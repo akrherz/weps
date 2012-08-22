@@ -5,7 +5,8 @@
 !
       integer   lui1
       parameter (lui1=141)
-!
+      integer   luit
+
       integer   lui2
       parameter (lui2=102)
 !
@@ -159,6 +160,7 @@
       integer   luoci
       parameter (luoci=162)
 
+      common /file/luit
 ! Note:  One must check main/openfils.for to ensure unit numbers are unique.
 !        Not all files are using logical unit numbers yet.
 
