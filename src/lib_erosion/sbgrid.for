@@ -5,7 +5,7 @@
 !**********************************************************************
 !     subroutine sbgrid
 !**********************************************************************
-      subroutine sbgrid
+      subroutine sbgrid 
 !
 !     +++ PURPOSE +++
 !     to calculate grid size and spacing for EROSION.
@@ -117,21 +117,21 @@
 !     determine subregion of each grid point
 !     for a single subregion now
       icsr = 1
+      do  icsr = 1, nsubr
       do 20 j = 0, jmax
       do 10 i = 0, imax
 !
 !     for multiple subregions
-!     do 5  icsr = 1, nsubr
+!     Modified by JG on 7/8/12 
+      
 !     for multiple subregions
-!     if (i*ix .lt. amxsr(1,1,icsr) .or. i*ix .gt. amxsr(1,2,icsr))
-!    & go to 10
-!     if (j*jy .lt. amxsr(2,1,icsr) .or. j*jy .gt. amxsr(2,2,icsr))
-!    & go to 10
-!   5 continue
-!
-        csr(i,j) = icsr
+      if (i*ix .gt. amxsr(1,1,icsr) .and. i*ix .lt. amxsr(1,2,icsr)      &
+     & .and. j*jy .gt. amxsr(2,1,icsr).and.j*jy.lt.amxsr(2,2,icsr)) then
+            csr(i,j) = icsr
+      end if
    10 continue
    20 continue
+      end do
       return
       end
 !++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
