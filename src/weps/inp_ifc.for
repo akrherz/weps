@@ -4,7 +4,7 @@
 !$Revision$
 !$HeadURL$
 !
-      subroutine inp_ifc_v1
+      subroutine inp_ifc_v1 (isr)
 
       include 'p1werm.inc'
       include 'm1subr.inc'
@@ -26,30 +26,30 @@
 !     + + + LOCAL VARIABLES + + +
       integer       lay
       character     line*512
-      integer       isr
+ !     integer       isr
       integer       max_typeidx  !Maximum number of lines to read in
       real          temp
-
+! add parameter variable isr 
+      integer       isr
 !     + + + FUNCTION DECLARATIONS + + +
 !
       integer linnum, typeidx
-      data linnum /1/, typeidx /0/
-
+      data linnum /1/
+!, typeidx /0/
+      typeidx = 0
       max_typeidx = 51  ! new ifc format (additional parms)
-      isr = 1           ! can only handle a soil IFC file for a single subregion (#1)
-
-      ! Read "Version 1.0" IFC soil file contents
+!      isr = 1           ! can only handle a soil IFC file for a single subregion (#1)    
+      ! Read "Version 1.0" IFC soil file contents     
  100  if (typeidx .eq. max_typeidx) go to 200 ! done reading IFC file
       linnum = linnum + 1
-      read (lui1,'(a)',err=901) line
-      ! print *, 'We are on line #', linnum, 'line = ', line
+      read (luit,'(a)',err=901) line
+!      print *, 'We are on line #', linnum, 'line = ', line,luit
       if (line(1:1) .eq. '#') go to 100                               ! skip comment lines
-
 !use case statement to appropriately assign values
       typeidx = typeidx + 1
         select case (typeidx)
         case (1)                                                      ! Soil ID string
-          am0sid(isr) = line
+          am0sid(isr) = line       
         case (2)                                                      ! Local Phase string
           read(line,*,err=902) am0localphase(isr)
         case (3)                                                      ! Taxonomy string
@@ -57,7 +57,6 @@
 
         case (4)                                                      ! NRCS Soil Loss Tolerance (t/ac/yr)
           read(line,*,err=902) SoilLossTol(isr)
-
 !     read IP surface physical properties
         case (5)                                                      ! Dry soil albedo (fraction)
           read(line,*,err=902) asfald(isr)
@@ -93,9 +92,10 @@
 !     read IP soil layer number and thickness 
         case (10)                                                      ! Number of soil layers
           read(line,*,err=902) nslay(isr)
+          print *, 'NSlay:', nslay(isr)
         case (11)                                                      ! Soil layer thickness (mm)
           read(line,*,err=902) (aszlyt(lay,isr), lay=1,nslay(isr))
-
+          print *, 'aszlyt:',(aszlyt(lay,isr),lay=1,nslay(isr))  
 !     read IP soil physical properties
         case (12)                                                     ! Sand fraction (kg/kg)
           read(line,*,err=902) (asfsan(lay,isr), lay=1,nslay(isr))
@@ -226,12 +226,12 @@
 
       return
 
- 901  write(*,9001) trim(sinfil), linnum, trim(line)
+ 901  write(*,9001) trim(sinfil(isr)), linnum, trim(line)
 9001  format(' Error in v1 IFC file ',a,' on line #',i4,' ',a)
       call exit(1)
 
 
- 902  write(*,9002) trim(sinfil), linnum, typeidx, trim(line)
+ 902  write(*,9002) trim(sinfil(isr)), linnum, typeidx, trim(line)
 9002  format(' Error in v1 IFC file ',a,' on line #',i4,'(',i2,') ',a)
       call exit(1)
 
@@ -240,7 +240,7 @@
       end
 
 !-----------------------------------------------------------------------
-      subroutine inp_ifc_v1_1
+      subroutine inp_ifc_v1_1 (isr)
 
       ! input routine for Version 1.1 IFC file format
 
@@ -268,9 +268,12 @@
 !     + + + LOCAL VARIABLES + + +
       integer       lay
       character     line*512
-      integer       isr
+!      integer       isr
       integer       max_typeidx  !Maximum number of lines to read in
       real          temp
+
+!   add parameter variable 
+      integer       isr
 
 !     + + + FUNCTION DECLARATIONS + + +
 !
@@ -278,14 +281,14 @@
       data linnum /1/, typeidx /0/
 
       max_typeidx = 55  ! new ifc format (additional parms)
-      isr = 1           ! can only handle a soil IFC file for a single subregion (#1)
+  !    isr = 1           ! can only handle a soil IFC file for a single subregion (#1)
 
       write(0,*) 'Reading Version 1.1 soil IFC file format!!!'
       ! Read "Version 1.1" IFC soil file contents
  100  if (typeidx .eq. max_typeidx) go to 200 ! done reading IFC file
       linnum = linnum + 1
-      read (lui1,'(a)',err=901) line
-      ! print *, 'We are on line #', linnum, 'line = ', line
+      read (luit,'(a)',err=901) line
+!      print *, 'We are on line #', linnum, 'line = ', line
       if (line(1:1) .eq. '#') go to 100                               ! skip comment lines
 
 !use case statement to appropriately assign values
@@ -474,12 +477,12 @@
 
       return
 
- 901  write(*,9001) trim(sinfil), linnum, trim(line)
+ 901  write(*,9001) trim(sinfil(isr)), linnum, trim(line)
 9001  format(' Error in v1.1 IFC file ',a,' on line #',i4,' ',a)
       call exit(1)
 
 
- 902  write(*,9002) trim(sinfil), linnum, typeidx, trim(line)
+ 902  write(*,9002) trim(sinfil(isr)), linnum, typeidx, trim(line)
 9002  format(' Error in v1.1 IFC file ',a,' on line #',i4,'(',i2,') ',a)
       call exit(1)
 
