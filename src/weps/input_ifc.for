@@ -39,7 +39,7 @@
 !     + + + LOCAL COMMON BLOCKS + + +
       include 'main/main.inc'
 !     + + + LOCAL VARIABLES + + +
-      integer       lay, i, luit
+      integer       lay, i
       character     line*512
       integer       isr
 ! isr represents the subregion index here. JG
