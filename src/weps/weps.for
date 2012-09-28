@@ -76,8 +76,10 @@
       include 'decomp/decomp.inc'
       include 'erosion/p1erode.inc' !Needs the SURF_UPD_FLG variable
       include 'erosion/m2geo.inc'   !Need tsterode cmdline arg vars(xgdpt,ygdpt)
-
-
+      include 'erosion/e2erod.inc'
+    
+      include 'subglobe.inc'
+      include 'erosion/e2grid.inc' 
 !     + + + LOCAL VARIABLES + + +
       logical first
    
@@ -88,7 +90,7 @@
 
       integer get_nperiods
       integer pd, nperiods
-
+      integer i,j 
       integer cd, cm, cy,                                               &
      &        end_init_jday, end_init_d, end_init_m, end_init_y,        &
      &        ndiy,                                                     &
@@ -222,9 +224,10 @@
       write(6,*) 'Compiled flags: ', trim(build_compiler_options)
       write(6,*)
 
+!      call fopenk(500,rootp(1:len_trim(rootp))//'CS.out','unknown')
       ! Determine date of Run
       call date_and_time(values=dt)
-
+      
       ! Determine month of year
       select case (dt(2))
         case (1); mstring = "Jan"
@@ -248,7 +251,7 @@
      &          i2.2,':',i2.2,':',i2.2)
       write(6,12) mstring, dt(3), dt(1), dt(5), dt(6), dt(7)
       write(6,*)
-
+      
       call timer(0,TIMSTART)
       call timer(TIMWEPS,TIMSTART)
 
@@ -257,7 +260,7 @@
 
       ! initialize anemometer defaults
       call anemometer_init
-
+      
 !     initialize math precision global variables
 !     the factor here is due to the implementation of the EXP function
 !     apparently, the limit is not the real number limit, but something else
@@ -309,13 +312,13 @@
       write(*,*) "Made it here after restore_soil"
 ! add do loop for subregion JG
 !     temporarily initialize old random roughness
+     
       do isr =1, nsubr 
       aslrrc(isr) = 10.
-      as0rrk(isr) = 0.9
-      
+      as0rrk(isr) = 0.9    
  
       call openfils
-
+      call fopenk(500,rootp(1:len_trim(rootp))//'CS.out','unknown')
       ! this prints header to plot.out file (isr not yet set)
       call plotdata(isr)  ! print to plot data file
       ! this prints header to decomp.out file (isr not yet set)
@@ -355,7 +358,6 @@
       am0gdf = .true.
       end do    
 ! end of the subregion do loop
-
 !     Likely that we will put all management data into memory
 !     and only read and initialize everything here, looping through
 !     each management file (one for each subregion).
@@ -378,7 +380,8 @@
 
    10 continue
 ! Subregion running loop
-      do isr=1,nsubr   ! do multiple subregion      
+! move the subregion loop into dailly loop by JG
+!      do isr=1,nsubr   ! do multiple subregion      
       call cliginit     !read "yearly average info" from cligen header
 
 !     calculate first and last Julian dates for simulation
@@ -400,10 +403,10 @@
           lopyr = 1
       endif
 
-      ! begin initialization simulation phase
+! begin initialization simulation phase
       init_loop = .true. ! Signifies that we are in the "initialization" loop
       do am0jd = ijday, end_init_jday   !will not enter if end before beginning
-
+        
          call caldatw (cd, cm, cy)
       ! determine number of days in the year
          ndiy = 365; if (isleap(cy) .eqv. .true.) ndiy = 366
@@ -416,6 +419,7 @@
             write(6,*) 'Year', yrsim, ' of', simyrs, '(initialization)'
             call flush(6)
          end if
+         do isr=1,nsubr   ! do multiple subregion      
 !         isr = 1 !Note: we are no longer dealing with multiple subregions here
          call submodels(isr, cd, cm, cy)
 ! set initialization flag to .false. after first day
@@ -439,6 +443,7 @@
                lopyr = amnryr(isr)
             end if
          end if
+	end do  ! end for subregion loop
       end do    ! end loop of multiple years
       init_loop = .false.
       write(6,*) "Finished initialization stage"
@@ -470,6 +475,7 @@
      &                         maxper, maxper*calibrate_rotcycles
 
          do am0jd = ijday,lcaljday
+           
             call caldatw (cd, cm, cy)
             ! determine number of days in the year
             ndiy = 365; if (isleap(cy) .eqv. .true.) ndiy = 366
@@ -490,6 +496,7 @@
             end if
 
 !            isr = 1 !Note: we are no longer dealing with multiple subregions here
+            do isr=1,nsubr   ! do multiple subregion     
             call submodels(isr, cd, cm, cy)
 
             call plotdata(isr)  ! print to plot data file
@@ -512,6 +519,7 @@
                   lopyr = amnryr(isr)
                end if
             end if
+	   end do  ! end subregion
          end do   ! "calibration" phase
          amnryr(isr) = keep
          calib_loop = .false.
@@ -583,7 +591,8 @@
 !           if (am0jd.eq.ijday+1) call dbgdmp(daysim, isr)
 !           if (am0jd.eq.ljday) call dbgdmp(daysim, isr)
 
- !           isr = 1 !Note: we are no longer dealing with multiple subregions here
+ !          isr = 1 !Note: we are no longer dealing with multiple subregions here
+            do isr=1,nsubr   ! do multiple subregion     
             call submodels(isr, cd, cm, cy)
             if (run_erosion > 0) then   ! Are we simulating erosion in this RUN
                if (awudmx .gt. 8.0) then ! if wind is great enough, call erosion
@@ -591,12 +600,17 @@
                   call calcwu
                   ! write(*,*) "Start erosion"
                   call erosion (5.0,isr)
+ !             write(500,320) cd,cm,cy,isr                   
+ !           do i=1, imax 
+ !             	write(500,300)i,j, (egt(i,j),j=1,jmax)        
+ !           end do             
                   if (btest(am0efl,0) .or. btest(am0efl,1)) then
-                     call daily_erodout (luo_egrd, luo_erod,isr)
+                     call daily_erodout (luo_egrd,luo_erod,isr)
                   endif
                end if
             end if
-
+  300       Format (2i4,60f6.2)
+  320	    Format (3i4)	
             call sci_cum(isr)   ! Keep running total for soil conditioning index (SCI)
             call plotdata(isr)  ! print to plot data file
     ! write decomposition biomass pool amounts to files
@@ -662,7 +676,7 @@
                endif
             end if
 
-            call clear_erosion()
+!            call clear_erosion()
 
             if( ci_flag .eq. 1) then
                ! calculate confidence interval
@@ -672,11 +686,20 @@
      &                                     ci_year)
                end if
             endif
+  	   end do
+! end for the do loop of subregions
+! printing out the emmison from subgrid by JG
+           write(500,320) cd,cm,cy                   
+            do i=1, imax 
+              	write(500,300)i,j, (egt(i,j),j=1,jmax) 
+	    end do	
+           call clear_erosion()
+
          end do   ! end of "reporting" loop
          report_loop = .false.
       end if
 ! End of "report" section
-      end do 
+!      end do
 ! end for the do loop of subregions
 ! Done with simulation here ..................
 
@@ -689,6 +712,7 @@
       call sci_report
       call print_ui1_output(nperiods, maxper, n_rot_cycles) !Use for new WEPS gui
       call print_mandate_output(luomandate)
+     
 ! call print_nui_output(nperiods, maxper) !Obsolete
 ! We need to create a "close files ()" call and remove/move all of this stuff - LEW
       close (luiwin)
@@ -698,6 +722,8 @@
       close (luomandate)
       close (unit = 40)
       close (luoplt)
+      close (500)
+
       if ((calc_confidence .gt. 0)) close (luoci)
 
 !     output the weather summary report
