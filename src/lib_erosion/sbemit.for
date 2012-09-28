@@ -5,7 +5,7 @@
 !**********************************************************************
 !     subroutine sbemit
 !**********************************************************************
-      subroutine sbemit (ounit, ws, hhr)
+      subroutine sbemit (ounit, ws, hhr,isr)
 
 !     To calc the emissions for each time step of the input wind speed
 !     The emissions for EPA are the suspension component
@@ -30,6 +30,7 @@
 !     +++ ARGUMENT DECLARATIONS +++
       integer        ounit   !Unit number for detail grid erosion
       real           ws, hhr
+      integer        isr     ! subregion idx added by JG
 !     +++ ARGUMENT DEFINITIONS +++
 !
 !
@@ -43,6 +44,7 @@
 !     + + + LOCAL COMMON BLOCKS + + +
       include  'erosion/m2geo.inc'
       include  'erosion/e2erod.inc'
+      include  'erosion/e2grid.inc'
 !
 !
 !     +++ PARAMETERS +++
@@ -86,9 +88,9 @@
 
           prev_erosion_jday = am0jd - 1  !init to previous day
 
-       !  aegtp   = 0.0
-       !  aegtssp = 0.0
-       !  aegt10p = 0.0
+         aegtp   = 0.0
+         aegtssp = 0.0
+         aegt10p = 0.0
           tims = 3600*24/ntstep !seconds in each emission period
           call caldatw (da, mo, yr) !Set day, month and year
       write(0,*) 'First ntstep is: ', ntstep, tims, tims/3600
@@ -111,12 +113,12 @@
     ! else
 
          !init prev erosion hr values to zero if this is new erosion day
-      if (prev_erosion_jday .ne. am0jd) then
-          prev_erosion_jday = am0jd 
-          aegtp   = 0.0
-          aegtssp = 0.0
-          aegt10p = 0.0
-      endif   
+ !     if (prev_erosion_jday .ne. am0jd) then
+ !         prev_erosion_jday = am0jd 
+ !         aegtp   = 0.0
+ !         aegtssp = 0.0
+ !         aegt10p = 0.0
+ !     endif   
 
       write(0,*) 'Subsequent ntstep is: ', ntstep, tims, tims/3600
 !          if (hr .ge. 24) then
@@ -129,27 +131,28 @@
              aegt   = 0.0
              aegtss = 0.0
              aegt10 = 0.0
-!
+! working on subregion JG
          do  j=1,jmax-1
            do  i= 1, imax-1
+             if (csr(i,j) .eq. isr) then
              aegt= aegt + egt(i,j)
              aegtss = aegtss + egtss(i,j)
              aegt10 = aegt10 + egt10(i,j)
+             end if
            enddo
          enddo
              tt     = (imax-1)*(jmax-1)
              aegt   = - aegt/tt     ! change signs to positive=emission
              aegtss = - aegtss/tt
              aegt10 = - aegt10/tt
-
 !  Commented out so that emission results don't get summed from hr to hr
 !  when erosion stops.  - LEW 5/26/06
 !     Hourly (or peroid) emission rate (kg m-2 s-1)
-   !      if (aegtssp .gt. aegtss) then  !main set egt arrays to zero
-   !          aegtp   = 0.0
-   !          aegtssp = 0.0
-   !          aegt10p = 0.0
-   !      endif
+          if (aegtssp .gt. aegtss) then  !main set egt arrays to zero
+             aegtp   = 0.0
+             aegtssp = 0.0
+             aegt10p = 0.0
+          endif
 !
          emittot = (aegt - aegtp)/tims
          emitss  = (aegtss - aegtssp)/tims
@@ -161,14 +164,9 @@
          aegt10p =  aegt10
 !
 !     Write to emit.out file
-         write (ounit,120) yr, mo, da, hhr, ws,                         &
-     &                     emittot, emittot-emitss, emitss, emit10
+      write (ounit,120) yr, mo, da, hhr, ws,                             &
+     &           emittot, emittot-emitss, emitss, emit10
 !
    !   endif
       return
       end
-
-
-
-
-
