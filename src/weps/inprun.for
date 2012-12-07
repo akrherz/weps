@@ -8,7 +8,7 @@
 !
 !     Edit History
 !     06-Feb-99   wjr   created from existing code, select added
-!
+!   Move the read of the subregion number from case 30 to case 12
       include 'p1werm.inc'
       include 'wpath.inc'
       include 'm1subr.inc'
@@ -59,7 +59,6 @@
       write (*,*) 'runfil is ', '>>',                                   &
      &  runfil(1:len_trim(runfil)), '<<'
       call fopenk (lui1, runfil(1:len_trim(runfil)), 'old')
-
       ! check for version number at top of file
       read (lui1,'(a)',err=80) line
       if( line(2:8) .eq. 'VERSION' ) then
@@ -108,7 +107,7 @@
           goto 80
         end if
       case (6)
-        read (line,*,err=80) amzele,nsubr
+        read (line,*,err=80) amzele
       case (7)
         read (line,*,err=80) awclsn
       case (8)
@@ -143,8 +142,11 @@
         end if
       case (11)
         read (line,*,err=80) ntstep
-!     read CLIGEN file name
+! read the number of sunregion by JG
       case (12)
+        read (line,*,err=80) nsubr
+!     read CLIGEN file name
+      case (13)
         write(luolog, *) 'line0: ', line
         write(luolog, *) 'line1: ', line(1:len_trim(line))
         clifil = rootp(1:len_trim(rootp)) // line(1:len_trim(line))
@@ -199,7 +201,7 @@
         goto 80
 
    30   continue
-      case (13)
+      case (14)
 !     read WINDGEN file name
         winfil = rootp(1:len_trim(rootp)) // line
 !     open WINDGEN file
@@ -228,7 +230,7 @@
         goto 80
 
    40   continue
-      case (14)
+      case (15)
 !     read subdaily wind file name
         if (line(1:4) .ne. 'none') then
           subfil = rootp(1:len_trim(rootp)) // line
@@ -248,7 +250,7 @@
             call fopenk (luiwsd, subfil, 'old')
           endif
         endif
-      case (15)
+      case (16)
 !     read in initial field conditions file name
 !     read in the subregion soils into an array of soil files
           if (i .lt. nsubr) then
@@ -258,7 +260,7 @@
             typidx = typidx -1
             if (i .eq. nsubr) typidx = typidx +1             
           end if                         
-      case (16)
+      case (17)
 !     read in management file name
 ! read in the subregion management file into an array of management files
           if (j .lt. nsubr) then
@@ -269,25 +271,25 @@
             typidx = typidx -1
             if (j .eq. nsubr) typidx = typidx +1
           end if                    
-      case (17)
+      case (18)
 !     read output file name
         simout = rootp(1:len_trim(rootp)) // line
         ! Quit opening this file.  We haven't used it for years. - 11/17/05 - LEW
 !       open (unit = 2, file = simout)
-      case (18)
+      case (19)
 !     read the flags to select the various general report forms
         read (line,*,err=80) (gnrpt(i), i=1,6)
 !     read code to select period for output
 !     yearly and simulation summaries are always given
-      case (19)
+      case (20)
         read (line,*,err=80) erosrpt
 !
 !     read flags to print submodel output
-      case (20)
+      case (21)
         read (line,*,err=80) am0hfl,am0sfl,am0tfl,am0cfl,am0dfl,am0efl
       if (am0tfl .eq. 1) call fopenk(15, rootp(1:len_trim(rootp)) //    &
      &  'manage.out', 'unknown')
-      case (21)
+      case (22)
         ! debug flag line. Add zero integer to end to make sure six values
         ! are available to read. Previously interface only set 5 flags.
         ! Now should set six.
@@ -304,36 +306,37 @@
         if (am0ddb .eq. 1) open (unit = 28,                             &
      &   file = rootp(1:len_trim(rootp)) // 'ddbug.out')
 
-      case (22)
-        read (line,*,err=80) amasim
       case (23)
-        read (line,*,err=80) amxsim(1,1), amxsim(2,1)
+        read (line,*,err=80) amasim
       case (24)
+        read (line,*,err=80) amxsim(1,1), amxsim(2,1)
+      case (25)
         read (line,*,err=80) amxsim(1,2),amxsim(2,2)
         ! compute the simulation area
         sim_area = (amxsim(1,2) - amxsim(1,1)) *                        &
      &             (amxsim(2,2) - amxsim(2,1))
         write(6,*) "Simulation area (m^2)", sim_area
         !write(6,*) amxsim(2,1),amxsim(1,1),amxsim(2,2),amxsim(1,2)
-      case (25)
+      case (26)
  !       These values are scaling factors for interface, not used in WEPS
         read (line,*,err=80) sclsim, sclbar
-      case (26)
+      case (27)
         read (line,*,err=80) nacctr
  ! set up iar for reading in next lines
         iar = 1
-      case (27)
+      case (28)
         read (line,*,err=80) amxar(1,1,iar), amxar(2,1,iar)
      
-      case (28)
+      case (29)
         read (line,*,err=80) amxar(1,2,iar), amxar(2,2,iar)
       
 ! send us back to case (25) to read in array
 !        if (iar.lt.nacctr) typidx = typidx - 2
-!        iar = iar + 1       
-      case (29)
-        read (line,*,err=80) nsubr
-        isr = 1
+!        iar = iar + 1     
+         isr = 1  
+!      case (30)
+!        read (line,*,err=80) nsubr
+!        isr = 1
 ! read in sub-region data (currently only 1 allowed),
 ! although the code will now read in more :)
 ! amxsr(1,1,i) as lower x-coor, and amxsr(1,2,i) as upper x-coor
@@ -344,12 +347,13 @@
 ! call sbgrid to assign subregion index for each grid in a region by JG
       case (31)
         read (line,*,err=80) amxsr(1,2,isr), amxsr(2,2,isr)  
-        if (isr.lt.nacctr) then
+        if (isr .lt. nacctr) then
           typidx = typidx - 2      
           isr = isr + 1
         else 
          isr = 1
         end if
+
       case (32)
         !        The new "versioned" IFC files contain a slope value
         !        which will be used if this value is set negative, 
@@ -479,6 +483,7 @@
 9001  format('Error in file ',a,' on line #',i4,i3,' ',a)
       call exit(1)
   200 close (lui1)
+     
 !
 ! Format statements
 !

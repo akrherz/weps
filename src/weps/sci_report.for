@@ -14,6 +14,7 @@
       include 'erosion/m2geo.inc'
       include 'main/sci_report_val.inc'
       include 'manage/man.inc'
+      include 'm1geo.inc'
 
 !     + + + PURPOSE + + +
 !     each time it is called, it adds a value to the total biomass increments
@@ -176,8 +177,9 @@
       write(luosci,*)'#subregionID,average biomass(kg/m2.d),windErosion &
      &(kg/m2.yr), diesel_energy_L/ha'
       do isr =1, nsubr
-      write(luosci, 1004) isr, allbiomass_avg(isr), allerosion_avg(isr), &
-     & energy_avg(isr) 
+      write(luosci, 1004) isr,amxsr(1,1,isr),amxsr(2,1,isr),            &
+     & amxsr(1,2,isr),amxsr(2,2,isr),allbiomass_avg(isr),               &
+     & allerosion_avg(isr),energy_avg(isr) 
       end do
  
 
@@ -185,6 +187,6 @@
  1001 format( 2(f10.4,' | '), f10.4 )
  1002 format( 3(f10.4,' | '), f10.4 )
  1003 format( f10.4 )
- 1004 format (I,' ',3f10.4)
+ 1004 format (I,' ',7f10.4)
       return
       end

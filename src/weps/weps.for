@@ -292,7 +292,7 @@
       call input
 
       write(*,*) "Made it here after input"
-
+     
 ! save variabled for each subregion by JG
       do isr =1, nsubr 
       call save_soil(isr)  
@@ -599,11 +599,7 @@
                   ! write(*,*) "Start calcwu"
                   call calcwu
                   ! write(*,*) "Start erosion"
-                  call erosion (5.0,isr)
- !             write(500,320) cd,cm,cy,isr                   
- !           do i=1, imax 
- !             	write(500,300)i,j, (egt(i,j),j=1,jmax)        
- !           end do             
+                  call erosion (5.0,isr)         
                   if (btest(am0efl,0) .or. btest(am0efl,1)) then
                      call daily_erodout (luo_egrd,luo_erod,isr)
                   endif
@@ -722,6 +718,7 @@
       close (luomandate)
       close (unit = 40)
       close (luoplt)
+      close (luo_erod)
       close (500)
 
       if ((calc_confidence .gt. 0)) close (luoci)

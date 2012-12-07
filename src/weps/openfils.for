@@ -186,5 +186,5 @@
          call fopenk(luoci, rootp(1:len_trim(rootp)) //                 &
      &   'ci.out', 'unknown')
       endif
-
+  
       end

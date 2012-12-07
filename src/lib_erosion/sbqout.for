@@ -327,7 +327,6 @@
       end if
       qsso=qssi+(1./(2.*c))*((-g*s+g*b+2.*f*c)*lx+2.*g*(-alog(2.0)+t2))
 !
-
 !     assemble composite params. for PM-10
       h = sf10en*f
       k = sf10an*sfssan*fancan - sf10en*sfssen*cen + sf10bk*cbk         &
@@ -458,8 +457,7 @@
         end if
 
 !        fanag = (1-sf84)*(1-sfcr)*fan
-
-      endif
+       endif
 !
 !     update surface roughness
 !
