@@ -62,7 +62,14 @@
       diwcsy(isr) = 0.0
       dweti(isr) = 0.0
 
-!     cummulative ddays for surface residues
+      do iage= 1,mnbpls
+         ! calendar days from residue initiation
+         resday(iage,isr) = 0
+         ! index for each residue initiation
+         resyear(iage,isr) = 0
+      end do
+
+!     cummulative ddays for standing residues
       do 90 iage= 1,mnbpls
          cumdds(iage,isr) = 0.0
    90 continue

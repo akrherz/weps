@@ -51,6 +51,9 @@
       integer iwetf
       integer iwetg(mnsz)
 
+      integer resday(mnbpls,mnsub)
+      integer resyear(mnbpls,mnsub)
+
 !cc
 
       real aqua
@@ -135,6 +138,9 @@
 !         ------------                    ------               ------
 !         fixed                           1                    max no. soil layers
 !         typical                         1                    ?
+
+!     resday - calendar days after residue initiation
+!     resyear - index counting each new residue initiation
 
 !     aqua    - sum of precip, irrigation and snow melt (mm)
 !
@@ -254,7 +260,7 @@
       common / decom /                                                  &
      &    iwets,iwetf,iwetg,                                            &
      &    dweti, hrvflag, iage, idtype, iht,                            &
-     &    ipool, ipoolf, isz,                                           &
+     &    ipool, ipoolf, isz, resday, resyear,                          &
      &    aqua, covfact, cumddf, cumddg, cumdds,                        &
      &    ddsthrsh, diddf, diddg, didds,                                &
      &    ditca, ditcg, diwcf, diwcg, diwcs, diwcsy,                    &

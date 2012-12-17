@@ -511,11 +511,12 @@
 ! Check for invalid commandline input values which are dependent
 ! upon erodin input values.
 
-      if ( (erod_interval /= 0) .AND.                                   &
-     &     (modulo(SEC_PER_DAY,ntstep*erod_interval) /= 0) ) then
-        write(0,*)                                                      &
+      if (erod_interval /= 0) then                                  
+          if (modulo(SEC_PER_DAY,ntstep*erod_interval) /= 0) then
+             write(0,*)                                                      &
      &       'Error: Day not evenly divisible by (ntstep*erod_interval)'
         call exit(141)
+        endif 
       endif
 
 ! Checking am0efl flag value specified in input file and comparing

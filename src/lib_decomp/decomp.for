@@ -243,8 +243,11 @@
 ! Summation of DECOMPOSITION days for graphing
 ! this is indexed based on the number of residue age pools
 
-! standing, flat and below ground
+! all, standing, flat and below ground
       do 70  iage = 1,mnbpls
+         ! calendar days
+         resday(iage,isr) = resday(iage,isr) + 1
+         ! decomposition days
          cumdds(iage,isr) = cumdds(iage,isr) + didds
          cumddf(iage,isr) = cumddf(iage,isr) + diddf
          do 60 isz = 1, nslay(isr)

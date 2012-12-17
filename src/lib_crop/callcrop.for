@@ -139,9 +139,10 @@
      &      ac0nam(sr), acxstm(sr), acrbc(sr), ac0sla(sr), ac0ck(sr),   &
      &      acdkrate(1,sr), accovfact(sr), acddsthrsh(sr), achyfg(sr),  &
      &      acresevapa(sr), acresevapb(sr),                             &
-     &   ad0nam(1,sr),adxstm(1,sr),adrbc(1,sr),ad0sla(1,sr),ad0ck(1,sr),&
-     &      dkrate(1,1,sr), covfact(1,sr), ddsthrsh(1,sr), adhyfg(1,sr),&
-     &      adresevapa(1,sr), adresevapb(1,sr),                         &
+     &      ad0nam(1,sr), adxstm(1,sr), adrbc(1,sr), ad0sla(1,sr),      &
+     &      ad0ck(1,sr), dkrate(1,1,sr), covfact(1,sr), ddsthrsh(1,sr), &
+     &      adhyfg(1,sr), adresevapa(1,sr), adresevapb(1,sr),           &
+     &      resday(1,sr), resyear(1,sr),                                &
      &      cumdds(1,sr), cumddf(1,sr), cumddg(1,1,sr),                 &
      &      nslay(sr) )
       end if

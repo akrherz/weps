@@ -1241,9 +1241,10 @@
      &      ac0nam(sr), acxstm(sr), acrbc(sr), ac0sla(sr), ac0ck(sr),   &
      &      acdkrate(1,sr), accovfact(sr), acddsthrsh(sr), achyfg(sr),  &
      &      acresevapa(sr), acresevapb(sr),                             &
-     &   ad0nam(1,sr),adxstm(1,sr),adrbc(1,sr),ad0sla(1,sr),ad0ck(1,sr),&
-     &      dkrate(1,1,sr), covfact(1,sr), ddsthrsh(1,sr), adhyfg(1,sr),&
-     &      adresevapa(1,sr), adresevapb(1,sr),                         &
+     &      ad0nam(1,sr),adxstm(1,sr),adrbc(1,sr),ad0sla(1,sr),         &
+     &      ad0ck(1,sr), dkrate(1,1,sr), covfact(1,sr), ddsthrsh(1,sr), &
+     &      adhyfg(1,sr), adresevapa(1,sr), adresevapb(1,sr),           &
+     &      resday(1,sr), resyear(1,sr),                                &
      &      cumdds(1,sr), cumddf(1,sr), cumddg(1,1,sr),                 &
      &      nslay(sr) )
       end if
@@ -1559,7 +1560,10 @@
         ! give residue the proper name
         ad0nam(1,sr) = cropname
         ! post-process stuff
-        ! set cumulative degree days for residues to zero
+        ! set calendar days for residue to zero
+        resday(1,sr) = 0
+        resyear(1,sr) = resyear(1,sr) + 1
+        ! set cumulative decomposition days for residue to zero
         cumdds(1,sr) = 0.0
         cumddf(1,sr) = 0.0
         do idx=1,nslay(sr)
@@ -1648,9 +1652,10 @@
      &      ac0nam(sr), acxstm(sr), acrbc(sr), ac0sla(sr), ac0ck(sr),   &
      &      acdkrate(1,sr), accovfact(sr), acddsthrsh(sr), achyfg(sr),  &
      &      acresevapa(sr), acresevapb(sr),                             &
-     &   ad0nam(1,sr),adxstm(1,sr),adrbc(1,sr),ad0sla(1,sr),ad0ck(1,sr),&
-     &      dkrate(1,1,sr), covfact(1,sr), ddsthrsh(1,sr), adhyfg(1,sr),&
-     &      adresevapa(1,sr), adresevapb(1,sr),                         &
+     &      ad0nam(1,sr), adxstm(1,sr), adrbc(1,sr), ad0sla(1,sr),      &
+     &      ad0ck(1,sr), dkrate(1,1,sr), covfact(1,sr), ddsthrsh(1,sr), &
+     &      adhyfg(1,sr), adresevapa(1,sr), adresevapb(1,sr),           &
+     &      resday(1,sr), resyear(1,sr),                                &
      &      cumdds(1,sr), cumddf(1,sr), cumddg(1,1,sr),                 &
      &      nslay(sr) )
       endif
@@ -2033,6 +2038,15 @@
         t0sla = 0.0
         t0ck = 0.0
 
+        ! check for amount of added biomass
+        if( poolmass(                                                   &
+     &           atmstandstem(sr), atmstandleaf(sr), atmstandstore(sr), &
+     &           atmflatstem(sr), atmflatleaf(sr), atmflatstore(sr),    &
+     &           atmflatrootstore(sr), atmflatrootfiber(sr),            &
+     &           atmbgstemz(1,sr), atmbgleafz(1,sr), atmbgstorez(1,sr), &
+     &           atmbgrootstorez(1,sr), atmbgrootfiberz(1,sr) )         &
+     &    .gt. 0.0 ) then
+          ! biomass was added, so do transfer
           call trans(                                                   &
      &      atmstandstem(sr), atmstandleaf(sr), atmstandstore(sr),      &
      &      atmflatstem(sr), atmflatleaf(sr), atmflatstore(sr),         &
@@ -2049,12 +2063,14 @@
      &      cropname, txstm, trbc, t0sla, t0ck,                         &
      &      tdkrate(1), tcovfact, tddsthrsh, thyfg,                     &
      &      tresevapa, tresevapb,                                       &
-     &   ad0nam(1,sr),adxstm(1,sr),adrbc(1,sr),ad0sla(1,sr),ad0ck(1,sr),&
-     &      dkrate(1,1,sr), covfact(1,sr), ddsthrsh(1,sr), adhyfg(1,sr),&
-     &      adresevapa(1,sr), adresevapb(1,sr),                         &
+     &      ad0nam(1,sr), adxstm(1,sr), adrbc(1,sr), ad0sla(1,sr),      &
+     &      ad0ck(1,sr), dkrate(1,1,sr), covfact(1,sr), ddsthrsh(1,sr), &
+     &      adhyfg(1,sr), adresevapa(1,sr), adresevapb(1,sr),           &
+     &      resday(1,sr), resyear(1,sr),                                &
      &      cumdds(1,sr), cumddf(1,sr), cumddg(1,1,sr),                 &
      &      nslay(sr) )
- 
+        end if
+
 !     post-process stuff
         if (am0tdb .eq. 1) then
           write (29,*) '//After add residue process//'
@@ -2162,6 +2178,14 @@
         t0sla = 0.0
         t0ck = 0.0
 
+        if( poolmass(                                                   &
+     &           atmstandstem(sr), atmstandleaf(sr), atmstandstore(sr), &
+     &           atmflatstem(sr), atmflatleaf(sr), atmflatstore(sr),    &
+     &           atmflatrootstore(sr), atmflatrootfiber(sr),            &
+     &           atmbgstemz(1,sr), atmbgleafz(1,sr), atmbgstorez(1,sr), &
+     &           atmbgrootstorez(1,sr), atmbgrootfiberz(1,sr) )         &
+     &    .gt. 0.0 ) then
+          ! biomass was added, so do transfer
           call trans(                                                   &
      &      atmstandstem(sr), atmstandleaf(sr), atmstandstore(sr),      &
      &      atmflatstem(sr), atmflatleaf(sr), atmflatstore(sr),         &
@@ -2178,11 +2202,13 @@
      &      cropname, txstm, trbc, t0sla, t0ck,                         &
      &      tdkrate(1), tcovfact, tddsthrsh, thyfg,                     &
      &      tresevapa, tresevapb,                                       &
-     &   ad0nam(1,sr),adxstm(1,sr),adrbc(1,sr),ad0sla(1,sr),ad0ck(1,sr),&
-     &      dkrate(1,1,sr), covfact(1,sr), ddsthrsh(1,sr), adhyfg(1,sr),&
-     &      adresevapa(1,sr), adresevapb(1,sr),                         &
+     &      ad0nam(1,sr), adxstm(1,sr), adrbc(1,sr), ad0sla(1,sr),      &
+     &      ad0ck(1,sr), dkrate(1,1,sr), covfact(1,sr), ddsthrsh(1,sr), &
+     &      adhyfg(1,sr), adresevapa(1,sr), adresevapb(1,sr),           &
+     &      resday(1,sr), resyear(1,sr),                                &
      &      cumdds(1,sr), cumddf(1,sr), cumddg(1,1,sr),                 &
      &      nslay(sr) )
+        end if
  
 !     post-process stuff
         if (am0tdb .eq. 1) then

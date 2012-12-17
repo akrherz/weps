@@ -20,9 +20,10 @@
      &         bc0nam, bcxstm, bcrbc, bc0sla, bc0ck,                    &
      &         bcdkrate, bccovfact, bcddsthrsh, bchyfg,                 &
      &         bcresevapa, bcresevapb,                                  &
-     &         bd0nam, bdxstm, bdrbc, bd0sla, bd0ck,                    &
-     &         bdkrate, bcovfact, bddsthrsh, bdhyfg,                    &
-     &         bdresevapa, bdresevapb,                                  &
+     &         bd0nam, bdxstm, bdrbc, bd0sla,                           &
+     &         bd0ck, bdkrate, bcovfact, bddsthrsh,                     &
+     &         bdhyfg, bdresevapa, bdresevapb,                          &
+     &         bresday, bresyear,                                       &
      &         bcumdds, bcumddf, bcumddg,                               &
      &         nslay )
 
@@ -107,15 +108,18 @@
       real       bdxstm(mnbpls)
       integer    bdrbc(mnbpls)
       real       bd0sla(mnbpls)
-      real       bd0ck(mnbpls)
 
+      real       bd0ck(mnbpls)
       real       bdkrate(mndk,mnbpls)
       real       bcovfact(mnbpls)
       real       bddsthrsh(mnbpls)
-      integer    bdhyfg(mnbpls)
 
+      integer    bdhyfg(mnbpls)
       real       bdresevapa(mnbpls)
       real       bdresevapb(mnbpls)
+
+      integer    bresday(mnbpls)
+      integer    bresyear(mnbpls)
 
       real       bcumdds(mnbpls)
       real       bcumddf(mnbpls)
@@ -265,12 +269,16 @@
 
 ! transfer CUMM DDAYS for s standing, f flat, and g below ground pools
       do ip = mnbpls,2,-1
+         bresday(ip) = bresday(ip-1)
+         bresyear(ip) = bresyear(ip-1)
          bcumdds(ip) = bcumdds(ip-1)
          bcumddf(ip) = bcumddf(ip-1)
          do lay = 1, nslay
             bcumddg(lay,ip) = bcumddg(lay,ip-1)
          end do
       end do
+      bresday(1) = 0
+      bresyear(1) = bresyear(2) + 1
       bcumdds(1) = 0.0    ! reset cummdds to zero
       bcumddf(1) = 0.0    ! reset cummddf to zero
       do lay = 1, nslay

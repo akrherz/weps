@@ -22,6 +22,10 @@
 ! + + + Called functions + + +
       integer ios
 
+! local variables
+      integer idx
+      character*10 decfile ! decomposition detail age pool output file name
+
 !     the main output file is opened at all times
 
 
@@ -139,13 +143,27 @@
      &         rootp(1:len_trim(rootp)) // 'dabove.out', 'unknown')
       endif
       if ((am0dfl .eq. 2).or.(am0dfl.eq.3)) then
-          call fopenk (luodec1, rootp(1:len_trim(rootp)) // 'dec1.btmp',&
-     &    'unknown')
-          call fopenk (luodec2, rootp(1:len_trim(rootp)) // 'dec2.btmp',&
-     &    'unknown')
-          call fopenk (luodec3, rootp(1:len_trim(rootp)) // 'dec3.btmp',&
-     &    'unknown')
-          call fopenk (luod_below,                                      &
+        ! open files to match number of biomass pools
+
+        ! create age pool output file names, set unit numbers and open files
+        ! assign first three characters to file name
+        decfile(1:3) = 'dec'
+        ! assign last four characters to file name
+        decfile(6:10) = '.btmp'
+        do idx = 1,mnbpls
+          ! assign 4 character of file name to be the number character corresponsing to tens place of idx
+          decfile(4:4) = char(48+(idx/10))
+          ! assign 5 character of file name to be the number character corresponsing to ones place of idx
+          decfile(5:5) = char(48+(idx-(idx/10)*10))
+          ! display created file
+          !write(*,*) 'File name created: ', decfile(idx)
+          ! assign logical unit number of opening file to array
+          luodec(idx) = 169 + idx
+          call fopenk (luodec(idx),                                     &
+     &         rootp(1:len_trim(rootp)) // decfile, 'unknown')
+        end do
+
+        call fopenk (luod_below,                                        &
      &         rootp(1:len_trim(rootp)) // 'dbelow.out', 'unknown')
       endif
 
@@ -186,5 +204,5 @@
          call fopenk(luoci, rootp(1:len_trim(rootp)) //                 &
      &   'ci.out', 'unknown')
       endif
-  
+
       end

@@ -81,16 +81,15 @@
 !
       integer   luocrp1
       parameter (luocrp1=121)
-!
-      integer   luodec1
-      parameter (luodec1=122)
-!
-      integer   luodec2
-      parameter (luodec2=123)
-!
-      integer   luodec3
-      parameter (luodec3=124)
-!
+
+      ! made an array of max 30. Any larger and it stomps on another logical unit number
+      integer   luodec(30)
+      ! the unit number is now set in openfils.for
+      ! parameter (luodec1=170)
+      ! parameter (luodec30=199)
+      ! make common to preserve values after files are opened
+      common / decfiles / luodec
+
       integer   luobio1
       parameter (luobio1=125)
 

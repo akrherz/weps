@@ -20,6 +20,7 @@
       include 'file.inc'
       include 'm1flag.inc'
       include 'b1glob.inc'
+      include 'd1gen.inc'
       include 'd1glob.inc'
       include 'c1glob.inc'
       include 'c1db1.inc'
@@ -39,12 +40,8 @@
 !      include 'h1db1.inc'
 !      include 'h1hydro.inc'
 
-
-1234     format (3i3,16f10.3)
-2345     format (3i3,3f10.5,13f10.3)
-
 !     + + + LOCAL VARIABLES + + +
-      integer doy
+      integer doy, idx, luout
 
 !     + + + FUNCTIONS CALLED + + +
       integer dayear
@@ -55,31 +52,30 @@
 
       if ((am0dfl .eq. 1).or.(am0dfl.eq.3)) then
 
-          ! day, month, year
-          ! flat crop cover, standing crop cover, total crop cover
-          ! crop cover fract, crop SAI, crop LAI
-          ! total crop biomass, 0.0, standing crop mass
-          ! (no "flat crop biomass")
-          ! crop root mass, 0.0, crop yield mass
-          ! (no "buried crop biomass")
-          ! qty crop stems per area, crop height, crop root depth, repr stem dia
+        ! day, month, year
+        ! flat crop cover, standing crop cover, total crop cover
+        ! crop cover fract, crop SAI, crop LAI
+        ! total crop biomass, 0.0, standing crop mass
+        ! (no "flat crop biomass")
+        ! crop root mass, 0.0, crop yield mass
+        ! (no "buried crop biomass")
+        ! qty crop stems per area, crop height, crop root depth, repr stem dia
 
-          ! Crop Pool
-          ! write file header if still initializing
-          if (am0ifl .eqv. .true.) then
-            write(luocrp1,*) '#daysim doy yy Tmin Tmax Tavg Tfacabove', &
-     &          ' Water Wfacstand Wfacflat Ddaystand Ddayflat Mstand1', &
-     &          ' Mstand2 Mstand3 MstandAll Mflat1 Mflat2 Mflat3',      &
-     &          ' MflatAll MaboveAll Mburied1 Mburied2 Mburied3',       &
-     &          ' MburiedAll Mroot1 Mroot2 Mroot3 MrootAll Cstand1',    &
-     &          ' Cstand2 Cstand3 CstandAll Cflat1 Cflat2 Cflat3',      &
-     &          ' CflatAll Cstand+flat1 Cstand+flat2 Cstand+flat3',     &
-     &          ' Cstand+flatAll SAI1 SAI2 SAI3 SAIAll LAI1 LAI2 LAI3', &
-     &          ' LAIAll Biodrag #stem1 #stem2 #stem3 #stemAll Hstem1', &
-     &          ' Hstem2 Hstem3 HstemAll Mrt4all'
+        ! Dead Crop Biomass Pool
+        ! write file header if still initializing
+        if (am0ifl .eqv. .true.) then
+          write(luocrp1,*) '#daysim doy yy Tmin Tmax Tavg Tfacabove',   &
+     &        ' Water Wfacstand Wfacflat Ddaystand Ddayflat Mstand1',   &
+     &        ' Mstand2 Mstand3 MstandAll Mflat1 Mflat2 Mflat3',        &
+     &        ' MflatAll MaboveAll Mburied1 Mburied2 Mburied3',         &
+     &        ' MburiedAll Mroot1 Mroot2 Mroot3 MrootAll Cstand1',      &
+     &        ' Cstand2 Cstand3 CstandAll Cflat1 Cflat2 Cflat3',        &
+     &        ' CflatAll Cstand+flat1 Cstand+flat2 Cstand+flat3',       &
+     &        ' Cstand+flatAll SAI1 SAI2 SAI3 SAIAll LAI1 LAI2 LAI3',   &
+     &        ' LAIAll Biodrag #stem1 #stem2 #stem3 #stemAll Hstem1',   &
+     &        ' Hstem2 Hstem3 HstemAll Mrt4all'
 
-            return
-          endif
+        else
 
           total = admsttot(1) + admftot(1)   !sum of standing and flat residue mass, all pools
 
@@ -126,13 +122,16 @@
           ! qty residue stems per area, "ave" residue height, 0.0, 0.0
           ! (no "ave" root depth or stem dia computed across residue pools)
 
+2345     format (i6,i4,i5,3f10.5,13f10.3)
+
           ! All Residue Pools Combined
-          write(luobio1,2345) cd, cm, cy,                               &
+          write(luobio1,2345) daysim, doy, cy,                          &
      &    abffcv(isr), abfscv(isr), abftcv(isr),                        &
      &    0.0, abrsai(isr), abrlai(isr),                                &
      &    abm(isr), abmf(isr), abmst(isr),                              &
      &    abmrt(isr), abmbg(isr),                                       &
      &    abdstm(isr), abzht(isr), 0.0, 0.0
+        endif
       endif
 
       if ((am0dfl .eq. 2).or.(am0dfl.eq.3)) then
@@ -146,29 +145,42 @@
           ! qty residue stems per area, residue height, 0.0, rep stem dia
           ! (no root depth for residue pools)
 
-          ! Residue Pool #1
-          write(luodec1,2345) cd, cm, cy,                               &
-     &    adffcv(1,isr), adfscv(1,isr), adftcv(1,isr),                  &
-     &    covfact(1,isr), adrsai(1,isr), adrlai(1,isr),                 &
-     &    adm(1,isr), admf(1,isr), admst(1,isr),                        &
-     &    admrt(1,isr), admbg(1,isr), 0.0,                              &
-     &    addstm(1,isr), adzht(1,isr), 0.0, adxstmrep(1,isr)
+        do idx=1,mnbpls
 
-          ! Residue Pool #2
-          write(luodec2,2345) cd, cm, cy,                               &
-     &    adffcv(2,isr), adfscv(2,isr), adftcv(2,isr),                  &
-     &    covfact(2,isr), adrsai(2,isr), adrlai(2,isr),                 &
-     &    adm(2,isr), admf(2,isr), admst(2,isr),                        &
-     &    admrt(2,isr), admbg(2,isr), 0.0,                              &
-     &    addstm(2,isr), adzht(2,isr), 0.0, adxstmrep(2,isr)
+          ! write file header if still initializing
+         if (am0ifl .eqv. .true.) then
+           write(luodec(idx),*) '#daysim resday resyear doy yy pool#',  &
+     &          ' cumddysta cumddyflat cumddybg10 flatcov standcov',    &
+     &          ' totalcov covfact silhoutte leafarea totalmass',       &
+     &          ' flatmass standmass bgrootmass bgshootmass stemnumb',  &
+     &          ' height repstemdia stemstandm leafstandm storstandm',  &
+     &          ' stemflatm leafflatm storflatm rstorflatm rfiberflatm',&
+     &          ' stembgm leafbgm storbgm rstorgbm rfibergbm name'
 
-          ! Residue Pool #3
-          write(luodec3,2345) cd, cm, cy,                               &
-     &    adffcv(3,isr), adfscv(3,isr), adftcv(3,isr),                  &
-     &    covfact(3,isr), adrsai(3,isr), adrlai(3,isr),                 &
-     &    adm(3,isr), admf(3,isr), admst(3,isr),                        &
-     &    admrt(3,isr), admbg(3,isr), 0.0,                              &
-     &    addstm(3,isr), adzht(3,isr), 0.0, adxstmrep(3,isr)
+         else
+
+2355       format (i6,1x,i5,1x,i4,1x,i3,1x,i4,1x,i2,30(1x,f10.5),1x,a30)
+
+           ! Residue Pool #idx
+           write(luodec(idx),2355) daysim,                              &
+     &     resday(idx,isr), resyear(idx,isr), doy, cy, idx,             &
+     &     cumdds(idx,isr), cumddf(idx,isr), cumddg(10,idx,isr),        &
+     &     adffcv(idx,isr), adfscv(idx,isr), adftcv(idx,isr),           &
+     &     covfact(idx,isr), adrsai(idx,isr), adrlai(idx,isr),          &
+     &     adm(idx,isr), admf(idx,isr), admst(idx,isr),                 &
+     &     admrt(idx,isr), admbg(idx,isr),                              &
+     &     addstm(idx,isr), adzht(idx,isr), adxstmrep(idx,isr),         &
+     &     admstandstem(idx,isr), admstandleaf(idx,isr),                &
+     &     admstandstore(idx,isr), admflatstem(idx,isr),                &
+     &     admflatleaf(idx,isr), admflatstore(idx,isr),                 &
+     &     admflatrootstore(idx,isr), admflatrootfiber(idx,isr),        &
+     &     admbgstem(idx,isr), admbgleaf(idx,isr),                      &
+     &     admbgstore(idx,isr), admbgrootstore(idx,isr),                &
+     &     admbgrootfiber(idx,isr),                                     &
+     &     ad0nam(idx,isr)
+
+         endif
+        end do
       endif
 
       end

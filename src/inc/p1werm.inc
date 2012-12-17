@@ -44,7 +44,7 @@
       parameter (mnsub = 4)
       parameter (mnsz = 100)
       parameter (mntime = 1440)
-      parameter (mnbpls = 5)
+      parameter (mnbpls = 5)   ! present decomp output maxes at 30 (see openfils.for, file.inc, FAF)
       parameter (mndk = 5)
       parameter (mngdpt = 501) !increased from 60 for standalone erosion testing
       parameter (mnrbc = 5)
