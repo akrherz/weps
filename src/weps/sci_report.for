@@ -14,7 +14,6 @@
       include 'erosion/m2geo.inc'
       include 'main/sci_report_val.inc'
       include 'manage/man.inc'
-      include 'm1geo.inc'
 
 !     + + + PURPOSE + + +
 !     each time it is called, it adds a value to the total biomass increments
@@ -76,13 +75,11 @@
       avgallstir = 0.0
       avgallenergy = 0.0
       avgallwatererosion = 0.0
-! woring on the subregion by JG
       do isr = 1, nsubr
+
           allbiomass_avg(isr) = allbiomass_sum(isr) / days_sum(isr)
-          allerosion_avg(isr) = allerosion_sum(isr)*365.25/days_sum(isr)
-!       This is to calculate yearly average erosion by multipling 365,
-!      To calculate dail average erosion, the constant was removed by JG
-!          allerosion_avg(isr) = allerosion_sum(isr)/days_sum(isr)  
+          allerosion_avg(isr) = allerosion_sum(isr)*365.25/days_sum(isr) 
+
           ! initialize subregion area totals
           sarea = 0.0
 
@@ -92,7 +89,8 @@
                       sarea = sarea + cellarea
                   end if
                end do
-          end do        
+          end do
+
           tarea = tarea + sarea
           avgallbiomass = avgallbiomass + allbiomass_avg(isr) * sarea
           avgallerosion = avgallerosion + allerosion_avg(isr) * sarea
@@ -129,7 +127,7 @@
               texmult = 1.4
           end select
           avgtexmult = avgtexmult + texmult * sarea
-          
+
           ! field operation STIR averaging
           stir_avg(isr) = stir_sum(isr) / mperod(isr)
           avgallstir = avgallstir + stir_avg(isr) * sarea
@@ -147,7 +145,8 @@
       avgallstir = avgallstir / tarea
       avgallenergy = avgallenergy / tarea
 
-      adjtotalRennerOM = totalRennerOM * avgtexmult     
+      adjtotalRennerOM = totalRennerOM * avgtexmult
+
       sci_om_factor = (avgallbiomass-adjtotalRennerOM) /adjtotalRennerOM
       sci_er_factor = (totalRennerEros                                  &
      &              - (avgallerosion + avgallwatererosion))             &
@@ -158,7 +157,7 @@
      &          + 0.4 * sci_fo_factor                                   &
      &          + 0.2 * sci_er_factor
 
-      ! write headers and values to sci_energy.out file
+      ! write headers and values to soil-conditioning.out file
       write(luosci, *) '#Soil_conditioning_index | diesel_energy_L/ha'
       write(luosci, 1000) sci_final, avgallenergy
       write(luosci, *) '#sci_om_factor | sci_er_factor | sci_fo_factor'
@@ -172,21 +171,11 @@
      &                    avgallwatererosion, avgallstir
       write(luosci, *) '#texturemult'
       write(luosci, 1003) avgtexmult
-! Print out the biomass, average erosion and diesel engergy for each subregion
-      write(luosci,*) '# avg biomass and erosion in subregion'
-      write(luosci,*)'#subregionID,average biomass(kg/m2.d),windErosion &
-     &(kg/m2.yr), diesel_energy_L/ha'
-      do isr =1, nsubr
-      write(luosci, 1004) isr,amxsr(1,1,isr),amxsr(2,1,isr),            &
-     & amxsr(1,2,isr),amxsr(2,2,isr),allbiomass_avg(isr),               &
-     & allerosion_avg(isr),energy_avg(isr) 
-      end do
- 
 
  1000 format( f10.3,' | ', f10.3 )
  1001 format( 2(f10.4,' | '), f10.4 )
  1002 format( 3(f10.4,' | '), f10.4 )
  1003 format( f10.4 )
- 1004 format (I,' ',7f10.4)
+
       return
       end

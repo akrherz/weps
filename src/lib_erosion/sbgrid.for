@@ -18,6 +18,8 @@
 !
 !     +++ ARGUMENT DECLARATION +++
 
+!
+
 !     +++ LOCAL DEFINITIONS +++
 !     imax  - no. grid intervals in x-direction
 !     jmax  - no. grid intervals in y-direction.
@@ -65,11 +67,6 @@
 !       calc. lx and ly sides of field
       lx = amxsim (1,2)-amxsim(1,1)
       ly = amxsim (2,2)-amxsim(2,1)
-     
-! Change lx and ly into subregion length here by JG 
- !      lx = amxsr(1,2,isr)-amxsr(1,1,isr)
- !      ly = amxsr(2,2,isr)-amxsr(2,1,isr)
-
 !
 !^^^tmp out
 !      write(*,*) 'tmp out from sbgrid, line 69'
@@ -81,14 +78,12 @@
 !         ngdpt = B_G_DPT
 !      endif
 !
-! change imax and jmax size into subregion size by JG
 !        case where lx > ly
       if ( lx .gt. ly)then
         imax  = int ( lx / dxmin)
         imax = min(imax,ngdpt)
         imax = max(imax,2)
 !     calculate spacing for square or with barriers a rectangular grid
-! Why do we need to minus 1 from max? JG
         ix  = lx / (imax - 1)
 
          if (nbr .gt. 0) then
@@ -118,25 +113,7 @@
         ix = lx/(imax-1)
 
       endif
-!
-!     determine subregion of each grid point
-!     for a single subregion now
-      icsr = 1
-      do  icsr = 1, nsubr
-      do 20 j = 0, jmax
-      do 10 i = 0, imax
-!
-!     for multiple subregions
-!     Modified by JG on 7/8/12 
-      
-!     for multiple subregions
-      if (i*ix .gt. amxsr(1,1,icsr) .and. i*ix .lt. amxsr(1,2,icsr)      &
-     & .and. j*jy .gt. amxsr(2,1,icsr).and.j*jy.lt.amxsr(2,2,icsr)) then
-            csr(i,j) = icsr
-      end if
-   10 continue
-   20 continue
-      end do
+
       return
       end
 !++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

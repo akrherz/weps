@@ -3,7 +3,7 @@
 !$Revision$
 !$HeadURL$
 
-      subroutine erosion (min_erosion_awu, icsr)
+      subroutine erosion (min_erosion_awu)
 
 !     +++ PURPOSE +++
 !     subroutine erosion is the control subroutine and calls other
@@ -23,8 +23,7 @@
                                  !to evaluate for erosion loss
 
 !     +++ ARGUMENT DEFINITIONS +++
-! added icsr for subregion by JG 
-      integer icsr    
+
 !     +++ PARAMETER +++
 
       real SNODEP                !Minimum snow depth to prevent erosion
@@ -66,9 +65,8 @@
       include 'erosion/s2surf.inc'
       include 'erosion/threshold.inc'
 
-
 !     +++ LOCAL VARIABLES +++
-      integer i,j,wustfl, outfl
+      integer i,j,wustfl, icsr, outfl
       integer nhill, n
       integer day, mon, yr, hidx
       real wuref, rusust, rut
@@ -184,8 +182,7 @@
       rusust = 0
 
 !*****this check cannot be done if subhourly wind is used  FAF
-! Remove the do-loop from erosion by JG
-   !   do 20 icsr=1, nsubr
+      do 20 icsr=1, nsubr
        ! If snow depth > 20 mm in all subregions, then no erosion
        if (ahzsnd(icsr) .le. SNODEP) then
         ! Have insufficient snow depth
@@ -193,6 +190,7 @@
 
         ! calc if daily max friction vel. exceeds threshold in any 
         ! subregions without hill and barrier effects
+
         ! calc. ridge spacing parallel the wind
         if (aszrgh(icsr) > 5.0) then
           sina = abs(sin(PID180*abs(awdir(icsr) - asargo(icsr))))
@@ -204,7 +202,8 @@
         else
 	  sxprg(icsr) = 1000
         endif
-      !compute Zo (wzzo) of surface
+
+        ! Compute Zo (wzzo) of surface
         call sbzo                                                       &
      &   (sxprg(icsr), aszrgh(icsr), aslrr(icsr),                       &
      &    wzoflg, adrlaitot(icsr), adrsaitot(icsr), abzht(icsr),        &
@@ -277,8 +276,18 @@
              ne_sfcv(icsr) = sfcv
            end if
         end do
+
+        if( (ne_wus(icsr)/ne_wust(icsr) ) .le. 1.0 ) then
+           ! non-erodable subregion, set plot.out flag
+           ne_erosion(icsr) = 0
+        else
+           ! erodable subregion, set plot.out flag
+           ne_erosion(icsr) = 1
+        endif
+
        else
         ! snow prevented erosion in this subregion
+        ne_erosion(icsr) = 0
         ne_snowdepth(icsr) = 1
         ne_wus_anemom(icsr) = 0
         ne_wus_random(icsr) = 0
@@ -295,8 +304,7 @@
         ne_wzzo(icsr) = 0
         ne_sfcv(icsr) = 0
        endif
- !  20 continue
-    ! remove the do-loop by JG
+   20 continue
 
 !     Some placeholder code for hills
 !     (it adjusts the threshold ratio cutoff for erosion)
@@ -309,21 +317,18 @@
 !        wr = 0.7
 !      endif
       
-      ! Check wind ration
+      ! Check wind ratio
       if (rusust .le. wr) then
-          ! no erosion, set plot.out flag
-          ne_erosion = 0
           ! exit out of erosion submodel
           go to 100
       endif
 
-      ! entering erosion submodel, set plot.out flag
-      ne_erosion = 1
+      ! entering erosion submodel
 
 !     sbinit calls sbsdfi to get sf< 0.01,0.1,0.84,2.0 mm
 !     and writes to grid, writes other var. to grid and
 !     zeros eros output arrays.
-      call sbinit(icsr)
+      call sbinit
 !     calc. sweep direction based on wind direction for sberod
       prev_dir = awdir(1)+ 1.0   !make different to force calculation
       call sbdirini( awdir(1), prev_dir )
@@ -480,7 +485,7 @@
                call timer(TIMEROS,TIMSTOP)
                call timer(TIMSBEROD,TIMSTART)
 
-               call sberod (time,SURF_UPD_FLG, icsr)
+               call sberod (time,SURF_UPD_FLG)
 
                call timer(TIMSBEROD,TIMSTOP)
                call timer(TIMEROS,TIMSTART)
@@ -515,12 +520,13 @@
          if (btest(am0efl,2)) then
             ! write(0,*) 'i is:', i, 'hr is:', hr
             ! Note that we use "hr" not "hrs" here so we report the end of the "ntstep" hr period
-            call sbemit (luo_emit, awu(i), hr,icsr)  !Should only write data here
+            call sbemit (luo_emit, awu(i), hr)  !Should only write data here
          endif
 
    41 continue
 
 !     Average surface conditions and update
+
 !     Purpose: update global variables changed by erosion at end of day
 !     not implemented partly because windgen does not correlate days.
 

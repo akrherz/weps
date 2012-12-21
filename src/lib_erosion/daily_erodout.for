@@ -3,7 +3,7 @@
 !$Revision$
 !$HeadURL$
 
-      subroutine daily_erodout (o_unit, o_E_unit,isr)
+      subroutine daily_erodout (o_unit, o_E_unit)
 
 !     +++  PURPOSE +++
 
@@ -11,10 +11,7 @@
 
 !     +++ ARGUMENT DECLARATIONS +++
 
-      integer o_unit, o_E_unit, isr
-
-      include  'erosion/e2grid.inc'
-      include 'subglobe.inc'
+      integer o_unit, o_E_unit
 
       integer i, j
       real aegt, aegtss, aegt10
@@ -37,6 +34,7 @@
 !
       integer x, y
 
+
       integer :: dt(8)
       character(len=3) :: mstring
       common / datetime / dt, mstring
@@ -56,36 +54,31 @@
        aegt   = 0.0
        aegtss = 0.0
        aegt10 = 0.0
- !      tt = 0.0
        j = jmax
        do 1 i = 1, imax-1
-         if (csr(i,j) .eq. isr) then
          aegt    = aegt   + egt(i,j)
          aegtss  = aegtss + egtss(i,j)
          aegt10  = aegt10 + egt10(i,j)
-         end if
     1  continue
 !      calc. average at top border
-       topt  = aegt/(imax_sub(isr)-1)
-       topss = aegtss/(imax_sub(isr)-1)
-       top10 = aegt10/(imax_sub(isr)-1)
+       topt  = aegt/(imax-1)
+       topss = aegtss/(imax-1)
+       top10 = aegt10/(imax-1)
 
 !      bottom border
        aegt   = 0.0
        aegtss = 0.0
        aegt10 = 0.0
        j = 0
-       do 2 i = 1, imax-1 
-         if (csr(i,j) .eq. isr) then
+       do 2 i = 1, imax-1
          aegt    = aegt   + egt(i,j)
          aegtss  = aegtss + egtss(i,j)
          aegt10  = aegt10 + egt10(i,j)
-         end if 
     2  continue
 !      calc. average at bottom border
-        bott  = aegt/(imax_sub(isr)-1)
-        botss = aegtss/(imax_sub(isr)-1)
-        bot10 = aegt10/(imax_sub(isr)-1)
+        bott  = aegt/(imax-1)
+        botss = aegtss/(imax-1)
+        bot10 = aegt10/(imax-1)
 
 !     right border
        aegt   = 0.0
@@ -93,16 +86,14 @@
        aegt10 = 0.0
        i = imax
        do 3 j = 1, jmax-1
-         if (csr(i,j) .eq. isr) then
          aegt    = aegt   + egt(i,j)
          aegtss  = aegtss + egtss(i,j)
          aegt10  = aegt10 + egt10(i,j)
-         end if
     3  continue
 !      calc. average at right border
-        ritt  = aegt/(jmax_sub(isr)-1)
-        ritss = aegtss/(jmax_sub(isr)-1)
-        rit10 = aegt10/(jmax_sub(isr)-1)
+        ritt  = aegt/(jmax-1)
+        ritss = aegtss/(jmax-1)
+        rit10 = aegt10/(jmax-1)
 !
 !     left border
        aegt   = 0.0
@@ -110,16 +101,14 @@
        aegt10 = 0.0
        i = 0
        do 4 j = 1, jmax-1
-         if (csr(i,j) .eq. isr) then
          aegt    = aegt   + egt(i,j)
          aegtss  = aegtss + egtss(i,j)
          aegt10  = aegt10 + egt10(i,j)
-         end if
     4  continue
 !      calc. average at left border
-        lftt   = aegt/(jmax_sub(isr)-1)
-        lftss  = aegtss/(jmax_sub(isr)-1)
-        lft10  = aegt10/(jmax_sub(isr)-1)
+        lftt   = aegt/(jmax-1)
+        lftss  = aegtss/(jmax-1)
+        lft10  = aegt10/(jmax-1)
 
 !     calculate averages of inner grid points
       aegt   = 0.0
@@ -127,15 +116,11 @@
       aegt10 = 0.0
       do 5 j=1,jmax-1
        do 5 i= 1, imax-1
-        if (csr(i,j) .eq. isr) then
         aegt= aegt + egt(i,j)
         aegtss = aegtss + egtss(i,j)
         aegt10 = aegt10 + egt10(i,j)
-        end if
     5 continue
-      tt     = (imax_sub(isr)-1)*(jmax_sub(isr)-1)
-!       tt =(amxsr(1,2,isr)-amxsr(1,1,isr))*(amxsr(2,2,isr)-             &
-!     & amxsr(2,1,isr))
+      tt     = (imax-1)*(jmax-1)
       aegt   = aegt/tt
       aegtss = aegtss/tt
       aegt10 = aegt10/tt
@@ -316,11 +301,13 @@
       !(deposition values are positive - erosion values are negative)
       if (btest(am0efl,0)) then
          call caldatw (da, mo, yr) !get day, month and year
-         write (UNIT=o_E_unit,FMT="(' ',i3,i5,i3,i3,' ')",ADVANCE="NO")    &
-     &         isr, yr, mo, da
+         write (UNIT=o_E_unit,FMT="(' ',i5,i3,i3,' ')",ADVANCE="NO")    &
+     &         yr, mo, da
          write (UNIT=o_E_unit,FMT="(4(f12.6),' ')",ADVANCE="YES")       &
      &          aegt, (aegt-aegtss), aegtss, aegt10
       endif
+
 !    end of plot section
+
       return
       end

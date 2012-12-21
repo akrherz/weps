@@ -78,11 +78,10 @@
       include 'erosion/m2geo.inc'   !Need tsterode cmdline arg vars(xgdpt,ygdpt)
       include 'erosion/e2erod.inc'
     
-      include 'subglobe.inc'
       include 'erosion/e2grid.inc' 
 !     + + + LOCAL VARIABLES + + +
       logical first
-   
+
       integer :: dt(8)
       character(len=3) :: mstring
       common / datetime / dt, mstring
@@ -90,7 +89,6 @@
 
       integer get_nperiods
       integer pd, nperiods
-      integer i,j 
       integer cd, cm, cy,                                               &
      &        end_init_jday, end_init_d, end_init_m, end_init_y,        &
      &        ndiy,                                                     &
@@ -98,7 +96,7 @@
      &        o_unit,                                                   &
      &        simyrs,                                                   &
      &        yrsim
-      integer lcaljday, keep
+      integer lcaljday, keep(mnsub)
       integer ci_flag, ci_year
       real    ci
 
@@ -171,6 +169,7 @@
 !     + + + FUNCTIONS CALLED + + +
       integer dayear, julday, lstday
       logical isleap
+      integer lcm_n
 
 !     + + + UNIT NUMBERS FOR INPUT/OUTPUT DEVICES + + +
 !     * = screen and keyboard
@@ -227,7 +226,7 @@
 !      call fopenk(500,rootp(1:len_trim(rootp))//'CS.out','unknown')
       ! Determine date of Run
       call date_and_time(values=dt)
-      
+
       ! Determine month of year
       select case (dt(2))
         case (1); mstring = "Jan"
@@ -251,7 +250,7 @@
      &          i2.2,':',i2.2,':',i2.2)
       write(6,12) mstring, dt(3), dt(1), dt(5), dt(6), dt(7)
       write(6,*)
-      
+
       call timer(0,TIMSTART)
       call timer(TIMWEPS,TIMSTART)
 
@@ -260,7 +259,7 @@
 
       ! initialize anemometer defaults
       call anemometer_init
-      
+
 !     initialize math precision global variables
 !     the factor here is due to the implementation of the EXP function
 !     apparently, the limit is not the real number limit, but something else
@@ -285,7 +284,7 @@
 
 !     Read command line arguments and options
       call cmdline()
-      
+
       if (calibrate_crops > 3) max_calib_cycles = calibrate_crops
 
 !     open input files and read run files
@@ -310,22 +309,28 @@
       end do
 
       write(*,*) "Made it here after restore_soil"
-! add do loop for subregion JG
+
 !     temporarily initialize old random roughness
      
-      do isr =1, nsubr 
-      aslrrc(isr) = 10.
-      as0rrk(isr) = 0.9    
- 
-      call openfils
-      call fopenk(500,rootp(1:len_trim(rootp))//'CS.out','unknown')
-      ! this prints header to plot.out file (isr not yet set)
-      call plotdata(isr)  ! print to plot data file
-      ! this prints header to decomp.out file (isr not yet set)
-      call bpools(1,1,1,isr)
+      do isr =1, nsubr ! added subregion loop JG
+          aslrrc(isr) = 10.
+          as0rrk(isr) = 0.9
+      end do 
 
-!     Initialize the management file and rotation counters
-      call mfinit(isr, tinfil(isr), maxper)
+      call openfils
+
+      do isr =1, nsubr
+          ! this prints header to plot.out file (isr not yet set)
+          call plotdata(isr)  ! print to plot data file
+          ! this prints header to decomp.out file (isr not yet set)
+          call bpools(1,1,1,isr)
+
+          ! Initialize the management file and rotation counters
+          call mfinit(isr, tinfil(isr))
+      end do
+
+      ! find maxper, which is the least common multiple of the number of year in each rotation
+      maxper = lcm_n( nsubr, mperod )
 
 !     check for consistency maxper, n_rot_cycles, number of years to run
       if( maxper*n_rot_cycles .ne. ly-iy+1 ) then
@@ -344,7 +349,9 @@
       endif
 
 !     This is all the initialization for the new output reporting code
-      call mandates(isr)  !Get man dates, op names, and crop names
+      do isr =1, nsubr
+          call mandates(isr)  !Get man dates, op names, and crop names
+      end do
       nperiods = get_nperiods(maxper)   !Get # of periods for reports
       if( report_debug >= 1 ) then
           write(*,*) '# rot years', maxper, "nperiods", nperiods,       &
@@ -356,14 +363,13 @@
       call asdini()
       call erodinit
       am0gdf = .true.
-      end do    
-! end of the subregion do loop
+
 !     Likely that we will put all management data into memory
 !     and only read and initialize everything here, looping through
 !     each management file (one for each subregion).
 
 !     Initializations unique to particular submodels
-      do 10 isr=1,nsubr
+      do isr=1,nsubr
          call decoinit(isr)
          call cropinit(isr)
          ! initialize all dependent variables
@@ -378,7 +384,7 @@
 !       and initialize applied NO3
         call soilinit(isr)
 
-   10 continue
+      end do
 ! Subregion running loop
 ! move the subregion loop into dailly loop by JG
 !      do isr=1,nsubr   ! do multiple subregion      
@@ -434,10 +440,9 @@
          ! if last day of year, check for end of rotation
          if (dayear(cd,cm,cy) .eq. ndiy) then
             ! check if at end of subregion's rotation cycle
-            if (mod(amnryr(isr),maxper) == 0) then
+            if (mod(amnryr(isr),mperod(isr)) == 0) then
                amnryr(isr) = 1
                lopyr = amnryr(isr)
-               amnrotcycle(isr) = amnrotcycle(isr) + 1
             else
                amnryr(isr) = amnryr(isr) + 1
                lopyr = amnryr(isr)
@@ -457,7 +462,9 @@
       call getwin(0, cm, cy)  ! Reset windgen file (day == 0)
 
 !     Start of "calibrate" section
-      keep = amnryr(isr)
+      do isr=1,nsubr   ! do multiple subregion     
+          keep(isr) = amnryr(isr)
+      end do
       if ((calibrate_crops > 0) .and. (.not. calib_done) .and.          &
      &    (calib_cycle < max_calib_cycles))                         then
          calib_cycle = calib_cycle + 1
@@ -475,7 +482,7 @@
      &                         maxper, maxper*calibrate_rotcycles
 
          do am0jd = ijday,lcaljday
-           
+
             call caldatw (cd, cm, cy)
             ! determine number of days in the year
             ndiy = 365; if (isleap(cy) .eqv. .true.) ndiy = 366
@@ -510,10 +517,9 @@
             ! if last day of year, check for end of rotation
             if (dayear(cd,cm,cy) .eq. ndiy) then
                ! check if at end of subregion's rotation cycle
-               if (mod(amnryr(isr),maxper) == 0) then
+               if (mod(amnryr(isr),mperod(isr)) == 0) then
                   amnryr(isr) = 1
                   lopyr = amnryr(isr)
-                  amnrotcycle(isr) = amnrotcycle(isr) + 1
                else
                   amnryr(isr) = amnryr(isr) + 1
                   lopyr = amnryr(isr)
@@ -521,7 +527,9 @@
             end if
 	   end do  ! end subregion
          end do   ! "calibration" phase
-         amnryr(isr) = keep
+         do isr=1,nsubr   ! do multiple subregion     
+             amnryr(isr) = keep(isr)
+         end do
          calib_loop = .false.
 
 !        if (calib_cycle == 1) then
@@ -539,7 +547,6 @@
          daysim = 0
          outcnt = 0
          amnryr = 1
-         amnrotcycle = 1
          !mnsize = 0.09
          !mxsize = 601.2
          !ahzpta = 0
@@ -560,7 +567,7 @@
 ! Start of "report" section
 
       else
-         amnrotcycle(isr) = 1   ! set here for use in confidence interval calculation (no other use?)
+         ncycles = 1   ! set here for use in confidence interval calculation (no other use?)
          am0sif = .false.  ! Done with all initialization and calibration phases
          ci_year = 0  ! nothing has yet been printed into ci.out
 
@@ -591,9 +598,10 @@
 !           if (am0jd.eq.ijday+1) call dbgdmp(daysim, isr)
 !           if (am0jd.eq.ljday) call dbgdmp(daysim, isr)
 
- !          isr = 1 !Note: we are no longer dealing with multiple subregions here
             do isr=1,nsubr   ! do multiple subregion     
-            call submodels(isr, cd, cm, cy)
+               call submodels(isr, cd, cm, cy)
+            end do
+
             if (run_erosion > 0) then   ! Are we simulating erosion in this RUN
                if (awudmx .gt. 8.0) then ! if wind is great enough, call erosion
                   ! write(*,*) "Start calcwu"
@@ -605,32 +613,40 @@
                   endif
                end if
             end if
-  300       Format (2i4,60f6.2)
-  320	    Format (3i4)	
-            call sci_cum(isr)   ! Keep running total for soil conditioning index (SCI)
-            call plotdata(isr)  ! print to plot data file
-    ! write decomposition biomass pool amounts to files
-            call bpools(cd,cm,cy,1)
+
+            do isr=1,nsubr   ! do multiple subregion     
+               call sci_cum(isr)   ! Keep running total for soil conditioning index (SCI)
+               call plotdata(isr)  ! print to plot data file
+               ! write decomposition biomass pool amounts to files
+               call bpools(cd,cm,cy,isr)
 
 !           write(*,*) 'weps:yrsim cd,cm,cy am0jd,daysim',              &
 !    &              yrsim," ",cd,cm,cy," ",am0jd,daysim
 
+               ! if last day of year, check for end of rotation
+               if (dayear(cd,cm,cy) .eq. ndiy) then
+                  ! check if at end of subregion's rotation cycle
+                  if (mod(amnryr(isr),mperod(isr)) == 0) then
+                     ! end of management rotation cycle
+                     amnryr(isr) = 1
+                     lopyr = amnryr(isr)
+                  else
+                     ! continue through rotation cycle
+                     amnryr(isr) = amnryr(isr) + 1
+                     lopyr = amnryr(isr)
+                  end if
+               end if
+            end do
+
             ! set initialization flag to .false. after first day
             if (am0ifl) am0ifl = .false.
-       ! if last day of year, check for end of rotation
+
+            ! how many times have we passed maxper
             if (dayear(cd,cm,cy) .eq. ndiy) then
-               ! check if at end of subregion's rotation cycle
-               if (mod(amnryr(isr),maxper) == 0) then
-                  ! end of management rotation cycle
-                  amnryr(isr) = 1
-                  lopyr = amnryr(isr)
-                  amnrotcycle(isr) = amnrotcycle(isr) + 1
+               if (mod(cy,maxper) == 0) then
+                  ncycles = ncycles + 1
                   ! trigger confidence interval calculation
                   ci_flag = 1
-               else
-                  ! continue through rotation cycle
-                  amnryr(isr) = amnryr(isr) + 1
-                  lopyr = amnryr(isr)
                end if
             end if
 
@@ -672,31 +688,20 @@
                endif
             end if
 
-!            call clear_erosion()
-
             if( ci_flag .eq. 1) then
                ! calculate confidence interval
                ! early exit not implemented
                if( calc_confidence .gt. 0 ) then
-                  call confidence_interval(ci, maxper, amnrotcycle(isr),&
-     &                                     ci_year)
+                 call confidence_interval(ci,maxper,ncycles,ci_year)
                end if
             endif
-  	   end do
-! end for the do loop of subregions
-! printing out the emmison from subgrid by JG
-           write(500,320) cd,cm,cy                   
-            do i=1, imax 
-              	write(500,300)i,j, (egt(i,j),j=1,jmax) 
-	    end do	
+
            call clear_erosion()
 
          end do   ! end of "reporting" loop
          report_loop = .false.
       end if
 ! End of "report" section
-!      end do
-! end for the do loop of subregions
 ! Done with simulation here ..................
 
       if (report_debug >= 1) then

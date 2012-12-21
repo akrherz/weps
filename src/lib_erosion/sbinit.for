@@ -6,7 +6,7 @@
 !     subroutine sbinit
 !**********************************************************************
 
-      subroutine sbinit(icsr)
+      subroutine sbinit
 
 !     +++ purpose +++
 !     Input subregion values of variables from other submodels
@@ -15,9 +15,9 @@
 !     Calc. soil fraction of 4 dia. from asd, & rr shelter angles
 !
 !     +++ ARGUMENT DECLARATIONS +++
-      integer icsr
+!
 !     +++ ARGUMENT DEFINITIONS +++
-!     icsr - subregion index added by JG
+!
 !     +++ PARAMETER +++
 !
 !     + + + GLOBAL COMMON BLOCKS + + +
@@ -43,7 +43,7 @@
 !
 !
 !     + + + LOCAL VARIABLES + + +
-      integer  i, j
+      integer  icsr, i, j
       real sfd1(mnsub), sfd10(mnsub), sfd84(mnsub), sfd200(mnsub)
 
 !     + + + LOCAL VARIABLE DEFINITIONS + + +
@@ -55,7 +55,7 @@
 !     + + + END SPECIFICATION + + +
 !
 !     calculate abrasion and pm10 parameters    edit LH 3-4-05
- !     do 5 icsr = 1, nsubr
+      do 5 icsr = 1, nsubr
       call sbpm10                                                       &
      & (aseags(1,icsr),asecr(icsr),asfcla(1,icsr),asfsan(1,icsr),       &
      & awzypt, acanag(icsr), acancr(icsr),                              &
@@ -91,14 +91,14 @@
       call sbsfdi                                                       &
      & (aslagm(1,icsr), as0ags(1,icsr), aslagn(1,icsr),                 &
      & aslagx(1,icsr), 2.0, sfd200(icsr))
-!    5  continue
+    5  continue
 !
-      do 20 j = 0, jmax
-      do 10 i = 0, imax
+      do 20 j = 1, jmax-1
+      do 10 i = 1, imax-1
 
-!     determine subregion (at present only 1 subregion)
+!     determine subregion
+      icsr = csr(i,j)
 !     input variables to grid cells
- !     icsr = csr(i,j)
       sf1  (i,j) = sfd1(icsr)
       sf10 (i,j) = sfd10(icsr)
       sf84 (i,j) = sfd84(icsr)
@@ -128,6 +128,9 @@
       sf84mn(i,j) = 0.0
 !
 !     initialize output array- now in sbigrd
+!      egt(i,j)    = 0
+!      egtss(i,j)  = 0
+!      egt10(i,j)  = 0
 !
    10 continue
    20 continue

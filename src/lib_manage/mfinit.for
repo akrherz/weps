@@ -7,7 +7,7 @@
 !$Header: /weru/cvs/weps/weps.src/manage/mfinit.for,v 1.23 2007-08-22 12:59:32 wagner Exp $
 !
 !
-      subroutine mfinit (sr, fname, maxper)
+      subroutine mfinit (sr, fname)
 !
 !     + + + PURPOSE + + +
 !     Mfinit should be called during the initialization stage of the the
@@ -36,7 +36,6 @@
 !     + + + ARGUMENT DECLARATIONS + + +
       integer sr
       character fname*(*)
-      integer maxper
 !
 !     + + + ARGUMENT DEFINITIONS + + +
 !     sr - current subregion
@@ -218,12 +217,6 @@
 !     &         ' first operation line is: ', curnt(sr)
 
 ! *** return before dump
-!     NOTE:  This won't work when we go to multiple subregions.
-!            maxper has to have a value that is divisible by
-!            each subregion's management cycle length.
-!            See "inc/main/main.inc" - LEW
-      if (mperod(sr) .gt. maxper) maxper = mperod(sr)
-
       return
 !     debugging code to dump table
 !

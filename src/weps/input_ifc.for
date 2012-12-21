@@ -38,58 +38,61 @@
 
 !     + + + LOCAL COMMON BLOCKS + + +
       include 'main/main.inc'
+
 !     + + + LOCAL VARIABLES + + +
-      integer       lay, i
+      integer       lay
       character     line*512
       integer       isr
-! isr represents the subregion index here. JG
+
+!     + + + LOCAL DEFINITIONS + + +
+!     lay - soil layer counter
+!     line - hold input line text
+!     isr - subregion counter
+
 !     + + + FUNCTION DECLARATIONS + + +
       real   plant_wat_g
 !
       integer linnum
       data linnum /1/
-       luit = lui1
-!      isr = 1           ! can only handle a soil IFC file for a single subregion (#1)
-!    Handle a mutiple subregion with several soil files inputs 
-! added by JG 
+
       do isr = 1, nsubr   
-         call fopenk (luit, sinfil(isr), 'old') ! open IFC file
+         call fopenk (lui1, sinfil(isr), 'old') ! open IFC file
        
 !     Check to see if this is a "versioned" IFC file
-         read (luit,'(a)',err=901) line
+         read (lui1,'(a)',err=901) line
          if (line(1:12) .eq. 'Version: 1.0') then
            call inp_ifc_v1(isr)  ! For version 1.0 IFC file format only
          else if (line(1:12) .eq. 'Version: 1.1') then
            call inp_ifc_v1_1(isr)  ! For version 1.1 IFC file format only
          else  ! Assuming obsolete unversioned IFC file formats only
-  !        close (lui1)
-          call inpsub(isr)  ! For obsolete IFC file formats only
-          return
-        end if
+           close (lui1)    
+           call inpsub(isr)  ! For obsolete IFC file formats only
+           return            ! initialization is already done in inpsub
+         end if
                    
-  !     close (lui1)    
+         close (lui1)    
      
- 901  write(*,9001) trim(sinfil(isr)), linnum, trim(line)
+ 901     write(*,9001) trim(sinfil(isr)), linnum, trim(line)
 
 !! removed code reading IFC file data - moved to inp_ifc.for
 !! which now handles both version 1.0 and version 1.1 IFC file formats
-     
+
       ! initialize new variables not read in from ifc file 
       do lay = 1, nslay(isr)
           ahfredsat(lay,isr) = 0.0
       end do
 
- !     do isr = 1, nsubr 
       ! Set layer thickness of the soils as is appropriate for the simulation
-      call spllay_ifc (isr)
-         
+      call spllay_ifc(isr)
+
       ! Wet Albedo (calculate from dry albedo)
       asfalw(isr) = asfald(isr)/((1.33**2.)*(1-asfald(isr))+asfald(isr))
+
       ! Settled Bulk Density and Particle Density (texture based calculation)
       call proptext( nslay(isr), asfcla(1,isr), asfsan(1,isr),          &
      &               asfom(1,isr), asdsblk(1,isr), asdpart(1,isr) )
-       
-      do lay=1,nslay(isr)        
+
+      do lay=1,nslay(isr)
       ! make sure settled bd is greater than or equal to wet bulk density
         if( asdsblk(lay,isr).lt.asdwblk(lay,isr) ) then
             write(*,*) 'WARNING: settled bd (',asdsblk(lay,isr),        &  ! NOTE:  Changed to "WARNING" so message
@@ -199,7 +202,8 @@
 !       removing them from mix and invert
         do lay = 1, nslay(isr)
             ! I've removed them from the mix and invert functions.  However, they might still be
-            ! used in (hopefully) dead crop code. 
+            ! used in (hopefully) dead crop code.
+            ascmg(lay,isr) = 0.0
             ascna(lay,isr) = 0.0
             asfesp(lay,isr) = 0.0
             asfnoh(lay,isr) = 0.0
@@ -227,9 +231,7 @@
       !is read so layer mixing does not affect the texture multiplier.  Only the top layer used.   
       !only handles a single subregion for now
       call update_stir_soil_multiplier(isr,asfsan(1,1),asfcla(1,1))
-      close (luit)
-      luit = luit+1
-! 901  write(*,9001) trim(sinfil(isr)), linnum, trim(line)
+
       end do !end of do loop to assign values for multiple subregions
       return
 

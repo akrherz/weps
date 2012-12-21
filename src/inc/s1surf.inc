@@ -21,7 +21,7 @@
       real             asfald(mnsub)
       real             asfalw(mnsub)
       real             acanag(mnsub)
-      real	       acancr(mnsub)
+      real             acancr(mnsub)
       real             asf10an(mnsub)
       real             asf10en(mnsub)
       real             asf10bk(mnsub)

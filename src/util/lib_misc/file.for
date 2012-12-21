@@ -22,7 +22,7 @@
 ! ***      write(*,1991) filnum, filnam,filsta
 ! *** 1991    format('in copenk', i3,a,a)
       open(filnum,FILE=filnam(1:len_trim(filnam)),STATUS=filsta,        &
-     &  ERR=100, IOSTAT=ios)
+     &  POSITION='REWIND', ERR=100, IOSTAT=ios)
       write(*,101) filnam(1:len_trim(filnam)), filnum, filsta
   101 format(' Opened file: ',a,' on unit ',i3,' with status ',a)
 

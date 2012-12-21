@@ -18,7 +18,6 @@
 !        when erosion is not being called.
 !     + + + GLOBAL COMMON BLOCKS + + +
 !
-
       include  'p1werm.inc'
       include  'm1flag.inc'
       include  'm1geo.inc'
@@ -27,22 +26,28 @@
       include  'erosion/e2grid.inc'  !needed for initialization of csr(*,*)
       include  'erosion/threshold.inc'
       include  's1surf.inc'
-      include  'subglobe.inc'
+      
 !     +++ SUBROUTINES CALLED +++
 !     sbgrid
 !     sbigrd
 !     sbhill (not activated)
 !     sbbr
 
+!     +++ Functions Called +++
+      integer pnpoly
+
 !     +++ LOCAL VARIABLES +++
 
       integer i, j, sr
+      real centrx, centry
+      real xx(4,mnsub), yy(4,mnsub)
 
 !     + + + LOCAL VARIABLE DEFINITIONS + + +
 !     nbr  = number of barriers (from m1geo.inc)
 
 !     +++ END SPECIFICATIONS +++
-! Grid is created at least once.
+
+      ! Grid is created at least once.
       if (am0eif .eqv. .true.) then
          ! check to see if grid dimensions specified via cmdline args
          if ((xgdpt > 0) .and. (ygdpt > 0)) then
@@ -50,33 +55,42 @@
            jmax = ygdpt + 1
            ix = (amxsim(1,2) - amxsim(1,1)) / xgdpt
            jy = (amxsim(2,2) - amxsim(2,1)) / ygdpt
-! Calculating the dimension for each subregion in X and Y direction by JG
-        do  sr = 1, nsubr
-          imax_sub(sr) = (amxsr(1,2,sr) - amxsr(1,1,sr)) / xgdpt
-          jmax_sub(sr) = (amxsr(2,1,sr) - amxsr(2,2,sr)) / ygdpt
-       
-          do j = 0, jmax
-              do i = 0, imax
-!
-!     for multiple subregions
-!     assigning the subregion ID to CSR for each subgrids by JG      
-
-         if (i*ix .gt. amxsr(1,1,sr) .and. i*ix .lt. amxsr(1,2,sr)      &
-     & .and. j*jy .gt. amxsr(2,1,sr).and.j*jy.lt.amxsr(2,2,sr)) then
-            csr(i,j) = sr
-          end if
-              end do
-           end do          
-        end do
-   !code lifted from sbgrid because it is initialized there - LEW
-   !        do j = 0, jmax
-   !          do i = 0, imax
-   !            csr(i,j) = 1          ! icsr = 1
-   !          end do 
-   !        end do
          else          !use Hagen's grid dimensioning as the default
            call sbgrid
          endif
+
+         ! assign subregion number to each grid cell
+         ! code lifted from sbgrid because it is initialized there - LEW
+         do sr = 1,nsubr
+            ! pnpoly requires an array of x values and an array of y values
+            xx(1,sr) = amxsr(1,1,sr)
+            xx(2,sr) = amxsr(1,2,sr)
+            xx(3,sr) = amxsr(1,2,sr)
+            xx(4,sr) = amxsr(1,1,sr)
+            yy(1,sr) = amxsr(2,1,sr)
+            yy(2,sr) = amxsr(2,1,sr)
+            yy(3,sr) = amxsr(2,2,sr)
+            yy(4,sr) = amxsr(2,2,sr)
+         end do
+
+         do j = 1, jmax-1
+           do i = 1, imax-1
+             ! The grid cell is assumed rectangular. Use centroid of grid cell
+             ! with subregion polygon to select grid cell subregion
+             centrx = 0.5 * (i-1+i) * ix
+             centry = 0.5 * (j-1+j) * jy
+             do sr = 1,nsubr
+               ! Check if it is inside subregion polygon
+               if( pnpoly(centrx,centry,xx(1,sr),yy(1,sr),4).ge.0) then
+                  ! centroid of grid cell is inside or on edge of subregion polygon
+                  ! set subregion index
+                  csr(i,j) = sr
+                  ! default to first polygon if on edge by exiting the subregion do loop
+                  exit
+               end if
+             end do
+           end do          
+        end do
 
          ! set grid cell output arrays to zero
          call sbigrd
@@ -124,5 +138,4 @@
 
       return
       end
-!++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 

@@ -40,6 +40,7 @@
       integer          lopyr
       integer          ljday
       integer          maxper
+      integer          ncycles
       integer          outcnt
       integer          tyears
 
@@ -54,7 +55,7 @@
      &                  id, im, iy, ijday,                              &
      &                  ld, lm, ly, ljday,                              &
      &                  lopday, lopmon, lopyr,                          &
-     &                  maxper,                                         &
+     &                  maxper, ncycles,                                &
      &                  outcnt, tyears,                                 &
 
      &                  subflg
@@ -106,6 +107,7 @@
 !              each would have a "maxper" value of 12 years.  Note that
 !              each of the individual subregion rotation periods can
 !              divide evenly into the "maxper" value.
+!     ncycles - a count of the number of maxper cycles that have been completed in the simulation run.
 
 !     outcnt - Counter that holds number of times output is
 !              written to the temporary file holding accounting region

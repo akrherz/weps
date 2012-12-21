@@ -4,7 +4,7 @@
 !$Revision$
 !$HeadURL$
 !
-      subroutine inpsub (isubr)
+      subroutine inpsub (isr)
 ! ***************************************************************** wjr
 ! reads initial field conditions (IFC) file for all subregions
 !
@@ -35,22 +35,24 @@
       include 'file.inc'
       include 'command.inc'          !declarations for commandline args
 
+!     + + + Arguments + + +
+      integer isr
+
 !     + + + LOCAL COMMON BLOCKS + + +
       include 'main/main.inc'
 !     + + + LOCAL VARIABLES + + +
       integer       lay
       character     line*256
-      integer       isr
+      integer       linnum, typidx
       integer       max_typidx  !Maximum number of lines to read in
       real          temp   ! temporary variable, throw away value
 
-! add parameter parameters isr
-      integer       isubr
 !     + + + FUNCTION DECLARATIONS + + +
       real   plant_wat_g
-!
-      integer linnum, typidx
-      data linnum /0/, typidx /0/
+
+!     + + + Initializations + + +
+      linnum = 0
+      typidx = 0
 
 !     Old ifc file format contains 52 lines
 !     New ifc file format contains 54 lines
@@ -63,12 +65,9 @@
       max_typidx = 54   ! new ifc format (additional parms)
 
 !     open simulation run file
-
-      call fopenk (lui1, sinfil(isubr), 'old')
+      call fopenk (lui1, sinfil(isr), 'old')
 
 !     read subregion information
-      do 200 isr = 1,nsubr
-        typidx = 0
   100   if (typidx.eq. max_typidx) go to 190  !do subregion initializations
         linnum = linnum + 1
         read (lui1,'(a)',err=81) line
@@ -82,7 +81,7 @@
         select case (typidx)
         case (1)
 !     read initial field conditions file
-          am0sid(isr) = line
+          am0sid(isr) = line(1:160)
         case (2)
           read(line,*,err=82) am0tax(isr)
         case (3)
@@ -389,8 +388,6 @@
             asfpoh(lay,isr) = 0.0
             asfpsp(lay,isr) = 0.0
         end do
-
-  200 continue
 
       close (lui1)
 

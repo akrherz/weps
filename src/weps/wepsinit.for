@@ -19,7 +19,6 @@
       do idx = 1, mnsub
           mcur(idx) = 0          ! manage/man.inc
           amnryr(idx) = 1        ! m1subr.inc
-          amnrotcycle(idx) = 1   ! m1subr.inc
       end do
       do idx = 1, mnsub+1
           mbeg(idx) = 0          ! manage/man.inc

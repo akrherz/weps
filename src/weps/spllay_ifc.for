@@ -35,7 +35,6 @@
 !     + + + LOCAL COMMON BLOCKS + + +
       include 'main/main.inc'
 
-
 !     + + + LOCAL VARIABLES + + +
 !      integer      lay
 !      character    line*256
@@ -58,7 +57,6 @@
       real          tempthk(mnsz)
       real          tempdep(mnsz)
       integer       tempstat(mnsz) ! 0 = target layer, 1 = fixed input layer
-      real          tempval(mnsz)
       integer       tempnslay
 
       targetthk(1) = 10
@@ -68,16 +66,13 @@
       targetthk(5) = 50
       targetthk(6) = 75
       targetthk(7) = 75
-      
       do ldx=8,mnsz
           targetthk(ldx) = 100
       end do
 
       ! set multiplier factor
-
       mfac = 1.0 + layer_infla/100.0
-  !    do isr = 1,nsubr      
-  ! remove the loop JG
+
         ! alternative layering
         targetthk(1) = layer_scale
         targetdep(1) = targetthk(1)
@@ -91,7 +86,7 @@
         do ldx = 2, nslay(isr)
           aszlyd(ldx, isr) = aszlyd(ldx-1, isr) + aszlyt(ldx, isr)
         end do
-       
+
         ! based on depth to impermeable, bedrock layer, increase depth 
         ! of soil. With a unit gradient at the bottom boundary, no water
         ! will move up from the lower boundary.
@@ -105,7 +100,6 @@
         ! set temporary layer thicknesses, matching input layer boundaries
         ! checking termination layer to get same total soil thickness
         ! set number of layers
-       
         oldcur = 1
         newcur = 1
         tmpcur = 1
@@ -129,9 +123,8 @@
             oldcur = oldcur + 1
           end if 
         end do
-     
         tempnslay = tmpcur-1
-        
+
         ! even out layer spacing of last surface layers
         ! search for first original layer boundary
         newcur = 1
@@ -155,7 +148,6 @@
         ! even out layer spacing between fixed layers
         oldcur = 0
         newcur = 0
-    
         do tmpcur = 1, tempnslay
           if( tempstat(tmpcur) .eq. 1 ) then
             ! fixed layer found
@@ -183,7 +175,7 @@
             oldcur = 0
           end if
         end do
-       
+
       ! debug write of layering created
 !      do ldx=1,nslay(isr)
 !          write(*,*) 'Old_Layer: ', ldx, aszlyt(ldx,isr),aszlyd(ldx,isr)
@@ -201,9 +193,8 @@
         ! save old layer values of property before placing new values
         ! into enlarged array. All layers are averaged, allowing for
         ! new layers to be either smaller or larger than original
-     
+
 !     IP soil physical properties
-     
         call move_ave_val( nslay(isr), aszlyd(1,isr), asfsan(1,isr),    &
      &                     tempnslay, tempdep )
         call move_ave_val( nslay(isr), aszlyd(1,isr), asfsil(1,isr),    &
@@ -272,18 +263,16 @@
      &                     tempnslay, tempdep )
         call move_ave_val( nslay(isr), aszlyd(1,isr), ahrsk(1,isr),     &
      &                     tempnslay, tempdep )
-      
-       
+
         ! New variable added that isn't read in any IFC file formats
         ! but is calculated with the -w4 cmdline option wc_type == 4
         ! before the layers are split
         call move_ave_val( nslay(isr), aszlyd(1,isr), ahfredsat(1,isr), &
      &                     tempnslay, tempdep )
-     
+
+
         ! set new number of soil layers into original variable
-         
         nslay(isr) = tempnslay
- 
         ! put new thickness into array
         do ldx = 1, tempnslay
           aszlyt(ldx, isr) = tempthk(ldx)
@@ -291,12 +280,13 @@
         ! recalculate  depth to bottom of soil layer
         call depthini( nslay(isr), aszlyt(1,isr), aszlyd(1,isr) )
      
-!      end do
-!  remove by JG
       return
 
-!      do isr = 1,nsubr
-! Remove it by JG
+! +++ the code below this pint is not executed
+! +++ and has been preserved for historical purposes
+
+      do isr = 1,nsubr
+
       oldcur = 0
       newcur = 0
       totthk = 0
@@ -327,7 +317,9 @@
 !
 !     convert layers by subregion
 !
-!      do isr = 1,nsubr  
+!      do isr = 1,nsubr
+
+        write(*,*) 'ready to spllay_ifc:'
 
         totthk = 0;
         do ldx = 1, nslay(isr)
@@ -603,7 +595,7 @@
 
       end do
  120  continue
-  !    end do
-  ! remove it by JG 
+      end do
+
       return
       end
