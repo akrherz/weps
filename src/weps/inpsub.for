@@ -391,8 +391,6 @@
 
       close (lui1)
 
-!
-!      call dmpall('wrk.dmp')
       return
    81 write(*,9001) trim(sinfil(isr)), linnum, trim(line)
 9001  format (' inpsub error - original format IFC file ',a,            &

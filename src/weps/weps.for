@@ -38,6 +38,9 @@
       USE pd_update_vars
       USE pd_report_vars
       USE pd_var_tables
+      use Polygons_Mod
+      use subregions_mod
+
 
 ! build and release info, fpp created by cook
       include 'build.inc'
@@ -727,6 +730,14 @@
       close (500)
 
       if ((calc_confidence .gt. 0)) close (luoci)
+
+      ! deallocate subregion polygon storage, no longer needed
+      do isr = 1, nsubr
+          ! free memory in polygon point arrays
+          call free_polygon(subr_poly(isr))
+      end do
+      ! free memory for array of polygons
+      deallocate(subr_poly)
 
 !     output the weather summary report
 !     call wsum

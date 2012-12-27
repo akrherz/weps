@@ -21,7 +21,6 @@
       real             amxbr(mnbpt,mnbpt,mnbr)
       real             amxbrw(mnbr)
       real             amxsim(mnspt,mnspt)
-      real             amxsr(mnsrpt,mnsrpt,mnsub)
       real             amzbr(mnbr)
       character*80     amzbt(mnbr)
 
@@ -30,7 +29,7 @@
      &                 sim_area,                                        &
      &                 amasim, ampbr,                                   &
      &                 amxar, amxbr, amxbrw,                            &
-     &                 amxsim, amxsr, amzbr,                            &
+     &                 amxsim, amzbr,                                   &
      &                 amzbt
 
       save :: /m1geo/
@@ -92,17 +91,6 @@
 
 !            - This variable contains the coordinates of two
 !              opposite points for a rectangular simulation region.
-
-!     amxsr  - Coordinates of the subregions
-
-!              range values       min        max
-!              ------------   ---------  ---------
-!              fixed               ?          ?
-!              typical             ?          ?
-!              ------------   ---------  ---------
-
-!            - This variable contains the coordinates of two
-!              opposite points for each rectangular subregion.
 
 !     amxbr  - Coordinates of barriers
 

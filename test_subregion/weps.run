@@ -69,9 +69,14 @@ none
 4
 #   RFD-SubregionNo
 # 1
-#   Subregion region coordinates (meters)
+#   Subregion polygon coordinates (meters)
+# number of coordinates
+4
+# list of coordinates
 0.0  183
+183  183
 183  366
+0.0  366
 #   RFD-AverageSlope(ratio m/m)
 -1
 #   RFD-SoilRockFragments
@@ -85,9 +90,14 @@ WA-Potatoes-WntrWheat-Beans,dry-Alfalfa,4yrs-CMZ49.man
 #
 #   RFD-SubregionNo
 # 2
-#   Subregion region coordinates (meters)
+#   Subregion polygon coordinates (meters)
+# number of coordinates
+4
+# list of coordinates
 183  183
+366  183
 366  366
+183  366
 #   RFD-AverageSlope(ratio m/m)
 -1
 #   RFD-SoilRockFragments
@@ -102,8 +112,13 @@ WA-Potatoes-WntrWheat-Beans,dry-Alfalfa,4yrs-CMZ49.man
 #   RFD-SubregionNo
 # 3
 #   Subregion region coordinates (meters)
+# number of coordinates
+4
+# list of coordinates
 0.0  0.0
+183  0.0
 183  183
+0.0  183
 #   RFD-AverageSlope(ratio m/m)
 -1
 #   RFD-SoilRockFragments
@@ -118,8 +133,13 @@ WA-Potatoes-WntrWheat-Beans,dry-Alfalfa,4yrs-CMZ49.man
 #   RFD-SubregionNo
 # 4
 #   Subregion region coordinates (meters)
+# number of coordinates
+4
+# list of coordinates
 183  0.0
+366  0.0
 366  183
+183  183
 #   RFD-AverageSlope(ratio m/m)
 -1
 #   RFD-SoilRockFragments

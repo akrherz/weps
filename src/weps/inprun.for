@@ -8,7 +8,11 @@
 !
 !     Edit History
 !     06-Feb-99   wjr   created from existing code, select added
-!
+
+!     + + + Modules Used + + +
+      use Polygons_Mod
+      use subregions_mod
+
       include 'p1werm.inc'
       include 'wpath.inc'
       include 'm1subr.inc'
@@ -35,13 +39,37 @@
 
 !     + + + LOCAL COMMON BLOCKS + + +
       include 'main/main.inc'
+
 !     + + + LOCAL VARIABLES + + +
-      integer       i, isr, iar, ios, ibr
+      integer       i, isr, iar, ios, ibr, ipol
       character     line*256
       real          sclsim, sclbar
       real          cligen_version
       logical       fexist
       real          wepsrun_version
+      integer       subr_np
+
+!     + + + Local Variable Definitions + + +
+!     i   - local index counter
+!     isr - subregion index counter
+!     iar - accounting region index counter
+!     ios - input output status flag
+!     ibr - barrier index counter
+!     ipol - polygon points index counter
+
+!     line - character array to hold contents of input line
+
+!     sclsim - scaling factor used by interface, not within WEPS
+!     sclbar - scaling factor used by interface, not within WEPS
+
+!     cligen_version - version of the specified cligen file
+
+!     fexist - flag indicating existence of file
+
+!     wepsrun_version - version of the weps.run file being read
+
+!     subr_poly - polygons defining each subregion extent
+!     subr_np - number of points in polygon read from file
 
 !     + + + FUNCTION DECLARATIONS + + +
 !      integer   julday
@@ -49,6 +77,7 @@
  
       integer linnum, typidx
 !      data linnum /0/, typidx /0/
+
       wepsrun_version = -1.0
       linnum = 1
       typidx = 0
@@ -299,22 +328,34 @@
       case (25)
         read (line,*,err=80) amxar(1,2,iar), amxar(2,2,iar)
       
-!     read Subregion count
       case (26)
+        ! read Subregion count
         read (line,*,err=80) nsubr
 
-! set up isr for reading in next lines for each subregion
+        ! set up isr for reading in next lines for each subregion
         isr = 1
 
-! read in sub-region data
-! amxsr(1,1,i) as lower x-coor, and amxsr(1,2,i) as upper x-coor
-! amxsr(2,1,i) as lower y-coor, and amxsr(2,2,i) as upper y-coor
-! store them in the same line for each subregion
+        ! create array of subregion polygons
+        allocate(subr_poly(nsubr))
+
       case (27)
-        read (line,*,err=80) amxsr(1,1,isr),amxsr(2,1,isr)
+        ! read subregion polygon point count
+        read (line,*,err=80) subr_np
+        ! create polygon point storage
+        subr_poly(isr) = create_polygon(subr_np)
+        ! set counter for reading each point pair
+        ipol = 1
 
       case (28)
-        read (line,*,err=80) amxsr(1,2,isr), amxsr(2,2,isr)  
+        ! read point pair
+        read (line,*,err=80) subr_poly(isr)%points(ipol)%x,             &
+     &                       subr_poly(isr)%points(ipol)%y
+        ! read next point pair
+        ipol = ipol + 1
+        if( ipol .le. subr_np ) then
+            ! read another point pair
+            typidx = typidx - 1
+        end if
 
       case (29)
         !        The new "versioned" IFC files contain a slope value

@@ -87,10 +87,16 @@
 #     ie. variables defined by subregion) are repeated for nsubr"
 #     subregions specified
 #
-#     amxsr(x,y,s), R, (m1subr.inc) Subregion diag. coordinates (m)
-#                     Input x,y coordinates in this form: x1,y1  x2,y2
-#                     for each subregion specified (subr)
- 0.0, 0.0, 1000.0, 200.0
+#     subregion polygon, count, xy pairs (subregions_mod)
+#         polygons can be:
+#         - open (the last point connects to the first point)
+#         - closed (last point is same as first point)
+#         - complex (multiple closed polygons entered as one)
+4
+0.0 0.0
+1000.0 0.0
+1000.0 200.0
+0.0 200.0
 #
 #     +++ BIOMASS +++
 #

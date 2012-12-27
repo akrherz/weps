@@ -2,3 +2,4 @@ erosion
 util/date
 util/misc
 util/timer
+util/math

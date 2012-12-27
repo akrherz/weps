@@ -1,0 +1,42 @@
+!$Author$
+!$Date$
+!$Revision$
+!$HeadURL$
+
+! started with code from:
+! http://rosettacode.org/wiki/Ray-casting_algorithm#Fortran
+
+! heavily modified to eliminate vertex index functionality.
+! A polygon is now simply and ordered set of points.
+! Routines define whether the last point must be joined to
+! the first point in order to close the polygon
+
+
+module Polygons_Mod
+  use Points_Mod
+  implicit none
+ 
+  type polygon
+     integer :: np   ! number of points in polygon point array
+     type(point), dimension(:), allocatable :: points  ! the polygon points
+  end type polygon
+ 
+contains
+ 
+  ! allocates a polygon structure which can contain np points
+  function create_polygon(nump) result(ppol)
+    integer, intent(in) :: nump  ! number of points in polygon created
+    type(polygon) :: ppol
+
+    allocate(ppol%points(nump))
+    ppol%np = nump
+  end function create_polygon
+ 
+  ! deallocates a polygon structure
+  subroutine free_polygon(pol)
+    type(polygon), intent(inout) :: pol
+
+    deallocate(pol%points)
+  end subroutine free_polygon
+
+end module Polygons_Mod

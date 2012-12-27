@@ -5,13 +5,16 @@
 
 program test_pnpoly
 
+    use Points_Mod
+    use Polygons_Mod
+    use pnpoly_mod
+    implicit none
+
     ! variable declaration
     integer :: sr, nsubr
-    real :: xx(4,4), yy(4,4)
     integer :: i, j, imax, jmax
     real :: ix, jy
     integer :: csr(0:6,0:10)
-    real :: centrx, centry
 
     ! variable definitions
     ! sr - subregion counter
@@ -24,42 +27,116 @@ program test_pnpoly
     ! jmax - maximum y index
     ! ix - grid cell length in x direction
     ! iy - grid cell length in y direction
-    ! centrx - x coordinate of grid cell centroid
-    ! centry - y coordinate of grid cell centroid
  
-    ! function declaration
-    integer pnpoly
+    character(len=16), dimension(4) :: names
+    type(polygon), dimension(4) :: polys
+    type(point) :: pnt
+ 
+    nsubr = 4
 
-    nsubr = 2
-
-    ! pnpoly requires an array of x values and an array of y values
+    ! pnpoly requires a point and a polygon
 
     ! first subregion, south, 120x60
-    xx(1,1) = 0.0
-    yy(1,1) = 0.0
+    names(1) = "South"
+    polys(1) = create_polygon(4)
 
-    xx(2,1) = 120.0
-    yy(2,1) = 0.0
+    polys(1)%points(1)%x = 0.0
+    polys(1)%points(1)%y = 0.0
 
-    xx(3,1) = 120.0
-    yy(3,1) = 60.0
+    polys(1)%points(2)%x = 120.0
+    polys(1)%points(2)%y = 0.0
 
-    xx(4,1) = 0.0
-    yy(4,1) = 60.0
+    polys(1)%points(3)%x = 120.0
+    polys(1)%points(3)%y = 60.0
+
+    polys(1)%points(4)%x = 0.0
+    polys(1)%points(4)%y = 60.0
 
     ! second subregion, north, 120x140
-    xx(1,2) = 0.0
-    yy(1,2) = 60.0
+    names(2) = "North"
+    polys(2) = create_polygon(4)
 
-    xx(2,2) = 120.0
-    yy(2,2) = 60.0
+    polys(2)%points(1)%x = 0.0
+    polys(2)%points(1)%y = 60.0
 
-    xx(3,2) = 120.0
-    yy(3,2) = 200.0
+    polys(2)%points(2)%x = 120.0
+    polys(2)%points(2)%y = 60.0
 
-    xx(4,2) = 0.0
-    yy(4,2) = 200.0
+    polys(2)%points(3)%x = 120.0
+    polys(2)%points(3)%y = 200.0
 
+    polys(2)%points(4)%x = 0.0
+    polys(2)%points(4)%y = 200.0
+
+    ! third subregion, western strips, 30x200
+    names(3) = "Western Strips"
+    polys(3) = create_polygon(10)
+
+    polys(3)%points(1)%x = 0.0
+    polys(3)%points(1)%y = 0.0
+
+    polys(3)%points(2)%x = 30.0
+    polys(3)%points(2)%y = 0.0
+
+    polys(3)%points(3)%x = 30.0
+    polys(3)%points(3)%y = 200.0
+
+    polys(3)%points(4)%x = 0.0
+    polys(3)%points(4)%y = 200.0
+
+    polys(3)%points(5)%x = 0.0
+    polys(3)%points(5)%y = 0.0
+
+    polys(3)%points(6)%x = 60.0
+    polys(3)%points(6)%y = 0.0
+
+    polys(3)%points(7)%x = 90.0
+    polys(3)%points(7)%y = 0.0
+
+    polys(3)%points(8)%x = 90.0
+    polys(3)%points(8)%y = 200.0
+
+    polys(3)%points(9)%x = 60.0
+    polys(3)%points(9)%y = 200.0
+
+    polys(3)%points(10)%x = 60.0
+    polys(3)%points(10)%y = 0.0
+
+    ! fourth subregion, eastern strips, 30x200
+    names(4) = "Eastern Strips"
+    polys(4) = create_polygon(10)
+
+    polys(4)%points(1)%x = 30.0
+    polys(4)%points(1)%y = 0.0
+
+    polys(4)%points(2)%x = 60.0
+    polys(4)%points(2)%y = 0.0
+
+    polys(4)%points(3)%x = 60.0
+    polys(4)%points(3)%y = 200.0
+
+    polys(4)%points(4)%x = 30.0
+    polys(4)%points(4)%y = 200.0
+
+    polys(4)%points(5)%x = 30.0
+    polys(4)%points(5)%y = 0.0
+
+    polys(4)%points(6)%x = 90.0
+    polys(4)%points(6)%y = 0.0
+
+    polys(4)%points(7)%x = 120.0
+    polys(4)%points(7)%y = 0.0
+
+    polys(4)%points(8)%x = 120.0
+    polys(4)%points(8)%y = 200.0
+
+    polys(4)%points(9)%x = 90.0
+    polys(4)%points(9)%y = 200.0
+
+    polys(4)%points(10)%x = 90.0
+    polys(4)%points(10)%y = 0.0
+
+    ! set up grid
     imax = 7
     jmax = 11
     ix = 120.0 / (imax-1)
@@ -70,22 +147,23 @@ program test_pnpoly
       do i = 1, imax-1
          ! The grid cell is assumed rectangular. Use centroid of grid cell
          ! with subregion polygon to select grid cell subregion
-         centrx = 0.5 * (i-1+i) * ix
-         centry = 0.5 * (j-1+j) * jy
+         pnt%x = 0.5 * (i-1+i) * ix
+         pnt%y = 0.5 * (j-1+j) * jy
          do sr = 1,nsubr
            ! Check if it is inside subregion polygon
-           if( pnpoly(centrx,centry,xx(1,sr),yy(1,sr),4).ge.0) then
+           if( pnpoly(pnt, polys(sr)).ge.0) then
               ! centroid of grid cell is inside or on edge of subregion polygon
               ! set subregion index
-              csr(i,j) = sr
-              write(*,*) 'point ', centrx, ':', centry, ' is in subregion ', sr
-              ! default to first polygon if on edge by exiting the subregion do loop
-              exit
+              !csr(i,j) = sr
+              write(*,*) 'point ', pnt%x, ':', pnt%y, ' is in subregion ', names(sr)
            end if
          end do
-         write(*,*) 'point ', centrx, ':', centry, ' is in subregion ', csr(i,j)
+         !write(*,*) 'point ', centrx, ':', centry, ' is in subregion ', csr(i,j)
       end do          
     end do
+ 
+    do i = 1, 4
+       call free_polygon(polys(i))
+    end do
 
-    return
-end
+end program test_pnpoly

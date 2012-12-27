@@ -8,7 +8,10 @@
 !
 !     +++ PURPOSE +++
 !     print out input file for stand alone erosion
-!
+
+!     + + + Modules Used + + +
+      use subregions_mod
+
 !     +++ ARGUMENT DECLARATIONS +++
 
 !     +++ ARGUMENT DEFINITIONS +++
@@ -48,12 +51,14 @@
 !      include  'erosion/w2wind.inc'
 !
 !     +++ LOCAL VARIABLES +++
-      integer k,l
+      integer k,l, sr, ip
       integer b
       integer day, mon, yr
 !
 !     + + + LOCAL VARIABLE DEFINITIONS + + +
-!
+!     sr - index used in subregion loop
+!     ip - index to polygon coordinates
+
 !     +++ SUBROUTINES CALLED +++
 !
 !     +++ FUNCTION DECLARATIONS +++
@@ -192,26 +197,39 @@
      &OGY,',/,                                                          &
      &'#     ie. variables defined by subregion) are repeated for nsubr &
      &',/,                                                              &
-     &'#     subregions specified',/,                                   &
-     &'#',/,                                                            &
-     &'#     amxsr(x,y,s), R, (m1subr.inc) Subregion coordinates (m)',/,&
-     &'#             Input x,y coordinates in this form: x1,y1 x2,y2',/,&
-     &'#             for each subregion specified (subr)')
-      write(42,*) amxsr(1,1,1),amxsr(2,1,1),amxsr(1,2,1),amxsr(2,2,1)
+     &'#     subregions specified')
+
+      ! loop through all subregions
+      do sr = 1, nsubr
+
+      write(42,2138)
+ 2138 format('#',/,                                                     &
+     &'#     subregion polygon, count, xy pairs (subregions_mod)',/,    &
+     &'#         polygons can be:',/,                                   &
+     &'#         - open (the last point connects to the first point)',/,&
+     &'#         - closed (last point is same as first point)',/,       &
+     &'#         - complex (multiple closed polygons entered as one)')
+      ! number of coordinate pairs in polygon
+      write(42,*) subr_poly(sr)%np
+      ! teh coordinate pairs
+      do ip = 1, subr_poly(sr)%np
+       write(42,*) subr_poly(sr)%points(ip)%x,subr_poly(sr)%points(ip)%y
+      end do
+
       write(42,2140)
  2140 format('#',/,                                                     &
      &'#     +++ BIOMASS +++',/,                                        &
      &'#',/,                                                            &
      &'#      adzht_ave(s), R, (d1glob.inc) Average residue height (m)')
-      write(42,*) adzht_ave(1)
+      write(42,*) adzht_ave(sr)
 ! Changed above to use "average residue height" instead of "overall height" - LEW 1/26/06
 !     &'#       abzht(s), R, (b1glob.inc) Overall biomass height (m)')
-!      write(42,*) abzht(1)
+!      write(42,*) abzht(sr)
 
       write(42,2146)
  2146 format('#',/,                                                     &
      &'#       aczht(s), R, (c1glob.inc) Crop height (m)')
-      write(42,*) aczht(1)
+      write(42,*) aczht(sr)
 
       write(42,2147)
  2147 format('#',/,                                                     &
@@ -219,7 +237,7 @@
      &',/,                                                              &
      &'#       acrlai(s), R, (c1glob.inc) Crop leaf area index (m^2/m^2)&
      &')
-      write(42,*) acrsai(1), acrlai(1)
+      write(42,*) acrsai(sr), acrlai(sr)
 
       write(42,2148)
  2148 format('#',/,                                                     &
@@ -227,7 +245,7 @@
      &2/m^2)',/,                                                        &
      &'#       adrlaitot(s), R, (d1glob.inc) Residue leaf area index (m^&
      &2/m^2)')
-      write(42,*) adrsaitot(1), adrlaitot(1)
+      write(42,*) adrsaitot(sr), adrlaitot(sr)
 
       write(42,2149)
  2149 format('#',/,                                                     &
@@ -235,7 +253,7 @@
      &,/,                                                               &
      &'#       ac0rg(s)  Crop seed placement (0 - furrow, 1 - ridge)'   &
      &)
-      write(42,*) acxrow(1), ac0rg(1)
+      write(42,*) acxrow(sr), ac0rg(sr)
 
       write(42,2150)
  2150 format('#',/,                                                     &
@@ -256,7 +274,7 @@
      &,/,                                                               &
      &'#             (should be 3 values here when abffcv(s) and abfscv(&
      &s) are used)')
-      write(42,*) abffcv(1)
+      write(42,*) abffcv(sr)
 
 !      soil
       write(42,2160)
@@ -265,7 +283,7 @@
      &'#',/,                                                            &
      &'#     nslay(s), I, (s1layr.inc) Number of soil layers (3-10)')
 
-      write(42,*) nslay(1)
+      write(42,*) nslay(sr)
 
       write(42,2165)
  2165 format('#',/,                                                     &
@@ -273,61 +291,61 @@
      &cified',/,                                                        &
      &'#',/,                                                            &
      &'#     aszlyt(l,s), R, (s1layr.inc) Soil layer thickness (mm)')
-      write(42,*) (aszlyt(l,1), l=1,nslay(1))
+      write(42,*) (aszlyt(l,sr), l=1,nslay(sr))
       write(42,2170)
  2170 format('#',/,                                                     &
      &'#     asdblk(l,s), R, (s1phys.inc) Soil layer bulk density (Mg/m^&
      &3')
-      write(42,*) (asdblk(l,1), l=1,nslay(1))
+      write(42,*) (asdblk(l,sr), l=1,nslay(sr))
       write(42,2175)
  2175 format('#',/,                                                     &
      &'#     asfsan(l,s),R,(s1dbh.inc) Soil layer sand content (Mg/Mg)')
-      write(42,*) (asfsan(l,1), l=1,nslay(1))
+      write(42,*) (asfsan(l,sr), l=1,nslay(sr))
       write(42,2177)
  2177 format('#',/,                                                     &
      &'#     asfvfs(l,s), R, (s1dbh.inc) Soil layer very fine sand (Mg/M&
      &g)')
-      write(42,*) (asfvfs(l,1), l=1,nslay(1))
+      write(42,*) (asfvfs(l,sr), l=1,nslay(sr))
       write(42,2180)
  2180 format('#',/,                                                     &
      &'#     asfsil(l,s),R,(s1dbh.inc) Soil layer silt content (Mg/Mg)')
-      write(42,*) (asfsil(l,1), l=1,nslay(1))
+      write(42,*) (asfsil(l,sr), l=1,nslay(sr))
       write(42,2185)
  2185 format('#',/,                                                     &
      &'#     asfcla(l,s),R,(s1dbh.inc) Soil layer clay content (Mg/Mg)')
-      write(42,*) (asfcla(l,1), l=1,nslay(1))
+      write(42,*) (asfcla(l,sr), l=1,nslay(sr))
       write(42,2190)
  2190 format('#',/,                                                     &
      &'#     asvroc(l,s), R, (s1dbh.inc) Soil layer rock volume (m^3/m^3&
      &)')
-      write(42,*) (asvroc(l,1), l=1,nslay(1))
+      write(42,*) (asvroc(l,sr), l=1,nslay(sr))
       write(42,2195)
  2195 format('#',/,                                                     &
      &'#     asdagd(l,s),R,(s1agg.inc) Soil layer agg density (Mg/m^3)')
-      write(42,*) (asdagd(l,1), l=1,nslay(1))
+      write(42,*) (asdagd(l,sr), l=1,nslay(sr))
       write(42,2200)
  2200 format('#',/,                                                     &
      &'#     aseags(l,s), R, (s1agg.inc) Soil layer agg stability ln(J/k&
      &g)')
-      write(42,*) (aseags(l,1), l=1,nslay(1))
+      write(42,*) (aseags(l,sr), l=1,nslay(sr))
       write(42,2205)
  2205 format('#',/,                                                     &
      &'#     aslagm(l,s), R, (s1agg.inc) Soil layer GMD (mm)')
-      write(42,*) (aslagm(l,1), l=1,nslay(1))
+      write(42,*) (aslagm(l,sr), l=1,nslay(sr))
       write(42,2210)
  2210 format('#',/,                                                     &
      &'#     aslagn(l,s), R, (s1agg.inc) Soil layer minimum agg size (mm&
      &)')
-      write(42,*) (aslagn(l,1), l=1,nslay(1))
+      write(42,*) (aslagn(l,sr), l=1,nslay(sr))
       write(42,2215)
  2215 format('#',/,                                                     &
      &'#     aslagx(l,s), R, (s1agg.inc) Soil layer maximum agg size (mm&
      &)')
-      write(42,*) (aslagx(l,1), l=1,nslay(1))
+      write(42,*) (aslagx(l,sr), l=1,nslay(sr))
       write(42,2220)
  2220 format('#',/,                                                     &
      &'#     as0ags(l,s), R, (s1agg.inc) Soil layer GSD (mm/mm)')
-      write(42,*) (as0ags(l,1), l=1,nslay(1))
+      write(42,*) (as0ags(l,sr), l=1,nslay(sr))
       write(42,2225)
  2225 format('#',/,                                                     &
      &'#     asfcr(s), R, (s1surf.inc) Surface crust fraction (m^2/m^2)'&
@@ -339,40 +357,40 @@
      &(kg/m^2)',/,                                                      &
      &'#     asdcr(s), R, (s1surf.inc) Soil crust density (Mg/m^3)',/,  &
      &'#     asecr(s), R, (s1surf.inc) Soil crust stability ln(J/kg)')
-      write(42,*) asfcr(1), aszcr(1), asflos(1), asmlos(1), asdcr(1),   &
-     &            asecr(1)
+      write(42,*) asfcr(sr), aszcr(sr), asflos(sr), asmlos(sr),         &
+     &            asdcr(sr), asecr(sr)
       write(42,2230)
  2230 format('#',/,                                                     &
      &'#     aslrr(s), R, (s1sgeo.inc) Allmaras random roughness (mm)')
-      write(42,*) aslrr(1)
+      write(42,*) aslrr(sr)
       write(42,2235)
  2235 format('#',/,                                                     &
      &'#     aszrgh(s), R, (s1sgeo.inc) Ridge height (mm)',/,           &
      &'#     asxrgs(s), R, (s1sgeo.inc) Ridge spacing (mm)',/,          &
      &'#     asxrgw(s), R, (s1sgeo.inc) Ridge width (mm)',/,            &
      &'#     asargo(s), R, (s1sgeo.inc) Ridge orientation (deg)')
-      write(42,*) aszrgh(1), asxrgs(1), asxrgw(1), asargo(1)
+      write(42,*) aszrgh(sr), asxrgs(sr), asxrgw(sr), asargo(sr)
       write(42,2240)
  2240 format('#',/,                                                     &
      &'#     asxdks(s), R, (s1sgeo.inc) Dike spacing (mm)')
-      write(42,*) asxdks(1)
+      write(42,*) asxdks(sr)
       write(42,2245)
 !      hydrology
  2245 format('#',/,                                                     &
      &'#     +++ HYDROLOGY +++',/,                                      &
      &'#',/,                                                            &
      &'#     ahzsnd(s), R, (s1sgeo.inc) Snow depth (mm)')
-      write(42,*) ahzsnd(1)
+      write(42,*) ahzsnd(sr)
       write(42,2250)
  2250 format('#',/,                                                     &
      &'#     ahrwcw(l,s), R, (h1db1.inc) Soil layer wilting point water &
      &content (Mg/Mg)')
-      write(42,*) (ahrwcw(l,1), l=1,nslay(1))
+      write(42,*) (ahrwcw(l,sr), l=1,nslay(sr))
       write(42,2255)
  2255 format('#',/,                                                     &
      &'#     ahrwca(l,s), R, (h1db1.inc) Soil layer water content (Mg/Mg&
      &)')
-      write(42,*) (ahrwca(l,1), l=1,nslay(1))
+      write(42,*) (ahrwca(l,sr), l=1,nslay(sr))
       write(42,2260)
  2260 format('#',/,                                                     &
      &'#     ahrwc0(h,s), R, (h1db1.inc) Surface layer water content (Mg&
@@ -383,9 +401,12 @@
      & content',/,                                                      &
      &'#                        on two lines, with 12 values in each lin&
      &e.')
-      write(42,22) (ahrwc0(l,1), l=1,12)
+      write(42,22) (ahrwc0(l,sr), l=1,12)
  22   format(12(1x,f10.7))
-      write(42,22) (ahrwc0(l,1), l=13,24)
+      write(42,22) (ahrwc0(l,sr), l=13,24)
+
+      ! end of subregion loop
+      end do
 
 !      weather
       write(42,2270)

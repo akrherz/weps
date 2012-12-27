@@ -10,7 +10,11 @@
 !     input file (stdin or erod.in) for the standalone erosion submodel
 !
 !     If "o_unit" == stdout (6) then input not echo'd
-!
+
+!     + + + Modules Used + + +
+      use Polygons_Mod
+      use subregions_mod
+
 !     +++ ARGUMENT DECLARATIONS +++
 !
       integer i_unit, o_unit, cmdebugflag, already_read_inputs
@@ -58,13 +62,14 @@
 !
 !     +++ LOCAL VARIABLES +++
       integer i,j,k
-      integer x,y,s,b,a,l,h
+      integer x,y,sr,b,a,l,h
       integer wflg
       real f(mntime), wfcalm, wuc, w0k, step, wu(mntime)
+      integer subr_np, ipol
 !
 !     + + + LOCAL VARIABLE DEFINITIONS + + +
 !     i, j, k = do-loop indices
-!     x,y,s,b,a,l,h = do-loop indices
+!     x,y,sr,b,a,l,h = do-loop indices
 !     wflg = flag to determine format of wind speed data (0 = Weibull, 1 = real)
 !     debugflg = flag to output debug data (0 = none, 1 = input, 2 = more, etc.)
 !     xplot    = flag to put plot data in arrays
@@ -76,6 +81,8 @@
 !     step      = tmp real variable for ntstep
 !     xcharin(i)= indep. variable name(s) used in plot
 !     xin(i)    = indep. variable value(s) used in plot
+!     subr_np   = number of points to be read in for a subregion polygon
+!     ipol      + index used to count reading in of polygon points
 !
 !     +++ FUNCTIONS CALLED +++
 !     getline
@@ -181,12 +188,23 @@
       read (line,*) nsubr
 !     read (getline(i_unit),*) nsubr
 
+      ! create subregion polygon array
+      allocate(subr_poly(nsubr))
+
 !     Dimensions, Biomass, Soil, and Hydrology (by subregion)
-      do 100  s=1, nsubr
-!       Subregion diagonal corners (x1,y1) and (x2,y2)
+      do 100  sr=1, nsubr
+        ! read subregion polygon point count
         line = getline(i_unit)
-        read (line,*) ((amxsr (x,y,s), x=1,2),y=1,2)
-!       read (getline(i_unit),*) ((amxsr (x,y,s), x=1,2),y=1,2)
+        read (line,*) subr_np
+        ! create polygon point storage
+        subr_poly(sr) = create_polygon(subr_np)
+        ! read in points
+        do ipol = 1, subr_np
+            ! read point pair
+            line = getline(i_unit)
+            read (line,*) subr_poly(sr)%points(ipol)%x,                 &
+     &                    subr_poly(sr)%points(ipol)%y
+        end do
 
 !     +++ BIOMASS +++
 
@@ -194,60 +212,60 @@
 
 !       Biomass height
 !        line = getline(i_unit)
-!        read (line,*)  abzht(s)
-!!       read (getline(i_unit),*) abzht(s)
+!        read (line,*)  abzht(sr)
+!!       read (getline(i_unit),*) abzht(sr)
 !       Now reads in average "residue height" instead of "biomass height'
 !       LEW - 1/26/06
         line = getline(i_unit)
-        read (line,*)  adzht_ave(s)
+        read (line,*)  adzht_ave(sr)
 
 !     c1glob.inc
 
 !       Crop height
         line = getline(i_unit)
-        read (line,*)  aczht(s)
+        read (line,*)  aczht(sr)
 
 !       Crop stem area index and leaf area index
         line = getline(i_unit)
-        read (line,*) acrsai(s), acrlai(s)
+        read (line,*) acrsai(sr), acrlai(sr)
 
 !     d1glob.inc
 
 !       Residue stem area index and leaf area index
         line = getline(i_unit)
-        read (line,*) adrsaitot(s), adrlaitot(s)
+        read (line,*) adrsaitot(sr), adrlaitot(sr)
 
 !       use crop and residue values to find the total value
 !       sum the stem area index and leaf area index values
-        abrsai(s) = acrsai(s) + adrsaitot(s)
-        abrlai(s) = acrlai(s) + adrlaitot(s)
+        abrsai(sr) = acrsai(sr) + adrsaitot(sr)
+        abrlai(sr) = acrlai(sr) + adrlaitot(sr)
       ! Compute the weighted average "biomass height" (residues and crop)
       ! which is used internally by the erosion code - LEW 1/26/06
-        if (abrsai(s) .le. 0.0) then
-            abzht(s) = 0.0
+        if (abrsai(sr) .le. 0.0) then
+            abzht(sr) = 0.0
         else
-            abzht(s) = (adzht_ave(s)*adrsaitot(s)+aczht(s)*acrsai(s))/  &
-     &              abrsai(s)
+            abzht(sr) = ( adzht_ave(sr)*adrsaitot(sr)                   &
+     &                    + aczht(sr)*acrsai(sr) ) / abrsai(sr)
         endif
 !     c1gen.inc
 
 !       addition to code for biodrag
 !       crop row spacing and seed location
         line = getline(i_unit)
-        read (line,*) acxrow(s), ac0rg(s)
+        read (line,*) acxrow(sr), ac0rg(sr)
 !
 !       These aren't used in EROSION yet
 !       Biomass stem area index by height
-!       read (getline(i_unit),*) (abrsaz(h,s), h=1,mncz)
+!       read (getline(i_unit),*) (abrsaz(h,sr), h=1,mncz)
 !       Biomass leaf area index by height
-!       read (getline(i_unit),*) (abrlaz(h,s), h=1,mncz)
+!       read (getline(i_unit),*) (abrlaz(h,sr), h=1,mncz)
 
 !       Biomass flat fraction cover, standing cover, and fraction total cover
-!       read (getline(i_unit),*) abffcv(s), abfscv(s), abftcv(s)
+!       read (getline(i_unit),*) abffcv(sr), abfscv(sr), abftcv(sr)
 !       Only flat fraction cover used yet
         line = getline(i_unit)
-        read (line,*) abffcv(s)
-!       read (getline(i_unit),*) abffcv(s)
+        read (line,*) abffcv(sr)
+!       read (getline(i_unit),*) abffcv(sr)
 
 !     +++ SOIL +++
 
@@ -255,107 +273,107 @@
 
 !       Number of soil layers (in this subregion)
         line = getline(i_unit)
-        read (line,*) nslay(s)
-!       read (getline(i_unit),*) nslay(s)
+        read (line,*) nslay(sr)
+!       read (getline(i_unit),*) nslay(sr)
 
 !       Soil layer thickness
         line = getline(i_unit)
-        read (line,*) (aszlyt(l,s),l=1,nslay(s))
-!       read (getline(i_unit),*) (aszlyt(l,s),l=1,nslay(s))
+        read (line,*) (aszlyt(l,sr),l=1,nslay(sr))
+!       read (getline(i_unit),*) (aszlyt(l,sr),l=1,nslay(sr))
 
 !       Soil layer bulk density
         line = getline(i_unit)
-        read (line,*) (asdblk(l,s), l=1,nslay(s))
-!       read (getline(i_unit),*) (asdblk(l,s), l=1,nslay(s))
+        read (line,*) (asdblk(l,sr), l=1,nslay(sr))
+!       read (getline(i_unit),*) (asdblk(l,sr), l=1,nslay(sr))
 
 !       Sand, silt, and clay fractions
         line = getline(i_unit)
-        read (line,*) (asfsan(l,s), l=1,nslay(s))
-!       read (getline(i_unit),*) (asfsan(l,s), l=1,nslay(s))
+        read (line,*) (asfsan(l,sr), l=1,nslay(sr))
+!       read (getline(i_unit),*) (asfsan(l,sr), l=1,nslay(sr))
 
 !       read very fine sand content edit 6-9-01 LH
         line = getline(i_unit)
-        read (line,*) (asfvfs(l,s), l=1,nslay(s))
+        read (line,*) (asfvfs(l,sr), l=1,nslay(sr))
 
         line = getline(i_unit)
-        read (line,*) (asfsil(l,s), l=1,nslay(s))
-!       read (getline(i_unit),*) (asfsil(l,s), l=1,nslay(s))
+        read (line,*) (asfsil(l,sr), l=1,nslay(sr))
+!       read (getline(i_unit),*) (asfsil(l,sr), l=1,nslay(sr))
 
         line = getline(i_unit)
-        read (line,*) (asfcla(l,s), l=1,nslay(s))
-!       read (getline(i_unit),*) (asfcla(l,s), l=1,nslay(s))
+        read (line,*) (asfcla(l,sr), l=1,nslay(sr))
+!       read (getline(i_unit),*) (asfcla(l,sr), l=1,nslay(sr))
 
 !       Volume of rock fraction
         line = getline(i_unit)
-        read (line,*) (asvroc(l,s), l=1,nslay(s))
+        read (line,*) (asvroc(l,sr), l=1,nslay(sr))
 
 !       s1agg.inc
 !       Soil layer aggregate density
         line = getline(i_unit)
-        read (line,*) (asdagd(l,s), l=1,nslay(s))
+        read (line,*) (asdagd(l,sr), l=1,nslay(sr))
 
 !       Soil layer aggregate stability
         line = getline(i_unit)
-        read (line,*) (aseags(l,s), l=1,nslay(s))
+        read (line,*) (aseags(l,sr), l=1,nslay(sr))
 
 ! Check these variables with ASD inc files and Hagen's EROSION inc files - LEW
 !       Soil layer ASD parms (gmd, min, max, gsd)
         line = getline(i_unit)
-        read (line,*) (aslagm(l,s), l=1,nslay(s))
+        read (line,*) (aslagm(l,sr), l=1,nslay(sr))
 
         line = getline(i_unit)
-        read (line,*) (aslagn(l,s), l=1,nslay(s))
+        read (line,*) (aslagn(l,sr), l=1,nslay(sr))
 
         line = getline(i_unit)
-        read (line,*) (aslagx(l,s), l=1,nslay(s))
+        read (line,*) (aslagx(l,sr), l=1,nslay(sr))
 
         line = getline(i_unit)
-        read (line,*) (as0ags(l,s), l=1,nslay(s))
+        read (line,*) (as0ags(l,sr), l=1,nslay(sr))
 
 !       s1surf.inc & s1sgeo.inc
 
 !       Crust parms (fraction, thickness)
         line = getline(i_unit)
-        read (line,*) asfcr(s), aszcr(s),                               &
-!       read (getline(i_unit),*) asfcr(s), aszcr(s),
+        read (line,*) asfcr(sr), aszcr(sr),                             &
+!       read (getline(i_unit),*) asfcr(sr), aszcr(sr),
 !       Crust parms (fraction cover of loose material, mass loose material)
-     &       asflos(s), asmlos(s),                                      &
+     &       asflos(sr), asmlos(sr),                                    &
 !       Crust parms (crust density and stability)
-     &       asdcr(s), asecr(s)
+     &       asdcr(sr), asecr(sr)
 
 !       Random Roughness
         line = getline(i_unit)
-        read (line,*) aslrr(s)
-!       read (getline(i_unit),*) aslrr(s)
+        read (line,*) aslrr(sr)
+!       read (getline(i_unit),*) aslrr(sr)
 
         !Lower and upper limits of grid cell RR allowed by erosion submodel
-        if (aslrr(s) < SLRR_MIN) then
-           write(0,*) 'slrr: ', aslrr(s),' < ', SLRR_MIN
+        if (aslrr(sr) < SLRR_MIN) then
+           write(0,*) 'slrr: ', aslrr(sr),' < ', SLRR_MIN
         end if
-        if (aslrr(s) > SLRR_MAX) then
-           write(0,*) 'slrr: ', aslrr(s),' < ', SLRR_MIN
+        if (aslrr(sr) > SLRR_MAX) then
+           write(0,*) 'slrr: ', aslrr(sr),' < ', SLRR_MIN
         end if
 
         !Lower and upper limits of grid cell aerodynamic roughness allowed
         !by erosion submodel (currently determined by equation used here)
-        if (aslrr(s) < (WZZO_MIN/0.3)) then
-           write(0,*) 'slrr: ', aslrr(s)
-           write(0,*) 'wzzo < WZZO_MIN: ', aslrr(s)*0.3,' < ', WZZO_MIN
-        else if(aslrr(s) > (WZZO_MAX/0.3)) then
-           write(0,*) 'slrr: ', aslrr(s)
-           write(0,*) 'wzzo > WZZO_MAX: ', aslrr(s)*0.3,' > ', WZZO_MAX
+        if (aslrr(sr) < (WZZO_MIN/0.3)) then
+           write(0,*) 'slrr: ', aslrr(sr)
+           write(0,*) 'wzzo < WZZO_MIN: ', aslrr(sr)*0.3,' < ', WZZO_MIN
+        else if(aslrr(sr) > (WZZO_MAX/0.3)) then
+           write(0,*) 'slrr: ', aslrr(sr)
+           write(0,*) 'wzzo > WZZO_MAX: ', aslrr(sr)*0.3,' > ', WZZO_MAX
         end if
 
 !       Oriented Roughness (ridge ht, spacing, width, orientation)
         line = getline(i_unit)
-        read (line,*) aszrgh(s), asxrgs(s),                             &
-!       read (getline(i_unit),*) aszrgh(s), asxrgs(s),
-     &       asxrgw(s), asargo(s)
+        read (line,*) aszrgh(sr), asxrgs(sr),                           &
+!       read (getline(i_unit),*) aszrgh(sr), asxrgs(sr),
+     &       asxrgw(sr), asargo(sr)
 
 !       Oriented Roughness ( spacing)
         line = getline(i_unit)
-        read (line,*) asxdks(s)
-!       read (getline(i_unit),*) asxdkh(s), asxdks(s)
+        read (line,*) asxdks(sr)
+!       read (getline(i_unit),*) asxdkh(sr), asxdks(sr)
 
 !     +++ HYDROLOGY +++
 
@@ -363,24 +381,24 @@
 
 !       Snow depth
         line = getline(i_unit)
-        read (line,*) ahzsnd(s)
-!       read (getline(i_unit),*) ahzsnd(s)
+        read (line,*) ahzsnd(sr)
+!       read (getline(i_unit),*) ahzsnd(sr)
 
 !       Soil layer wilting point
         line = getline(i_unit)
-        read (line,*) (ahrwcw(l,s), l=1,nslay(s))
-!       read (getline(i_unit),*) (ahrwcw(l,s), l=1,nslay(s))
+        read (line,*) (ahrwcw(l,sr), l=1,nslay(sr))
+!       read (getline(i_unit),*) (ahrwcw(l,sr), l=1,nslay(sr))
 !       Soil layer water content
         line = getline(i_unit)
-        read (line,*) (ahrwca(l,s), l=1,nslay(s))
-!       read (getline(i_unit),*) (ahrwca(l,s), l=1,nslay(s))
+        read (line,*) (ahrwca(l,sr), l=1,nslay(sr))
+!       read (getline(i_unit),*) (ahrwca(l,sr), l=1,nslay(sr))
 !       Soil surface hourly water content
         line = getline(i_unit)
-        read (line,*) (ahrwc0(h,s), h=1,12)
-!       read (getline(i_unit),*) (ahrwc0(h,s), h=1,12)
+        read (line,*) (ahrwc0(h,sr), h=1,12)
+!       read (getline(i_unit),*) (ahrwc0(h,sr), h=1,12)
         line = getline(i_unit)
-        read (line,*) (ahrwc0(h,s), h=13,24)
-!       read (getline(i_unit),*) (ahrwc0(h,s), h=13,24)
+        read (line,*) (ahrwc0(h,sr), h=13,24)
+!       read (getline(i_unit),*) (ahrwc0(h,sr), h=13,24)
   100 continue
 
 !     +++ WEATHER +++
@@ -817,7 +835,8 @@
   220 format (1x, 2f8.2)
   230 format (1x, 3f8.2)
   240 format (1x, 4f8.3)
-  250 format (1x, 5f8.2)
+  250 format (1x, i4)
+  251 format (1x, 2f8.2)
   260 format (1x, 6f8.2)
   270 format (1x, 7f8.2)
   280 format (1x, 8f8.2)
@@ -870,82 +889,87 @@
       write (o_unit,*)
       write (o_unit,*) 'nsubr - number of subregions'
       write (o_unit,*) nsubr
-      write (o_unit,*) 'subregion dimensions (x1,y1) (x2,y2)'
-      do 1020 s = 1, nsubr
-        write (o_unit,250) ((amxsr (i,j,s), i=1,2), j=1,2)
+      write (o_unit,*) 'subregion polygon, count, xy pairs'
+      do 1020 sr = 1, nsubr
+        write (o_unit,250) subr_poly(sr)%np
+        do ipol = 1, subr_poly(sr)%np
+            write (o_unit,251) subr_poly(sr)%points(ipol)%x,            &
+     &                       subr_poly(sr)%points(ipol)%y
+        end do
  1020 continue
 
-      do 1100 s = 1, nsubr
+      do 1100 sr = 1, nsubr
         write (o_unit,*)
         write (o_unit,*)
-        write(o_unit,*) '*********************** Subregion ', s,        &
+        write(o_unit,*) '*********************** Subregion ', sr,       &
      &                 ' ***********************'
 
         write (o_unit,*)
         write(o_unit,*) '+++ BIOMASS +++'
         write (o_unit,*)
         write (o_unit,*) 'Biomass ht,  flat cover'
-        write (o_unit,220) abzht(s), abffcv(s)
+        write (o_unit,220) abzht(sr), abffcv(sr)
 
         write (o_unit,*)
         write (o_unit,*) 'Crop height, SAI,    LAI'
-        write (o_unit,230) aczht(s), acrsai(s), acrlai(s)
+        write (o_unit,230) aczht(sr), acrsai(sr), acrlai(sr)
 
         write (o_unit,*)
         write (o_unit,*) 'Residue height, SAI,    LAI'
-        write (o_unit,230) adzht_ave(s), adrsaitot(s), adrlaitot(s)
+        write (o_unit,230) adzht_ave(sr), adrsaitot(sr), adrlaitot(sr)
 
         write (o_unit,*)
         write (o_unit,*) '+++ SOIL +++ '
         write (o_unit,*)
         write (o_unit,*) 'nslay - number of soil layers'
-        write (o_unit,*) nslay(s)
+        write (o_unit,*) nslay(sr)
 
         write (o_unit,*)
         write (o_unit,*) 'layer depth b.density ',                      &
      &                   'vfsand   sand   silt   clay    rock vol'
-        do 1030 l = 1, nslay(s)
-          write (o_unit,350) l, aszlyt(l,s), asdblk(l,s),               &
-     &  asfvfs(l,s),asfsan(l,s), asfsil(l,s), asfcla(l,s), asvroc(l,s)
+        do 1030 l = 1, nslay(sr)
+          write (o_unit,350) l, aszlyt(l,sr), asdblk(l,sr),             &
+     &                       asfvfs(l,sr), asfsan(l,sr), asfsil(l,sr),  &
+     &                       asfcla(l,sr), asvroc(l,sr)
  1030   continue
 
         write (o_unit,*)
           write (o_unit,*) 'layer    AgD     AgS ',                     &
      &                   ' GMD    GMDmn     GMDmx    GSD'
-        do 1040 l = 1, nslay(s)
-          write (o_unit,350) l, asdagd(l,s), aseags(l,s),               &
-     &           aslagm(l,s),aslagn(l,s), aslagx(l,s), as0ags(l,s)
+        do 1040 l = 1, nslay(sr)
+          write (o_unit,350) l, asdagd(l,sr), aseags(l,sr),             &
+     &           aslagm(l,sr),aslagn(l,sr), aslagx(l,sr), as0ags(l,sr)
  1040   continue
 
         write (o_unit,*)
         write (o_unit,*) 'Crust frac thick mass LOS frac.LOS, ',        &
      &                   'density stability'
-        write (o_unit,260)asfcr(s),aszcr(s),asmlos(s),asflos(s),        &
-     &                    asdcr(s),asecr(s)
+        write (o_unit,260)asfcr(sr),aszcr(sr),asmlos(sr),asflos(sr),    &
+     &                    asdcr(sr),asecr(sr)
 
         write (o_unit,*)
         write (o_unit,*) '    RR,    Rg ht,  width, spacing, ',         &
      &                   'orient., dike spacing'
-        write (o_unit,270) aslrr(s), aszrgh(s), asxrgw(s), asxrgs(s),   &
-     &                     asargo(s),  asxdks(s)
+        write (o_unit,270) aslrr(sr), aszrgh(sr), asxrgw(sr),           &
+     &                     asxrgs(sr), asargo(sr), asxdks(sr)
 
         write (o_unit,*)
         write (o_unit,*) '+++ HYDROLOGY +++ '
         write (o_unit,*)
 
         write (o_unit,*) 'Snow depth (mm)'
-        write (o_unit,*) ahzsnd(s)
+        write (o_unit,*) ahzsnd(sr)
 
         write (o_unit,*)
         write (o_unit,*) 'layer  wilting and actual water contents'
-        do 1050 l = 1, nslay(s)
-          write (o_unit,350) l, ahrwcw (l,s), ahrwca(l,s)
+        do 1050 l = 1, nslay(sr)
+          write (o_unit,350) l, ahrwcw (l,sr), ahrwca(l,sr)
  1050   continue
         write (o_unit,*) 'Hourly water contents - ahrwc0'
-        write (o_unit,260) (ahrwc0(h,s), h=1,6)
-        write (o_unit,260) (ahrwc0(h,s), h=7,12)
-        write (o_unit,260) (ahrwc0(h,s), h=13,18)
-        write (o_unit,260) (ahrwc0(h,s), h=19,24)
+        write (o_unit,260) (ahrwc0(h,sr), h=1,6)
+        write (o_unit,260) (ahrwc0(h,sr), h=7,12)
+        write (o_unit,260) (ahrwc0(h,sr), h=13,18)
+        write (o_unit,260) (ahrwc0(h,sr), h=19,24)
 
  1100 continue
 
