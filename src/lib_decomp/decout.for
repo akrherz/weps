@@ -12,7 +12,7 @@
 
 !  +  + +  COMMON  BLOCKS + + +
 
-      include 'file.inc'
+      use file_io_mod, only: luod_above, luod_below
       include 'p1werm.inc'
       include 'm1subr.inc'
       include 'm1flag.inc'

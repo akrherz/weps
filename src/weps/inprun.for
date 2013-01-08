@@ -12,6 +12,8 @@
 !     + + + Modules Used + + +
       use Polygons_Mod
       use subregions_mod
+      use file_io_mod, only: fopenk, luicli, luiwin, luiwsd, luocdb,    &
+     &            luoddb, luohdb, luosdb, luotdb, luomanage, luolog
 
       include 'p1werm.inc'
       include 'wpath.inc'
@@ -35,7 +37,6 @@
       include 'h1db1.inc'
       include 'w1clig.inc'
       include 'w1wind.inc'
-      include 'file.inc'
 
 !     + + + LOCAL COMMON BLOCKS + + +
       include 'main/main.inc'
@@ -48,6 +49,7 @@
       logical       fexist
       real          wepsrun_version
       integer       subr_np
+      integer       lui1
 
 !     + + + Local Variable Definitions + + +
 !     i   - local index counter
@@ -70,6 +72,7 @@
 
 !     subr_poly - polygons defining each subregion extent
 !     subr_np - number of points in polygon read from file
+!     lui1 - unit number for input of weps.run file
 
 !     + + + FUNCTION DECLARATIONS + + +
 !      integer   julday
@@ -285,26 +288,25 @@
 !     read flags to print submodel output
       case (17)
         read (line,*,err=80) am0hfl,am0sfl,am0tfl,am0cfl,am0dfl,am0efl
-        if (am0tfl .eq. 1) then
-          call fopenk(luomanage,rootp(1:len_trim(rootp)) //'manage.out',&
-     &         'unknown')
-        end if
+        if (am0tfl .eq. 1) call fopenk(luomanage,                       &
+     &     rootp(1:len_trim(rootp)) // 'manage.out', 'unknown')
+
       case (18)
         ! debug flag line. Add zero integer to end to make sure six values
         ! are available to read. Previously interface only set 5 flags.
         ! Now should set six.
         line = line(1:len_trim(line)) // ' 0'
         read (line,*,err=80) am0hdb,am0sdb,am0tdb,am0cdb,am0ddb,am0edb
-        if (am0hdb .eq. 1) open (unit = luohdb,                         &
-     &   file = rootp(1:len_trim(rootp)) // 'hdbug.out')
-        if (am0sdb .eq. 1) open (unit = luosdb,                         &
-     &   file = rootp(1:len_trim(rootp)) // 'sdbug.out')
-        if (am0tdb .eq. 1) open(unit = luotdb,                          &
-     &   file = rootp(1:len_trim(rootp)) // 'tdbug.out')
-        if (am0cdb .eq. 1) open (unit = luocdb,                         &
-     &   file = rootp(1:len_trim(rootp)) // 'cdbug.out')
-        if (am0ddb .eq. 1) open (unit = luoddb,                         &
-     &   file = rootp(1:len_trim(rootp)) // 'ddbug.out')
+        if (am0hdb .eq. 1) call fopenk (luohdb,                         &
+     &     rootp(1:len_trim(rootp)) // 'hdbug.out', 'unknown')
+        if (am0sdb .eq. 1) call fopenk (luosdb,                         &
+     &     rootp(1:len_trim(rootp)) // 'sdbug.out', 'unknown')
+        if (am0tdb .eq. 1) call fopenk (luotdb,                         &
+     &     rootp(1:len_trim(rootp)) // 'tdbug.out', 'unknown')
+        if (am0cdb .eq. 1) call fopenk (luocdb,                         &
+     &     rootp(1:len_trim(rootp)) // 'cdbug.out', 'unknown')
+        if (am0ddb .eq. 1) call fopenk (luoddb,                         &
+     &     rootp(1:len_trim(rootp)) // 'ddbug.out', 'unknown')
 
       case (19)
         read (line,*,err=80) amasim

@@ -13,11 +13,12 @@
 
       subroutine bpools (cd,cm,cy,isr)
 
+      use file_io_mod, only: luocrp1, luobio1, luodec
+
       integer cd,cm,cy,isr
       real total, saitotal !added by Simon
 
       include 'p1werm.inc'
-      include 'file.inc'
       include 'm1flag.inc'
       include 'b1glob.inc'
       include 'd1gen.inc'
@@ -41,7 +42,7 @@
 !      include 'h1hydro.inc'
 
 !     + + + LOCAL VARIABLES + + +
-      integer doy, idx, luout
+      integer doy, idx
 
 !     + + + FUNCTIONS CALLED + + +
       integer dayear

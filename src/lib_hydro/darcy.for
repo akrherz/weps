@@ -21,6 +21,8 @@
 !     + + + KEYWORDS + + +
 !     soil water redistribution, evaporation, runoff, deep percolation
 
+      use file_io_mod, only: luowater
+
 !     + + + ARGUMENT DECLARATIONS + + +
       integer daysim, numeq
       real bszlyt(*), bulkden(*), bszlyd(*), theta(0:*)
@@ -108,7 +110,6 @@
       include 'p1unconv.inc'
       include 'm1flag.inc'
       include 'm1subr.inc'
-      include 'file.inc'
 
 !     + + + LOCAL COMMON BLOCKS + + +
       include 'hydro/lsoda.inc'

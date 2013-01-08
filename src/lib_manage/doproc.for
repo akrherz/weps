@@ -17,6 +17,7 @@
 
 !     + + + PARAMETERS AND COMMON BLOCKS + + +
 
+      use file_io_mod, only: luomanage, luotdb
       include 'command.inc'
       include 'p1werm.inc'
       include 'p1unconv.inc'
@@ -51,7 +52,6 @@
       include 'manage/tcrop.inc'
       include 'main/main.inc'
       include 'crop/prevstate.inc'
-      include 'file.inc'
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer sr, bmrotation

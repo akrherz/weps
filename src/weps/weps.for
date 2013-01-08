@@ -28,7 +28,6 @@
 !       10-Mar-99       wjr     did lots of stuff -- put init code into separate
 !                                files, put total loops into sep file, open into ...
 !                                created soilinit, cliginit, ...
-!
 
 !     external continue_hdl
 !     external common_handler
@@ -40,11 +39,10 @@
       USE pd_var_tables
       use Polygons_Mod
       use subregions_mod
-
+      use file_io_mod, only: luo_egrd, luo_erod, luomandate
 
 ! build and release info, fpp created by cook
       include 'build.inc'
-
       include 'p1werm.inc'
       include 'wpath.inc'
       include 'p1unconv.inc'
@@ -61,7 +59,6 @@
       include 'w1clig.inc'
       include 'w1wind.inc'
       include 'w1pavg.inc'
-      include 'file.inc'
 
       include 'b1glob.inc'
       include 'd1glob.inc'
@@ -716,19 +713,8 @@
       call print_ui1_output(nperiods, maxper, n_rot_cycles) !Use for new WEPS gui
       call print_mandate_output(luomandate)
      
-! call print_nui_output(nperiods, maxper) !Obsolete
-! We need to create a "close files ()" call and remove/move all of this stuff - LEW
-      close (luiwin)
-      close (luicli)
-      close (luiwsd)
-      close (luogui1)
-      close (luomandate)
-      close (unit = 40)
-      close (luoplt)
-      close (luo_erod)
-      close (500)
-
-      if ((calc_confidence .gt. 0)) close (luoci)
+      ! close all open files
+      call closefils
 
       ! deallocate subregion polygon storage, no longer needed
       do isr = 1, nsubr

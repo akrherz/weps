@@ -8,7 +8,7 @@
 !     + + + PURPOSE + + +
 !     Prints headers for the CROP submodel output files
 
-      include 'file.inc'
+      use file_io_mod, only: luoseason, luocrop, luoshoot, luoinpt
       include 'm1flag.inc'
 
 !     + + + OUTPUT FORMATS + + +

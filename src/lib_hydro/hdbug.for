@@ -19,6 +19,7 @@
 
 !     + + + GLOBAL COMMON BLOCKS + + +
 
+      use file_io_mod, only: luohdb
       include 'p1werm.inc'
       include 'm1subr.inc'
       include 'm1flag.inc'
@@ -39,7 +40,6 @@
       include 'h1scs.inc'
       include 'h1db1.inc'
       include 'h1temp.inc'
-      include 'file.inc'
 
 !     + + + LOCAL COMMON BLOCKS + + +
       include 'main/main.inc'

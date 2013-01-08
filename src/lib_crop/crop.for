@@ -61,6 +61,8 @@
 !     + + + KEYWORDS + + +
 !     Wind erosion crop model
 
+      use file_io_mod, only: luocrop, luoshoot
+
 !     + + + ARGUMENT DECLARATIONS + + +
       integer bnslay, bctdtm, bcthudf
       real bszlyt(*)
@@ -263,7 +265,6 @@
 !     bggrainf - internally computed grain fraction of reproductive mass
 
 !     + + + GLOBAL COMMON BLOCKS + + +
-      include 'file.inc'
       include 'p1werm.inc'
       include 'm1flag.inc'
       include 'p1solar.inc'

@@ -20,6 +20,8 @@
 !     +++ PARAMETER +++
 !
 !     + + + GLOBAL COMMON BLOCKS + + +
+
+      use file_io_mod, only: fopenk
       include  'p1werm.inc'
       include  'p1const.inc'
       include  'b1glob.inc'
@@ -40,7 +42,6 @@
       include  'm1subr.inc'
       include  'wpath.inc'
       include  'c1gen.inc'
-      include  'file.inc'
 !
 !     + + + LOCAL COMMON BLOCKS + + +
       include 'erosion/e2grid.inc'
@@ -55,7 +56,8 @@
       integer k,l, sr, ip
       integer b
       integer day, mon, yr
-!
+      integer :: luo_saeinp      ! output unit number
+
 !     + + + LOCAL VARIABLE DEFINITIONS + + +
 !     sr - index used in subregion loop
 !     ip - index to polygon coordinates
@@ -479,7 +481,7 @@
      &bles with 1 flag)')
       write(luo_saeinp,*) '-1'
 
-      close(42)
+      close(luo_saeinp)
 
       return
       end

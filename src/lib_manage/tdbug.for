@@ -13,6 +13,8 @@
 !     wind, erosion, tillage, soil, crop, decomposition
 !     management
 
+      use file_io_mod, only: luotdb
+
 !     + + + ARGUMENT DECLARATIONS + + +
       integer sr, slay, output
 
@@ -22,7 +24,6 @@
 !     output  - process number for debugging output
 
 !     + + + GLOBAL COMMON BLOCKS + + +
-
       include 'p1werm.inc'
       include 's1layr.inc'
       include 's1surf.inc'
@@ -38,7 +39,6 @@
       include 'h1scs.inc'
       include 'h1db1.inc'
       include 'decomp/decomp.inc'
-      include 'file.inc'
 
 !     + + + LOCAL COMMON BLOCKS + + +
       include 'main/main.inc'

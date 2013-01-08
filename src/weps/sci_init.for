@@ -4,6 +4,8 @@
 !$HeadURL$
       subroutine sci_init(isr)
 
+      use file_io_mod, only: luostir
+
 !     + + + ARGUMENT VARIABLES + + +
       integer isr
 
@@ -13,7 +15,6 @@
 !     + + + INCLUDE + + +
       include 'p1werm.inc'
       include 'command.inc'
-      include 'file.inc'
       include 'main/sci_report_val.inc'
       include 'main/stir_report_val.inc'
       include 'manage/man.inc'

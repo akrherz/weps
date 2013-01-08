@@ -5,9 +5,9 @@
       subroutine sci_report
 
 !     + + + INCLUDE + + +
+      use file_io_mod, only: luosci
       include 'p1werm.inc'
       include 'command.inc'
-      include 'file.inc'
       include 'm1subr.inc'
       include 's1dbh.inc'
       include 'erosion/e2grid.inc'

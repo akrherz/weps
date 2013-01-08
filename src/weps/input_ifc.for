@@ -15,7 +15,8 @@
           
 !     + + + MODULES + + +
       use stir_soil_texture, only : update_stir_soil_multiplier
-      
+      use file_io_mod, only: fopenk      
+
       include 'p1werm.inc'
       include 'wpath.inc'
       include 'm1subr.inc'
@@ -33,7 +34,6 @@
       include 'h1hydro.inc'
       include 'h1scs.inc'
       include 'h1db1.inc'
-      include 'file.inc'
       include 'command.inc'          !declarations for commandline args
 
 !     + + + LOCAL COMMON BLOCKS + + +
@@ -43,11 +43,13 @@
       integer       lay
       character     line*512
       integer       isr
+      integer       lui1
 
 !     + + + LOCAL DEFINITIONS + + +
 !     lay - soil layer counter
 !     line - hold input line text
 !     isr - subregion counter
+!     lui1 - input file unit number
 
 !     + + + FUNCTION DECLARATIONS + + +
       real   plant_wat_g
@@ -61,9 +63,9 @@
 !     Check to see if this is a "versioned" IFC file
          read (lui1,'(a)',err=901) line
          if (line(1:12) .eq. 'Version: 1.0') then
-           call inp_ifc_v1(isr)  ! For version 1.0 IFC file format only
+           call inp_ifc_v1(isr, lui1)  ! For version 1.0 IFC file format only
          else if (line(1:12) .eq. 'Version: 1.1') then
-           call inp_ifc_v1_1(isr)  ! For version 1.1 IFC file format only
+           call inp_ifc_v1_1(isr, lui1)  ! For version 1.1 IFC file format only
          else  ! Assuming obsolete unversioned IFC file formats only
            close (lui1)    
            call inpsub(isr)  ! For obsolete IFC file formats only

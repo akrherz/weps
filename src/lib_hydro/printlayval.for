@@ -14,6 +14,8 @@
 !     + + + KEYWORDS + + +
 !     output hydro
 
+      use file_io_mod, only: luohlayers
+
 !     + + + ARGUMENT DECLARATIONS + + +
       integer daysim, layrsn
       real bszlyt(*), bszlyd(*), bulkden(*)
@@ -42,7 +44,6 @@
       parameter( pi = 3.1415927 )
 
 !     + + + COMMON BLOCKS + + +
-      include 'file.inc'
 
 !     + + + LOCAL COMMON BLOCKS + + +
       include 'hydro/vapprop.inc'

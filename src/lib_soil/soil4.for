@@ -36,11 +36,12 @@
 !     wind erosion, soil processes, surface process, layer process
 
 !     + + + GLOBAL COMMON BLOCKS + + +
+
+      use file_io_mod, only: luosoilsurf, luosoillay
       include 'p1werm.inc'
       include 'wpath.inc'
       include 'm1subr.inc'
       include 'm1flag.inc'
-      include 'file.inc'
 
 !     + + + GLOBAL COMMON BLOCKS + + +
       include 'soil/cumulat.inc'

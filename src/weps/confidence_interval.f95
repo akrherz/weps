@@ -12,11 +12,9 @@ subroutine confidence_interval(ci, nrot_yrs, n1cycles, ci_year)
 
     use pd_report_vars
     use pd_var_tables
+    use file_io_mod, only: luoci
 
     implicit none
-
-    include 'file.inc'
- 
 
     real,    intent (in) :: ci ! confidence interval value (decimal)
     integer, intent (in) :: nrot_yrs ! number of year in a rotation cycle

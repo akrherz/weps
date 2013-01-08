@@ -4,7 +4,7 @@
 !$Revision$
 !$HeadURL$
 !
-      subroutine inp_ifc_v1 (isr)
+      subroutine inp_ifc_v1 (isr, lui1)
 
       include 'p1werm.inc'
       include 'm1subr.inc'
@@ -18,10 +18,10 @@
       include 'h1hydro.inc'
       include 'h1scs.inc'
       include 'h1db1.inc'
-      include 'file.inc'
 
 !     + + + Arguments + + +
       integer isr
+      integer lui1
 
 !     + + + LOCAL COMMON BLOCKS + + +
       include 'main/main.inc'
@@ -241,7 +241,7 @@
       end
 
 !-----------------------------------------------------------------------
-      subroutine inp_ifc_v1_1 (isr)
+      subroutine inp_ifc_v1_1 (isr, lui1)
 
       ! input routine for Version 1.1 IFC file format
 
@@ -261,13 +261,13 @@
       include 'h1hydro.inc'
       include 'h1scs.inc'
       include 'h1db1.inc'
-      include 'file.inc'
 
 !     + + + LOCAL COMMON BLOCKS + + +
       include 'main/main.inc'
 
 !     + + + Arguments + + +
       integer isr
+      integer lui1
 
 !     + + + LOCAL VARIABLES + + +
       integer       lay

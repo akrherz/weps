@@ -5,6 +5,8 @@
 
       subroutine plotdata(sr)
 
+      use file_io_mod, only: luoplt
+
       integer sr
 !       Edit History
 !       04-Mar-99       wjr     created
@@ -24,7 +26,6 @@
       include 'w1clig.inc'
       include 'w1wind.inc'
       include 'h1hydro.inc'
-      include 'file.inc'
       include 'm1subr.inc'
       include 'erosion/m2geo.inc'
       include 'erosion/e2erod.inc'

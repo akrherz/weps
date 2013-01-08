@@ -21,6 +21,8 @@
 !     + + + KEYWORDS + + +
 !     crop model status
 
+      use file_io_mod, only: luoseason
+
 !     + + + ARGUMENT DECLARATIONS + + +
       character*(80) bc0nam
       integer bm0cfl, bnslay, bc0idc, bcdayam
@@ -69,7 +71,6 @@
 !                1  - Warnings generated for any crop unless supressed by crop type
 
 !     + + + GLOBAL COMMON BLOCKS + + +
-      include 'file.inc'
 
 !     + + + LOCAL VARIABLES + + +
       integer lay, dd, mm, yy

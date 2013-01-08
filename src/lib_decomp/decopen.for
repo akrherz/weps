@@ -7,10 +7,9 @@
       subroutine decopen
 
 ! + + + Purpose  + + +
-!     opens the files for decomp output
+!     Write the headers into some files for decomp output
 
-
-      include 'file.inc'
+      use file_io_mod, only: luod_above, luod_below
       include 'p1werm.inc'
       include 'wpath.inc'
       include 'm1flag.inc'
@@ -20,10 +19,6 @@
 ! + + + LOCAL VARIABLES + + +
 
 ! + + + FORMATS + + +
-
-! 2020 format (///////////)
-! 2210 format (/,' warning, the output file -  ',a80,/,' already exists -
-!     & press enter to overwrite this file or control break to stop')
  2030 format( 29x,'Standing',9x,'Flat',9x,'Surface Cover    Silhouett ' &
      &,'Area     Total Residue Amounts')
  2035 format (14x,'Pool',1x,'Stem',1x,2(2x,'decomp',3x,'bio-',1x),2x,   &
@@ -35,9 +30,6 @@
 !    + + + DATA + + +
 
 !    + + + END SPECIFICATIONS + + +
-
-!     open output file  for root residues
-!     open output file  for cover estiamtes
 
 !   Write headers for output files
 !       dabove.out

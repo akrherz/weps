@@ -5,6 +5,8 @@
 
       subroutine report_hydrobal( isr, bmrotation )
 
+      use file_io_mod, only: luohydrobal
+
 !     + + + ARGUMENT DECLARATIONS + + +
       integer isr, bmrotation
 
@@ -14,7 +16,6 @@
 
 !     + + + PARAMETERS AND COMMON BLOCKS + + +
       include 'p1werm.inc'
-      include 'file.inc'
       include 'm1flag.inc'
       include 'main/main.inc'
       include 'manage/oper.inc'

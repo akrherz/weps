@@ -9,8 +9,8 @@
 !     Edit History
 !     09-Mar-99   wjr   created
 
+      use file_io_mod, only: luicli
       include 'p1werm.inc'
-      include 'file.inc'
       include 'w1clig.inc'
       include 'm1sim.inc'
       include 'w1pavg.inc'

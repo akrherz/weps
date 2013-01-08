@@ -22,6 +22,8 @@
 !     + + + KEYWORDS + + +
 !     shoot growth
 
+      use file_io_mod, only: luoshoot
+
 !     + + + ARGUMENT DECLARATIONS + + +
       integer bnslay
       real bszlyd(*), bcdpop
@@ -98,7 +100,6 @@
 !     bcdayap - number of days of growth completed since crop planted
 
 !     + + + COMMON BLOCKS + + +
-      include 'file.inc'
       include 'm1flag.inc'
       include 'p1unconv.inc'
       include 'command.inc'

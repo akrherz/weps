@@ -6,6 +6,7 @@
 
 !     + + + MODULES + + +
       use stir_soil_texture, only : get_stir_soil_multiplier
+      use file_io_mod, only: luostir
       
 !     + + + ARGUMENT DECLARATIONS + + +
       integer isr
@@ -21,7 +22,6 @@
 !     + + + INCLUDE + + +
       include 'p1werm.inc'
       include 'command.inc'
-      include 'file.inc'
       include 'm1flag.inc'
       include 'main/sci_report_val.inc'
       include 'main/stir_report_val.inc'

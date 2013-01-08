@@ -7,6 +7,7 @@
      &                           harv_unit_flg )
 
       use mandate_vars    ! Load shared mandates() array
+      use file_io_mod, only: luoharvest_si, luoharvest_en
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer sr, bmrotation
@@ -23,10 +24,8 @@
 !                1  - use lb/ac or kg/m^2
 
 !     + + + PARAMETERS AND COMMON BLOCKS + + +
-
       include 'p1werm.inc'
       include 'p1const.inc'
-      include 'file.inc'
       include 'm1flag.inc'
       include 'main/main.inc'
       include 'c1info.inc'

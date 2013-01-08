@@ -289,9 +289,6 @@ call test_crop_cliginit()                   !Reads header info and sets "monthly
      call cpout                                 !print headings for crop output files
   endif
 
-  if (am0cfl .gt. 1) then
-     call fopenk (luoallcrop, 'allcrop.prn', 'unknown') !main crop debug file (Doesn't appear to be used right now)
-  endif
   if (am0cdb .gt. 0) then
      open (unit = 27, file = 'cdbug.out')       !crop submodel debug output file
   endif

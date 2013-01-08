@@ -23,12 +23,12 @@
 !     +++ ARGUMENT DECLARATIONS +++
 !
 !     + + + GLOBAL COMMON BLOCKS + + +
-!
+
+      use file_io_mod, only: fopenk
       include 'p1werm.inc'
       include 'p1const.inc'
       include 'm1sim.inc'
       include 'm1flag.inc'
-      include 'file.inc'
       include 'erosion/m2geo.inc'
       include 'w1clig.inc'        !Requires yrly average precip.....
 
@@ -172,13 +172,6 @@
 !     (stdin = 5, stdout = 6)
       i_unit = 5         !If -i option is specified, use unit number 50
       o_unit = 6         !stdout
-
-      o_einp_unit = 60   !Echo input to a file (unit number)
-      o_egrd_unit = luo_egrd   !grid erosion summary file unit number
-      o_erod_unit = luo_erod   !erosion summary file unit number
-      o_emit_unit = luo_emit   !grid erosion detail file unit number
-      o_eplt_unit = 64   !parameter data plot file unit number
-      o_sgrd_unit = luo_sgrd   !grid erosion subdaily file unit number
 
       o_einp_ext = ".einp"   !filename extension for echo'd input data file
       o_egrd_ext = ".egrd"   !filename extension for grid erosion summary output
@@ -324,17 +317,9 @@
                 input_filepath = trim(argv(3:))
                 !write(0,*) 'input_filepath', trim(input_filepath)
 
-                i_unit = 50    !Assign unit number for input file 
-                open (i_unit, FILE=input_filepath, IOSTAT=iostat,       &
-     &                STATUS='old')
-                if (iostat /= 0) then
-                   write(0,*) 'input_filepath:', trim(input_filepath)
-                   write(0,*) 'iostat', iostat
-                   write(0,*) 'Error opening input file'
-                   call exit(62)
-                else
-                   have_ifile = .true.
-                endif
+                ! checks and exits if file does not exist
+                call fopenk (i_unit, input_filepath, 'old')
+                have_ifile = .true.
 
                !extract input file basename from it's path
                indx = index(trim(input_filepath),'/',back=.true.)
@@ -359,15 +344,7 @@
              o_einp_file = trim(file_bname) //  trim(o_einp_ext)
              o_einp_fpath = trim(fpath_bname)//trim(o_einp_ext)
 
-             open(o_einp_unit, file=o_einp_fpath, IOSTAT=iostat,        &
-     &            status='unknown')
-                if (iostat /= 0) then
-                   write(0,*) 'Echo erosion input file:',               &
-     &                        trim(o_einp_fpath)
-                   write(0,*) 'iostat', iostat
-                   write(0,*) 'Error opening echo erosion input file'
-                   call exit(72)
-                endif
+             call fopenk(o_einp_unit, o_einp_fpath, 'unknown')
 
            else if (argv(2:5) == 'Eplt') then  !If specified print Hagen's output file
              !write(0,*) '"-Eplt" option specified'
@@ -380,15 +357,7 @@
              o_eplt_file = trim(file_bname) //  trim(o_eplt_ext)
              o_eplt_fpath = trim(fpath_bname)//trim(o_eplt_ext)
 
- !           open(o_eplt_unit, file=o_eplt_fpath, IOSTAT=iostat,        &
- !   &            status='unknown')
- !              if (iostat /= 0) then
- !                 write(0,*) 'Parameter data plot file:',              &
- !   &                        trim(o_eplt_fpath)
- !                 write(0,*) 'iostat', iostat
- !                 write(0,*) 'Error opening parameter data plot file'
- !                 call exit(82)
- !              endif
+ !           call fopenk(o_eplt_unit, o_eplt_fpath, 'unknown')
 
            else if (argv(2:5) == 'Egrd') then
              !write(0,*) '"-Egrd" option specified'
@@ -400,15 +369,7 @@
              o_egrd_file = trim(file_bname) //  trim(o_egrd_ext)
              o_egrd_fpath = trim(fpath_bname)//trim(o_egrd_ext)
 
-             open(o_egrd_unit, file=o_egrd_fpath, IOSTAT=iostat,        &
-     &            status='unknown')
-                if (iostat /= 0) then
-                   write(0,*) 'Grid erosion summary file:',             &
-     &                        trim(o_egrd_fpath)
-                   write(0,*) 'iostat', iostat
-                   write(0,*) 'Error opening grid erosion summary file'
-                   call exit(92)
-                endif
+             call fopenk(o_egrd_unit, o_egrd_fpath, 'unknown')
 
            else if (argv(2:6) == 'Esgrd') then
              !write(0,*) '"-Esgrd" option specified'
@@ -420,15 +381,7 @@
              o_sgrd_file = trim(file_bname) //  trim(o_sgrd_ext)
              o_sgrd_fpath = trim(fpath_bname)//trim(o_sgrd_ext)
 
-             open(o_sgrd_unit, file=o_sgrd_fpath, IOSTAT=iostat,        &
-     &            status='unknown')
-                if (iostat /= 0) then
-                   write(0,*) 'Grid erosion subdaily file:',            &
-     &                        trim(o_sgrd_fpath)
-                   write(0,*) 'iostat', iostat
-                   write(0,*) 'Error opening grid erosion subdaily file'
-                   call exit(102)
-                endif
+             call fopenk(o_sgrd_unit, o_sgrd_fpath, 'unknown')
 		 
            else if (argv(2:5) == 'Emit') then
              !write(0,*) '"-Emit" option specified'
@@ -442,16 +395,7 @@
              o_emit_file = trim(file_bname) //  trim(o_emit_ext)
              o_emit_fpath = trim(fpath_bname)//trim(o_emit_ext)
 
-
-             open(luo_emit, file=o_emit_fpath, IOSTAT=iostat,           &
-     &            status='unknown')
-                if (iostat /= 0) then
-                   write(0,*) 'Grid erosion detail file:',              &
-     &                        trim(o_emit_fpath)
-                   write(0,*) 'iostat', iostat
-                   write(0,*) 'Error opening grid erosion detail file'
-                   call exit(112)
-                endif
+             call fopenk(o_emit_unit, o_emit_fpath, 'unknown')
 			 
            else if (argv(2:5) == 'Erod') then
              !write(0,*) '"-Erod" option specified'
@@ -464,14 +408,7 @@
              o_erod_file = trim(file_bname) //  trim(o_erod_ext)
              o_erod_fpath = trim(fpath_bname) // trim(o_erod_ext)
 
-             open(o_erod_unit, file=o_erod_fpath, IOSTAT=iostat,        &
-     &            status='unknown')
-                if (iostat /= 0) then
-                   write(0,*) 'Erosion summary file:',trim(o_erod_fpath)
-                   write(0,*) 'iostat', iostat
-                   write(0,*) 'Error opening erosion summary file'
-                   call exit(122)
-                endif
+             call fopenk(o_erod_unit, o_erod_fpath, 'unknown')
 
            else     !Unknown option ....
              write (0,*) 'Ignoring uknown option: ', trim(argv)

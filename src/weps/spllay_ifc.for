@@ -29,7 +29,6 @@
       include 'h1hydro.inc'
       include 'h1scs.inc'
       include 'h1db1.inc'
-      include 'file.inc'
       include 'command.inc'          !declarations for commandline args
 
 !     + + + LOCAL COMMON BLOCKS + + +

@@ -5,6 +5,8 @@
 
       subroutine report_calib_harvest(sr,bmrotation,mass_rem, mass_left)
 
+      use file_io_mod, only: luoharvest_calib, luoharvest_calib_parm
+
 !     + + + ARGUMENT DECLARATIONS + + +
       integer sr, bmrotation
       real mass_rem, mass_left
@@ -23,7 +25,6 @@
 !     + + + PARAMETERS AND COMMON BLOCKS + + +
       include 'p1werm.inc'
       include 'p1const.inc'
-      include 'file.inc'
       include 'm1flag.inc'
       include 'main/main.inc'
       include 'c1info.inc'

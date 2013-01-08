@@ -17,6 +17,8 @@
 ! ****See user modifications at start of code to enable test
 !      output subroutines sb1out and sb2out
 
+      use file_io_mod, only: luo_sgrd, luo_emit
+
 !     +++ ARGUMENT DECLARATIONS +++
 
       real min_erosion_awu       !Minimum erosive wind speed (m/s)
@@ -49,8 +51,6 @@
       include  'h1db1.inc'
       include  'm1flag.inc'
       include  'm1sim.inc'
-!      include  'wpath.inc'
-      include  'file.inc'
       include  'timer.inc'
       include  'command.inc'
       include  'main/main.inc'

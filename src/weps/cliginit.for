@@ -10,10 +10,10 @@
 !
 !       Edit History
 !       04-Mar-99       wjr     created
-!
+
+      use file_io_mod, only: luicli
       include 'p1werm.inc'
       include 'w1clig.inc'
-      include 'file.inc'
       include 'm1flag.inc'
       include 'main/w1cli.inc'
       include 'main/w1win.inc'

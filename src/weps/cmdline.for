@@ -18,9 +18,9 @@
 
 !     + + + GLOBAL COMMON BLOCKS + + +
 
+      use file_io_mod, only: fopenk, luolog
       include 'p1werm.inc'
       include 'wpath.inc'
-      include 'file.inc'
       include 'm1flag.inc'
 
       include 'util/misc/f2kcli.inc'  !declarations for f2k commandline functions

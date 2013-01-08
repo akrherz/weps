@@ -34,6 +34,8 @@
 !     + + + KEYWORDS + + +
 !     Initialization
 
+      use file_io_mod, only: luoinpt
+
 !     + + + ARGUMENT DECLARATIONS + + +
       integer bnslay, bc0idc, dd, mm, yy, bcthudf, bctdtm
       real bszlyt(*)  ! added so a local variable would be set correctly - LEW
@@ -425,7 +427,7 @@
           d2(j,3)=sphu
 !          if (am0cfl .gt. 0) then
 !              print for debugging
-!              write(60,*) d2(j,1),d2(j,2),d2(j,3)
+!              write(luoinpt,*) d2(j,1),d2(j,2),d2(j,3)
 !          end if
       end do
       sphu=0.
@@ -463,7 +465,7 @@
 
       ! print out heat average heat unit and days to maturity
       if (am0cfl .gt. 0) then
-         write(60,2120) pdate, hdate, bcthudf, dtm, bctdtm, phu, bcthum
+         write(luoinpt,2120) pdate,hdate,bcthudf,dtm,bctdtm, phu, bcthum
       end if
 
       ! after printing the value, set the global parameter for maximum
@@ -476,7 +478,7 @@
       call scrv1(bc0fd1,cc0fd1,bc0fd2,cc0fd2,a_fr,b_fr)   ! Frost damage
 !      call scrv1(s11x1,s11y1,s11x2,s11y2,a_s11,b_s11)    ! P uptake stress parameters
 !      call scrv1(s8x1,s8y1,s8x2,s8y2,a_s8,b_s8)          ! N and P availability stress
-!      if (am0cfl .gt. 0) write (60,2110)a_co,b_co,a_fr,b_fr
+!      if (am0cfl .gt. 0) write (luoinpt,2110)a_co,b_co,a_fr,b_fr
 
 !     calculate bc0bn1,bc0bn2,bc0bn3,bn4,bc0bp1,bc0bp2,bc0bp3,bp4
 !      call nconc (bc0bn1,bc0bn2,bc0bn3,bn4)

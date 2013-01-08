@@ -21,6 +21,7 @@
 
 !     + + + GLOBAL COMMON BLOCKS + + +
 
+      use file_io_mod, only: luiwsd, luo_subday
       include 'p1unconv.inc'
       include 'p1const.inc'
       include 'p1werm.inc'
@@ -28,7 +29,6 @@
       include 'm1sim.inc'
       include 'm1flag.inc'
       include 'w1wind.inc'
-      include 'file.inc'
 
 !     + + + LOCAL COMMON BLOCKS + + +
       include 'main/main.inc'

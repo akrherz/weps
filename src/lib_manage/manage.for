@@ -23,12 +23,12 @@
 
 !     + + + PARAMETERS AND COMMON BLOCKS + + +
 
+      use file_io_mod, only: luomanage
       include 'p1werm.inc'
       include 'm1flag.inc'
       include 'manage/man.inc'
       include 'manage/asd.inc'
       include 'manage/oper.inc'
-      include 'file.inc'
 
 ! for debugging
 ! ***      include 's1layr.inc'      

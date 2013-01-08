@@ -11,8 +11,8 @@
 !     Edit History
 !     09-Mar-99   wjr   created
 
+      use file_io_mod, only: luiwin
       include 'p1werm.inc'
-      include 'file.inc'
       include 'w1wind.inc'
       include 'm1flag.inc'
       include 'command.inc'

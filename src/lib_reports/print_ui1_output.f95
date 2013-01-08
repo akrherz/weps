@@ -32,10 +32,10 @@ SUBROUTINE print_ui1_output(nperiods, nrot_years, ncycles)
 
     USE pd_var_tables
     USE mandate_vars
+    use file_io_mod, only: luogui1
 
     IMPLICIT NONE
 
-    INCLUDE 'file.inc'
     INCLUDE 'p1werm.inc'
     INCLUDE 'm1geo.inc'
 

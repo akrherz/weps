@@ -16,6 +16,8 @@
 !     plotout is called from erodout.for with yin data
 !     the xin data come from common/plot/ with erodin.for
 
+      use file_io_mod, only: fopenk
+
 !     + + + ARGUMENT DECLARATAIONS + + +
       integer yplot
       character*12 ycharin(30)
@@ -29,8 +31,7 @@
 !     + + + PARAMETERS + + +
 !
 !     + + + GLOBAL COMMON BLOCKS + + +
-      include 'file.inc'
-!
+
 !     + + + LOCAL COMMON BLOCKS + + +
 
       integer xplot
@@ -45,6 +46,7 @@
       integer i,j, nline
       logical used
       character*500 line, plotdat(500)
+      integer luo1    ! output file unit number
 !
 !     + + + LOCAL VARIABLE DEFINITIONS + + +
 !     i,j    = temp indexes
@@ -74,7 +76,7 @@
       if(.not.used) then
 
 !       write heading for tsterode.eplt
-        open(UNIT=luo1,FILE='tsterode.eplt',STATUS='new')
+        call fopenk(luo1, 'tsterode.eplt', 'new')
         write(luo1,201)
         write(luo1,202)
 !      write(luo1,*)((ycharin(i),i=1,yplot),(xcharin(i),i=1,xplot))
@@ -84,7 +86,7 @@
       endif
 !
 !     read current tsterode.eplt file to plotdat char. array
-      open(UNIT=luo1,FILE='tsterode.eplt',STATUS='old')
+      call fopenk(luo1, 'tsterode.eplt', 'old')
       j=0
    20 read (luo1, '(a)', end=50) line
       j=j + 1

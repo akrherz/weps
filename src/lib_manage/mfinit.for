@@ -24,6 +24,7 @@
 !
 !     + + + PARAMETERS AND COMMON BLOCKS + + +
 
+      use file_io_mod, only: fopenk
       include 'p1werm.inc'
       include 'wpath.inc'
       include 'm1dbug.inc'
@@ -31,23 +32,23 @@
       include 'manage/man.inc'
       include 'manage/asd.inc'
       include 'manage/tcrop.inc'
-      include 'file.inc'
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer sr
       character fname*(*)
-!
+
 !     + + + ARGUMENT DEFINITIONS + + +
 !     sr - current subregion
 !     fname - management file name
-!
+
 !     + + + LOCAL VARIABLES + + +
       integer           linidx, eofidx, endidx
       character*256      line
       integer           idx,idy
-!
+      integer           luimandate   ! unit number for reading in management file
+
 !     + + + SUBROUTINES CALLED + + +
-!
+
 !     + + + FUNCTION DECLARATONS + + +
 
 !     + + + DATA INITIALIZATIONS + + +

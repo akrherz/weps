@@ -45,6 +45,8 @@
 !     + + + KEY WORDS + + +
 !     hydrology
 
+      use file_io_mod, only: luohydro, luohlayers
+
 !     + + + ARGUMENT DECLARATIONS + + +
       integer layrsn
       real bmrslp
@@ -214,7 +216,6 @@
       include 'h1et.inc'
       include 'h1db1.inc'
       include 'timer.inc'
-      include 'file.inc'
       include 'command.inc'
 
 !     + + + LOCAL COMMON BLOCKS + + +

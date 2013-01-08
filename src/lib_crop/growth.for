@@ -32,6 +32,8 @@
 !     + + + KEYWORDS + + +
 !     biomass
 
+      use file_io_mod, only: luocrop
+
 !     + + + ARGUMENT DECLARATIONS + + +
       integer bnslay
       real bszlyd(*), bc0ck, bcgrf
@@ -153,7 +155,6 @@
 !     bcdmaxshoot - maximum number of shoots possible from each plant
 
 !     + + + COMMON BLOCKS + + +
-      include 'file.inc'
       include 'p1werm.inc'
       include 'm1flag.inc'
       include 'precision.inc'

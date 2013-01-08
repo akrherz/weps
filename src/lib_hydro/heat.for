@@ -27,10 +27,11 @@
 !     soil temperature
 
 !     + + + COMMON BLOCKS + + +
+
+      use file_io_mod, only: luotempsoil
       include 'm1flag.inc'
       include 'p1const.inc'
       include 'p1unconv.inc'
-      include 'file.inc'
 
 !     + + + LOCAL COMMON BLOCKS + + +
       include 'hydro/snowprop.inc'
