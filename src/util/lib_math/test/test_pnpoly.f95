@@ -163,7 +163,7 @@ program test_pnpoly
     end do
  
     do i = 1, 4
-       call free_polygon(polys(i))
+       call destroy_polygon(polys(i))
     end do
 
 end program test_pnpoly

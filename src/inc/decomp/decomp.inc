@@ -37,31 +37,16 @@
 !
 !     + + + VARIABLE DECLARATIONS + + +
 
-      integer dweti(mnsub)
-      integer hrvflag
       integer iage
       integer idtype
       integer iht
-      integer ipool
-      integer ipoolf
       integer isz
 
-!cc
       integer iwets
       integer iwetf
       integer iwetg(mnsz)
 
-      integer resday(mnbpls,mnsub)
-      integer resyear(mnbpls,mnsub)
-
-!cc
-
       real aqua
-      real covfact(mnbpls,mnsub)
-      real cumddf(mnbpls,mnsub)
-      real cumddg(mnsz,mnbpls,mnsub)
-      real cumdds(mnbpls,mnsub)
-      real ddsthrsh(mnbpls,mnsub)
       real diddf
       real diddg(mnsz)
       real didds
@@ -71,24 +56,8 @@
       real diwcg(mnsz)
       real diwcs
       real diwcsy(mnsub)
-      real dkrate(mndk,mnbpls,mnsub)
-
-      real adresevapa(mnbpls,mnsub)
-      real adresevapb(mnbpls,mnsub)
 
 ! + + + VARIABLE DEFINITIONS + + +
-
-!     dweti   - days since anticedent moisture (4 to 0) index
-
-!     hrvflag - harvest flag used to increment residue pools
-!
-!         range values                   min                  max
-!         ------------                   ------               ------
-!         fixed                          0                    number of harvest + 1
-!         typical                        0                    ?
-!
-!         - Needed for determining the number of residue pools for
-!           the first three harvests.
 
 !     iage   - residue pool age index
 !
@@ -117,21 +86,6 @@
 !         fixed                           1                    5
 !         typical                         1                    5
 
-!     ipool - residue pool age variable for standing, buried, root and
-!             stem number age pools.
-!
-!         range values                    min                  max
-!         ------------                    ------               ------
-!         fixed                           1                    2
-!         typical                         1                    2
-
-!     ipoolf - residue pool age variable for surface residues.
-!
-!         range values                    min                  max
-!         ------------                    ------               ------
-!         fixed                           1                    3
-!         typical                         1                    3
-
 !     isz     - soil layer indexing variable
 !
 !         range values                    min                  max
@@ -139,50 +93,12 @@
 !         fixed                           1                    max no. soil layers
 !         typical                         1                    ?
 
-!     resday - calendar days after residue initiation
-!     resyear - index counting each new residue initiation
-
 !     aqua    - sum of precip, irrigation and snow melt (mm)
 !
 !         range values                    min                  max
 !         ------------                    ------               ------
 !         fixed                           fmin                 fmax
 !         typical                         tmin                 tmax
-
-!     covfact - coeficient for converting mass to cover  (m^2/kg)
-!
-!         range values                    min                  max
-!         ------------                    ------               ------
-!         fixed                           0                    10
-!         typical                         0                    10
-
-!     cumddf - cummlative decomp days for surface res. by pool  (days)
-!
-!         range values                    min                  max
-!         ------------                    ------               ------
-!         fixed                           0                    fmax
-!         typical                         0                    tmax
-
-!     cumddg - cumm. decomp days below ground res by pool and layer (days)
-!
-!         range values                    min                  max
-!         ------------                    ------               ------
-!         fixed                           0                    fmax
-!         typical                         0                    tmax
-
-!     cumdds - cumulative decomp days for standing res. by pool (days)
-!
-!         range values                    min                  max
-!         ------------                    ------               ------
-!         fixed                           0                    fmax
-!         typical                         0                    tmax
-
-!     ddsthrsh - threshhold number of decomp. days before stems begin to fall
-!
-!         range values                    min                  max
-!         ------------                    ------               ------
-!         fixed                           0                    25
-!         typical                         0                    15
 
 !     diddf   - decomposition day for surface residue (0 to 1)
 !
@@ -247,23 +163,12 @@
 !         fixed                           0                    1
 !         typical                         0                    1
 
-!     dkrate - decomposition rate for each age pool and location (d < 1) (g/g/day)
-!
-!         range values                    min                  max
-!         ------------                    ------               ------
-!         fixed                           0                    .1
-!         typical                         0                    .1
-
-!     adresevapa - coefficient a in relation ea/ep = exp(resevap * (flat mass kg/m^2)**resevapb)
-!     adresevapb - coefficient b in relation ea/ep = exp(resevap * (flat mass kg/m^2)**resevapb)
-
       common / decom /                                                  &
      &    iwets,iwetf,iwetg,                                            &
-     &    dweti, hrvflag, iage, idtype, iht,                            &
-     &    ipool, ipoolf, isz, resday, resyear,                          &
-     &    aqua, covfact, cumddf, cumddg, cumdds,                        &
-     &    ddsthrsh, diddf, diddg, didds,                                &
-     &    ditca, ditcg, diwcf, diwcg, diwcs, diwcsy,                    &
-     &    dkrate, adresevapa, adresevapb
+     &    iage, idtype, iht,                                            &
+     &    isz,                                                          &
+     &    aqua,                                                         &
+     &    diddf, diddg, didds,                                          &
+     &    ditca, ditcg, diwcf, diwcg, diwcs, diwcsy
 
       save :: /decom/

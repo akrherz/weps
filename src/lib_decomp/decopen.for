@@ -4,19 +4,15 @@
 ! $HeadURL$
 !     file: decopen.for
 
-      subroutine decopen
+      subroutine decopen(luod_above, luod_below)
 
 ! + + + Purpose  + + +
-!     Write the headers into some files for decomp output
+!   Write headers for output files
+!       dabove.out
+!       dbelow.out
 
-      use file_io_mod, only: luod_above, luod_below
-      include 'p1werm.inc'
-      include 'wpath.inc'
+      integer :: luod_above, luod_below
       include 'm1flag.inc'
-      include 'd1gen.inc'
-      include 'h1temp.inc'
-
-! + + + LOCAL VARIABLES + + +
 
 ! + + + FORMATS + + +
  2030 format( 29x,'Standing',9x,'Flat',9x,'Surface Cover    Silhouett ' &
@@ -27,13 +23,7 @@
      &        '   Stems      Flat    Total      /5     Stand    Flat  ',&
      &'  Buried    ')
 
-!    + + + DATA + + +
-
 !    + + + END SPECIFICATIONS + + +
-
-!   Write headers for output files
-!       dabove.out
-!       dbelow.out
 
 !     write headers for above ground residues file if requested
       if ((am0dfl .eq. 1) .or. (am0dfl .eq. 3)) then

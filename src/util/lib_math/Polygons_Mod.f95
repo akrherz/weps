@@ -28,15 +28,31 @@ contains
     integer, intent(in) :: nump  ! number of points in polygon created
     type(polygon) :: ppol
 
-    allocate(ppol%points(nump))
-    ppol%np = nump
+    ! local variable
+    integer :: alloc_stat
+
+    allocate(ppol%points(nump), stat=alloc_stat)
+    if( alloc_stat .gt. 0 ) then
+      ! allocation failed
+      write(*,*) "ERROR: unable to allocate memory for Polygon"
+      ppol%np = 0
+    else
+      ppol%np = nump
+    end if 
   end function create_polygon
  
   ! deallocates a polygon structure
-  subroutine free_polygon(pol)
+  subroutine destroy_polygon(pol)
     type(polygon), intent(inout) :: pol
 
-    deallocate(pol%points)
-  end subroutine free_polygon
+    ! local variable
+    integer :: dealloc_stat
+
+    deallocate(pol%points, stat=dealloc_stat)
+    if( dealloc_stat .gt. 0 ) then
+      ! allocation failed
+      write(*,*) "ERROR: unable to deallocate memory for Polygon"
+    end if
+  end subroutine destroy_polygon
 
 end module Polygons_Mod

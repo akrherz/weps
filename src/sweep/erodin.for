@@ -13,7 +13,7 @@
 
 !     + + + Modules Used + + +
       use Polygons_Mod
-      use subregions_mod
+      use subregions_mod, only: subr_poly
 
 !     +++ ARGUMENT DECLARATIONS +++
 !

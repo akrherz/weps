@@ -3,14 +3,17 @@
 !$Revision$
 !$HeadURL$
 
-      subroutine submodels (isr, cd, cm, cy)
+      subroutine submodels (isr, cd, cm, cy, residue)
+
+      use biomaterial, only: biomatter
 
       include 'p1werm.inc'
       include 'm1flag.inc'      !am0cgf
       include 'main/main.inc'   !daysim, lopday, lopmon, lopyr, iy
 
-! Arguments
+!     + + +   ARGUMENT DECLARATIONS + + +
       integer isr, cd, cm, cy
+      type(biomatter), dimension(:,:), intent(inout) :: residue
 
 !        write(*,*) "Start manage"      !MANAGEment (tillage) submodel
         call manage (isr, cd, cm, cy,iy,lopday,lopmon,lopyr)
@@ -37,7 +40,7 @@
         end if
 
 !        write(*,*) "Start decomp"
-        call decomp(isr)                 !DECOMPosition submodel
+        call decomp(isr, residue(:,isr))         !DECOMPosition submodel
 
 !        write(*,*) "Start updres"
         call updres(isr)

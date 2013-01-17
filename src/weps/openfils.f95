@@ -12,19 +12,33 @@
 !       10-Mar-99       wjr     created
 !
       use file_io_mod
+      use biomaterial, only biomatter
+
       include 'p1werm.inc'
       include 'wpath.inc'
 
       include 'm1flag.inc'
       include 'command.inc'
+      include 'm1subr.inc'
 
+!     + + +   ARGUMENT DECLARATIONS + + +
 
 ! + + + Called functions + + +
       integer ios
 
-! local variables
-      integer idx
+!     + + +   LOCAL VARIABLES + + +
+      integer idx, jdx, alloc_stat
       character*10 decfile ! decomposition detail age pool output file name
+      character*13 subr_text(nsubr) ! subregion subdirectory text string
+
+      ! create subregion directory names
+      do idx = 1, nsubr
+          subr_text(1:9,idx) = 'subregion'
+          subr_text(10,idx) = char(48+(idx/1000))    ! thousands place of subregion number
+          subr_text(11,idx) = char(48+(idx-(idx/1000)*1000))    ! hundreds place of subregion number
+          subr_text(12,idx) = char(48+(idx-(idx/100)*100))    ! tens place of subregion number
+          subr_text(13,idx) = char(48+(idx-(idx/10)*10))    ! ones place of subregion number
+      end do
 
 !     the main output file is opened at all times
 
@@ -100,9 +114,17 @@
 ! open files for outputing the crop and decomp biomass variables - LEW
 
       if ((am0dfl .eq. 1).or.(am0dfl.eq.3)) then
+         allocate( luod_above(nsubr), stat=alloc_stat )
+         if( alloc_stat .gt. 0 ) then
+            Write(*,*) 'ERROR: unable to allocate luod_above array'
+         end if
+
          call fopenk (luocrp1, rootp(1:len_trim(rootp)) // 'decomp.out', 'unknown')
          call fopenk (luobio1, rootp(1:len_trim(rootp)) // 'bio1.btmp', 'unknown')
-         call fopenk (luod_above, rootp(1:len_trim(rootp)) // 'dabove.out', 'unknown')
+
+         do idx = 1, nsubr
+            call fopenk (luod_above(idx), rootp(1:len_trim(rootp)) // subr_text(idx) // 'dabove.out', 'unknown')
+         end do
       endif
       if ((am0dfl .eq. 2).or.(am0dfl.eq.3)) then
         ! open files to match number of biomass pools
@@ -112,18 +134,27 @@
         decfile(1:3) = 'dec'
         ! assign last four characters to file name
         decfile(6:10) = '.btmp'
-        do idx = 1,mnbpls
+        do idx = 1, nsubr
+
+        do jdx = 1,mnbpls
           ! assign 4 character of file name to be the number character corresponsing to tens place of idx
-          decfile(4:4) = char(48+(idx/10))
+          decfile(4:4) = char(48+(jdx/10))
           ! assign 5 character of file name to be the number character corresponsing to ones place of idx
-          decfile(5:5) = char(48+(idx-(idx/10)*10))
+          decfile(5:5) = char(48+(jdx-(jdx/10)*10))
           ! display created file
-          !write(*,*) 'File name created: ', decfile(idx)
+          !write(*,*) 'File name created: ', decfile(jdx)
           ! assign logical unit number of opening file to array
-          call fopenk (luodec(idx), rootp(1:len_trim(rootp)) // decfile, 'unknown')
+          call fopenk (residue(jdx,idx)%luo%dec, rootp(1:len_trim(rootp)) // subr_text(idx) // decfile, 'unknown')
         end do
 
-        call fopenk (luod_below, rootp(1:len_trim(rootp)) // 'dbelow.out', 'unknown')
+         allocate( luod_below(nsubr), stat=alloc_stat )
+         if( alloc_stat .gt. 0 ) then
+            Write(*,*) 'ERROR: unable to allocate luod_below array'
+         end if
+
+         do idx = 1, nsubr
+            call fopenk (luod_below, rootp(1:len_trim(rootp)) // 'dbelow.out', 'unknown')
+         end do
       endif
 
       if (am0cfl .gt. 0) then

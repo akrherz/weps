@@ -37,9 +37,11 @@
       USE pd_update_vars
       USE pd_report_vars
       USE pd_var_tables
-      use Polygons_Mod
-      use subregions_mod
-      use file_io_mod, only: luo_egrd, luo_erod, luomandate
+      use Polygons_Mod, only: destroy_polygon
+      use subregions_mod, only: subr_poly
+      use file_io_mod, only: luo_egrd, luo_erod, luomandate,            &
+     &                       luod_above, luod_below
+      use biomaterial
 
 ! build and release info, fpp created by cook
       include 'build.inc'
@@ -92,13 +94,17 @@
       integer cd, cm, cy,                                               &
      &        end_init_jday, end_init_d, end_init_m, end_init_y,        &
      &        ndiy,                                                     &
-     &        isr,                                                      &
+     &        isr, ipl,                                                 &
      &        o_unit,                                                   &
      &        simyrs,                                                   &
      &        yrsim
       integer lcaljday, keep(mnsub)
       integer ci_flag, ci_year
       real    ci
+
+      type(biomatter), dimension(:), allocatable :: crop
+      type(biomatter), dimension(:,:), allocatable :: residue
+      integer :: alloc_stat, sum_stat
 
 !     + + + LOCAL DEFINITIONS + + +
 
@@ -291,6 +297,23 @@
 
       write(*,*) "Made it here after input"
      
+      ! allocate subregion crop and residue pool arrays
+      sum_stat = 0
+      allocate(crop(nsubr), stat=alloc_stat)
+      sum_stat = sum_stat + alloc_stat
+      allocate(residue(mnbpls, nsubr), stat=alloc_stat)
+      sum_stat = sum_stat + alloc_stat
+      if( sum_stat .gt. 0 ) then
+         Write(*,*) 'ERROR: unable to allocate crop and residue'
+      end if
+      ! complete allocation of layers
+      do isr = 1, nsubr
+         crop(isr) = create_biomatter(nslay(isr), 1)
+         do ipl = 1, mnbpls
+            residue(ipl,isr) = create_biomatter(nslay(isr), 1)
+         end do
+      end do
+
 ! save variabled for each subregion by JG
       do isr =1, nsubr 
       call save_soil(isr)  
@@ -369,7 +392,10 @@
 
 !     Initializations unique to particular submodels
       do isr=1,nsubr
-         call decoinit(isr)
+         do ipl = 1, mnbpls
+            call decoinit(residue(ipl, isr))
+         end do
+         call decopen(luod_above(isr), luod_below(isr)) ! prints headers in above.out and below.out
          call cropinit(isr)
          ! initialize all dependent variables
          call updres(isr)
@@ -426,7 +452,7 @@
          end if
          do isr=1,nsubr   ! do multiple subregion      
 !         isr = 1 !Note: we are no longer dealing with multiple subregions here
-         call submodels(isr, cd, cm, cy)
+         call submodels(isr, cd, cm, cy, residue)
 ! set initialization flag to .false. after first day
          if (am0ifl) am0ifl = .false.
 
@@ -503,7 +529,7 @@
 
 !            isr = 1 !Note: we are no longer dealing with multiple subregions here
             do isr=1,nsubr   ! do multiple subregion     
-            call submodels(isr, cd, cm, cy)
+            call submodels(isr, cd, cm, cy, residue)
 
             call plotdata(isr)  ! print to plot data file
 
@@ -598,7 +624,7 @@
 !           if (am0jd.eq.ljday) call dbgdmp(daysim, isr)
 
             do isr=1,nsubr   ! do multiple subregion     
-               call submodels(isr, cd, cm, cy)
+               call submodels(isr, cd, cm, cy, residue)
             end do
 
             if (run_erosion > 0) then   ! Are we simulating erosion in this RUN
@@ -719,10 +745,29 @@
       ! deallocate subregion polygon storage, no longer needed
       do isr = 1, nsubr
           ! free memory in polygon point arrays
-          call free_polygon(subr_poly(isr))
+          call destroy_polygon(subr_poly(isr))
       end do
       ! free memory for array of polygons
       deallocate(subr_poly)
+
+      ! deallocate subregion crop and residue pool arrays
+      ! destroy layers
+      do isr = 1, nsubr
+         call destroy_biomatter(crop(isr))
+         do ipl = 1, mnbpls
+            call destroy_biomatter(residue(ipl,isr))
+         end do
+      end do
+      !remove main arrays
+      sum_stat = 0
+      deallocate(crop, stat=alloc_stat)
+      sum_stat = sum_stat + alloc_stat
+      deallocate(residue, stat=alloc_stat)
+      sum_stat = sum_stat + alloc_stat
+      if( sum_stat .gt. 0 ) then
+         Write(*,*) 'ERROR: unable to deallocate crop and residue'
+      end if
+
 
       write (*,*) 'The WEPS simulation run is finished'
 

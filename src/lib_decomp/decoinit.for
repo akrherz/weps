@@ -7,7 +7,9 @@
 
 !     decini.for
 
-      subroutine decoinit(isr)
+      subroutine decoinit(residue)
+
+      use biomaterial, only: biomatter
 
 !     + + +  PURPOSE + + +
 !     This subroutine initalizes values needed in the decomposiiton
@@ -17,156 +19,105 @@
 
 !     The subroutine also sets all other age pools and decompdays to 0.
 
-
-!     + + + COMMON BLOCKS + + +
-
-      include 'p1werm.inc'
-      include 'wpath.inc'
-      include 'd1gen.inc'
-      include 's1layr.inc'
-      include 'm1subr.inc'
-      include 'c1db1.inc'
-      include 'd1glob.inc'
-
-      include 'decomp/decomp.inc'
+!     + + +   ARGUMENT DECLARATIONS + + +
+      type(biomatter) :: residue
 
 !      + + + LOCAL VARIABLE DECLARATION + + +
-
-      integer isr
-      integer j, l
-
-!     + + +  LOCAL VARIABLE DEFINITIONS + + +
-
-!     isr     current subregion
-
-!   + + + FUNCTION DECLARATION + + +
-
-!   + + + DATA INITIALIZATION + + +
-
-!      + + + FORMAT STATEMENT  + + +
-
- 2500 format ('  Problem reading the DECOMPOSITION parameters from file &
-     &crop.db - WEPS EXECUTION HALTED')
+      integer idx     ! loop index
 
 !     + + + END SPECIFICATION + + +
-
-!     Set harvest flag to 0 and pool values to 1
-      hrvflag = 0
-      ipool = 1
-      ipoolf = 1
 
 !     default initalization values for crop type, stem no. stem biomass
 !     surface biomass, below ground biomass, and root biomass. ie. nothing
 
+      residue%bname = "No Crop"
 !     water coefficent parameters
-      diwcsy(isr) = 0.0
-      dweti(isr) = 0.0
+      residue%decomp%iwcsy = 0.0
+      residue%decomp%weti = 0
 
-      do iage= 1,mnbpls
-         ! calendar days from residue initiation
-         resday(iage,isr) = 0
-         ! index for each residue initiation
-         resyear(iage,isr) = 0
-      end do
+      ! calendar days from residue initiation
+      residue%decomp%resday = 0
+      ! index for each residue initiation
+      residue%decomp%resyear = 0
 
 !     cummulative ddays for standing residues
-      do 90 iage= 1,mnbpls
-         cumdds(iage,isr) = 0.0
-   90 continue
-
-!     standing stem biomass, stem number, stem diam, stem height, stem fall threshold
-      do iage = 1,mnbpls
-         ad0nam(iage,isr) = "No Crop"
-         ad0sla(iage,isr) = 0.0
-         ad0ck(iage,isr) = 0.0
-         adrbc(iage,isr) = 1
-
-         admst(iage,isr) = 0.0
-         addstm(iage,isr) = 0.0
-         adxstm(iage,isr) = 0.0
-         adxstmrep(iage,isr) = 0.0
-         ddsthrsh(iage,isr) = 0.0
-
-         admstandstem(iage,isr) = 0.0
-         admstandleaf(iage,isr) = 0.0
-         admstandstore(iage,isr) = 0.0
-
-         admflatstem(iage,isr) = 0.0
-         admflatleaf(iage,isr) = 0.0
-         admflatstore(iage,isr) = 0.0
-
-         admflatrootstore(iage,isr) = 0.0
-         admflatrootfiber(iage,isr) = 0.0
-
-         adgrainf(iage,isr) = 1.0
-         adhyfg(iage,isr) = 0
-
-         addstm(iage,isr) = 0.0
-         adzht(iage,isr) = 0.0
-
-         adm(iage,isr) = 0.0
-         admst(iage,isr) = 0.0
-         admf(iage,isr) = 0.0
-         admbg(iage,isr) = 0.0
-         admrt(iage,isr) = 0.0
-
-         adrsai(iage,isr) = 0.0
-         adrlai(iage,isr) = 0.0
-         adffcv(iage,isr) = 0.0
-         adfscv(iage,isr) = 0.0
-         adftcv(iage,isr) = 0.0
-      end do
+      residue%decomp%cumdds = 0.0
+!     flat biomass, cummddays, and covfact for surface residues
+      residue%decomp%cumddf = 0.0
 
 !     cumulative ddays and biomass for all layers below ground
-      do 40 isz = 1,nslay(isr)
-         do 41 iage = 1,mnbpls
-            cumddg(isz,iage,isr) = 0.0
-   41    continue
-         do 42 iage = 1,mnbpls
-            admbgz(isz,iage,isr) = 0.0
-            admrtz(isz,iage,isr) = 0.0
+      do idx = 1, size(residue%decomp%bg)
+         residue%decomp%bg(idx)%cumddg = 0.0
+      end do
 
-            admbgstemz(isz,iage,isr) = 0.0
-            admbgleafz(isz,iage,isr) = 0.0
-            admbgstorez(isz,iage,isr) = 0.0
+      residue%mass%standstem = 0.0
+      residue%mass%standleaf = 0.0
+      residue%mass%standstore = 0.0
 
-            admbgrootstorez(isz,iage,isr) = 0.0
-            admbgrootfiberz(isz,iage,isr) = 0.0
-   42    continue
-   40 continue
+      residue%mass%flatstem = 0.0
+      residue%mass%flatleaf = 0.0
+      residue%mass%flatstore = 0.0
 
-!     flat biomass, cummddays, and covfact for surface residues
-      do 30 iage = 1,mnbpls
-         cumddf(iage,isr) = 0.0
-         covfact(iage,isr) = 0.0
-   30 continue
+      residue%mass%flatrootstore = 0.0
+      residue%mass%flatrootfiber = 0.0
 
-!  decomp pool variables
-      do iage=1,mnbpls
-          do isz=1, mncz
-              adrsaz(isz,iage,isr) = 0.0
-              adrlaz(isz,iage,isr) = 0.0
-          end do
+      do idx = 1, size(residue%mass%bg)
+         residue%mass%bg(idx)%stemz = 0.0
+         residue%mass%bg(idx)%leafz = 0.0
+         residue%mass%bg(idx)%storez = 0.0
+
+         residue%mass%bg(idx)%rootstorez = 0.0
+         residue%mass%bg(idx)%rootfiberz = 0.0
+      end do
+
+      residue%geometry%dstm = 0.0
+      residue%geometry%xstmrep = 0.0
+
+      residue%geometry%grainf = 1.0
+      residue%geometry%hyfg = 0
+
+      residue%geometry%dstm = 0.0
+      residue%geometry%zht = 0.0
+
+      residue%deriv%m = 0.0
+      residue%deriv%mst = 0.0
+      residue%deriv%mf = 0.0
+      residue%deriv%mbg = 0.0
+      residue%deriv%mrt = 0.0
+
+      residue%deriv%rsai = 0.0
+      residue%deriv%rlai = 0.0
+      residue%deriv%ffcv = 0.0
+      residue%deriv%fscv = 0.0
+      residue%deriv%ftcv = 0.0
+
+      do idx = 1, size(residue%deriv%bg)
+         residue%deriv%bg(idx)%mbgz = 0.0
+         residue%deriv%bg(idx)%mrtz = 0.0
+      end do
+
+      !  canopy layer
+      do idx = 1, size(residue%deriv%can)
+         residue%deriv%can(idx)%rsaz = 0.0
+         residue%deriv%can(idx)%rlaz = 0.0
       end do
 
 !     set biomass decomposition rates to 0.0 for all pools
 !     residue type counter
-      do 50 j = 1,5
-!        residue pool counter
-         do 60 l = 1,mnbpls
-            dkrate(j,l,isr) = 0.0
-   60    continue
-   50 continue
-
-      ! set biomass surface evaporation suppression coefficients
-      do iage = 1,mnbpls
-          adresevapa(iage,isr) = 0.0
-          adresevapb(iage,isr) = 1.0
+      do idx = 1, 5
+         residue%database%dkrate(idx) = 0.0
       end do
 
-!     Open output files
-      call decopen
+      ! set biomass surface evaporation suppression coefficients
+      residue%database%resevapa = 0.0
+      residue%database%resevapb = 1.0
+
+      residue%database%ddsthrsh = 0.0
+      residue%database%xstm = 0.0
+      residue%database%sla = 0.0
+      residue%database%ck = 0.0
+      residue%database%rbc = 1
+      residue%database%covfact = 0.0
 
       return
-   80 write(*,2500)
       end
