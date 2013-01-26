@@ -3,7 +3,7 @@
 !$Revision$
 !$HeadURL$
 
-      subroutine  ddbug(isr,slay)
+      subroutine  ddbug(isr, slay, residue)
 
 !     + + + PURPOSE + + +
 !    This program prints out many of the global variables before
@@ -20,9 +20,10 @@
 !     wind, erosion, hydrology, tillage, soil, crop, ddbug.forosition
 !     management
 
-!     + + + GLOBAL COMMON BLOCKS + + +
-
       use file_io_mod, only: luoddb
+      use biomaterial, only: biomatter
+
+!     + + + GLOBAL COMMON BLOCKS + + +
       include 'p1werm.inc'
       include 'm1subr.inc'
       include 'm1flag.inc'
@@ -44,6 +45,10 @@
       include 'h1db1.inc'
       include 'h1temp.inc'
 
+!     + + + ARGUMENT DECLARATIONS + + +
+      integer isr, slay
+      type(biomatter), dimension(:), intent(in) :: residue
+
 !     + + + LOCAL COMMON BLOCKS + + +
       include 'decomp/decomp.inc'
       include 'decomp/tddbug.inc'
@@ -51,7 +56,7 @@
 
 !     + + + LOCAL VARIABLES + + +
 
-      integer cd, cm, cy, isr, l, slay
+      integer cd, cm, cy, l
 
 !     + + + LOCAL DEFINITIONS + + +
 
@@ -106,8 +111,7 @@
 
 !          write weather cligen and windgen variables
 !      write(*,*) 'd1',cd,cm,cy,isr,tday,tmo,tyr,tisr
-      if ((cd .eq. tday) .and. (cm .eq. tmo) .and. (cy .eq. tyr) .and.  &
-     &   (isr .eq. tisr)) then
+      if ((cd .eq. tday) .and. (cm .eq. tmo) .and. (cy .eq. tyr) .and. (isr .eq. tisr)) then
          write(luoddb(isr),2030) cd,cm,cy,isr
       else
          write(luoddb(isr),2031) cd,cm,cy,isr
@@ -123,29 +127,27 @@
          write(luoddb(isr),2065)
       do 300 l=1,slay
          write(luoddb(isr),2070)                                        &
-     &          l,admbgz(l,1,isr),admbgz(l,2,isr),admbgz(l,3,isr),      &
+     &          l,residue(1)%deriv%bg(l)%mbgz,residue(2)%deriv%bg(l)%mbgz,residue(3)%deriv%bg(l)%mbgz, &
      &            admrtz(l,1,isr),admrtz(l,2,isr),admrtz(l,3,isr)
   300 continue
 !         write(luoddb(isr),2066)
 !      do 310 l=1,slay
-!         write(luoddb(isr),2071) l,admbgz(l,1,isr),admbgz(l,2,isr),     &
-!     &                           admbgz(l,3,isr),                       &
-!     &                  admrtz(l,1,isr),admrtz(l,2,isr),admrtz(l,3,isr)
+!         write(luoddb(isr),2071) l,residue(1)%deriv%bg(l)%mbgz,residue(2)%deriv%bg(l)%mbgz,     &
+!     &                           residue(3)%deriv%bg(l)%mbgz,                       &
+!     &                  residue(1)%deriv%bg(l)%mrtz,residue(2)%deriv%bg(l)%mrtz,residue(3)%deriv%bg(l)%mrtz
 !  310 continue
 
          write(luoddb(isr),2067)
       do 320 l=1,slay
-         write(luoddb(isr),2072) l,cumddg(l,1,isr),cumddg(l,2,isr),     &
-     &                  cumddg(l,3,isr)
+         write(luoddb(isr),2072) l,residue(1)%decomp%bg(l)%cumddg,residue(2)%decomp%bg(l)%cumddg, residue(3)%decomp%bg(l)%cumddg
   320 continue
 
          write(luoddb(isr),2068)
-         write(luoddb(isr),2073) cumdds(1,isr),cumdds(2,isr),           &
-     &                           cumdds(3,isr),                         &
-     &                  cumddf(1,isr),cumddf(2,isr),cumddf(3,isr)
+         write(luoddb(isr),2073) residue(1)%decomp%cumdds,residue(2)%decomp%cumdds, residue(3)%decomp%cumdds, &
+     &                  residue(1)%decomp%cumddf,residue(2)%decomp%cumddf,residue(3)%decomp%cumddf
          write(luoddb(isr),2069)
-         write(luoddb(isr),2074) admst(1,isr),admst(2,isr),admst(3,isr),&
-     &                  admf(1,isr),admf(2,isr),admf(3,isr)
+         write(luoddb(isr),2074) residue(1)%deriv%mst,residue(2)%deriv%mst,residue(3)%deriv%mst, &
+     &                  residue(1)%deriv%mf,residue(2)%deriv%mf,residue(3)%deriv%mf
       tisr = isr
       tday = cd
       tmo = cm

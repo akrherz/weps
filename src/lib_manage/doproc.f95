@@ -3,7 +3,7 @@
 !$Revision$
 !$HeadURL$
 
-      subroutine   doproc (sr, bmrotation)
+      subroutine   doproc (sr, bmrotation, residue)
 
 !     + + + PURPOSE + + +
 !     Doproc is called when a processline is found in the management file
@@ -15,9 +15,10 @@
 !     + + + KEYWORDS + + +
 !     tillage, process, management
 
-!     + + + PARAMETERS AND COMMON BLOCKS + + +
-
       use file_io_mod, only: luomanage, luotdb
+      use biomaterial, only: biomatter
+
+!     + + + PARAMETERS AND COMMON BLOCKS + + +
       include 'command.inc'
       include 'p1werm.inc'
       include 'p1unconv.inc'
@@ -55,6 +56,7 @@
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer sr, bmrotation
+      type(biomatter), dimension(:), intent(inout) :: residue
 
 !     + + + ARGUMENT DEFINITIONS + + +
 !     sr - the subregion being processed
@@ -1087,7 +1089,7 @@
         call fall_mod_vt( rate_mult_vt, thresh_mult_vt,                 &
      &                    sel_pool, fracarea,                           &
      &                    acrbc(sr), acdkrate(1,sr), acddsthrsh(sr),    &
-     &                    adrbc(1,sr), dkrate(1,1,sr), ddsthrsh(1,sr) )
+     &                    residue )
 
 !     post-process stuff
         if (am0tdb .eq. 1) then
@@ -1233,20 +1235,9 @@
      &      atmbgstemz(1,sr), atmbgleafz(1,sr), atmbgstorez(1,sr),      &
      &      atmbgrootstorez(1,sr), atmbgrootfiberz(1,sr),               &
      &      atzht(sr), atdstm(sr),atxstmrep(sr),atgrainf(sr),           &
-     &      admstandstem(1,sr), admstandleaf(1,sr), admstandstore(1,sr),&
-     &      admflatstem(1,sr), admflatleaf(1,sr), admflatstore(1,sr),   &
-     &      admflatrootstore(1,sr), admflatrootfiber(1,sr),             &
-     &      admbgstemz(1,1,sr), admbgleafz(1,1,sr), admbgstorez(1,1,sr),&
-     &      admbgrootstorez(1,1,sr), admbgrootfiberz(1,1,sr),           &
-     &      adzht(1,sr), addstm(1,sr), adxstmrep(1,sr), adgrainf(1,sr), &
      &      ac0nam(sr), acxstm(sr), acrbc(sr), ac0sla(sr), ac0ck(sr),   &
      &      acdkrate(1,sr), accovfact(sr), acddsthrsh(sr), achyfg(sr),  &
      &      acresevapa(sr), acresevapb(sr),                             &
-     &      ad0nam(1,sr),adxstm(1,sr),adrbc(1,sr),ad0sla(1,sr),         &
-     &      ad0ck(1,sr), dkrate(1,1,sr), covfact(1,sr), ddsthrsh(1,sr), &
-     &      adhyfg(1,sr), adresevapa(1,sr), adresevapb(1,sr),           &
-     &      resday(1,sr), resyear(1,sr),                                &
-     &      cumdds(1,sr), cumddf(1,sr), cumddg(1,1,sr),                 &
      &      nslay(sr) )
       end if
 
@@ -1548,27 +1539,26 @@
         mcur(sr) = mcur(sr) + 1
         line = mtbl(mcur(sr))
         ! read decomposition parameters for type of residue buried
-        read(line(2:len_trim(line)), *, err=901)                        &
-     &    dkrate(1,1,sr), dkrate(2,1,sr), dkrate(3,1,sr),               &
-     &    dkrate(4,1,sr), dkrate(5,1,sr),  adxstm(1,sr),                &
-     &    ddsthrsh(1,sr), covfact(1,sr)
+        read(line(2:len_trim(line)), *, err=901) residue(1)%database%dkrate(1), residue(1)%database%dkrate(2), &
+             residue(1)%database%dkrate(3), residue(1)%database%dkrate(4), residue(1)%database%dkrate(5), &
+             residue(1)%database%xstm, residue(1)%database%ddsthrsh, residue(1)%database%covfact
         ! get additional line of data
         mcur(sr) = mcur(sr) + 1
         line = mtbl(mcur(sr))
         ! read decomposition parameters for type of residue buried
         read(line(2:len_trim(line)), *, err=901)                        &
-     &    adresevapa(1,sr), adresevapb(1,sr)
+     &    residue(1)%database%resevapa, residue(1)%database%resevapa
         ! give residue the proper name
         ad0nam(1,sr) = cropname
         ! post-process stuff
         ! set calendar days for residue to zero
-        resday(1,sr) = 0
-        resyear(1,sr) = resyear(1,sr) + 1
+        residue(1)%decomp%resday = 0
+        residue(1)%decomp%resyear = residue(1)%decomp%resyear + 1
         ! set cumulative decomposition days for residue to zero
-        cumdds(1,sr) = 0.0
-        cumddf(1,sr) = 0.0
+        residue(1)%decomp%cumdds = 0.0
+        residue(1)%decomp%cumddf = 0.0
         do idx=1,nslay(sr)
-          cumddg(idx,1,sr) = 0.0
+          residue(1)%decomp%bg(idx)%cumddg = 0.0
         end do
 
         ! zero out uninitialized mass pools
@@ -1644,20 +1634,9 @@
      &      atmbgstemz(1,sr), atmbgleafz(1,sr), atmbgstorez(1,sr),      &
      &      atmbgrootstorez(1,sr), atmbgrootfiberz(1,sr),               &
      &      atzht(sr), atdstm(sr),atxstmrep(sr),atgrainf(sr),           &
-     &      admstandstem(1,sr), admstandleaf(1,sr), admstandstore(1,sr),&
-     &      admflatstem(1,sr), admflatleaf(1,sr), admflatstore(1,sr),   &
-     &      admflatrootstore(1,sr), admflatrootfiber(1,sr),             &
-     &      admbgstemz(1,1,sr), admbgleafz(1,1,sr), admbgstorez(1,1,sr),&
-     &      admbgrootstorez(1,1,sr), admbgrootfiberz(1,1,sr),           &
-     &      adzht(1,sr), addstm(1,sr), adxstmrep(1,sr), adgrainf(1,sr), &
      &      ac0nam(sr), acxstm(sr), acrbc(sr), ac0sla(sr), ac0ck(sr),   &
      &      acdkrate(1,sr), accovfact(sr), acddsthrsh(sr), achyfg(sr),  &
      &      acresevapa(sr), acresevapb(sr),                             &
-     &      ad0nam(1,sr), adxstm(1,sr), adrbc(1,sr), ad0sla(1,sr),      &
-     &      ad0ck(1,sr), dkrate(1,1,sr), covfact(1,sr), ddsthrsh(1,sr), &
-     &      adhyfg(1,sr), adresevapa(1,sr), adresevapb(1,sr),           &
-     &      resday(1,sr), resyear(1,sr),                                &
-     &      cumdds(1,sr), cumddf(1,sr), cumddg(1,1,sr),                 &
      &      nslay(sr) )
       endif
       ! crop pool state has been changed, force dependent variable update  
@@ -2055,20 +2034,9 @@
      &      atmbgstemz(1,sr), atmbgleafz(1,sr), atmbgstorez(1,sr),      &
      &      atmbgrootstorez(1,sr), atmbgrootfiberz(1,sr),               &
      &      atzht(sr), atdstm(sr),atxstmrep(sr),atgrainf(sr),           &
-     &      admstandstem(1,sr), admstandleaf(1,sr), admstandstore(1,sr),&
-     &      admflatstem(1,sr), admflatleaf(1,sr), admflatstore(1,sr),   &
-     &      admflatrootstore(1,sr), admflatrootfiber(1,sr),             &
-     &      admbgstemz(1,1,sr), admbgleafz(1,1,sr), admbgstorez(1,1,sr),&
-     &      admbgrootstorez(1,1,sr), admbgrootfiberz(1,1,sr),           &
-     &      adzht(1,sr), addstm(1,sr), adxstmrep(1,sr), adgrainf(1,sr), &
      &      cropname, txstm, trbc, t0sla, t0ck,                         &
      &      tdkrate(1), tcovfact, tddsthrsh, thyfg,                     &
      &      tresevapa, tresevapb,                                       &
-     &      ad0nam(1,sr), adxstm(1,sr), adrbc(1,sr), ad0sla(1,sr),      &
-     &      ad0ck(1,sr), dkrate(1,1,sr), covfact(1,sr), ddsthrsh(1,sr), &
-     &      adhyfg(1,sr), adresevapa(1,sr), adresevapb(1,sr),           &
-     &      resday(1,sr), resyear(1,sr),                                &
-     &      cumdds(1,sr), cumddf(1,sr), cumddg(1,1,sr),                 &
      &      nslay(sr) )
         end if
 
@@ -2194,20 +2162,9 @@
      &      atmbgstemz(1,sr), atmbgleafz(1,sr), atmbgstorez(1,sr),      &
      &      atmbgrootstorez(1,sr), atmbgrootfiberz(1,sr),               &
      &      atzht(sr), atdstm(sr),atxstmrep(sr),atgrainf(sr),           &
-     &      admstandstem(1,sr), admstandleaf(1,sr), admstandstore(1,sr),&
-     &      admflatstem(1,sr), admflatleaf(1,sr), admflatstore(1,sr),   &
-     &      admflatrootstore(1,sr), admflatrootfiber(1,sr),             &
-     &      admbgstemz(1,1,sr), admbgleafz(1,1,sr), admbgstorez(1,1,sr),&
-     &      admbgrootstorez(1,1,sr), admbgrootfiberz(1,1,sr),           &
-     &      adzht(1,sr), addstm(1,sr), adxstmrep(1,sr), adgrainf(1,sr), &
      &      cropname, txstm, trbc, t0sla, t0ck,                         &
      &      tdkrate(1), tcovfact, tddsthrsh, thyfg,                     &
      &      tresevapa, tresevapb,                                       &
-     &      ad0nam(1,sr), adxstm(1,sr), adrbc(1,sr), ad0sla(1,sr),      &
-     &      ad0ck(1,sr), dkrate(1,1,sr), covfact(1,sr), ddsthrsh(1,sr), &
-     &      adhyfg(1,sr), adresevapa(1,sr), adresevapb(1,sr),           &
-     &      resday(1,sr), resyear(1,sr),                                &
-     &      cumdds(1,sr), cumddf(1,sr), cumddg(1,1,sr),                 &
      &      nslay(sr) )
         end if
  

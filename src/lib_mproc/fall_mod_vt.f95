@@ -6,7 +6,7 @@
       subroutine fall_mod_vt ( rate_mult_vt, thresh_mult_vt,            &
      &                         sel_pool, fracarea,                      &
      &                         bcrbc, bcdkrate, bcddsthrsh,             &
-     &                         bdrbc, bdkrate, bddsthrsh )
+     &                         residue )
 
 !     + + + PURPOSE + + +
 !     This subroutine modifies the stem fall rate for standing crop and
@@ -16,6 +16,8 @@
 
 !     + + + KEYWORDS + + +
 !     standing stem fall fate
+
+      use biomaterial, only: biomatter
 
 !     + + + COMMON BLOCKS + + +
       include 'p1werm.inc'
@@ -28,9 +30,7 @@
       integer    bcrbc
       real       bcdkrate(mndk)
       real       bcddsthrsh
-      integer    bdrbc(mnbpls)
-      real       bdkrate(mndk,mnbpls)
-      real       bddsthrsh(mnbpls)
+      type(biomatter), dimension(:), intent(inout) :: residue
 
 !     + + + ARGUMENT DEFINITIONS + + +
 !     rate_mult_vt - standing stem fall rate multiplier
@@ -86,9 +86,8 @@
 !     + + + END SPECIFICATIONS + + +
 
       do idx = 1, mnrbc
-          area_adj_rate_mult(idx) = 1.0+fracarea*(rate_mult_vt(idx)-1.0)
-          area_adj_thresh_mult(idx) = 1.0                               &
-     &                              + fracarea*(thresh_mult_vt(idx)-1.0)
+          area_adj_rate_mult(idx) = 1.0 + fracarea*(rate_mult_vt(idx)-1.0)
+          area_adj_thresh_mult(idx) = 1.0 + fracarea*(thresh_mult_vt(idx)-1.0)
       end do
 
       ! crop pool or temporary pool
@@ -102,9 +101,8 @@
         ! for each residue pool
         do idy = 1, mnbpls
           ! Adjust for proper residue burial class
-          bdkrate(5,idy) = bdkrate(5,idy)*area_adj_rate_mult(bdrbc(idy))
-          bddsthrsh(idy) = bddsthrsh(idy)                               &
-     &                   * area_adj_thresh_mult(bdrbc(idy))
+          residue(idy)%database%dkrate(5) = residue(idy)%database%dkrate(5) * area_adj_rate_mult(residue(idy)%database%rbc)
+          residue(idy)%database%ddsthrsh = residue(idy)%database%ddsthrsh * area_adj_thresh_mult(residue(idy)%database%rbc)
         end do
       end if
 

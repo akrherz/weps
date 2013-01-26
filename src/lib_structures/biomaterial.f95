@@ -11,6 +11,10 @@ module biomaterial
   public :: biomatter
   public :: create_biomatter
   public :: destroy_biomatter
+
+  public :: biototal
+  public :: create_biototal
+  public :: destroy_biototal
  
   ! start c1glob.inc and d1glob.inc
   ! defines mass of plant parts that are below ground by soil layer
@@ -100,6 +104,13 @@ module biomaterial
   end type bioderived_canopy_layers
 
   type bioderived
+     real :: mbgstem      ! buried residue stem mass (kg/m^2)
+     real :: mbgleaf      ! buried residue leaf mass (kg/m^2)
+     real :: mbgstore     ! buried residue storage mass (kg/m^2)
+
+     real :: mbgrootstore ! buried storage root mass (kg/m^2)
+     real :: mbgrootfiber ! buried fibrous root mass (kg/m^2)
+
      real :: m            ! Total mass (standing + flat + roots + buried) (kg/m^2)
      real :: mst          ! Standing mass (standstem + standleaf + standstore) (kg/m^2)
      real :: mf           ! Flat mass (flatstem + flatleaf + flatstore) (kg/m^2)
@@ -155,8 +166,61 @@ module biomaterial
      type(biostate_decomp) :: decomp
      type(bioderived) :: deriv
      type(biodatabase_decomp) :: database
-     type(bio_output_units) :: luo
   end type biomatter
+
+
+  type biototal
+     real :: dstmtot      ! total number of stems  per unit area (#/m^2)
+     real :: zht_ave      ! Weighted ave height across pools (m)
+     real :: zmht         ! Tallest biomass height across pools (m)
+
+     real :: mtot         ! Total mass across pools (standing + flat + roots + buried) (kg/m^2)
+     real :: mtotto4      ! Total mass across pools (standing + flat + roots + buried to a 4 inch depth) (kg/m^2)
+     real :: msttot       ! Standing mass across pools (standstem + standleaf + standstore) (kg/m^2)
+     real :: mftot        ! Flat mass across pools (flatstem + flatleaf + flatstore) (kg/m^2)
+     real :: mbgtot       ! Buried mass across pools (kg/m^2)
+     real :: mbgtotto4    ! Buried (to a 4 inch depth) mass across pools (kg/m^2)
+     real :: mrttot       ! Buried root mass across pools (kg/m^2)
+     real :: mrttotto4    ! Buried (to a 4 inch depth) root mass across pools (kg/m^2)
+     type(bioderived_below_ground_layers), dimension(:), allocatable :: bg
+
+     real :: rsaitot      ! total of stem area index across pools (m^2/m^2)
+     real :: rlaitot      ! total of leaf area index across pools (m^2/m^2)
+     type(bioderived_canopy_layers), dimension(:), allocatable :: can
+
+     real :: rcdtot       ! effective Biomass silhouette area across pools (SAI+LAI) (m^2/m^2)
+                          ! (combination of leaf area and stem area indices)
+
+     real :: ffcvtot      ! biomass cover across pools - flat (m^2/m^2)
+     real :: fscvtot      ! biomass cover across pools - standing (m^2/m^2)
+     real :: ftcvtot      ! biomass cover across pools - total (m^2/m^2)
+                          ! (adffcvtot + adfscvtot)
+     real :: ftcancov     ! fraction of soil surface covered by canopy across pools (m^2/m^2)
+     real :: evapredu     ! composite evaporation reduction from across pools (ea/ep ratio)
+
+!     abdstm - Total number of stems (#/m^2) (live and dead) May be a weighted summation.
+!     abzht  - Composite weighted average biomass height (m)
+!     abzmht - Tallest biomass height (m) greatest of daily crop or residue height
+!     abm - Total biomass (kg/m^2) standing + roots + flat + buried + yield
+!     abmst - Standing biomass - above ground (kg/m^2)
+!     abmf    - Flat biomass (kg/m^2)
+!     abmbg - Buried biomass (kg/m^2)
+!     abmrt - Buried root biomass (kg/m^2)
+!     abmbgz - Buried biomass by soil layer (kg/m^2)
+!     abmrtz - Buried root biomass by soil layer (kg/m^2)
+!     abrsai - Biomass stem area index (m^2/m^2)
+!     abrlai - Biomass leaf area index (m^2/m^2)
+!     abrcd  - effective Biomass silhouette area (SAI+LAI) (m^2/m^2)
+!              (combination of leaf area and stem area indices)
+!     abrsaz - Biomass stem area index by height (1/m)
+!     abrlaz - Biomass leaf area index by height (1/m)
+!     abffcv - Biomass cover - flat  (m^2/m^2)
+!     abfscv - Biomass cover - standing  (m^2/m^2)
+!     abftcv - Biomass cover - total  (m^2/m^2)
+!              (sum of abffcv and abfscv)
+!     abfcancov - fraction of soil surface covered by all canopy (m^2/m^2)
+!     abevapredu - composite evaporation reduction from crop and residue materials (ea/ep ratio)
+  end type biototal
 
 contains
 
@@ -205,6 +269,34 @@ contains
         write(*,*) 'ERROR: unable to deallocate memory for biomatter'
      end if
   end subroutine destroy_biomatter
+
+  function create_biototal(nsoillay) result(biotot)
+     integer, intent(in) :: nsoillay
+     type(biototal) :: biotot
+
+     ! local variable
+     integer :: alloc_stat  ! allocation status return
+
+     ! allocate below and above ground arrays
+     allocate(biotot%bg(nsoillay), stat=alloc_stat)
+     if( alloc_stat .gt. 0 ) then
+        write(*,*) 'ERROR: unable to allocate memory for biototal'
+        stop(1)
+     end if
+  end function create_biototal
+
+  subroutine destroy_biototal(biotot)
+     type(biototal), intent(inout) :: biotot
+
+     ! local variable
+     integer :: dealloc_stat
+
+     ! allocate below and above ground arrays
+     deallocate(biotot%bg, stat=dealloc_stat)
+     if( dealloc_stat .gt. 0 ) then
+        write(*,*) 'ERROR: unable to deallocate memory for biomatter'
+     end if
+  end subroutine destroy_biototal
 
 end module biomaterial
 

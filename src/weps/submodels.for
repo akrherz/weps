@@ -3,9 +3,9 @@
 !$Revision$
 !$HeadURL$
 
-      subroutine submodels (isr, cd, cm, cy, residue)
+      subroutine submodels (isr, cd, cm, cy, residue, restot, biotot)
 
-      use biomaterial, only: biomatter
+      use biomaterial, only: biomatter, biototal
 
       include 'p1werm.inc'
       include 'm1flag.inc'      !am0cgf
@@ -13,13 +13,14 @@
 
 !     + + +   ARGUMENT DECLARATIONS + + +
       integer isr, cd, cm, cy
-      type(biomatter), dimension(:,:), intent(inout) :: residue
+      type(biomatter), dimension(:), intent(inout) :: residue
+      type(biototal), intent(inout) :: restot, biotot
 
 !        write(*,*) "Start manage"      !MANAGEment (tillage) submodel
-        call manage (isr, cd, cm, cy,iy,lopday,lopmon,lopyr)
+        call manage (isr, cd, cm, cy,iy,lopday,lopmon,lopyr, residue)
 
 !        write(*,*) "Start updres"
-        call updres(isr)                 !update decomp residue pools
+        call updres(isr, residue, restot)                 !update decomp residue pools
 
 !        write(*,*) "Start callhydr"
         call callhydr(daysim, isr)      !call HYDROLOGY submodel
@@ -36,17 +37,17 @@
         ! the previous day crop data registers even though growth flag is
         ! turned off.
         if( am0cgf .or. (am0cropupfl.gt.0) ) then
-            call callcrop(daysim, isr)
+            call callcrop(daysim, isr, residue)
         end if
 
 !        write(*,*) "Start decomp"
-        call decomp(isr, residue(:,isr))         !DECOMPosition submodel
+        call decomp(isr, residue)         !DECOMPosition submodel
 
 !        write(*,*) "Start updres"
-        call updres(isr)
+        call updres(isr, residue, restot)
 
 !        write(*,*) "Start sumbio"
-        call sumbio(isr) ! sum live and dead biomass
+        call sumbio(isr, residue, biotot) ! sum live and dead biomass
 
       return
       end

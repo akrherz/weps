@@ -1,4 +1,3 @@
-!
 !$Author$
 !$Date$
 !$Revision$
@@ -11,22 +10,23 @@
 ! crop and individual biomass pools (not all pools have the same variables)
 
 
-      subroutine bpools (cd,cm,cy,isr)
+      subroutine bpools (cd, cm, cy, isr, residue, restot)
 
-      use file_io_mod, only: luocrp1, luobio1, luodec
+      use biomaterial, only: biomatter, biototal
+      use file_io_mod, only: luocrp1, luobio1
 
-      integer cd,cm,cy,isr
-      real total, saitotal !added by Simon
+!     + + + ARGUMENT DECLARATIONS + + +
+      integer cd, cm, cy, isr
+      type(biomatter), dimension(:), intent(in) :: residue
+      type(biototal), intent(in) :: restot
 
       include 'p1werm.inc'
       include 'm1flag.inc'
       include 'b1glob.inc'
-      include 'd1gen.inc'
-      include 'd1glob.inc'
       include 'c1glob.inc'
       include 'c1db1.inc'
-      include 'decomp/decomp.inc'
       include 'main/main.inc'   ! daysim
+      include 'decomp/decomp.inc'
 
 ! statements below added by Simon
 
@@ -43,6 +43,7 @@
 
 !     + + + LOCAL VARIABLES + + +
       integer doy, idx
+      real total, saitotal !added by Simon
 
 !     + + + FUNCTIONS CALLED + + +
       integer dayear
@@ -65,7 +66,8 @@
         ! Dead Crop Biomass Pool
         ! write file header if still initializing
         if (am0ifl .eqv. .true.) then
-          write(luocrp1,*) '#daysim doy yy Tmin Tmax Tavg Tfacabove',   &
+          write(luocrp1(isr),*) '#daysim doy yy Tmin Tmax Tavg',        &
+     &        ' Tfacabove',                                             &
      &        ' Water Wfacstand Wfacflat Ddaystand Ddayflat Mstand1',   &
      &        ' Mstand2 Mstand3 MstandAll Mflat1 Mflat2 Mflat3',        &
      &        ' MflatAll MaboveAll Mburied1 Mburied2 Mburied3',         &
@@ -78,31 +80,31 @@
 
         else
 
-          total = admsttot(1) + admftot(1)   !sum of standing and flat residue mass, all pools
+          total = restot%msttot + restot%mftot   !sum of standing and flat residue mass, all pools
 
           ! insert double blank lines to demarcate years
           if( doy .eq. 1 ) then
-              write (luocrp1,*)
-              write (luocrp1,*)
+              write (luocrp1(isr),*)
+              write (luocrp1(isr),*)
           end if
 
-          write(luocrp1,2222) daysim, doy, cy,                          & !simulation day, day of year, year
+          write(luocrp1(isr),2222) daysim, doy, cy,                     & !simulation day, day of year, year
      &    awtdmn, awtdmx, awtdav, ditca,                                & !tmin, tmax, tavg, tf  
      &    aqua, diwcs, diwcf, didds, diddf,                             & !precip, wf standing, wf flat, dd standing, dd flat
-     &    admst(1,1), admst(2,1), admst(3,1), admsttot(1),              & !mass, standing
-     &    admf(1,1), admf(2,1), admf(3,1), admftot(1),                  & !mass, flat
+     &    residue(1)%deriv%mst, residue(2)%deriv%mst, residue(3)%deriv%mst, restot%msttot,              & !mass, standing
+     &    residue(1)%deriv%mf, residue(2)%deriv%mf, residue(3)%deriv%mf, restot%mftot,                  & !mass, flat
      &    total,                                                        & !sum of standing and flat residue mass, all pools
-     &    admbg(1,1), admbg(2,1), admbg(3,1), admbgtot(1),              & !mass, below ground
-     &    admrt(1,1), admrt(2,1), admrt(3,1), admrttot(1),              & !mass, roots
-     &    adfscv(1,1), adfscv(2,1), adfscv(3,1), adfscvtot(1),          & !cover provided by standing residue (fraction)
-     &    adffcv(1,1), adffcv(2,1), adffcv(3,1), adffcvtot(1),          & !cover provided by flat residue (fraction)
-     &    adftcv(1,1), adftcv(2,1), adftcv(3,1), adftcvtot(1),          & !cover provided by standing+flat residue (fraction)
-     &    adrsai(1,1), adrsai(2,1), adrsai(3,1), adrsaitot(1),          & !stem area index 
-     &    adrlai(1,1), adrlai(2,1), adrlai(3,1), adrlaitot(1),          & !leaf area index
-     &    adrcdtot(1),                                                  & !biodrag
-     &    addstm(1,1), addstm(2,1), addstm(3,1), addstmtot(1),          & !stems (no/m2) 
-     &    adzht(1,1), adzht(2,1), adzht(3,1), adzht_ave(1),             & !stem height for each residue pool
-     &    admrttotto4(1)                                                  !root mass to 4 inches
+     &    residue(1)%deriv%mbg, residue(2)%deriv%mbg, residue(3)%deriv%mbg, restot%mbgtot,              & !mass, below ground
+     &    residue(1)%deriv%mrt, residue(2)%deriv%mrt, residue(3)%deriv%mrt, restot%mrttot,              & !mass, roots
+     &    residue(1)%deriv%fscv, residue(2)%deriv%fscv, residue(3)%deriv%fscv, restot%fscvtot,          & !cover provided by standing residue (fraction)
+     &    residue(1)%deriv%ffcv, residue(2)%deriv%ffcv, residue(3)%deriv%ffcv, restot%ffcvtot,          & !cover provided by flat residue (fraction)
+     &    residue(1)%deriv%ftcv, residue(2)%deriv%ftcv, residue(3)%deriv%ftcv, restot%ftcvtot,          & !cover provided by standing+flat residue (fraction)
+     &    residue(1)%deriv%rsai, residue(2)%deriv%rsai, residue(3)%deriv%rsai, restot%rsaitot,          & !stem area index 
+     &    residue(1)%deriv%rlai, residue(2)%deriv%rlai, residue(3)%deriv%rlai, restot%rlaitot,          & !leaf area index
+     &    restot%rcdtot,                                                  & !biodrag
+     &    residue(1)%geometry%dstm, residue(2)%geometry%dstm, residue(3)%geometry%dstm, restot%dstmtot,          & !stems (no/m2) 
+     &    residue(1)%geometry%zht, residue(2)%geometry%zht, residue(3)%geometry%zht, restot%zht_ave,             & !stem height for each residue pool
+     &    restot%mrttotto4                                                  !root mass to 4 inches
 
 ! tf=temperature factor, wf=water factor, dd=decomposition day
    
@@ -126,7 +128,7 @@
 2345     format (i6,i4,i5,3f10.5,13f10.3)
 
           ! All Residue Pools Combined
-          write(luobio1,2345) daysim, doy, cy,                          &
+          write(luobio1(isr),2345) daysim, doy, cy,                     &
      &    abffcv(isr), abfscv(isr), abftcv(isr),                        &
      &    0.0, abrsai(isr), abrlai(isr),                                &
      &    abm(isr), abmf(isr), abmst(isr),                              &
@@ -150,7 +152,7 @@
 
           ! write file header if still initializing
          if (am0ifl .eqv. .true.) then
-           write(luodec(idx),*) '#daysim resday resyear doy yy pool#',  &
+           write(residue(idx)%luo%dec,*) '#daysim resday resyear doy yy pool#',  &
      &          ' cumddysta cumddyflat cumddybg10 flatcov standcov',    &
      &          ' totalcov covfact silhoutte leafarea totalmass',       &
      &          ' flatmass standmass bgrootmass bgshootmass stemnumb',  &
@@ -163,22 +165,22 @@
 2355       format (i6,1x,i5,1x,i4,1x,i3,1x,i4,1x,i2,30(1x,f10.5),1x,a30)
 
            ! Residue Pool #idx
-           write(luodec(idx),2355) daysim,                              &
-     &     resday(idx,isr), resyear(idx,isr), doy, cy, idx,             &
-     &     cumdds(idx,isr), cumddf(idx,isr), cumddg(10,idx,isr),        &
-     &     adffcv(idx,isr), adfscv(idx,isr), adftcv(idx,isr),           &
-     &     covfact(idx,isr), adrsai(idx,isr), adrlai(idx,isr),          &
-     &     adm(idx,isr), admf(idx,isr), admst(idx,isr),                 &
-     &     admrt(idx,isr), admbg(idx,isr),                              &
-     &     addstm(idx,isr), adzht(idx,isr), adxstmrep(idx,isr),         &
-     &     admstandstem(idx,isr), admstandleaf(idx,isr),                &
-     &     admstandstore(idx,isr), admflatstem(idx,isr),                &
-     &     admflatleaf(idx,isr), admflatstore(idx,isr),                 &
-     &     admflatrootstore(idx,isr), admflatrootfiber(idx,isr),        &
-     &     admbgstem(idx,isr), admbgleaf(idx,isr),                      &
-     &     admbgstore(idx,isr), admbgrootstore(idx,isr),                &
-     &     admbgrootfiber(idx,isr),                                     &
-     &     ad0nam(idx,isr)
+           write(residue(idx)%luo%dec,2355) daysim, &
+     &     residue(idx)%decomp%resday, residue(idx)%decomp%resyear, doy, cy, idx, &
+     &     residue(idx)%decomp%cumdds, residue(idx)%decomp%cumddf, residue(idx)%decomp%bg(10)%cumddg, &
+     &     residue(idx)%deriv%ffcv, residue(idx)%deriv%fscv, residue(idx)%deriv%ftcv, &
+     &     residue(idx)%database%covfact, residue(idx)%deriv%rsai, residue(idx)%deriv%rlai, &
+     &     residue(idx)%deriv%m, residue(idx)%deriv%mf, residue(idx)%deriv%mst, &
+     &     residue(idx)%deriv%mrt, residue(idx)%deriv%mbg, &
+     &     residue(idx)%geometry%dstm, residue(idx)%geometry%zht, residue(idx)%geometry%xstmrep, &
+     &     residue(idx)%mass%standstem, residue(idx)%mass%standleaf, &
+     &     residue(idx)%mass%standstore, residue(idx)%mass%flatstem, &
+     &     residue(idx)%mass%flatleaf, residue(idx)%mass%flatstore, &
+     &     residue(idx)%mass%flatrootstore, residue(idx)%mass%flatrootfiber, &
+     &     residue(idx)%deriv%mbgstem, residue(idx)%deriv%mbgleaf, &
+     &     residue(idx)%deriv%mbgstore, residue(idx)%deriv%mbgrootstore, &
+     &     residue(idx)%deriv%mbgrootfiber, &
+     &     residue(idx)%bname
 
          endif
         end do

@@ -12,8 +12,8 @@
 !     + + + Modules Used + + +
       use Polygons_Mod
       use subregions_mod
-      use file_io_mod, only: fopenk, luicli, luiwin, luiwsd, luocdb,    &
-     &            luoddb, luohdb, luosdb, luotdb, luomanage, luolog
+      use file_io_mod, only: fopenk, luicli, luiwin, luiwsd,            &
+     &                       luomanage, luolog
 
       include 'p1werm.inc'
       include 'wpath.inc'
@@ -297,16 +297,6 @@
         ! Now should set six.
         line = line(1:len_trim(line)) // ' 0'
         read (line,*,err=80) am0hdb,am0sdb,am0tdb,am0cdb,am0ddb,am0edb
-        if (am0hdb .eq. 1) call fopenk (luohdb,                         &
-     &     rootp(1:len_trim(rootp)) // 'hdbug.out', 'unknown')
-        if (am0sdb .eq. 1) call fopenk (luosdb,                         &
-     &     rootp(1:len_trim(rootp)) // 'sdbug.out', 'unknown')
-        if (am0tdb .eq. 1) call fopenk (luotdb,                         &
-     &     rootp(1:len_trim(rootp)) // 'tdbug.out', 'unknown')
-        if (am0cdb .eq. 1) call fopenk (luocdb,                         &
-     &     rootp(1:len_trim(rootp)) // 'cdbug.out', 'unknown')
-        if (am0ddb .eq. 1) call fopenk (luoddb,                         &
-     &     rootp(1:len_trim(rootp)) // 'ddbug.out', 'unknown')
 
       case (19)
         read (line,*,err=80) amasim

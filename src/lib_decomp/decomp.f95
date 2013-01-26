@@ -149,14 +149,14 @@
 
       if (aqua .gt. 0.) then
 
-         residue(iage)%decomp%weti = 4.0                  !set # of days for antecedent
+         residue(iage)%decomp%weti = 4                  !set # of days for antecedent
          diwcs = aqua / 4.0                !4 mm or more is optimum for decomp.
          diwcs = diwcs + residue(iage)%decomp%iwcsy * 0.4 !add previous antecdent moisture
 
          if (diwcs.gt.1.) diwcs = 1.0      !Limit no greater than 1.
 
-      else if (residue(iage)%decomp%weti.gt.0.) then      !No precip but recent water input
-         residue(iage)%decomp%weti = residue(iage)%decomp%weti - 1.0     !decrement days since precip
+      else if (residue(iage)%decomp%weti .gt. 0) then      !No precip but recent water input
+         residue(iage)%decomp%weti = residue(iage)%decomp%weti - 1     !decrement days since precip
          diwcs = residue(iage)%decomp%iwcsy*0.4           !set diwcs to decremented value
 
       else                                 
@@ -249,7 +249,7 @@
          residue(iage)%decomp%cumdds = residue(iage)%decomp%cumdds + didds
          residue(iage)%decomp%cumddf = residue(iage)%decomp%cumddf + diddf
          do isz = 1, nslay(isr)
-            residue(iage)%decomp%cumddg(isz) = residue(iage)%decomp%cumddg(isz) + diddg(isz)
+            residue(iage)%decomp%bg(isz)%cumddg = residue(iage)%decomp%bg(isz)%cumddg + diddg(isz)
          end do
       end do
 
@@ -290,16 +290,16 @@
         do isz = 1, nslay(isr)
           ! buried surface biomass
           dec_fac = max(0.0, 1.0-residue(iage)%database%dkrate(3)*diddg(isz))
-          residue(iage)%mass%bgstemz(isz) = residue(iage)%mass%bgstemz(isz) * dec_fac
+          residue(iage)%mass%bg(isz)%stemz = residue(iage)%mass%bg(isz)%stemz * dec_fac
           dec_fac = max(0.0, 1.0-leaf_fac*residue(iage)%database%dkrate(3)*diddg(isz))
-          residue(iage)%mass%bgleafz(isz) = residue(iage)%mass%bgleafz(isz) * dec_fac
+          residue(iage)%mass%bg(isz)%leafz = residue(iage)%mass%bg(isz)%leafz * dec_fac
           dec_fac = max(0.0,1.0-store_fac*residue(iage)%database%dkrate(3)*diddg(isz))
-          residue(iage)%mass%bgstorez(isz) = residue(iage)%mass%bgstorez(isz) * dec_fac
+          residue(iage)%mass%bg(isz)%storez = residue(iage)%mass%bg(isz)%storez * dec_fac
 
           ! buried root biomass
           dec_fac = max(0.0, 1.0 - residue(iage)%database%dkrate(4)*diddg(isz))
-          residue(iage)%mass%bgrootstorez(isz) = residue(iage)%mass%bgrootstorez(isz) * dec_fac
-          residue(iage)%mass%bgrootfiberz(isz) = residue(iage)%mass%bgrootfiberz(isz) * dec_fac
+          residue(iage)%mass%bg(isz)%rootstorez = residue(iage)%mass%bg(isz)%rootstorez * dec_fac
+          residue(iage)%mass%bg(isz)%rootfiberz = residue(iage)%mass%bg(isz)%rootfiberz * dec_fac
         end do
       end do
 
@@ -337,9 +337,8 @@
       end do
 
       if (dbgflg) write(*,*) 'decomp 10'
-      if (am0ddb .eq. 1) call ddbug(isr, nslay(isr))
-      if ((am0dfl .eq. 1).or.(am0dfl .eq. 2).or.(am0dfl .eq.3))         &
-     &   call decout
+      if (am0ddb .eq. 1) call ddbug(isr, nslay(isr), residue)
+      if ((am0dfl .eq. 1).or.(am0dfl .eq. 2).or.(am0dfl .eq.3)) call decout(isr, residue)
 
       return
       end

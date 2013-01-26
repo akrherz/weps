@@ -79,8 +79,8 @@ module file_io_mod
     integer :: luoinpt         ! write inpt.out for crop input detail
     integer, dimension(:), allocatable :: luod_above      ! write dabove.out for above ground decomp detail
     integer, dimension(:), allocatable :: luod_below      ! write dbelow.out for below ground decomp detail
-    integer :: luocrp1         ! write decomp.out for select decomp pools detail
-    integer :: luobio1         ! bio1.btmp for residue totals detail
+    integer, dimension(:), allocatable :: luocrp1         ! write decomp.out for select decomp pools detail
+    integer, dimension(:), allocatable :: luobio1         ! bio1.btmp for residue totals detail
 
     integer :: luosci          ! write sci_energy.out for soil conditioning index detail
     integer :: luostir         ! write stir_energy.out for soil tillage intesity rating detail

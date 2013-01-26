@@ -3,12 +3,15 @@
 !$Revision$
 !$HeadURL$
 
-      subroutine sumbio(isr)
-! ***************************************************************** wjr
-! Contains init code from main
+      subroutine sumbio(isr, residue, restot, biotot)
 
-!       Edit History
-!       04-Mar-99       wjr     created
+      use biomaterial, only: biomatter, biototal
+
+!     + + +   ARGUMENT DECLARATIONS + + +
+      type(biomatter), dimension(:), intent(inout) :: residue
+      type(biototal), intent(inout) :: restot, biotot
+
+!     Update geometric properties of all biomass pools
 
       include 'p1werm.inc'
       include 's1layr.inc'
@@ -28,7 +31,7 @@
 ! local variables
 
       integer idx,jdx
-      real atotal, aheight, a(0:mnbpls)
+      real atotal, aheight, a(0:size(residue))
 
 !     + + + FUNCTIONS CALLED + + +
       real    biodrag
@@ -37,29 +40,29 @@
 ! *****************************************************************
 !     Compute total number of stems
 
-      abdstm(isr) = acdstm(isr)
-      do 10 idx=1,mnbpls
-        abdstm(isr) = abdstm(isr) + addstm(idx,isr)
-10    continue
+      biotot%dstmtot = acdstm(isr)
+      do idx=1,mnbpls
+        biotot%dstmtot = biotot%dstmtot + residue(idx)%geometry%dstm
+      end do
 ! *****************************************************************
 !     compute the weighted average residue height
 
 !     determine weighting factors (stem area index)
       atotal = 0.0
-      do 14 idx=1,mnbpls
-        a(idx) = adzht(idx,isr) * addstm(idx,isr) * adxstmrep(idx,isr)
+      do idx=1,mnbpls
+        a(idx) = residue(idx)%geometry%zht * residue(idx)%geometry%dstm * adxstmrep(idx,isr)
         atotal = atotal + a(idx)
-14    continue
+      end do
 
 !     linearly weight height from each residue pool based on stem area index
       aheight = 0.0
       if( atotal .gt. 0.0 ) then
         do idx=1,mnbpls
-          aheight = aheight + adzht(idx,isr) * a(idx) / atotal
+          aheight = aheight + residue(idx)%geometry%zht * a(idx) / atotal
         end do
       end if
 
-      adzht_ave(isr) = aheight
+      restot%zht_ave = aheight
 ! *****************************************************************
 !     compute the weighted average biomass height
 
@@ -67,7 +70,7 @@
       a(0) = aczht(isr) * acdstm(isr) * acxstmrep(isr)
 !      atotal = a(0)
 !      do 15 idx=1,mnbpls
-!        a(idx) = adzht(idx,isr) * addstm(idx,isr) * adxstmrep(idx,isr)
+!        a(idx) = residue(idx)%geometry%zht * residue(idx)%geometry%dstm * adxstmrep(idx,isr)
 !        atotal = atotal + a(idx)
 !15    continue
         atotal = atotal + a(0)
@@ -76,22 +79,22 @@
       if( atotal .gt. 0.0 ) then
         aheight = aczht(isr) * a(0) / atotal
         do idx=1,mnbpls
-          aheight = aheight + adzht(idx,isr) * a(idx) / atotal
+          aheight = aheight + residue(idx)%geometry%zht * a(idx) / atotal
         end do
       else
         aheight = 0.0
       end if
 
-      abzht(isr) = aheight
+      biotot%zht_ave = aheight
 ! *****************************************************************
 !     determine the pool with the tallest biomass height
 !     and use that value
-      abzmht(isr) = aczht(isr)
-      do 30 idx=1,mnbpls
-        if (abzmht(isr) .lt. adzht(idx,isr)) then
-          abzmht(isr) = adzht(idx,isr)
+      biotot%zmht = aczht(isr)
+      do idx=1,mnbpls
+        if (biotot%zmht .lt. residue(idx)%geometry%zht) then
+          biotot%zmht = residue(idx)%geometry%zht
         end if
-30    continue
+      end do
 
 ! *****************************************************************
 !     sum the flat biomass from each pool
@@ -99,37 +102,37 @@
 !     sum the buried biomass from each pool
 !     sum the root biomass from each pool
 
-      abmf(isr) = acmf(isr) + admftot(isr)    !flat
-      abmst(isr) = acmst(isr) + admsttot(isr) !standing 
+      biotot%mftot = acmf(isr) + restot%mftot    !flat
+      biotot%msttot = acmst(isr) + restot%msttot !standing 
 
-      abmbg(isr) = 0.0        !below ground
-      abmrt(isr) = acmrt(isr) !roots
-      do 40 idx=1,mnbpls
-        abmbg(isr) = abmbg(isr) + admbg(idx,isr) !below ground
-        abmrt(isr) = abmrt(isr) + admrt(idx,isr) !roots
-40    continue
+      biotot%mbgtot = 0.0        !below ground
+      biotot%mrttot = acmrt(isr) !roots
+      do idx=1,mnbpls
+        biotot%mbgtot = biotot%mbgtot + residue(idx)%deriv%mbg !below ground
+        biotot%mrttot = biotot%mrttot + residue(idx)%deriv%mbg !roots
+      end do
 ! *****************************************************************
 !     determine the total mass of biomass (above, flat and below ground)
-      abm(isr) = acm(isr) + admtot(isr)
+      biotot%mtot = acm(isr) + restot%mtot
 ! *****************************************************************
 !     sum the buried biomass by layer
 !     sum the root mass by layer
-      do 60 jdx=1,nslay(isr)
-        abmbgz(jdx,isr) = 0.0
-        abmrtz(jdx,isr) = 0.0
-        do 50 idx=1,mnbpls
-          abmbgz(jdx,isr) = abmbgz(jdx,isr) + admbgz(jdx,idx,isr)
-          abmrtz(jdx,isr) = abmrtz(jdx,isr) + admrtz(jdx,idx,isr)
-50      continue
-60    continue
+      do jdx=1,nslay(isr)
+        biotot%bg(jdx)%mbgz = 0.0
+        biotot%bg(jdx)%mrtz = 0.0
+        do idx=1,mnbpls
+          biotot%bg(jdx)%mbgz = biotot%bg(jdx)%mbgz + residue(idx)%deriv%bg(jdx)%mbgz
+          biotot%bg(jdx)%mrtz = biotot%bg(jdx)%mrtz + residue(idx)%deriv%bg(jdx)%mrtz
+        end do
+      end do
 ! *****************************************************************
 !     sum the stem area index and leaf area index values
-      abrsai(isr) = acrsai(isr) + adrsaitot(isr)
-      abrlai(isr) = acrlai(isr) + adrlaitot(isr)
+      biotot%rsaitot = acrsai(isr) + restot%rsaitot
+      biotot%rlaitot = acrlai(isr) + restot%rlaitot
 
 !     compute "effective biomass (live and dead) drag coefficient
 !     from SAI and LAI values
-      abrcd(isr) = biodrag( adrlaitot(isr), adrsaitot(isr), acrlai(isr),&
+      biotot%rcdtot = biodrag( restot%rlaitot, restot%rsaitot, acrlai(isr),&
      &             acrsai(isr), ac0rg(isr), acxrow(isr), aczht(isr),    &
      &             aszrgh(isr) )
 ! *****************************************************************
@@ -142,12 +145,12 @@
       ! pool should have it's own height, and hence divisions. This
       ! should at least stay within the arrays.
       do jdx = 1, mncz
-          abrsaz(jdx,isr) = acrsaz(jdx,isr)
-          abrlaz(jdx,isr) = acrlaz(jdx,isr)
+          biotot%can(jdx)%rsaz = acrsaz(jdx,isr)
+          biotot%can(jdx)%rlaz = acrlaz(jdx,isr)
           do idx=1,mnbpls
-              abrsaz(jdx,isr) = abrsaz(jdx,isr) + adrsaz(jdx,idx,isr)
-              abrlaz(jdx,isr) = abrlaz(jdx,isr) + adrlaz(jdx,idx,isr)
-        end do
+              biotot%can(jdx)%rsaz = biotot%can(jdx)%rsaz + residue(idx)%deriv%can(jdx)%rsaz
+              biotot%can(jdx)%rlaz = biotot%can(jdx)%rlaz + residue(idx)%deriv%can(jdx)%rlaz
+          end do
       end do
 
 
@@ -158,15 +161,15 @@
 !     Note that these values shouldn't ever exceed 1.0 or be less than zero
 
       ! flat and flat, with overlap
-      abffcv(isr) = acffcv(isr) + adffcvtot(isr) * (1.0-acffcv(isr))
+      biotot%ffcvtot = acffcv(isr) + restot%ffcvtot * (1.0-acffcv(isr))
 
       ! standing and standing, no overlap
-      abfscv(isr) = acfscv(isr) + adfscvtot(isr)
-      if (abfscv(isr) > 1.0) abfscv(isr) = 1.0
+      biotot%fscvtot = acfscv(isr) + restot%fscvtot
+      if (biotot%fscvtot > 1.0) biotot%fscvtot = 1.0
 
       ! flat and standing, no overlap
-      abftcv(isr) =  abffcv(isr) + abfscv(isr)
-      if (abftcv(isr) > 1.0) abftcv(isr) = 1.0
+      biotot%ftcvtot =  biotot%ffcvtot + biotot%fscvtot
+      if (biotot%ftcvtot > 1.0) biotot%ftcvtot = 1.0
 
 ! ***        write(*,*) ' sumbio before: abffcv acfscv acftcv ',
 ! ***     *  abffcv(isr), acfscv(isr),acftcv(isr)
@@ -185,21 +188,21 @@
 ! ***    *  abffcv(isr), abfscv(isr),abftcv(isr)
 
       ! canopy cover for all biomass (overlaps)
-      abfcancov(isr)=acfcancov(isr)+adftcancov(isr)*(1.0-acfcancov(isr))
+      biotot%ftcancov=acfcancov(isr)+restot%ftcancov*(1.0-acfcancov(isr))
 
 !     find composite evaporation supression for total flat residue
       ! set initial value to no residue condition
-      abevapredu(isr) = 1.0
+      biotot%evapredu = 1.0
       ! start with older flat residue layers
       do idx = mnbpls,1,-1
-          if( admf(idx,isr) .gt. 0.0 ) then
-              abevapredu(isr) = resevapredu( abevapredu(isr),           &
-     &         admf(idx,isr), adresevapa(idx,isr), adresevapb(idx,isr) )
+          if( residue(idx)%deriv%mf .gt. 0.0 ) then
+              biotot%evapredu = resevapredu( biotot%evapredu, residue(idx)%deriv%mf, &
+     &                                       residue(idx)%database%resevapa, residue(idx)%database%resevapb )
           end if
       end do
       ! add any flat crop residue to the reduction
       if( acmf(isr) .gt. 0.0 ) then
-          abevapredu(isr) = resevapredu( abevapredu(isr), acmf(isr),    &
+          biotot%evapredu = resevapredu( biotot%evapredu, acmf(isr),    &
      &                  acresevapa(isr), acresevapb(isr) )
       end if
 

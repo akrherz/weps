@@ -4,7 +4,7 @@
 !$Revision$
 !$HeadURL$
 !
-      subroutine openfils
+      subroutine openfils(residue)
 ! ***************************************************************** wjr
 ! Contains init code from main
 !
@@ -12,7 +12,7 @@
 !       10-Mar-99       wjr     created
 !
       use file_io_mod
-      use biomaterial, only biomatter
+      use biomaterial, only: biomatter
 
       include 'p1werm.inc'
       include 'wpath.inc'
@@ -20,24 +20,23 @@
       include 'm1flag.inc'
       include 'command.inc'
       include 'm1subr.inc'
+      include 'm1dbug.inc'
 
-!     + + +   ARGUMENT DECLARATIONS + + +
-
-! + + + Called functions + + +
-      integer ios
+!     + + + ARGUMENT DECLARATIONS + + +
+      type(biomatter), dimension(:,:), intent(out) :: residue
 
 !     + + +   LOCAL VARIABLES + + +
-      integer idx, jdx, alloc_stat
-      character*10 decfile ! decomposition detail age pool output file name
-      character*13 subr_text(nsubr) ! subregion subdirectory text string
+      integer idx, jdx, alloc_stat, sum_stat
+      character*10 :: decfile ! decomposition detail age pool output file name
+      character*13 :: subr_text(nsubr) ! subregion subdirectory text string
 
       ! create subregion directory names
       do idx = 1, nsubr
-          subr_text(1:9,idx) = 'subregion'
-          subr_text(10,idx) = char(48+(idx/1000))    ! thousands place of subregion number
-          subr_text(11,idx) = char(48+(idx-(idx/1000)*1000))    ! hundreds place of subregion number
-          subr_text(12,idx) = char(48+(idx-(idx/100)*100))    ! tens place of subregion number
-          subr_text(13,idx) = char(48+(idx-(idx/10)*10))    ! ones place of subregion number
+          subr_text(idx)(1:9) = 'subregion'
+          subr_text(idx)(10:10) = char(48+(idx/1000))    ! thousands place of subregion number
+          subr_text(idx)(11:11) = char(48+(idx-(idx/1000)*1000))    ! hundreds place of subregion number
+          subr_text(idx)(12:12) = char(48+(idx-(idx/100)*100))    ! tens place of subregion number
+          subr_text(idx)(13:13) = char(48+(idx-(idx/10)*10))    ! ones place of subregion number
       end do
 
 !     the main output file is opened at all times
@@ -114,15 +113,20 @@
 ! open files for outputing the crop and decomp biomass variables - LEW
 
       if ((am0dfl .eq. 1).or.(am0dfl.eq.3)) then
+         sum_stat = 0
          allocate( luod_above(nsubr), stat=alloc_stat )
-         if( alloc_stat .gt. 0 ) then
-            Write(*,*) 'ERROR: unable to allocate luod_above array'
+         sum_stat = sum_stat + 1
+         allocate( luod_above(nsubr), stat=alloc_stat )
+         sum_stat = sum_stat + 1
+         allocate( luod_above(nsubr), stat=alloc_stat )
+         sum_stat = sum_stat + 1
+         if( sum_stat .gt. 0 ) then
+            Write(*,*) 'ERROR: unable to allocate luod_above, luocrp1 or luobio1 array'
          end if
 
-         call fopenk (luocrp1, rootp(1:len_trim(rootp)) // 'decomp.out', 'unknown')
-         call fopenk (luobio1, rootp(1:len_trim(rootp)) // 'bio1.btmp', 'unknown')
-
          do idx = 1, nsubr
+            call fopenk (luocrp1(idx), rootp(1:len_trim(rootp)) // subr_text(idx) // 'decomp.out', 'unknown')
+            call fopenk (luobio1(idx), rootp(1:len_trim(rootp)) // subr_text(idx) // 'bio1.btmp', 'unknown')
             call fopenk (luod_above(idx), rootp(1:len_trim(rootp)) // subr_text(idx) // 'dabove.out', 'unknown')
          end do
       endif
@@ -136,24 +140,24 @@
         decfile(6:10) = '.btmp'
         do idx = 1, nsubr
 
-        do jdx = 1,mnbpls
-          ! assign 4 character of file name to be the number character corresponsing to tens place of idx
-          decfile(4:4) = char(48+(jdx/10))
-          ! assign 5 character of file name to be the number character corresponsing to ones place of idx
-          decfile(5:5) = char(48+(jdx-(jdx/10)*10))
-          ! display created file
-          !write(*,*) 'File name created: ', decfile(jdx)
-          ! assign logical unit number of opening file to array
-          call fopenk (residue(jdx,idx)%luo%dec, rootp(1:len_trim(rootp)) // subr_text(idx) // decfile, 'unknown')
-        end do
+           do jdx = 1,mnbpls
+             ! assign 4 character of file name to be the number character corresponsing to tens place of idx
+             decfile(4:4) = char(48+(jdx/10))
+             ! assign 5 character of file name to be the number character corresponsing to ones place of idx
+             decfile(5:5) = char(48+(jdx-(jdx/10)*10))
+             ! display created file
+             !write(*,*) 'File name created: ', decfile(jdx)
+             ! assign logical unit number of opening file to array
+             call fopenk (residue(jdx,idx)%luo%dec, rootp(1:len_trim(rootp)) // subr_text(idx) // decfile, 'unknown')
+           end do
 
-         allocate( luod_below(nsubr), stat=alloc_stat )
-         if( alloc_stat .gt. 0 ) then
-            Write(*,*) 'ERROR: unable to allocate luod_below array'
-         end if
+            allocate( luod_below(nsubr), stat=alloc_stat )
+            if( alloc_stat .gt. 0 ) then
+               Write(*,*) 'ERROR: unable to allocate luod_below array'
+            end if
 
-         do idx = 1, nsubr
-            call fopenk (luod_below, rootp(1:len_trim(rootp)) // 'dbelow.out', 'unknown')
+         
+            call fopenk (luod_below(idx), rootp(1:len_trim(rootp)) // subr_text(idx) // 'dbelow.out', 'unknown')
          end do
       endif
 
@@ -183,4 +187,22 @@
          call fopenk(luoci, rootp(1:len_trim(rootp)) // 'ci.out', 'unknown')
       endif
 
+        if (am0hdb .eq. 1) call fopenk (luohdb,                         &
+     &     rootp(1:len_trim(rootp)) // 'hdbug.out', 'unknown')
+        if (am0sdb .eq. 1) call fopenk (luosdb,                         &
+     &     rootp(1:len_trim(rootp)) // 'sdbug.out', 'unknown')
+        if (am0tdb .eq. 1) call fopenk (luotdb,                         &
+     &     rootp(1:len_trim(rootp)) // 'tdbug.out', 'unknown')
+        if (am0cdb .eq. 1) call fopenk (luocdb,                         &
+     &     rootp(1:len_trim(rootp)) // 'cdbug.out', 'unknown')
+      if (am0ddb .eq. 1) then
+         ! create arrays for subregion debug output files
+         allocate( luoddb(nsubr), stat=alloc_stat )
+         if( alloc_stat .gt. 0 ) then
+            Write(*,*) 'ERROR: unable to allocate luoddb array'
+         end if
+         do idx = 1, nsubr
+            call fopenk (luoddb(idx), rootp(1:len_trim(rootp)) // subr_text(idx) // 'ddbug.out', 'unknown')
+         end do
+      end if
       end

@@ -1,26 +1,26 @@
-!
 !$Author$
 !$Date$
 !$Revision$
 !$HeadURL$
-!
-      subroutine closefils
-! ***************************************************************** wjr
-! Contains init code from main
-!
-!       Edit History
-!       10-Mar-99       wjr     created
-!
+
+      subroutine closefils(residue)
+
       use file_io_mod
+      use biomaterial, only: biomatter
+
       include 'p1werm.inc'
       include 'wpath.inc'
 
+      include 'm1subr.inc'   ! nsubr
       include 'm1flag.inc'
       include 'm1dbug.inc'
       include 'command.inc'
 
+!     + + + ARGUMENT DECLARATIONS + + +
+      type(biomatter), dimension(:,:), intent(in) :: residue
+
       ! local variables
-      integer idx
+      integer idx, jdx
 
       ! files opened in inprun.for
       close(luicli)
@@ -31,7 +31,9 @@
       if (am0sdb .eq. 1) close(luosdb)
       if (am0tdb .eq. 1) close(luotdb)
       if (am0cdb .eq. 1) close(luocdb)
-      if (am0ddb .eq. 1) close(luoddb)
+      do idx = 1, nsubr
+         if (am0ddb .eq. 1) close(luoddb(idx))
+      end do
 
       ! files opened in cmdline.for
       close(luolog)
@@ -109,20 +111,22 @@
 
 ! files for outputing the crop and decomp biomass variables - LEW
 
-      if ((am0dfl .eq. 1).or.(am0dfl.eq.3)) then
-         close(luocrp1)
-         close(luobio1)
-         close(luod_above)
-      endif
-      if ((am0dfl .eq. 2).or.(am0dfl.eq.3)) then
-        ! files to match number of biomass pools
+      do idx = 1, nsubr
+         if ((am0dfl .eq. 1).or.(am0dfl.eq.3)) then
+            close(luocrp1(idx))
+            close(luobio1(idx))
+            close(luod_above(idx))
+         endif
+         if ((am0dfl .eq. 2).or.(am0dfl.eq.3)) then
+           ! files to match number of biomass pools
 
-        do idx = 1,mnbpls
-          close(luodec(idx))
-        end do
+           do jdx = 1,mnbpls
+              close(residue(jdx,idx)%luo%dec)
+           end do
 
-        close(luod_below)
-      endif
+           close(luod_below(idx))
+         endif
+      end do
 
       if (am0cfl .gt. 0) then
 !         daily crop output of most state variables 

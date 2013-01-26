@@ -2,23 +2,13 @@
 !$Date$
 !$Revision$
 !$HeadURL$
-      subroutine poolupdate(                                            &
-     &           bdmstandstem, bdmstandleaf, bdmstandstore,             &
-     &           bdmflatstem, bdmflatleaf, bdmflatstore,                &
-     &           bdmflatrootstore, bdmflatrootfiber,                    &
-     &           bdmbgstemz, bdmbgleafz, bdmbgstorez,                   &
-     &           bdmbgrootstorez, bdmbgrootfiberz,                      &
-     &           bdzht, bddstm, bdxstmrep, bdgrainf,                    &
-     &           bdmbgstem, bdmbgleaf, bdmbgstore,                      &
-     &           bdmbgrootstore, bdmbgrootfiber,                        &
-     &           bdm, bdmst, bdmf, bdmrt, bdmrtz, bdmbg, bdmbgz,        &
-     &           bdrsai, bdrlai, bdrsaz, bdrlaz,                        &
-     &           bdffcv, bdfscv, bdftcv, bdfcancov,                     &
-     &           bdrcd, bddstmtot, bdrsaitot, bdrlaitot,                &
-     &           bdrcdtot, bdmtot, bdmtotto4, bdmsttot, bdmftot,        &
-     &           bdmbgtot, bdmbgtotto4, bdmrttot, bdmrttotto4,          &
-     &           bdffcvtot, bdfscvtot, bdftcvtot, bdftcancov,           &
-     &           bnslay, bszlyd, bcovfact, bdxstm, bd0sla, bd0ck)
+      subroutine poolupdate(bnslay, bszlyd, residue, restot)
+
+      use biomaterial, only: biomatter, biototal
+
+!     + + +   ARGUMENT DECLARATIONS + + +
+      type(biomatter), dimension(:), intent(inout) :: residue
+      type(biototal), intent(inout) :: restot
 
 !     INCLUDE
       include 'p1const.inc'
@@ -30,78 +20,9 @@
 
 !     + + + VARIABLE DECLARATIONS + + +
 
-      ! state variables
-      real bdmstandstem(mnbpls)
-      real bdmstandleaf(mnbpls)
-      real bdmstandstore(mnbpls)
-
-      real bdmflatstem(mnbpls)
-      real bdmflatleaf(mnbpls)
-      real bdmflatstore(mnbpls)
-
-      real bdmflatrootstore(mnbpls)
-      real bdmflatrootfiber(mnbpls)
-
-      real bdmbgstemz(mnsz,mnbpls)
-      real bdmbgleafz(mnsz,mnbpls)
-      real bdmbgstorez(mnsz,mnbpls)
-
-      real bdmbgrootstorez(mnsz,mnbpls)
-      real bdmbgrootfiberz(mnsz,mnbpls)
-
-      real bdzht(mnbpls)
-      real bddstm(mnbpls)
-      real bdxstmrep(mnbpls)
-      real bdgrainf(mnbpls)
-
-      ! derived variables
-      real bdmbgstem(mnbpls)
-      real bdmbgleaf(mnbpls)
-      real bdmbgstore(mnbpls)
-      real bdmbgrootstore(mnbpls)
-      real bdmbgrootfiber(mnbpls)
-      real bdm(mnbpls)
-      real bdmst(mnbpls)
-      real bdmf(mnbpls)
-      real bdmrt(mnbpls)
-      real bdmrtz(mnsz,mnbpls)
-      real bdmbg(mnbpls)
-      real bdmbgz(mnsz,mnbpls)
-      real bdrsai(mnbpls)
-      real bdrlai(mnbpls)
-      real bdrsaz(mncz,mnbpls)
-      real bdrlaz(mncz,mnbpls)
-      real bdffcv(mnbpls)
-      real bdfscv(mnbpls)
-      real bdftcv(mnbpls)
-      real bdfcancov(mnbpls)
-      real bdrcd(mnbpls)
-
-      ! derived variables (all pools)
-      real bddstmtot
-      real bdrsaitot
-      real bdrlaitot
-      real bdrcdtot
-      real bdmtot
-      real bdmtotto4
-      real bdmsttot
-      real bdmftot
-      real bdmbgtot
-      real bdmbgtotto4
-      real bdmrttot
-      real bdmrttotto4
-      real bdffcvtot
-      real bdfscvtot
-      real bdftcvtot
-      real bdftcancov
-
       ! database variables
       integer bnslay
       real bszlyd(mnsz)
-      real bcovfact(mnbpls)
-      real bdxstm(mnbpls)
-      real bd0sla(mnbpls)
-      real bd0ck(mnbpls)
 
 !     + + + PURPOSE + + +
       ! calculates values of derived variables based on the present values
@@ -158,7 +79,7 @@
 !     bdmbgz - Buried residue mass by soil layer (kg/m^2)
 
 !     bdrsai - Residue stem area index (m^2/m^2)
-!     bdrlai - Residue leaf area index (m^2/m^2)
+!     bdrlai - Residue leaf area indexmtot (m^2/m^2)
 !     bdrsaz - Residue stem area index by height (1/m)
 !     bdrlaz - Residue leaf area index by height (1/m)
 
@@ -202,7 +123,7 @@
 !     LOCAL VARIABLES
       integer idx, idy, scilays
       real partlayrat
-      real bdmrtto4(mnbpls), bdmbgto4(mnbpls), bdmto4(mnbpls)
+      real bdmrtto4(size(residue)), bdmbgto4(size(residue)), bdmto4(size(residue))
 
 !     LOCAL VARIABLE DEFINITIONS
 !     idx - indexing variable
@@ -218,41 +139,37 @@
       parameter( scidepth = 101.6 ) ! mm 101.6 = 4 inches
 
       ! accumulate layer values into pool mass totals
-      do idy = 1, mnbpls
-          bdmbgstem(idy) = 0.0
-          bdmbgleaf(idy) = 0.0
-          bdmbgstore(idy) = 0.0
-          bdmbgrootstore(idy) = 0.0
-          bdmbgrootfiber(idy) = 0.0
-          do idx = 1, bnslay
-              bdmbgstem(idy) = bdmbgstem(idy) + bdmbgstemz(idx,idy)
-              bdmbgleaf(idy) = bdmbgleaf(idy) + bdmbgleafz(idx,idy)
-              bdmbgstore(idy) = bdmbgstore(idy) + bdmbgstorez(idx,idy)
-              bdmbgrootstore(idy) = bdmbgrootstore(idy)                 &
-     &                            + bdmbgrootstorez(idx,idy)
-              bdmbgrootfiber(idy) = bdmbgrootfiber(idy)                 &
-     &                            + bdmbgrootfiberz(idx,idy)
+      do idy = 1, size(residue)
+          residue(idy)%deriv%mbgstem = 0.0
+          residue(idy)%deriv%mbgleaf = 0.0
+          residue(idy)%deriv%mbgstore = 0.0
+          residue(idy)%deriv%mbgrootstore = 0.0
+          residue(idy)%deriv%mbgrootfiber = 0.0
+          do idx = 1, size(residue(idy)%mass%bg)
+              residue(idy)%deriv%mbgstem = residue(idy)%deriv%mbgstem + residue(idy)%mass%bg(idx)%stemz
+              residue(idy)%deriv%mbgleaf = residue(idy)%deriv%mbgleaf + residue(idy)%mass%bg(idx)%leafz
+              residue(idy)%deriv%mbgstore = residue(idy)%deriv%mbgstore + residue(idy)%mass%bg(idx)%storez
+              residue(idy)%deriv%mbgrootstore = residue(idy)%deriv%mbgrootstore + residue(idy)%mass%bg(idx)%rootstorez
+              residue(idy)%deriv%mbgrootfiber = residue(idy)%deriv%mbgrootfiber + residue(idy)%mass%bg(idx)%rootfiberz
           end do
       end do
 
-      ! sum buried root and residue masses for each layer across pools
-      do idx = 1, bnslay
-          do idy = 1, mnbpls
-              bdmrtz(idx,idy) = bdmbgrootstorez(idx,idy)                &
-     &                        + bdmbgrootfiberz(idx,idy)
-              bdmbgz(idx,idy) = bdmbgstemz(idx,idy)                     &
-     &                        + bdmbgleafz(idx,idy)                     &
-     &                        + bdmbgstorez(idx,idy)
+      ! sum buried root and residue masses for each layer and each pool
+      do idy = 1, size(residue)
+           do idx = 1, size(residue(idy)%mass%bg)
+              residue(idy)%deriv%bg(idx)%mrtz = residue(idy)%mass%bg(idx)%rootstorez + residue(idy)%mass%bg(idx)%rootfiberz
+              residue(idy)%deriv%bg(idx)%mbgz = residue(idy)%mass%bg(idx)%stemz + residue(idy)%mass%bg(idx)%leafz &
+     &                        + residue(idy)%mass%bg(idx)%storez
           end do
       end do
 
-      ! sum root and below ground from layer values
-      do idy = 1, mnbpls
-          bdmrt(idy) = 0.0
-          bdmbg(idy) = 0.0
-          do idx = 1, bnslay
-              bdmrt(idy) = bdmrt(idy) + bdmrtz(idx,idy)
-              bdmbg(idy) = bdmbg(idy) + bdmbgz(idx,idy)
+      ! sum root and below ground from layer values for each pool
+      do idy = 1, size(residue)
+          residue(idy)%deriv%mrt = 0.0
+          residue(idy)%deriv%mbg = 0.0
+          do idx = 1, size(residue(idy)%deriv%bg)
+              residue(idy)%deriv%mrt = residue(idy)%deriv%mrt + residue(idy)%deriv%bg(idx)%mrtz
+              residue(idy)%deriv%mbg = residue(idy)%deriv%mbg + residue(idy)%deriv%bg(idx)%mbgz
           end do
       end do
 
@@ -277,80 +194,77 @@
       end if
 
       ! sum root and below ground from layer values to the SCI depth (4 inches)
-      do idy = 1, mnbpls
+      do idy = 1, size(residue)
           bdmrtto4(idy) = 0.0
           bdmbgto4(idy) = 0.0
           do idx = 1, scilays-1
-              bdmrtto4(idy) = bdmrtto4(idy) + bdmrtz(idx,idy)
-              bdmbgto4(idy) = bdmbgto4(idy) + bdmbgz(idx,idy)
+              bdmrtto4(idy) = bdmrtto4(idy) + residue(idy)%deriv%bg(idx)%mrtz
+              bdmbgto4(idy) = bdmbgto4(idy) + residue(idy)%deriv%bg(idx)%mbgz
           end do
-          bdmrtto4(idy) = bdmrtto4(idy) + bdmrtz(scilays,idy)*partlayrat
-          bdmbgto4(idy) = bdmbgto4(idy) + bdmbgz(scilays,idy)*partlayrat
+          bdmrtto4(idy) = bdmrtto4(idy) + residue(idy)%deriv%bg(scilays)%mrtz*partlayrat
+          bdmbgto4(idy) = bdmbgto4(idy) + residue(idy)%deriv%bg(scilays)%mbgz*partlayrat
       end do
 
       ! sum above ground (stem + leaf + store) by and across pools
-      bdmtot = 0.0
-      bdmtotto4 = 0.0
-      bdmftot = 0.0
-      bdmsttot = 0.0
-      bdmbgtot = 0.0
-      bdmbgtotto4 = 0.0
-      bdmrttot = 0.0
-      bdmrttotto4 = 0.0
-      do idy = 1, mnbpls
-          bdmst(idy) = bdmstandstem(idy) + bdmstandleaf(idy)            &
-     &               + bdmstandstore(idy)
-          bdmf(idy) = bdmflatstem(idy) + bdmflatleaf(idy)               &
-     &              + bdmflatstore(idy) + bdmflatrootstore(idy)         &
-     &              + bdmflatrootfiber(idy)
-          bdm(idy) = bdmst(idy) + bdmf(idy) + bdmrt(idy) + bdmbg(idy)
-          bdmto4(idy) = bdmst(idy) + bdmf(idy) + bdmrtto4(idy)          &
-     &                + bdmbgto4(idy)
-          bdmtot = bdmtot + bdm(idy)
-          bdmtotto4 = bdmtotto4 + bdmto4(idy)
-          bdmftot = bdmftot + bdmf(idy)
-          bdmsttot = bdmsttot + bdmst(idy)
-          bdmbgtot = bdmbgtot + bdmbg(idy)
-          bdmbgtotto4 = bdmbgtotto4 + bdmbgto4(idy)
-          bdmrttot = bdmrttot + bdmrt(idy)
-          bdmrttotto4 = bdmrttotto4 + bdmrtto4(idy)
+      restot%mtot = 0.0
+      restot%mtotto4 = 0.0
+      restot%mftot = 0.0
+      restot%msttot = 0.0
+      restot%mbgtot = 0.0
+      restot%mbgtotto4 = 0.0
+      restot%mrttot = 0.0
+      restot%mrttotto4 = 0.0
+      do idy = 1, size(residue)
+          residue(idy)%deriv%mst = residue(idy)%mass%standstem + residue(idy)%mass%standleaf + residue(idy)%mass%standstore
+          residue(idy)%deriv%mf = residue(idy)%mass%flatstem + residue(idy)%mass%flatleaf + residue(idy)%mass%flatstore &
+     &                               + residue(idy)%mass%flatrootstore + residue(idy)%mass%flatrootfiber
+          residue(idy)%deriv%m = residue(idy)%deriv%mst + residue(idy)%deriv%mf + residue(idy)%deriv%mrt + residue(idy)%deriv%mbg
+          bdmto4(idy) = residue(idy)%deriv%mst + residue(idy)%deriv%mf + bdmrtto4(idy) + bdmbgto4(idy)
+          restot%mtot = restot%mtot + residue(idy)%deriv%m
+          restot%mtotto4 = restot%mtotto4 + bdmto4(idy)
+          restot%mftot = restot%mftot + residue(idy)%deriv%mf
+          restot%msttot = restot%msttot + residue(idy)%deriv%mst
+          restot%mbgtot = restot%mbgtot + residue(idy)%deriv%mbg
+          restot%mbgtotto4 = restot%mbgtotto4 + bdmbgto4(idy)
+          restot%mrttot = restot%mrttot + residue(idy)%deriv%mrt
+          restot%mrttotto4 = restot%mrttotto4 + bdmrtto4(idy)
       end do
 
-!      write(*,*) "scilays, partlayrat, bdmtot, bdmtotto4",              &
-!     &            scilays, partlayrat, bdmtot, bdmtotto4
+!      write(*,*) "scilays, partlayrat, restot%mtot, restot%mtotto4",              &
+!     &            scilays, partlayrat, restot%mtot, restot%mtotto4
 
-      bddstmtot = 0.0
-      bdrlaitot = 0.0
-      bdrsaitot = 0.0
-      bdffcvtot = 0.0
-      bdfscvtot = 0.0
-      bdftcvtot = 0.0
-      bdftcancov = 0.0
-      do idy = 1, mnbpls
+      restot%dstmtot = 0.0
+      restot%rlaitot = 0.0
+      restot%rsaitot = 0.0
+      restot%ffcvtot = 0.0
+      restot%fscvtot = 0.0
+      restot%ftcvtot = 0.0
+      restot%ftcancov = 0.0
+      do idy = 1, size(residue)
           ! total residue stems
-          bddstmtot = bddstmtot + bddstm(idy)
+          restot%dstmtot = restot%dstmtot + residue(idy)%geometry%dstm
 
           ! calculate residue stem area index
           ! (plants/m^2 ground) * m * m/plant = m^2 stem / m^2 ground
-          bdrsai(idy) = bddstm(idy)*bdzht(idy)*bdxstmrep(idy)
+          residue(idy)%deriv%rsai = residue(idy)%geometry%dstm * residue(idy)%geometry%zht * residue(idy)%geometry%xstmrep
 
-          bdrsaitot = bdrsaitot + bdrsai(idy)
+          restot%rsaitot = restot%rsaitot + residue(idy)%deriv%rsai
 
           ! leaf area index for standing material
           ! m^2 leaf/kg * kg/m^2 ground = m^2 leaf/m^2 ground
-          bdrlai(idy) = bd0sla(idy) * bdmstandleaf(idy)
+          residue(idy)%deriv%rlai = residue(idy)%database%sla * residue(idy)%mass%standleaf
 
-          bdrlaitot = bdrlaitot + bdrlai(idy)
+          restot%rlaitot = restot%rlaitot + residue(idy)%deriv%rlai
 
           ! effective silhouette
-          bdrcd(idy) = biodrag(bdrlai(idy), bdrsai(idy),                &
-     &                 0.0, 0.0, 0, 0.0, bdzht(idy), 0.0)
+          residue(idy)%deriv%rcd = biodrag(residue(idy)%deriv%rlai, residue(idy)%deriv%rsai, 0.0, 0.0, 0, 0.0, 0.0, 0.0)
 
           ! set stem and leaf area by plant height increments
           ! these are divided equally for a first approximation
+          !mncz = size(residue(idy)%deriv%can)
           do idx = 1, mncz
-              bdrsaz(idx,idy) = bdrsai(idy) / mncz
-              bdrlaz(idx,idy) = bdrlai(idy) / mncz
+              residue(idy)%deriv%can(idx)%rsaz = residue(idy)%deriv%rsai / mncz
+              residue(idy)%deriv%can(idx)%rlaz = residue(idy)%deriv%rlai / mncz
           end do
 
           ! Residue cover calculations.
@@ -360,31 +274,30 @@
           ! cover from flat mass
           ! estimated using Gregory, 1982. Trans. ASAE 25:1333-1337
           ! fraction (m2/m2) modified to take overlap into account.
-          bdffcv(idy) = 1.0 - exp( -bcovfact(idy) * bdmf(idy) )
+          residue(idy)%deriv%ffcv = 1.0 - exp( -residue(idy)%database%covfact * residue(idy)%deriv%mf )
 
           ! cover from standing stems
-          bdfscv(idy) = bddstm(idy) * pi * ( bdxstm(idy)/2.0 )**2.0
-          if (bdfscv(idy) > 1.0) bdfscv(idy) = 1.0
+          residue(idy)%deriv%fscv = residue(idy)%geometry%dstm * pi * ( residue(idy)%database%xstm/2.0 )**2.0  ! should this really use geometry%xstmrep for consistency
+          if (residue(idy)%deriv%fscv > 1.0) residue(idy)%deriv%fscv = 1.0
 
           ! total cover (flat + standing)
-          bdftcv(idy) = bdffcv(idy) + bdfscv(idy) !no overlap
-          if (bdftcv(idy) > 1.0) bdftcv(idy) = 1.0
+          residue(idy)%deriv%ftcv = residue(idy)%deriv%ffcv + residue(idy)%deriv%fscv !no overlap
+          if (residue(idy)%deriv%ftcv > 1.0) residue(idy)%deriv%ftcv = 1.0
 
-          bdffcvtot = bdffcvtot + (1.0 - bdffcvtot) * bdffcv(idy) !flat, with overlap
-          bdfscvtot = bdfscvtot + bdfscv(idy) !standing, no overlap
+          restot%ffcvtot = restot%ffcvtot + (1.0 - restot%ffcvtot) * residue(idy)%deriv%ffcv !flat, with overlap
+          restot%fscvtot = restot%fscvtot + residue(idy)%deriv%fscv !standing, no overlap
 
           ! residue leaf interception area (canopy cover)
-          bdfcancov(idy) = 1.0 - exp( - bd0ck(idy) * bdrlai(idy))
-          bdftcancov = bdftcancov + bdfcancov(idy) * (1.0 - bdftcancov)
+          residue(idy)%deriv%fcancov = 1.0 - exp( - residue(idy)%database%ck * residue(idy)%deriv%rlai)
+          restot%ftcancov = restot%ftcancov + residue(idy)%deriv%fcancov * (1.0 - restot%ftcancov)
 
       end do
-      if (bdfscvtot > 1.0) bdfscvtot = 1.0
-      bdftcvtot = bdffcvtot + bdfscvtot !total, no overlap
-      if (bdftcvtot > 1.0) bdftcvtot = 1.0
+      if (restot%fscvtot > 1.0) restot%fscvtot = 1.0
+      restot%ftcvtot = restot%ffcvtot + restot%fscvtot !total, no overlap
+      if (restot%ftcvtot > 1.0) restot%ftcvtot = 1.0
 
       ! effective silhouette
-      bdrcdtot = biodrag(bdrlaitot, bdrsaitot,                          &
-     &                 0.0, 0.0, 0, 0.0, 0.0, 0.0)
+      restot%rcdtot = biodrag(restot%rlaitot, restot%rsaitot, 0.0, 0.0, 0, 0.0, 0.0, 0.0)
 
       return
       end

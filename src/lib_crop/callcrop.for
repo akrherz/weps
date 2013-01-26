@@ -2,13 +2,16 @@
 !$Date$
 !$Revision$
 !$HeadURL$
-      subroutine callcrop(daysim, sr)
+      subroutine callcrop(daysim, sr, residue)
 ! ***************************************************************** wjr
 ! Wrapper to call crop
 
-! Arguments
+      use biomaterial, only: biomatter
+
+!     + + +   ARGUMENT DECLARATIONS + + +
       integer daysim
       integer sr
+      type(biomatter), dimension(:), intent(inout) :: residue
 
 ! Includes
       include 'p1werm.inc'
@@ -130,21 +133,10 @@
      &      agmbgstemz(1,sr), agmbgleafz(1,sr), agmbgstorez(1,sr),      &
      &      agmbgrootstorez(1,sr), agmbgrootfiberz(1,sr),               &
      &      agzht(sr), agdstm(sr), agxstmrep(sr), aggrainf(sr),         &
-     &      admstandstem(1,sr), admstandleaf(1,sr), admstandstore(1,sr),&
-     &      admflatstem(1,sr), admflatleaf(1,sr), admflatstore(1,sr),   &
-     &      admflatrootstore(1,sr), admflatrootfiber(1,sr),             &
-     &      admbgstemz(1,1,sr), admbgleafz(1,1,sr), admbgstorez(1,1,sr),&
-     &      admbgrootstorez(1,1,sr), admbgrootfiberz(1,1,sr),           &
-     &      adzht(1,sr), addstm(1,sr), adxstmrep(1,sr), adgrainf(1,sr), &
      &      ac0nam(sr), acxstm(sr), acrbc(sr), ac0sla(sr), ac0ck(sr),   &
      &      acdkrate(1,sr), accovfact(sr), acddsthrsh(sr), achyfg(sr),  &
      &      acresevapa(sr), acresevapb(sr),                             &
-     &      ad0nam(1,sr), adxstm(1,sr), adrbc(1,sr), ad0sla(1,sr),      &
-     &      ad0ck(1,sr), dkrate(1,1,sr), covfact(1,sr), ddsthrsh(1,sr), &
-     &      adhyfg(1,sr), adresevapa(1,sr), adresevapb(1,sr),           &
-     &      resday(1,sr), resyear(1,sr),                                &
-     &      cumdds(1,sr), cumddf(1,sr), cumddg(1,1,sr),                 &
-     &      nslay(sr) )
+     &      nslay(sr), residue)
       end if
 
       ! update all derived globals for crop global variables

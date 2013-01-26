@@ -5,7 +5,7 @@
 
       subroutine   manage                                               &
      &                      (sr, dd, mm, yyyy, syear,                   &
-     &                       lopdd, lopmm, lopyy)
+     &                       lopdd, lopmm, lopyy, residue)
 
 !     + + + PURPOSE + + +
 !     This is the main routine of the MANAGEMENT submodel. The date passed
@@ -21,9 +21,10 @@
 !     + + + KEYWORDS + + +
 !     tillage, management
 
-!     + + + PARAMETERS AND COMMON BLOCKS + + +
-
       use file_io_mod, only: luomanage
+      use biomaterial, only: biomatter, biototal
+
+!     + + + PARAMETERS AND COMMON BLOCKS + + +
       include 'p1werm.inc'
       include 'm1flag.inc'
       include 'manage/man.inc'
@@ -36,6 +37,7 @@
 !     + + + ARGUMENT DECLARATIONS + + +
       integer sr, dd, mm, yyyy, syear
       integer lopdd, lopmm, lopyy
+      type(biomatter), dimension(:), intent(inout) :: residue
 
 !     + + + ARGUMENT DEFINITIONS + + +
 !        sr - the subregion number
@@ -118,7 +120,7 @@
       case ('G')
         if(opskip.eq.0) call dogroup(sr)
       case ('P')
-        if(opskip.eq.0) call doproc(sr, mcount(sr))
+        if(opskip.eq.0) call doproc(sr, mcount(sr), residue)
       case ('D')
         call stir_report(sr, .false., ostir, oenergyarea)
         read (line (3:12),'(i2,1x,i2,1x,i4)', err=902) day,month,year
