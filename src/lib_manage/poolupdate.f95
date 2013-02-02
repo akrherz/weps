@@ -2,11 +2,19 @@
 !$Date$
 !$Revision$
 !$HeadURL$
+
       subroutine poolupdate(bnslay, bszlyd, residue, restot)
+
+!     + + + PURPOSE + + +
+      ! calculates values of derived variables based on the present values
+      ! or the state variables. The derived variables are commonly used
+      ! where residue totals are required.
 
       use biomaterial, only: biomatter, biototal
 
 !     + + +   ARGUMENT DECLARATIONS + + +
+      integer :: bnslay
+      real, dimension(:), intent(in) :: bszlyd
       type(biomatter), dimension(:), intent(inout) :: residue
       type(biototal), intent(inout) :: restot
 
@@ -17,17 +25,6 @@
 !     + + + FUNCTION DECLARATIONS + + +
 
       real biodrag
-
-!     + + + VARIABLE DECLARATIONS + + +
-
-      ! database variables
-      integer bnslay
-      real bszlyd(mnsz)
-
-!     + + + PURPOSE + + +
-      ! calculates values of derived variables based on the present values
-      ! or the state variables. The derived variables are commonly used
-      ! where residue totals are required.
 
 !     + + + VARIABLE DEFINITIONS + + +
 

@@ -3,9 +3,10 @@
 !$Revision$
 !$HeadURL$
 
-      subroutine submodels (isr, cd, cm, cy, residue, restot, biotot)
+      subroutine submodels (isr, cd, cm, cy, residue, restot, biotot,   &
+     &                      decompfac)
 
-      use biomaterial, only: biomatter, biototal
+      use biomaterial, only: biomatter, biototal, decomp_factors
 
       include 'p1werm.inc'
       include 'm1flag.inc'      !am0cgf
@@ -15,6 +16,7 @@
       integer isr, cd, cm, cy
       type(biomatter), dimension(:), intent(inout) :: residue
       type(biototal), intent(inout) :: restot, biotot
+      type(decomp_factors), intent(inout) :: decompfac
 
 !        write(*,*) "Start manage"      !MANAGEment (tillage) submodel
         call manage (isr, cd, cm, cy,iy,lopday,lopmon,lopyr, residue)
@@ -41,7 +43,7 @@
         end if
 
 !        write(*,*) "Start decomp"
-        call decomp(isr, residue)         !DECOMPosition submodel
+        call decomp(isr, residue, decompfac)         !DECOMPosition submodel
 
 !        write(*,*) "Start updres"
         call updres(isr, residue, restot)

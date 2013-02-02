@@ -19,7 +19,6 @@
       include 's1layr.inc'
       include 'd1glob.inc'
       include 'd1gen.inc'
-      include 'decomp/decomp.inc'
 
 !     + + + ARGUMENT DECLARATIONS + + +
 

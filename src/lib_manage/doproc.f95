@@ -43,7 +43,6 @@
       include 'd1gen.inc'
       include 'h1hydro.inc'
       include 'h1db1.inc'
-      include 'decomp/decomp.inc'
       include 'manage/oper.inc'
       include 'manage/asd.inc'
       include 'manage/man.inc'

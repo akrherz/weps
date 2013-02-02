@@ -7,9 +7,9 @@
 
 !     decini.for
 
-      subroutine decoinit(residue)
+      subroutine decoinit(residue, decompfac)
 
-      use biomaterial, only: biomatter
+      use biomaterial, only: biomatter, decomp_factors
 
 !     + + +  PURPOSE + + +
 !     This subroutine initalizes values needed in the decomposiiton
@@ -19,8 +19,10 @@
 
 !     The subroutine also sets all other age pools and decompdays to 0.
 
-!     + + +   ARGUMENT DECLARATIONS + + +
-      type(biomatter) :: residue
+!     + + +   ARGUMENT DECLARATIONS + + +     type(decomp_factors) :: decompfac
+
+      type(biomatter), intent(inout) :: residue
+      type(decomp_factors), intent(inout) :: decompfac
 
 !      + + + LOCAL VARIABLE DECLARATION + + +
       integer idx     ! loop index
@@ -32,8 +34,8 @@
 
       residue%bname = "No Crop"
 !     water coefficent parameters
-      residue%decomp%iwcsy = 0.0
-      residue%decomp%weti = 0
+      decompfac%iwcsy = 0.0
+      decompfac%weti = 0
 
       ! calendar days from residue initiation
       residue%decomp%resday = 0

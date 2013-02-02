@@ -114,12 +114,12 @@
 
       if ((am0dfl .eq. 1).or.(am0dfl.eq.3)) then
          sum_stat = 0
+         allocate( luocrp1(nsubr), stat=alloc_stat )
+         sum_stat = sum_stat + alloc_stat
+         allocate( luobio1(nsubr), stat=alloc_stat )
+         sum_stat = sum_stat + alloc_stat
          allocate( luod_above(nsubr), stat=alloc_stat )
-         sum_stat = sum_stat + 1
-         allocate( luod_above(nsubr), stat=alloc_stat )
-         sum_stat = sum_stat + 1
-         allocate( luod_above(nsubr), stat=alloc_stat )
-         sum_stat = sum_stat + 1
+         sum_stat = sum_stat + alloc_stat
          if( sum_stat .gt. 0 ) then
             Write(*,*) 'ERROR: unable to allocate luod_above, luocrp1 or luobio1 array'
          end if

@@ -4,14 +4,16 @@
 ! $HeadURL$
 !     file: decopen.for
 
-      subroutine decopen(luod_above, luod_below)
+      subroutine decopen(isr)
 
 ! + + + Purpose  + + +
 !   Write headers for output files
 !       dabove.out
 !       dbelow.out
 
-      integer :: luod_above, luod_below
+      use file_io_mod, only: luod_above, luod_below
+
+      integer :: isr
       include 'm1flag.inc'
 
 ! + + + FORMATS + + +
@@ -27,23 +29,24 @@
 
 !     write headers for above ground residues file if requested
       if ((am0dfl .eq. 1) .or. (am0dfl .eq. 3)) then
-         write (luod_above,*)                                           &
+         write (luod_above(isr),*)                                      &
      &         'Above Ground Residue Decomposition Output File'
-         write (luod_above,*) 'Standing and Surface Residues'
-         write (luod_above,*) '  '
-         write (luod_above,2030)
-         write (luod_above,2035)
-         write (luod_above,2040)
-         write (luod_above,*) '  '
+         write (luod_above(isr),*) 'Standing and Surface Residues'
+         write (luod_above(isr),*) '  '
+         write (luod_above(isr),2030)
+         write (luod_above(isr),2035)
+         write (luod_above(isr),2040)
+         write (luod_above(isr),*) '  '
       end if
 
 !     write headers for below ground residues file if requested
       if ((am0dfl .eq. 2) .or. (am0dfl .eq. 3)) then
-         write (luod_below,*)                                           &
+         write (luod_below(isr),*)                                      &
      &         'Below Ground Residue Decomposition Output File'
-         write (luod_below,*) 'Data by soil layer for age pools 1 and 2'
-         write (luod_below,*) '  '
-         write (luod_below,*) '     day/mo/year '
+         write (luod_below(isr),*)                                      &
+     &         'Data by soil layer for age pools 1 and 2'
+         write (luod_below(isr),*) '  '
+         write (luod_below(isr),*) '     day/mo/year '
       end if
 
       return

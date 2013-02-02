@@ -15,6 +15,10 @@ module biomaterial
   public :: biototal
   public :: create_biototal
   public :: destroy_biototal
+
+  public :: decomp_factors
+  public :: create_decomp_factors
+  public :: destroy_decomp_factors
  
   ! start c1glob.inc and d1glob.inc
   ! defines mass of plant parts that are below ground by soil layer
@@ -86,8 +90,6 @@ module biomaterial
   type biostate_decomp    ! from decomp/decomp.inc
      integer :: resday    ! calendar days after residue initiation
      integer :: resyear   ! index counting each new residue initiation
-     integer :: weti     ! days since anticedent moisture (4 to 0) index
-     real :: iwcsy       ! water coefficient from previous day standing res.  (0 to 1)
      real :: cumdds       ! cumulative decomp days for standing res. by pool (days)
      real :: cumddf       ! cummlative decomp days for surface res. by pool (days)
      type(biostate_decomp_below_ground_layers), dimension(:), allocatable :: bg
@@ -222,6 +224,27 @@ module biomaterial
 !     abevapredu - composite evaporation reduction from crop and residue materials (ea/ep ratio)
   end type biototal
 
+
+  type decomp_factors_below_ground_layers
+     real :: iddg   ! decomp. day for below ground residue by soil layer (0 to 1)
+     real :: itcg   ! temperature coef. below ground res. by soil layer (0 to 1)
+     real :: iwcg   ! water coef. for below ground res. by soil layer (0 to 1)
+  end type decomp_factors_below_ground_layers
+
+  type decomp_factors
+     real :: aqua    ! sum of precip, irrigation and snow melt (mm)
+     integer :: weti     ! days since anticedent moisture (4 to 0) index
+     real :: iwcsy       ! daily water coefficient from previous day standing res.  (0 to 1)
+     real :: idds   ! daily decomposition day for standing residue (0 to 1)
+     real :: itcs   ! daily temperature coef. for above ground res. (0 to 1)
+     real :: iwcs   ! daily water coefficient for standing residues (0 to 1)
+!     real :: itca   ! daily temperature coef. for above ground res. (0 to 1) (removed to allow different temperatures for standing vs flat)
+     real :: iddf   ! daily decomposition day for surface residue (0 to 1)
+     real :: itcf   ! daily temperature coef. for above ground res. (0 to 1)
+     real :: iwcf   ! daily water coefficient for surface residues (0 to 1)
+     type(decomp_factors_below_ground_layers), dimension(:), allocatable :: bg
+  end type decomp_factors
+
 contains
 
   function create_biomatter(nsoillay, ncanlay) result(biomat)
@@ -297,6 +320,35 @@ contains
         write(*,*) 'ERROR: unable to deallocate memory for biomatter'
      end if
   end subroutine destroy_biototal
+
+  function create_decomp_factors(nsoillay) result(decompfac)
+     integer, intent(in) :: nsoillay
+     type(decomp_factors) :: decompfac
+
+     ! local variable
+     integer :: alloc_stat  ! allocation status return
+
+     ! allocate below and above ground arrays
+     allocate(decompfac%bg(nsoillay), stat=alloc_stat)
+     if( alloc_stat .gt. 0 ) then
+        write(*,*) 'ERROR: unable to allocate memory for decompfac'
+        stop(1)
+     end if
+  end function create_decomp_factors
+
+  subroutine destroy_decomp_factors(decompfac)
+     type(decomp_factors), intent(inout) :: decompfac
+
+     ! local variable
+     integer :: dealloc_stat  ! allocation status return
+
+     ! allocate below and above ground arrays
+     deallocate(decompfac%bg, stat=dealloc_stat)
+     if( dealloc_stat .gt. 0 ) then
+        write(*,*) 'ERROR: unable to allocate memory for decompfac'
+        stop(1)
+     end if
+  end subroutine destroy_decomp_factors
 
 end module biomaterial
 

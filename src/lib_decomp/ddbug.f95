@@ -22,6 +22,7 @@
 
       use file_io_mod, only: luoddb
       use biomaterial, only: biomatter
+      use debug_mod, only: tddbug
 
 !     + + + GLOBAL COMMON BLOCKS + + +
       include 'p1werm.inc'
@@ -50,8 +51,6 @@
       type(biomatter), dimension(:), intent(in) :: residue
 
 !     + + + LOCAL COMMON BLOCKS + + +
-      include 'decomp/decomp.inc'
-      include 'decomp/tddbug.inc'
       include 'main/main.inc'
 
 !     + + + LOCAL VARIABLES + + +
@@ -70,17 +69,12 @@
 
 !     + + + FUNCTIONS CALLED + + +
 
-!     + + + UNIT NUMBERS FOR INPUT/OUTPUT DEVICES + + +
-!     * = screen and keyboard
-!    28 = debug DECOMP
-
 !     + + + DATA INITIALIZATIONS + + +
 
       if (am0ifl  .eqv. .true.) then
-          tday = -1
-          tmo = -1
-          tyr = -1
-          tisr = -1
+          tddbug(isr)%tday = -1
+          tddbug(isr)%tmo = -1
+          tddbug(isr)%tyr = -1
       end if
       call caldatw (cd, cm, cy)
 
@@ -91,11 +85,11 @@
      &egion No. ',i3)
  2031 format ('**',1x,2(i2,'/'),i4,'    Before call to DECOMP       Subr&
      &egion No. ',i3)
- 2060 format (i4,1x,f7.2,1x,e7.1,f6.2,4f7.2,f6.2,3f7.2)
+ !2060 format (i4,1x,f7.2,1x,e7.1,f6.2,4f7.2,f6.2,3f7.2)
  2065 format(' layer  admbgz(p#1) admbgz(p#2) admbgz(p#3) ',            &
      &       ' admrtz(p#1) admrtz(p#2) admrtz(p#3)')
- 2066 format(' layer  admbgz(p#1) admbgz(p#2) admbgz(p#3) admrtz(p#1) ',&
-     &       ' admrtz(p#2) admrtz(p#3)')
+ !2066 format(' layer  admbgz(p#1) admbgz(p#2) admbgz(p#3) admrtz(p#1) ',&
+ !    &       ' admrtz(p#2) admrtz(p#3)')
  2067 format(' layer  cumddg(p#1) cumddg(p#2) cumddg(p#3)')
  2068 format(' cumdds(p#1) cumdds(p#2) cumdds(p#3) cumddf(p#1) ',       &
      &       ' cumddf(p#2) cumddf(p#3)')
@@ -110,8 +104,8 @@
 !     + + + END SPECIFICATIONS + + +
 
 !          write weather cligen and windgen variables
-!      write(*,*) 'd1',cd,cm,cy,isr,tday,tmo,tyr,tisr
-      if ((cd .eq. tday) .and. (cm .eq. tmo) .and. (cy .eq. tyr) .and. (isr .eq. tisr)) then
+!      write(*,*) 'd1',cd,cm,cy,isr,tddbug(isr)%tday,tddbug(isr)%tmo,tddbug(isr)%tyr
+      if ((cd .eq. tddbug(isr)%tday) .and. (cm .eq. tddbug(isr)%tmo) .and. (cy .eq. tddbug(isr)%tyr)) then
          write(luoddb(isr),2030) cd,cm,cy,isr
       else
          write(luoddb(isr),2031) cd,cm,cy,isr
@@ -148,11 +142,10 @@
          write(luoddb(isr),2069)
          write(luoddb(isr),2074) residue(1)%deriv%mst,residue(2)%deriv%mst,residue(3)%deriv%mst, &
      &                  residue(1)%deriv%mf,residue(2)%deriv%mf,residue(3)%deriv%mf
-      tisr = isr
-      tday = cd
-      tmo = cm
-      tyr = cy
-!       write(*,*) 'd2',tday,tmo,tyr,tisr
+      tddbug(isr)%tday = cd
+      tddbug(isr)%tmo = cm
+      tddbug(isr)%tyr = cy
+!       write(*,*) 'd2',tddbug(isr)%tday,tddbug(isr)%tmo,tddbug(isr)%tyr
 
       return
       end

@@ -37,7 +37,6 @@
       include 'timer.inc'
       include 'crop/prevstate.inc'
       include 'crop/gcrop.inc'
-      include 'decomp/decomp.inc'
 
 ! Local Variables
       integer lay

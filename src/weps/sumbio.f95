@@ -22,7 +22,6 @@
       include 'c1glob.inc'
       include 'd1glob.inc'
       include 'main/main.inc'
-      include 'decomp/decomp.inc'
 
 ! arguments
 

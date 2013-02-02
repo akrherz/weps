@@ -21,8 +21,6 @@
       include 'd1glob.inc'
       include 's1layr.inc'
 
-      include 'decomp/decomp.inc'
-
 !     + + + ARGUMENT DECLARATIONS + + +
       integer    isr
       type(biomatter), dimension(:), intent(in) :: residue
@@ -31,6 +29,7 @@
 
 !      integer outday(13)
       integer cd, cm, cy
+      integer :: isz
 
 ! + + + FORMATS + + +
 

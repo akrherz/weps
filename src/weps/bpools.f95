@@ -10,15 +10,16 @@
 ! crop and individual biomass pools (not all pools have the same variables)
 
 
-      subroutine bpools (cd, cm, cy, isr, residue, restot)
+      subroutine bpools (cd, cm, cy, isr, residue, restot, decompfac)
 
-      use biomaterial, only: biomatter, biototal
+      use biomaterial, only: biomatter, biototal, decomp_factors
       use file_io_mod, only: luocrp1, luobio1
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer cd, cm, cy, isr
       type(biomatter), dimension(:), intent(in) :: residue
       type(biototal), intent(in) :: restot
+      type(decomp_factors), intent(in) :: decompfac
 
       include 'p1werm.inc'
       include 'm1flag.inc'
@@ -26,7 +27,6 @@
       include 'c1glob.inc'
       include 'c1db1.inc'
       include 'main/main.inc'   ! daysim
-      include 'decomp/decomp.inc'
 
 ! statements below added by Simon
 
@@ -89,8 +89,8 @@
           end if
 
           write(luocrp1(isr),2222) daysim, doy, cy,                     & !simulation day, day of year, year
-     &    awtdmn, awtdmx, awtdav, ditca,                                & !tmin, tmax, tavg, tf  
-     &    aqua, diwcs, diwcf, didds, diddf,                             & !precip, wf standing, wf flat, dd standing, dd flat
+     &    awtdmn, awtdmx, awtdav, decompfac%itcs,                       & !tmin, tmax, tavg, tf  
+     &    decompfac%aqua, decompfac%iwcs, decompfac%iwcf, decompfac%idds, decompfac%iddf,   & !precip, wf standing, wf flat, dd standing, dd flat
      &    residue(1)%deriv%mst, residue(2)%deriv%mst, residue(3)%deriv%mst, restot%msttot,              & !mass, standing
      &    residue(1)%deriv%mf, residue(2)%deriv%mf, residue(3)%deriv%mf, restot%mftot,                  & !mass, flat
      &    total,                                                        & !sum of standing and flat residue mass, all pools

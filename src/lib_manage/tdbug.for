@@ -38,7 +38,6 @@
       include 'h1hydro.inc'
       include 'h1scs.inc'
       include 'h1db1.inc'
-      include 'decomp/decomp.inc'
 
 !     + + + LOCAL COMMON BLOCKS + + +
       include 'main/main.inc'
