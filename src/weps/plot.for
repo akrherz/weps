@@ -5,6 +5,7 @@
 
       subroutine plotdata(sr)
 
+      use weps_interface_defs
       use file_io_mod, only: luoplt
 
       integer sr
@@ -39,9 +40,6 @@
 
       integer ngdpt  !number of grid cells within field
       integer idx, jdy   !local loop vars
-
-!     + + + FUNCTIONS CALLED + + +
-      integer dayear
 
 !     + + + OUTPUT FORMATS + + +
 !     format for header of plot file

@@ -13,7 +13,9 @@
 !     to the grid points of the erosion submodel which erosion changes
 !     Initialize output grid array
 !     Calc. soil fraction of 4 dia. from asd, & rr shelter angles
-!
+
+      use weps_interface_defs
+
 !     +++ ARGUMENT DECLARATIONS +++
 !
 !     +++ ARGUMENT DEFINITIONS +++

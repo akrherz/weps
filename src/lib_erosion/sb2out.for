@@ -10,7 +10,9 @@
 !     + + + PURPOSE + + +
 !     To print to file tst.out some key variables used in erosion
 !     use wind direction of 270 to see output along downwind direction
-!
+
+      use weps_interface_defs
+
 !     + + + ARGUEMENT DECLARATIONS + + +
       real ws, wdir, hr
       integer  jj, nn, o_unit

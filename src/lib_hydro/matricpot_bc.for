@@ -15,6 +15,8 @@
 !     the matric potential from the clay isotherms and is also returned for
 !     potentials in the wetter range.
 
+      use weps_interface_defs
+
 !*** Argument declarations ***
       real  theta, thetar, thetas, airentry, lambda
       real  thetaw, theta80rh, soiltemp
@@ -31,7 +33,7 @@
 !     soilrh     - relative humidity of soil air (fraction)
 
 !*** function declarations ***
-      real soilrelhum, matricpot_from_rh
+!      real soilrelhum, matricpot_from_rh
 
 !*** Include files ***
       include 'hydro/vapprop.inc'

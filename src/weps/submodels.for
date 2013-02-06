@@ -6,6 +6,7 @@
       subroutine submodels (isr, cd, cm, cy, residue, restot, biotot,   &
      &                      decompfac)
 
+      use weps_interface_defs
       use biomaterial, only: biomatter, biototal, decomp_factors
 
       include 'p1werm.inc'
@@ -49,7 +50,7 @@
         call updres(isr, residue, restot)
 
 !        write(*,*) "Start sumbio"
-        call sumbio(isr, residue, biotot) ! sum live and dead biomass
+        call sumbio(isr, residue, restot, biotot) ! sum live and dead biomass
 
       return
       end

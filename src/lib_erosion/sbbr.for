@@ -11,7 +11,9 @@
 !     to calculate the fraction of open field friction velocity
 !     in shelter for 8 cardinal wind directions 0, 45, ...315
 !     at all interior nodes
-!
+
+      use weps_interface_defs
+
 !     to assign the 8 fractons calculated at each node to as 3-d
 !     array (W0br(i,j,k)) for all nodes inside sim. region.
 

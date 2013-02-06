@@ -17,6 +17,8 @@
 !     + + + PURPOSE + + +
 !     Implements soil water balance using routines from WEPP
 
+      use weps_interface_defs
+
 !     + + + ARGUMENT DECLARATIONS + + +
       integer, intent(in) :: layrsn
       real, intent(in) :: thetas(*), thetes(*), thetaf(*), thetaw(*)
@@ -216,7 +218,7 @@
 !     + + + SUBROUTINES CALLED + + +
 
 !     + + + FUNCTION DECLARATIONS + + +
-      real depstore, valbydepth, rainenergy
+!      real depstore, valbydepth, rainenergy
 
 !     + + + DATA INITIALIZATIONS + + +
       dtinf = 180.0 !in seconds = three minutes)

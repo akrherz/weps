@@ -19,6 +19,7 @@
 
 !     + + + GLOBAL COMMON BLOCKS + + +
 
+      use weps_interface_defs
       use file_io_mod, only: luocdb
       include 'p1werm.inc'
       include 'm1subr.inc'
@@ -93,7 +94,7 @@
  2050 format ('amrslp(',i2,') acftcv(',i2,') acrlai(',i2,')',           &
      &        ' aczrtd(',i2,') admf(',i2,') ahfwsf(',i2,')',            &
      &        ' ac0nam(',i2,')')
- 2051 format (2f10.2,2f10.5,2x,f10.2,f10.2,3x,a12)
+! 2051 format (2f10.2,2f10.5,2x,f10.2,f10.2,3x,a12)
  2052 format ('actdtm(',i2,') sum-phu(',i2,') acmst(',i2,')',           &
      &        '  acmrt(',i2,')  ahzeta      ahzetp     ',               &
      &        ' ahzpta ')

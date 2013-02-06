@@ -14,23 +14,32 @@
 !  For more info refer to "Numerical Recipies-The Art of Scientific Computing"
 !  Cambridge University press, 1986. 
 
-	   subroutine trapzd(a,b,s,n) 
-       integer it, tmn, n,  j
-	   real a, b, func, del, s, x, sum 
-	   if (n.eq.1) then
-		 s=0.5*(b-a)*(func(a)+func(b))
-		 it = 1
-       else
-		 tmn = it
-		 del = (b-a)/tmn
-		 x=a+0.5*del
-		 sum=0.0
-		 do 100 j=1,it
-		   sum=sum+func(x)
-		   x=x+del
- 100     continue
-         s=0.5*(s+(b-a)*sum/tmn)
-         it=2*it
-       endif
-	   return
-	   end
+      subroutine trapzd(a,b,s,n) 
+
+!     + + + ARGUMENT DECLARATIONS + + +
+      integer n
+      real a, b, s
+
+!     + + + LOCAL VARIABLES + + +
+      integer it, tmn, j
+      real func, del, x, sum 
+
+!     + + + END SPECIFICATIONS + + +
+
+      if (n.eq.1) then
+          s=0.5*(b-a)*(func(a)+func(b))
+          it = 1
+      else
+          tmn = it
+          del = (b-a)/tmn
+          x=a+0.5*del
+          sum=0.0
+          do j=1,it
+              sum=sum+func(x)
+              x=x+del
+          end do
+          s=0.5*(s+(b-a)*sum/tmn)
+          it=2*it
+      endif
+      return
+      end

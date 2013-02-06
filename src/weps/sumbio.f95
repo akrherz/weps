@@ -8,6 +8,7 @@
       use biomaterial, only: biomatter, biototal
 
 !     + + +   ARGUMENT DECLARATIONS + + +
+      integer, intent(in) :: isr
       type(biomatter), dimension(:), intent(inout) :: residue
       type(biototal), intent(inout) :: restot, biotot
 
@@ -22,10 +23,6 @@
       include 'c1glob.inc'
       include 'd1glob.inc'
       include 'main/main.inc'
-
-! arguments
-
-      integer isr
 
 ! local variables
 

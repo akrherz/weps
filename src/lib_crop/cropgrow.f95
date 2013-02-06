@@ -3,7 +3,7 @@
 !$Revision$
 !$HeadURL$
 
-      subroutine crop (bnslay, bszlyt, bszlyd, bsdblk,                  &
+      subroutine cropgrow (bnslay, bszlyt, bszlyd, bsdblk,              &
      &                 bsfcce, bsfom, bsfcec, bsfsmb,                   &
      &                 bsfcla, bs0ph, bsftan, bsftap,                   &
      &                 bsmno3,                                          &
@@ -61,6 +61,7 @@
 !     + + + KEYWORDS + + +
 !     Wind erosion crop model
 
+      use weps_interface_defs
       use file_io_mod, only: luocrop, luoshoot
 
 !     + + + ARGUMENT DECLARATIONS + + +
@@ -341,9 +342,9 @@
 !     npcy
 !
 !     + + + FUNCTION DECLARATIONS + + +
-      integer dayear
-      real huc1
-      real daylen
+!      integer dayear
+!      real huc1
+!      real daylen
 
 !     + + + END OF SPECIFICATIONS + + +
 
@@ -671,7 +672,7 @@
 
               ! daily shoot growth
               call shoot_grow( bnslay, bszlyd, bcdpop,                  &
-     &                 bczmxc, bczmrt, bcfleafstem,                     &
+     &                 bczmxc, bcfleafstem,                             &
      &                 bcfshoot, bc0ssa, bc0ssb, bc0diammax,            &
      &                 hui, huiy, bcthu_shoot_beg, bcthu_shoot_end,     &
      &                 bcmstandstem, bcmstandleaf, bcmstandstore,       &
@@ -710,7 +711,7 @@
      &                 bc0sla, bcxstm, bhtsmn,                          &
      &                 bwtdmx, bwtdmn, bweirr, bhfwsf,                  &
      &                 hui, huiy, huirt, huirty, hu_delay, bcthardnx,   &
-     &                 bcthu_shoot_end, bcbaflg, bcbaf, bcyraf,bchyfg,  &
+     &                 bcbaf, bchyfg,                                   &
      &                 bcfleaf2stor, bcfstem2stor, bcfstor2stor,        &
      &                 bcyld_coef, bcresid_int,                         &
      &                 bcmstandstem, bcmstandleaf, bcmstandstore,       &

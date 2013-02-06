@@ -38,6 +38,8 @@
 !     + + + KEYWORDS + + +
 !     cut, transfer, biomass manipulation
 
+      use weps_interface_defs
+
       include 'p1werm.inc'
       include 'p1unconv.inc'
 

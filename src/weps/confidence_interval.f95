@@ -10,6 +10,7 @@
 
 subroutine confidence_interval(ci, nrot_yrs, n1cycles, ci_year)
 
+    use weps_interface_defs
     use pd_report_vars
     use pd_var_tables
     use file_io_mod, only: luoci

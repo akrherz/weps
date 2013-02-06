@@ -45,6 +45,7 @@
 !     + + + KEY WORDS + + +
 !     hydrology
 
+      use weps_interface_defs
       use file_io_mod, only: luohydro, luohlayers
 
 !     + + + ARGUMENT DECLARATIONS + + +
@@ -301,35 +302,35 @@
 !     caldat
 
 !     + + + FUNCTION DECLARATIONS + + +
-      integer dayear
-      real dawn
-      real daylen
-      real radnet
-      real availwc
-      real plant_wat_t
-      real movewind
-      real volwatadsorb
+!      integer dayear
+!      real dawn
+!      real daylen
+!      real radnet
+!      real availwc
+!      real plant_wat_t
+!      real movewind
+!      real volwatadsorb
 
 !     + + + OUTPUT FORMATS + + +
  2000 format('#    ')
- 2009 format('# Daily HYDROLOGY output ')
- 2010 format (/,'#',18x,5('*'),'   soil   data - Subregion #',i4,3x,    &
-     &        5('*'),16x)
- 2020 format ('#',79('-')/'#soil  depth',t16,'initial',t25,'saturated', &
-     &  t36,'field',t45,'wilting',t54,'bh0cb',t60,'air',t69,'sat.',t76, &
-     &  'bulk'/'#layer',t17,'water',t27,'water',t35,                    &
-     &  'capacity',t46,'point  term  entry',t70,'k   density'/'# no',   &
-     &  t16,'content',t26,'content',t57,'potential'/'#',t9,             &
-     &  '(mm)',3x,15('-'),'m^3/m^3',14('-'),t57,'joules/kg',            &
-     &  t69,'m/s',3x,'mg/m^3',/,'#',79('-'))
- 2030 format ('#',i3,f8.3,f9.3,f10.3,2f9.3,2f7.2,e10.3,f6.2)
- 2040 format ('#',79('-'))
- 2050 format('#','initial soil wetness at the soil-air interface =',    &
-     &         f6.3,' m^3/m^3')
- 2060 format('#','initial total amount of soil water in the soil'       &
-     & ,' profile =',f7.2,' mm'/,'#')
- 2070 format (/'#',19x,5('*'),' daily soil water balance data ',        &
-     &       5('*'))
+! 2009 format('# Daily HYDROLOGY output ')
+! 2010 format (/,'#',18x,5('*'),'   soil   data - Subregion #',i4,3x,    &
+!     &        5('*'),16x)
+! 2020 format ('#',79('-')/'#soil  depth',t16,'initial',t25,'saturated', &
+!     &  t36,'field',t45,'wilting',t54,'bh0cb',t60,'air',t69,'sat.',t76, &
+!     &  'bulk'/'#layer',t17,'water',t27,'water',t35,                    &
+!     &  'capacity',t46,'point  term  entry',t70,'k   density'/'# no',   &
+!     &  t16,'content',t26,'content',t57,'potential'/'#',t9,             &
+!     &  '(mm)',3x,15('-'),'m^3/m^3',14('-'),t57,'joules/kg',            &
+!     &  t69,'m/s',3x,'mg/m^3',/,'#',79('-'))
+! 2030 format ('#',i3,f8.3,f9.3,f10.3,2f9.3,2f7.2,e10.3,f6.2)
+! 2040 format ('#',79('-'))
+! 2050 format('#','initial soil wetness at the soil-air interface =',    &
+!     &         f6.3,' m^3/m^3')
+! 2060 format('#','initial total amount of soil water in the soil'       &
+!     & ,' profile =',f7.2,' mm'/,'#')
+! 2070 format (/'#',19x,5('*'),' daily soil water balance data ',        &
+!     &       5('*'))
 ! *** 2080 format (1x,82('-')/1x,'sr    date',t17,'etp',t23,'ep',t29,'tp',t36
 ! ***     &      ,'ea',t43,'ta',t47,'bhzper',t54,'bhzirr',t61,'dprec',t67,
 ! ***     *      'bhzrun'

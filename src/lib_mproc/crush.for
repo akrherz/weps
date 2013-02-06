@@ -5,6 +5,8 @@
 
       subroutine crush (alpha, beta,nlay,mf)
 
+      use weps_interface_defs
+
       include 'p1werm.inc'
       include 'manage/asd.inc'
 

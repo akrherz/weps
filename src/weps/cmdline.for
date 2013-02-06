@@ -17,8 +17,9 @@
 !     WEPS, cligen, windgen
 
 !     + + + GLOBAL COMMON BLOCKS + + +
-
+      use weps_interface_defs
       use file_io_mod, only: fopenk, luolog
+
       include 'p1werm.inc'
       include 'wpath.inc'
       include 'm1flag.inc'
@@ -54,9 +55,6 @@
 
 !     argv    - a specified arg from the list of command line arguments.
 !   numarg    - number of arguments passed on the command line.
-
-!     + + + FUNCTION DECLARATIONS + + +
-      integer   julday
 
 !     + + + FUNCTIONS CALLED + + +
 !     julday  -  This function determines the julian day given day,

@@ -23,6 +23,8 @@
 !     + + + KEYWORDS + + +
 !     matric potential parameters
 
+      use weps_interface_defs
+
 !     + + + ARGUMENT DECLARATIONS + + +
       integer nlay
       real bszlyd(*), bsdblk(*), bsdpart(*)
@@ -58,7 +60,7 @@
       include 'hydro/vapprop.inc'
 
 !     + + + FUNCTION DECLARATIONS + + +
-      real volwat_matpot_bc
+!      real volwat_matpot_bc
 
 !     + + + LOCAL VARIABLES + + +
       integer lay

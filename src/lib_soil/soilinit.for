@@ -10,7 +10,9 @@
 !
 !       Edit History
 !       04-Mar-99       wjr     created
-!
+
+      use weps_interface_defs
+
       include 'p1werm.inc'
       include 's1layr.inc'
       include 's1dbc.inc'

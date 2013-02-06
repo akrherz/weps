@@ -15,6 +15,7 @@
 !     Edit History
 !     06-Feb-99   wjr   created
 
+      use weps_interface_defs
       use file_io_mod, only: fopenk
       include 'p1werm.inc'
       include 'wpath.inc'
@@ -47,9 +48,6 @@
       integer       max_typidx  !Maximum number of lines to read in
       real          temp   ! temporary variable, throw away value
       integer       lui1   ! input file unit number
-
-!     + + + FUNCTION DECLARATIONS + + +
-      real   plant_wat_g
 
 !     + + + Initializations + + +
       linnum = 0

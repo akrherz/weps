@@ -12,6 +12,8 @@
 !     + + + KEYWORDS + + +
 !     soil water redistribution, evaporation, deep percolation, runoff
 
+      use weps_interface_defs
+
 !     + + + ARGUMENT DECLARATIONS + + +
       integer neqn(*)
       real tsec, volw(*), wfluxn(*)
@@ -27,11 +29,11 @@
 !     wfluxn(*) - net flux rates corresponding to volw(*) (m/s)
 
 !*** FUNCTION DECLARATIONS ***
-      real unsatcond_bc
-      real internode_wt_bc
-      real vaporden, diffusive
-      real airtempsin, satvappres
-      real evapredu, matricpot_from_rh
+!      real unsatcond_bc
+!      real internode_wt_bc
+!      real vaporden, diffusive
+!      real airtempsin, satvappres
+!      real evapredu, matricpot_from_rh
 
 !*** INCLUDED COMMON BLOCKS ***
       include 'p1werm.inc'

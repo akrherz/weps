@@ -6,6 +6,7 @@
 ! ***************************************************************** wjr
 ! Wrapper to call crop
 
+      use weps_interface_defs
       use biomaterial, only: biomatter
 
 !     + + +   ARGUMENT DECLARATIONS + + +
@@ -60,7 +61,8 @@
 
          if (am0cdb.eq.1) call cdbug(sr, nslay(sr))
 
-         call crop(nslay(sr), aszlyt(1,sr), aszlyd(1,sr), asdblk(1,sr), &
+         call cropgrow(nslay(sr),                                       &
+     &   aszlyt(1,sr), aszlyd(1,sr), asdblk(1,sr),                      &
      &   asfcce(1,sr), asfom(1,sr), asfcec(1,sr), asfsmb(1,sr),         &
      &   asfcla(1,sr), as0ph(1,sr), asftan(1,sr), asftap(1,sr),         &
      &   asmno3(sr),                                                    &
@@ -142,13 +144,13 @@
       call cropupdate(                                                  &
      &      acmstandstem(sr), acmstandleaf(sr), acmstandstore(sr),      &
      &      acmflatstem(sr), acmflatleaf(sr), acmflatstore(sr),         &
-     &      acmshoot(sr), acmbgstemz(1,sr),                             &
+     &      acmbgstemz(1,sr),                                           &
      &      acmrootstorez(1,sr),acmrootfiberz(1,sr),                    &
      &      aczht(sr), acdstm(sr), aczrtd(sr),                          &
-     &      acthucum(sr), aczgrowpt(sr), acmbgstem(sr),                 &
+     &      acmbgstem(sr),                                              &
      &      acmrootstore(sr), acmrootfiber(sr), acxstmrep(sr),          &
      &      acm(sr), acmst(sr), acmf(sr), acmrt(sr), acmrtz(1,sr),      &
-     &      acrcd(sr), aszrgh(sr), asxrgs(sr), asargo(sr),              &
+     &      acrcd(sr), aszrgh(sr),                                      &
      &      acrsai(sr), acrlai(sr), acrsaz(1,sr), acrlaz(1,sr),         &
      &      acffcv(sr), acfscv(sr), acftcv(sr), acfcancov(sr),          &
      &      ac0rg(sr), acxrow(sr),                                      &

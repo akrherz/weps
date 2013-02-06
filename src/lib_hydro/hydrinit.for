@@ -7,6 +7,8 @@
 
 ! Contains init code from main
 
+      use weps_interface_defs
+
       include 'p1werm.inc'
       include 'h1db1.inc'
       include 'h1et.inc'

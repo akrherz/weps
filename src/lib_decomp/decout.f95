@@ -10,6 +10,7 @@
 !       + + +  PURPOSE + + + +
 !      This subroutine writes decomposition output
 
+      use weps_interface_defs
       use file_io_mod, only: luod_above, luod_below
       use biomaterial, only: biomatter
 

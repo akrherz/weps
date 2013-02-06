@@ -12,6 +12,8 @@
 !     + + + KEYWORDS + + +
 !     tillage, operation, management
 
+      use weps_interface_defs
+
 !     + + + PARAMETERS AND COMMON BLOCKS + + +
       include 'p1werm.inc'
       include 'manage/oper.inc'

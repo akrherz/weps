@@ -14,6 +14,7 @@
 !     + + + KEYWORDS + + +
 !     output hydro
 
+      use weps_interface_defs
       use file_io_mod, only: luohlayers
 
 !     + + + ARGUMENT DECLARATIONS + + +
@@ -72,11 +73,11 @@
 !     slsoda - livermore solver for ordinary differential equations
 
 !     + + + FUNCTION DECLARATIONS + + +
-      integer dayear
-      real    availwc
-      real    unsatcond_bc
-      real    volwatadsorb
-      real    volwat_matpot_bc
+!      integer dayear
+!      real    availwc
+!      real    unsatcond_bc
+!      real    volwatadsorb
+!      real    volwat_matpot_bc
 
 !     + + + END SPECIFICATIONS + + +
 

@@ -43,6 +43,8 @@
 !     + + + KEYWORDS + + +
 !     flatten, biomass manipulation
 
+      use weps_interface_defs
+
       include 'p1werm.inc'
 !
 !     + + + ARGUMENT DECLARATIONS + + +

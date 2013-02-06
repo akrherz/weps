@@ -6,6 +6,7 @@
 !
 SUBROUTINE update_period_update_vars()
 
+    use weps_interface_defs
     USE pd_dates_vars
     USE pd_update_vars
     USE pd_report_vars
@@ -55,7 +56,7 @@ SUBROUTINE update_period_update_vars()
                                 ! ascancr(crust coeff. of abrasion)
                                 ! ascanag (agg. coeff. of abrasion)
 
-    REAL :: biodrag		! biodrag() function in util/misc/biodrag.for
+!    REAL :: biodrag		! biodrag() function in util/misc/biodrag.for
 
     REAL :: tmp
     REAL :: ef84                ! erodible agg. size fraction below 0.84mm

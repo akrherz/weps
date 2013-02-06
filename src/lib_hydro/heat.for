@@ -28,6 +28,7 @@
 
 !     + + + COMMON BLOCKS + + +
 
+      use weps_interface_defs
       use file_io_mod, only: luotempsoil
       include 'm1flag.inc'
       include 'p1const.inc'
@@ -121,9 +122,9 @@
 !     soil_val - soil heat flux value returned from energy balance routine
 
 !     + + + FUNCTIONS CALLED + + +
-      real heatcond
-      real heatcap
-      real snowcond
+!      real heatcond
+!      real heatcap
+!      real snowcond
 
 !     + + + SUBROUTINES CALLED + + +
 !     stat

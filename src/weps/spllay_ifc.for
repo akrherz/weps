@@ -11,7 +11,9 @@
 !     Edit History
 !     07-Feb-01   wjr   created
 !     10-Oct-04   lew   modified to work with "versioned" IFC files only
-!
+
+      use weps_interface_defs
+
       include 'p1werm.inc'
       include 'wpath.inc'
       include 'm1subr.inc'

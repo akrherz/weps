@@ -25,8 +25,9 @@
 !           EROSION opens emit.out file, calls sbemit to write headings
 !           & sets  ae0efl to 99, then calls sbemit
 !            to print period emissions for an erosion day.
-!
-!
+
+      use weps_interface_defs
+
 !     +++ ARGUMENT DECLARATIONS +++
       integer        ounit   !Unit number for detail grid erosion
       real           ws, hhr

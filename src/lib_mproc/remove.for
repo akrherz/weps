@@ -60,6 +60,8 @@
 !     + + + KEYWORDS + + +
 !     remove, biomass manipulation
 
+      use weps_interface_defs
+
 !     + + + COMMON BLOCKS + + +
       include 'p1werm.inc'
 

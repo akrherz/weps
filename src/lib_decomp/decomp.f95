@@ -4,6 +4,7 @@
 !$HeadURL$
       subroutine decomp(isr, residue, decompfac)
 
+      use weps_interface_defs
       use biomaterial, only: biomatter, decomp_factors
 
 !     +++ PURPOSE + + +
@@ -47,7 +48,7 @@
       include 'c1glob.inc'
 
 !     + + +   ARGUMENT DECLARATIONS + + +
-      integer   isr                    ! current subregion
+      integer, intent(in) :: isr                               ! current subregion
       type(biomatter), dimension(:), intent(inout) :: residue  ! structure containing biomatter state and parameters
       type(decomp_factors), intent(inout) :: decompfac
 
@@ -97,7 +98,7 @@
 !
       data dbgflg /.false./
 
-      if (am0ddb .eq. 1) call ddbug(isr, nslay(isr))
+      if (am0ddb .eq. 1) call ddbug(isr, nslay(isr), residue)
 
       if (dbgflg) write(*,*) 'decomp 1'
 

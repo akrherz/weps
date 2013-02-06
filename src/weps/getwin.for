@@ -11,7 +11,9 @@
 !     Edit History
 !     09-Mar-99   wjr   created
 
+      use weps_interface_defs
       use file_io_mod, only: luiwin
+
       include 'p1werm.inc'
       include 'w1wind.inc'
       include 'm1flag.inc'
@@ -24,14 +26,9 @@
       integer cwd,cwm,cwy
 
 !     + + + LOCAL VARIABLES + + +
-      integer     maxday
       character   header*80
       integer     ioc
       integer     i                          !local loop index
-
-!     + + + FUNCTION DECLARATIONS + + +
-
-      logical isleap
 
 ! This code added to re-initialize the reading of a windgen file
 ! following the "initialization" phase.  It is triggered if the

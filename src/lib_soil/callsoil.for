@@ -5,7 +5,9 @@
       subroutine callsoil(daysim, isr)
 ! ***************************************************************** wjr
 ! Wrapper to call soil
-!
+
+      use weps_interface_defs
+
 ! Arguments
       integer daysim
       integer isr                   

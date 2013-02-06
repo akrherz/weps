@@ -26,6 +26,7 @@
 !     WEPS, cligen, windgen
 
 !     + + + GLOBAL COMMON BLOCKS + + +
+      use weps_interface_defs
 
       include 'p1werm.inc'
       include 'wpath.inc'

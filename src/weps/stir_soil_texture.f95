@@ -18,6 +18,9 @@ contains
     !store the stir texture multipler for the given sand and clay values.
     !called at the end of input_ifc.for
     subroutine update_stir_soil_multiplier(sub, sand, clay)
+
+        use weps_interface_defs
+
         integer, intent(in) :: sub
         real, intent(in) :: sand, clay
 

@@ -10,6 +10,7 @@
 !     06-Feb-99   wjr   created from existing code, select added
 
 !     + + + Modules Used + + +
+      use weps_interface_defs
       use Polygons_Mod
       use subregions_mod
       use file_io_mod, only: fopenk, luicli, luiwin, luiwsd,            &
@@ -74,10 +75,6 @@
 !     subr_np - number of points in polygon read from file
 !     lui1 - unit number for input of weps.run file
 
-!     + + + FUNCTION DECLARATIONS + + +
-!      integer   julday
-       integer   lstday
- 
       integer linnum, typidx
 !      data linnum /0/, typidx /0/
 

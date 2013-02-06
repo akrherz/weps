@@ -24,6 +24,7 @@
 !
 !     + + + PARAMETERS AND COMMON BLOCKS + + +
 
+      use weps_interface_defs
       use file_io_mod, only: fopenk
       include 'p1werm.inc'
       include 'wpath.inc'

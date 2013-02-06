@@ -6,6 +6,7 @@
       subroutine report_harvest( sr, bmrotation, mass_rem, mass_left,   &
      &                           harv_unit_flg )
 
+      use weps_interface_defs
       use mandate_vars    ! Load shared mandates() array
       use file_io_mod, only: luoharvest_si, luoharvest_en
 

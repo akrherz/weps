@@ -7,7 +7,9 @@
 
 ! ***************************************************************** wjr
 ! Wrapper to call hydro
-!
+
+      use weps_interface_defs
+
 ! Arguments
       integer daysim
       integer isr                   

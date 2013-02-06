@@ -5,13 +5,13 @@
       subroutine cropupdate(                                            &
      &      bcmstandstem, bcmstandleaf, bcmstandstore,                  &
      &      bcmflatstem, bcmflatleaf, bcmflatstore,                     &
-     &      bcmshoot, bcmbgstemz,                                       &
+     &      bcmbgstemz,                                                 &
      &      bcmrootstorez, bcmrootfiberz,                               &
      &      bczht, bcdstm, bczrtd,                                      &
-     &      bcthucum, bczgrowpt, bcmbgstem,                             &
+     &      bcmbgstem,                                                  &
      &      bcmrootstore, bcmrootfiber, bcxstmrep,                      &
      &      bcm, bcmst, bcmf, bcmrt, bcmrtz,                            &
-     &      bcrcd, bszrgh, bsxrgs, bsargo,                              &
+     &      bcrcd, bszrgh,                                              &
      &      bcrsai, bcrlai, bcrsaz, bcrlaz,                             &
      &      bcffcv, bcfscv, bcftcv, bcfcancov,                          &
      &      bc0rg, bcxrow,                                              &
@@ -20,13 +20,15 @@
      &      bhztranspdepth, bhzfurcut,                                  &
      &      bhztransprtmin, bhztransprtmax )
 
+      use weps_interface_defs
+
 !     INCLUDE
       include 'p1const.inc'
       include 'p1werm.inc'
 
 !     + + + FUNCTION DECLARATIONS + + +
 
-      real biodrag
+!      real biodrag
       real transpdepth
 
 !     + + + VARIABLE DECLARATIONS + + +
@@ -34,19 +36,18 @@
       ! state variables
       real bcmstandstem, bcmstandleaf, bcmstandstore
       real bcmflatstem, bcmflatleaf, bcmflatstore
-      real bcmshoot, bcmbgstemz(mnsz)
-      real bcmrootstorez(mnsz), bcmrootfiberz(mnsz)
+      real bcmbgstemz(*)
+      real bcmrootstorez(*), bcmrootfiberz(*)
       real bczht, bcdstm, bczrtd
-      real bcthucum, bczgrowpt
-      real bszrgh, bsxrgs, bsargo
+      real bszrgh
       integer bc0rg
       real bcxrow
 
       ! derived variables
       real bcmbgstem, bcmrootstore, bcmrootfiber, bcxstmrep
-      real bcm, bcmst, bcmf, bcmrt, bcmrtz(mnsz)
+      real bcm, bcmst, bcmf, bcmrt, bcmrtz(*)
       real bcrcd
-      real bcrsai, bcrlai, bcrsaz(mncz), bcrlaz(mncz)
+      real bcrsai, bcrlai, bcrsaz(*), bcrlaz(*)
       real bcffcv, bcfscv, bcftcv, bcfcancov
       real bhztranspdepth, bhzfurcut
       real bhztransprtmin, bhztransprtmax
@@ -72,10 +73,6 @@
 !     bcmflatleaf  - crop flat leaf mass (kg/m^2)
 !     bcmflatstore - crop flat storage mass (kg/m^2)
 
-!     bcmshoot - crop shoot mass grown from root storage (kg/m^2)
-!                this is a "breakout" mass and does not represent a unique pool
-!                since this mass is destributed into below ground stem and
-!                standing stem as each increment of the shoot is added
 !     bcmbgstemz - crop stem mass below soil surface by layer (kg/m^2)
 
 !     bcmrootstorez - crop root storage mass by soil layer (kg/m^2)
@@ -85,9 +82,6 @@
 !     bczht  - Crop height (m)
 !     bcdstm - Number of stems per unit area (#/m^2)(used in shoot calculations)
 !     bczrtd  - Crop root depth (m)
-
-!     bcthucum - crop accumulated heat units
-!     bczgrowpt - depth in the soil of the gowing point (m)
 
 !     bcmbgstem = crop stem mass below the soil surface (kg/m^2)
 !     bcmrootstore - crop root storage mass (kg/m^2)
@@ -106,8 +100,6 @@
 !     bcrcd  - effective Biomass silhouette area (SAI+LAI) (m^2/m^2)
 !              (combination of leaf area and stem area indices)
 !     bszrgh - ridge height
-!     bsxrgs - ridge spacing
-!     bsargo - ridge direction
 !     bc0rg - crop seeding location flag (0 - in furrow, 1 - on ridge)
 !     bcxrow - crop row spacing
 

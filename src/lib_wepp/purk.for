@@ -17,6 +17,9 @@
 
       subroutine purk(nsl, st, fc, ul, hk, ssc, sep)
 
+      use weps_interface_defs
+!      use perc_sub
+
       implicit none
 
 !***********************************************************************
@@ -31,7 +34,6 @@
 !
 !***********************************************************************
 
-!      use perc_sub
       integer, intent(in) :: nsl
       real, intent(in)  :: fc(*),ul(*), hk(*), ssc(*)
 

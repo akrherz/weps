@@ -15,6 +15,8 @@
 !     + + + KEWORDS + + +
 !     nutrient cycling
 
+      use weps_interface_defs
+
 !     + + + COMMON BLOCKS + + +
 
        include 'p1werm.inc'

@@ -12,6 +12,8 @@
 !     + + + KEYWORDS + + +
 !     tillage, operation, management
 
+      use weps_interface_defs
+
 !     + + + PARAMETERS AND COMMON BLOCKS + + +
       include 'p1werm.inc'
       include 'm1flag.inc'
@@ -42,7 +44,7 @@
 !     + + + SUBROUTINES CALLED + + +
 
 !     + + + FUNCTION DECLARATONS + + +
-      integer tillay
+!      integer tillay
 
 !     + + + DATA INITIALIZATIONS + + +
 

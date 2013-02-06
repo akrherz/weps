@@ -34,6 +34,7 @@
 !     + + + KEYWORDS + + +
 !     Initialization
 
+      use weps_interface_defs
       use file_io_mod, only: luoinpt
 
 !     + + + ARGUMENT DECLARATIONS + + +
@@ -145,9 +146,9 @@
       include 'crop/p1crop.inc'
 
 !     + + + FUNCTION DECLARATIONS + + +
-      integer dayear
-      real daylen
-      real huc1
+!      integer dayear
+!      real daylen
+!      real huc1
 
 !     + + + LOCAL VARIABLES + +
 !     character*20 cpnm
@@ -157,7 +158,14 @@
       real dy_mon(14),mx_air_temp(14),mn_air_temp(14)
       real mx_air_temp2(14), mn_air_temp2(14)
       real sphu, yp1, ypn, bphu, ephu
-      real max_air,min_air,heat_unit, ad, bd, cd,dq,d1(365,3),d2(730,3)
+      real max_air,min_air,heat_unit, ad, bd, cd, dq !,d1(365)%cumheatunits,d2(730)%cumheatunits
+
+      type day_heatunits
+          integer day
+          real heatunits
+          real cumheatunits
+      end type day_heatunits
+      type(day_heatunits) d1(365), d2(730)
 
 !     + + + LOCAL VARIABLE DEFINITIONS + + +
 
@@ -249,8 +257,8 @@
 
 
 !     + + + OUTPUT FORMATS + + +
- 2110 format (5x,' a_co2=',f6.3,' b_co2=',f6.3,' a_frst=',f6.3,         &
-     &' b_frst=',f6.3)
+! 2110 format (5x,' a_co2=',f6.3,' b_co2=',f6.3,' a_frst=',f6.3,         &
+!     &' b_frst=',f6.3)
  2120 format (i5, i7, i9, i11, i10, 2x, 2f10.1)
 
 !     Initialize
@@ -410,54 +418,54 @@
           call splint(dy_mon,mx_air_temp,mx_air_temp2,n,jreal,max_air)
           call splint(dy_mon,mn_air_temp,mn_air_temp2,n,jreal,min_air)
           heat_unit = huc1(max_air, min_air, bctopt, bctmin)
-          d1(i,1)=i
-          d1(i,2)=heat_unit
-          d2(i,1)=i
-          d2(i,2)=heat_unit
+          d1(i)%day=i
+          d1(i)%heatunits=heat_unit
+          d2(i)%day=i
+          d2(i)%heatunits=heat_unit
       end do
 !     duplicate the first year into the second year
       do j=1,365
           m=j+365
-          d2(m,1)=m
-          d2(m,2)=d1(j,2)
+          d2(m)%day=m
+          d2(m)%heatunits=d1(j)%heatunits
       end do
 !     running sum of heat units
       do j=1,730
-          sphu=sphu+d2(j,2)
-          d2(j,3)=sphu
+          sphu=sphu+d2(j)%heatunits
+          d2(j)%cumheatunits=sphu
 !          if (am0cfl .gt. 0) then
 !              print for debugging
-!              write(luoinpt,*) d2(j,1),d2(j,2),d2(j,3)
+!              write(luoinpt,*) d2(j)%day,d2(j)%heatunits,d2(j)%cumheatunits
 !          end if
       end do
       sphu=0.
 
 !     find dtm or phu depending on heat unit flag=1
       do j=1,730
-            if (d2(j,1).eq.pdate) bphu = d2(j,3)
+            if (d2(j)%day.eq.pdate) bphu = d2(j)%cumheatunits
       end do
       if (bcthudf.eq.1) then
          ! use heat unit calculations to find dtm 
          phu = bcthum
          do j=1,730
-            if (d2(j,3).le.bphu+phu) dtm = d2(j,1) - pdate
+            if (d2(j)%cumheatunits.le.bphu+phu) dtm = d2(j)%day - pdate
          end do
          hdate = pdate + dtm
       else
          ! calculate average seasonal heat units
          dtm=bctdtm
          hdate = pdate + dtm
-         if( hdate.gt.d2(730,1)) then
+         if( hdate.gt.d2(730)%day) then
             ! this crop grows longer than one year
-            ephu = d2(730,3)
+            ephu = d2(730)%cumheatunits
             phu = ephu - bphu
             ! cap this at two years
-            dxx = min(730,hdate - int(d2(730,1)))
-            ehu = d2(dxx,3)
+            dxx = min(730,hdate - int(d2(730)%day))
+            ehu = d2(dxx)%cumheatunits
             phu = phu + ehu
          else
             do j=1,730
-               if (d2(j,1).eq.hdate) ephu = d2(j,3)
+               if (d2(j)%day.eq.hdate) ephu = d2(j)%cumheatunits
             end do
             phu = ephu - bphu
          end if

@@ -1,0 +1,2641 @@
+!
+!   Add this definition file in every source file to insure that the compiler can
+!   verify subroutine and function signatures.
+!  
+!   Can't seem to use constants in interface block? This effects two dimensional arrays where the
+!   first dimension must be specified 
+!        26 = msieve variables mf()
+!      
+!    
+!       integer mnsz_loc
+!       integer mncz_loc
+!       parameter (mnsz_loc = 100)
+!       parameter (mncz_loc = 5)
+!       parameter (mnbpls = 3)
+!       parameter (mndk = 5)
+       
+       MODULE weps_interface_defs
+
+       interface
+
+!---------------------- ASD Routines ----------------------------      
+!-----------------------      
+      subroutine asd2m (mnot, minf, gmd, gsd, nlay, mf)
+      real, intent(in) :: mnot(*), minf(*)
+      real, intent(in) :: gmd(*), gsd(*)
+      integer, intent(in) :: nlay
+      real, intent(out) :: mf(26+1,*)
+      end subroutine asd2m
+!----------------------
+      subroutine asdini()
+      end subroutine asdini
+!------------------------  
+      subroutine m2asd (mf, nlay, mnot, minf, gmd, gsd)
+      real, intent(in) :: mf(26+1, *)
+      integer, intent(in) :: nlay
+      real, intent(in) ::  mnot(*), minf(*)
+      real, intent(out) :: gmd(*), gsd(*)
+      end subroutine m2asd 
+      
+!-------------------- CROP Routines --------------------------------
+!------------------------
+      subroutine callcrop(daysim, sr, residue)
+      use biomaterial, only: biomatter
+      integer daysim
+      integer sr
+      type(biomatter), dimension(:), intent(inout) :: residue
+      end subroutine callcrop
+!----------------------
+      subroutine  cdbug(isr,slay)
+      integer isr,slay
+      end subroutine cdbug
+!----------------------
+      subroutine chillu(bctchillucum, day_max_temp, day_min_temp)
+      real, intent(inout) :: bctchillucum
+      real, intent(in) :: day_max_temp, day_min_temp            
+      end subroutine chillu
+!----------------------
+      subroutine cinit(bnslay, bszlyt, bszlyd, bsdblk, bsfcce, bsfcec,  &
+     &           bsfsmb, bsfom, bsfcla, bs0ph,                          &
+     &           bc0bn1, bc0bn2, bc0bn3, bc0bp1, bc0bp2,                &
+     &           bc0bp3, bsmno3,                                        &
+     &           bc0fd1, bc0fd2, bctopt, bctmin,                        &
+     &           cc0fd1, cc0fd2,                                        &
+     &           bc0sla, bc0idc, dd, mm, yy,                            &
+     &           bcthudf, bctdtm, bcthum, bc0hue, bcdmaxshoot,          &
+     &           bc0shoot, bc0growdepth, bc0storeinit,                  &
+     &           bcmstandstem, bcmstandleaf, bcmstandstore,             &
+     &           bcmflatstem, bcmflatleaf, bcmflatstore,                &
+     &           bcmshoot, bcmtotshoot, bcmbgstemz,                     &
+     &           bcmrootstorez, bcmrootfiberz,                          &
+     &           bczht, bczshoot, bcdstm, bczrtd,                       & 
+     &           bcdayap, bcdayam, bcthucum, bctrthucum,                &
+     &           bcgrainf, bczgrowpt, bcfliveleaf,                      &
+     &           bcleafareatrend, bcstemmasstrend, bctwarmdays,         &
+     &           bctchillucum, bcthardnx, bcthu_shoot_beg,              &
+     &           bcthu_shoot_end, bcdpop, bcdayspring)
+      integer bnslay, bc0idc, dd, mm, yy, bcthudf, bctdtm
+      real bszlyt(*)  ! added so a local variable would be set correctly - LEW
+      real bszlyd(*), bsdblk(*), bsfcce(*), bsfcec(*), bsfsmb(*)
+      real bsfom(*), bsfcla(*), bs0ph(*)
+      real bc0fd1, bc0fd2, bctopt, bctmin
+      real cc0fd1, cc0fd2
+      real bc0bn1, bc0bn2, bc0bn3, bn4, bc0bp1, bc0bp2, bc0bp3
+      real bsmno3
+      real bc0sla, bcthum, bc0hue, bcdmaxshoot, bc0shoot
+      real bc0growdepth, bc0storeinit
+      real bcmstandstem, bcmstandleaf, bcmstandstore
+      real bcmflatstem, bcmflatleaf, bcmflatstore
+      real bcmshoot, bcmtotshoot, bcmbgstemz(*)
+      real bcmrootstorez(*), bcmrootfiberz(*)
+      real bczht, bczshoot, bcdstm, bczrtd
+      integer bcdayap, bcdayam
+      real bcthucum, bctrthucum
+      real bcgrainf, bczgrowpt, bcfliveleaf
+      real bcleafareatrend, bcstemmasstrend
+      integer bctwarmdays
+      real bctchillucum, bcthardnx, bcthu_shoot_beg, bcthu_shoot_end
+      real bcdpop
+      integer bcdayspring
+      end subroutine cinit
+!-------------------------------
+      subroutine cookyield(bchyfg, bnslay, dlfwt, dstwt, drpwt, drswt,  &
+     &                     bcmstandstem, bcmstandleaf, bcmstandstore,   &
+     &                     bcmflatstem, bcmflatleaf, bcmflatstore,      &
+     &                     bcmrootstorez, lost_mass,                    &
+     &                     bcyld_coef, bcresid_int, bcgrf )
+      integer bchyfg, bnslay
+      real dlfwt, dstwt, drpwt, drswt
+      real bcmstandstem, bcmstandleaf, bcmstandstore
+      real bcmflatstem, bcmflatleaf, bcmflatstore
+      real bcmrootstorez(*), lost_mass
+      real bcyld_coef, bcresid_int, bcgrf          
+      end subroutine cookyield
+!-------------------------------
+      subroutine cpout()
+      end subroutine cpout
+!-------------------------------
+      subroutine cprnl (hmx,bcthucum,day,mo,yr)
+      integer   day, mo, yr
+      real hmx, bcthucum  
+      end subroutine cprnl
+!-----------------------------
+      subroutine cropgrow (bnslay, bszlyt, bszlyd, bsdblk,              &
+     &                 bsfcce, bsfom, bsfcec, bsfsmb,                   &
+     &                 bsfcla, bs0ph, bsftan, bsftap,                   &
+     &                 bsmno3,                                          &
+     &                 bc0bn1, bc0bn2, bc0bn3,                          &
+     &                 bc0bp1, bc0bp2, bc0bp3,                          &
+     &                 bc0ck, bcgrf, bcehu0, bczmxc,                    &
+     &                 bc0nam, bc0idc, bcxrow,                          &
+     &                 bctdtm, bczmrt, bctmin, bctopt,                  &
+     &                 bc0fd1, bc0fd2, cc0fd1, cc0fd2,                  &
+     &                 bc0bceff,                                        &
+     &                 bdmb, bc0alf, bc0blf, bc0clf,                    &
+     &                 bc0dlf, bc0arp, bc0brp, bc0crp,                  &
+     &                 bc0drp, bc0aht, bc0bht,                          &
+     &                 bc0sla, bc0hue, bctverndel,                      &
+     &                 bweirr, bwtdmx, bwtdmn, bwzdpt,                  &
+     &                 bhtsmx, bhtsmn,                                  &
+     &                 bhzpta, bhzeta, bhzptp, bhfwsf,                  &
+     &                 bm0cif, bm0cgf,                                  &
+     &                 bcthudf, bcbaflg, bcbaf, bcyraf,                 &
+     &                 bchyfg, bcthum, bcdpop, bcdmaxshoot,             &
+     &                 bc0transf, bc0storeinit, bcfshoot,               &
+     &                 bc0growdepth, bcfleafstem, bc0shoot,             &
+     &                 bc0diammax, bc0ssa, bc0ssb,                      &
+     &                 bcfleaf2stor, bcfstem2stor, bcfstor2stor,        &
+     &                 bcyld_coef, bcresid_int, bcxstm,                 &
+     &                 bcmstandstem, bcmstandleaf, bcmstandstore,       &
+     &                 bcmflatstem, bcmflatleaf, bcmflatstore,          &
+     &                 bcmshoot, bcmtotshoot, bcmbgstemz,               &
+     &                 bcmrootstorez, bcmrootfiberz,                    &
+     &                 bczht, bczshoot, bcdstm, bczrtd,                 &
+     &                 bcdayap, bcdayam, bcthucum, bctrthucum,          &
+     &                 bcgrainf, bczgrowpt, bcfliveleaf,                &
+     &                 bcleafareatrend, bcstemmasstrend, bctwarmdays,   &
+     &                 bctchillucum, bcthardnx, bcthu_shoot_beg,        &
+     &                 bcthu_shoot_end, bcxstmrep,                      &
+     &                 bprevstandstem, bprevstandleaf, bprevstandstore, &
+     &                 bprevflatstem, bprevflatleaf, bprevflatstore,    &
+     &                 bprevmshoot, bprevmtotshoot, bprevbgstemz,       &
+     &                 bprevrootstorez, bprevrootfiberz,                &
+     &                 bprevht, bprevzshoot, bprevstm, bprevrtd,        &
+     &                 bprevdayap, bprevhucum, bprevrthucum,            &
+     &                 bprevgrainf, bprevchillucum, bprevliveleaf,      &
+     &               bprevdayspring, daysim, bcdayspring, bczloc_regrow,&
+     &                 bgmstandstem, bgmstandleaf, bgmstandstore,       &
+     &                 bgmflatstem, bgmflatleaf, bgmflatstore,          &
+     &                 bgmbgstemz,                                      &
+     &                 bgzht, bgdstm, bgxstmrep, bggrainf )
+      use file_io_mod, only: luocrop, luoshoot
+      integer bnslay, bctdtm, bcthudf
+      real bszlyt(*)
+      real bszlyd(*), bsdblk(*), bsfcec(*), bsfcce(*)
+      real bsfom(*), bsfcla(*), bs0ph(*)
+      real bsftan(*), bsftap(*)
+      real bsfsmb(*), bsmno3
+      real bc0bn1, bc0bn2, bc0bn3
+      real bc0bp1, bc0bp2, bc0bp3
+      real bc0ck, bcgrf, bcehu0, bczmxc
+      character*(80) bc0nam
+      integer bc0idc
+      real bcxrow
+      real bczmrt, bctmin, bctopt
+      real bc0fd1, bc0fd2
+      real cc0fd1, cc0fd2, bc0bceff, bdmb(*)
+      real bc0alf, bc0blf, bc0clf, bc0dlf, bc0arp, bc0brp
+      real bc0crp, bc0drp, bc0aht, bc0bht
+      real bc0sla, bc0hue, bctverndel
+      real bweirr, bwtdmx, bwtdmn, bwzdpt
+      real bhtsmx(*), bhtsmn(*)
+      real bhzpta, bhzeta, bhzptp, bhfwsf
+      integer bchyfg
+      real bcthum, bcdpop, bcdmaxshoot
+      integer bc0transf
+      real bc0storeinit, bcfshoot
+      real bc0growdepth, bcfleafstem, bc0shoot
+      real bc0diammax, bc0ssa, bc0ssb
+      real bcfleaf2stor, bcfstem2stor, bcfstor2stor
+      real bcyld_coef, bcresid_int, bcxstm
+      real bcmstandstem, bcmstandleaf, bcmstandstore
+      real bcmflatstem, bcmflatleaf, bcmflatstore
+      real bcmshoot, bcmtotshoot, bcmbgstemz(*)
+      real bcmrootstorez(*), bcmrootfiberz(*)
+      real bczht, bczshoot, bcdstm, bczrtd
+      integer bcdayap, bcdayam
+      real bcthucum, bctrthucum
+      real bcgrainf, bczgrowpt, bcfliveleaf
+      real bcleafareatrend, bcstemmasstrend
+      integer bctwarmdays
+      real bctchillucum, bcthardnx, bcthu_shoot_beg, bcthu_shoot_end
+      real bcxstmrep
+      real bprevstandstem, bprevstandleaf, bprevstandstore
+      real bprevflatstem, bprevflatleaf, bprevflatstore
+      real bprevmshoot, bprevmtotshoot, bprevbgstemz(*)
+      real bprevrootstorez(*), bprevrootfiberz(*)
+      real bprevht, bprevzshoot, bprevstm, bprevrtd
+      integer bprevdayap
+      real bprevhucum, bprevrthucum
+      real bprevgrainf, bprevchillucum, bprevliveleaf
+      integer bprevdayspring
+      logical bm0cif, bm0cgf
+      integer bcbaflg
+      real    bcbaf, bcyraf
+      integer daysim, bcdayspring
+      real    bczloc_regrow
+      real    bgmstandstem, bgmstandleaf, bgmstandstore
+      real    bgmflatstem, bgmflatleaf, bgmflatstore
+      real    bgmbgstemz(*)
+      real    bgzht, bgdstm, bgxstmrep, bggrainf
+      end subroutine cropgrow
+!---------------------------
+      subroutine cropinit(isr)                          
+      integer isr
+      end subroutine cropinit
+!---------------------------
+      subroutine growth(bnslay, bszlyd, bc0ck, bcgrf,                   &
+     &                 bcehu0, bczmxc, bc0idc, bc0nam,                  &
+     &                 a_fr, b_fr, bcxrow, bc0diammax,                  &
+     &                 bczmrt, bctmin, bctopt, cc0be,                   &
+     &                 bc0alf, bc0blf, bc0clf, bc0dlf,                  &
+     &                 bc0arp, bc0brp, bc0crp, bc0drp,                  &
+     &                 bc0aht, bc0bht, bc0ssa, bc0ssb,                  &
+     &                 bc0sla, bcxstm, bhtsmn,                          &
+     &                 bwtdmx, bwtdmn, bweirr, bhfwsf,                  &
+     &                 hui, huiy, huirt, huirty, hu_delay, bcthardnx,   &
+     &                 bcbaf, bchyfg,                                   &
+     &                 bcfleaf2stor, bcfstem2stor, bcfstor2stor,        &
+     &                 bcyld_coef, bcresid_int,                         &
+     &                 bcmstandstem, bcmstandleaf, bcmstandstore,       &
+     &                 bcmflatstem, bcmflatleaf, bcmflatstore,          &
+     &                 bcmrootstorez, bcmrootfiberz,                    &
+     &                 bcmbgstemz,                                      &
+     &                 bczht, bcdstm, bczrtd, bcfliveleaf,              &
+     &                 bcdayap, bcgrainf, bcdpop, daysim, regrowth_flg, &
+     &                 bc0shoot, bcdmaxshoot )
+      integer bnslay
+      real bszlyd(*), bc0ck, bcgrf
+      real bcehu0, bczmxc
+      integer bc0idc
+      character*(80) bc0nam
+      real a_fr, b_fr, bcxrow, bc0diammax
+      real bczmrt, bctmin, bctopt, cc0be
+      real bc0alf, bc0blf, bc0clf, bc0dlf
+      real bc0arp, bc0brp, bc0crp, bc0drp
+      real bc0aht, bc0bht, bc0ssa, bc0ssb
+      real bc0sla, bcxstm, bhtsmn(*)
+      real bwtdmx, bwtdmn, bweirr, bhfwsf
+      real hui, huiy, huirt, huirty, hu_delay, bcthardnx
+      real bcbaf
+      integer bchyfg
+      real bcfleaf2stor, bcfstem2stor, bcfstor2stor
+      real bcyld_coef, bcresid_int
+      real bcmstandstem, bcmstandleaf, bcmstandstore
+      real bcmflatstem, bcmflatleaf, bcmflatstore
+      real bcmrootstorez(*), bcmrootfiberz(*)
+      real bcmbgstemz(*)
+      real bczht, bcdstm, bczrtd, bcfliveleaf
+      integer bcdayap
+      real bcgrainf, bcdpop
+      integer daysim, regrowth_flg
+      real bc0shoot, bcdmaxshoot
+      end subroutine growth
+!----------------------------------
+      real function heatunit( tmax, tmin, thres )
+      real tmax, tmin, thres                
+      end function heatunit
+!----------------------------------
+      real function huc1 (bwtdmx, bwtdmn, bctmax, bctmin)
+      real bwtdmx, bwtdmn, bctmax, bctmin      
+      end function huc1
+!---------------------------------- 
+      subroutine nconc (po, p5,p1, a)
+      real a, po, p5, p1
+      end subroutine nconc
+!----------------------------------
+      subroutine nmnim (k)           
+      integer k
+      end subroutine nmnim
+!----------------------------------
+      subroutine npcy()
+      end subroutine npcy
+!----------------------------------
+      subroutine npmin (j)          
+      integer j
+      end subroutine npmin
+!----------------------------------
+      subroutine nuse (bn1, bn2, bn3, bp1, bp2, bp4, un1, un2, sup, cnt,&
+     & hui,dm, uno3, cpt, up2, up1, upp, rw, ir, wno3,sunn, ap, wt,     &
+     & a_s11,b_s11,up,rwt,suno3,un,tno3,rmnr,tap,wmp)
+    
+      real, intent(in) :: bn1, bn2, bn3, bp1, bp2, bp4
+      real, intent(out) :: un1,sup,cnt,uno3,cpt,up2,upp
+      real, intent(in) :: hui,dm,rw,un(*),rmnr,wmp
+      real, intent(in) :: wt(*),a_s11,b_s11,rwt(*)
+      integer, intent(in) :: ir
+      real, intent(inout) :: sunn,un2,wno3(*),up(*),up1
+      real, intent(inout) :: suno3,ap(*),tno3,tap   
+      end subroutine nuse
+!----------------------------------
+      subroutine nuts (y1, y2, uu, a_s8, b_s8)
+      real, intent(in) :: y1, y2, a_s8, b_s8
+      real, intent(inout) :: uu   
+      end subroutine nuts
+!----------------------------------
+      subroutine scrv1 (x1, y1, x2, y2, a, b)
+      real a,b,x1,x2,y1,y2 
+      end subroutine scrv1
+!---------------------------------
+      subroutine sdst (x,dg,dg1,i)
+      integer i
+      real dg, dg1, x(*)  
+      end subroutine sdst
+!---------------------------------
+      subroutine shoot_grow( bnslay, bszlyd, bcdpop,                    &
+     &                 bczmxc, bcfleafstem,                             &
+     &                 bcfshoot, bc0ssa, bc0ssb, bc0diammax,            &
+     &                 hui, huiy, bcthu_shoot_beg, bcthu_shoot_end,     &
+     &                 bcmstandstem, bcmstandleaf, bcmstandstore,       &
+     &                 bcmflatstem, bcmflatleaf, bcmflatstore,          &
+     &                 bcmshoot, bcmtotshoot, bcmbgstemz,               &
+     &                 bcmrootstorez, bcmrootfiberz,                    &
+     &                 bczht, bczshoot, bcdstm, bczrtd,                 &
+     &                 bczgrowpt, bcfliveleaf, bc0nam,                  &
+     &                 bchyfg, bcyld_coef, bcresid_int, bcgrf,          &
+     &                 daysim, bcdayap )
+      integer bnslay
+      real bszlyd(*), bcdpop
+      real bczmxc, bcfleafstem
+      real bcfshoot, bc0ssa, bc0ssb, bc0diammax
+      real hui, huiy, bcthu_shoot_beg, bcthu_shoot_end
+      real bcmstandstem, bcmstandleaf, bcmstandstore
+      real bcmflatstem, bcmflatleaf, bcmflatstore
+      real bcmshoot, bcmtotshoot, bcmbgstemz(*)
+      real bcmrootstorez(*), bcmrootfiberz(*)
+      real bczht, bczshoot, bcdstm, bczrtd
+      real bczgrowpt, bcfliveleaf
+      character*(80) bc0nam
+      integer bchyfg
+      real bcyld_coef, bcresid_int, bcgrf
+      integer daysim, bcdayap
+      end subroutine shoot_grow
+!----------------------------------
+      subroutine shootnum( shoot_flg, bnslay, bc0idc, bcdpop, bc0shoot, &
+     &           bcdmaxshoot, bcmtotshoot, bcmrootstorez, bcdstm )
+      integer shoot_flg, bnslay, bc0idc
+      real bcdpop, bc0shoot, bcdmaxshoot
+      real bcmtotshoot
+      real bcmrootstorez(*)
+      real bcdstm
+      end subroutine shootnum
+!------------------------------------
+      subroutine spline(x,y,n,yp1,ypn,y2)
+      real x(*), y(*), yp1, ypn, y2(*)
+      integer n                           
+      end subroutine spline
+!-------------------------------------
+      subroutine splint(xa,ya,y2a,n,x,y)
+
+      real x, y, y2a(*), ya(*), xa(*)
+      integer n  
+      end subroutine splint
+!-------------------------------------
+      real function temps(bwtdmx, bwtdmn, bctopt, bctmin)
+
+      real bwtdmx, bwtdmn, bctopt, bctmin
+      end function temps
+!--------------------------------------  
+
+!-------------- DECOMP Routines ------------------------------
+      subroutine  ddbug(isr, slay, residue)
+      use biomaterial, only: biomatter
+      integer isr, slay
+      type(biomatter), dimension(:), intent(in) :: residue
+      end subroutine ddbug
+!---------------------------
+      subroutine decoinit(residue, decompfac)
+      use biomaterial, only: biomatter, decomp_factors
+      type(biomatter), intent(inout) :: residue
+      type(decomp_factors), intent(inout) :: decompfac
+      end subroutine decoinit
+!---------------------------
+      subroutine decomp(isr, residue, decompfac)
+      use biomaterial, only: biomatter, decomp_factors
+      integer, intent(in) :: isr
+      type(biomatter), dimension(:), intent(inout) :: residue
+      type(decomp_factors), intent(inout) :: decompfac
+      end subroutine decomp
+!---------------------------
+      subroutine decopen(isr)
+      integer :: isr
+      end subroutine decopen  
+!----------------------------
+      subroutine  decout(isr, residue)
+      use biomaterial, only: biomatter
+      integer    isr
+      type(biomatter), dimension(:), intent(in) :: residue
+      end subroutine decout
+!---------------- EROSION Routines ---------------------------
+      subroutine calcwu()
+      end subroutine calcwu
+!---------------------------
+      subroutine daily_erodout (o_unit, o_E_unit)   
+      integer  o_unit, o_E_unit
+      end subroutine daily_erodout
+!---------------------------
+      subroutine erodinit()  
+      end subroutine erodinit
+!---------------------------
+      subroutine erosion (min_erosion_awu)
+      real min_erosion_awu
+      end subroutine erosion
+!---------------------------
+      subroutine saeinp() 
+      end subroutine saeinp
+!---------------------------
+      subroutine sb1out (jj, nn, hr, ws, wdir, o_unit)
+      real ws, wdir, hr
+      integer  jj, nn, o_unit
+      end subroutine sb1out   
+!----------------------------
+      subroutine sb2out (jj, nn, hr, ws, wdir, o_unit)
+      real ws, wdir, hr
+      integer  jj, nn, o_unit
+      end subroutine sb2out    
+!----------------------------
+      subroutine sbaglos (wus, wust, wusto, sf84ic, asvroc,             &
+     &                    smaglosmx, smaglos, sf84mn, sf84)
+
+      real wus, wust, wusto, sf84ic, asvroc
+      real smaglosmx, smaglos, sf84mn, sf84 
+      end subroutine sbaglos
+!-----------------------------
+      subroutine sbbr()
+      end subroutine sbbr
+!-----------------------------
+      subroutine sbdirini(wind_dir, prev_dir)
+      real wind_dir
+      real prev_dir                           
+      end subroutine sbdirini
+!-----------------------------
+      subroutine sbemit (ounit, ws, hhr)
+
+      integer        ounit   !Unit number for detail grid erosion
+      real           ws, hhr      
+      end subroutine sbemit
+!----------------------------
+      subroutine sberod (time,flg)
+      real      time
+      integer   flg    !Surface update flag (1=on, 0=off)
+      end subroutine sberod
+!----------------------------
+      subroutine sbgrid()
+      end subroutine sbgrid
+!----------------------------
+      subroutine sbigrd()   
+      end subroutine sbigrd   
+!----------------------------
+      subroutine sbinit()
+      end subroutine sbinit
+!----------------------------
+      subroutine sbpm10                                                 &
+     &  (seags, secr, sfcla, sfsan, awzypt,                             &
+     &  canag, cancr, sf10an, sf10en, sf10bk)
+
+        real seags, secr, sfcla, sfsan, awzypt
+        real canag, cancr,sf10an, sf10en, sf10bk                             
+      end subroutine sbpm10
+!----------------------------
+      subroutine sbqout                                                 &
+     & (flg, wus, wust, wusp, sf10, sf84,                               &
+     & sf200, szcr, sfcr, sflos, smlos,                                 &
+     & szrgh, sxrgs, sxprg, slrr,                                       &
+     & sfcla, sfsan,                                                    &
+     & sfvfs, svroc, brsai, bzht,                                       &
+     & bffcv, time,                                                     &
+     & canag, cancr, sf10an, sf10en, sf10bk,                            &
+     & lx, qi, qssi, q10i, i, j, imax, jmax,                            &
+     & smaglos, dmlos, sf84mn, sf84ic, sf10ic, asvroc,smaglosmx,        &
+     & qo, qsso, q10o )
+
+      integer   flg    !Surface update flag (1=on, 0=off)
+      real wus, wust, wusp, sf1, sf10, sf84
+      real sf200, szcr, sfcr, sflos, smlos
+      real szrgh, sxrgs, sxprg, slrr
+      real sfcla, sfsan,sfvfs
+      real svroc, brsai, bzht, bffcv, time
+      real canag, cancr, sf10an, sf10en, sf10bk
+      real lx, qi, qssi, q10i, qo, qsso, q10o
+      real smaglos, dmlos, sf84mn, sf84ic, sf10ic, asvroc, smaglosmx
+      integer i, j, imax, jmax   
+      end subroutine sbqout
+!-----------------------------
+      subroutine sbsfdi (slagm, s0ags, slagn, slagx, sldi, sfdi)
+
+      real slagm, s0ags, slagn, slagx, sldi, sfdi         
+      end subroutine sbsfdi
+!-----------------------------
+      subroutine sbwind (wustfl,awu, wind_dir, ntstep, intstep, rusust)
+
+      integer wustfl,intstep, ntstep
+      real awu, rusust, wind_dir      
+      end subroutine sbwind
+!-------------------------------
+      subroutine sbwus (anemht, awzzo, awu, wzzov, brcd, wus)
+
+      real  anemht, awzzo, awu, wzzov
+      real  brcd, wus 
+      end subroutine sbwus
+!-------------------------------
+      subroutine sbwust (sf84, sdagd, sfcr, svroc, sflos, bffcv,        &
+     &  wzzo, hrwc, hrwcw, wus, sf84ic, asvroc, dmlos,                  &
+     &  wust, wusp, wusto, sf84mn, smaglos, smaglosmx,                  &
+     &  wubsts, wucsts, wucwts, wucdts, sfcv)
+      real sf84, sdagd, sfcr, svroc, sflos, bffcv
+      real wzzo, hrwc, hrwcw, wus, sf84ic, asvroc, dmlos
+      real wust, wusp, sf84mn, smaglos
+      real smaglosmx, wusto
+      real wubsts, wucsts, wucwts, wucdts, sfcv
+      end subroutine sbwust
+!--------------------------------
+      subroutine sbzdisp (szrgh, bcxrow, bc0rg, wzoflg,                 &
+     &                 bdrlai, bdrsai, bbzht, bcrlai, bcrsai, bczht,    &
+     &                 awzdisp, wzdisp)
+      real szrgh, bcxrow
+      integer bc0rg, wzoflg
+      real bdrlai, bdrsai, bbzht
+      real bcrlai, bcrsai, bczht
+      real awzdisp, wzdisp   
+      end subroutine sbzdisp
+!---------------------------------
+      subroutine sbzo (sxprg, szrgh, slrr,                              &
+     &                 wzoflg, bdrlai, bdrsai, bbzht,                   &
+     &                 bcrlai, bcrsai, bczht,                           &
+     &                 bcxrow, bc0rg, wzorg, wzorr,                     &
+     &                 wzzo, wzzov, awzzo, brcd)
+      real sxprg, szrgh, slrr
+      integer wzoflg
+      real bdrlai, bdrsai, bbzht
+      real bcrlai, bcrsai, bczht, bcxrow
+      integer bc0rg
+      real wzorg, wzorr, wzzo, wzzov, awzzo, brcd
+      end subroutine sbzo   
+!-----------------------------------
+
+!---------------  HYDRO Routines -----------------------------
+      real function acplwu (awcr, awcr_crit, wup)
+      real awcr
+      real awcr_crit
+      real wup                   
+      end function acplwu
+!------------------------
+
+      subroutine addsnow(dprecip, dirrig, bwzdpt, bhzirr, bhlocirr,     &
+     &                   bwtdmn, bwtdmx, bwtdpt, bmzele,                &
+     &                   bhzsno, bhtsno, bhfsnfrz, bhzsnd )
+
+      real, intent(in) :: bwzdpt, bhzirr, bhlocirr
+      real, intent(in) :: bwtdmn, bwtdmx, bwtdpt, bmzele
+      real, intent(in) :: bhzsno, bhtsno, bhfsnfrz, bhzsnd
+      real, intent(inout) :: dirrig, dprecip
+      end subroutine addsnow
+!----------------------
+      real function airtempsin(tsec, tmax, tmin)
+
+      real, intent(in) ::  tsec, tmax, tmin            
+      end function airtempsin
+!----------------------
+      real function albedo (bcrlai, snwc, sndp, bsfalw, bsfald)
+
+      real bcrlai
+      real snwc
+      real sndp
+      real bsfalw
+      real bsfald      
+      end function albedo
+!------------------------
+      real function atmpreselev( elevation )
+      real, intent(in) :: elevation      
+      end function atmpreselev
+!------------------------
+      real function availwc (theta, thetaw, thetaf)
+
+      real theta, thetaw, thetaf      
+      end function availwc
+!------------------------
+      real function calctht0( bszlyd, theta, thetaw, eratio )
+
+      real bszlyd(*)
+      real theta(0:*)
+      real thetaw(*)
+      real eratio      
+      end function calctht0
+!---------------------------
+      subroutine callhydr(daysim, isr)
+      integer daysim
+      integer isr                   
+      end subroutine callhydr
+!---------------------------
+      subroutine darcy(daysim, numeq, bszlyt, bszlyd, bulkden,          &
+     &       theta, thetadmx, bthetas, bthetaf, bthetaw, bthetar,       &
+     &       bhrsk, bheaep, bh0cb, bsfcla, bsfom, bhtsav,               &
+     &       bwtdmxprev, bwtdmn, bwtdmx, bwtdmnnext, bwtdpt,            &
+     &       rise, daylength, bhzep, dprecip, bwdurpt, bwpeaktpt,       &
+     &       dirrig, bhdurirr, bhlocirr, bhzoutflow,                    &
+     &       bbdstm, bbffcv, bslrro, bslrr, bmzele, bhrwc0,             &
+     &       bhzea, bhzper, bhzrun, bhzinf, bhzwid,                     &
+     &       bhzeasurf, evaplimit, vaptrans, bmrslp )
+
+      integer daysim, numeq
+      real bszlyt(*), bulkden(*), bszlyd(*), theta(0:*)
+      real thetadmx(*), bthetas(*), bthetaf(*), bthetar(*), bthetaw(*)
+      real bhrsk(*), bheaep(*), bh0cb(*), bsfcla(*), bsfom(*), bhtsav(*)
+      real bwtdmxprev, bwtdmn, bwtdmx, bwtdmnnext, bwtdpt
+      real rise, daylength, bhzep, dprecip, bwdurpt, bwpeaktpt
+      real dirrig, bhdurirr, bhlocirr, bhzoutflow
+      real bbdstm, bbffcv, bslrro, bslrr, bmzele, bhrwc0(*)
+      real bhzea, bhzper, bhzrun, bhzinf, bhzwid
+      real bhzeasurf, evaplimit, vaptrans, bmrslp    
+      end subroutine darcy
+!----------------------
+      real function depstore( ranrough, soilslope, bhzoutflow )
+      real ranrough, soilslope, bhzoutflow        
+      end function depstore
+!----------------------
+      real function diffusive( theta, porosity, airtemp, atmpres )
+
+      real, intent(in) :: theta, porosity, airtemp, atmpres
+      end function diffusive
+!----------------------
+      subroutine drainsnow(dh2o, bhzsno, bhfsnfrz, bhzsnd )
+
+      real, intent(inout) :: dh2o, bhzsno, bhfsnfrz, bhzsnd      
+      end subroutine drainsnow
+!----------------------
+      subroutine dvolw(neqn,tsec,volw,wfluxn)
+
+      integer neqn(*)
+      real tsec, volw(*), wfluxn(*)      
+      end subroutine dvolw
+!-----------------------
+      subroutine jac (neq, t, y, ml, mu, pd, nrowpd)
+      integer neq, ml, mu, nrowpd
+      real*4 t, y(*), pd(*)
+      end subroutine jac      
+!-----------------------
+      subroutine  et(rn, g_soil, vel_wind, bmzele, bwtdmx, bwtdmn,      &
+     &            bwtdav, bwtdpt, bwrrh, bhzetp, loc_za, loc_zo, loc_zd)
+
+      real rn
+      real g_soil
+      real vel_wind
+      real bmzele
+      real bwtdmn
+      real bwtdmx
+      real bwtdav
+      real bwtdpt
+      real bwrrh
+      real bhzetp
+      real loc_za, loc_zo, loc_zd   
+      end subroutine et
+!-------------------------
+      real function evapredu( bhzeasurf, evaplimit, vaptrans, bhzep )
+
+      real bhzeasurf, evaplimit, vaptrans, bhzep         
+      end function evapredu
+!--------------------------
+      real function extra (bszlyd, theta)
+
+      real, intent(in) :: bszlyd(*)
+      real, intent(in) :: theta(0:*)
+      end function extra
+!--------------------------
+      real function fricfact(ref_ranrough, ranrough,                    &
+     &                  tot_stems, tot_flat_cov )
+
+      real ref_ranrough, ranrough
+      real tot_stems, tot_flat_cov            
+      end function fricfact
+!-------------------------
+      real function furrowcut ( bszrgh, bsxrgw, bsxrgs )
+      real bszrgh, bsxrgw, bsxrgs
+      end function furrowcut
+!-------------------------
+      subroutine  hdbug(isr,slay)  
+      integer isr,slay
+      end subroutine hdbug
+!-------------------------
+      subroutine heat(layrsn, bszlyd, bszlyt, theta, thetas,            &
+     &                bsfsan, bsfsil, bsfcla, bsfom, bsdblk,            &
+     &                bwtdmn, bwtdmx, bwtyav, rad_net, bdmres,          &
+     &                bhtsmn, bhtsmx, bhtsav, bhfice,                   &
+     &                bhzsno, bhtsno, bhfsnfrz, bhzsnd,                 &
+     &                bhzsmt, soil_heat_flux )
+      integer layrsn
+      real bszlyd(*), bszlyt(*), theta(0:*), thetas(*)
+      real bsfsan(*), bsfsil(*), bsfcla(*), bsfom(*), bsdblk(*)
+      real bwtdmn, bwtdmx, bwtyav, rad_net, bdmres
+      real bhtsmn(*), bhtsmx(*), bhtsav(*), bhfice(*)
+      real bhzsno, bhtsno, bhfsnfrz, bhzsnd
+      real bhzsmt, soil_heat_flux
+      end subroutine heat
+!-------------------------
+      real function snowcond( snow_den )
+      real snow_den
+      end function snowcond
+!-------------------------------      
+      real function heatcap(bsdblk, theta, bhfice,                      &
+     &                      bsfsan, bsfsil, bsfcla, bsfom)
+      real, intent(in) :: bsdblk
+      real, intent(in) :: theta
+      real, intent(in) :: bhfice
+      real, intent(in) :: bsfsan
+      real, intent(in) :: bsfsil
+      real, intent(in) :: bsfcla
+      real, intent(in) :: bsfom              
+      end function heatcap
+!-----------------------
+      real function heatcond(bsdblk, theta, thetas, bhtsav, bhfice,     &
+     &                       bsfsan, bsfsil, bsfcla, bsfom)
+      real, intent(in) :: bsdblk, theta, thetas, bhtsav, bhfice
+      real, intent(in) :: bsfsan, bsfsil, bsfcla, bsfom      
+      end function heatcond
+!-----------------------
+      subroutine hinit(layrsn, bsdblk, bsdblk0, bsdpart, bsdwblk,       &
+     &                 bhrwc, bhrwcs, bhrwcf, bhrwcw, bhrwcr,           &
+     &                 bhrwca, bh0cb, bheaep, bhrsk, bhfredsat,         &
+     &                 bsfsan, bsfsil, bsfcla, bsfom, bsfcec,           &
+     &                 bszlyd, bszlyt, vaptrans, evaplimit)
+      integer layrsn
+      real bsdblk(*), bsdblk0(*), bsdpart(*), bsdwblk(*)
+      real bhrwc(*), bhrwcs(*), bhrwcf(*), bhrwcw(*), bhrwcr(*)
+      real bhrwca(*), bh0cb(*), bheaep(*), bhrsk(*), bhfredsat(*)
+      real bsfsan(*), bsfsil(*), bsfcla(*), bsfom(*), bsfcec(*)
+      real bszlyd(*), bszlyt(*), vaptrans, evaplimit 
+      end subroutine hinit
+!------------------------
+      subroutine hydrinit(isr)
+      integer isr
+      end subroutine hydrinit
+!-------------------------
+      subroutine hydro ( layrsn, bmrslp,                                &
+     &                   bdrlai, bdrsai, bbzht,                         &
+     &                   bcrlai, bcrsai, bczht, bcdayap,                &
+     &                   bcxrow, bc0rg, bbfcancov, bcfliveleaf,         &
+     &                   bdmres, bbevapredu, bczrtd, bhfwsf,            &
+     &                   bszlyd, bsdblk, bsdblk0, bsdpart, bsdwblk,     &
+     &                   bhrwc, bhrwcdmx, bhrwcs, bhrwcf,               &
+     &                   bhrwcw, bhrwcr, bhrwca,                        &
+     &                   bh0cb, bheaep, bhfredsat,                      &
+     &                   bsfsan, bsfsil, bsfcla,                        &
+     &                   bsvroc, bsfom, bsfcec,                         &
+     &                   bhtsav, bbdstm, bbffcv,                        &
+     &                   bsxrgs, bszrgh,                                &
+     &                   bslrro, bslrr, bmzele,                         &
+     &                   bh0cng, bh0cnp, bhzper,                        &
+     &                   bhzirr, bhzdmaxirr, bhratirr, bhdurirr,        &
+     &                   bhlocirr, bhminirr, bm0monirr,                 &
+     &                   bhmadirr, bhndayirr, bhmintirr,                &
+     &                   bhzoutflow, bhzrun, bhzinf,                    &
+     &                   bhzsno, bhtsno, bhfsnfrz, bhzsnd,              &
+     &                   bhzsmt, bhfice, bhrsk,                         &
+     &                   bhtsmx, bhtsmn, bhrwc0,                        &
+     &                   daysim, bsfald, bsfalw, bszlyt,                &
+     &                   bwzdpt, bwdurpt, bwpeaktpt, bwpeakipt,         &
+     &                   bwtdmxprev, bwtdmn, bwtdmx, bwtdmnnext,        &
+     &                   bwtdav, bwtyav, bwrrh,                         &
+     &                   bwtdpt, bweirr, bwudav, bhzwid,                &
+     &                   bhzeasurf,                                     &
+     &                   cumprecip, cumrunoff, cumevap,                 &
+     &                   cumtrans, cumdrain,                            &
+     &                   initswc, initsnow, initday,                    &
+     &                   presswc, pressnow, presday,                    &
+     &                   bhztranspdepth )
+      integer layrsn
+      real bmrslp
+      real bdrlai, bdrsai, bbzht
+      real bcrlai, bcrsai, bczht
+      integer bcdayap
+      real bcxrow
+      integer bc0rg
+      real bbfcancov, bcfliveleaf
+      real bdmres, bbevapredu, bczrtd, bhfwsf
+      real bszlyd(*), bsdblk(*), bsdblk0(*), bsdpart(*), bsdwblk(*)
+      real bhrwc(*), bhrwcdmx(*), bhrwcs(*), bhrwcf(*)
+      real bhrwcw(*), bhrwcr(*), bhrwca(*)
+      real bh0cb(*), bheaep(*), bhfredsat(*)
+      real bsfsan(*), bsfsil(*), bsfcla(*)
+      real bsvroc(*), bsfom(*), bsfcec(*)
+      real bhtsav(*), bbdstm, bbffcv
+      real bsxrgs, bszrgh
+      real bslrro, bslrr, bmzele
+      real bh0cng, bh0cnp, bhzper
+      real bhzirr, bhzdmaxirr, bhratirr, bhdurirr
+      real bhlocirr, bhminirr
+      integer bm0monirr
+      real bhmadirr
+      integer bhndayirr, bhmintirr
+      real bhzoutflow, bhzrun, bhzinf
+      real bhzsno, bhtsno, bhfsnfrz, bhzsnd
+      real bhzsmt, bhfice(*), bhrsk(*)
+      real bhtsmx(*), bhtsmn(*), bhrwc0(*)
+      integer daysim
+      real bsfald, bsfalw, bszlyt(*)
+      real bwzdpt, bwdurpt, bwpeaktpt, bwpeakipt
+      real bwtdmxprev, bwtdmx, bwtdmn, bwtdmnnext
+      real bwtdav, bwtyav, bwrrh
+      real bwtdpt, bweirr, bwudav, bhzwid
+      real bhzeasurf
+      real cumprecip, cumrunoff, cumevap
+      real cumtrans, cumdrain
+      real initswc, initsnow, initday
+      real presswc, pressnow, presday
+      real bhztranspdepth
+      end subroutine hydro
+!-----------------------
+      real function internode_wt_bc(cond_up, cond_low,                  &
+     &              ksat_up, ksat_low, lambda_up, lambda_low,           &
+     &              thick_up, thick_low, airentry_up, airentry_low )
+
+      real cond_up, cond_low
+      real ksat_up, ksat_low, lambda_up, lambda_low
+      real thick_up, thick_low, airentry_up, airentry_low 
+      end function internode_wt_bc
+!-----------------------
+      subroutine matricpot_bc(theta, thetar, thetas, airentry, lambda,  &
+     &                        thetaw, theta80rh, soiltemp,              &
+     &                        matricpot, soilrh )
+
+      real  theta, thetar, thetas, airentry, lambda
+      real  thetaw, theta80rh, soiltemp
+      real  matricpot, soilrh                           
+      end subroutine matricpot_bc
+!------------------------
+      real function matricpot_from_rh( soilrh, soiltemp )
+
+      real  soilrh, soiltemp      
+      end function matricpot_from_rh
+!-------------------------
+      real function movewind( meas_wind, meas_za, meas_zo, meas_zd,     &
+     &                          loc_za, loc_zo, loc_zd)
+
+      real meas_wind, meas_za, meas_zo, meas_zd
+      real loc_za, loc_zo, loc_zd  
+      end function movewind    
+!---------------------------
+      subroutine param_blkden_adj( nlay, bsdblk, bsdblk0,               &
+     &                         bsdpart, bhrwcf, bhrwcw, bhrwca,         &
+     &                         bsfcla, bsfom,                           &
+     &                         bh0cb, bheaep, bhrsk )
+
+      integer nlay
+      real bsdblk(*), bsdblk0(*)
+      real bsdpart(*), bhrwcf(*), bhrwcw(*), bhrwca(*)
+      real bsfcla(*), bsfom(*)
+      real bh0cb(*), bheaep(*), bhrsk(*)      
+      end subroutine param_blkden_adj
+!----------------------------
+      subroutine param_pot_bc( nlay, bsdblk,                            &
+     &                         bsdpart, bhrwcf, bhrwcw,                 &
+     &                         bsfcla, bsfom,                           &
+     &                         bh0cb, bheaep )
+
+      integer nlay
+      real bsdblk(*)
+      real bsdpart(*), bhrwcf(*), bhrwcw(*)
+      real bsfcla(*), bsfom(*)
+      real bh0cb(*), bheaep(*) 
+      end subroutine param_pot_bc
+!-----------------------------
+      subroutine param_prop_bc( nlay, bszlyd, bsdblk, bsdpart,          &
+     &                          bsfcla, bsfsan, bsfom, bsfcec,          &
+     &                          bhrwcs, bhrwcf, bhrwcw, bhrwcr,         &
+     &                          bhrwca, bh0cb, bheaep, bhrsk,           &
+     &                          bhfredsat )
+
+      integer nlay
+      real bszlyd(*), bsdblk(*), bsdpart(*)
+      real bsfcla(*), bsfsan(*), bsfom(*), bsfcec(*)
+      real bhrwcs(*), bhrwcf(*), bhrwcw(*), bhrwcr(*)
+      real bhrwca(*), bh0cb(*), bheaep(*), bhrsk(*)
+      real bhfredsat(*) 
+      end subroutine param_prop_bc
+!------------------------------
+      real function plant_wat_g( begind, endd, bhrwcf, bhrwcw, bsdblk,  &
+     &                           bszlyt, nlay )
+
+      integer nlay
+      real bhrwcf(nlay), bhrwcw(nlay), bsdblk(nlay), bszlyt(nlay)
+      real begind, endd  
+      end function  plant_wat_g
+!--------------------------------
+      real function plant_wat_t( begind, endd, thetaf, thetaw,          &
+     &                           bszlyd, nlay )
+
+      real begind, endd
+      integer nlay
+      real thetaf(nlay), thetaw(nlay), bszlyd(nlay)                   
+      end function plant_wat_t
+!-------------------------------
+      real function preslaps( elevation )
+      real elevation      
+      end function preslaps
+!------------------------------
+      subroutine printlayval( daysim, layrsn,                           &
+     &       bszlyt, bszlyd, bulkden,                                   &
+     &       theta, thetas, thetaf, thetaw, thetar,                     &
+     &       bhrsk, bheaep, bh0cb, bsfcla, bsfom, bhtsav )
+
+      integer daysim, layrsn
+      real bszlyt(*), bszlyd(*), bulkden(*)
+      real theta(0:*), thetas(*), thetaf(*), thetar(*), thetaw(*)
+      real bhrsk(*), bheaep(*), bh0cb(*), bsfcla(*), bsfom(*), bhtsav(*)
+      end subroutine printlayval
+!--------------------------------      
+      subroutine propsaxt( sandf, clayf, sat, fc, pwp )
+
+      real sandf, clayf, sat, fc, pwp
+      end subroutine propsaxt
+!-------------------------------
+      subroutine proptext( nlay, clayf, sandf, organf,                  &
+     &                 settled_bulkden, partden )
+
+      integer nlay
+      real sandf(*),clayf(*),organf(*)
+      real settled_bulkden(*), partden(*)      
+      end subroutine proptext
+!--------------------------------
+      subroutine   psd (sandm, siltm, claym, pgmd, pgsd)
+
+      real claym
+      real pgmd
+      real pgsd
+      real sandm
+      real siltm  
+      end subroutine psd
+!---------------------------------
+      real function radnet (bcrlai, bweirr, snwc, sndp, bwtdmx, bwtdmn, &
+     &                      bmalat, bsfalw, bsfald, idoy, bwtdpt,bwzdpt)
+
+      real bcrlai, bweirr, snwc, sndp, bwtdmx, bwtdmn
+      real bmalat, bsfalw, bsfald
+      integer idoy
+      real bwtdpt,bwzdpt  
+      end function radnet
+!---------------------------------
+      subroutine ratedura(bhzirr, bhratirr, bhdurirr)
+
+      real bhzirr, bhratirr, bhdurirr              
+      end subroutine ratedura
+!----------------------------------
+      subroutine report_hydrobal( isr, bmrotation )
+
+      integer isr, bmrotation      
+      end subroutine report_hydrobal
+!----------------------------------
+      real function resevapredu(                                           &
+     &           prev_redu_ratio, biomass, coeff_a, coeff_b)
+
+      real prev_redu_ratio
+      real biomass
+      real coeff_a
+      real coeff_b      
+      end function resevapredu
+!-----------------------------------
+      real function satvappres( airtemp )
+
+      real airtemp      
+      end function satvappres
+!-----------------------------------
+      real function   scsq (rain,cniip,cniig,canp,slp,theta1,thetf1)
+
+      real rain
+      real cniip
+      real cniig
+      real canp
+      real slp
+      real theta1
+      real thetf1      
+      end function scsq
+!------------------------------------
+      subroutine set_prevday_blk( nlay, bsdblk, bsdblk0 )
+
+      integer nlay
+      real bsdblk(*), bsdblk0(*)      
+      end subroutine set_prevday_blk
+!----------------------------------
+      subroutine setlsnow(snow_wat, snow_froz_old, snow_froz_new,       &
+     &                    snow_depth, snow_temp, bwtdmx )
+
+      real snow_wat, snow_froz_old, snow_froz_new
+      real snow_depth, snow_temp, bwtdmx      
+      end subroutine setlsnow
+!------------------------------
+      real function soilrelhum(theta, thetaw, theta80rh, soiltemp,      &
+     &                           matricpot)
+
+      real*4 theta, thetaw, theta80rh, soiltemp, matricpot
+      end function soilrelhum
+!------------------------------
+      subroutine statesnow( dh2o, new_mass, new_energy, new_depth,      &
+     &                      bhzsno, bhtsno, bhfsnfrz, bhzsnd )
+
+      real dh2o, new_mass, new_energy, new_depth
+      real bhzsno, bhtsno, bhfsnfrz, bhzsnd      
+      end subroutine statesnow
+!-------------------------------
+      real function store (minlay, maxlay, prevvolw, volw, laydepth)
+
+      integer minlay, maxlay
+      real prevvolw(*), volw(*), laydepth(*)      
+      end function store
+!-------------------------------
+      subroutine transp (layrsn, actflg, bszlyd, bszlyt, rootd,         &
+     &                   theta, thetas, thetaf, thetaw,                 &
+     &                   theta80rh, thetar, airentry, lambda,           &
+     &                   ksat, soiltemp, potwu, actwu, wsf)
+
+      integer layrsn, actflg
+      real bszlyd(*), bszlyt(*), rootd
+      real theta(0:*), thetas(*), thetaf(*), thetaw(*)
+      real theta80rh(*), thetar(*), airentry(*), lambda(*)
+      real ksat(*), soiltemp(*), potwu, actwu, wsf      
+      end subroutine transp
+!------------------------------
+      real function unsatcond_bc(theta, thetar, thetas, ksat, lambda)
+
+      real  theta, thetar, thetas, ksat, lambda      
+      end function unsatcond_bc
+!-------------------------------
+      real function vaporden( airtemp, relhum )
+
+      real airtemp, relhum      
+      end function vaporden
+!--------------------------------
+      real function volwat_matpot_bc(matricpot,thetar,thetas,           &
+     &                                 airentry,lambda)
+
+      real matricpot, thetar, thetas, airentry, lambda      
+      end function volwat_matpot_bc
+!---------------------------------
+      real function volwatadsorb(bulkden, clayfrac, orgfrac,            &
+     &                             claygrav80rh, orggrav80rh )
+
+      real bulkden, clayfrac, orgfrac, claygrav80rh, orggrav80rh      
+      end function volwatadsorb
+!-------------------------------
+      real function waterk (bd, cb, clay, silt)
+
+      real bd
+      real cb
+      real clay
+      real silt      
+      end function waterk
+!------------------------------
+      real function wetbulb( airtemp, dewtemp, elevation )
+
+      real airtemp, dewtemp, elevation
+      end function wetbulb
+!------------------------------      
+
+!---------------- MAIN Routines ------------------------------
+      subroutine bpools (cd, cm, cy, isr, residue, restot, decompfac)
+      use biomaterial, only: biomatter, biototal, decomp_factors
+      integer cd, cm, cy, isr
+      type(biomatter), dimension(:), intent(in) :: residue
+      type(biototal), intent(in) :: restot
+      type(decomp_factors), intent(in) :: decompfac
+      end subroutine bpools
+!------------------------------
+      subroutine clear_erosion()
+      end subroutine clear_erosion
+!------------------------------
+      subroutine cliginit()
+      end subroutine cliginit
+!------------------------------
+      subroutine   cmdline()
+      end subroutine cmdline
+!------------------------------
+      subroutine   dmpall(filnam)   
+      character*(*) filnam
+      end subroutine dmpall
+!-----------------------------
+      integer   function g_argc()    
+      end function g_argc     
+!-------------------------------
+      integer FUNCTION get_nperiods (nrot_yrs)
+
+          INTEGER, INTENT (IN) :: nrot_yrs
+          end function get_nperiods
+!-------------------------------
+      subroutine getcli(ccd, ccm, ccy)
+
+      integer ccd,ccm,ccy
+      end subroutine getcli
+!-------------------------------
+      subroutine getwin(cwd,cwm,cwy)
+
+      integer cwd,cwm,cwy  
+      end subroutine getwin
+!--------------------------------
+      subroutine inprun()
+      end subroutine inprun
+!--------------------------------
+      subroutine inpsub (isr)
+      integer isr
+      end subroutine inpsub
+!------------------------------      
+      subroutine   input()
+      end subroutine input
+!------------------------------
+      subroutine input_ifc()
+      end subroutine input_ifc
+!------------------------------
+      subroutine mandates(sr)   
+      integer sr
+      end subroutine mandates
+!-----------------------------
+      subroutine openfils(residue)
+      use biomaterial, only: biomatter
+      type(biomatter), dimension(:,:), intent(out) :: residue
+      end subroutine openfils
+!--------------------------------
+      subroutine plotdata(sr) 
+      integer sr
+      end subroutine plotdata
+!--------------------------------
+      subroutine save_soil(isr)
+      integer isr
+      end subroutine save_soil
+!--------------------------------
+      subroutine sort (iarr,n,p1,p5,p9)
+
+      integer  n
+      real iarr(*),p1, p5, p9
+      end subroutine sort
+!--------------------------------
+      subroutine spllay()
+      end subroutine spllay
+!--------------------------------
+      subroutine spllay_ifc (isr)
+      integer       isr
+      end subroutine spllay_ifc
+!--------------------------------
+      subroutine submodels (isr, cd, cm, cy, residue, restot, biotot, decompfac)
+      use biomaterial, only: biomatter, biototal, decomp_factors
+      integer isr, cd, cm, cy
+      type(biomatter), dimension(:), intent(inout) :: residue
+      type(biototal), intent(inout) :: restot, biotot
+      type(decomp_factors), intent(inout) :: decompfac
+      end subroutine submodels
+!-------------------------------
+      subroutine sumbio(isr, residue, restot, biotot)
+      use biomaterial, only: biomatter, biototal
+      integer, intent(in) :: isr
+      type(biomatter), dimension(:), intent(inout) :: residue
+      type(biototal), intent(inout) :: restot, biotot
+      end subroutine sumbio
+!-------------------------------
+      subroutine updres(isr, residue, restot)
+      use biomaterial, only: biomatter, biototal
+      type(biomatter), dimension(:), intent(inout) :: residue
+      type(biototal), intent(inout) :: restot
+      integer isr
+      end subroutine updres
+!--------------------------------     
+      subroutine wsum()
+      end subroutine wsum
+!--------------------------------  
+
+!--------------- MANAGE Subroutines --------------------------
+      subroutine cropupdate(                                            &
+     &      bcmstandstem, bcmstandleaf, bcmstandstore,                  &
+     &      bcmflatstem, bcmflatleaf, bcmflatstore,                     &
+     &      bcmbgstemz,                                                 &
+     &      bcmrootstorez, bcmrootfiberz,                               &
+     &      bczht, bcdstm, bczrtd,                                      &
+     &      bcmbgstem,                                                  &
+     &      bcmrootstore, bcmrootfiber, bcxstmrep,                      &
+     &      bcm, bcmst, bcmf, bcmrt, bcmrtz,                            &
+     &      bcrcd, bszrgh,                                              &
+     &      bcrsai, bcrlai, bcrsaz, bcrlaz,                             &
+     &      bcffcv, bcfscv, bcftcv, bcfcancov,                          &
+     &      bc0rg, bcxrow,                                              &
+     &      bnslay, bc0ssa, bc0ssb, bc0sla,                             &
+     &      bcovfact, bc0ck, bcxstm, bcdpop,                            &
+     &      bhztranspdepth, bhzfurcut,                                  &
+     &      bhztransprtmin, bhztransprtmax )
+      real bcmstandstem, bcmstandleaf, bcmstandstore
+      real bcmflatstem, bcmflatleaf, bcmflatstore
+      real bcmbgstemz(*)
+      real bcmrootstorez(*), bcmrootfiberz(*)
+      real bczht, bcdstm, bczrtd
+      real bszrgh
+      integer bc0rg
+      real bcxrow
+      real bcmbgstem, bcmrootstore, bcmrootfiber, bcxstmrep
+      real bcm, bcmst, bcmf, bcmrt, bcmrtz(*)
+      real bcrcd
+      real bcrsai, bcrlai, bcrsaz(*), bcrlaz(*)
+      real bcffcv, bcfscv, bcftcv, bcfcancov
+      real bhztranspdepth, bhzfurcut
+      real bhztransprtmin, bhztransprtmax
+      integer bnslay
+      real bc0ssa, bc0ssb, bc0sla
+      real bcovfact, bc0ck, bcxstm, bcdpop
+      end subroutine cropupdate
+!----------------------
+      subroutine   dogroup (sr)      
+      integer sr
+      end subroutine dogroup
+!----------------------
+      subroutine   dooper (sr)
+      integer sr
+      end subroutine dooper
+!---------------------------
+      subroutine   doproc (sr, bmrotation, residue)
+      use biomaterial, only: biomatter
+      integer sr, bmrotation
+      type(biomatter), dimension(:), intent(inout) :: residue
+      end subroutine doproc
+!--------------------------
+      SUBROUTINE get_calib_crops(sr) 
+      integer sr
+      end subroutine get_calib_crops
+!--------------------------
+      SUBROUTINE get_calib_yield(sr,rotation_no,mass_removed, mass_left)
+      INTEGER :: sr
+      INTEGER :: rotation_no
+      REAL    :: mass_removed
+      REAL    :: mass_left
+      end subroutine get_calib_yield
+!--------------------------
+      subroutine manage(sr, dd, mm, yyyy, syear, lopdd, lopmm, lopyy, residue)
+      use biomaterial, only: biomatter, biototal
+      integer sr, dd, mm, yyyy, syear
+      integer lopdd, lopmm, lopyy
+      type(biomatter), dimension(:), intent(inout) :: residue
+      end subroutine manage
+!-------------------------
+      subroutine mfinit (sr, fname)
+      integer sr
+      character fname*(*)
+      end subroutine mfinit
+!--------------------------
+      subroutine mgdreset (sr)
+      integer sr
+      end subroutine mgdreset
+!---------------------------
+      real function poolmass(                                           &
+     &           mstandstem, mstandleaf, mstandstore,                   &
+     &           mflatstem, mflatleaf, mflatstore,                      &
+     &           mflatrootstore, mflatrootfiber,                        &
+     &           mbgstemz, mbgleafz, mbgstorez,                         &
+     &           mbgrootstorez, mbgrootfiberz )
+      real mstandstem
+      real mstandleaf
+      real mstandstore
+      real mflatstem
+      real mflatleaf
+      real mflatstore
+      real mflatrootstore
+      real mflatrootfiber
+      real mbgstemz(*)
+      real mbgleafz(*)
+      real mbgstorez(*)
+      real mbgrootstorez(*)
+      real mbgrootfiberz(*)
+      end function poolmass      
+!--------------------------
+      subroutine poolupdate(bnslay, bszlyd, residue, restot)
+      use biomaterial, only: biomatter, biototal
+      integer :: bnslay
+      real, dimension(:), intent(in) :: bszlyd
+      type(biomatter), dimension(:), intent(inout) :: residue
+      type(biototal), intent(inout) :: restot
+      end subroutine poolupdate
+!------------------------
+      subroutine report_calib_harvest(sr,bmrotation,mass_rem, mass_left)
+      integer sr, bmrotation
+      real mass_rem, mass_left      
+      end subroutine report_calib_harvest
+!------------------------
+      subroutine report_harvest( sr, bmrotation, mass_rem, mass_left, harv_unit_flg )
+      integer sr, bmrotation
+      real mass_rem, mass_left
+      integer harv_unit_flg
+      end subroutine  report_harvest
+!-------------------------
+      SUBROUTINE set_calib(sr)
+      integer sr
+      end subroutine set_calib
+!-------------------------
+      integer function skpnam(line)
+      character line*80                
+      end function  skpnam
+!--------------------------
+      subroutine  tdbug(isr,slay,output)
+      integer isr,slay,output
+      end subroutine tdbug
+!--------------------------
+      integer function tillay (tdepth, lthick, nlay)
+      real    tdepth
+      integer nlay
+      real    lthick(*)
+      end function tillay
+!---------------------------
+            
+!---------------  MPROC Routines -----------------------------
+      subroutine buryadj( burycoef,mnrbc,                               &
+     &                    speed,stdspeed,minspeed,maxspeed,             &
+     &                    depth,stddepth,mindepth,maxdepth)
+      integer mnrbc
+      real    burycoef(mnrbc)
+      real    speed,stdspeed,minspeed,maxspeed
+      real    depth,stddepth,mindepth,maxdepth      
+      end subroutine buryadj
+!-----------------------------
+      real function burydist( lay, burydistflg, lthick, ldepth, nlay)
+      integer lay
+      integer burydistflg
+      real    lthick(*)
+      real    ldepth(*)
+      integer nlay      
+      end function burydist
+!-----------------------------
+      subroutine burylift                                               &
+     &              (nlay,dflat,dstand,droot,                           &
+     &               dblwgnd,buryf,liftf,fltcoef) 
+      integer nlay
+      real    buryf,liftf,fltcoef 
+      real    dflat(*),dstand(*)
+      real   dblwgnd(3,*), droot(3,*)  
+      end subroutine burylift
+!-------------------------------
+      subroutine crush (alpha, beta,nlay,mf)
+      real    alpha, beta
+      integer nlay
+      real    mf(26+1,*) 
+      end subroutine crush         
+!-------------------------------
+      subroutine crust (crustf_rm,tillf,crustf,lmosf, lmosm)
+      real tillf, crustf, crustf_rm, lmosf, lmosm
+      end subroutine crust
+!-------------------------------
+      subroutine cut (                                                  &
+     &           cutflg, cutht, grainf, cropf, standf,                  &
+     &           bcmstandstem, bcmstandleaf, bcmstandstore,             &
+     &           bcmflatstem, bcmflatleaf, bcmflatstore,                &
+     &           bczht, bcgrainf, bchyfg,                               &
+     &           btmstandstem, btmstandleaf, btmstandstore,             &
+     &           btmflatstem, btmflatleaf, btmflatstore,                &
+     &           btzht, btgrainf,                                       &
+     &           bdmstandstem, bdmstandleaf, bdmstandstore,             &
+     &           bdmflatstem, bdmflatleaf, bdmflatstore,                &
+     &           bdzht, bdgrainf, bdhyfg,                               &
+     &           tot_mass_rem, sel_mass_left)
+      integer cutflg
+      real    cutht, grainf, cropf, standf
+      real bcmstandstem, bcmstandleaf, bcmstandstore
+      real bcmflatstem, bcmflatleaf, bcmflatstore
+      real bczht, bcgrainf
+      integer bchyfg
+      real btmstandstem, btmstandleaf, btmstandstore
+      real btmflatstem, btmflatleaf, btmflatstore
+      real btzht, btgrainf
+      real bdmstandstem(*)
+      real bdmstandleaf(*)
+      real bdmstandstore(*)
+      real bdmflatstem(*)
+      real bdmflatleaf(*)
+      real bdmflatstore(*)
+      real bdzht(*)
+      real bdgrainf(*)
+      integer bdhyfg(*)
+      real tot_mass_rem, sel_mass_left   
+      end subroutine cut
+!---------------------------------
+      subroutine fall_mod_vt ( rate_mult_vt, thresh_mult_vt,            &
+     &                         sel_pool, fracarea,                      &
+     &                         bcrbc, bcdkrate, bcddsthrsh,             &
+     &                         residue )
+      use biomaterial, only: biomatter
+      real       rate_mult_vt(*)
+      real       thresh_mult_vt(*)
+      integer    sel_pool
+      real       fracarea
+      integer    bcrbc
+      real       bcdkrate(*)
+      real       bcddsthrsh
+      type(biomatter), dimension(:), intent(inout) :: residue
+      end subroutine fall_mod_vt  
+!-----------------------------------
+      subroutine flatvt                                                 &
+     &                 (fltcoef, tillf, bcrbc, bdrbc,                   &
+     &           bcmstandstem, bcmstandleaf, bcmstandstore,             &
+     &           btmflatstem, btmflatleaf, btmflatstore,                &
+     &           bcdstm,                                                &
+     &           bdmstandstem, bdmstandleaf, bdmstandstore,             &
+     &           bdmflatstem, bdmflatleaf, bdmflatstore,                &
+     &           bddstm, bflg)
+      real    fltcoef(*)
+      real    tillf
+      integer bcrbc
+      integer bdrbc(*)
+      real    bcmstandstem
+      real    bcmstandleaf
+      real    bcmstandstore
+      real    btmflatstem
+      real    btmflatleaf
+      real    btmflatstore
+      real    bcdstm
+      real    bdmstandstem(*)
+      real    bdmstandleaf(*)
+      real    bdmstandstore(*)
+      real    bdmflatstem(*)
+      real    bdmflatleaf(*)
+      real    bdmflatstore(*)
+      real    bddstm(*)
+      integer bflg   
+      end subroutine flatvt
+!---------------------------
+      real function func(y) 
+      real y
+      end function func
+!---------------------------
+      subroutine invert                                                 &
+     &              (nlay,density,laythk,                               &
+     &               sand,silt,clay, rock_vol,                          &
+     &               c_sand, m_sand, f_sand, vf_sand,                   &
+     &               w_bd,                                              &
+     &               organic, ph, calcarb, cation,                      &
+     &               lin_ext,                                           &
+     &               aggden, drystab,                                   &
+     &               soilwatr,                                          &
+     &               satwatr, thrdbar, ftnbar,                          &
+     &               avawatr,                                           &
+     &               soilcb,soilair,satcond,                            &
+     &               rootm,blwgnd,massf)
+      integer nlay
+      real density(*),laythk(*)
+      real sand(*),silt(*),clay(*), rock_vol(*)
+      real c_sand(*), m_sand(*), f_sand(*), vf_sand(*)
+      real w_bd(*)
+      real organic(*), ph(*), calcarb(*), cation(*)
+      real lin_ext(*)
+      real aggden(*), drystab(*)
+      real soilwatr(*)
+      real satwatr(*), thrdbar(*), ftnbar(*)
+      real avawatr(*)
+      real soilcb(*), soilair(*), satcond(*)
+      real rootm(100,*),blwgnd(100,*)
+      real massf(26+1,*) 
+      end subroutine invert
+!--------------------------
+      subroutine invproc(nlay,thick,xcomp) 
+      real xcomp(*), thick(*)
+      integer nlay  
+      end subroutine invproc
+!---------------------------
+      subroutine kill_crop( am0cgf, nlay,                               &
+     &           bcmstandstem, bcmstandleaf, bcmstandstore,             &
+     &           bcmflatstem, bcmflatleaf, bcmflatstore,                &
+     &           bcmrootstorez, bcmrootfiberz,                          &
+     &           bcmbgstemz,                                            &
+     &           bczht, bcdstm, bcxstmrep, bczrtd,                      &
+     &           bcgrainf,                                              &
+     &           btmstandstem, btmstandleaf, btmstandstore,             &
+     &           btmflatstem, btmflatleaf, btmflatstore,                &
+     &           btmbgrootstorez, btmbgrootfiberz,                      &
+     &           btmbgstemz,                                            &
+     &           btzht, btdstm, btxstmrep, btzrtd,                      &
+     &           btgrainf )
+
+      logical am0cgf
+      integer nlay
+
+      real    bcmstandstem
+      real    bcmstandleaf
+      real    bcmstandstore
+
+      real    bcmflatstem
+      real    bcmflatleaf
+      real    bcmflatstore
+
+      real    bcmrootstorez(*)
+      real    bcmrootfiberz(*)
+
+      real    bcmbgstemz(*)
+
+      real    bczht
+      real    bcdstm
+      real    bcxstmrep
+      real    bczrtd
+
+      real    bcgrainf
+
+      real    btmstandstem
+      real    btmstandleaf
+      real    btmstandstore
+
+      real    btmbgstemz(*)
+
+      real    btmflatstem
+      real    btmflatleaf
+      real    btmflatstore
+
+      real    btmbgrootstorez(*)
+      real    btmbgrootfiberz(*)
+
+      real    btzht
+      real    btdstm
+      real    btxstmrep
+      real    btzrtd
+
+      real    btgrainf  
+      end subroutine kill_crop
+!---------------------------------
+      subroutine liftvt                                                 &
+     &              (liftf, tillf, bdrbc, nlay,                         &
+     &           bdmflatstem, bdmflatleaf, bdmflatstore,                &
+     &           bdmflatrootstore, bdmflatrootfiber,                    &
+     &           bdmbgstemz, bdmbgleafz, bdmbgstorez,                   &
+     &           bdmbgrootstorez, bdmbgrootfiberz,                      &
+     &           resurface_roots, bflg)
+      integer resurface_roots
+      integer nlay, bflg
+      real    liftf(*)
+      real    tillf
+      integer bdrbc(*)
+      real   bdmflatstem(*)
+      real   bdmflatleaf(*)
+      real   bdmflatstore(*)
+      real   bdmflatrootstore(*)
+      real   bdmflatrootfiber(*)
+      real   bdmbgstemz(100,*)
+      real   bdmbgleafz(100,*)
+      real   bdmbgstorez(100,*)
+
+      real   bdmbgrootstorez(100,*)
+      real   bdmbgrootfiberz(100,*)
+      end subroutine liftvt
+!--------------------------------
+      subroutine loosn (u,tillf,nlay,density,sbd,laythk)
+
+      integer nlay
+      real    u,tillf,density(*),laythk(*),sbd(*)                                     
+      end subroutine loosn
+!---------------------------------
+      subroutine mburyvt                                                &
+     &          (buryf,tillf,bcrbc,bdrbc,burydistflg,                   &
+     &           nlay,lthick,ldepth,                                    &
+     &           btmflatstem, btmflatleaf, btmflatstore,                &
+     &           btmflatrootstore, btmflatrootfiber,                    &
+     &           btmbgstemz, btmbgleafz, btmbgstorez,                   &
+     &           btmbgrootstorez, btmbgrootfiberz,                      &
+     &           bdmflatstem, bdmflatleaf, bdmflatstore,                &
+     &           bdmflatrootstore, bdmflatrootfiber,                    &
+     &           bdmbgstemz, bdmbgleafz, bdmbgstorez,                   &
+     &           bdmbgrootstorez, bdmbgrootfiberz,                      &
+     &           bflg)
+
+      real    buryf(*)
+      real    tillf
+      integer bcrbc
+      integer bdrbc(*)
+      integer burydistflg
+
+      integer nlay
+      real    lthick(*)
+      real    ldepth(*)
+
+      real   btmflatstem
+      real   btmflatleaf
+      real   btmflatstore
+
+      real   btmflatrootstore
+      real   btmflatrootfiber
+
+      real   btmbgstemz(*)
+      real   btmbgleafz(*)
+      real   btmbgstorez(*)
+
+      real   btmbgrootstorez(*)
+      real   btmbgrootfiberz(*)
+
+      real   bdmflatstem(*)
+      real   bdmflatleaf(*)
+      real   bdmflatstore(*)
+
+      real   bdmflatrootstore(*)
+      real   bdmflatrootfiber(*)
+
+      real   bdmbgstemz(100,*)
+      real   bdmbgleafz(100,*)
+      real   bdmbgstorez(100,*)
+
+      real   bdmbgrootstorez(100,*)
+      real   bdmbgrootfiberz(100,*)
+
+      integer bflg      
+      end subroutine mburyvt
+!-------------------------------
+      subroutine mix                                                    &
+     &              (u,tillf,nlay,density,laythk,                       &
+     &               sand,silt,clay, rock_vol,                          &
+     &               c_sand, m_sand, f_sand, vf_sand,                   &
+     &               w_bd,                                              &
+     &               organic, ph, calcarb, cation,                      &
+     &               lin_ext,                                           &
+     &               aggden, drystab,                                   &
+     &               soilwatr,                                          &
+     &               satwatr, thrdbar, ftnbar,                          &
+     &               avawatr,                                           &
+     &               soilcb,soilair,satcond,                            &
+     &               rootm,blwgnd,massf)
+      integer nlay
+      real u,tillf,density(*),laythk(*)
+      real sand(*),silt(*),clay(*), rock_vol(*)
+      real c_sand(*), m_sand(*), f_sand(*), vf_sand(*)
+      real w_bd(*)
+      real organic(*), ph(*), calcarb(*), cation(*)
+      real lin_ext(*)
+      real aggden(*), drystab(*)
+      real soilwatr(*)
+      real satwatr(*), thrdbar(*), ftnbar(*)
+      real avawatr(*)
+      real soilcb(*), soilair(*), satcond(*)
+      real rootm(100,*),blwgnd(100,*)
+      real massf(26+1,*)  
+      end subroutine mix
+!-------------------------
+      subroutine mixproc(u, nlay, xcomp, cmass, mass) 
+
+      integer nlay  
+          real xcomp(*), mass, cmass, u          
+          end subroutine mixproc
+!--------------------------
+      subroutine orient                                                 &
+     &              (rh,rw,rs,rd,dh,ds,                                 &
+     &              impl_rh,impl_rw,impl_rs,impl_rd,                    &
+     &              impl_dh,impl_ds,tilld,rflag)
+      real     rh,rw,rs,rd,dh,ds
+      real     impl_rh,impl_rw,impl_rs,impl_rd
+      real     impl_dh,impl_ds
+      real     tilld
+      integer  rflag
+      end subroutine orient
+!----------------------------
+      subroutine orient1                                                &
+     &              (rh,rw,rs,rd,                                       &
+     &              impl_rh,impl_rw,impl_rs,impl_rd,                    &
+     &              tilld,rflag) 
+      real     rh,rw,rs,rd
+      real     impl_rh,impl_rw,impl_rs,impl_rd
+      real     tilld
+      integer  rflag
+      end subroutine orient1
+!-----------------------------
+      subroutine orient2 (dh,ds,impl_dh,impl_ds)  
+      real     dh,ds
+      real     impl_dh,impl_ds    
+      end subroutine orient2
+!------------------------------
+      subroutine remove (                                               &
+     &           sel_position, sel_pool, bflg,                          &
+     &           stemf, leaff, storef, rootstoref, rootfiberf,          &
+     &           bcmstandstem, bcmstandleaf, bcmstandstore,             &
+     &           bcmflatstem, bcmflatleaf, bcmflatstore,                &
+     &           bcmrootstorez, bcmrootfiberz,                          &
+     &           bcmbgstemz,                                            &
+     &           bczht, bcdstm, bcgrainf, bchyfg,                       &
+     &           btmstandstem, btmstandleaf, btmstandstore,             &
+     &           btmflatstem, btmflatleaf, btmflatstore,                &
+     &           btmflatrootstore, btmflatrootfiber,                    &
+     &           btmbgstemz, btmbgleafz, btmbgstorez,                   &
+     &           btmbgrootstorez, btmbgrootfiberz,                      &
+     &           btzht, btdstm, btgrainf,                               &
+     &           bdmstandstem, bdmstandleaf, bdmstandstore,             &
+     &           bdmflatstem, bdmflatleaf, bdmflatstore,                &
+     &           bdmflatrootstore, bdmflatrootfiber,                    &
+     &           bdmbgstemz, bdmbgleafz, bdmbgstorez,                   &
+     &           bdmbgrootstorez, bdmbgrootfiberz,                      &
+     &           bdzht, bddstm, bdgrainf, bdhyfg,                       &
+     &           nslay, tot_mass_rem, sel_mass_left)
+      integer sel_position, sel_pool, bflg
+      real stemf, leaff, storef, rootstoref, rootfiberf
+      real bcmstandstem, bcmstandleaf, bcmstandstore
+      real bcmflatstem, bcmflatleaf, bcmflatstore
+      real bcmrootstorez(*), bcmrootfiberz(*)
+      real bczht, bcdstm, bcgrainf
+      integer bchyfg
+
+      real btmstandstem, btmstandleaf, btmstandstore
+      real btmflatstem, btmflatleaf, btmflatstore
+      real btmflatrootstore, btmflatrootfiber
+      real btmbgstemz(*), btmbgleafz(*), btmbgstorez(*)
+      real btmbgrootstorez(*), btmbgrootfiberz(*)
+      real bcmbgstemz(*)
+
+      real btzht, btdstm, btgrainf
+
+      real bdmstandstem(*)
+      real bdmstandleaf(*)
+      real bdmstandstore(*)
+
+      real bdmflatstem(*)
+      real bdmflatleaf(*)
+      real bdmflatstore(*)
+
+      real bdmflatrootstore(*)
+      real bdmflatrootfiber(*)
+
+      real bdmbgstemz(100,*)
+      real bdmbgleafz(100,*)
+      real bdmbgstorez(100,*)
+
+      real bdmbgrootstorez(100,*)
+      real bdmbgrootfiberz(100,*)
+
+      real bdzht(*)
+      real bddstm(*)
+      real bdgrainf(*)
+      integer bdhyfg(*)
+
+      integer nslay
+      real   tot_mass_rem, sel_mass_left
+      end subroutine remove
+!---------------------------------
+      subroutine resinit(resmass, resdepth, nlay, resarray, laythick)
+
+      real resmass
+      real resdepth
+      integer nlay
+      real resarray(*)
+      real laythick(*)      
+      end subroutine resinit
+!-----------------------------------
+      integer function rootlay (rtdepth, lthick, nlay)
+
+      integer nlay
+      real    rtdepth
+      real    lthick(*)      
+      end function rootlay
+!-----------------------------------
+      subroutine rough                                                  &
+     &              (roughflg, rrimpl,till_i,tillf,                     &
+     &               rr, tillay, clayf, siltf,                          &
+     &               rootmass, resmass,                                 &
+     &               ldepth ) 
+      integer roughflg
+          real    tillf,rrimpl,rr,till_i
+      integer tillay
+      real    clayf(*), siltf(*)
+      real    rootmass(*), resmass(*)
+      real    ldepth(*)      
+      end subroutine rough
+!---------------------
+      subroutine thin (                                                 &
+     &           thinflg, thinval, grainf, cropf, standf,               &
+     &           bcmstandstem, bcmstandleaf, bcmstandstore,             &
+     &           bcmflatstem, bcmflatleaf, bcmflatstore,                &
+     &           bcdstm, bcgrainf, bchyfg,                              &
+     &           btmstandstem, btmstandleaf, btmstandstore,             &
+     &           btmflatstem, btmflatleaf, btmflatstore,                &
+     &           btdstm, btgrainf,                                      &
+     &           bdmstandstem, bdmstandleaf, bdmstandstore,             &
+     &           bdmflatstem, bdmflatleaf, bdmflatstore,                &
+     &           bddstm, bdgrainf, bdhyfg,                              &
+     &           tot_mass_rem, sel_mass_left)
+
+
+      integer thinflg
+      real    thinval, grainf, cropf, standf
+
+      real    bcmstandstem
+      real    bcmstandleaf
+      real    bcmstandstore
+
+      real    bcmflatstem
+      real    bcmflatleaf
+      real    bcmflatstore
+
+      real    bcdstm
+      real    bcgrainf
+      integer bchyfg
+
+      real    btmstandstem
+      real    btmstandleaf
+      real    btmstandstore
+
+      real    btmflatstem
+      real    btmflatleaf
+      real    btmflatstore
+
+      real    btdstm
+      real    btgrainf
+
+      real    bdmstandstem(*)
+      real    bdmstandleaf(*)
+      real    bdmstandstore(*)
+
+      real    bdmflatstem(*)
+      real    bdmflatleaf(*)
+      real    bdmflatstore(*)
+
+      real    bddstm(*)
+      real    bdgrainf(*)
+      integer bdhyfg(*)
+
+      real    tot_mass_rem, sel_mass_left      
+      end subroutine thin
+!----------------------------------
+      subroutine trans(                                                 &
+     &           bcmstandstem, bcmstandleaf, bcmstandstore,             &
+     &           bcmflatstem, bcmflatleaf, bcmflatstore,                &
+     &           bcmflatrootstore, bcmflatrootfiber,                    &
+     &           bcmbgstemz, bcmbgleafz, bcmbgstorez,                   &
+     &           bcmbgrootstorez, bcmbgrootfiberz,                      &
+     &           bczht, bcdstm, bcxstmrep, bcgrainf,                    &
+     &         bc0nam, bcxstm, bcrbc, bc0sla, bc0ck,                    &
+     &         bcdkrate, bccovfact, bcddsthrsh, bchyfg,                 &
+     &         bcresevapa, bcresevapb,                                  &
+     &         nslay, residue )
+      use biomaterial, only: biomatter
+      type(biomatter), dimension(:), intent(inout) :: residue
+      real             bcmstandstem !added state
+      real             bcmstandleaf !added state
+      real             bcmstandstore !added state
+      real             bcmflatstem !added state
+      real             bcmflatleaf !added state
+      real             bcmflatstore !added state
+      real             bcmflatrootstore !added state
+      real             bcmflatrootfiber !added state
+      real             bcmbgstemz(*) !added state
+      real             bcmbgleafz(*) !added state
+      real             bcmbgstorez(*) !added state
+      real             bcmbgrootstorez(*) !added state
+      real             bcmbgrootfiberz(*) !added state
+      real             bczht  !changed from tczht state
+      real             bcdstm !changed from tcdstm state
+      real             bcxstmrep !changed from tcxstmrep state
+      real             bcgrainf !added state
+      character*(80)  bc0nam
+      real       bcxstm
+      integer    bcrbc
+      real       bc0sla
+      real       bc0ck
+      real       bcdkrate(*)
+      real       bccovfact
+      real       bcddsthrsh
+      integer    bchyfg
+      real       bcresevapa 
+      real       bcresevapb
+      integer    nslay
+      end subroutine trans
+!------------------------------
+          subroutine trapzd(a,b,s,n) 
+      integer n
+          real a, b, s
+          end subroutine trapzd
+!------------------------------
+
+!--------------- REPORTS Routines ----------------------------
+      integer FUNCTION alloc_pd_vars (nperiods, nrot_yrs, ncycles)
+      INTEGER, INTENT (IN) :: nperiods    ! Number of total periods
+      INTEGER, INTENT (IN) :: nrot_yrs    ! Number of rotation years
+      INTEGER, INTENT (IN) :: ncycles    ! number of rotation cycles
+      end function alloc_pd_vars
+!-----------------------
+      SUBROUTINE init_report_vars(nperiods, nrot_yrs, ncycles)
+
+      INTEGER, INTENT (IN) :: nperiods   ! 24 is minimum value per rotation year
+      INTEGER, INTENT (IN) :: nrot_yrs   ! Minimum is 1
+      INTEGER, INTENT (IN) :: ncycles    ! number of rotation cycles
+      end subroutine init_report_vars
+!----------------------
+      SUBROUTINE print_mandate_output(lun)
+      integer lun
+      end subroutine print_mandate_output
+!----------------------
+      SUBROUTINE print_nui_output(nperiods, nrot_years)
+
+      INTEGER, INTENT (IN) :: nperiods
+      INTEGER, INTENT (IN) :: nrot_years   
+      end subroutine print_nui_output
+!-----------------------
+      SUBROUTINE print_report_vars(nperiods, nrot_yrs)
+
+      INTEGER, INTENT (IN) :: nperiods
+      INTEGER, INTENT (IN) :: nrot_yrs 
+      end subroutine print_report_vars
+!-----------------------
+      SUBROUTINE print_ui1_output(nperiods, nrot_years, ncycles)
+
+      INTEGER, INTENT (IN) :: nperiods
+      INTEGER, INTENT (IN) :: nrot_years
+      INTEGER, INTENT (IN) :: ncycles              
+      end subroutine print_ui1_output
+!-----------------------
+      SUBROUTINE print_yr_report_vars(nperiods, nrot_yrs, ncycles)
+
+      INTEGER, INTENT (IN) :: nperiods
+      INTEGER, INTENT (IN) :: nrot_yrs
+      INTEGER, INTENT (IN) :: ncycles        
+      end subroutine print_yr_report_vars
+!----------------------
+      SUBROUTINE run_ave(pd_ave, new_val, cnt) 
+      USE pd_var_type_def
+
+      TYPE (pd_var_type),INTENT (INOUT) :: pd_ave
+      REAL,    INTENT (IN) :: new_val
+      INTEGER, INTENT (IN) :: cnt      
+      end subroutine run_ave
+!-----------------------
+      SUBROUTINE update_hmonth_update_vars(cd,cm)
+      INTEGER, INTENT (IN) :: cd  ! current day
+      INTEGER, INTENT (IN) :: cm  ! current month      
+      end subroutine update_hmonth_update_vars
+!-----------------------
+      SUBROUTINE update_monthly_update_vars(cm)
+
+      INTEGER, INTENT (IN) :: cm  
+      end subroutine  update_monthly_update_vars
+!------------------------
+      SUBROUTINE update_period_update_vars()
+      end subroutine  update_period_update_vars
+!-------------------------
+      SUBROUTINE update_yrly_update_vars() 
+      end subroutine update_yrly_update_vars
+!-------------------------            
+!---------------  Soil Routines ------------------------------       
+!-----------    
+      subroutine aggsta(daysim,                                         &
+     &  cseags, cseagmn, cseagmx,                                       &
+     &  cbhrwc0, cbhrwc, cbhrwcdmx,                                     &
+     &  chrwcw, chrwca,chrwcs,                                          &
+     &  chtmx0, chtsmn, chtsmx, ck4d,                                   &
+     &  se0, se1, trigger,                                              &
+     &  k4f, k4fs, k4fd, k4td, k4w, k4d)
+      integer daysim
+      real cseags, cseagmn, cseagmx
+      real  cbhrwc0, cbhrwc, cbhrwcdmx
+      real  chrwcw, chrwca,chrwcs
+      real  chtmx0, chtsmn, chtsmx, ck4d
+      real  se0, se1
+      integer trigger
+      real k4f, k4fs, k4fd, k4td, k4w, k4d
+      end subroutine aggsta
+!------------         
+      subroutine asd( cslagm, cslmin, cslmax, chtsmx, chtmx0, cs0ags,   &
+     &  cslagx, se0, se1)
+      real cslagm, cslmin
+      real cslmax, chtsmx, chtmx0, cs0ags
+      real cslagx, se0, se1
+      end subroutine asd
+!-------------         
+      subroutine callsoil(daysim, isr)
+      integer daysim,isr
+      end subroutine callsoil 
+!-------------
+      subroutine cru(bszcr,cumpa,csfcla,dcump,bsfcr,bhzsmt,             &
+     &  bsmlos,csfom,csfcce,csfsan,bsmls0,bszrgh,bszrr,bsflos)
+      real bszcr,cumpa,csfcla,dcump,bsfcr,bhzsmt,bsmlos,csfom
+      real csfcce,csfsan,bsmls0,bszrgh,bszrr,bsflos        
+      end subroutine cru
+!---------------      
+      subroutine den(                                                   &
+     &  csdblk, csdsblk, csdwblk, cszlyt, csdagd,                       &
+     &  chrwc0, chrwc, chrwca, chrwcw,                                  &
+     &  bhzinf, chzwid, trigger)
+      real csdblk, csdsblk, csdwblk, cszlyt, csdagd
+      real chrwc0, chrwc, chrwca, chrwcw
+      real bhzinf, chzwid
+      integer trigger
+      end subroutine den
+!----------------      
+      subroutine depthini(nlay, bszlyt, bszlyd)
+      integer nlay
+      real    bszlyt(*), bszlyd(*)
+      end subroutine depthini
+!----------------
+      subroutine ranrou(                                                &
+     &  csfsil, csfsan, bszrr, bszrro, cumpa, dcump, cf2cov, csvroc)
+      real csfsil, csfsan
+      real bszrr, bszrro
+      real cumpa, dcump, cf2cov, csvroc
+      end subroutine ranrou
+!------------------
+      subroutine rid(cf2cov, bbfscv, bbffcv, bszrgh,                    &
+     &  bsxrgs, bszrho, cumpa, dcump, bsvroc)
+      real cf2cov, bbfscv, bbffcv, bszrgh, bsxrgs, bszrho
+      real cumpa, dcump, bsvroc(*)  
+      end subroutine rid
+!------------------
+      subroutine  sdbug(isr,slay)
+      integer isr,slay
+      end subroutine sdbug
+!------------------
+      subroutine sinit (daysim,                                         &
+     &                 bhtsmx, bhrwc, bsfom, bszlyt,                    &
+     &                 bslay, bsfsan, bsfsil, bsfcla,                   &
+     &                 bszrgh, bszrr, bsfcce, bsfcec,                   &
+     &                 cump, dcump, bsk4d,                              &
+     &                 bhtmx0, bhrwc0, szlyd,                           &
+     &                 bszrr0, bszrh0,                                  &
+     &                 bseagm, bseagmn, bseagmx,                        &
+     &                 bslmin, bslmax,                                  &
+     &                 rain, snow, sprink,                              &
+     &                 bhzirr, bszrho,                                  &
+     &                 bhlocirr, bhzsmt, bszrro,                        &
+     &                 bsdsblk, bwzdpt, bwtdav, trigger)
+      integer daysim
+      real bhtsmx(*), bhrwc(*), bsfom(1:*), bszlyt(*)
+      integer bslay
+      real bsfsan(1:*), bsfsil(1:*), bsfcla(1:*)
+      real bszrgh, bszrr, bsfcce(1:*), bsfcec(1:*)
+      real cump, dcump, bsk4d(*)
+      real bhtmx0(*), bhrwc0(*), szlyd(0:*)
+      real bszrr0, bszrh0
+      real bseagm(*), bseagmn(*), bseagmx(*)
+      real bslmin(*),bslmax(*)
+      real rain, snow, sprink
+      real bhzirr, bszrho
+      real bhlocirr, bhzsmt, bszrro
+      real bsdsblk(*), bwzdpt, bwtdav
+      integer trigger(*)
+      end subroutine sinit
+!-----------------
+      subroutine soil (daysim, bhlocirr, bhzirr, bhzsmt,                &
+     &                 bhtsmx, bhtsmn,                                  &
+     &                 bhrwc, bhrwcdmx, bhrwca,                         &
+     &                 bhrwcw, bhrwcs, bszlyt, bslay,                   &
+     &                 bsfsan, bsfsil, bsfcla, bsfom, bsvroc,           &
+     &                 bsxrgs, bszrgh, bszrho,                          &
+     &                 bszrr, bszrro,                                   &
+     &                 bszcr, bsfcr, bsecr, bsdcr,                      &
+     &                 bsmlos, bsflos,                                  &
+     &                 bsdsblk, bsdwblk,                                &
+     &                 bsdblk, bsdagd,                                  &
+     &                 bslagm, bslagn,                                  &
+     &                 bs0ags, bslagx, bseags,                          &
+     &                 bseagm, bseagmn, bseagmx,                        &
+     &                 bsk4d, bslmin, bslmax,                           &
+     &                 bbffcv, bbfscv,                                  &
+     &                 bsfcce, bsfcec, bhzinf, bhzwid, bwzdpt, bwtdav)
+      integer daysim
+      real bhlocirr, bhzirr, bhzsmt
+      real bhtsmx(*), bhtsmn(*)
+      real bhrwc(*), bhrwcdmx(*), bhrwca(*)
+      real bhrwcw(*), bhrwcs(*), bszlyt(*)
+      integer bslay
+      real bsfsan(1:*), bsfsil(1:*), bsfcla(1:*)
+      real bsfom(1:*), bsvroc(1:*)
+      real bsxrgs, bszrgh, bszrho
+      real bszrr, bszrro
+      real bszcr, bsfcr, bsecr, bsdcr
+      real bsmlos, bsflos
+      real bsdsblk(*), bsdwblk(*)
+      real bsdblk(0:*), bsdagd(0:*)
+      real bslagm(0:*), bslagn(0:*)
+      real bs0ags(0:*), bslagx(0:*), bseags(0:*)
+      real bseagm(*), bseagmn(*), bseagmx(*)
+      real bsk4d(*), bslmin(*), bslmax(*)
+      real bbffcv, bbfscv
+      real bsfcce(1:*), bsfcec(1:*)
+      real bhzinf, bhzwid, bwzdpt, bwtdav
+      end subroutine soil
+!------------------------
+      subroutine soilinit(isr)                                
+      integer isr
+      end subroutine soilinit
+!-----------------------
+      subroutine updlay(daysim, szlyd,                                  &
+     &  bhrwc0, bhrwc, bhrwcdmx,                                        &
+     &  bseagmx, bseagmn, bseags,                                       &
+     &  bhrwca, bhrwcw, bhrwcs,                                         &
+     &  bhtsmn, bhtmx0, bhtsmx,                                         &
+     &  bsecr,                                                          &
+     &  bsk4d, bslmin, bslmax,                                          &
+     &  bslagm,                                                         &
+     &  bs0ags, bslagx, bsdblk,                                         &
+     &  bszlyt, bsdagd, bslay, bsdcr,                                   &
+     &  bsdsblk, bsdwblk,                                               &
+     &  bhzinf, bhzwid, trigger)
+      integer daysim
+      real szlyd(0:*)
+      real  bhrwc0(*), bhrwc(*), bhrwcdmx(*)
+      real  bseagmx(*), bseagmn(*), bseags(0:*)
+      real  bhrwca(*), bhrwcw(*),bhrwcs(*)
+      real  bhtsmn(*), bhtmx0(*), bhtsmx(*)
+      real  bsecr
+      real bsk4d(*), bslmin(*), bslmax(*)
+      real bslagm(0:*)
+      real bs0ags(0:*), bslagx(0:*)
+      real bsdblk(0:*), bhzinf
+      real bszlyt(*), bsdagd(0:*)
+      real bsdcr, bsdsblk(*), bsdwblk(*)
+      real bhzwid
+      integer bslay, trigger(*)
+      end subroutine updlay  
+!-----------------------
+!---------------- WEPP in WEPS Routines ----------------------------
+      subroutine waterbal(layrsn, thetas, thetes, thetaf, thetaw,       &
+     &                   bszlyt, bszlyd, satcond,                       &
+     &                   dprecip, bwdurpt, bwpeaktpt, bwpeakipt,        &
+     &                   dirrig, bhdurirr, bhlocirr, bhzoutflow,        &
+     &                   bhzsno, bslrr, bmrslp, bsfsan, bsfcla,         &
+     &                   bsvroc, bsdblk, bsfcec,                        &
+     &                   bbffcv, bbfcancov, bbzht, bcdayap,             &
+     &                   bhzep, theta, thetadmx, bhrwc0,                &
+     &                   bhzea, bhzper, bhzrun, bhzinf, bhzwid,         &
+     &                   rkecum )
+      integer, intent(in) :: layrsn
+      real, intent(in) :: thetas(*), thetes(*), thetaf(*), thetaw(*)
+      real, intent(in) :: bszlyt(*), bszlyd(*), satcond(*)
+      real, intent(in) :: dprecip, bwdurpt, bwpeaktpt, bwpeakipt
+      real, intent(in) :: dirrig, bhdurirr, bhlocirr, bhzoutflow
+      real, intent(in) :: bhzsno, bslrr, bmrslp, bsfsan(*), bsfcla(*)
+      real, intent(in) :: bsvroc(*), bsdblk(*), bsfcec(*)
+      real, intent(in) :: bbffcv, bbfcancov, bbzht
+      integer, intent(in) :: bcdayap
+      real, intent(in) :: bhzep
+      real, intent(inout) :: theta(0:*), thetadmx(*), bhrwc0(*)
+      real, intent(inout) :: bhzea, bhzper, bhzrun, bhzinf, bhzwid
+      real, intent(inout) :: rkecum
+      end subroutine waterbal
+!-----------------------
+      subroutine arraymerge( nr, dt, trf, rf, irrig, durirr,            &
+     &                       nf, tr, r, rr)
+      integer, intent(in) :: nr
+      real, intent(in) :: dt, trf(*), rf(*), irrig, durirr
+      integer, intent(inout) :: nf
+      real, intent(inout) :: tr(*), r(*), rr(*)
+      end subroutine arraymerge
+!-----------------------
+      SUBROUTINE CONST(NR, DELTFQ, TIMEDL, INTDL)
+      INTEGER NR
+      REAL DELTFQ, TIMEDL(*), INTDL(*) 
+      end subroutine CONST
+!-----------------------
+      SUBROUTINE DBLEX(NR, DELTFQ, TIMEDL, INTDL, TPD, IP)
+      INTEGER NR
+      REAL DELTFQ, TIMEDL(*), INTDL(*), IP, TPD
+      end subroutine DBLEX
+!-----------------------
+      SUBROUTINE  disag(NR, TRF, RF, P, DURD, TPD, IP)
+      INTEGER NR
+      REAL TRF(*), RF(*), P, DURD, TPD, IP
+      end SUBROUTINE  disag
+!-----------------------
+      FUNCTION EQROOT(A,ERR)
+      REAL EQROOT, A
+      INTEGER ERR  
+      end function EQROOT
+!-----------------------
+      SUBROUTINE grna( NF, DEPSTO, TR, R, RR, KS, SM,                   &
+     &     NS, TF, RCUM, F, FF, RE, RECUM, TP,                          &
+     &     RPRINT, DDEPSTO, RUNOFF, DUREXR, EFFINT, EFFDRR )
+      INTEGER, intent(in) :: NF
+      REAL, intent(in) :: DEPSTO, TR(*), R(*), RR(*), KS, SM
+      INTEGER, intent(inout) :: NS
+      REAL, intent(inout) :: TF(*), RCUM(*),                            &
+     &     F(*), FF(*), RE(*), RECUM(*), TP(*),                         &
+     &     RPRINT(*), DDEPSTO(*),                                       &
+     &     RUNOFF, DUREXR, EFFINT, EFFDRR
+      end SUBROUTINE grna
+!-----------------------
+      subroutine infparsub( nsl, ssc, dg, cec1, st, ul,                 &
+     &                      avclay, avsand, avbdin, avporin, avrocvol,  &
+     &                      avsatin, rescov, cancov, canhgt,            &
+     &                      rrc, dsnow, prcp, rkecum, bcdayap,          &
+     &                      ks, sm )
+      integer, intent(in) :: nsl
+      real, intent(in) :: ssc(*), dg(*), cec1(*), st(*), ul(*)
+      real, intent(in) :: avclay, avsand, avbdin, avporin, avrocvol
+      real, intent(in) :: avsatin, rescov, cancov, canhgt
+      real, intent(in) :: rrc, dsnow, prcp, rkecum
+      integer, intent(in) :: bcdayap
+      real, intent(inout) :: ks, sm
+      end subroutine infparsub
+!-----------------------
+      SUBROUTINE NEWTON(TIME, FFPAST, FFNOW, KS, SM)
+      REAL TIME, FFPAST, FFNOW, KS, SM
+      end SUBROUTINE NEWTON
+!-----------------------
+      SUBROUTINE parestsub(SAND, CLAY, SAT, CC, SC, KS, SM)
+      REAL, intent(in) :: SAND, CLAY, SAT, CC, SC
+      REAL, intent(inout) :: KS, SM
+      end SUBROUTINE parestsub
+!-----------------------
+      real function rainenergy( ninten, timem, intensity)
+      integer, intent(in) :: ninten
+      real, intent(in) :: timem(*), intensity(*)
+      end function rainenergy
+!-----------------------
+      subroutine perc(vv, k1, nsl, st, ul, hk, ssc, sep)
+      integer, intent(in) :: k1, nsl
+      real, intent(in) :: vv, st(*), ul(*), hk, ssc
+      real, intent(inout) :: sep
+      end subroutine perc
+!-----------------------
+      subroutine purk(nsl, st, fc, ul, hk, ssc, sep)
+      integer, intent(in) :: nsl
+      real, intent(in)  :: fc(*),ul(*), hk(*), ssc(*)
+      real, intent(inout) :: st(*), sep
+      end subroutine purk
+!-----------------------
+      subroutine usdatx( sand, clay, class)
+      integer class
+      real sand, clay
+      end subroutine usdatx
+!-----------------------
+!---------------- WEPP Routines ----------------------------
+      real function cross(x1,y1,x2,y2)
+      real, intent(in) :: x1, y1, x2, y2              
+      end function cross
+!-----------------------
+      real function depc(xu,a,b,phi,theta,du,ktrato,qostar)
+      real, intent(in) ::  xu, a, b, phi, theta, du, ktrato, qostar  
+      end function depc
+!-----------------------
+      real function depend(xu,xl,a,b,cdep,phi,theta,ktrato,qostar)
+      real, intent(in) :: xu, xl, a, b, cdep, phi, theta, ktrato, qostar          
+      end function depend
+!------------------------
+      subroutine depeqs(xu,cdep,a,b,phi,theta,x,depeq,ktrato,qostar)
+      real, intent(in) :: xu, cdep, a, b, phi, theta,ktrato,qostar
+      real, intent(inout) :: x
+      real, intent(out) :: depeq      
+      end subroutine depeqs
+!-------------------------
+      subroutine depos(xb,xe,cdep,a,b,c,phi,theta,ilast,dl,ldlast,      &
+     &    xinput,ktrato,detach,load,tc,qostar)
+      real, intent(in) :: xb, cdep, phi, theta, ktrato, qostar
+      real, intent(in) :: a, b, c
+      real, intent(inout) :: xe, xinput(101), load(101)
+      real, intent(out) :: dl, ldlast, detach(101)
+      real, intent(out) :: tc(101)
+      integer, intent(inout) :: ilast
+      end subroutine depos
+!--------------------------
+      subroutine enrich(kk,xtop,xbot,xdetst,ldtop,ldbot,lddend,theta,   &
+     &    iendfg,slplen,ktrato,qin,qout,qostar,ainftc,binftc,cinftc,    &
+     &    npart,frac,fall,frcly,frslt,frsnd,frorg,sand,silt,clay,orgmat,&
+     &    fidel,tcf1,frcflw,enrato)
+      integer, intent(in) :: kk, iendfg, npart
+      real, intent(in) :: xtop, xbot, xdetst, theta, ldtop,ldbot,lddend,&
+     &     slplen, ktrato, qin, qout, qostar, ainftc(*),                & 
+     &     binftc(*), cinftc(*), frac(*), fall(*),                      &
+     &     frcly(*), frslt(*), frsnd(*), frorg(*),                      &
+     &     fidel(*), tcf1(*),                                           &
+     &     sand(*), silt(*), clay(*), orgmat(*)  
+      real, intent(inout) :: frcflw(*)    
+      real, intent(out) ::  enrato 
+      end subroutine enrich
+!--------------------------
+      subroutine enrprt(jun,npart,frac,frcflw,dia,spg,frsnd,            &
+     &    frslt,frcly,frorg,enrato)
+      integer, intent(in) :: jun, npart
+      real, intent(in) ::  frac(*), frcflw(*), dia(*),                  & 
+     &      spg(*),                                                     &
+     &     frsnd(*), frslt(*), frcly(*), frorg(*),                      &
+     &     enrato   
+      end subroutine enrprt
+!---------------------------
+      subroutine eprint(slplen,avgslp,runoff,peakro,effdrn,efflen, effint,effdrr)
+       real, intent(in) :: slplen, avgslp, runoff, peakro, effdrn, efflen, effint, effdrr 
+      end subroutine eprint
+!---------------------------
+      subroutine erod(xb,xe,a,b,c,atc,btc,ctc,eata,tauc,theta,phi,ilast,&
+     &    dl,ldlast,xdbeg,ndep,xinput,ktrato,load,tc,detach,qostar)
+      real, intent(in) :: xb, xe, a, b, c, eata, tauc, theta
+      real, intent(inout) :: xdbeg
+      real, intent(in) ::  atc, btc, ctc, phi, qostar
+      real, intent(in) :: xinput(101), ktrato
+      real, intent(inout) :: detach(101)
+      integer, intent(inout) ::  ilast
+      integer, intent(out) :: ndep
+      real, intent(inout) :: ldlast, tc(101), load(101), dl 
+      end subroutine erod
+!---------------------------
+      real function falvel(spg,dia)
+      real, intent(in) :: spg, dia
+      end function falvel
+!---------------------------
+      subroutine getFromWeps(isr,canhgt,cancov,sand,silt,clay,orgmat,   &
+     & rtm15,thetdr,rrc,dg,st,thdp,frdp,ifrost,thetfc,por,rh,           &
+     & frctrl, frcsol,rtm, smrm, precip)
+      integer, intent(in):: isr
+      real, intent(out):: canhgt,cancov
+      real, intent(out):: sand(*), silt(*), clay(*)
+      real, intent(out):: orgmat(*)
+      real, intent(out):: thetdr(*), rrc, rtm15
+      real, intent(out):: dg(*), st(*), thdp, frdp
+      integer, intent(inout):: ifrost
+      real, intent(out):: thetfc(*), por(*), rh
+      real, intent(out):: frctrl, frcsol
+      real, intent(out):: rtm(3), smrm(3), precip 
+      end subroutine getFromWeps
+!---------------------------------
+      SUBROUTINE init_wepp(afterWarmup)
+      integer, intent(in) :: afterWarmup
+      end subroutine init_wepp
+!---------------------------------
+      subroutine param(qin,qout,qostar,qshear,qsout,a,b,avgslp,         &
+     &    width,rspace,ktrato,shrsol,tcend,frcsol,frctrl,rrc,npart,frac,&
+     &    dia,spg,fall,runoff,effdrn,effint,effdrr,strldn,tcf1,eata,    &
+     &    fidel,tauc,theta,phi,slpend,ainf,binf,cinf,ainftc,binftc,     &
+     &    cinftc,sand,slplen,kiadj,kradj,shcrtadj,nslpts,efflen,rwflag)
+      real, intent(out) :: ktrato, shrsol, tcend, strldn, eata, tauc
+      real, intent(out) :: phi, tcf1(*), theta, fidel(*)
+      real, intent(out) :: slpend
+      real, intent(out) ::  ainftc(*), binftc(*),cinftc(*)
+      real, intent(inout) :: width
+      real, intent(in):: a(*), b(*),avgslp,qin,qout,qostar
+      real, intent(in):: qsout, qshear, rspace, frcsol, frctrl, rrc           
+      real, intent(in):: frac(*), dia(*),spg(*)
+      real, intent(in):: fall(*), runoff,effdrn, effint, effdrr
+      real, intent(in):: sand(*), slplen, kiadj, kradj, shcrtadj
+      real, intent(in) ::efflen
+      real, intent(inout):: ainf(*),binf(*),cinf(*)
+      integer, intent(in):: npart, nslpts,rwflag  
+      end subroutine param
+!------------------------------
+      subroutine print(slplen,avgslp,runoff,peakro,effdrn,efflen,       &
+     &    effint,effdrr)
+      real, intent(in) :: slplen, avgslp, runoff, peakro, effdrn,       &
+     &     efflen, effint, effdrr 
+      end subroutine print
+!------------------------------
+      SUBROUTINE PRINT_BUG(DT, NS,RECUM, T, S, SI, SLEN,ALPHA, M,       &
+     &    DUREXR, A1, A2, TSTAR)                                   
+      real, intent(inout) :: T(*), S(*), SI(*)
+      integer, intent(in) :: NS
+      real, intent(in) :: RECUM(*), ALPHA, M, DUREXR, A1, A2
+      real, intent(in) :: TSTAR, DT, SLEN  
+      end subroutine print_bug
+!-------------------------------
+      subroutine profil(a,b,avgslp,nslpts,slplen,xinput,slpinp,xu,xl,   &  
+     & y,x,totlen)
+      real, intent(out) :: a(*), b(*), avgslp, xu(*)
+      real, intent(out) :: xl(*), y(*), x(*), totlen
+      real, intent(in) :: slplen, xinput(*), slpinp(*)
+      integer, intent(in) :: nslpts 
+      end subroutine profil
+!-------------------------------
+      subroutine prtcmp(npart,spg,dia,frac,frcly,frslt,frsnd,frorg,     &
+     & sand1,silt1,clay1,orgmat1)
+      real, intent(out) :: spg(10), dia(10), frcly(10),frslt(10),       &
+     & frsnd(10),frorg(10), frac(10)
+      real, intent(in) :: clay1, sand1, silt1, orgmat1
+      integer, intent(in) :: npart 
+      end subroutine prtcmp
+!--------------------------------
+      subroutine root(a,b,c,x1,x2)
+      real, intent(in) :: a, b
+      double precision, intent(in) :: c
+      double precision, intent(out) :: x1, x2
+      end subroutine root
+!---------------------------------
+      subroutine route(qin,qout,qostar,strldn,ktrato,ainf,binf,         &
+     &    cinf,ainftc,binftc,cinftc,npart,frac,frcly,frslt,frsnd,frorg, &
+     &    fall,frcflw,nslpts,xinput,xu,xl,load,enrato,tcf1,fidel,sand,  &
+     &    silt,clay,orgmat,eata,tauc,theta,phi,slplen)
+      real, intent(in):: qin, qout, qostar,strldn,ktrato
+      real, intent(in):: ainf(*), binf(*), cinf(*)
+      real, intent(in) :: ainftc(*), binftc(*), cinftc(*)
+      real, intent(in) :: frac(*), frcly(*), frslt(*)
+      real, intent(in) :: frsnd(*)
+      real, intent(in) :: frorg(*), fall(*)
+      real, intent(in) :: fidel(*)
+      real, intent(inout) :: xinput(101)
+      real, intent(out) :: enrato
+      real, intent(in) :: sand(*), silt(*), clay(*)
+      real, intent(in) :: orgmat(*)
+      real, intent(in) :: eata, tauc, theta, phi, slplen, tcf1(*)
+      real, intent(out) ::  load(101), frcflw(*)
+      real, intent(inout) :: xu(*), xl(*)
+      integer, intent(in) :: npart, nslpts 
+      end subroutine route
+!----------------------------------
+      subroutine runge(a,b,c,atc,btc,ctc,eata,tauc,theta,dx,x,ldold,    &
+     &    ldnew,xx,eatax,taucx,shr,dcap,ktrato)
+      real, intent(in) :: atc, btc, ctc, a, b, c, ktrato
+      real, intent(in) :: eata, tauc, theta, dx, ldold, x
+      real, intent(out) :: dcap, ldnew 
+      real, intent(inout) ::  xx, eatax, taucx, shr 
+      end subroutine runge
+!-----------------------------------
+      real function sedia(spg,eqfall)
+      real, intent(in) :: spg,eqfall                                                   
+      end function sedia
+!----------------------------------
+      subroutine sedist(dslost,dstot,stdist,delxx,slplen,avgslp, y,ysdist)
+      real, intent(in) :: slplen, avgslp, y(101), dslost(100)
+      real, intent(out) :: ysdist(1000),dstot(1000),stdist(1000),delxx  
+      end subroutine sedist
+!----------------------------------
+      subroutine sedmax(jnum,amax,amin,ptmax,ptmin,dstot,stdist,ibegin, iend,jflag,lseg)
+      integer, intent(in) :: jnum, ibegin, iend, jflag(100), lseg
+      real, intent(out) ::  amax(100), amin(100), ptmax(100), ptmin(100)
+      real, intent(in) :: dstot(1000), stdist(1000)
+      end subroutine sedmax
+!----------------------------------
+      subroutine sedout(sumfile,plotfile,irdgdx,dslost,avsole,          &
+     &    enrato,npart,frac,                                            &
+     &    dia,spg,frcly,frslt,frsnd,frorg,frcflw,slplen,fwidth,avgslp,  &
+     &    y,totlen,years)
+      integer, intent(in) :: npart, plotfile, sumfile, years
+      real, intent(in) :: irdgdx, dslost(100), avsole, enrato,          &
+     & frac(*),                                                    &
+     &     dia(*), spg(*), frcly(*), frslt(*),                          &
+     &     frsnd(*), frorg(*), frcflw(*), slplen, fwidth, avgslp  
+      real y(101), totlen  
+      end subroutine sedout
+!---------------------------------
+      subroutine sedseg(dslost,jun,iyear,noout,dstot,stdist,irdgdx,     &
+     &    ysdist,avgslp,slplen,y,avedet,maxdet,ptdet,avedep,maxdep,     &
+     &    ptdep)
+      integer, intent(in) :: jun, iyear, noout
+      real, intent(in) :: dslost(100)                                 
+      real, intent(in) :: irdgdx, avgslp, slplen, y(101)
+      real, intent(out) :: dstot(1000), stdist(1000), ysdist(1000)
+      real, intent(out) :: avedet,maxdet,ptdet
+      real, intent(out) :: avedep,maxdep,ptdep                          
+      end subroutine sedseg
+!--------------------------------
+      subroutine sedsta(jnum,dloss,dsstd,vmax,pmax,vmin,pmin,ibegin,    &
+     &    iend,jflag,lseg,dstot,stdist,delxx)
+      integer, intent(in) ::  jnum, ibegin, iend, jflag(100), lseg
+      real, intent(out) :: pmax(100), pmin(100)
+      real, intent(out) :: vmax(100), vmin(100)
+      real, intent(in) :: dstot(1000), stdist(1000), delxx
+      real, intent(out) :: dloss(100), dsstd(100)  
+      end subroutine sedsta
+!--------------------------------
+      real function shear(a,b,c,x)
+      real, intent(in) :: a, b, c, x    
+      end function shear
+!--------------------------------
+      real function shears(q,slp,rspace,width,frcsol,frctrl,rwflag)
+      real, intent(inout) :: width
+      real, intent(in) :: q, rspace, frcsol, frctrl, slp
+      integer, intent(in) :: rwflag      
+      end function shears
+!---------------------------------
+      real function shield(reyn)
+      real, intent(in) :: reyn
+      end function shield
+!--------------------------------
+      subroutine sloss(load,tcend,width,rspace,effdrn,theta,            &
+     &    slplen,irdgdx,qsout,dslost,dsmon,dsyear,dsavg,avsole,qout,    &
+     &    frcflw,npart,enrato)
+      real, intent(in) :: load(101), tcend, width, rspace, effdrn
+      real, intent(in) :: theta, slplen, frcflw(*)
+      real, intent(in) :: qout,enrato
+      real, intent(out) :: dslost(100)
+      real, intent(out) :: avsole, irdgdx, qsout
+      real, intent(inout) :: dsmon(100), dsyear(100), dsavg(100)
+      integer, intent(in) :: npart 
+      end subroutine sloss
+!-----------------------------
+      subroutine soil_adj(ki,kr,shcrit,kiadj,kradj,shcrtadj,            &
+     & rrc, canhgt,cancov,inrcov,rtm15,rtm,bconsd,daydis,rh,rspace,     &
+     & avgslp,smrm,krcrat,tccrat,kicrat,dg,thetdr,st,thdp,frdp,ifrost,  &
+     & thetfc,por,tens,cycle)
+      real, intent(in):: canhgt,cancov,inrcov,rtm15,rtm(3)
+      real, intent(in):: bconsd,rh,rspace,avgslp
+      real, intent(in):: smrm(3),krcrat,tccrat,rrc,kicrat
+      real, intent(in):: dg(10), thetdr(10), st(10),thdp,frdp
+      real, intent(in):: thetfc(10), por(10)
+      integer, intent(in):: cycle, daydis
+      integer, intent(inout):: ifrost
+      real, intent(out):: tens, kiadj, kradj, shcrtadj
+      real, intent(in):: ki, kr, shcrit
+      end subroutine soil_adj
+!--------------------------------
+      subroutine trcoeff(trcoef,shrsol,sand,dia,spg,tcf1,npart,frac)
+      real, intent(in) :: sand(*), dia(*), spg(*), frac(*),shrsol
+      integer, intent(in) ::  npart
+      real, intent(out) :: trcoef
+      real, intent(inout):: tcf1(*)
+      end subroutine trcoeff
+!----------------------------------
+      subroutine undflo(factor,expon)
+      real, intent(inout) :: factor, expon
+      end subroutine undflo
+!----------------------------------
+      SUBROUTINE water_erosion(isr, cd, cm, cy,luowepperod,luoweppsum)
+      integer, intent(in):: isr,cd,cm,cy,luowepperod,luoweppsum     
+      end subroutine water_erosion
+!----------------------------------
+     subroutine weppsum(luoweppplot, luoweppsum, years)
+      integer, intent(in) :: luoweppplot, luoweppsum, years   
+      end subroutine weppsum
+!-----------------------------------
+      subroutine xcrit(a,b,c,tauc,xb,xe,xc1,xc2,mshear)
+      real, intent(in) :: a, b, c, tauc, xb, xe
+      integer, intent(out) :: mshear
+      real, intent(out) :: xc1,xc2
+      end subroutine xcrit
+!-----------------------------------
+      subroutine xinflo(xinput,efflen,slplen,a,b,qin,qout,peakro,       &
+     &    qostar,ainf,binf,cinf,ainftc,binftc,cinftc,qshear,rspace,     &
+     &    nslpts)
+      real, intent(out) :: xinput(*), qout, qostar, qshear
+      real, intent(in) :: qin, peakro, efflen, slplen, a(*)
+      real, intent(in) :: b(*), rspace
+      real, intent(out) :: ainf(*), binf(*), cinf(*)
+      real, intent(out) :: ainftc(*), binftc(*), cinftc(*)
+      integer, intent(in) :: nslpts 
+      end subroutine xinflo
+!-----------------------------------
+      subroutine yalin(effsh,tottc,sand,dia,spg,tcf1,npart,frac)
+      real, intent(in) :: effsh
+      real, intent(in) :: dia(*), spg(*), sand(*)
+      real, intent(in) :: frac(*)      
+      integer, intent(in) ::  npart
+      real, intent(out) :: tottc, tcf1(*) 
+      end subroutine yalin
+!------------------------------------   
+
+!-------------- UTIL Routines -----------------------
+      integer   function begtrm (val)
+      character*(*) val
+      end function begtrm
+!----------------------------------
+      real function biodrag (bdrlai, bdrsai, bcrlai, bcrsai, bc0rg, bcxrow, bczht, bszrgh)
+      real    bdrlai, bdrsai, bcrlai, bcrsai
+      integer bc0rg
+      real    bcxrow, bczht, bszrgh      
+      end function biodrag
+!------------------------------------
+      subroutine dbgdmp(day,sr)
+      integer  day
+      integer  sr
+      end subroutine dbgdmp
+!------------------------------------
+      subroutine distriblay( nlay, bszlyd, bszlyt, layval, insertval, begind, endd )
+      integer nlay
+      real bszlyd(nlay), bszlyt(nlay), layval(nlay)
+      real insertval, begind, endd 
+      end subroutine distriblay
+!------------------------------------
+!------------------------------------      
+      real function intersect( begind_a, endd_a, begind_b, endd_b )
+      real begind_a, endd_a, begind_b, endd_b 
+      end function intersect
+!-------------------------------------
+      subroutine move_ave_val( nlay_old, bszlyd, valuearr, nlay_new, laydepth_new )
+      integer nlay_old, nlay_new
+      real bszlyd(*), valuearr(*), laydepth_new(*) 
+      end subroutine move_ave_val     
+!-------------------------------------
+      real function setbds (clay, sand, om)
+      real clay, sand, om  
+      end function setbds    
+!-------------------------------------
+      real function valbydepth(layrsn, bszlyd, lay_val, ai_flag, depthtop, depthbot)
+      integer layrsn
+      real bszlyd(layrsn), lay_val(layrsn)
+      integer ai_flag
+      real depthtop, depthbot      
+      end function valbydepth
+!-------------------------------------
+      subroutine   caldat (ijulian, dd, mm, yyyy)
+      integer   ijulian, dd, mm, yyyy
+      end subroutine caldat
+!-------------------------------------
+      subroutine   caldatw (dd, mm, yyyy)
+      integer   dd, mm, yyyy
+      end subroutine caldatw 
+!-------------------------------------
+      integer   function   dayear (dd, mm, yyyy)
+      integer dd, mm, yyyy
+      end function dayear
+!------------------------------------
+      integer   function   difdat (d1, m1, yyy1, d2, m2, yyy2)
+      integer d1, m1, yyy1, d2, m2, yyy2      
+      end function difdat
+!-----------------------------------
+      logical   function   isleap (yyyy)
+      integer yyyy   
+      end function isleap   
+!------------------------------------
+      integer   function   julday (dd, mm, yyyy)
+      integer   dd, mm, yyyy 
+      end function  julday    
+!------------------------------------
+      integer function  lstday (mm, yyyy)
+      integer mm, yyyy   
+      end function lstday   
+!------------------------------------
+      subroutine   mvdate (delta, dd, mm, yyyy, nday, nmonth, nyear)
+      integer delta, dd, mm, yyyy, nday, nmonth, nyear      
+      end subroutine mvdate
+!------------------------------------
+      integer   function   wkday (dd, mm, yyyy)
+      integer dd, mm, yyyy  
+      end function wkday   
+!------------------------------------
+      integer   function   wkjday (jday)
+      integer jday    
+      end function wkjday   
+!------------------------------------
+      real function  dawn(dlat,dlong,idoy,riseangle)
+      integer, intent(in) :: idoy
+      real, intent(in) :: dlat
+      real, intent(in) :: dlong
+      real, intent(in) :: riseangle      
+      end function dawn
+!------------------------------------
+      real function   daylen(dlat,idoy,riseangle)
+      integer, intent(in) :: idoy
+      real, intent(in) :: dlat
+      real, intent(in) :: riseangle      
+      end function daylen
+!------------------------------------      
+       end interface
+       end module

@@ -9,6 +9,8 @@
 
 !     To print output desired from standalone EROSION submodel
 
+      use weps_interface_defs
+
 !     +++ ARGUMENT DECLARATIONS +++
 
       integer o_unit, o_E_unit

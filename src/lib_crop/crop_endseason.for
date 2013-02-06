@@ -21,6 +21,7 @@
 !     + + + KEYWORDS + + +
 !     crop model status
 
+      use weps_interface_defs
       use file_io_mod, only: luoseason
 
 !     + + + ARGUMENT DECLARATIONS + + +

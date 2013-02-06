@@ -17,6 +17,8 @@
 !     + + + KEYWORDS + + +
 !     matric potential parameters
 
+      use weps_interface_defs
+
       include 'hydro/clayomprop.inc'
 
 !     + + + ACCESSED COMMON BLOCK VARIABLE DEFINITIONS + + +
@@ -42,7 +44,7 @@
 !     bheaep   - Brooks and Corey air entry potential
 
 !     + + + FUNCTION DECLARATIONS + + +
-      real volwatadsorb
+!      real volwatadsorb
 
 !     + + + LOCAL VARIABLES + + +
       integer lay

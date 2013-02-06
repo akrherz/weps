@@ -33,14 +33,14 @@
 !     external common_handler
 !     + + + GLOBAL COMMON BLOCKS + + +
 
+      use weps_interface_defs
       USE pd_dates_vars
       USE pd_update_vars
       USE pd_report_vars
       USE pd_var_tables
       use Polygons_Mod, only: destroy_polygon
       use subregions_mod, only: subr_poly
-      use file_io_mod, only: luo_egrd, luo_erod, luomandate,            &
-     &                       luod_above, luod_below
+      use file_io_mod, only: luo_egrd, luo_erod, luomandate, luod_above, luod_below
       use biomaterial
       use debug_mod
 
@@ -89,7 +89,6 @@
       common / datetime / dt, mstring
       save :: /datetime/
 
-      integer get_nperiods
       integer pd, nperiods
       integer cd, cm, cy,                                               &
      &        end_init_jday, end_init_d, end_init_m, end_init_y,        &
@@ -175,8 +174,6 @@
 !     bpools   -  prints many biomass pool components (for debugging)
 
 !     + + + FUNCTIONS CALLED + + +
-      integer dayear, julday, lstday
-      logical isleap
       integer lcm_n
 
 !     + + + UNIT NUMBERS FOR INPUT/OUTPUT DEVICES + + +
@@ -316,13 +313,13 @@
       end if
       ! complete allocation of layers
       do isr = 1, nsubr
-         crop(isr) = create_biomatter(nslay(isr), 1)
+         crop(isr) = create_biomatter(nslay(isr), mncz)
          do ipl = 1, mnbpls
-            residue(ipl,isr) = create_biomatter(nslay(isr), 1)
+            residue(ipl,isr) = create_biomatter(nslay(isr), mncz)
          end do
          ! allocate layer arrays in totaling structures
-         restot(isr) = create_biototal(nslay(isr))
-         biotot(isr) = create_biototal(nslay(isr))
+         restot(isr) = create_biototal(nslay(isr), mncz)
+         biotot(isr) = create_biototal(nslay(isr), mncz)
          decompfac(isr) = create_decomp_factors(nslay(isr))
       end do
 
@@ -360,7 +357,7 @@
           ! this prints header to plot.out file (isr not yet set)
           call plotdata(isr)  ! print to plot data file
           ! this prints header to decomp.out file (isr not yet set)
-          call bpools(1,1,1,isr, residue(1,isr), restot(isr), decompfac(isr))
+          call bpools(1,1,1,isr, residue(1:size(residue,1),isr), restot(isr), decompfac(isr))
 
           ! Initialize the management file and rotation counters
           call mfinit(isr, tinfil(isr))
@@ -413,8 +410,8 @@
          call decopen(isr) ! prints headers in above.out and below.out
          call cropinit(isr)
          ! initialize all dependent variables
-         call updres(isr, residue(1, isr), restot(isr))
-         call sumbio(isr, residue(1, isr), restot(isr), biotot(isr))
+         call updres(isr, residue(1:size(residue,1), isr), restot(isr))
+         call sumbio(isr, residue(1:size(residue,1), isr), restot(isr), biotot(isr))
          call sci_init(isr)
 
 !       Initialize the water holding capacity variable
@@ -467,14 +464,14 @@
          end if
          do isr=1,nsubr   ! do multiple subregion      
 !         isr = 1 !Note: we are no longer dealing with multiple subregions here
-          call submodels(isr, cd, cm, cy, residue(1,isr), restot(isr),  &
+          call submodels(isr, cd, cm, cy, residue(1:size(residue,1),isr), restot(isr),  &
      &                   biotot(isr), decompfac(isr))
           ! set initialization flag to .false. after first day
           if (am0ifl) am0ifl = .false.
 
           call plotdata(isr)  ! print to plot data file
           ! write decomposition biomass pool amounts to files
-          call bpools(cd,cm,cy,isr, residue(1,isr), restot(isr), decompfac(isr))
+          call bpools(cd,cm,cy,isr, residue(1:size(residue,1),isr), restot(isr), decompfac(isr))
 !        write(*,*) 'weps:yrsim cd,cm,cy am0jd,daysim',                 &
 !     &              yrsim," ",cd,cm,cy," ",am0jd,daysim
 
@@ -545,13 +542,13 @@
 
 !            isr = 1 !Note: we are no longer dealing with multiple subregions here
             do isr=1,nsubr   ! do multiple subregion     
-            call submodels(isr, cd, cm, cy, residue(1,isr), restot(isr),&
+            call submodels(isr, cd, cm, cy, residue(1:size(residue,1),isr), restot(isr),&
      &                     biotot(isr), decompfac(isr))
 
             call plotdata(isr)  ! print to plot data file
 
             ! write decomposition biomass pool amounts to files
-            call bpools(cd,cm,cy,isr, residue(1,isr), restot(isr), decompfac(isr))
+            call bpools(cd,cm,cy,isr, residue(1:size(residue,1),isr), restot(isr), decompfac(isr))
 
             ! set initialization flag to .false. after first day
             if (am0ifl) am0ifl = .false.
@@ -641,7 +638,7 @@
 !           if (am0jd.eq.ljday) call dbgdmp(daysim, isr)
 
             do isr=1,nsubr   ! do multiple subregion     
-            call submodels(isr, cd, cm, cy, residue(1,isr), restot(isr),&
+            call submodels(isr, cd, cm, cy, residue(1:size(residue,1),isr), restot(isr),&
      &                   biotot(isr), decompfac(isr))
             end do
 
@@ -661,7 +658,7 @@
                call sci_cum(isr)   ! Keep running total for soil conditioning index (SCI)
                call plotdata(isr)  ! print to plot data file
                ! write decomposition biomass pool amounts to files
-               call bpools(cd,cm,cy,isr, residue(1,isr), restot(isr), decompfac(isr))
+               call bpools(cd,cm,cy,isr, residue(1:size(residue,1),isr), restot(isr), decompfac(isr))
 
 !           write(*,*) 'weps:yrsim cd,cm,cy am0jd,daysim',              &
 !    &              yrsim," ",cd,cm,cy," ",am0jd,daysim

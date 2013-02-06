@@ -18,7 +18,7 @@
      &               satwatr, thrdbar, ftnbar,                          &
      &               avawatr,                                           &
      &               soilcb,soilair,satcond,                            &
-     &               root,blwgnd,massf)
+     &               rootm,blwgnd,massf)
 
 
 !     + + + PURPOSE + + +
@@ -26,11 +26,11 @@
 !     This subroutine reads in the array(s) containing the components 
 !     that need to be inverted.  It then calls the subroutine invproc 
 !     and the actual inversion process is performed.
-!
-!
-!
+
 !     + + + KEYWORDS + + +
 !     inversion, tillage 
+
+      use weps_interface_defs
 
       include 'p1werm.inc'
       include 'manage/asd.inc'
@@ -49,7 +49,7 @@
       real satwatr(mnsz), thrdbar(mnsz), ftnbar(mnsz)
       real avawatr(mnsz)
       real soilcb(mnsz), soilair(mnsz), satcond(mnsz)
-      real root(mnsz,mnbpls),blwgnd(mnsz,mnbpls)
+      real rootm(mnsz,mnbpls),blwgnd(mnsz,mnbpls)
       real massf(msieve+1,mnsz)
 !
 !
@@ -89,7 +89,7 @@
 !     soilair     - soil air entery potential
 !     satcond     - saturated hydraulic conductivity
 
-!     root        - root mass by layers
+!     rootm       - root mass by layers
 !     blwgnd      - below ground biomass
 !     massf       - mass fractions for sieve cuts
 
@@ -174,11 +174,11 @@
 
       do 175 i=1,mnbpls
          do 202 k=1,nlay
-            dum2(k)=root(k,i)
+            dum2(k)=rootm(k,i)
 202      continue
          call invproc(nlay,laythk,dum2(1))
          do 203 k=1,nlay
-           root(k,i)=dum2(k)
+           rootm(k,i)=dum2(k)
 203      continue
 175   continue
 

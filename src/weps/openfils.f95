@@ -10,7 +10,8 @@
 !
 !       Edit History
 !       10-Mar-99       wjr     created
-!
+
+      use weps_interface_defs
       use file_io_mod
       use biomaterial, only: biomatter
 

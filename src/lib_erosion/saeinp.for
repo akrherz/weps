@@ -10,6 +10,7 @@
 !     print out input file for stand alone erosion
 
 !     + + + Modules Used + + +
+      use weps_interface_defs
       use subregions_mod
 
 !     +++ ARGUMENT DECLARATIONS +++

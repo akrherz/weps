@@ -12,6 +12,8 @@
 !     properly adjusts the snow water content, depth, frozen to liquid
 !     ratio and temperature
 
+      use weps_interface_defs
+
 !     + + + KEY WORDS + + +
 !     add snow
 
@@ -58,7 +60,7 @@
 !     snow_den - calculated value of snow density (kg/m^3)
 
 !     + + + FUNCTIONS CALLED + + +
-      real wetbulb
+!      real wetbulb
 
 !     + + + SUBROUTINES CALLED + + +
 !     statesnow

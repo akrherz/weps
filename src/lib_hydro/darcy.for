@@ -21,6 +21,7 @@
 !     + + + KEYWORDS + + +
 !     soil water redistribution, evaporation, runoff, deep percolation
 
+      use weps_interface_defs
       use file_io_mod, only: luowater
 
 !     + + + ARGUMENT DECLARATIONS + + +
@@ -192,42 +193,42 @@
 !     slsoda - livermore solver for ordinary differential equations
 
 !     + + + FUNCTION DECLARATIONS + + +
-      external   dvolw, jac
-      real   volwatadsorb
-      real   volwat_matpot_bc
-      real   atmpreselev, depstore, fricfact, store
-      real   calctht0
-      real   evapredu
-      integer dayear
-      real   availwc
-      real   unsatcond_bc
-      real   intersect
+!      external   dvolw, jac
+!      real   volwatadsorb
+!      real   volwat_matpot_bc
+!      real   atmpreselev, depstore, fricfact, store
+!      real   calctht0
+!      real   evapredu
+!      integer dayear
+!      real   availwc
+!      real   unsatcond_bc
+!      real   intersect
 
 !     + + + DATA INITIALIZATIONS + + +
 
 !     + + + OUTPUT FORMATS + + +
- 2000   format('*','Time of Sunrise: ',f10.2,/,'*','Length of Day: '    &
-     &,f10.2,/,'*','Time of Sunset: ',f10.2)
- 2009   format ('*',' Hourly HYDROLOGY output ')
- 2010   format('*','date: ',i2,'/',i2,'/',i4,'          Subregion # '   &
-     &         ,i4)
- 2020   format ('*',22x,3('*'),' hourly soil water data ',3('*'))
- 2030   format ('*',79('-')/'*','hr',t7,'evap',t13,'run',t17,'dper',t24,&
-     &  'swc',t28,'theta(0)',1x,11('-'),'water content of soil layers', &
-     &  10('-')/,'*',t7,'--------mm--------',2x,25('-'),                &
-     &  'm^3/m^3',24('-'))
- 2040    format('*',18x,f8.3,1x,f6.3,1x,10(1x,f6.3))
- 2050    format(1x,i2,2f6.3,f4.1,f8.3,1x,f6.3,1x,10(1x,f6.3))
- 2060    format('*',79('-'))
- 2065    format('*','average daily wetness',6x,f6.3,1x,10(1x,f6.3))
- 2070    format('*','ep=',f7.2,' mm',' (cumulative amount of daily',    &
-     &         ' potential soil evaporation)')
- 2080    format('*','ea=',f7.2,' mm',' (cumulative amount of daily',    &
-     &         ' actual soil evaporation)')
- 2090    format('*','bhzper=',f6.2,' mm',' (cumulative amount of daily',&
-     &         ' deep percolation)')
- 2100    format('darcy: lrx, wc, wct, wfluxn, deltim, wfluxr(top), wflu &
-     &xr(bottom)',/,i2,7f11.3,/,7f11.3)
+! 2000   format('*','Time of Sunrise: ',f10.2,/,'*','Length of Day: '    &
+!     &,f10.2,/,'*','Time of Sunset: ',f10.2)
+! 2009   format ('*',' Hourly HYDROLOGY output ')
+! 2010   format('*','date: ',i2,'/',i2,'/',i4,'          Subregion # '   &
+!     &         ,i4)
+! 2020   format ('*',22x,3('*'),' hourly soil water data ',3('*'))
+! 2030   format ('*',79('-')/'*','hr',t7,'evap',t13,'run',t17,'dper',t24,&
+!     &  'swc',t28,'theta(0)',1x,11('-'),'water content of soil layers', &
+!     &  10('-')/,'*',t7,'--------mm--------',2x,25('-'),                &
+!     &  'm^3/m^3',24('-'))
+! 2040    format('*',18x,f8.3,1x,f6.3,1x,10(1x,f6.3))
+! 2050    format(1x,i2,2f6.3,f4.1,f8.3,1x,f6.3,1x,10(1x,f6.3))
+! 2060    format('*',79('-'))
+! 2065    format('*','average daily wetness',6x,f6.3,1x,10(1x,f6.3))
+! 2070    format('*','ep=',f7.2,' mm',' (cumulative amount of daily',    &
+!     &         ' potential soil evaporation)')
+! 2080    format('*','ea=',f7.2,' mm',' (cumulative amount of daily',    &
+!     &         ' actual soil evaporation)')
+! 2090    format('*','bhzper=',f6.2,' mm',' (cumulative amount of daily',&
+!     &         ' deep percolation)')
+! 2100    format('darcy: lrx, wc, wct, wfluxn, deltim, wfluxr(top), wflu &
+!     &xr(bottom)',/,i2,7f11.3,/,7f11.3)
  3000 format('# sec daysim doy yr var depth volw netflux numeq = ',i3)
  3010 format(1x,f8.1,1x,i5,1x,i3,1x,i4,1x,i3,4(1x,g11.4))
 

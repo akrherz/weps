@@ -21,6 +21,7 @@
 !     + + + KEYWORDS + + +
 !     tillage, management
 
+      use weps_interface_defs
       use file_io_mod, only: luomanage
       use biomaterial, only: biomatter, biototal
 
@@ -62,11 +63,6 @@
 !     dooper - DO OPERation is called when dates match
 !     dogroup - DO GROUP is called when G code encountered
 !     doproc - DO PROCess is called when P code encountered
-
-!     + + + FUNCTION DECLARATIONS + + +
-      integer difdat
-
-!     + + + DATA INITIALIZATIONS + + +
 
 !     + + + OUTPUT FORMATS + + +
 2015     format ('Op Date ', i2,1x,i2,1x,i4,' Rot yr ',i2,' sr #',i2)

@@ -43,7 +43,7 @@
 
 !     + + + LOCAL VARIABLES + + +
       integer doy, idx
-      real total, saitotal !added by Simon
+      real total   !, saitotal !added by Simon
 
 !     + + + FUNCTIONS CALLED + + +
       integer dayear

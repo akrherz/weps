@@ -21,6 +21,8 @@
 !     + + + KEYWORDS + + +
 !     transpiration
 
+      use weps_interface_defs
+
 !     + + + ARGUMENT DECLARATIONS + + +
       integer layrsn, actflg
       real bszlyd(*), bszlyt(*), rootd
@@ -76,10 +78,9 @@
 !           Agriculture Organization of the United Nations, Rome, page 24
 
 !     + + + FUNCTIONS CALLED + + +
-
-      real availwc
-      real acplwu
-      real unsatcond_bc
+!      real availwc
+!      real acplwu
+!      real unsatcond_bc
 
 !     availwc - Available water content (mm/mm)
 !     acplwu - Actual water use rate from soil layer (mm/day)

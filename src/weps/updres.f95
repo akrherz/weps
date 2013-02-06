@@ -6,9 +6,11 @@
 !
       subroutine updres(isr, residue, restot)
 
+      use weps_interface_defs
       use biomaterial, only: biomatter, biototal
 
 !     + + +   ARGUMENT DECLARATIONS + + +
+      integer isr
       type(biomatter), dimension(:), intent(inout) :: residue
       type(biototal), intent(inout) :: restot
 
@@ -17,17 +19,13 @@
       include 'p1werm.inc'
       include 'p1const.inc'
       include 's1layr.inc'
-      include 'd1glob.inc'
-      include 'd1gen.inc'
-
-!     + + + ARGUMENT DECLARATIONS + + +
-
-      integer isr
+!      include 'd1glob.inc'
+!      include 'd1gen.inc'
 
 !     + + + END SPECIFICATIONS + + +
 
       ! update derived globals for all decomposition pools
-      call poolupdate(nslay(isr), aszlyd(1,isr), residue, restot)
+      call poolupdate(nslay(isr), aszlyd(1:size(aszlyd,1),isr), residue, restot)
 
       return
       end

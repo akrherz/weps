@@ -5,6 +5,7 @@
 
 SUBROUTINE get_calib_yield(sr,rotation_no,mass_removed, mass_left)
 
+    use weps_interface_defs
     USE generic_list , ONLY : Link_Ptr_Type, Link_Type, List_Type
     USE generic_list , ONLY : LI_Init_List, LI_Add_To_Head
     USE generic_list , ONLY : LI_Get_Head, LI_Remove_Head

@@ -14,7 +14,9 @@
 !     To initialize en thresh. and cp thresh. fr. velocites on grid;
 !     To calculate max ratios of friction velocity to threshold
 !     friction velocity
-!
+
+      use weps_interface_defs
+
 !     +++ ARGUMENT DECLARATIONS +++
       integer wustfl,intstep, ntstep
       real awu, rusust, wind_dir

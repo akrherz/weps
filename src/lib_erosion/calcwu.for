@@ -21,6 +21,7 @@
 
 !     + + + GLOBAL COMMON BLOCKS + + +
 
+      use weps_interface_defs
       use file_io_mod, only: luiwsd, luo_subday
       include 'p1unconv.inc'
       include 'p1const.inc'
@@ -62,7 +63,7 @@
 !               (if .true., read header; if .false., skip).
 
 !     + + + FUNCTIONS CALLED + + +
-      integer julday
+!      integer julday
 
 !     + + + FUNCTION DEFINITIONS + + +
 !     julday  -  Calculates the julian date given the day, month, year

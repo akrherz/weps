@@ -18,6 +18,7 @@
 
 !     + + + GLOBAL COMMON BLOCKS + + +
 
+      use weps_interface_defs
       use file_io_mod, only: luosdb
       include 'p1werm.inc'
       include 'm1subr.inc'

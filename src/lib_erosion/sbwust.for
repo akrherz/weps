@@ -15,6 +15,8 @@
 !     as a function of ag size dist., aerodynamic roughness,
 !   	  crust, rock, & flat biomass cover,and soil surface wetness
 
+      use weps_interface_defs
+
 !     + + + ARGUMENT DECLARATIONS + + +
       real sf84, sdagd, sfcr, svroc, sflos, bffcv
       real wzzo, hrwc, hrwcw, wus, sf84ic, asvroc, dmlos

@@ -19,7 +19,7 @@
      &               satwatr, thrdbar, ftnbar,                          &
      &               avawatr,                                           &
      &               soilcb,soilair,satcond,                            &
-     &               root,blwgnd,massf)
+     &               rootm,blwgnd,massf)
 
 
 !     + + + PURPOSE + + +
@@ -27,11 +27,11 @@
 !     This subroutine reads in the array(s) containing the components 
 !     that need to be mixed.  It then calls the subroutine mixproc
 !     and the actual mixing process is performed.
-!
-!
-!
+
 !     + + + KEYWORDS + + +
 !     mixing 
+
+      use weps_interface_defs
 
       include 'p1werm.inc'
       include 'manage/asd.inc'
@@ -49,7 +49,7 @@
       real satwatr(mnsz), thrdbar(mnsz), ftnbar(mnsz)
       real avawatr(mnsz)
       real soilcb(mnsz), soilair(mnsz), satcond(mnsz)
-      real root(mnsz,mnbpls),blwgnd(mnsz,mnbpls)
+      real rootm(mnsz,*),blwgnd(mnsz,*)
       real massf(msieve+1,mnsz)
 
 
@@ -91,7 +91,7 @@
 !     soilair     - soil air entery potential
 !     satcond     - saturated hydraulic conductivity
 
-!     root        - root mass by layers
+!     rootm       - root mass by layers
 !     blwgnd      - below ground biomass
 !     massf       - mass fractions for sieve cuts
 
@@ -122,7 +122,7 @@
 
 !      print*,'initial data - before mixing'
 !         do 230 i=1,5 
-!            print*, root(i,1)  
+!            print*, rootm(i,1)  
 !230      continue
 
 !     find combination coefficient based on fraction of area and mixing
@@ -324,17 +324,17 @@
       do 175 j=1,mnbpls
          cmass = 0.0
          do 153 i=1,nlay
-            dum1(i) = density(i)*laythk(i)*root(i,j)+cmass
+            dum1(i) = density(i)*laythk(i)*rootm(i,j)+cmass
             cmass = dum1(i)
-            dum2(i)=root(i,j)
+            dum2(i)=rootm(i,j)
 153      continue
          call mixproc(tillmix, nlay, dum2(1), cmass, mass)
          do 499 i=1,nlay
-            root(i,j)=dum2(i)
+            rootm(i,j)=dum2(i)
 499      continue
 175   continue
 !         do 231 i=1,5 
-!            print*, root(i,1)  
+!            print*, rootm(i,1)  
 !231      continue
 
       do 180 j=1,mnbpls

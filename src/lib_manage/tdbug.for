@@ -13,6 +13,7 @@
 !     wind, erosion, tillage, soil, crop, decomposition
 !     management
 
+      use weps_interface_defs
       use file_io_mod, only: luotdb
 
 !     + + + ARGUMENT DECLARATIONS + + +

@@ -15,6 +15,7 @@
 !     + + + KEYWORDS + + +
 !     tillage, process, management
 
+      use weps_interface_defs
       use file_io_mod, only: luomanage, luotdb
       use biomaterial, only: biomatter
 
@@ -262,9 +263,6 @@
 !                 and updates the decomposition pools accordingly.
 !     rough     - calculated the post tillage random roughness
 !     tdbug     - subroutine which writes out variables for debugging purposes
-
-!     + + + FUNCTION DECLARATONS + + +
-      real poolmass, furrowcut
 
 !     + + + DATA INITIALIZATIONS + + +
       noparam1 = 0.0
@@ -1237,7 +1235,7 @@
      &      ac0nam(sr), acxstm(sr), acrbc(sr), ac0sla(sr), ac0ck(sr),   &
      &      acdkrate(1,sr), accovfact(sr), acddsthrsh(sr), achyfg(sr),  &
      &      acresevapa(sr), acresevapb(sr),                             &
-     &      nslay(sr) )
+     &      nslay(sr), residue )
       end if
 
       ! turn off kill flag, since temporary pool being emptied
@@ -1636,7 +1634,7 @@
      &      ac0nam(sr), acxstm(sr), acrbc(sr), ac0sla(sr), ac0ck(sr),   &
      &      acdkrate(1,sr), accovfact(sr), acddsthrsh(sr), achyfg(sr),  &
      &      acresevapa(sr), acresevapb(sr),                             &
-     &      nslay(sr) )
+     &      nslay(sr), residue )
       endif
       ! crop pool state has been changed, force dependent variable update  
       am0cropupfl = 1
@@ -2036,7 +2034,7 @@
      &      cropname, txstm, trbc, t0sla, t0ck,                         &
      &      tdkrate(1), tcovfact, tddsthrsh, thyfg,                     &
      &      tresevapa, tresevapb,                                       &
-     &      nslay(sr) )
+     &      nslay(sr), residue )
         end if
 
 !     post-process stuff
@@ -2164,7 +2162,7 @@
      &      cropname, txstm, trbc, t0sla, t0ck,                         &
      &      tdkrate(1), tcovfact, tddsthrsh, thyfg,                     &
      &      tresevapa, tresevapb,                                       &
-     &      nslay(sr) )
+     &      nslay(sr), residue )
         end if
  
 !     post-process stuff

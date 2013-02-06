@@ -20,6 +20,7 @@
 !     wind, erosion, hydrology, tillage, soil, crop, ddbug.forosition
 !     management
 
+      use weps_interface_defs
       use file_io_mod, only: luoddb
       use biomaterial, only: biomatter
       use debug_mod, only: tddbug
@@ -96,7 +97,7 @@
  2069 format(' admst(p#1) admst(p#2) admst(p#3) ',                      &
      &       '  admf(p#1)  admf(p#2)  admf(p#3)  ')
  2070 format (i4,2x,6(3x,f7.3))
- 2071 format (i4,1x,6(4x,f7.3))
+! 2071 format (i4,1x,6(4x,f7.3))
  2072 format (i4,1x,3(4x,f7.3))
  2073 format (6(4x,f7.3))
  2074 format (6(4x,f7.3))

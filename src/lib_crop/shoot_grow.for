@@ -4,7 +4,7 @@
 !$HeadURL$
 
       subroutine shoot_grow( bnslay, bszlyd, bcdpop,                    &
-     &                 bczmxc, bczmrt, bcfleafstem,                     &
+     &                 bczmxc, bcfleafstem,                             &
      &                 bcfshoot, bc0ssa, bc0ssb, bc0diammax,            &
      &                 hui, huiy, bcthu_shoot_beg, bcthu_shoot_end,     &
      &                 bcmstandstem, bcmstandleaf, bcmstandstore,       &
@@ -22,12 +22,13 @@
 !     + + + KEYWORDS + + +
 !     shoot growth
 
+      use weps_interface_defs
       use file_io_mod, only: luoshoot
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer bnslay
       real bszlyd(*), bcdpop
-      real bczmxc, bczmrt, bcfleafstem
+      real bczmxc, bcfleafstem
       real bcfshoot, bc0ssa, bc0ssb, bc0diammax
       real hui, huiy, bcthu_shoot_beg, bcthu_shoot_end
       real bcmstandstem, bcmstandleaf, bcmstandstore
@@ -47,7 +48,6 @@
 !     bcdpop - Number of plants per unit area (#/m^2)
 !            - Note: bcdstm/bcdpop gives the number of stems per plant
 !     bczmxc - maximum potential plant height (m)
-!     bczmrt - maximum root depth
 !     bcfleafstem - crop leaf to stem mass ratio for shoots
 !     bcfshoot - crop ratio of shoot diameter to length
 !     bc0ssa - stem area to mass coefficient a, result is m^2 per plant
@@ -169,7 +169,7 @@
 !     rootf - fraction of biomass allocated to roots when growing from seed
 
 !     + + + FUNCTIONS CALLED + + +
-      integer dayear
+!      integer dayear
       real frac_lay
 
 !     + + + END OF SPECIFICATIONS + + +

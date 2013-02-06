@@ -13,7 +13,7 @@
      &                 bc0sla, bcxstm, bhtsmn,                          &
      &                 bwtdmx, bwtdmn, bweirr, bhfwsf,                  &
      &                 hui, huiy, huirt, huirty, hu_delay, bcthardnx,   &
-     &                 bcthu_shoot_end, bcbaflg, bcbaf, bcyraf, bchyfg, &
+     &                 bcbaf, bchyfg,                                   &
      &                 bcfleaf2stor, bcfstem2stor, bcfstor2stor,        &
      &                 bcyld_coef, bcresid_int,                         &
      &                 bcmstandstem, bcmstandleaf, bcmstandstore,       &
@@ -32,6 +32,7 @@
 !     + + + KEYWORDS + + +
 !     biomass
 
+      use weps_interface_defs
       use file_io_mod, only: luocrop
 
 !     + + + ARGUMENT DECLARATIONS + + +
@@ -48,9 +49,7 @@
       real bc0sla, bcxstm, bhtsmn(*)
       real bwtdmx, bwtdmn, bweirr, bhfwsf
       real hui, huiy, huirt, huirty, hu_delay, bcthardnx
-      real bcthu_shoot_end
-      integer bcbaflg
-      real bcbaf, bcyraf
+      real bcbaf
       integer bchyfg
       real bcfleaf2stor, bcfstem2stor, bcfstor2stor
       real bcyld_coef, bcresid_int
@@ -107,12 +106,7 @@
 !     hu_delay - fraction of heat units accummulated
 !                based on incomplete vernalization and day length
 !     bcthardnx - hardening index for winter annuals (range from 0 t0 2)
-!     bcbaflg - flag for biomass adjustment action
-!         0     o normal crop growth
-!         1     o find biomass adjustment factor for target yield
-!         2     o Use given biomass adjustment factor
 !     bcbaf  - biomass adjustment factor
-!     bcyraf - yield to biomass ratio adjustment factor
 !     bchyfg - flag indicating the part of plant to apply the "grain fraction",
 !              GRF, to when removing that plant part for yield
 !         0     GRF applied to above ground storage (seeds, reproductive)
@@ -165,7 +159,7 @@
 !     + + + LOCAL VARIABLES + + +
       real frst, par, apar, arg_exp
       real pddm, ddm, ddm_rem
-      real p_rw, p_st, p_lf, p_rp, p_rp_max
+      real p_rw, p_st, p_lf, p_rp
       real drfwt, dlfwt, dstwt, drpwt, drswt
       real pdht, dht
       real hux, ff, ffa, ffw, ffr
@@ -179,10 +173,9 @@
       integer i   
       real    wcg, wmaxd
       real lost_mass
-      real stem_area_index, temp_ht
       real wffiber, wfstore
       integer irfiber, irstore
-      real temp_fiber, temp_store, temp_stem, temp_leaf
+      real temp_fiber, temp_store, temp_stem
       real wfl(mnsz) !  and weight fraction by layer used to distribute root mass into the soil layers
       real za(mnsz)
 !      real ppx,ppveg,pprpd ! used with plant population adjustment
@@ -203,7 +196,6 @@
 !     p_st - stem partitioning ratio
 !     p_lf - leaf partitioning ratio
 !     p_rp - reproductive partitioning ratio
-!     p_rp_max - maximum reproductive partitioning ratio (end of season)
 !     drfwt - increment in fibrous root weight (kg/m^2)
 !     dlfwt - increment in leaf dry weight (kg/m^2)
 !     dstwt - increment in dry weight of stem (kg/m^2)
@@ -253,9 +245,6 @@
 !     dead_mass - mass of living tissue that died today
 !     lost_mass - biomass that decayed (disappeared) 
 
-!     stem_area_index - stem silhoutte area per unit ground area (m^2/m^2)
-!     temp_ht - temporary height variable (m)
-
 !     drswt - biomass diverted from partitioning to root storage
 !     wffiber - total of weight fractions for fibrous roots (normalization)
 !     wfstore - total of weight fractions for storage roots (normalization)
@@ -280,8 +269,8 @@
 !             1 - returns the shoot number unconstrained by bcdmaxshoot
 
 !     + + + FUNCTIONS CALLED + + +
-      integer dayear
-      real temps
+!      integer dayear
+!      real temps
 
 !     + + + SUBROUTINES CALLED + + +
 !     caldatw
@@ -322,7 +311,6 @@
           p_lf = 0.0
           p_st = 0.0
           p_rp = 0.0
-!          goto 887
       else
           frst = 0.0
       endif
@@ -706,8 +694,6 @@
       else
           bcgrainf = bcgrf
       endif
-
- 887  continue             ! Below freezing jump to here
 
 !     the following write statements are for 'crop.out'
 !     am0cfl is flag to print crop submodel output

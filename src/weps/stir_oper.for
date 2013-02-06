@@ -4,6 +4,8 @@
 !$HeadURL$
       subroutine stir_oper(isr)
 
+      use weps_interface_defs
+
 !     + + + ARGUMENT DECLARATIONS + + +
       integer isr
 

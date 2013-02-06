@@ -14,6 +14,7 @@
 !
           
 !     + + + MODULES + + +
+      use weps_interface_defs
       use stir_soil_texture, only : update_stir_soil_multiplier
       use file_io_mod, only: fopenk      
 
@@ -51,9 +52,6 @@
 !     isr - subregion counter
 !     lui1 - input file unit number
 
-!     + + + FUNCTION DECLARATIONS + + +
-      real   plant_wat_g
-!
       integer linnum
       data linnum /1/
 

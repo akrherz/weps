@@ -15,6 +15,8 @@
      &  bsdsblk, bsdwblk,                                               &
      &  bhzinf, bhzwid, trigger)
 
+      use weps_interface_defs
+
 !     + + + GLOBAL COMMON BLOCKS + + +
       include 'p1werm.inc'
 

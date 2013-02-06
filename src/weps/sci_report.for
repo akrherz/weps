@@ -5,6 +5,7 @@
       subroutine sci_report
 
 !     + + + INCLUDE + + +
+      use weps_interface_defs
       use file_io_mod, only: luosci
       include 'p1werm.inc'
       include 'command.inc'
@@ -21,13 +22,13 @@
 
 !     + + + LOCAL VARIABLES + + +
       integer isr, texclass
-      integer idx, jdy, ngdpt(nsubr), tngdpt
+      integer idx, jdy
       real sarea, tarea, cellarea, texmult, avgtexmult
       real avgallbiomass, avgallerosion, avgallstir, avgallenergy
       real avgallwatererosion
       real allbiomass_avg(nsubr), allerosion_avg(nsubr)
       real stir_avg(nsubr), energy_avg(nsubr)
-      real adjtotalRennerOM, totalEros, sci_final
+      real adjtotalRennerOM, sci_final
       real sci_om_factor, sci_er_factor, sci_fo_factor
       real totalRennerOM, rennerstir, totalRennerEros
       real totalRennerErosWater, totalRennerErosWind
@@ -43,8 +44,6 @@
 !     texclass - texture class index, see defn in usdatx.for
 !     idx - index on x erosion grid direction
 !     jdy - index on y erosion grid direction
-!     ngdpt - number of grid points in each subregion
-!     tngdpt - total number of grid points (all subregions)
 !     sarea - area for each subregion
 !     tarea - total area (all subregions)
 !     cellarea - area of each cell (m^2)

@@ -40,7 +40,7 @@ module biomaterial
      real :: flatstore      ! flat storage mass (kg/m^2)
      real :: flatrootstore  ! flat storage root mass (kg/m^2)
      real :: flatrootfiber  ! flat fibrous root mass (kg/m^2)
-     type(biostate_mass_below_ground_layers), dimension(:), allocatable :: bg
+     type(biostate_mass_below_ground_layers), dimension(:), pointer :: bg
   end type biostate_mass
 
   type biostate_geometry
@@ -92,7 +92,7 @@ module biomaterial
      integer :: resyear   ! index counting each new residue initiation
      real :: cumdds       ! cumulative decomp days for standing res. by pool (days)
      real :: cumddf       ! cummlative decomp days for surface res. by pool (days)
-     type(biostate_decomp_below_ground_layers), dimension(:), allocatable :: bg
+     type(biostate_decomp_below_ground_layers), dimension(:), pointer :: bg
   end type biostate_decomp
 
   type bioderived_below_ground_layers
@@ -118,11 +118,11 @@ module biomaterial
      real :: mf           ! Flat mass (flatstem + flatleaf + flatstore) (kg/m^2)
      real :: mrt          ! Buried root mass (rootfiber + rootstore)(kg/m^2)
      real :: mbg          ! Buried mass (kg/m^2) Excludes root mass below the surface.
-     type(bioderived_below_ground_layers), dimension(:), allocatable :: bg
+     type(bioderived_below_ground_layers), dimension(:), pointer :: bg
 
      real :: rsai         ! Residue stem area index (m^2/m^2)
      real :: rlai         ! Residue leaf area index (m^2/m^2)
-     type(bioderived_canopy_layers), dimension(:), allocatable :: can
+     type(bioderived_canopy_layers), dimension(:), pointer :: can
 
      real :: rcd          ! effective Biomass silhouette area (SAI+LAI) (m^2/m^2)
                           ! (combination of leaf area and stem area indices)
@@ -184,11 +184,11 @@ module biomaterial
      real :: mbgtotto4    ! Buried (to a 4 inch depth) mass across pools (kg/m^2)
      real :: mrttot       ! Buried root mass across pools (kg/m^2)
      real :: mrttotto4    ! Buried (to a 4 inch depth) root mass across pools (kg/m^2)
-     type(bioderived_below_ground_layers), dimension(:), allocatable :: bg
+     type(bioderived_below_ground_layers), dimension(:), pointer :: bg
 
      real :: rsaitot      ! total of stem area index across pools (m^2/m^2)
      real :: rlaitot      ! total of leaf area index across pools (m^2/m^2)
-     type(bioderived_canopy_layers), dimension(:), allocatable :: can
+     type(bioderived_canopy_layers), dimension(:), pointer :: can
 
      real :: rcdtot       ! effective Biomass silhouette area across pools (SAI+LAI) (m^2/m^2)
                           ! (combination of leaf area and stem area indices)
@@ -242,7 +242,7 @@ module biomaterial
      real :: iddf   ! daily decomposition day for surface residue (0 to 1)
      real :: itcf   ! daily temperature coef. for above ground res. (0 to 1)
      real :: iwcf   ! daily water coefficient for surface residues (0 to 1)
-     type(decomp_factors_below_ground_layers), dimension(:), allocatable :: bg
+     type(decomp_factors_below_ground_layers), dimension(:), pointer :: bg
   end type decomp_factors
 
 contains
@@ -279,6 +279,7 @@ contains
      integer :: dealloc_stat
      integer :: sum_stat    ! accumulates allocation status results so only one write/exit statement needed
 
+     sum_stat = 0
      ! allocate below and above ground arrays
      deallocate(biomat%mass%bg, stat=dealloc_stat)
      sum_stat = sum_stat + dealloc_stat
@@ -293,16 +294,22 @@ contains
      end if
   end subroutine destroy_biomatter
 
-  function create_biototal(nsoillay) result(biotot)
+  function create_biototal(nsoillay, ncanlay) result(biotot)
      integer, intent(in) :: nsoillay
+     integer, intent(in) :: ncanlay
      type(biototal) :: biotot
 
      ! local variable
      integer :: alloc_stat  ! allocation status return
+     integer :: sum_stat    ! accumulates allocation status results so only one write/exit statement needed
 
+     sum_stat = 0
      ! allocate below and above ground arrays
      allocate(biotot%bg(nsoillay), stat=alloc_stat)
-     if( alloc_stat .gt. 0 ) then
+     sum_stat = sum_stat + alloc_stat
+     allocate(biotot%can(ncanlay), stat=alloc_stat)
+     sum_stat = sum_stat + alloc_stat
+     if( sum_stat .gt. 0 ) then
         write(*,*) 'ERROR: unable to allocate memory for biototal'
         stop(1)
      end if
@@ -313,10 +320,15 @@ contains
 
      ! local variable
      integer :: dealloc_stat
+     integer :: sum_stat    ! accumulates allocation status results so only one write/exit statement needed
 
+     sum_stat = 0
      ! allocate below and above ground arrays
      deallocate(biotot%bg, stat=dealloc_stat)
-     if( dealloc_stat .gt. 0 ) then
+     sum_stat = sum_stat + dealloc_stat
+     deallocate(biotot%can, stat=dealloc_stat)
+     sum_stat = sum_stat + dealloc_stat
+     if( sum_stat .gt. 0 ) then
         write(*,*) 'ERROR: unable to deallocate memory for biomatter'
      end if
   end subroutine destroy_biototal

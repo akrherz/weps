@@ -10,6 +10,7 @@
 !
 !     Edit History
 !     07-Feb-01   wjr   created
+      use weps_interface_defs
 
       include 'p1werm.inc'
       include 'wpath.inc'
@@ -53,7 +54,6 @@
       real          tempthk(mnsz)
       real          tempdep(mnsz)
       integer       tempstat(mnsz) ! 0 = target layer, 1 = fixed input layer
-      real          tempval(mnsz)
       integer       tempnslay
 
       targetthk(1) = 10

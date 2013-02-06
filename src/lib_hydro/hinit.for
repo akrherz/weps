@@ -30,6 +30,8 @@
 !     + + + KEYWORDS + + +
 !     initialization, hydrology
 
+      use weps_interface_defs
+
 !     + + + ARGUMENT DECLARATIONS + + +
       integer layrsn
       real bsdblk(*), bsdblk0(*), bsdpart(*), bsdwblk(*)
@@ -88,10 +90,10 @@
 !     extra
 
 !     + + + FUNCTION DECLARATIONS + + +
-      real waterk
+!      real waterk
 !      real calctht0
-      real volwatadsorb
-      real volwat_matpot_bc
+!      real volwatadsorb
+!      real volwat_matpot_bc
 
 !     + + + END SPECIFICATIONS + + +
 !     initialize various soil layer references

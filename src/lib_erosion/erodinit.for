@@ -18,6 +18,7 @@
 !        when erosion is not being called.
 
 !     + + + Modules Used + + +
+      use weps_interface_defs
       use Points_Mod
       use Polygons_Mod
       use pnpoly_mod

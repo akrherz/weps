@@ -17,6 +17,7 @@
 ! ****See user modifications at start of code to enable test
 !      output subroutines sb1out and sb2out
 
+      use weps_interface_defs
       use file_io_mod, only: luo_sgrd, luo_emit
 
 !     +++ ARGUMENT DECLARATIONS +++

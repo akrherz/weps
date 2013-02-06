@@ -37,6 +37,7 @@
 
 !     + + + GLOBAL COMMON BLOCKS + + +
 
+      use weps_interface_defs
       use file_io_mod, only: luosoilsurf, luosoillay
       include 'p1werm.inc'
       include 'wpath.inc'
@@ -175,7 +176,7 @@
 !               7   - wet_bulk_den
 
 !     + + + FUNCTIONS CALLED + + +
-      integer dayear
+!      integer dayear
 
 !     + + + SUBROUTINES CALLED + + +
 !   caldat    - input: julian day, output: day, mo, yr

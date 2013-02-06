@@ -12,7 +12,9 @@
 !     To calc. deposition in the boundary cells of sim. region
 !     To update the threshold friction velocity as the loose material
 !         depletes upwind and increases downwind
-!
+
+      use weps_interface_defs
+
 !     +++ ARGUMENT DECLARATIONS +++
 
       real      time
