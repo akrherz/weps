@@ -21,7 +21,6 @@
       include 'c1db1.inc'
       include 'b1glob.inc'
       include 'c1glob.inc'
-      include 'd1glob.inc'
       include 'main/main.inc'
 
 ! local variables
@@ -46,7 +45,7 @@
 !     determine weighting factors (stem area index)
       atotal = 0.0
       do idx=1,mnbpls
-        a(idx) = residue(idx)%geometry%zht * residue(idx)%geometry%dstm * adxstmrep(idx,isr)
+        a(idx) = residue(idx)%geometry%zht * residue(idx)%geometry%dstm * residue(idx)%geometry%xstmrep
         atotal = atotal + a(idx)
       end do
 

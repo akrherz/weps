@@ -40,8 +40,6 @@
       include 'c1db3.inc'
       include 'c1glob.inc'
       include 'c1info.inc'
-      include 'd1glob.inc'
-      include 'd1gen.inc'
       include 'h1hydro.inc'
       include 'h1db1.inc'
       include 'manage/oper.inc'
@@ -607,7 +605,7 @@
      &    ahrwcs(1,sr),ahrwcf(1,sr), ahrwcw(1,sr),                      &
      &    ahrwca(1,sr),                                                 &
      &    ah0cb(1,sr), aheaep(1,sr), ahrsk(1,sr),                       &
-     &    admrtz(1,1,sr),admbgz(1,1,sr),                                &
+     &    residue,                                                      &
      &    massf)
 
 !     post-process stuff
@@ -679,7 +677,7 @@
      &    ahrwcs(1,sr),ahrwcf(1,sr), ahrwcw(1,sr),                      &
      &    ahrwca(1,sr),                                                 &
      &    ah0cb(1,sr), aheaep(1,sr), ahrsk(1,sr),                       &
-     &    admrtz(1,1,sr),admbgz(1,1,sr),                                &
+     &    residue,                                                      &
      &    massf)
 
 
@@ -720,13 +718,10 @@
      &                      afvt(2), afvt(3), afvt(4), afvt(5)
 
 !     do process
-        call flatvt(afvt, fracarea, acrbc(sr), adrbc(1,sr),             &
+        call flatvt(afvt, fracarea, acrbc(sr), &
      &       acmstandstem(sr), acmstandleaf(sr), acmstandstore(sr),     &
      &       atmflatstem(sr), atmflatleaf(sr), atmflatstore(sr),        &
-     &       acdstm(sr),                                                &
-     &       admstandstem(1,sr),admstandleaf(1,sr), admstandstore(1,sr),&
-     &       admflatstem(1,sr), admflatleaf(1,sr), admflatstore(1,sr),  &
-     &       addstm(1,sr), bioflg)
+     &       acdstm(sr), residue, bioflg)
 
 !     post-process stuff
         ! crop pool state has been changed, force dependent variable update  
@@ -764,17 +759,13 @@
      &             tdepth,tstddepth,tmindepth,tmaxdepth)
 
 !     do process
-        call mburyvt(mfvt,fracarea,acrbc(sr),adrbc(1,sr),burydistflg,   &
+        call mburyvt(mfvt,fracarea,acrbc(sr), burydistflg,   &
      &             tlayer,aszlyt(1,sr),aszlyd(1,sr),                    &
      &       atmflatstem(sr), atmflatleaf(sr), atmflatstore(sr),        &
      &       atmflatrootstore(sr), atmflatrootfiber(sr),                &
      &       atmbgstemz(1,sr), atmbgleafz(1,sr), atmbgstorez(1,sr),     &
      &       atmbgrootstorez(1,sr), atmbgrootfiberz(1,sr),              &
-     &       admflatstem(1,sr), admflatleaf(1,sr), admflatstore(1,sr),  &
-     &       admflatrootstore(1,sr), admflatrootfiber(1,sr),            &
-     &       admbgstemz(1,1,sr), admbgleafz, admbgstorez(1,1,sr),       &
-     &       admbgrootstorez(1,1,sr), admbgrootfiberz(1,1,sr),          &
-     &       bioflg)
+     &       residue, bioflg)
 
 !     post-process stuff
         if (am0tdb .eq. 1) then
@@ -801,12 +792,7 @@
       bioflg = 0
 
 !     do process
-        call liftvt(mfvt, fracarea, adrbc(1,sr), tlayer,                &
-     &       admflatstem(1,sr), admflatleaf(1,sr), admflatstore(1,sr),  &
-     &       admflatrootstore(1,sr), admflatrootfiber(1,sr),            &
-     &       admbgstemz(1,1,sr), admbgleafz, admbgstorez(1,1,sr),       &
-     &       admbgrootstorez(1,1,sr), admbgrootfiberz(1,1,sr),          &
-     &       resurf_roots, bioflg)
+        call liftvt(mfvt, fracarea, tlayer, residue, resurf_roots, bioflg)
 
 !     post-process stuff
         if (am0tdb .eq. 1) then
@@ -969,10 +955,7 @@
      &       aczht(sr), acgrainf(sr), achyfg(sr),                       &
      &       atmstandstem(sr), atmstandleaf(sr), atmstandstore(sr),     &
      &       atmflatstem(sr), atmflatleaf(sr), atmflatstore(sr),        &
-     &       atzht(sr), atgrainf(sr),                                   &
-     &       admstandstem(1,sr), admstandleaf(1,sr),admstandstore(1,sr),&
-     &       admflatstem(1,sr), admflatleaf(1,sr), admflatstore(1,sr),  &
-     &       adzht(1,sr), adgrainf(1,sr), adhyfg(1,sr),                 &
+     &       atzht(sr), atgrainf(sr), residue,                          &
      &       mass_rem, mass_left)
 
 !     post-process stuff
@@ -1026,10 +1009,7 @@
      &       aczht(sr), acgrainf(sr), achyfg(sr),                       &
      &       atmstandstem(sr), atmstandleaf(sr), atmstandstore(sr),     &
      &       atmflatstem(sr), atmflatleaf(sr), atmflatstore(sr),        &
-     &       atzht(sr), atgrainf(sr),                                   &
-     &       admstandstem(1,sr), admstandleaf(1,sr),admstandstore(1,sr),&
-     &       admflatstem(1,sr), admflatleaf(1,sr), admflatstore(1,sr),  &
-     &       adzht(1,sr), adgrainf(1,sr), adhyfg(1,sr),                 &
+     &       atzht(sr), atgrainf(sr), residue,                          &
      &       mass_rem, mass_left)
 !     post-process stuff
         if (am0tdb .eq. 1) then
@@ -1116,10 +1096,7 @@
      &       acdstm(sr), acgrainf(sr), achyfg(sr),                      &
      &       atmstandstem(sr), atmstandleaf(sr), atmstandstore(sr),     &
      &       atmflatstem(sr), atmflatleaf(sr), atmflatstore(sr),        &
-     &       atdstm(sr), atgrainf(sr),                                  &
-     &       admstandstem(1,sr), admstandleaf(1,sr),admstandstore(1,sr),&
-     &       admflatstem(1,sr), admflatleaf(1,sr), admflatstore(1,sr),  &
-     &       addstm(1,sr), adgrainf(1,sr), adhyfg(1,sr),                &
+     &       atdstm(sr), atgrainf(sr), residue,                         &
      &       mass_rem, mass_left)
 
 !     post-process stuff
@@ -1173,10 +1150,7 @@
      &       acdstm(sr), acgrainf(sr), achyfg(sr),                      &
      &       atmstandstem(sr), atmstandleaf(sr), atmstandstore(sr),     &
      &       atmflatstem(sr), atmflatleaf(sr), atmflatstore(sr),        &
-     &       atdstm(sr), atgrainf(sr),                                  &
-     &       admstandstem(1,sr), admstandleaf(1,sr),admstandstore(1,sr),&
-     &       admflatstem(1,sr), admflatleaf(1,sr), admflatstore(1,sr),  &
-     &       addstm(1,sr), adgrainf(1,sr), adhyfg(1,sr),                &
+     &       atdstm(sr), atgrainf(sr), residue,                         &
      &       mass_rem, mass_left)
 !     post-process stuff
         if (am0tdb .eq. 1) then
@@ -1243,11 +1217,6 @@
       ! temporary pool
       am0kilfl = 0
 
-!      do idx=1,mnbpls
-!          write(*,*) 'after trans',adzht(idx,sr),addstm(idx,sr),
-!     &                     adxstm(idx,sr)
-!      end do
-!
 !     post-process stuff
         if (am0tdb .eq. 1) then
           write (luotdb,*) '//After biomass transfer process//'
@@ -1278,10 +1247,7 @@
      &       aczht(sr), acgrainf(sr), achyfg(sr),                       &
      &       atmstandstem(sr), atmstandleaf(sr), atmstandstore(sr),     &
      &       atmflatstem(sr), atmflatleaf(sr), atmflatstore(sr),        &
-     &       atzht(sr), atgrainf(sr),                                   &
-     &       admstandstem(1,sr), admstandleaf(1,sr),admstandstore(1,sr),&
-     &       admflatstem(1,sr), admflatleaf(1,sr), admflatstore(1,sr),  &
-     &       adzht(1,sr), adgrainf(1,sr), adhyfg(1,sr),                 &
+     &       atzht(sr), atgrainf(sr), residue,                          &
      &       mass_rem, mass_left)
 
 !     post-process stuff
@@ -1340,10 +1306,7 @@
      &       aczht(sr), acgrainf(sr), achyfg(sr),                       &
      &       atmstandstem(sr), atmstandleaf(sr), atmstandstore(sr),     &
      &       atmflatstem(sr), atmflatleaf(sr), atmflatstore(sr),        &
-     &       atzht(sr), atgrainf(sr),                                   &
-     &       admstandstem(1,sr), admstandleaf(1,sr),admstandstore(1,sr),&
-     &       admflatstem(1,sr), admflatleaf(1,sr), admflatstore(1,sr),  &
-     &       adzht(1,sr), adgrainf(1,sr), adhyfg(1,sr),                 &
+     &       atzht(sr), atgrainf(sr), residue,                          &
      &       mass_rem, mass_left)
 !     post-process stuff
         if (am0tdb .eq. 1) then
@@ -1401,10 +1364,7 @@
      &       acdstm(sr), acgrainf(sr), achyfg(sr),                      &
      &       atmstandstem(sr), atmstandleaf(sr), atmstandstore(sr),     &
      &       atmflatstem(sr), atmflatleaf(sr), atmflatstore(sr),        &
-     &       atdstm(sr), atgrainf(sr),                                  &
-     &       admstandstem(1,sr), admstandleaf(1,sr),admstandstore(1,sr),&
-     &       admflatstem(1,sr), admflatleaf(1,sr), admflatstore(1,sr),  &
-     &       addstm(1,sr), adgrainf(1,sr), adhyfg(1,sr),                &
+     &       atdstm(sr), atgrainf(sr), residue,                         &
      &       mass_rem, mass_left)
 
 !     post-process stuff
@@ -1463,10 +1423,7 @@
      &       acdstm(sr), acgrainf(sr), achyfg(sr),                      &
      &       atmstandstem(sr), atmstandleaf(sr), atmstandstore(sr),     &
      &       atmflatstem(sr), atmflatleaf(sr), atmflatstore(sr),        &
-     &       atdstm(sr), atgrainf(sr),                                  &
-     &       admstandstem(1,sr), admstandleaf(1,sr),admstandstore(1,sr),&
-     &       admflatstem(1,sr), admflatleaf(1,sr), admflatstore(1,sr),  &
-     &       addstm(1,sr), adgrainf(1,sr), adhyfg(1,sr),                &
+     &       atdstm(sr), atgrainf(sr), residue,                         &
      &       mass_rem, mass_left)
 !     post-process stuff
         if (am0tdb .eq. 1) then
@@ -1518,8 +1475,8 @@
         mcur(sr) = mcur(sr) + 1
         line = mtbl(mcur(sr))
         read(line(2:len_trim(line)),* , err=901)                        &
-     &    addstm(1,sr), adzht(1,sr), admstandstem(1,sr),                &
-     &    admflatstem(1,sr), adrbc(1,sr)
+     &    residue(1)%geometry%dstm, residue(1)%geometry%zht, residue(1)%mass%standstem, &
+     &    residue(1)%mass%flatstem, residue(1)%database%rbc
 
         ! get additional line of data
         mcur(sr) = mcur(sr) + 1
@@ -1529,9 +1486,9 @@
      &    dmassres, zmassres, dmassrot, zmassrot
         ! place buried residue in pools by layer
         call resinit(dmassrot, zmassrot, nslay(sr),                     &
-     &               admbgrootfiberz(1,1,sr), aszlyt(1,sr))
+     &               residue(1)%mass%bg(1:size(residue(1)%mass%bg))%rootfiberz, aszlyt(1,sr))
         call resinit(dmassres,zmassres,nslay(sr),                       &
-     &               admbgstemz(1,1,sr), aszlyt(1,sr))
+     &               residue(1)%mass%bg(1:size(residue(1)%mass%bg))%stemz, aszlyt(1,sr))
         ! get additional line of data
         mcur(sr) = mcur(sr) + 1
         line = mtbl(mcur(sr))
@@ -1546,7 +1503,7 @@
         read(line(2:len_trim(line)), *, err=901)                        &
      &    residue(1)%database%resevapa, residue(1)%database%resevapa
         ! give residue the proper name
-        ad0nam(1,sr) = cropname
+        residue(1)%bname = cropname
         ! post-process stuff
         ! set calendar days for residue to zero
         residue(1)%decomp%resday = 0
@@ -1564,31 +1521,31 @@
         dmassrot = 0.0
         zmassrot = 0.0
         do idx = 2, mnbpls
-            admstandstem(idx,sr) = 0.0
-            admflatstem(idx,sr) = 0.0
+            residue(idx)%mass%standstem = 0.0
+            residue(idx)%mass%flatstem = 0.0
             call resinit(dmassrot, zmassrot, nslay(sr),                 &
-     &                   admbgrootfiberz(1,1,sr), aszlyt(1,sr))
+     &                   residue(idx)%mass%bg(1:size(residue(idx)%mass%bg))%rootfiberz, aszlyt(1,sr))
             call resinit(dmassres,zmassres,nslay(sr),                   &
-     &                   admbgstemz(1,1,sr), aszlyt(1,sr))
+     &                   residue(idx)%mass%bg(1:size(residue(idx)%mass%bg))%stemz, aszlyt(1,sr))
         end do
 
         do idx = 1, mnbpls
-            admstandleaf(idx,sr) = 0.0
-            admstandstore(idx,sr) = 0.0
-            admflatleaf(idx,sr) = 0.0
-            admflatstore(idx,sr) = 0.0
-            admflatrootstore(idx,sr) = 0.0
-            admflatrootfiber(idx,sr) = 0.0
+            residue(idx)%mass%standleaf = 0.0
+            residue(idx)%mass%standstore = 0.0
+            residue(idx)%mass%flatleaf = 0.0
+            residue(idx)%mass%flatstore = 0.0
+            residue(idx)%mass%flatrootstore = 0.0
+            residue(idx)%mass%flatrootfiber = 0.0
             call resinit(dmassres, zmassres, nslay(sr),                 &
-     &                   admbgleafz(1,idx,sr), aszlyt(1,sr))
+     &                   residue(idx)%mass%bg(1:size(residue(1)%mass%bg))%leafz, aszlyt(1,sr))
             call resinit(dmassres, zmassres, nslay(sr),                 &
-     &                   admbgstorez(1,idx,sr), aszlyt(1,sr))
+     &                   residue(idx)%mass%bg(1:size(residue(1)%mass%bg))%storez, aszlyt(1,sr))
             call resinit(dmassrot, zmassrot, nslay(sr),                 &
-     &                   admbgrootstorez(1,idx,sr), aszlyt(1,sr))
+     &                   residue(idx)%mass%bg(1:size(residue(1)%mass%bg))%rootstorez, aszlyt(1,sr))
             ! set other state variables
-            adxstmrep(idx,sr) = adxstm(1,sr)
-            adgrainf(idx,sr) = 1.0
-            adhyfg(idx,sr) = 0
+            residue(idx)%geometry%xstmrep = residue(idx)%database%xstm
+            residue(idx)%geometry%grainf = 1.0
+            residue(idx)%geometry%hyfg = 0
         end do
 !     post-process stuff
         if (am0tdb .eq. 1) then
@@ -1826,13 +1783,7 @@
      &    atmflatrootstore(sr), atmflatrootfiber(sr),                   &
      &    atmbgstemz(1,sr), atmbgleafz(1,sr), atmbgstorez(1,sr),        &
      &    atmbgrootstorez(1,sr), atmbgrootfiberz(1,sr),                 &
-     &    atzht(sr), atdstm(sr), atgrainf(sr),                          &
-     &    admstandstem(1,sr), admstandleaf(1,sr), admstandstore(1,sr),  &
-     &    admflatstem(1,sr), admflatleaf(1,sr), admflatstore(1,sr),     &
-     &    admflatrootstore(1,sr), admflatrootfiber(1,sr),               &
-     &    admbgstemz(1,1,sr), admbgleafz(1,1,sr), admbgstorez(1,1,sr),  &
-     &    admbgrootstorez(1,1,sr), admbgrootfiberz(1,1,sr),             &
-     &    adzht(1,sr), addstm(1,sr), adgrainf(1,sr), adhyfg(1,sr),      &
+     &    atzht(sr), atdstm(sr), atgrainf(sr), residue,                 &
      &    nslay(sr), mass_rem, mass_left)
 
 !     post-process stuff
@@ -1894,13 +1845,7 @@
      &    atmflatrootstore(sr), atmflatrootfiber(sr),                   &
      &    atmbgstemz(1,sr), atmbgleafz(1,sr), atmbgstorez(1,sr),        &
      &    atmbgrootstorez(1,sr), atmbgrootfiberz(1,sr),                 &
-     &    atzht(sr), atdstm(sr), atgrainf(sr),                          &
-     &    admstandstem(1,sr), admstandleaf(1,sr), admstandstore(1,sr),  &
-     &    admflatstem(1,sr), admflatleaf(1,sr), admflatstore(1,sr),     &
-     &    admflatrootstore(1,sr), admflatrootfiber(1,sr),               &
-     &    admbgstemz(1,1,sr), admbgleafz(1,1,sr), admbgstorez(1,1,sr),  &
-     &    admbgrootstorez(1,1,sr), admbgrootfiberz(1,1,sr),             &
-     &    adzht(1,sr), addstm(1,sr), adgrainf(1,sr), adhyfg(1,sr),      &
+     &    atzht(sr), atdstm(sr), atgrainf(sr), residue,                 &
      &    nslay(sr), mass_rem, mass_left)
 
         ! post-process stuff

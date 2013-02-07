@@ -14,7 +14,7 @@
      &                 bctdtm, bczmrt, bctmin, bctopt,                  &
      &                 bc0fd1, bc0fd2, cc0fd1, cc0fd2,                  &
      &                 bc0bceff,                                        &
-     &                 bdmb, bc0alf, bc0blf, bc0clf,                    &
+     &                 bc0alf, bc0blf, bc0clf,                          &
      &                 bc0dlf, bc0arp, bc0brp, bc0crp,                  &
      &                 bc0drp, bc0aht, bc0bht,                          &
      &                 bc0sla, bc0hue, bctverndel,                      &
@@ -79,7 +79,7 @@
       real bcxrow
       real bczmrt, bctmin, bctopt
       real bc0fd1, bc0fd2
-      real cc0fd1, cc0fd2, bc0bceff, bdmb(*)
+      real cc0fd1, cc0fd2, bc0bceff
       real bc0alf, bc0blf, bc0clf, bc0dlf, bc0arp, bc0brp
       real bc0crp, bc0drp, bc0aht, bc0bht
       real bc0sla, bc0hue, bctverndel
@@ -136,7 +136,6 @@
 !     bc0brp - rprd partitioning parameter
 !     bc0bht - height s-curve parameter
 !     bsdblk      - bulk density of a layer (g/cm^3=t/m^3)
-!     bdmb    - residue amount by soil layer
 !     bc0bn1 - normal fraction of N in crop biomass at emergence
 !     bc0bn2 - normal fraction of N in crop biomass at midseasn
 !     bc0bn3 - normal fraction of N in crop biomass at maturity
@@ -363,14 +362,6 @@
          wp(lay) = 0.0
          wno3(lay) = bsftan(lay)
          ap(lay) = bsftap(lay)
-!    residue is now passed from MAIN and converted here from kg/m^2 to t/ha
-!    residue was previously estimated in subroutine sdst
-!    the validity of this needs to be checked since type of residue (rsd)
-!    needed is not clearin CROP    - jt  07/21/94
-!      I think this (rsd) is being used in the nutrient cycling.
-!      Thus, it probably should be the sum of admbgz and admrtz
-!      (all pools) for each layer.  LEW 4/23/99
-         rsd(lay) = bdmb(lay) * 10.0
     5 continue
 
 !     initialize growth and nutrient variables when crop is planted

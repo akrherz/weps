@@ -3,12 +3,16 @@
 !$Revision$
 !$HeadURL$
 
-      subroutine plotdata(sr)
+      subroutine plotdata(sr, restot)
 
       use weps_interface_defs
       use file_io_mod, only: luoplt
+      use biomaterial, only: biototal
 
-      integer sr
+!     + + + ARGUMENT DECLARATIONS + + +
+      integer, intent(in) :: sr
+      type(biototal), intent(in) :: restot
+
 !       Edit History
 !       04-Mar-99       wjr     created
 
@@ -16,7 +20,6 @@
 ! ***      include 'm1sim.inc'
       include 'm1flag.inc'
       include 'c1glob.inc'
-      include 'd1glob.inc'
       include 'b1glob.inc'
       include 'h1db1.inc'
       include 's1layr.inc'
@@ -151,8 +154,8 @@
      &       aczht(sr), acxstmrep(sr), acrcd(sr), acftcv(sr)
 
         write (luoplt, 2082, ADVANCE="NO")                              &
-     &       adzht_ave(sr), adrsaitot(sr), adrlaitot(sr),               &
-     &       adrcdtot(sr), adftcancov(sr), adftcvtot(sr)
+     &       restot%zht_ave, restot%rsaitot, restot%rlaitot,            &
+     &       restot%rcdtot, restot%ftcancov, restot%ftcvtot
 
         ! additional friction velocity and threshold outputs
         write (luoplt, 2085, ADVANCE="NO")                              &

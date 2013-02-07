@@ -1,23 +1,16 @@
-!
 !$Author$
 !$Date$
 !$Revision$
 !$HeadURL$
-!
-!
-!
+
       subroutine mburyvt                                                &
-     &          (buryf,tillf,bcrbc,bdrbc,burydistflg,                   &
+     &          (buryf,tillf,bcrbc,burydistflg,                         &
      &           nlay,lthick,ldepth,                                    &
      &           btmflatstem, btmflatleaf, btmflatstore,                &
      &           btmflatrootstore, btmflatrootfiber,                    &
      &           btmbgstemz, btmbgleafz, btmbgstorez,                   &
      &           btmbgrootstorez, btmbgrootfiberz,                      &
-     &           bdmflatstem, bdmflatleaf, bdmflatstore,                &
-     &           bdmflatrootstore, bdmflatrootfiber,                    &
-     &           bdmbgstemz, bdmbgleafz, bdmbgstorez,                   &
-     &           bdmbgrootstorez, bdmbgrootfiberz,                      &
-     &           bflg)
+     &           residue, bflg)
 
 !     + + + PURPOSE + + +
 !
@@ -29,13 +22,15 @@
 !     + + + KEYWORDS + + +
 !     bury, lift, biomass manipulation
 
+      use weps_interface_defs
+      use biomaterial, only: biomatter
+
       include 'p1werm.inc'
 !
 !     + + + ARGUMENT DECLARATIONS + + +
       real    buryf(mnrbc)
       real    tillf
       integer bcrbc
-      integer bdrbc(mnbpls)
       integer burydistflg
 
       integer nlay
@@ -56,20 +51,7 @@
       real   btmbgrootstorez(mnsz)
       real   btmbgrootfiberz(mnsz)
 
-      real   bdmflatstem(mnbpls)
-      real   bdmflatleaf(mnbpls)
-      real   bdmflatstore(mnbpls)
-
-      real   bdmflatrootstore(mnbpls)
-      real   bdmflatrootfiber(mnbpls)
-
-      real   bdmbgstemz(mnsz,mnbpls)
-      real   bdmbgleafz(mnsz,mnbpls)
-      real   bdmbgstorez(mnsz,mnbpls)
-
-      real   bdmbgrootstorez(mnsz,mnbpls)
-      real   bdmbgrootfiberz(mnsz,mnbpls)
-
+      type(biomatter), dimension(:), intent(inout) :: residue
       integer bflg
 
 !     + + + ARGUMENT DEFINITIONS + + +
@@ -78,7 +60,6 @@
 !                 different residue burial classes (m^2/m^2)
 !     tillf    - fraction of soil area tilled by the machine
 !     bcrbc     - residue burial class for standing crop
-!     bdrbc     - residue burial classes for residue
 !     nlay      - number of soil layers used in the operation(s)
 !     lthick    - distance from soil surface to bottom of layer
 !                 for each soil layer
@@ -98,20 +79,8 @@
 !                   (tubers (potatoes, carrots), extended leaf (onion), seeds (peanuts))
 !     btmbgrootfiberz - crop root fibrous mass by layer (kg/m^2)
 
-!     bdmflatstem  - flat stem mass (kg/m^2)
-!     bdmflatleaf  - flat leaf mass (kg/m^2)
-!     bdmflatstore - flat storage mass (kg/m^2)
 
-!     bdmflatstore - flat storage root mass (kg/m^2)
-!     bdmflatfiber - flat fibrous root mass (kg/m^2)
-
-!     bdmbgstemz  - buried stem mass by layer (kg/m^2)
-!     bdmbgleafz  - buried leaf mass by layer (kg/m^2)
-!     bdmbgstorez - buried (from above ground) storage mass by layer (kg/m^2)
-
-!     bdmbgrootstorez - buried storage root mass by layer (kg/m^2)
-!     bdmbgrootfiberz - buried fibrous root mass by layer (kg/m^2)
-
+!     residue - structure containing residue state variables to be modified
 !     bflg      - flag indicating what to manipulate
 !       0 - All standing material is manipulate (both crop and residue)
 !       1 - Crop
@@ -130,10 +99,10 @@
 !     mnsz          - max number of soil layers
 !
 !     + + + FUNCTIONS + + +
-      real burydist
-!
+!      real burydist
+
 !     + + + LOCAL VARIABLES + + +
-!
+
       integer  lay,idy,tflg
       real     tbury
       real     fracbury(nlay)
@@ -208,42 +177,37 @@
 
       do idy = 1, mnbpls
 !         check for proper indexes in bdrbc
-          if( (bdrbc(idy).ge.1).and.(bdrbc(idy).le.mnrbc) ) then
+          if( (residue(idy)%database%rbc.ge.1).and.(residue(idy)%database%rbc.le.mnrbc) ) then
               if (BTEST(tflg,idy)) then
-                  tbury = bdmflatstem(idy)*buryf(bdrbc(idy))*tillf
+                  tbury = residue(idy)%mass%flatstem * buryf(residue(idy)%database%rbc) * tillf
                   do lay=1,nlay
-                      bdmbgstemz(lay,idy) = bdmbgstemz(lay,idy)         &
-     &                                    + tbury*fracbury(lay)
+                      residue(idy)%mass%bg(lay)%stemz = residue(idy)%mass%bg(lay)%stemz + tbury*fracbury(lay)
                   end do
-                  bdmflatstem(idy) = bdmflatstem(idy) - tbury
+                  residue(idy)%mass%flatstem = residue(idy)%mass%flatstem - tbury
 
-                  tbury = bdmflatleaf(idy)*buryf(bdrbc(idy))*tillf
+                  tbury = residue(idy)%mass%flatleaf * buryf(residue(idy)%database%rbc) * tillf
                   do lay=1,nlay
-                      bdmbgleafz(lay,idy) = bdmbgleafz(lay,idy)         &
-     &                                    + tbury*fracbury(lay)
+                      residue(idy)%mass%bg(lay)%leafz = residue(idy)%mass%bg(lay)%leafz + tbury*fracbury(lay)
                   end do
-                  bdmflatleaf(idy) = bdmflatleaf(idy) - tbury
+                  residue(idy)%mass%flatleaf = residue(idy)%mass%flatleaf - tbury
 
-                  tbury = bdmflatstore(idy)*buryf(bdrbc(idy))*tillf
+                  tbury = residue(idy)%mass%flatstore * buryf(residue(idy)%database%rbc) * tillf
                   do lay=1,nlay
-                      bdmbgstorez(lay,idy) = bdmbgstorez(lay,idy)       &
-     &                                     + tbury*fracbury(lay)
+                      residue(idy)%mass%bg(lay)%storez = residue(idy)%mass%bg(lay)%storez + tbury*fracbury(lay)
                   end do
-                  bdmflatstore(idy) = bdmflatstore(idy) - tbury
+                  residue(idy)%mass%flatstore = residue(idy)%mass%flatstore - tbury
 
-                  tbury = bdmflatrootstore(idy)*buryf(bdrbc(idy))*tillf
+                  tbury = residue(idy)%mass%flatrootstore * buryf(residue(idy)%database%rbc) * tillf
                   do lay=1,nlay
-                      bdmbgrootstorez(lay,idy) =bdmbgrootstorez(lay,idy)&
-     &                                         + tbury*fracbury(lay)
+                      residue(idy)%mass%bg(lay)%rootstorez = residue(idy)%mass%bg(lay)%rootstorez + tbury*fracbury(lay)
                   end do
-                  bdmflatrootstore(idy) = bdmflatrootstore(idy) - tbury
+                  residue(idy)%mass%flatrootstore = residue(idy)%mass%flatrootstore - tbury
 
-                  tbury = bdmflatrootfiber(idy)*buryf(bdrbc(idy))*tillf
+                  tbury = residue(idy)%mass%flatrootfiber * buryf(residue(idy)%database%rbc) * tillf
                   do lay=1,nlay
-                      bdmbgrootfiberz(lay,idy) =bdmbgrootfiberz(lay,idy)&
-     &                                         + tbury*fracbury(lay)
+                      residue(idy)%mass%bg(lay)%rootfiberz = residue(idy)%mass%bg(lay)%rootfiberz + tbury*fracbury(lay)
                   end do
-                  bdmflatrootfiber(idy) = bdmflatrootfiber(idy) - tbury
+                  residue(idy)%mass%flatrootfiber = residue(idy)%mass%flatrootfiber - tbury
               endif
           endif
       end do

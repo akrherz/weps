@@ -19,8 +19,6 @@
       include 'p1werm.inc'
       include 'p1const.inc'
       include 's1layr.inc'
-!      include 'd1glob.inc'
-!      include 'd1gen.inc'
 
 !     + + + END SPECIFICATIONS + + +
 

@@ -1,19 +1,13 @@
-!
 !$Author$
 !$Date$
 !$Revision$
 !$HeadURL$
-!
-!
-!
+
       subroutine flatvt                                                 &
-     &                 (fltcoef, tillf, bcrbc, bdrbc,                   &
+     &                 (fltcoef, tillf, bcrbc,                          &
      &           bcmstandstem, bcmstandleaf, bcmstandstore,             &
      &           btmflatstem, btmflatleaf, btmflatstore,                &
-     &           bcdstm,                                                &
-     &           bdmstandstem, bdmstandleaf, bdmstandstore,             &
-     &           bdmflatstem, bdmflatleaf, bdmflatstore,                &
-     &           bddstm, bflg)
+     &           bcdstm, residue, bflg)
 
 !     + + + PURPOSE + + +
 !     Process # 33 called from doeffect.for
@@ -43,7 +37,7 @@
 !     + + + KEYWORDS + + +
 !     flatten, biomass manipulation
 
-      use weps_interface_defs
+      use biomaterial, only: biomatter
 
       include 'p1werm.inc'
 !
@@ -51,7 +45,6 @@
       real    fltcoef(mnrbc)
       real    tillf
       integer bcrbc
-      integer bdrbc(mnbpls)
 
       real    bcmstandstem
       real    bcmstandleaf
@@ -62,16 +55,7 @@
       real    btmflatstore
 
       real    bcdstm
-
-      real    bdmstandstem(mnbpls)
-      real    bdmstandleaf(mnbpls)
-      real    bdmstandstore(mnbpls)
-
-      real    bdmflatstem(mnbpls)
-      real    bdmflatleaf(mnbpls)
-      real    bdmflatstore(mnbpls)
-
-      real    bddstm(mnbpls)
+      type(biomatter), dimension(:), intent(inout) :: residue
       integer bflg
 !
 !     + + + ARGUMENT DEFINITIONS + + +
@@ -80,7 +64,6 @@
 !                 different residue burial classes (m^2/m^2)
 !     tillf    - fraction of soil area tilled by the machine
 !     bcrbc     - residue burial class for standing crop
-!     bdrbc     - residue burial class for residue
 
 !     bcmstandstem - crop standing stem mass (kg/m^2)
 !     bcmstandleaf - crop standing leaf mass (kg/m^2)
@@ -92,20 +75,7 @@
 
 !     bcdstm - Number of crop stems per unit area (#/m^2)
 
-!     bdmstandstem  - standing stem mass (kg/m^2)
-!     bdmstandleaf  - standing leaf mass (kg/m^2)
-!     bdmstandstore - standing storage mass (kg/m^2)
-
-!     bdmflatstem  - flat stem mass (kg/m^2)
-!     bdmflatleaf  - flat leaf mass (kg/m^2)
-!     bdmflatstore - flat storage mass (kg/m^2)
-
-!     bddstm - Number of residue stems per unit area (#/m^2)
-
-!     dstand    - (decomp pool) standing biomass by age pool (kg/m^2)
-!     dflat     - (decomp pool) surface biomass by age pool  (kg/m^2)
-!     dstems    - (decomp pool) number of standing residue stems (#/m^2)
-!
+!     residue - structure containing residue state variables to be modified
 !     bflg      - flag indicating what to flatten
 !       0 - All standing material is flatttened (both crop and residue)
 !       1 - Crop is flattened
@@ -167,22 +137,19 @@
 
       do idy = 1,mnbpls               ! flatten standing residue
 !         check for proper indexes in bdrbc
-          if( (bdrbc(idy).ge.1).and.(bdrbc(idy).le.mnrbc) ) then
+          if( (residue(idy)%database%rbc .ge. 1) .and. (residue(idy)%database%rbc .le. mnrbc) ) then
               if (BTEST(tflg,idy)) then    ! from specified decomp pools 
-                  flatfrac = fltcoef(bdrbc(idy)) * tillf
-                  bdmflatstem(idy) = bdmflatstem(idy)                   &
-     &                             + bdmstandstem(idy) * flatfrac
-                  bdmflatleaf(idy) = bdmflatleaf(idy)                   &
-     &                             + bdmstandleaf(idy) * flatfrac
-                  bdmflatstore(idy) = bdmflatstore(idy)                 &
-     &                              + bdmstandstore(idy) * flatfrac
-                  bdmstandstem(idy) = bdmstandstem(idy)*(1.0 - flatfrac)
-                  bdmstandleaf(idy) = bdmstandleaf(idy)*(1.0 - flatfrac)
-                  bdmstandstore(idy) = bdmstandstore(idy)*(1.0-flatfrac)
-                  bddstm(idy) = bddstm(idy) * (1.0 - flatfrac)
+                  flatfrac = fltcoef(residue(idy)%database%rbc) * tillf
+                  residue(idy)%mass%flatstem = residue(idy)%mass%flatstem + residue(idy)%mass%standstem * flatfrac
+                  residue(idy)%mass%flatleaf = residue(idy)%mass%flatleaf + residue(idy)%mass%standleaf * flatfrac
+                  residue(idy)%mass%flatstore = residue(idy)%mass%flatstore + residue(idy)%mass%standstore * flatfrac
+                  residue(idy)%mass%standstem = residue(idy)%mass%standstem * (1.0 - flatfrac)
+                  residue(idy)%mass%standleaf = residue(idy)%mass%standleaf * (1.0 - flatfrac)
+                  residue(idy)%mass%standstore = residue(idy)%mass%standstore * (1.0 - flatfrac)
+                  residue(idy)%geometry%dstm = residue(idy)%geometry%dstm * (1.0 - flatfrac)
               endif
           endif
       end do
 
- 60   return
+      return
       end

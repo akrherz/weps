@@ -19,7 +19,7 @@
      &               satwatr, thrdbar, ftnbar,                          &
      &               avawatr,                                           &
      &               soilcb,soilair,satcond,                            &
-     &               rootm,blwgnd,massf)
+     &               residue, massf)
 
 
 !     + + + PURPOSE + + +
@@ -32,6 +32,7 @@
 !     mixing 
 
       use weps_interface_defs
+      use biomaterial, only: biomatter
 
       include 'p1werm.inc'
       include 'manage/asd.inc'
@@ -49,7 +50,7 @@
       real satwatr(mnsz), thrdbar(mnsz), ftnbar(mnsz)
       real avawatr(mnsz)
       real soilcb(mnsz), soilair(mnsz), satcond(mnsz)
-      real rootm(mnsz,*),blwgnd(mnsz,*)
+      type(biomatter), dimension(:), intent(inout) :: residue
       real massf(msieve+1,mnsz)
 
 
@@ -91,8 +92,7 @@
 !     soilair     - soil air entery potential
 !     satcond     - saturated hydraulic conductivity
 
-!     rootm       - root mass by layers
-!     blwgnd      - below ground biomass
+!     residue     - structure containing residue by soil layer
 !     massf       - mass fractions for sieve cuts
 
 !     nlay        - number of soil layers used
@@ -321,34 +321,64 @@
 !
 !********************DECOMPOSITION VARIABLES********************	
 !   need to mix both pools and layers for these next two variables 
-      do 175 j=1,mnbpls
-         cmass = 0.0
-         do 153 i=1,nlay
-            dum1(i) = density(i)*laythk(i)*rootm(i,j)+cmass
-            cmass = dum1(i)
-            dum2(i)=rootm(i,j)
-153      continue
-         call mixproc(tillmix, nlay, dum2(1), cmass, mass)
-         do 499 i=1,nlay
-            rootm(i,j)=dum2(i)
-499      continue
-175   continue
-!         do 231 i=1,5 
-!            print*, rootm(i,1)  
-!231      continue
+      do j=1,mnbpls
 
-      do 180 j=1,mnbpls
          cmass = 0.0
-         do 154 i=1,nlay
-            dum1(i) = density(i)*laythk(i)*blwgnd(i,j)+cmass
+         do i=1,nlay
+            dum1(i) = density(i)*laythk(i)*residue(j)%mass%bg(i)%stemz + cmass
             cmass = dum1(i)
-            dum2(i)=blwgnd(i,j)
-154      continue
+            dum2(i) = residue(j)%mass%bg(i)%stemz
+         end do
          call mixproc(tillmix, nlay, dum2(1), cmass, mass)
-         do 501 i=1,nlay
-            blwgnd(i,j)=dum2(i)
-501      continue
-180   continue 
+         do i=1,nlay
+            residue(j)%mass%bg(i)%stemz = dum2(i)
+         end do
+
+         cmass = 0.0
+         do i=1,nlay
+            dum1(i) = density(i)*laythk(i)*residue(j)%mass%bg(i)%leafz + cmass
+            cmass = dum1(i)
+            dum2(i) = residue(j)%mass%bg(i)%leafz
+         end do
+         call mixproc(tillmix, nlay, dum2(1), cmass, mass)
+         do i=1,nlay
+            residue(j)%mass%bg(i)%leafz = dum2(i)
+         end do
+
+         cmass = 0.0
+         do i=1,nlay
+            dum1(i) = density(i)*laythk(i)*residue(j)%mass%bg(i)%storez + cmass
+            cmass = dum1(i)
+            dum2(i) = residue(j)%mass%bg(i)%storez
+         end do
+         call mixproc(tillmix, nlay, dum2(1), cmass, mass)
+         do i=1,nlay
+            residue(j)%mass%bg(i)%storez = dum2(i)
+         end do
+
+         cmass = 0.0
+         do i=1,nlay
+            dum1(i) = density(i)*laythk(i)*residue(j)%mass%bg(i)%rootstorez + cmass
+            cmass = dum1(i)
+            dum2(i) = residue(j)%mass%bg(i)%rootstorez
+         end do
+         call mixproc(tillmix, nlay, dum2(1), cmass, mass)
+         do i=1,nlay
+            residue(j)%mass%bg(i)%rootstorez = dum2(i)
+         end do
+
+         cmass = 0.0
+         do i=1,nlay
+            dum1(i) = density(i)*laythk(i)*residue(j)%mass%bg(i)%rootfiberz + cmass
+            cmass = dum1(i)
+            dum2(i) = residue(j)%mass%bg(i)%rootfiberz
+         end do
+         call mixproc(tillmix, nlay, dum2(1), cmass, mass)
+         do i=1,nlay
+            residue(j)%mass%bg(i)%rootfiberz = dum2(i)
+         end do
+
+      end do
 !********************DECOMPOSITION VARIABLES********************
 !
 ! 

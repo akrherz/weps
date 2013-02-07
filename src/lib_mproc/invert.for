@@ -18,7 +18,7 @@
      &               satwatr, thrdbar, ftnbar,                          &
      &               avawatr,                                           &
      &               soilcb,soilair,satcond,                            &
-     &               rootm,blwgnd,massf)
+     &               residue, massf)
 
 
 !     + + + PURPOSE + + +
@@ -31,6 +31,7 @@
 !     inversion, tillage 
 
       use weps_interface_defs
+      use biomaterial, only: biomatter
 
       include 'p1werm.inc'
       include 'manage/asd.inc'
@@ -49,7 +50,7 @@
       real satwatr(mnsz), thrdbar(mnsz), ftnbar(mnsz)
       real avawatr(mnsz)
       real soilcb(mnsz), soilair(mnsz), satcond(mnsz)
-      real rootm(mnsz,mnbpls),blwgnd(mnsz,mnbpls)
+      type(biomatter), dimension(:), intent(inout) :: residue
       real massf(msieve+1,mnsz)
 !
 !
@@ -89,8 +90,7 @@
 !     soilair     - soil air entery potential
 !     satcond     - saturated hydraulic conductivity
 
-!     rootm       - root mass by layers
-!     blwgnd      - below ground biomass
+!     residue     - structure containing residue by soil layer
 !     massf       - mass fractions for sieve cuts
 
 !     nlay        - number of soil layers used
@@ -170,27 +170,51 @@
 !************************ASD MASS FRACTIONS********************	
 ! 
 !************************DECOMPOSITION VARIABLES********************	
-!   need to invert both pools and layers for these next two variables 
+!   need to invert each pool for these
 
-      do 175 i=1,mnbpls
-         do 202 k=1,nlay
-            dum2(k)=rootm(k,i)
-202      continue
+      do i=1,mnbpls
+
+         do k=1,nlay
+            dum2(k) = residue(i)%mass%bg(k)%stemz
+         end do
          call invproc(nlay,laythk,dum2(1))
-         do 203 k=1,nlay
-           rootm(k,i)=dum2(k)
-203      continue
-175   continue
+         do k=1,nlay
+           residue(i)%mass%bg(k)%stemz = dum2(k)
+         end do
 
-      do 180 i=1,mnbpls
-         do 204 k=1,nlay
-         dum2(k)=blwgnd(k,i)
-204   continue
-      call invproc(nlay,laythk,dum2(1))
-      do 205 k=1,nlay
-         blwgnd(k,i)=dum2(k)
-205     continue
-180   continue 
+         do k=1,nlay
+            dum2(k) = residue(i)%mass%bg(k)%leafz
+         end do
+         call invproc(nlay,laythk,dum2(1))
+         do k=1,nlay
+           residue(i)%mass%bg(k)%leafz = dum2(k)
+         end do
+
+         do k=1,nlay
+            dum2(k) = residue(i)%mass%bg(k)%storez
+         end do
+         call invproc(nlay,laythk,dum2(1))
+         do k=1,nlay
+           residue(i)%mass%bg(k)%storez = dum2(k)
+         end do
+
+         do k=1,nlay
+            dum2(k) = residue(i)%mass%bg(k)%rootstorez
+         end do
+         call invproc(nlay,laythk,dum2(1))
+         do k=1,nlay
+           residue(i)%mass%bg(k)%rootstorez = dum2(k)
+         end do
+
+         do k=1,nlay
+            dum2(k) = residue(i)%mass%bg(k)%rootfiberz
+         end do
+         call invproc(nlay,laythk,dum2(1))
+         do k=1,nlay
+           residue(i)%mass%bg(k)%rootfiberz = dum2(k)
+         end do
+
+      end do
 !************************DECOMPOSITION VARIABLES********************
 !
 		  

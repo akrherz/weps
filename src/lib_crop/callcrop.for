@@ -22,8 +22,6 @@
       include 'c1info.inc'
       include 'c1glob.inc'
       include 'c1gen.inc'
-      include 'd1glob.inc'
-      include 'd1gen.inc'
       include 'm1flag.inc'
       include 'm1dbug.inc'
       include 's1layr.inc'
@@ -73,7 +71,7 @@
      &   actdtm(sr), aczmrt(sr), actmin(sr), actopt(sr),                &
      &   ac0fd1(1,sr), ac0fd2(1,sr), ac0fd1(2,sr), ac0fd2(2,sr),        &
      &   ac0bceff(sr),                                                  &
-     &   admbgz(1,1,sr), ac0alf(sr), ac0blf(sr), ac0clf(sr),            &
+     &   ac0alf(sr), ac0blf(sr), ac0clf(sr),                            &
      &   ac0dlf(sr), ac0arp(sr), ac0brp(sr), ac0crp(sr),                &
      &   ac0drp(sr), ac0aht(sr), ac0bht(sr),                            &
      &   ac0sla(sr), ac0hue(sr),  actverndel(sr),                       &

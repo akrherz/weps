@@ -10,10 +10,7 @@
      &           bcdstm, bcgrainf, bchyfg,                              &
      &           btmstandstem, btmstandleaf, btmstandstore,             &
      &           btmflatstem, btmflatleaf, btmflatstore,                &
-     &           btdstm, btgrainf,                                      &
-     &           bdmstandstem, bdmstandleaf, bdmstandstore,             &
-     &           bdmflatstem, bdmflatleaf, bdmflatstore,                &
-     &           bddstm, bdgrainf, bdhyfg,                              &
+     &           btdstm, btgrainf, residue,                             &
      &           tot_mass_rem, sel_mass_left)
 
 !     + + + PURPOSE + + +
@@ -36,6 +33,7 @@
 !     thin, transfer, biomass manipulation
 
       use weps_interface_defs
+      use biomaterial, only: biomatter
 
       include 'p1werm.inc'
 
@@ -66,18 +64,7 @@
 
       real    btdstm
       real    btgrainf
-
-      real    bdmstandstem(mnbpls)
-      real    bdmstandleaf(mnbpls)
-      real    bdmstandstore(mnbpls)
-
-      real    bdmflatstem(mnbpls)
-      real    bdmflatleaf(mnbpls)
-      real    bdmflatstore(mnbpls)
-
-      real    bddstm(mnbpls)
-      real    bdgrainf(mnbpls)
-      integer bdhyfg(mnbpls)
+      type(biomatter), dimension(:), intent(inout) :: residue
 
       real    tot_mass_rem, sel_mass_left
 
@@ -118,25 +105,7 @@
 
 !     btdstm   - temporary crop stem count (# stems/m^2)
 !     btgrainf - internally computed grain fraction of reproductive mass
-
-!     bdmstandstem  - standing stem mass (kg/m^2)
-!     bdmstandleaf  - standing leaf mass (kg/m^2)
-!     bdmstandstore - standing storage mass (kg/m^2)
-
-!     bdmflatstem  - flat stem mass (kg/m^2)
-!     bdmflatleaf  - flat leaf mass (kg/m^2)
-!     bdmflatstore - flat storage mass (kg/m^2)
-
-!     bddstm   - residue pool stem count (# stems/m^2)
-!     bdgrainf - internally computed grain fraction of reproductive mass
-!     bdhyfg - flag indicating the part of plant to apply the "grain fraction",
-!              GRF, to when removing that plant part for yield
-!         0     GRF applied to above ground storage (seeds, reproductive)
-!         1     GRF times growth stage factor (see growth.for) applied to above ground storage (seeds, reproductive)
-!         2     GRF applied to all aboveground biomass (forage)
-!         3     GRF applied to leaf mass (tobacco)
-!         4     GRF applied to stem mass (sugarcane)
-!         5     GRF applied to below ground storage mass (potatoes, peanuts)
+!     residue - structure containing residue state variables to be modified
 
 !     tot_mass_rem - mass of material removed by this harvest operation (kg/m^2)
 !     sel_mass_left - mass of material left in pools from which mass is removed
@@ -220,12 +189,12 @@
           ! thin residue decomposition crop pools
           call thin_pool (                                              &
      &         thinval, grainf, standf,                                 &
-     &         bdmstandstem(idy), bdmstandleaf(idy), bdmstandstore(idy),&
-     &         bdmflatstem(idy), bdmflatleaf(idy), bdmflatstore(idy),   &
-     &         bdgrainf(idy), bdhyfg(idy), tot_mass_rem, sel_mass_left)
+     &         residue(idy)%mass%standstem, residue(idy)%mass%standleaf, residue(idy)%mass%standstore,&
+     &         residue(idy)%mass%flatstem, residue(idy)%mass%flatleaf, residue(idy)%mass%flatstore,   &
+     &         residue(idy)%geometry%grainf, residue(idy)%geometry%hyfg, tot_mass_rem, sel_mass_left)
 
           ! modify stem count to reflect change
-          bddstm(idy) = bddstm(idy) * thinval
+          residue(idy)%geometry%dstm = residue(idy)%geometry%dstm * thinval
       end do
 
       return

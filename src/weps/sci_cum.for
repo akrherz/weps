@@ -2,17 +2,21 @@
 !$Date$
 !$Revision$
 !$HeadURL$
-      subroutine sci_cum( isr )
+
+      subroutine sci_cum( isr, restot )
+
+      use biomaterial, only: biototal
 
 !     + + + ARGUMENT DECLARATIONS + + +
-      integer isr
+      integer, intent(in) :: isr
+      type(biototal), intent(in) :: restot
 
 !     + + + ARGUMENT DEFINITIONS + + +
 !     isr - subregion index
+!     restot - structure containing residue totals
 
 !     + + + INCLUDE + + +
       include 'p1werm.inc'
-      include 'd1glob.inc'
       include 'command.inc'
       include 'erosion/e2erod.inc'
       include 'erosion/e2grid.inc'
@@ -46,8 +50,8 @@
       end if
 
       ! allbiomass_sum(isr) = allbiomass_sum(isr) + admtotto4(isr)
-      allbiomass_sum(isr) = allbiomass_sum(isr) + admftot(isr)          &
-     &      + admsttot(isr) + admbgtot(isr) + admrttotto4(isr)
+      allbiomass_sum(isr) = allbiomass_sum(isr) + restot%mftot          &
+     &      + restot%msttot + restot%mbgtot + restot%mrttotto4
 
       allerosion_sum(isr) = allerosion_sum(isr) + total
       days_sum(isr) = days_sum(isr) + 1

@@ -3,15 +3,19 @@
 !$Revision$
 !$HeadURL$
 
-      subroutine dbgdmp(day,sr)
+      subroutine dbgdmp(day,sr, residue)
 ! ****************************************************************** wjr
 !     The dumps variables that have gone out of range
 
 !       EDIT HISTORY
 !       01-Mar-99       wjr     original coding
 
-      integer  day
-      integer  sr
+      use biomaterial, only: biomatter
+
+!     + + + ARGUMENT DECLARATIONS + + +
+      integer, intent(in) :: day
+      integer, intent(in) :: sr
+      type(biomatter), dimension(:), intent(in) :: residue
       
 !     + + + GLOBAL COMMON BLOCKS + + +
 
@@ -36,7 +40,6 @@
       include 'c1db2.inc'
       include 'c1db3.inc'
       include 'c1glob.inc'
-      include 'd1glob.inc'
       include 'b1glob.inc'
       include 'w1clig.inc'
       include 'w1wind.inc'
@@ -592,63 +595,50 @@
 !
       if (ahzsnd(sr).lt.0.0.or.ahzsnd(sr).gt.tstmax)                    &
      &  write(*,*) 'day ',day,' ahzsnd ', ahzsnd(sr)
-!
+
 ! p1werm
+
+   do idx=1,mnbpls
+      if (residue(idx)%deriv%mf .lt. 0.0 .or. residue(idx)%deriv%mf .gt. tstmax) &
+         write(*,*) 'day ',day,' residue(',idx,')%deriv%mf', residue(idx)%deriv%mf
+   end do
+
+   do idx=1,mnsz
+      do jdx=1,mnbpls
+         if (residue(jdx)%deriv%bg(idx)%mbgz .lt. 0.0 .or. residue(jdx)%deriv%bg(idx)%mbgz .gt. tstmax) &
+            write(*,*) 'day ',day,' residue(',jdx,')%deriv%bg(',idx,')%mbgz ', residue(jdx)%deriv%bg(idx)%mbgz
 !
-      do 145 idx=1,mnbpls
-      if (admf(idx,sr).lt.0.0.or.admf(idx,sr).gt.tstmax)                &
-     &  write(*,*) 'day ',day,' admf(',idx,')', admf(idx,sr)
-145   continue
-!
-! Not used anymore
-!      do 150 idx=0,mncz
-!      if (adma(idx, sr).lt.0.0.or.adma(idx, sr).gt.tstmax)
-!     &  write(*,*) 'day ',day,' adma(',idx,') ', adma(idx, sr)
-!  150 continue     
-!
-!      if (admbt(sr).lt.0.0.or.admbt(sr).gt.tstmax)
-!     &  write(*,*) 'day ',day,' admbt ', admbt(sr)
-!
-      do 160 idx=1,mnsz
-      do 170 jdx=1,mnbpls
-      if (admbgz(idx, jdx, sr).lt.0.0 .or.                              &
-     &    admbgz(idx, jdx, sr).gt.tstmax)                               &
-     &  write(*,*) 'day ',day,' admbgz(',idx,jdx,') ',                  &
-     &    admbgz(idx, jdx, sr)
-!
-      if (admrtz(idx, jdx, sr).lt.0.0 .or.                              &
-     &    admrtz(idx, jdx, sr).gt.tstmax)                               &
-     &  write(*,*) 'day ',day,' admrtz(',idx,jdx,') ',                  &
-     &    admrtz(idx, jdx, sr)
-  170 continue
-  160 continue
-!
+         if (residue(jdx)%deriv%bg(idx)%mrtz .lt. 0.0 .or. residue(jdx)%deriv%bg(idx)%mrtz .gt. tstmax) &
+     &  write(*,*) 'day ',day,' residue(',jdx,')%deriv%bg(',idx,')%mrtz ', residue(jdx)%deriv%bg(idx)%mrtz
+      end do
+   end do
+
 ! d1glob
-!
+
       if (dmpflg) write(*,*) 'd1glob'
 !      
-      do 180 idx=1,mnbpls
-      if (adzht(idx, sr).lt.tstmin.or.adzht(idx, sr).gt.tstmax)         &
-     &  write(*,*) 'day ',day,' adzht(',idx,') ', adzht(idx, sr)
+   do idx=1,mnbpls
+      if (residue(idx)%geometry%zht .lt. tstmin .or. residue(idx)%geometry%zht .gt. tstmax) &
+     &  write(*,*) 'day ',day,' residue(',idx,')%geometry%zht ', residue(idx)%geometry%zht
 
-      if (adm(idx, sr).lt. 0.0 .or.adm(idx, sr).gt.tstmax)              &
-     &  write(*,*) 'day ',day,' adm(',idx,') ', adm(idx, sr)
+      if (residue(idx)%deriv%m .lt. 0.0 .or. residue(idx)%deriv%m .gt. tstmax) &
+     &  write(*,*) 'day ',day,' residue(',idx,')%deriv%m ', residue(idx)%deriv%m
 
-      if (admst(idx, sr).lt. 0.0 .or.admst(idx, sr).gt.tstmax)          &
-     &  write(*,*) 'day ',day,' admst(',idx,') ', admst(idx, sr)
+      if (residue(idx)%deriv%mst .lt. 0.0 .or. residue(idx)%deriv%mst .gt. tstmax) &
+     &  write(*,*) 'day ',day,' residue(',idx,')%deriv%mst ', residue(idx)%deriv%mst
 
-      if (admf(idx, sr).lt. 0.0 .or.admf(idx, sr).gt.tstmax)            &
-     &  write(*,*) 'day ',day,' admf(',idx,') ', admf(idx, sr)
+      if (residue(idx)%deriv%mf .lt. 0.0 .or. residue(idx)%deriv%mf .gt. tstmax) &
+     &  write(*,*) 'day ',day,' residue(',idx,')%deriv%mf ', residue(idx)%deriv%mf
 
-      if (admbg(idx, sr).lt. 0.0 .or.admbg(idx, sr).gt.tstmax)          &
-     &  write(*,*) 'day ',day,' admbg(',idx,') ', admbg(idx, sr)
+      if (residue(idx)%deriv%mbg .lt. 0.0 .or. residue(idx)%deriv%mbg .gt. tstmax) &
+     &  write(*,*) 'day ',day,' residue(',idx,')%deriv%mbg ', residue(idx)%deriv%mbg
 
-      if (admrt(idx, sr).lt. 0.0 .or.admrt(idx, sr).gt.tstmax)          &
-     &  write(*,*) 'day ',day,' admrt(',idx,') ', admrt(idx, sr)
+      if (residue(idx)%deriv%mrt .lt. 0.0 .or. residue(idx)%deriv%mrt .gt. tstmax) &
+     &  write(*,*) 'day ',day,' residue(',idx,')%deriv%mrt ', residue(idx)%deriv%mrt
 
-      if (addstm(idx, sr).lt. 0.0 .or.addstm(idx, sr).gt.tstmax)        &
-     &  write(*,*) 'day ',day,' addstm(',idx,') ', addstm(idx, sr)
-  180 continue     
+      if (residue(idx)%geometry%dstm .lt. 0.0 .or. residue(idx)%geometry%dstm .gt. tstmax) &
+     &  write(*,*) 'day ',day,' residue(',idx,')%geometry%dstm ', residue(idx)%geometry%dstm
+   end do
 
 ! c1db3
 !

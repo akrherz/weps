@@ -1,19 +1,9 @@
-!
 !$Author$
 !$Date$
 !$Revision$
 !$HeadURL$
-!
-!
-!
-      subroutine liftvt                                                 &
-     &              (liftf, tillf, bdrbc, nlay,                         &
-     &           bdmflatstem, bdmflatleaf, bdmflatstore,                &
-     &           bdmflatrootstore, bdmflatrootfiber,                    &
-     &           bdmbgstemz, bdmbgleafz, bdmbgstorez,                   &
-     &           bdmbgrootstorez, bdmbgrootfiberz,                      &
-     &           resurface_roots, bflg)
 
+      subroutine liftvt (liftf, tillf, nlay, residue, resurface_roots, bflg)
 
 !     + + + PURPOSE + + +
 !
@@ -22,54 +12,28 @@
 !     buried biomass to the surface.  It deals only with the biomass
 !     pools (ie no live crop is involved)
 !
-!
 !     + + + KEYWORDS + + +
 !     bury, lift, biomass manipulation
+
+      use biomaterial, only: biomatter
 
       include 'p1werm.inc'
 !
 !     + + + ARGUMENT DECLARATIONS + + +
-      integer resurface_roots
-      integer nlay, bflg
       real    liftf(mnrbc)
       real    tillf
-      integer bdrbc(mnbpls)
-
-      real   bdmflatstem(mnbpls)
-      real   bdmflatleaf(mnbpls)
-      real   bdmflatstore(mnbpls)
-
-      real   bdmflatrootstore(mnbpls)
-      real   bdmflatrootfiber(mnbpls)
-
-      real   bdmbgstemz(mnsz,mnbpls)
-      real   bdmbgleafz(mnsz,mnbpls)
-      real   bdmbgstorez(mnsz,mnbpls)
-
-      real   bdmbgrootstorez(mnsz,mnbpls)
-      real   bdmbgrootfiberz(mnsz,mnbpls)
-
+      integer nlay
+      type(biomatter), dimension(:), intent(inout) :: residue
+      integer resurface_roots
+      integer bflg
 
 !     + + + ARGUMENT DEFINITIONS + + +
-!     resurface_roots - flag to specify whether roots are resurfaced or not
 !     liftf     - fraction of buried material lifted to the surface for
 !                 different residue burial classes (m^2/m^2)
 !     tillf    - fraction of soil area tilled by the machine
 !     nlay      - number of soil layers used in the operation(s)
-!     bdmflatstem  - flat stem mass (kg/m^2)
-!     bdmflatleaf  - flat leaf mass (kg/m^2)
-!     bdmflatstore - flat storage mass (kg/m^2)
-
-!     bdmflatstore - flat storage root mass (kg/m^2)
-!     bdmflatfiber - flat fibrous root mass (kg/m^2)
-
-!     bdmbgstemz  - buried stem mass by layer (kg/m^2)
-!     bdmbgleafz  - buried leaf mass by layer (kg/m^2)
-!     bdmbgstorez - buried (from above ground) storage mass by layer (kg/m^2)
-
-!     bdmbgrootstorez - buried storage root mass by layer (kg/m^2)
-!     bdmbgrootfiberz - buried fibrous root mass by layer (kg/m^2)
-
+!     residue - structure containing residue state variables to be modified
+!     resurface_roots - flag to specify whether roots are resurfaced or not
 !     bflg      - flag indicating what to manipulate
 !       0 - All standing material is manipulate (both crop and residue)
 !       1 - Crop is cut
@@ -116,67 +80,57 @@
 !     perform the lifting of biomass
       do idy = 1,mnbpls
 !         check for proper indexes in bdrbc
-          if( (bdrbc(idy).ge.1).and.(bdrbc(idy).le.mnrbc) ) then
+          if( (residue(idy)%database%rbc .ge. 1) .and. (residue(idy)%database%rbc .le. mnrbc) ) then
 !             lift it if biomass flag right
               if (BTEST(tflg,idy))then
 
                   ! stem
                   lifttot = 0.0
                   do lay=1,nlay
-                      liftlay(lay) = bdmbgstemz(lay,idy)                &
-     &                             * liftf(bdrbc(idy))*tillf
+                      liftlay(lay) = residue(idy)%mass%bg(lay)%stemz * liftf(residue(idy)%database%rbc) * tillf
                       lifttot = lifttot + liftlay(lay)
-                      bdmbgstemz(lay,idy) = bdmbgstemz(lay,idy)         &
-     &                                    - liftlay(lay)
+                      residue(idy)%mass%bg(lay)%stemz = residue(idy)%mass%bg(lay)%stemz - liftlay(lay)
                   end do
-                  bdmflatstem(idy) = bdmflatstem(idy) + lifttot
+                  residue(idy)%mass%flatstem = residue(idy)%mass%flatstem + lifttot
 
                   ! leaf
                   lifttot = 0.0
                   do lay=1,nlay
-                      liftlay(lay) = bdmbgleafz(lay,idy)                &
-     &                             * liftf(bdrbc(idy))*tillf
+                      liftlay(lay) = residue(idy)%mass%bg(lay)%leafz * liftf(residue(idy)%database%rbc) * tillf
                       lifttot = lifttot + liftlay(lay)
-                      bdmbgleafz(lay,idy) = bdmbgleafz(lay,idy)         &
-     &                                    - liftlay(lay)
+                      residue(idy)%mass%bg(lay)%leafz = residue(idy)%mass%bg(lay)%leafz - liftlay(lay)
                   end do
-                  bdmflatleaf(idy) = bdmflatleaf(idy) + lifttot
+                  residue(idy)%mass%flatleaf = residue(idy)%mass%flatleaf + lifttot
 
                   ! store
                   lifttot = 0.0
                   do lay=1,nlay
-                      liftlay(lay) = bdmbgstorez(lay,idy)               &
-     &                             * liftf(bdrbc(idy))*tillf
+                      liftlay(lay) = residue(idy)%mass%bg(lay)%storez * liftf(residue(idy)%database%rbc) * tillf
                       lifttot = lifttot + liftlay(lay)
-                      bdmbgstorez(lay,idy) = bdmbgstorez(lay,idy)       &
-     &                                     - liftlay(lay)
+                      residue(idy)%mass%bg(lay)%storez = residue(idy)%mass%bg(lay)%storez - liftlay(lay)
                   end do
-                  bdmflatstore(idy) = bdmflatstore(idy) + lifttot
+                  residue(idy)%mass%flatstore = residue(idy)%mass%flatstore + lifttot
 
                   ! rootstore
                   if (resurface_roots == 1) then
                   lifttot = 0.0
                   do lay=1,nlay
-                      liftlay(lay) = bdmbgrootstorez(lay,idy)           &
-     &                             * liftf(bdrbc(idy))*tillf
+                      liftlay(lay) = residue(idy)%mass%bg(lay)%rootstorez * liftf(residue(idy)%database%rbc) * tillf
                       lifttot = lifttot + liftlay(lay)
-                      bdmbgrootstorez(lay,idy)= bdmbgrootstorez(lay,idy)&
-     &                                        - liftlay(lay)
+                      residue(idy)%mass%bg(lay)%rootstorez = residue(idy)%mass%bg(lay)%rootstorez - liftlay(lay)
                   end do
-                  bdmflatrootstore(idy)= bdmflatrootstore(idy) + lifttot
+                  residue(idy)%mass%flatrootstore = residue(idy)%mass%flatrootstore + lifttot
                   endif
 
                   ! rootfiber
                   lifttot = 0.0
                   if (resurface_roots == 1) then
                   do lay=1,nlay
-                      liftlay(lay) = bdmbgrootfiberz(lay,idy)           &
-     &                             * liftf(bdrbc(idy))*tillf
+                      liftlay(lay) = residue(idy)%mass%bg(lay)%rootfiberz * liftf(residue(idy)%database%rbc) * tillf
                       lifttot = lifttot + liftlay(lay)
-                      bdmbgrootfiberz(lay,idy)= bdmbgrootfiberz(lay,idy)&
-     &                                        - liftlay(lay)
+                      residue(idy)%mass%bg(lay)%rootfiberz = residue(idy)%mass%bg(lay)%rootfiberz - liftlay(lay)
                   end do
-                  bdmflatrootfiber(idy)= bdmflatrootfiber(idy) + lifttot
+                  residue(idy)%mass%flatrootfiber = residue(idy)%mass%flatrootfiber + lifttot
                   endif
 
               endif

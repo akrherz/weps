@@ -10,10 +10,7 @@
      &           bczht, bcgrainf, bchyfg,                               &
      &           btmstandstem, btmstandleaf, btmstandstore,             &
      &           btmflatstem, btmflatleaf, btmflatstore,                &
-     &           btzht, btgrainf,                                       &
-     &           bdmstandstem, bdmstandleaf, bdmstandstore,             &
-     &           bdmflatstem, bdmflatleaf, bdmflatstore,                &
-     &           bdzht, bdgrainf, bdhyfg,                               &
+     &           btzht, btgrainf, residue,                              &
      &           tot_mass_rem, sel_mass_left)
 
 
@@ -39,6 +36,7 @@
 !     cut, transfer, biomass manipulation
 
       use weps_interface_defs
+      use biomaterial, only: biomatter
 
       include 'p1werm.inc'
       include 'p1unconv.inc'
@@ -55,18 +53,7 @@
       real btmstandstem, btmstandleaf, btmstandstore
       real btmflatstem, btmflatleaf, btmflatstore
       real btzht, btgrainf
-
-      real bdmstandstem(mnbpls)
-      real bdmstandleaf(mnbpls)
-      real bdmstandstore(mnbpls)
-
-      real bdmflatstem(mnbpls)
-      real bdmflatleaf(mnbpls)
-      real bdmflatstore(mnbpls)
-
-      real bdzht(mnbpls)
-      real bdgrainf(mnbpls)
-      integer bdhyfg(mnbpls)
+      type(biomatter), dimension(:), intent(inout) :: residue
 
       real tot_mass_rem, sel_mass_left
 
@@ -114,25 +101,7 @@
 !     btgrainf - internally computed grain fraction of reproductive mass
 !     NOTE: harvestable yield flag for crop pool used also for temporary pool
 
-!     bdmstandstem  - standing stem mass (kg/m^2)
-!     bdmstandleaf  - standing leaf mass (kg/m^2)
-!     bdmstandstore - standing storage mass (kg/m^2)
-
-!     bdmflatstem  - flat stem mass (kg/m^2)
-!     bdmflatleaf  - flat leaf mass (kg/m^2)
-!     bdmflatstore - flat storage mass (kg/m^2)
-
-!     bdzht  - Residue height (m)
-!     bdgrainf - internally computed grain fraction of reproductive mass
-!     bdhyfg - flag indicating the part of plant to apply the "grain fraction",
-!              GRF, to when removing that plant part for yield
-!         0     GRF applied to above ground storage (seeds, reproductive)
-!         1     GRF times growth stage factor (see growth.for) applied to above ground storage (seeds, reproductive)
-!         2     GRF applied to all aboveground biomass (forage)
-!         3     GRF applied to leaf mass (tobacco)
-!         4     GRF applied to stem mass (sugarcane)
-!         5     GRF applied to below ground storage mass (potatoes, peanuts)
-
+!     residue - structure containing residue state variables to be modified
 !     tot_mass_rem - total of all mass removed from the field
 !     sel_mass_left - mass of material left in pools from which mass is removed
 !                      by this harvest operation (kg/m^2)
@@ -211,9 +180,9 @@
           ! separate for living and dead crop. Grain is harvested out of both
           call cut_pool (                                               &
      &           cutht, grainf, standf,                                 &
-     &           bdmstandstem(idy),bdmstandleaf(idy),bdmstandstore(idy),&
-     &           bdzht(idy), bdgrainf(idy), bdhyfg(idy),                &
-     &           bdmflatstem(idy), bdmflatleaf(idy), bdmflatstore(idy), &
+     &           residue(idy)%mass%standstem, residue(idy)%mass%standleaf, residue(idy)%mass%standstore, &
+     &           residue(idy)%geometry%zht, residue(idy)%geometry%grainf, residue(idy)%geometry%hyfg, &
+     &           residue(idy)%mass%flatstem, residue(idy)%mass%flatleaf, residue(idy)%mass%flatstore, &
      &           tot_mass_rem, sel_mass_left )
       end do
 

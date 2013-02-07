@@ -8,8 +8,6 @@
 !
       subroutine invproc(nlay,thick,xcomp) 
 
-      use weps_interface_defs
-
       include 'p1werm.inc'
 
 !     + + + PURPOSE + + +

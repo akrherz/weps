@@ -1,4 +1,8 @@
-!
+!$Author$
+!$Date$
+!$Revision$
+!$HeadURL$
+
 !   Add this definition file in every source file to insure that the compiler can
 !   verify subroutine and function signatures.
 !  
@@ -131,7 +135,7 @@
      &                 bctdtm, bczmrt, bctmin, bctopt,                  &
      &                 bc0fd1, bc0fd2, cc0fd1, cc0fd2,                  &
      &                 bc0bceff,                                        &
-     &                 bdmb, bc0alf, bc0blf, bc0clf,                    &
+     &                 bc0alf, bc0blf, bc0clf,                          &
      &                 bc0dlf, bc0arp, bc0brp, bc0crp,                  &
      &                 bc0drp, bc0aht, bc0bht,                          &
      &                 bc0sla, bc0hue, bctverndel,                      &
@@ -168,7 +172,6 @@
      &                 bgmflatstem, bgmflatleaf, bgmflatstore,          &
      &                 bgmbgstemz,                                      &
      &                 bgzht, bgdstm, bgxstmrep, bggrainf )
-      use file_io_mod, only: luocrop, luoshoot
       integer bnslay, bctdtm, bcthudf
       real bszlyt(*)
       real bszlyd(*), bsdblk(*), bsfcec(*), bsfcce(*)
@@ -183,7 +186,7 @@
       real bcxrow
       real bczmrt, bctmin, bctopt
       real bc0fd1, bc0fd2
-      real cc0fd1, cc0fd2, bc0bceff, bdmb(*)
+      real cc0fd1, cc0fd2, bc0bceff
       real bc0alf, bc0blf, bc0clf, bc0dlf, bc0arp, bc0brp
       real bc0crp, bc0drp, bc0aht, bc0bht
       real bc0sla, bc0hue, bctverndel
@@ -1141,16 +1144,23 @@
       type(biomatter), dimension(:,:), intent(out) :: residue
       end subroutine openfils
 !--------------------------------
-      subroutine plotdata(sr) 
-      integer sr
+      subroutine plotdata(sr, restot)
+      use biomaterial, only: biototal
+      integer, intent(in) :: sr
+      type(biototal), intent(in) :: restot
       end subroutine plotdata
 !--------------------------------
       subroutine save_soil(isr)
       integer isr
       end subroutine save_soil
 !--------------------------------
+      subroutine sci_cum( isr, restot )
+      use biomaterial, only: biototal
+      integer, intent(in) :: isr
+      type(biototal), intent(in) :: restot
+      end subroutine sci_cum
+!--------------------------------
       subroutine sort (iarr,n,p1,p5,p9)
-
       integer  n
       real iarr(*),p1, p5, p9
       end subroutine sort
@@ -1370,11 +1380,9 @@
      &           bczht, bcgrainf, bchyfg,                               &
      &           btmstandstem, btmstandleaf, btmstandstore,             &
      &           btmflatstem, btmflatleaf, btmflatstore,                &
-     &           btzht, btgrainf,                                       &
-     &           bdmstandstem, bdmstandleaf, bdmstandstore,             &
-     &           bdmflatstem, bdmflatleaf, bdmflatstore,                &
-     &           bdzht, bdgrainf, bdhyfg,                               &
+     &           btzht, btgrainf, residue,                              &
      &           tot_mass_rem, sel_mass_left)
+      use biomaterial, only: biomatter
       integer cutflg
       real    cutht, grainf, cropf, standf
       real bcmstandstem, bcmstandleaf, bcmstandstore
@@ -1384,17 +1392,31 @@
       real btmstandstem, btmstandleaf, btmstandstore
       real btmflatstem, btmflatleaf, btmflatstore
       real btzht, btgrainf
-      real bdmstandstem(*)
-      real bdmstandleaf(*)
-      real bdmstandstore(*)
-      real bdmflatstem(*)
-      real bdmflatleaf(*)
-      real bdmflatstore(*)
-      real bdzht(*)
-      real bdgrainf(*)
-      integer bdhyfg(*)
-      real tot_mass_rem, sel_mass_left   
+      type(biomatter), dimension(:), intent(inout) :: residue
+      real tot_mass_rem, sel_mass_left
       end subroutine cut
+!---------------------------------
+      subroutine cut_pool (                                             &
+     &           poolcutht, grainf, cropf,                                  &
+     &           poolmstandstem, poolmstandleaf, poolmstandstore,       &
+     &           poolzht, poolgrainf, poolhyfg,                         &
+     &           poolmflatstem, poolmflatleaf, poolmflatstore,          &
+     &           tot_mass_rem, sel_mass_left )
+      real    poolcutht
+      real    grainf
+      real    cropf
+      real    poolmstandstem
+      real    poolmstandleaf
+      real    poolmstandstore
+      real    poolzht
+      real    poolgrainf
+      integer poolhyfg
+      real    poolmflatstem
+      real    poolmflatleaf
+      real    poolmflatstore
+      real    tot_mass_rem
+      real    sel_mass_left
+      end subroutine cut_pool
 !---------------------------------
       subroutine fall_mod_vt ( rate_mult_vt, thresh_mult_vt,            &
      &                         sel_pool, fracarea,                      &
@@ -1412,17 +1434,14 @@
       end subroutine fall_mod_vt  
 !-----------------------------------
       subroutine flatvt                                                 &
-     &                 (fltcoef, tillf, bcrbc, bdrbc,                   &
+     &                 (fltcoef, tillf, bcrbc,                          &
      &           bcmstandstem, bcmstandleaf, bcmstandstore,             &
      &           btmflatstem, btmflatleaf, btmflatstore,                &
-     &           bcdstm,                                                &
-     &           bdmstandstem, bdmstandleaf, bdmstandstore,             &
-     &           bdmflatstem, bdmflatleaf, bdmflatstore,                &
-     &           bddstm, bflg)
+     &           bcdstm, residue, bflg)
+      use biomaterial, only: biomatter
       real    fltcoef(*)
       real    tillf
       integer bcrbc
-      integer bdrbc(*)
       real    bcmstandstem
       real    bcmstandleaf
       real    bcmstandstore
@@ -1430,14 +1449,8 @@
       real    btmflatleaf
       real    btmflatstore
       real    bcdstm
-      real    bdmstandstem(*)
-      real    bdmstandleaf(*)
-      real    bdmstandstore(*)
-      real    bdmflatstem(*)
-      real    bdmflatleaf(*)
-      real    bdmflatstore(*)
-      real    bddstm(*)
-      integer bflg   
+      type(biomatter), dimension(:), intent(inout) :: residue
+      integer bflg
       end subroutine flatvt
 !---------------------------
       real function func(y) 
@@ -1456,7 +1469,8 @@
      &               satwatr, thrdbar, ftnbar,                          &
      &               avawatr,                                           &
      &               soilcb,soilair,satcond,                            &
-     &               rootm,blwgnd,massf)
+     &               residue, massf)
+      use biomaterial, only: biomatter
       integer nlay
       real density(*),laythk(*)
       real sand(*),silt(*),clay(*), rock_vol(*)
@@ -1469,7 +1483,7 @@
       real satwatr(*), thrdbar(*), ftnbar(*)
       real avawatr(*)
       real soilcb(*), soilair(*), satcond(*)
-      real rootm(100,*),blwgnd(100,*)
+      type(biomatter), dimension(:), intent(inout) :: residue
       real massf(26+1,*) 
       end subroutine invert
 !--------------------------
@@ -1536,29 +1550,14 @@
       real    btgrainf  
       end subroutine kill_crop
 !---------------------------------
-      subroutine liftvt                                                 &
-     &              (liftf, tillf, bdrbc, nlay,                         &
-     &           bdmflatstem, bdmflatleaf, bdmflatstore,                &
-     &           bdmflatrootstore, bdmflatrootfiber,                    &
-     &           bdmbgstemz, bdmbgleafz, bdmbgstorez,                   &
-     &           bdmbgrootstorez, bdmbgrootfiberz,                      &
-     &           resurface_roots, bflg)
-      integer resurface_roots
-      integer nlay, bflg
+      subroutine liftvt (liftf, tillf, nlay, residue, resurface_roots, bflg)
+      use biomaterial, only: biomatter
       real    liftf(*)
       real    tillf
-      integer bdrbc(*)
-      real   bdmflatstem(*)
-      real   bdmflatleaf(*)
-      real   bdmflatstore(*)
-      real   bdmflatrootstore(*)
-      real   bdmflatrootfiber(*)
-      real   bdmbgstemz(100,*)
-      real   bdmbgleafz(100,*)
-      real   bdmbgstorez(100,*)
-
-      real   bdmbgrootstorez(100,*)
-      real   bdmbgrootfiberz(100,*)
+      integer nlay
+      type(biomatter), dimension(:), intent(inout) :: residue
+      integer resurface_roots
+      integer bflg
       end subroutine liftvt
 !--------------------------------
       subroutine loosn (u,tillf,nlay,density,sbd,laythk)
@@ -1568,57 +1567,33 @@
       end subroutine loosn
 !---------------------------------
       subroutine mburyvt                                                &
-     &          (buryf,tillf,bcrbc,bdrbc,burydistflg,                   &
+     &          (buryf,tillf,bcrbc,burydistflg,                         &
      &           nlay,lthick,ldepth,                                    &
      &           btmflatstem, btmflatleaf, btmflatstore,                &
      &           btmflatrootstore, btmflatrootfiber,                    &
      &           btmbgstemz, btmbgleafz, btmbgstorez,                   &
      &           btmbgrootstorez, btmbgrootfiberz,                      &
-     &           bdmflatstem, bdmflatleaf, bdmflatstore,                &
-     &           bdmflatrootstore, bdmflatrootfiber,                    &
-     &           bdmbgstemz, bdmbgleafz, bdmbgstorez,                   &
-     &           bdmbgrootstorez, bdmbgrootfiberz,                      &
-     &           bflg)
-
+     &           residue, bflg)
+      use biomaterial, only: biomatter
       real    buryf(*)
       real    tillf
       integer bcrbc
-      integer bdrbc(*)
       integer burydistflg
-
       integer nlay
       real    lthick(*)
       real    ldepth(*)
-
       real   btmflatstem
       real   btmflatleaf
       real   btmflatstore
-
       real   btmflatrootstore
       real   btmflatrootfiber
-
       real   btmbgstemz(*)
       real   btmbgleafz(*)
       real   btmbgstorez(*)
-
       real   btmbgrootstorez(*)
       real   btmbgrootfiberz(*)
-
-      real   bdmflatstem(*)
-      real   bdmflatleaf(*)
-      real   bdmflatstore(*)
-
-      real   bdmflatrootstore(*)
-      real   bdmflatrootfiber(*)
-
-      real   bdmbgstemz(100,*)
-      real   bdmbgleafz(100,*)
-      real   bdmbgstorez(100,*)
-
-      real   bdmbgrootstorez(100,*)
-      real   bdmbgrootfiberz(100,*)
-
-      integer bflg      
+      type(biomatter), dimension(:), intent(inout) :: residue
+      integer bflg
       end subroutine mburyvt
 !-------------------------------
       subroutine mix                                                    &
@@ -1633,7 +1608,8 @@
      &               satwatr, thrdbar, ftnbar,                          &
      &               avawatr,                                           &
      &               soilcb,soilair,satcond,                            &
-     &               rootm,blwgnd,massf)
+     &               residue, massf)
+      use biomaterial, only: biomatter
       integer nlay
       real u,tillf,density(*),laythk(*)
       real sand(*),silt(*),clay(*), rock_vol(*)
@@ -1646,7 +1622,7 @@
       real satwatr(*), thrdbar(*), ftnbar(*)
       real avawatr(*)
       real soilcb(*), soilair(*), satcond(*)
-      real rootm(100,*),blwgnd(100,*)
+      type(biomatter), dimension(:), intent(inout) :: residue
       real massf(26+1,*)  
       end subroutine mix
 !-------------------------
@@ -1695,14 +1671,9 @@
      &           btmflatrootstore, btmflatrootfiber,                    &
      &           btmbgstemz, btmbgleafz, btmbgstorez,                   &
      &           btmbgrootstorez, btmbgrootfiberz,                      &
-     &           btzht, btdstm, btgrainf,                               &
-     &           bdmstandstem, bdmstandleaf, bdmstandstore,             &
-     &           bdmflatstem, bdmflatleaf, bdmflatstore,                &
-     &           bdmflatrootstore, bdmflatrootfiber,                    &
-     &           bdmbgstemz, bdmbgleafz, bdmbgstorez,                   &
-     &           bdmbgrootstorez, bdmbgrootfiberz,                      &
-     &           bdzht, bddstm, bdgrainf, bdhyfg,                       &
+     &           btzht, btdstm, btgrainf, residue,                      &
      &           nslay, tot_mass_rem, sel_mass_left)
+      use biomaterial, only: biomatter
       integer sel_position, sel_pool, bflg
       real stemf, leaff, storef, rootstoref, rootfiberf
       real bcmstandstem, bcmstandleaf, bcmstandstore
@@ -1710,42 +1681,70 @@
       real bcmrootstorez(*), bcmrootfiberz(*)
       real bczht, bcdstm, bcgrainf
       integer bchyfg
-
       real btmstandstem, btmstandleaf, btmstandstore
       real btmflatstem, btmflatleaf, btmflatstore
       real btmflatrootstore, btmflatrootfiber
       real btmbgstemz(*), btmbgleafz(*), btmbgstorez(*)
       real btmbgrootstorez(*), btmbgrootfiberz(*)
       real bcmbgstemz(*)
-
       real btzht, btdstm, btgrainf
-
-      real bdmstandstem(*)
-      real bdmstandleaf(*)
-      real bdmstandstore(*)
-
-      real bdmflatstem(*)
-      real bdmflatleaf(*)
-      real bdmflatstore(*)
-
-      real bdmflatrootstore(*)
-      real bdmflatrootfiber(*)
-
-      real bdmbgstemz(100,*)
-      real bdmbgleafz(100,*)
-      real bdmbgstorez(100,*)
-
-      real bdmbgrootstorez(100,*)
-      real bdmbgrootfiberz(100,*)
-
-      real bdzht(*)
-      real bddstm(*)
-      real bdgrainf(*)
-      integer bdhyfg(*)
-
+      type(biomatter), dimension(:), intent(inout) :: residue
       integer nslay
       real   tot_mass_rem, sel_mass_left
       end subroutine remove
+!---------------------------------
+      subroutine rem_stand_pool(                                        &
+     &      stemf, leaff, storef, rootstoref, rootfiberf,               &
+     &      pool_stem, pool_leaf, pool_store,                           &
+     &      pool_rootstore, pool_rootfiber,                             &
+     &      nslay, pool_hyfg, pool_grainf, pool_dstm,                   &
+     &      tot_mass_rem, sel_mass_left )
+      real stemf, leaff, storef, rootstoref, rootfiberf
+      real pool_store, pool_leaf, pool_stem
+      real pool_rootstore(*), pool_rootfiber(*)
+      integer nslay, pool_hyfg
+      real pool_grainf, pool_dstm, tot_mass_rem, sel_mass_left
+      end subroutine rem_stand_pool
+!---------------------------------
+      subroutine rem_flat_pool(                                         &
+     &           stemf, leaff, storef, rootstoref, rootfiberf,          &
+     &           pool_stem, pool_leaf, pool_store,                      &
+     &           pool_rootstore, pool_rootfiber,                        &
+     &           pool_hyfg, pool_grainf, tot_mass_rem, sel_mass_left )
+      real stemf, leaff, storef, rootstoref, rootfiberf
+      real pool_store, pool_leaf, pool_stem
+      real pool_rootstore, pool_rootfiber
+      integer pool_hyfg
+      real pool_grainf, tot_mass_rem, sel_mass_left
+      end subroutine rem_flat_pool
+!---------------------------------
+      subroutine rem_bg_pool(                                           &
+     &      stemf, leaff, storef, rootstoref, rootfiberf,               &
+     &      pool_stem, pool_leaf, pool_store,                           &
+     &      pool_rootstore, pool_rootfiber,                             &
+     &      nslay, pool_hyfg, pool_grainf, tot_mass_rem, sel_mass_left )
+      real stemf, leaff, storef, rootstoref, rootfiberf
+      real pool_store(*), pool_leaf(*), pool_stem(*)
+      real pool_rootstore(*), pool_rootfiber(*)
+      integer nslay, pool_hyfg
+      real pool_grainf, tot_mass_rem, sel_mass_left
+      end subroutine rem_bg_pool
+!---------------------------------
+      subroutine adj_stand_pool(                                        &
+     &      start_standstem, start_standleaf, start_standstore,         &
+     &      start_rootstore, start_rootfiber,                           &
+     &      pool_standstem, pool_standleaf, pool_standstore,            &
+     &      pool_rootstore, pool_rootfiber,                             &
+     &      pool_flatstem, pool_flatleaf, pool_flatstore,               &
+     &      pool_dstm, nslay)
+      real start_standstem, start_standleaf, start_standstore
+      real start_rootstore(*), start_rootfiber(*)
+      real pool_standstem, pool_standleaf, pool_standstore
+      real pool_rootstore(*), pool_rootfiber(*)
+      real pool_flatstem, pool_flatleaf, pool_flatstore
+      real pool_dstm
+      integer nslay
+      end subroutine adj_stand_pool
 !---------------------------------
       subroutine resinit(resmass, resdepth, nlay, resarray, laythick)
 
@@ -1783,53 +1782,43 @@
      &           bcdstm, bcgrainf, bchyfg,                              &
      &           btmstandstem, btmstandleaf, btmstandstore,             &
      &           btmflatstem, btmflatleaf, btmflatstore,                &
-     &           btdstm, btgrainf,                                      &
-     &           bdmstandstem, bdmstandleaf, bdmstandstore,             &
-     &           bdmflatstem, bdmflatleaf, bdmflatstore,                &
-     &           bddstm, bdgrainf, bdhyfg,                              &
+     &           btdstm, btgrainf, residue,                             &
      &           tot_mass_rem, sel_mass_left)
-
-
+      use biomaterial, only: biomatter
       integer thinflg
       real    thinval, grainf, cropf, standf
-
       real    bcmstandstem
       real    bcmstandleaf
       real    bcmstandstore
-
       real    bcmflatstem
       real    bcmflatleaf
       real    bcmflatstore
-
       real    bcdstm
       real    bcgrainf
       integer bchyfg
-
       real    btmstandstem
       real    btmstandleaf
       real    btmstandstore
-
       real    btmflatstem
       real    btmflatleaf
       real    btmflatstore
-
       real    btdstm
       real    btgrainf
-
-      real    bdmstandstem(*)
-      real    bdmstandleaf(*)
-      real    bdmstandstore(*)
-
-      real    bdmflatstem(*)
-      real    bdmflatleaf(*)
-      real    bdmflatstore(*)
-
-      real    bddstm(*)
-      real    bdgrainf(*)
-      integer bdhyfg(*)
-
-      real    tot_mass_rem, sel_mass_left      
+      type(biomatter), dimension(:), intent(inout) :: residue
+      real    tot_mass_rem, sel_mass_left
       end subroutine thin
+!----------------------------------
+      subroutine thin_pool (                                            &
+     &           thinval, grainf, cropf,                                &
+     &           poolmstandstem, poolmstandleaf, poolmstandstore,       &
+     &           poolmflatstem, poolmflatleaf, poolmflatstore,          &
+     &           poolgrainf, poolhyfg, tot_mass_rem, sel_mass_left)
+      real    thinval, grainf, cropf
+      real    poolmstandstem, poolmstandleaf, poolmstandstore
+      real    poolmflatstem, poolmflatleaf, poolmflatstore
+      integer poolhyfg
+      real    poolgrainf, tot_mass_rem, sel_mass_left
+      end subroutine thin_pool
 !----------------------------------
       subroutine trans(                                                 &
      &           bcmstandstem, bcmstandleaf, bcmstandstore,             &
@@ -2552,9 +2541,11 @@
       real    bcxrow, bczht, bszrgh      
       end function biodrag
 !------------------------------------
-      subroutine dbgdmp(day,sr)
-      integer  day
-      integer  sr
+      subroutine dbgdmp(day,sr, residue)
+      use biomaterial, only: biomatter
+      integer, intent(in) :: day
+      integer, intent(in) :: sr
+      type(biomatter), dimension(:), intent(in) :: residue
       end subroutine dbgdmp
 !------------------------------------
       subroutine distriblay( nlay, bszlyd, bszlyt, layval, insertval, begind, endd )

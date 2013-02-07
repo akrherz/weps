@@ -16,13 +16,7 @@
      &           btmflatrootstore, btmflatrootfiber,                    &
      &           btmbgstemz, btmbgleafz, btmbgstorez,                   &
      &           btmbgrootstorez, btmbgrootfiberz,                      &
-     &           btzht, btdstm, btgrainf,                               &
-     &           bdmstandstem, bdmstandleaf, bdmstandstore,             &
-     &           bdmflatstem, bdmflatleaf, bdmflatstore,                &
-     &           bdmflatrootstore, bdmflatrootfiber,                    &
-     &           bdmbgstemz, bdmbgleafz, bdmbgstorez,                   &
-     &           bdmbgrootstorez, bdmbgrootfiberz,                      &
-     &           bdzht, bddstm, bdgrainf, bdhyfg,                       &
+     &           btzht, btdstm, btgrainf, residue,                      &
      &           nslay, tot_mass_rem, sel_mass_left)
 
 !     + + + PURPOSE + + +
@@ -61,6 +55,7 @@
 !     remove, biomass manipulation
 
       use weps_interface_defs
+      use biomaterial, only: biomatter
 
 !     + + + COMMON BLOCKS + + +
       include 'p1werm.inc'
@@ -82,29 +77,7 @@
       real bcmbgstemz(mnsz)
 
       real btzht, btdstm, btgrainf
-
-      real bdmstandstem(mnbpls)
-      real bdmstandleaf(mnbpls)
-      real bdmstandstore(mnbpls)
-
-      real bdmflatstem(mnbpls)
-      real bdmflatleaf(mnbpls)
-      real bdmflatstore(mnbpls)
-
-      real bdmflatrootstore(mnbpls)
-      real bdmflatrootfiber(mnbpls)
-
-      real bdmbgstemz(mnsz,mnbpls)
-      real bdmbgleafz(mnsz,mnbpls)
-      real bdmbgstorez(mnsz,mnbpls)
-
-      real bdmbgrootstorez(mnsz,mnbpls)
-      real bdmbgrootfiberz(mnsz,mnbpls)
-
-      real bdzht(mnbpls)
-      real bddstm(mnbpls)
-      real bdgrainf(mnbpls)
-      integer bdhyfg(mnbpls)
+      type(biomatter), dimension(:), intent(inout) :: residue
 
       integer nslay
       real   tot_mass_rem, sel_mass_left
@@ -196,36 +169,7 @@
 !            - It is computed by taking the tillering factor
 !              times the plant population density.
 !     btgrainf - internally computed grain fraction of reproductive mass
-
-!     bdmstandstem  - standing stem mass (kg/m^2)
-!     bdmstandleaf  - standing leaf mass (kg/m^2)
-!     bdmstandstore - standing storage mass (kg/m^2)
-
-!     bdmflatstem  - flat stem mass (kg/m^2)
-!     bdmflatleaf  - flat leaf mass (kg/m^2)
-!     bdmflatstore - flat storage mass (kg/m^2)
-
-!     bdmflatrootstore - flat storage root mass (kg/m^2)
-!     bdmflatrootfiber - flat fibrous root mass (kg/m^2)
-
-!     bdmbgstemz  - buried stem mass by layer (kg/m^2)
-!     bdmbgleafz  - buried leaf mass by layer (kg/m^2)
-!     bdmbgstorez - buried (from above ground) storage mass by layer (kg/m^2)
-
-!     bdmbgrootstorez - buried storage root mass by layer (kg/m^2)
-!     bdmbgrootfiberz - buried fibrous root mass by layer (kg/m^2)
-
-!     bdzht  - Residue height (m)
-!     bddstm - Number of residue stems per unit area (#/m^2)
-!     bdgrainf - internally computed grain fraction of reproductive mass
-!     bdhyfg - flag indicating the part of plant to apply the "grain fraction",
-!              GRF, to when removing that plant part for yield
-!         0     GRF applied to above ground storage (seeds, reproductive)
-!         1     GRF times growth stage factor (see growth.for) applied to above ground storage (seeds, reproductive)
-!         2     GRF applied to all aboveground biomass (forage)
-!         3     GRF applied to leaf mass (tobacco)
-!         4     GRF applied to stem mass (sugarcane)
-!         5     GRF applied to below ground storage mass (potatoes, peanuts)
+!     residue - structure containing residue state variables to be modified
 
 !     nlay      - number of layer from which below ground biomass is removed
 !     tot_mass_rem - mass of material removed by this harvest operation (kg/m^2)
@@ -388,28 +332,29 @@
          if (BTEST(tflg,idy)) then
           ! standing and rooted biomass
           ! set starting values
-          start_store = bdmstandstore(idy)
-          start_leaf = bdmstandleaf(idy)
-          start_stem = bdmstandstem(idy)
+          start_store = residue(idy)%mass%standstore
+          start_leaf = residue(idy)%mass%standleaf
+          start_stem = residue(idy)%mass%standstem
           do idx = 1, nslay
-              start_rootstore(idx) = bdmbgrootstorez(idx,idy)
-              start_rootfiber(idx) = bdmbgrootfiberz(idx,idy)
+              start_rootstore(idx) = residue(idy)%mass%bg(idx)%rootstorez
+              start_rootfiber(idx) = residue(idy)%mass%bg(idx)%rootfiberz
           end do
           if( BTEST(sel_position,0) ) then
               call rem_stand_pool(                                      &
      &        stemf, leaff, storef, rootstoref, rootfiberf,             &
-     &        bdmstandstem(idy), bdmstandleaf(idy), bdmstandstore(idy), &
-     &        bdmbgrootstorez(1,idy), bdmbgrootfiberz(1,idy),           &
-     &        nslay, bdhyfg(idy), bdgrainf(idy), bddstm(idy),           &
+     &        residue(idy)%mass%standstem, residue(idy)%mass%standleaf, residue(idy)%mass%standstore, &
+     &        residue(idy)%mass%bg(1:size(residue(idy)%mass%bg))%rootstorez, &
+     &        residue(idy)%mass%bg(1:size(residue(idy)%mass%bg))%rootfiberz, &
+     &        nslay, residue(idy)%geometry%hyfg, residue(idy)%geometry%grainf, residue(idy)%geometry%dstm, &
      &        tot_mass_rem, sel_mass_left )
           end if
           ! flat biomass
           if( BTEST(sel_position,1) ) then
               call rem_flat_pool(                                       &
      &        stemf, leaff, storef, rootstoref, rootfiberf,             &
-     &        bdmflatstem(idy), bdmflatleaf(idy), bdmflatstore(idy),    &
-     &        bdmflatrootstore(idy), bdmflatrootfiber(idy),             &
-     &        bdhyfg(idy), bdgrainf(idy), tot_mass_rem, sel_mass_left )
+     &        residue(idy)%mass%flatstem, residue(idy)%mass%flatleaf, residue(idy)%mass%flatstore, &
+     &        residue(idy)%mass%flatrootstore, residue(idy)%mass%flatrootfiber, &
+     &        residue(idy)%geometry%hyfg, residue(idy)%geometry%grainf, tot_mass_rem, sel_mass_left )
           end if
           ! buried biomass
           if( BTEST(sel_position,2) ) then
@@ -417,17 +362,20 @@
               ! root removal already done in standing
               call rem_bg_pool(                                         &
      &        stemf, leaff, storef, rootstoref, rootfiberf,             &
-     &        bdmbgstemz(1,idy), bdmbgleafz(1,idy), bdmbgstorez(1,idy), &
+     &        residue(idy)%mass%bg(1:size(residue(idy)%mass%bg))%stemz, residue(idy)%mass%bg(1:size(residue(idy)%mass%bg))%leafz, &
+     &        residue(idy)%mass%bg(1:size(residue(idy)%mass%bg))%storez, &
      &        pool_temp1z, pool_temp2z,                                 &
-     &        nslay, bdhyfg(idy), bdgrainf(idy),                        &
+     &        nslay, residue(idy)%geometry%hyfg, residue(idy)%geometry%grainf, &
      &        tot_mass_rem, sel_mass_left )
             else
               ! standing not done so do root removal here
               call rem_bg_pool(                                         &
      &        stemf, leaff, storef, rootstoref, rootfiberf,             &
-     &        bdmbgstemz(1,idy), bdmbgleafz(1,idy), bdmbgstorez(1,idy), &
-     &        bdmbgrootstorez(1,idy), bdmbgrootfiberz(1,idy),           &
-     &        nslay, bdhyfg(idy), bdgrainf(idy),                        &
+     &        residue(idy)%mass%bg(1:size(residue(idy)%mass%bg))%stemz, residue(idy)%mass%bg(1:size(residue(idy)%mass%bg))%leafz, &
+     &        residue(idy)%mass%bg(1:size(residue(idy)%mass%bg))%storez, &
+     &        residue(idy)%mass%bg(1:size(residue(idy)%mass%bg))%rootstorez, &
+     &        residue(idy)%mass%bg(1:size(residue(idy)%mass%bg))%rootfiberz, &
+     &        nslay, residue(idy)%geometry%hyfg, residue(idy)%geometry%grainf, &
      &        tot_mass_rem, sel_mass_left )
             end if
           end if
@@ -435,10 +383,11 @@
           call adj_stand_pool(                                          &
      &         start_stem, start_leaf, start_store,                     &
      &         start_rootstore, start_rootfiber,                        &
-     &         bdmstandstem(idy), bdmstandleaf(idy), bdmstandstore(idy),&
-     &         bdmbgrootstorez(1,idy), bdmbgrootfiberz(1,idy),          &
-     &         bdmflatstem(idy), bdmflatleaf(idy), bdmflatstore(idy),   &
-     &         bddstm(idy), nslay)
+     &         residue(idy)%mass%standstem, residue(idy)%mass%standleaf, residue(idy)%mass%standstore, &
+     &         residue(idy)%mass%bg(1:size(residue(idy)%mass%bg))%rootstorez, &
+     &         residue(idy)%mass%bg(1:size(residue(idy)%mass%bg))%rootfiberz, &
+     &         residue(idy)%mass%flatstem, residue(idy)%mass%flatleaf, residue(idy)%mass%flatstore, &
+     &         residue(idy)%geometry%dstm, nslay)
          end if
         end do  
       end if
