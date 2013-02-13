@@ -6,12 +6,6 @@
 module debug_mod
   implicit none
 
-  private
-
-  public :: tddbug
-  public :: create_decomp_debug
-  public :: destroy_decomp_debug
-
   type decomp_debug
      integer :: tday
      integer :: tmo

@@ -6,20 +6,6 @@
 module biomaterial
   implicit none
 
-  private
-
-  public :: biomatter
-  public :: create_biomatter
-  public :: destroy_biomatter
-
-  public :: biototal
-  public :: create_biototal
-  public :: destroy_biototal
-
-  public :: decomp_factors
-  public :: create_decomp_factors
-  public :: destroy_decomp_factors
- 
   ! start c1glob.inc and d1glob.inc
   ! defines mass of plant parts that are below ground by soil layer
   type biostate_mass_below_ground_layers
@@ -268,7 +254,7 @@ contains
      sum_stat = sum_stat + alloc_stat
      if( sum_stat .gt. 0 ) then
         write(*,*) 'ERROR: unable to allocate memory for biomatter'
-        stop(1)
+        stop 1
      end if
   end function create_biomatter
 
@@ -311,7 +297,7 @@ contains
      sum_stat = sum_stat + alloc_stat
      if( sum_stat .gt. 0 ) then
         write(*,*) 'ERROR: unable to allocate memory for biototal'
-        stop(1)
+        stop 1
      end if
   end function create_biototal
 
@@ -344,7 +330,7 @@ contains
      allocate(decompfac%bg(nsoillay), stat=alloc_stat)
      if( alloc_stat .gt. 0 ) then
         write(*,*) 'ERROR: unable to allocate memory for decompfac'
-        stop(1)
+        stop 1
      end if
   end function create_decomp_factors
 
@@ -358,7 +344,7 @@ contains
      deallocate(decompfac%bg, stat=dealloc_stat)
      if( dealloc_stat .gt. 0 ) then
         write(*,*) 'ERROR: unable to allocate memory for decompfac'
-        stop(1)
+        stop 1
      end if
   end subroutine destroy_decomp_factors
 
