@@ -4,22 +4,24 @@
 !$Revision$
 !$HeadURL$
 !
-SUBROUTINE print_mandate_output(lun)
+SUBROUTINE print_mandate_output(lun, mandate)
 
 !   USE pd_dates_vars
 !   USE pd_update_vars
 !   USE pd_report_vars
 
 !   USE pd_var_tables
-    USE mandate_vars
+    use mandate_mod, only: opercrop_date
 
     IMPLICIT NONE
 
     INCLUDE 'p1werm.inc'       ! mnsub - (required for use of mperod() variable
     INCLUDE 'manage/man.inc'   ! mperod(mnsub) - number of years in man rotation file
 
-    INTEGER :: lun             ! local loop variables
-    INTEGER :: i               ! local loop variables
+    INTEGER :: lun             ! output file unit number
+    type (opercrop_date), dimension(:), intent(in) :: mandate
+
+    INTEGER :: i               ! local loop variable
 
 
     WRITE (UNIT=lun,FMT="(i4,(A))",ADVANCE="YES")                            &

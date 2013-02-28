@@ -1,0 +1,214 @@
+!$Author$
+!$Date$
+!$Revision$
+!$HeadURL$
+
+! This module needs to be "used" by mandates.for and others
+
+    MODULE mandate_mod
+
+    IMPLICIT NONE
+
+    type :: opercrop_date
+       integer :: d, m, y 
+       character(80) :: opname
+       character(80) :: cropname
+    end type opercrop_date
+
+    type :: mandate_array
+       integer :: mperod
+       type (opercrop_date), dimension(:), allocatable :: mandate
+       !type (opercrop_date), dimension(:), pointer :: mp
+    end type mandate_array
+
+    contains
+
+    subroutine create_mandate( cnt_dates, mandate )
+       integer :: cnt_dates
+       type (opercrop_date), dimension(:), allocatable :: mandate
+
+       integer :: alloc_stat  ! allocation status return
+
+       allocate(mandate(1:cnt_dates), stat=alloc_stat)
+       if( alloc_stat .gt. 0 ) then
+          write(*,*) 'ERROR: unable to allocate memory for mandate'
+          stop 1
+       end if
+    end subroutine create_mandate
+
+    subroutine destroy_mandate( mandate )
+       type (opercrop_date), dimension(:), allocatable :: mandate
+
+       integer :: dealloc_stat  ! deallocation status return
+
+       deallocate(mandate, stat=dealloc_stat)
+       if( dealloc_stat .gt. 0 ) then
+          write(*,*) 'ERROR: unable to deallocate memory for mandate'
+          stop 1
+       end if
+    end subroutine destroy_mandate
+
+    subroutine allmandates( mandatbs )
+
+       type(mandate_array), dimension(:) :: mandatbs
+
+       integer :: difdat ! function definition
+
+       integer :: npass       ! counter 1 = count dates prior to allocation, 2 = populate date array
+       integer :: alloc_stat
+       integer :: sum_stat
+       logical :: alldone
+
+       integer :: ld, lm, ly  ! day, month, year values
+       integer :: daydif      ! result from difdat
+       integer :: mindif      ! minimum result from difdat
+       integer :: minsr       ! index of mindif subregion
+
+       integer :: isr    ! subregion loop index
+       integer :: lsr   ! lower subregion index
+       integer :: usr   ! upper subregion index
+       integer :: osr   ! the composite 0 "subregion" index
+
+       integer :: cnt_dates   ! count of dates
+       integer :: cnt_remain  ! number of subregions with dates still to be inserted on this step
+       integer :: cnt_match   ! number of subregions whose dates matched on this step
+       integer, dimension(:), allocatable :: ldx    ! lower index for each subregion date array
+       integer, dimension(:), allocatable :: udx    ! upper index for each subregion date array
+       integer, dimension(:), allocatable :: pdx    ! present index for each subregion date array
+
+       integer, dimension(:), allocatable :: cnt_cycles    ! number of cycles for each subregion date array to fill 0 array cycle
+       integer, dimension(:), allocatable :: idx_cycles    ! index indicating the present subregion date array cycle
+       integer, dimension(:), allocatable :: add_yr    ! number of years too add subregion date to make it match multiple cycles
+
+       if( allocated( mandatbs(lbound(mandatbs,1))%mandate ) ) then
+          return   ! already allocated so values are already populated (calibration mode)
+       end if
+
+       ! note: this structure is passed with the (0) index array used to hold the result
+       osr = lbound(mandatbs,1)
+       lsr = osr + 1
+       usr = ubound(mandatbs,1)
+
+       sum_stat = 0
+       ! allocate index pointers into each mandate array
+       allocate( ldx(osr:usr), stat = alloc_stat )
+       sum_stat = sum_stat + alloc_stat
+       allocate( udx(osr:usr), stat = alloc_stat )
+       sum_stat = sum_stat + alloc_stat
+       allocate( pdx(osr:usr), stat = alloc_stat )
+       sum_stat = sum_stat + alloc_stat
+       allocate( cnt_cycles(lsr:usr), stat = alloc_stat )
+       sum_stat = sum_stat + alloc_stat
+       allocate( idx_cycles(lsr:usr), stat = alloc_stat )
+       sum_stat = sum_stat + alloc_stat
+       allocate( add_yr(lsr:usr), stat = alloc_stat )
+       sum_stat = sum_stat + alloc_stat
+       if( sum_stat .gt. 0 ) then
+          write(*,*) 'ERROR: unable to allocate memory in allmandates'
+          stop 1
+       end if
+
+       do npass = 1, 2
+
+        do isr = lsr, usr
+          ldx(isr) = lbound(mandatbs(isr)%mandate,1)
+          udx(isr) = ubound(mandatbs(isr)%mandate,1)
+          pdx(isr) = ldx(isr)
+          cnt_cycles(isr) = mandatbs(osr)%mperod / mandatbs(isr)%mperod
+          idx_cycles(isr) = 1
+          add_yr(isr) = 0
+        end do
+
+        ! find first date
+        ld = mandatbs(lsr)%mandate(ldx(lsr))%d
+        lm = mandatbs(lsr)%mandate(ldx(lsr))%m
+        ly = mandatbs(lsr)%mandate(ldx(lsr))%y
+        do isr = lsr+1, usr
+          if( difdat(ld, lm, ly, mandatbs(isr)%mandate(ldx(isr))%d, mandatbs(isr)%mandate(ldx(isr))%m, &
+                                 mandatbs(isr)%mandate(ldx(isr))%y) .lt. 0 ) then
+             ! replace with earlier date
+             ld = mandatbs(isr)%mandate(ldx(isr))%d
+             lm = mandatbs(isr)%mandate(ldx(isr))%m
+             ly = mandatbs(isr)%mandate(ldx(isr))%y
+          end if             
+        end do
+        alldone = .false.
+        cnt_dates = 0
+        do while( .not. alldone)
+          ! Find all subregion dates that match and add to array and increment subregion date array index
+          cnt_remain = 0
+          cnt_match = 0
+          do isr = lsr, usr
+             ! difference between present date and subregion date
+             daydif = difdat(ld, lm, ly, mandatbs(isr)%mandate(pdx(isr))%d, mandatbs(isr)%mandate(pdx(isr))%m, &
+                                         mandatbs(isr)%mandate(pdx(isr))%y + add_yr(isr))
+             if( daydif .eq. 0 ) then
+                ! This date matches present date, add to array
+                cnt_dates = cnt_dates + 1
+                cnt_match = cnt_match + 1
+                if( npass .eq. 2 ) then
+                   if( pdx(osr) .gt. udx(osr) ) then
+                      ! invalid array index
+                      write(*,*) 'mandate array index out of bounds in allmandates'
+                      stop 1
+                   end if
+                   ! assign subregion date and names to array including all subregions
+                   mandatbs(osr)%mandate(pdx(osr)) = mandatbs(isr)%mandate(pdx(isr))
+                   ! bump subregion year to match sequence
+                   !mandatbs(osr)%mandate(pdx(osr))%y = mandatbs(isr)%mandate(pdx(isr))%y + add_yr(isr))
+                   ! increment index
+                   pdx(osr) = pdx(osr) + 1
+                end if
+                if( pdx(isr) .lt. udx(isr) ) then
+                   ! index is less than maximum
+                   ! bump index to next date
+                   pdx(isr) = pdx(isr) + 1
+                   ! add to count of remaining
+                   cnt_remain = cnt_remain + 1
+                else ! pdx(isr) .eq. udx(isr)
+                   if( idx_cycles(isr) .lt. cnt_cycles(isr) ) then
+                      pdx(isr) = ldx(isr)
+                      add_yr(isr) = add_yr(isr) + mandatbs(isr)%mperod
+                      cnt_remain = cnt_remain + 1
+                   end if
+                end if
+             end if
+          end do
+          if( cnt_remain .eq. 0 ) then
+             alldone = .true.
+          else
+             if( cnt_match .eq. 0 ) then
+                ! select next date
+                mindif = huge(mindif)
+                do isr = lsr, usr
+                   ! difference between present date and subregion date
+                   daydif = difdat(ld, lm, ly, mandatbs(isr)%mandate(pdx(isr))%d, mandatbs(isr)%mandate(pdx(isr))%m, &
+                                               mandatbs(isr)%mandate(pdx(isr))%y + add_yr(isr))
+                   if( daydif .lt. mindif) then
+                      ! select subregion index with minimum value
+                      mindif = daydif
+                      minsr = isr
+                   end if
+                end do
+                !set new date from selected subregion
+                ld = mandatbs(isr)%mandate(pdx(isr))%d
+                lm = mandatbs(isr)%mandate(pdx(isr))%m
+                ly = mandatbs(isr)%mandate(pdx(isr))%y + add_yr(isr)
+             end if
+          end if
+        end do
+
+        if( npass .eq. 1 ) then
+          ! create 0 index mandate array
+          call create_mandate( cnt_dates, mandatbs(lbound(mandatbs,1))%mandate )
+
+          ldx(osr) = lbound(mandatbs(osr)%mandate,1)
+          udx(osr) = ubound(mandatbs(osr)%mandate,1)
+          pdx(osr) = ldx(osr)
+        end if
+
+       end do  ! npass loop
+
+    end subroutine allmandates
+
+    END MODULE mandate_mod

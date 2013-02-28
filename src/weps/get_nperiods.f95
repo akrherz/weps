@@ -13,17 +13,18 @@
 ! (we will use day 15 as a starting day since many ops will be
 ! scheduled then)
 
-FUNCTION get_nperiods (nrot_yrs)
+FUNCTION get_nperiods (nrot_yrs, mandate)
 
-	USE mandate_vars
+        USE mandate_mod, only: opercrop_date
 
-	IMPLICIT NONE
+        IMPLICIT NONE
 
-	INTEGER :: get_nperiods
-	INTEGER, INTENT (IN) :: nrot_yrs	! Number of rotation years
+        INTEGER :: get_nperiods
+        INTEGER :: nrot_yrs            ! Number of rotation years
+        type(opercrop_date), dimension(:), intent(in) :: mandate ! array of mandates from management file
 
-	INTEGER :: nperiods	 		! Number of periods
-	INTEGER :: minperiods = 24		! Minimum number of periods
+        INTEGER :: nperiods            ! Number of periods
+        INTEGER :: minperiods = 24     ! Minimum number of periods
 
 	INTEGER :: i				! local loop variable
 
@@ -36,7 +37,7 @@ FUNCTION get_nperiods (nrot_yrs)
 !			    31,12,1, 1,2,2, 11,3,2,  7,5,2, 18,7,2, 30,12,3 /),&
 !			(/ 3,24 /) )
 
-	nperiods = minperiods * nrot_yrs	! Minimum total periods
+        nperiods = minperiods * nrot_yrs          ! Minimum total periods
 
 ! This looks for "end dates" rather than "starting dates"
 !	DO i = 1, size(mandate) 

@@ -4,17 +4,16 @@
 !$Revision$
 !$HeadURL$
 !
-SUBROUTINE update_monthly_update_vars(cm)
+SUBROUTINE update_monthly_update_vars(cm, monthly_update, mrot_update)
 
-    USE pd_dates_vars
-    USE pd_update_vars
-    USE pd_report_vars
-
+    USE pd_var_type_def
     USE pd_var_tables
 
     IMPLICIT NONE
 
-    INTEGER, INTENT (IN) :: cm
+    INTEGER, INTENT (IN) :: cm  ! current month
+    TYPE (pd_var_type), DIMENSION(:), intent(inout) :: monthly_update
+    TYPE (pd_var_type), DIMENSION(:,:), intent(inout) :: mrot_update
 
     include "w1clig.inc"        ! precip
     include "p1werm.inc"        ! mntime (maximum # of time steps/day)
@@ -318,12 +317,10 @@ END IF  !Have_Erosion flag
 END SUBROUTINE update_monthly_update_vars
 
 
-SUBROUTINE update_monthly_report_vars(cur_month, cur_year, nrot_years)
+SUBROUTINE update_monthly_report_vars(cur_month, cur_year, nrot_years, monthly_update, mrot_update, monthly_report)
 
     USE pd_dates_vars
-    USE pd_update_vars
-    USE pd_report_vars
-
+    USE pd_var_type_def
     USE pd_var_tables
 
     IMPLICIT NONE
@@ -331,6 +328,9 @@ SUBROUTINE update_monthly_report_vars(cur_month, cur_year, nrot_years)
     INTEGER, INTENT (IN) :: cur_month
     INTEGER, INTENT (IN) :: cur_year
     INTEGER, INTENT (IN) :: nrot_years
+    TYPE (pd_var_type), DIMENSION(:), intent(inout) :: monthly_update
+    TYPE (pd_var_type), DIMENSION(:,:), intent(inout) :: mrot_update
+    TYPE (pd_var_type), DIMENSION(:,:,:), intent(inout) :: monthly_report
 
     INTEGER :: i        ! local loop variables
     INTEGER :: rot_y    ! local variables

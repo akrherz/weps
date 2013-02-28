@@ -17,11 +17,13 @@ MODULE pd_report_vars
     IMPLICIT NONE
 
     ! Specify "period var" structures
-    TYPE (pd_var_type),DIMENSION(:,:),TARGET,ALLOCATABLE :: yrly_report
-    TYPE (pd_var_type),DIMENSION(:,:,:),TARGET,ALLOCATABLE :: monthly_report
-    TYPE (pd_var_type),DIMENSION(:,:,:),TARGET,ALLOCATABLE :: hmonth_report
-    TYPE (pd_var_type),DIMENSION(:,:),TARGET,ALLOCATABLE :: period_report
-    TYPE (pd_var_type),DIMENSION(:,:),TARGET,ALLOCATABLE :: yr_report
+    type :: reporting_report
+       TYPE (pd_var_type), DIMENSION(:,:), ALLOCATABLE :: yrly_report
+       TYPE (pd_var_type), DIMENSION(:,:,:), ALLOCATABLE :: monthly_report
+       TYPE (pd_var_type), DIMENSION(:,:,:), ALLOCATABLE :: hmonth_report
+       TYPE (pd_var_type), DIMENSION(:,:), ALLOCATABLE :: period_report
+       TYPE (pd_var_type), DIMENSION(:,:), ALLOCATABLE :: yr_report
+    end type reporting_report
 
 ! NOTE:  These already exist because of how the previous variables are defined.
 !        See "alloc_pd_vars.f95"

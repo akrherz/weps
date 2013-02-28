@@ -4,16 +4,24 @@
 !$Revision$
 !$HeadURL$
 !
-SUBROUTINE update_period_update_vars()
+SUBROUTINE update_period_update_vars(sbr, period_update, restot)
 
     use weps_interface_defs
-    USE pd_dates_vars
-    USE pd_update_vars
-    USE pd_report_vars
-
     USE pd_var_tables
+    USE pd_var_type_def
+    use biomaterial, only: biototal
 
     IMPLICIT NONE
+
+!   + + + ARGUMENT DECLARATIONS + + +
+    INTEGER :: sbr              ! current subregion
+    TYPE (pd_var_type), DIMENSION(:), intent(inout) :: period_update
+    type(biototal), intent(in) :: restot  ! contains:
+                                ! adftcvtot(sbr)  total dead flat cover
+                                ! adrcdtot(sbr)   total effective silhouette
+                                ! admftot(sbr)    total dead flat mass
+                                ! admsttot(sbr)   total dead standing mass
+
 
     include "p1werm.inc"        ! needed by other include files
 
@@ -32,10 +40,6 @@ SUBROUTINE update_period_update_vars()
                                 ! acmstandstore(sbr)      crop standing repr mass
                                 ! acmflatstore(sbr)      crop flat repr mass
 
-    include "d1glob.inc"        ! adftcvtot(sbr)  total dead flat cover
-                                ! adrcdtot(sbr)   total effective silhouette
-                                ! admftot(sbr)    total dead flat mass
-                                ! admsttot(sbr)   total dead standing mass
 
     include "b1glob.inc"        ! abftcv(sbr)     all flat cover
                                 ! abrcd           all effective silhouette
@@ -60,8 +64,6 @@ SUBROUTINE update_period_update_vars()
 
     REAL :: tmp
     REAL :: ef84                ! erodible agg. size fraction below 0.84mm
-
-    INTEGER :: sbr = 1          ! current subregion - set to 1 for now
 
     INTEGER :: i,j,idx          ! local loop variables
     INTEGER :: ngdpt            ! number of simulation grid datapoints
@@ -179,40 +181,28 @@ SUBROUTINE update_period_update_vars()
     period_update(Crop_number_stems)%cnt = period_update(Crop_number_stems)%cnt + 1
 
 ! Residue vars
-    period_update(Res_flat_cov)%val = adftcvtot(sbr)
+    period_update(Res_flat_cov)%val = restot%ftcvtot
     period_update(Res_flat_cov)%cnt = period_update(Res_flat_cov)%cnt + 1
 
-    period_update(Res_stand_sil)%val = adrcdtot(sbr)
+    period_update(Res_stand_sil)%val = restot%rcdtot
     period_update(Res_stand_sil)%cnt = period_update(Res_stand_sil)%cnt + 1
 
-    period_update(Res_flat_mass)%val = admftot(sbr) 
+    period_update(Res_flat_mass)%val = restot%mftot
     period_update(Res_flat_mass)%cnt = period_update(Res_flat_mass)%cnt + 1
 
-    period_update(Res_stand_mass)%val = admsttot(sbr)
+    period_update(Res_stand_mass)%val = restot%msttot
     period_update(Res_stand_mass)%cnt = period_update(Res_stand_mass)%cnt + 1
 
-      tmp = 0.0
-      do idx=1,mnbpls
-        tmp = tmp + admbg(idx,sbr)
-      end do
-    period_update(Res_buried_mass)%val = tmp
+    period_update(Res_buried_mass)%val = restot%mbgtot
     period_update(Res_buried_mass)%cnt = period_update(Res_buried_mass)%cnt + 1
 
-      tmp = 0.0
-      do idx=1,mnbpls
-        tmp = tmp + admrt(idx,sbr)
-      end do
-    period_update(Res_root_mass)%val = tmp
+    period_update(Res_root_mass)%val = restot%mrttot
     period_update(Res_root_mass)%cnt = period_update(Res_root_mass)%cnt + 1
 
-    period_update(Res_stand_height)%val = adzht_ave(sbr) 
+    period_update(Res_stand_height)%val = restot%zht_ave
     period_update(Res_stand_height)%cnt = period_update(Res_stand_height)%cnt + 1
 
-      tmp = 0.0
-      do idx=1,mnbpls
-        tmp = tmp + addstm(idx,sbr)
-      end do
-    period_update(Res_number_stems)%val = tmp
+    period_update(Res_number_stems)%val = restot%dstmtot
     period_update(Res_number_stems)%cnt = period_update(Res_number_stems)%cnt + 1
 
 ! Biomass vars
@@ -230,12 +220,7 @@ SUBROUTINE update_period_update_vars()
     period_update(All_stand_mass)%val = abmst(sbr) - acmstandstore(sbr)
     period_update(All_stand_mass)%cnt = period_update(All_stand_mass)%cnt + 1
 
-      tmp = 0.0
-      do idx=1,mnbpls
-        tmp = tmp + admrt(idx,sbr) + admbg(idx,sbr)
-      end do
-      tmp = tmp + acmrt(sbr)  !Add crop root mass to total
-    period_update(All_buried_mass)%val = tmp
+    period_update(All_buried_mass)%val = acmrt(sbr) + restot%mrttot + restot%mbgtot
     period_update(All_buried_mass)%cnt = period_update(All_buried_mass)%cnt + 1
 
 ! ------------------------------------------------------------------------------------------------------------------
@@ -404,12 +389,10 @@ SUBROUTINE update_period_update_vars()
 END SUBROUTINE update_period_update_vars
 
 
-SUBROUTINE update_period_report_vars(pd,npd,cur_day,cur_month,cur_yr,nrot_years)
+SUBROUTINE update_period_report_vars(pd,npd,cur_day,cur_month,cur_yr,nrot_years, period_update, period_report)
 
     USE pd_dates_vars
-    USE pd_update_vars
-    USE pd_report_vars
-
+    USE pd_var_type_def
     USE pd_var_tables
 
     IMPLICIT NONE
@@ -419,6 +402,8 @@ SUBROUTINE update_period_report_vars(pd,npd,cur_day,cur_month,cur_yr,nrot_years)
     INTEGER, INTENT (IN) :: cur_month
     INTEGER, INTENT (IN) :: cur_yr
     INTEGER, INTENT (IN) :: nrot_years
+    TYPE (pd_var_type), DIMENSION(:), intent(inout) :: period_update
+    TYPE (pd_var_type), DIMENSION(:,:), intent(inout) :: period_report
 
     INTEGER :: i    ! local loop variables
     INTEGER :: rot_y    ! local variables

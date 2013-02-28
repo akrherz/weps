@@ -43,15 +43,19 @@
       
 !-------------------- CROP Routines --------------------------------
 !------------------------
-      subroutine callcrop(daysim, sr, residue)
-      use biomaterial, only: biomatter
+      subroutine callcrop(daysim, sr, residue, restot)
+      use biomaterial, only: biomatter, biototal
       integer daysim
       integer sr
       type(biomatter), dimension(:), intent(inout) :: residue
+      type(biototal), intent(in) :: restot
       end subroutine callcrop
 !----------------------
-      subroutine  cdbug(isr,slay)
-      integer isr,slay
+      subroutine  cdbug(isr, slay, restot)
+      use biomaterial, only: biototal
+      integer        isr
+      integer        slay
+      type(biototal), intent(in) :: restot
       end subroutine cdbug
 !----------------------
       subroutine chillu(bctchillucum, day_max_temp, day_min_temp)
@@ -434,7 +438,7 @@
       real min_erosion_awu
       end subroutine erosion
 !---------------------------
-      subroutine saeinp() 
+      subroutine saeinp()
       end subroutine saeinp
 !---------------------------
       subroutine sb1out (jj, nn, hr, ws, wdir, o_unit)
@@ -520,9 +524,8 @@
       end subroutine sbsfdi
 !-----------------------------
       subroutine sbwind (wustfl,awu, wind_dir, ntstep, intstep, rusust)
-
       integer wustfl,intstep, ntstep
-      real awu, rusust, wind_dir      
+      real awu, rusust, wind_dir
       end subroutine sbwind
 !-------------------------------
       subroutine sbwus (anemht, awzzo, awu, wzzov, brcd, wus)
@@ -549,7 +552,7 @@
       integer bc0rg, wzoflg
       real bdrlai, bdrsai, bbzht
       real bcrlai, bcrsai, bczht
-      real awzdisp, wzdisp   
+      real awzdisp, wzdisp
       end subroutine sbzdisp
 !---------------------------------
       subroutine sbzo (sxprg, szrgh, slrr,                              &
@@ -615,9 +618,11 @@
       real eratio      
       end function calctht0
 !---------------------------
-      subroutine callhydr(daysim, isr)
+      subroutine callhydr(daysim, isr, restot)
+      use biomaterial, only: biototal
       integer daysim
       integer isr                   
+      type(biototal), intent(in) :: restot
       end subroutine callhydr
 !---------------------------
       subroutine darcy(daysim, numeq, bszlyt, bszlyd, bulkden,          &
@@ -705,8 +710,11 @@
       real bszrgh, bsxrgw, bsxrgs
       end function furrowcut
 !-------------------------
-      subroutine  hdbug(isr,slay)  
-      integer isr,slay
+      subroutine  hdbug(isr, slay, restot)
+      use biomaterial, only: biototal
+      integer isr                   
+      integer slay                   
+      type(biototal), intent(in) :: restot
       end subroutine hdbug
 !-------------------------
       subroutine heat(layrsn, bszlyd, bszlyt, theta, thetas,            &
@@ -762,8 +770,7 @@
       integer isr
       end subroutine hydrinit
 !-------------------------
-      subroutine hydro ( layrsn, bmrslp,                                &
-     &                   bdrlai, bdrsai, bbzht,                         &
+      subroutine hydro ( layrsn, bmrslp, bbzht,                         &
      &                   bcrlai, bcrsai, bczht, bcdayap,                &
      &                   bcxrow, bc0rg, bbfcancov, bcfliveleaf,         &
      &                   bdmres, bbevapredu, bczrtd, bhfwsf,            &
@@ -794,10 +801,11 @@
      &                   cumtrans, cumdrain,                            &
      &                   initswc, initsnow, initday,                    &
      &                   presswc, pressnow, presday,                    &
-     &                   bhztranspdepth )
+     &                   bhztranspdepth, restot )
+      use biomaterial, only: biototal
       integer layrsn
       real bmrslp
-      real bdrlai, bdrsai, bbzht
+      real bbzht
       real bcrlai, bcrsai, bczht
       integer bcdayap
       real bcxrow
@@ -835,6 +843,7 @@
       real initswc, initsnow, initday
       real presswc, pressnow, presday
       real bhztranspdepth
+      type(biototal), intent(in) :: restot
       end subroutine hydro
 !-----------------------
       real function internode_wt_bc(cond_up, cond_low,                  &
@@ -1100,6 +1109,16 @@
       subroutine   cmdline()
       end subroutine cmdline
 !------------------------------
+    subroutine confidence_interval(ci, nrot_yrs, n1cycles, ci_year, yrly_report, yr_report)
+    USE pd_var_type_def
+    real,    intent (in) :: ci ! confidence interval value (decimal)
+    integer, intent (in) :: nrot_yrs ! number of year in a rotation cycle
+    integer, intent (in) :: n1cycles ! one more than the number of rotation cycles completed
+    integer, intent (inout) :: ci_year ! indicates how many years of data have been printed into ci.out
+    TYPE (pd_var_type), DIMENSION(:,:), intent(in) :: yrly_report
+    TYPE (pd_var_type), DIMENSION(:,:), intent(in) :: yr_report
+    end subroutine confidence_interval
+!------------------------------
       subroutine   dmpall(filnam)   
       character*(*) filnam
       end subroutine dmpall
@@ -1107,10 +1126,12 @@
       integer   function g_argc()    
       end function g_argc     
 !-------------------------------
-      integer FUNCTION get_nperiods (nrot_yrs)
-
-          INTEGER, INTENT (IN) :: nrot_yrs
-          end function get_nperiods
+        FUNCTION get_nperiods (nrot_yrs, mandate)
+        USE mandate_mod, only: opercrop_date
+        INTEGER :: get_nperiods
+        INTEGER :: nrot_yrs            ! Number of rotation years
+        type(opercrop_date), dimension(:), intent(in) :: mandate ! array of mandates from management file
+        end function get_nperiods
 !-------------------------------
       subroutine getcli(ccd, ccm, ccy)
 
@@ -1122,21 +1143,25 @@
       integer cwd,cwm,cwy  
       end subroutine getwin
 !--------------------------------
-      subroutine inprun()
+      subroutine inprun( n_rot_cycles )
+      integer, intent(out) :: n_rot_cycles
       end subroutine inprun
 !--------------------------------
       subroutine inpsub (isr)
       integer isr
       end subroutine inpsub
 !------------------------------      
-      subroutine   input()
+       subroutine   input( n_rot_cycles )
+      integer, intent(out) :: n_rot_cycles
       end subroutine input
 !------------------------------
       subroutine input_ifc()
       end subroutine input_ifc
 !------------------------------
-      subroutine mandates(sr)   
+      subroutine mandates(sr, mandate)
+      use mandate_mod, only: opercrop_date, create_mandate    ! Load shared mandate() array
       integer sr
+      type (opercrop_date), dimension(:), allocatable :: mandate
       end subroutine mandates
 !-----------------------------
       subroutine openfils(residue)
@@ -1172,12 +1197,14 @@
       integer       isr
       end subroutine spllay_ifc
 !--------------------------------
-      subroutine submodels (isr, cd, cm, cy, residue, restot, biotot, decompfac)
+      subroutine submodels (isr, cd, cm, cy, residue, restot, biotot, decompfac, mandate)
       use biomaterial, only: biomatter, biototal, decomp_factors
+      use mandate_mod, only: opercrop_date
       integer isr, cd, cm, cy
       type(biomatter), dimension(:), intent(inout) :: residue
       type(biototal), intent(inout) :: restot, biotot
       type(decomp_factors), intent(inout) :: decompfac
+      type(opercrop_date), dimension(:), intent(inout) :: mandate
       end subroutine submodels
 !-------------------------------
       subroutine sumbio(isr, residue, restot, biotot)
@@ -1244,10 +1271,12 @@
       integer sr
       end subroutine dooper
 !---------------------------
-      subroutine   doproc (sr, bmrotation, residue)
+      subroutine   doproc (sr, bmrotation, residue, mandate)
       use biomaterial, only: biomatter
+      use mandate_mod, only: opercrop_date
       integer sr, bmrotation
       type(biomatter), dimension(:), intent(inout) :: residue
+      type(opercrop_date), dimension(:), intent(inout) :: mandate
       end subroutine doproc
 !--------------------------
       SUBROUTINE get_calib_crops(sr) 
@@ -1261,11 +1290,13 @@
       REAL    :: mass_left
       end subroutine get_calib_yield
 !--------------------------
-      subroutine manage(sr, dd, mm, yyyy, syear, lopdd, lopmm, lopyy, residue)
-      use biomaterial, only: biomatter, biototal
+      subroutine   manage(sr, dd, mm, yyyy, syear, lopdd, lopmm, lopyy, residue, mandate)
+      use biomaterial, only: biomatter
+      use mandate_mod, only: opercrop_date
       integer sr, dd, mm, yyyy, syear
       integer lopdd, lopmm, lopyy
       type(biomatter), dimension(:), intent(inout) :: residue
+      type(opercrop_date), dimension(:), intent(inout) :: mandate
       end subroutine manage
 !-------------------------
       subroutine mfinit (sr, fname)
@@ -1311,10 +1342,12 @@
       real mass_rem, mass_left      
       end subroutine report_calib_harvest
 !------------------------
-      subroutine report_harvest( sr, bmrotation, mass_rem, mass_left, harv_unit_flg )
+      subroutine report_harvest( sr, bmrotation, mass_rem, mass_left, harv_unit_flg, mandate )
+      use mandate_mod, only: opercrop_date
       integer sr, bmrotation
       real mass_rem, mass_left
       integer harv_unit_flg
+      type(opercrop_date), dimension(:), intent(inout) :: mandate
       end subroutine  report_harvest
 !-------------------------
       SUBROUTINE set_calib(sr)
@@ -1325,8 +1358,10 @@
       character line*80                
       end function  skpnam
 !--------------------------
-      subroutine  tdbug(isr,slay,output)
-      integer isr,slay,output
+      subroutine tdbug(sr, slay, output, residue)
+      use biomaterial, only: biomatter
+      integer sr, slay, output
+      type(biomatter), dimension(:), intent(in) :: residue
       end subroutine tdbug
 !--------------------------
       integer function tillay (tdepth, lthick, nlay)
@@ -1871,48 +1906,51 @@
 !------------------------------
 
 !--------------- REPORTS Routines ----------------------------
-      integer FUNCTION alloc_pd_vars (nperiods, nrot_yrs, ncycles)
-      INTEGER, INTENT (IN) :: nperiods    ! Number of total periods
-      INTEGER, INTENT (IN) :: nrot_yrs    ! Number of rotation years
-      INTEGER, INTENT (IN) :: ncycles    ! number of rotation cycles
-      end function alloc_pd_vars
-!-----------------------
-      SUBROUTINE init_report_vars(nperiods, nrot_yrs, ncycles)
-
-      INTEGER, INTENT (IN) :: nperiods   ! 24 is minimum value per rotation year
-      INTEGER, INTENT (IN) :: nrot_yrs   ! Minimum is 1
-      INTEGER, INTENT (IN) :: ncycles    ! number of rotation cycles
-      end subroutine init_report_vars
+    SUBROUTINE init_report_vars(nperiods, nrot_yrs, ncycles, mandate, rep_report, rep_update)
+    USE pd_dates_vars
+    USE pd_update_vars
+    USE pd_report_vars
+    USE mandate_mod, only: opercrop_date
+    INTEGER, INTENT (IN) :: nperiods   ! 24 is minimum value per rotation year
+    INTEGER, INTENT (IN) :: nrot_yrs   ! Minimum is 1
+    INTEGER, INTENT (IN) :: ncycles    ! number of rotation cycles
+    type (opercrop_date), dimension(:), intent(in) :: mandate
+    type(reporting_report), intent(inout) :: rep_report
+    type(reporting_update), intent(inout) :: rep_update
+    end subroutine init_report_vars
 !----------------------
-      SUBROUTINE print_mandate_output(lun)
-      integer lun
-      end subroutine print_mandate_output
+    SUBROUTINE print_mandate_output(lun, mandate)
+    use mandate_mod, only: opercrop_date
+    INTEGER :: lun             ! output file unit number
+    type (opercrop_date), dimension(:), intent(in) :: mandate
+    end subroutine print_mandate_output
 !----------------------
-      SUBROUTINE print_nui_output(nperiods, nrot_years)
-
-      INTEGER, INTENT (IN) :: nperiods
-      INTEGER, INTENT (IN) :: nrot_years   
-      end subroutine print_nui_output
+    SUBROUTINE print_report_vars(nperiods, nrot_yrs, rep_report, mandate)
+    USE pd_report_vars
+    use mandate_mod, only: opercrop_date
+    INTEGER, INTENT (IN) :: nperiods
+    INTEGER, INTENT (IN) :: nrot_yrs
+    type (reporting_report), intent(in) :: rep_report
+    type (opercrop_date), dimension(:), intent(in) :: mandate
+    end subroutine print_report_vars
 !-----------------------
-      SUBROUTINE print_report_vars(nperiods, nrot_yrs)
-
-      INTEGER, INTENT (IN) :: nperiods
-      INTEGER, INTENT (IN) :: nrot_yrs 
-      end subroutine print_report_vars
+    SUBROUTINE print_ui1_output(nperiods, nrot_years, ncycles, rep_report, mandate)
+    USE pd_report_vars
+    use mandate_mod, only: opercrop_date
+    INTEGER, INTENT (IN) :: nperiods
+    INTEGER, INTENT (IN) :: nrot_years
+    INTEGER, INTENT (IN) :: ncycles
+    type(reporting_report), intent(in) :: rep_report
+    type (opercrop_date), dimension(:), intent(in) :: mandate
+    end subroutine print_ui1_output
 !-----------------------
-      SUBROUTINE print_ui1_output(nperiods, nrot_years, ncycles)
-
-      INTEGER, INTENT (IN) :: nperiods
-      INTEGER, INTENT (IN) :: nrot_years
-      INTEGER, INTENT (IN) :: ncycles              
-      end subroutine print_ui1_output
-!-----------------------
-      SUBROUTINE print_yr_report_vars(nperiods, nrot_yrs, ncycles)
-
-      INTEGER, INTENT (IN) :: nperiods
-      INTEGER, INTENT (IN) :: nrot_yrs
-      INTEGER, INTENT (IN) :: ncycles        
-      end subroutine print_yr_report_vars
+    SUBROUTINE print_yr_report_vars(nperiods, nrot_yrs, ncycles, yr_report)
+    USE pd_var_type_def
+    INTEGER, INTENT (IN) :: nperiods
+    INTEGER, INTENT (IN) :: nrot_yrs
+    INTEGER, INTENT (IN) :: ncycles
+    TYPE (pd_var_type), DIMENSION(:,:), intent(in) :: yr_report
+    end subroutine print_yr_report_vars
 !----------------------
       SUBROUTINE run_ave(pd_ave, new_val, cnt) 
       USE pd_var_type_def
@@ -1922,21 +1960,67 @@
       INTEGER, INTENT (IN) :: cnt      
       end subroutine run_ave
 !-----------------------
-      SUBROUTINE update_hmonth_update_vars(cd,cm)
-      INTEGER, INTENT (IN) :: cd  ! current day
-      INTEGER, INTENT (IN) :: cm  ! current month      
-      end subroutine update_hmonth_update_vars
+    SUBROUTINE update_hmonth_update_vars(cd, cm, hmonth_update, hmrot_update)
+    USE pd_var_type_def
+    INTEGER, INTENT (IN) :: cd  ! current day
+    INTEGER, INTENT (IN) :: cm  ! current month
+    TYPE (pd_var_type), DIMENSION(:), intent(inout) :: hmonth_update
+    TYPE (pd_var_type), DIMENSION(:,:), intent(inout) :: hmrot_update
+    end subroutine update_hmonth_update_vars
 !-----------------------
-      SUBROUTINE update_monthly_update_vars(cm)
-
-      INTEGER, INTENT (IN) :: cm  
-      end subroutine  update_monthly_update_vars
+    SUBROUTINE update_monthly_update_vars(cm, monthly_update, mrot_update)
+    USE pd_var_type_def
+    INTEGER, INTENT (IN) :: cm  ! current month
+    TYPE (pd_var_type), DIMENSION(:), intent(inout) :: monthly_update
+    TYPE (pd_var_type), DIMENSION(:,:), intent(inout) :: mrot_update
+    end subroutine  update_monthly_update_vars
 !------------------------
-      SUBROUTINE update_period_update_vars()
-      end subroutine  update_period_update_vars
+    SUBROUTINE update_monthly_report_vars(cur_month, cur_year, nrot_years, monthly_update, mrot_update, monthly_report)
+    USE pd_var_type_def
+    INTEGER, INTENT (IN) :: cur_month
+    INTEGER, INTENT (IN) :: cur_year
+    INTEGER, INTENT (IN) :: nrot_years
+    TYPE (pd_var_type), DIMENSION(:), intent(inout) :: monthly_update
+    TYPE (pd_var_type), DIMENSION(:,:), intent(inout) :: mrot_update
+    TYPE (pd_var_type), DIMENSION(:,:,:), intent(inout) :: monthly_report
+    end SUBROUTINE update_monthly_report_vars
+!------------------------
+    SUBROUTINE update_period_update_vars(sbr, period_update, restot)
+    USE pd_var_type_def
+    use biomaterial, only: biototal
+    INTEGER :: sbr              ! current subregion
+    TYPE (pd_var_type), DIMENSION(:), intent(inout) :: period_update
+    type(biototal), intent(in) :: restot  ! contains:
+    end subroutine  update_period_update_vars
 !-------------------------
-      SUBROUTINE update_yrly_update_vars() 
-      end subroutine update_yrly_update_vars
+    SUBROUTINE update_period_report_vars(pd,npd,cur_day,cur_month,cur_yr,nrot_years, period_update, period_report)
+    USE pd_var_type_def
+    INTEGER, INTENT (IN) :: pd, npd
+    INTEGER, INTENT (IN) :: cur_day
+    INTEGER, INTENT (IN) :: cur_month
+    INTEGER, INTENT (IN) :: cur_yr
+    INTEGER, INTENT (IN) :: nrot_years
+    TYPE (pd_var_type), DIMENSION(:), intent(inout) :: period_update
+    TYPE (pd_var_type), DIMENSION(:,:), intent(inout) :: period_report
+    end SUBROUTINE update_period_report_vars
+!-------------------------            
+    SUBROUTINE update_yrly_update_vars(yrly_update, yrot_update, yr_update)
+    USE pd_var_type_def
+    TYPE (pd_var_type), DIMENSION(:), intent(inout) :: yrly_update
+    TYPE (pd_var_type), DIMENSION(:), intent(inout) :: yrot_update
+    TYPE (pd_var_type), DIMENSION(:), intent(inout) :: yr_update
+    end subroutine update_yrly_update_vars
+!-------------------------            
+    SUBROUTINE update_yrly_report_vars(cur_year, nrot_years, yrly_update, yrot_update, yr_update, yrly_report, yr_report)
+    USE pd_var_type_def
+    INTEGER, INTENT (IN) :: nrot_years
+    INTEGER, INTENT (IN) :: cur_year
+    TYPE (pd_var_type), DIMENSION(:), intent(inout) :: yrly_update
+    TYPE (pd_var_type), DIMENSION(:), intent(inout) :: yrot_update
+    TYPE (pd_var_type), DIMENSION(:), intent(inout) :: yr_update
+    TYPE (pd_var_type), DIMENSION(:,:), intent(inout) :: yrly_report
+    TYPE (pd_var_type), DIMENSION(:,:), intent(inout) :: yr_report
+    end SUBROUTINE update_yrly_report_vars
 !-------------------------            
 !---------------  Soil Routines ------------------------------       
 !-----------    
@@ -2552,10 +2636,11 @@
       character*(*) val
       end function begtrm
 !----------------------------------
-      real function biodrag (bdrlai, bdrsai, bcrlai, bcrsai, bc0rg, bcxrow, bczht, bszrgh)
+      real function biodrag (bdrlai, bdrsai, bcrlai, bcrsai, bc0rg,     &
+     &                       bcxrow, bczht, bszrgh)
       real    bdrlai, bdrsai, bcrlai, bcrsai
       integer bc0rg
-      real    bcxrow, bczht, bszrgh      
+      real    bcxrow, bczht, bszrgh
       end function biodrag
 !------------------------------------
       subroutine dbgdmp(day,sr, residue)

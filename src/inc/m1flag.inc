@@ -40,7 +40,6 @@
 
       integer          max_calib_cycles
       integer          calib_cycle
-      integer          n_rot_cycles
 
       logical          calib_done
 
@@ -51,7 +50,7 @@
      &                  am0cropupfl, am0sfl, am0tfl, am0cfl, am0dfl,    &
      &                  am0efl, am0oif, am0sif,                         &
      &                  init_loop, calib_loop, report_loop, calib_done, &
-     &                  max_calib_cycles, calib_cycle, n_rot_cycles,    &
+     &                  max_calib_cycles, calib_cycle,                  &
      &                  wind_gen_fmt_flag, cli_gen_fmt_flag,            &
      &                  wind_max_flag
 
@@ -225,7 +224,6 @@
 !                        
 !     calib_cycle - identify the calibration "cycle" we are in
 !                   currently set and updated in "main/weps.for"
-!     n_rot_cycles - actual number of rotation cycles simulated
 !     calib_done - flag to identify when we are "done" with calibration
 !
 !               values   -    .true.     .false.

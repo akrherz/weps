@@ -3,7 +3,7 @@
 !$Revision$
 !$HeadURL$
 
-      subroutine tdbug(sr, slay, output)
+      subroutine tdbug(sr, slay, output, residue)
 
 !     + + + PURPOSE + + +
 !    This program prints out many of the global variables before
@@ -15,9 +15,11 @@
 
       use weps_interface_defs
       use file_io_mod, only: luotdb
+      use biomaterial, only: biomatter
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer sr, slay, output
+      type(biomatter), dimension(:), intent(in) :: residue
 
 !     + + + ARGUMENT DEFINITIONS + + +
 !     sr      - subregion number
@@ -35,7 +37,6 @@
       include 's1sgeo.inc'
       include 'c1gen.inc'
       include 'c1glob.inc'
-      include 'd1glob.inc'
       include 'h1hydro.inc'
       include 'h1scs.inc'
       include 'h1db1.inc'
@@ -125,8 +126,8 @@
      &       'as0ph  ascmg ascna asfcce asfcec asfesp')
  2066     format(3x,'asfom asfnoh asfpoh asfpsp asfsmb asdagd aseags ', &
      &       'ahrwc aheaep ahrwcw ahrwcf ahrwca ahrwcs')
- 2068     format(3x,'layer admrtz(1)  admrtz(2)  admrtz(3) ',           &
-     &               ' admbgz(1)  admbgz(2)  admbgz(3)') 
+ 2068     format(3x,'layer residue(1)%deriv%bg(s)%mrtz  residue(2)%deriv%bg(s)%mrtz  residue(3)%deriv%bg(s)%mrtz ',           &
+     &               ' residue(1)%deriv%bg(s)%mbgz  residue(2)%deriv%bg(s)%mbgz  residue(3)%deriv%bg(s)%mbgz') 
           write(luotdb,2065)
           do idx = 1,slay
             write(luotdb,2060) idx, asdblk(idx,sr), aszlyt(idx,sr),     &
@@ -145,8 +146,8 @@
           write(luotdb,2068)
           do idx = 1,slay
             write(luotdb,2063)                                          &
-     &        idx, admrtz(idx,1,sr), admrtz(idx,2,sr), admrtz(idx,3,sr),&
-     &        admbgz(idx,1,sr), admbgz(idx,2,sr), admbgz(idx,3,sr)
+     &        idx, residue(1)%deriv%bg(idx)%mrtz, residue(2)%deriv%bg(idx)%mrtz, residue(3)%deriv%bg(idx)%mrtz,&
+     &        residue(1)%deriv%bg(idx)%mbgz, residue(2)%deriv%bg(idx)%mbgz, residue(3)%deriv%bg(idx)%mbgz
           end do 
 
       case (14) ! inversion process (process code 14)
@@ -176,18 +177,18 @@
           total = atmflatstem(sr) + atmflatleaf(sr) + atmflatstore(sr)  &
      &          + atmflatrootstore(sr) + atmflatrootfiber(sr)
           do idx = 1, mnbpls
-            total = total + admflatstem(idx,sr) + admflatleaf(idx,sr)   &
-     &            + admflatstore(idx,sr) + admflatrootstore(idx,sr)     &
-     &            + admflatrootfiber(idx,sr)
+            total = total + residue(idx)%mass%flatstem + residue(idx)%mass%flatleaf   &
+     &            + residue(idx)%mass%flatstore + residue(idx)%mass%flatrootstore     &
+     &            + residue(idx)%mass%flatrootfiber
           end do 
           write(luotdb,*) total, ' total flat mass'
           write(luotdb,2500)
           write(luotdb,2501) 0, atmflatstem(sr), atmflatleaf(sr),       &
      &      atmflatstore(sr), atmflatrootstore(sr), atmflatrootfiber(sr)
           do idx = 1, mnbpls
-            write(luotdb,2501) idx, admflatstem(idx,sr),                &
-     &        admflatleaf(idx,sr), admflatstore(idx,sr),                &
-     &        admflatrootstore(idx,sr), admflatrootfiber(idx,sr)
+            write(luotdb,2501) idx, residue(idx)%mass%flatstem,                &
+     &        residue(idx)%mass%flatleaf, residue(idx)%mass%flatstore,                &
+     &        residue(idx)%mass%flatrootstore, residue(idx)%mass%flatrootfiber
           end do 
 
       case (26) ! re-surface process variable toughness (process code 26)
@@ -195,27 +196,23 @@
           total = atmflatstem(sr) + atmflatleaf(sr) + atmflatstore(sr)  &
      &          + atmflatrootstore(sr) + atmflatrootfiber(sr)
           do idx = 1, mnbpls
-            total = total + admflatstem(idx,sr) + admflatleaf(idx,sr)   &
-     &            + admflatstore(idx,sr) + admflatrootstore(idx,sr)     &
-     &            + admflatrootfiber(idx,sr)
+            total = total + residue(idx)%mass%flatstem + residue(idx)%mass%flatleaf   &
+     &            + residue(idx)%mass%flatstore + residue(idx)%mass%flatrootstore     &
+     &            + residue(idx)%mass%flatrootfiber
           end do 
           write(luotdb,*) total, ' total flat mass'
           write(luotdb,2500)
           write(luotdb,2501) 0, atmflatstem(sr), atmflatleaf(sr),       &
      &      atmflatstore(sr), atmflatrootstore(sr), atmflatrootfiber(sr)
           do idx = 1, mnbpls
-            write(luotdb,2501) idx, admflatstem(idx,sr),                &
-     &        admflatleaf(idx,sr), admflatstore(idx,sr),                &
-     &        admflatrootstore(idx,sr), admflatrootfiber(idx,sr)
+            write(luotdb,2501) idx, residue(idx)%mass%flatstem,                &
+     &        residue(idx)%mass%flatleaf, residue(idx)%mass%flatstore,                &
+     &        residue(idx)%mass%flatrootstore, residue(idx)%mass%flatrootfiber
           end do 
 !     &       atmflatstem(sr), atmflatleaf(sr), atmflatstore(sr),        &
 !     &       atmflatrootstore(sr), atmflatrootfiber(sr),                &
 !     &       atmbgstemz(1,sr), atmbgleafz(1,sr), atmbgstorez(1,sr),     &
 !     &       atmbgrootstorez(1,sr), atmbgrootfiberz(1,sr),              &
-!     &       admflatstem(1,sr), admflatleaf(1,sr), admflatstore(1,sr),  &
-!     &       admflatrootstore(1,sr), admflatrootfiber(1,sr),            &
-!     &       admbgstemz(1,1,sr), admbgleafz, admbgstorez(1,1,sr),       &
-!     &       admbgrootstorez(1,1,sr), admbgrootfiberz(1,1,sr),          &
 
       case (31) ! killing process (process code 31)
 
@@ -224,18 +221,18 @@
       case (33) ! cutting by fraction process (process code 33)
 
       case (34) ! modify standing fall rate process variable toughness (process code 34)
- 2074     format(3x,'admf(1) admf(2) admf(3) admst(1)',                 &
-     &      ' admst(2) admst(3)')
+ 2074     format(3x,'residue(1)%deriv%mf residue(2)%deriv%mf residue(3)%deriv%mf residue(1)%deriv%mst',                 &
+     &      ' residue(2)%deriv%mst residue(3)%deriv%mst')
  2075     format (6(2x,f7.3))
           write(luotdb,2068)
           do idx = 1,slay
-            write(luotdb,2063) idx, admrtz(idx,1,sr), admrtz(idx,2,sr), &
-     &        admrtz(idx,3,sr), admbgz(idx,1,sr), admbgz(idx,2,sr),     &
-     &        admbgz(idx,3,sr)
+            write(luotdb,2063) idx, residue(1)%deriv%bg(idx)%mrtz, residue(2)%deriv%bg(idx)%mrtz, &
+     &        residue(3)%deriv%bg(idx)%mrtz, residue(1)%deriv%bg(idx)%mbgz, residue(2)%deriv%bg(idx)%mbgz,     &
+     &        residue(3)%deriv%bg(idx)%mbgz
           end do 
           write(luotdb,2074)
-          write(luotdb,2075) admf(1,sr), admf(2,sr), admf(3,sr),        &
-     &      admst(1,sr), admst(2,sr), admst(3,sr)
+          write(luotdb,2075) residue(1)%deriv%mf, residue(2)%deriv%mf, residue(3)%deriv%mf,        &
+     &      residue(1)%deriv%mst, residue(2)%deriv%mst, residue(3)%deriv%mst
 
       case (37) ! thinning to population process (process code 37)
 
@@ -250,12 +247,12 @@
       case (61) ! biomass remove process (process code 61)
  2164     format (3x,3f7.3)
  2169     format(4x,'acmyld  aczht  aczrtd')
- 2269     format(4x,'adfscv  adffcv ')
+ 2269     format(4x,'residue()%deriv%fscv  residue()%deriv%ffcv ')
           write(luotdb,2169)
           write(luotdb,2164) acmstandstore(sr), aczht(sr), aczrtd(sr)
           write(luotdb,2269)
           do idx = 1, mnbpls
-            write(luotdb,2073) adfscv(idx,sr), adffcv(idx,sr)
+            write(luotdb,2073) residue(idx)%deriv%fscv, residue(idx)%deriv%ffcv
           end do 
 
       case (62) ! biomass remove pool process (process code 62)
@@ -268,11 +265,11 @@
      &        atmflatstem(sr), atmflatleaf(sr),                         &
      &      atmflatstore(sr), atmflatrootstore(sr), atmflatrootfiber(sr)
           do idx = 1, mnbpls
-            write(luotdb,6201) idx, adzht(idx,sr), admstandstem(idx,sr),&
-     &        admstandleaf(idx,sr), admstandstore(idx,sr),              &
-     &        admflatstem(idx,sr), admflatleaf(idx,sr),                 &
-     &        admflatstore(idx,sr), admflatrootstore(idx,sr),           &
-     &        admflatrootfiber(idx,sr)
+            write(luotdb,6201) idx, residue(idx)%geometry%zht, residue(idx)%mass%standstem,&
+     &        residue(idx)%mass%standleaf, residue(idx)%mass%standstore,              &
+     &        residue(idx)%mass%flatstem, residue(idx)%mass%flatleaf,                 &
+     &        residue(idx)%mass%flatstore, residue(idx)%mass%flatrootstore,           &
+     &        residue(idx)%mass%flatrootfiber
           end do 
 
       case (65) ! add residue process (process code 65)

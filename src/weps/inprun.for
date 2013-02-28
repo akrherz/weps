@@ -2,7 +2,7 @@
 !$Date$
 !$Revision$
 !$HeadURL$
-      subroutine inprun
+      subroutine inprun( n_rot_cycles )
 ! ***************************************************************** wjr
 ! reads weps simulation run file
 !
@@ -15,6 +15,9 @@
       use subregions_mod
       use file_io_mod, only: fopenk, luicli, luiwin, luiwsd,            &
      &                       luomanage, luolog
+
+!     + + + ARGUMENT DECLARATIONS + + +
+      integer, intent(out) :: n_rot_cycles
 
       include 'p1werm.inc'
       include 'wpath.inc'

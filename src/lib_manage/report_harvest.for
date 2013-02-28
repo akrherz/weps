@@ -4,16 +4,17 @@
 !$HeadURL$
 
       subroutine report_harvest( sr, bmrotation, mass_rem, mass_left,   &
-     &                           harv_unit_flg )
+     &                           harv_unit_flg, mandate )
 
       use weps_interface_defs
-      use mandate_vars    ! Load shared mandates() array
+      use mandate_mod, only: opercrop_date
       use file_io_mod, only: luoharvest_si, luoharvest_en
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer sr, bmrotation
       real mass_rem, mass_left
       integer harv_unit_flg
+      type(opercrop_date), dimension(:), intent(inout) :: mandate
 
 !     + + + ARGUMENT DEFINITIONS + + +
 !     sr    - subregion number

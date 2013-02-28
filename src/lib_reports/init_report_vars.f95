@@ -4,7 +4,7 @@
 !$Revision$
 !$HeadURL$
 !
-SUBROUTINE init_report_vars(nperiods, nrot_yrs, ncycles)
+SUBROUTINE init_report_vars(nperiods, nrot_yrs, ncycles, mandate, rep_report, rep_update)
 
     USE pd_dates_vars
     USE pd_update_vars
@@ -12,7 +12,7 @@ SUBROUTINE init_report_vars(nperiods, nrot_yrs, ncycles)
 
     USE pd_var_tables
 
-    USE mandate_vars
+    USE mandate_mod, only: opercrop_date
 
     USE alloc_pd_vars_func         !defines alloc_pd_vars function
 
@@ -21,13 +21,16 @@ SUBROUTINE init_report_vars(nperiods, nrot_yrs, ncycles)
     INTEGER, INTENT (IN) :: nperiods   ! 24 is minimum value per rotation year
     INTEGER, INTENT (IN) :: nrot_yrs   ! Minimum is 1
     INTEGER, INTENT (IN) :: ncycles    ! number of rotation cycles
-    INTEGER :: status = 0
+    type (opercrop_date), dimension(:), intent(in) :: mandate
+    type(reporting_report), intent(inout) :: rep_report
+    type(reporting_update), intent(inout) :: rep_update
 
+    INTEGER :: status = 0
     INTEGER :: i,p,hm,m,y,z        ! local loop variables
 
     include 'command.inc'          !declarations for commandline args
 
-    status = alloc_pd_vars(nperiods, nrot_yrs, ncycles) !Allocate space for all pd variables
+    status = alloc_pd_vars(nperiods, nrot_yrs, ncycles, rep_report, rep_update) !Allocate space for all pd variables
     IF (status >= 1) THEN
        write(0,*) "Status of alloc_pd_vars: ", status
        write(0,*) "Error allocating pd_vars"
@@ -286,55 +289,55 @@ SUBROUTINE init_report_vars(nperiods, nrot_yrs, ncycles)
 
     ! initialize "update" and "report" vars and their cnts
     DO i=Min_yrly_vars,Max_yrly_vars
-       yrly_update(i)%cnt = 0
-       yrly_update(i)%val = 0.0
-       yrot_update(i)%cnt = 0
-       yrot_update(i)%val = 0.0
-       yr_update(i)%cnt = 0
-       yr_update(i)%val = 0.0
+       rep_update%yrly_update(i)%cnt = 0
+       rep_update%yrly_update(i)%val = 0.0
+       rep_update%yrot_update(i)%cnt = 0
+       rep_update%yrot_update(i)%val = 0.0
+       rep_update%yr_update(i)%cnt = 0
+       rep_update%yr_update(i)%val = 0.0
        DO y=0, nrot_yrs
-          yrly_report(i,y)%cnt = 0
-          yrly_report(i,y)%val = 0.0
+          rep_report%yrly_report(i,y)%cnt = 0
+          rep_report%yrly_report(i,y)%val = 0.0
        END DO
        ! For a year by year report of yearly (and rotation year) averaged variables
        DO y=1, nrot_yrs*ncycles
-          yr_report(i,y)%cnt = 0
-          yr_report(i,y)%val = 0.0
+          rep_report%yr_report(i,y)%cnt = 0
+          rep_report%yr_report(i,y)%val = 0.0
        END DO
     END DO
 
     DO i=Min_monthly_vars,Max_monthly_vars
-       monthly_update(i)%cnt = 0
-       monthly_update(i)%val = 0.0
+       rep_update%monthly_update(i)%cnt = 0
+       rep_update%monthly_update(i)%val = 0.0
        DO m=1, 12
-          mrot_update(i,m)%cnt = 0
-          mrot_update(i,m)%val = 0.0
+          rep_update%mrot_update(i,m)%cnt = 0
+          rep_update%mrot_update(i,m)%val = 0.0
           DO y=0, nrot_yrs
-             monthly_report(i,m,y)%cnt = 0
-             monthly_report(i,m,y)%val = 0.0
+             rep_report%monthly_report(i,m,y)%cnt = 0
+             rep_report%monthly_report(i,m,y)%val = 0.0
           END DO
        END DO
     END DO
 
     DO i=Min_hmonth_vars,Max_hmonth_vars
-       hmonth_update(i)%cnt = 0
-       hmonth_update(i)%val = 0.0
+       rep_update%hmonth_update(i)%cnt = 0
+       rep_update%hmonth_update(i)%val = 0.0
        DO hm=1, 24
-          hmrot_update(i,hm)%cnt = 0
-          hmrot_update(i,hm)%val = 0.0
+          rep_update%hmrot_update(i,hm)%cnt = 0
+          rep_update%hmrot_update(i,hm)%val = 0.0
           DO y=0, nrot_yrs
-             hmonth_report(i,hm,y)%cnt = 0
-             hmonth_report(i,hm,y)%val = 0.0
+             rep_report%hmonth_report(i,hm,y)%cnt = 0
+             rep_report%hmonth_report(i,hm,y)%val = 0.0
           END DO
        END DO
     END DO
 
     DO i=Min_period_vars,Max_period_vars
-       period_update(i)%cnt = 0
-       period_update(i)%val = 0.0
+       rep_update%period_update(i)%cnt = 0
+       rep_update%period_update(i)%val = 0.0
        DO p=1, nperiods
-          period_report(i,p)%cnt = 0
-          period_report(i,p)%val = 0.0
+          rep_report%period_report(i,p)%cnt = 0
+          rep_report%period_report(i,p)%val = 0.0
        END DO
     END DO
 
@@ -377,51 +380,51 @@ SUBROUTINE init_report_vars(nperiods, nrot_yrs, ncycles)
 
     if( report_debug >= 1 ) then
         DO i=Min_yrly_vars,Max_yrly_vars
-            print *, "yrly_update(",i,")%val,cnt,date,ed", yrly_update(i)%val,  &
-                yrly_update(i)%cnt, yrly_update(i)%date,       &
-                yrly_update(i)%date%ed
+            print *, "rep_update%yrly_update(",i,")%val,cnt,date,ed", rep_update%yrly_update(i)%val,  &
+                rep_update%yrly_update(i)%cnt, rep_update%yrly_update(i)%date,       &
+                rep_update%yrly_update(i)%date%ed
         END DO
     endif
 
     if( report_debug == 2 ) then
   
      DO i=Min_yrly_vars,Max_yrly_vars
-         print *, "yrly_update(",i,")%val,cnt,date", yrly_update(i)%val,   &
-                  yrly_update(i)%cnt, yrly_update(i)%date
+         print *, "rep_update%yrly_update(",i,")%val,cnt,date", rep_update%yrly_update(i)%val,   &
+                  rep_update%yrly_update(i)%cnt, rep_update%yrly_update(i)%date
      END DO
      DO i=Min_monthly_vars,Max_monthly_vars
-         print *, "monthly_update(",i,")%val,cnt,date", monthly_update(i)%val,   &
-              monthly_update(i)%cnt, monthly_update(i)%date
+         print *, "rep_update%monthly_update(",i,")%val,cnt,date", rep_update%monthly_update(i)%val,   &
+              rep_update%monthly_update(i)%cnt, rep_update%monthly_update(i)%date
      END DO
      DO i=Min_hmonth_vars,Max_hmonth_vars
-         print *, "hmonth_update(",i,")%val,cnt,date", hmonth_update(i)%val,   &
-              hmonth_update(i)%cnt, hmonth_update(i)%date
+         print *, "rep_update%hmonth_update(",i,")%val,cnt,date", rep_update%hmonth_update(i)%val,   &
+              rep_update%hmonth_update(i)%cnt, rep_update%hmonth_update(i)%date
      END DO
      DO i=Min_period_vars,Max_period_vars
-         print *, "period_update(",i,")%val,cnt,date", period_update(i)%val,   &
-              period_update(i)%cnt,period_update(i)%date
+         print *, "rep_update%period_update(",i,")%val,cnt,date", rep_update%period_update(i)%val,   &
+              rep_update%period_update(i)%cnt,rep_update%period_update(i)%date
      END DO
  
      DO i=Min_yrly_vars,Max_yrly_vars
-         print *, "yrot_update(",i,")%val,cnt,date", yrot_update(i)%val,   &
-                  yrot_update(i)%cnt, yrot_update(i)%date
+         print *, "rep_update%yrot_update(",i,")%val,cnt,date", rep_update%yrot_update(i)%val,   &
+                  rep_update%yrot_update(i)%cnt, rep_update%yrot_update(i)%date
      END DO
      DO i=Min_monthly_vars,Max_monthly_vars
        DO m=1,12
-         print *, "mrot_update(",i,",",m,")%val,cnt,date", mrot_update(i,m)%val,   &
-              mrot_update(i,m)%cnt, mrot_update(i,m)%date
+         print *, "rep_update%mrot_update(",i,",",m,")%val,cnt,date", rep_update%mrot_update(i,m)%val,   &
+              rep_update%mrot_update(i,m)%cnt, rep_update%mrot_update(i,m)%date
        END DO
      END DO
      DO i=Min_hmonth_vars,Max_hmonth_vars
        DO hm=1,24
-         print *, "hmrot_update(",i,",",hm,")%val,cnt,date", hmrot_update(i,hm)%val,   &
-              hmrot_update(i,hm)%cnt, hmrot_update(i,hm)%date
+         print *, "rep_update%hmrot_update(",i,",",hm,")%val,cnt,date", rep_update%hmrot_update(i,hm)%val,   &
+              rep_update%hmrot_update(i,hm)%cnt, rep_update%hmrot_update(i,hm)%date
        END DO
      END DO
 
      DO i=Min_yrly_vars,Max_yrly_vars
-         print *, "yr_update(",i,")%val,cnt,date", yr_update(i)%val,   &
-                  yr_update(i)%cnt, yr_update(i)%date
+         print *, "rep_update%yr_update(",i,")%val,cnt,date", rep_update%yr_update(i)%val,   &
+                  rep_update%yr_update(i)%cnt, rep_update%yr_update(i)%date
      END DO
     end if
  
@@ -430,21 +433,21 @@ SUBROUTINE init_report_vars(nperiods, nrot_yrs, ncycles)
 
      DO i=Min_yrly_vars,Min_yrly_vars
        DO y=0,nrot_yrs
-         IF (.not. ASSOCIATED(yrly_report(i,y)%date,yrly_dates(y))) THEN
-           print *, "Error: yrly_report(",i,y,")%date not ASSOCIATED with yrly_dates(",y,")"
+         IF (.not. ASSOCIATED(rep_report%yrly_report(i,y)%date,yrly_dates(y))) THEN
+           print *, "Error: rep_report%yrly_report(",i,y,")%date not ASSOCIATED with yrly_dates(",y,")"
          ELSE
-           print *, "yrly_report(",i,",",y,")%val,cnt,date", yrly_report(i,y)%val,   &
-                  yrly_report(i,y)%cnt, yrly_report(i,y)%date
+           print *, "rep_report%yrly_report(",i,",",y,")%val,cnt,date", rep_report%yrly_report(i,y)%val,   &
+                  rep_report%yrly_report(i,y)%cnt, rep_report%yrly_report(i,y)%date
          END IF
        END DO
      END DO
      DO i=Max_yrly_vars,Max_yrly_vars
        DO y=0,nrot_yrs
-         IF (.not. ASSOCIATED(yrly_report(i,y)%date,yrly_dates(y))) THEN
-           print *, "Error: yrly_report(",i,y,")%date not ASSOCIATED with yrly_dates(",y,")"
+         IF (.not. ASSOCIATED(rep_report%yrly_report(i,y)%date,yrly_dates(y))) THEN
+           print *, "Error: rep_report%yrly_report(",i,y,")%date not ASSOCIATED with yrly_dates(",y,")"
          ELSE
-           print *, "yrly_report(",i,",",y,")%val,cnt,date", yrly_report(i,y)%val,   &
-                  yrly_report(i,y)%cnt, yrly_report(i,y)%date
+           print *, "rep_report%yrly_report(",i,",",y,")%val,cnt,date", rep_report%yrly_report(i,y)%val,   &
+                  rep_report%yrly_report(i,y)%cnt, rep_report%yrly_report(i,y)%date
          END IF
        END DO
      END DO
@@ -452,19 +455,19 @@ SUBROUTINE init_report_vars(nperiods, nrot_yrs, ncycles)
      DO i=Min_monthly_vars,Min_monthly_vars
        DO y=0,nrot_yrs
          DO m=1,1
-           IF (.not. ASSOCIATED(monthly_report(i,m,y)%date,monthly_dates(m,y))) THEN
-             print *, "Error: monthly_report(",i,m,y,")%date not ASSOCIATED with monthly_dates(",m,y,")"
+           IF (.not. ASSOCIATED(rep_report%monthly_report(i,m,y)%date,monthly_dates(m,y))) THEN
+             print *, "Error: rep_report%monthly_report(",i,m,y,")%date not ASSOCIATED with monthly_dates(",m,y,")"
            ELSE
-             print *, "monthly_report(",i, ",",m,",",y,")%val,cnt,date", monthly_report(i,m,y)%val,   &
-                  monthly_report(i,m,y)%cnt, monthly_report(i,m,y)%date
+             print *, "rep_report%monthly_report(",i, ",",m,",",y,")%val,cnt,date", rep_report%monthly_report(i,m,y)%val,   &
+                  rep_report%monthly_report(i,m,y)%cnt, rep_report%monthly_report(i,m,y)%date
            END IF
          END DO
          DO m=12,12
-           IF (.not. ASSOCIATED(monthly_report(i,m,y)%date,monthly_dates(m,y))) THEN
-             print *, "Error: monthly_report(",i,m,y,")%date not ASSOCIATED with monthly_dates(",m,y,")"
+           IF (.not. ASSOCIATED(rep_report%monthly_report(i,m,y)%date,monthly_dates(m,y))) THEN
+             print *, "Error: rep_report%monthly_report(",i,m,y,")%date not ASSOCIATED with monthly_dates(",m,y,")"
            ELSE
-             print *, "monthly_report(",i, ",",m,",",y,")%val,cnt,date", monthly_report(i,m,y)%val,   &
-                  monthly_report(i,m,y)%cnt, monthly_report(i,m,y)%date
+             print *, "rep_report%monthly_report(",i, ",",m,",",y,")%val,cnt,date", rep_report%monthly_report(i,m,y)%val,   &
+                  rep_report%monthly_report(i,m,y)%cnt, rep_report%monthly_report(i,m,y)%date
            END IF
          END DO
        END DO
@@ -472,19 +475,19 @@ SUBROUTINE init_report_vars(nperiods, nrot_yrs, ncycles)
      DO i=Max_monthly_vars,Max_monthly_vars
        DO y=0,nrot_yrs
          DO m=1,1
-           IF (.not. ASSOCIATED(monthly_report(i,m,y)%date,monthly_dates(m,y))) THEN
-             print *, "Error: monthly_report(",i,m,y,")%date not ASSOCIATED with monthly_dates(",m,y,")"
+           IF (.not. ASSOCIATED(rep_report%monthly_report(i,m,y)%date,monthly_dates(m,y))) THEN
+             print *, "Error: rep_report%monthly_report(",i,m,y,")%date not ASSOCIATED with monthly_dates(",m,y,")"
            ELSE
-             print *, "monthly_report(",i, ",",m,",",y,")%val,cnt,date", monthly_report(i,m,y)%val,   &
-                  monthly_report(i,m,y)%cnt, monthly_report(i,m,y)%date
+             print *, "rep_report%monthly_report(",i, ",",m,",",y,")%val,cnt,date", rep_report%monthly_report(i,m,y)%val,   &
+                  rep_report%monthly_report(i,m,y)%cnt, rep_report%monthly_report(i,m,y)%date
            END IF
          END DO
          DO m=12,12
-           IF (.not. ASSOCIATED(monthly_report(i,m,y)%date,monthly_dates(m,y))) THEN
-             print *, "Error: monthly_report(",i,m,y,")%date not ASSOCIATED with monthly_dates(",m,y,")"
+           IF (.not. ASSOCIATED(rep_report%monthly_report(i,m,y)%date,monthly_dates(m,y))) THEN
+             print *, "Error: rep_report%monthly_report(",i,m,y,")%date not ASSOCIATED with monthly_dates(",m,y,")"
            ELSE
-             print *, "monthly_report(",i, ",",m,",",y,")%val,cnt,date", monthly_report(i,m,y)%val,   &
-                  monthly_report(i,m,y)%cnt, monthly_report(i,m,y)%date
+             print *, "rep_report%monthly_report(",i, ",",m,",",y,")%val,cnt,date", rep_report%monthly_report(i,m,y)%val,   &
+                  rep_report%monthly_report(i,m,y)%cnt, rep_report%monthly_report(i,m,y)%date
            END IF
          END DO
        END DO
@@ -493,19 +496,19 @@ SUBROUTINE init_report_vars(nperiods, nrot_yrs, ncycles)
      DO i=Min_hmonth_vars,Min_hmonth_vars
        DO y=0,nrot_yrs
          DO hm=1,1
-           IF (.not. ASSOCIATED(hmonth_report(i,hm,y)%date,hmonth_dates(hm,y))) THEN
-               print *, "Error: hmonth_report(",i,hm,y,")%date not ASSOCIATED with hmonth_dates(",hm,y,")"
+           IF (.not. ASSOCIATED(rep_report%hmonth_report(i,hm,y)%date,hmonth_dates(hm,y))) THEN
+               print *, "Error: rep_report%hmonth_report(",i,hm,y,")%date not ASSOCIATED with hmonth_dates(",hm,y,")"
            ELSE
-             print *, "hmonth_report(",i, ",",hm,",",y,")%val,cnt,date", hmonth_report(i,hm,y)%val,   &
-                  hmonth_report(i,hm,y)%cnt, hmonth_report(i,hm,y)%date
+             print *, "rep_report%hmonth_report(",i, ",",hm,",",y,")%val,cnt,date", rep_report%hmonth_report(i,hm,y)%val,   &
+                  rep_report%hmonth_report(i,hm,y)%cnt, rep_report%hmonth_report(i,hm,y)%date
            END IF
          END DO
          DO hm=24,24
-           IF (.not. ASSOCIATED(hmonth_report(i,hm,y)%date,hmonth_dates(hm,y))) THEN
-               print *, "Error: hmonth_report(",i,hm,y,")%date not ASSOCIATED with hmonth_dates(",hm,y,")"
+           IF (.not. ASSOCIATED(rep_report%hmonth_report(i,hm,y)%date,hmonth_dates(hm,y))) THEN
+               print *, "Error: rep_report%hmonth_report(",i,hm,y,")%date not ASSOCIATED with hmonth_dates(",hm,y,")"
            ELSE
-             print *, "hmonth_report(",i, ",",hm,",",y,")%val,cnt,date", hmonth_report(i,hm,y)%val,   &
-                  hmonth_report(i,hm,y)%cnt, hmonth_report(i,hm,y)%date
+             print *, "rep_report%hmonth_report(",i, ",",hm,",",y,")%val,cnt,date", rep_report%hmonth_report(i,hm,y)%val,   &
+                  rep_report%hmonth_report(i,hm,y)%cnt, rep_report%hmonth_report(i,hm,y)%date
            END IF
          END DO
        END DO
@@ -513,19 +516,19 @@ SUBROUTINE init_report_vars(nperiods, nrot_yrs, ncycles)
      DO i=Max_hmonth_vars,Max_hmonth_vars
        DO y=0,nrot_yrs
          DO hm=1,1
-           IF (.not. ASSOCIATED(hmonth_report(i,hm,y)%date,hmonth_dates(hm,y))) THEN
-               print *, "Error: hmonth_report(",i,hm,y,")%date not ASSOCIATED with hmonth_dates(",hm,y,")"
+           IF (.not. ASSOCIATED(rep_report%hmonth_report(i,hm,y)%date,hmonth_dates(hm,y))) THEN
+               print *, "Error: rep_report%hmonth_report(",i,hm,y,")%date not ASSOCIATED with hmonth_dates(",hm,y,")"
            ELSE
-             print *, "hmonth_report(",i, ",",hm,",",y,")%val,cnt,date", hmonth_report(i,hm,y)%val,   &
-                  hmonth_report(i,hm,y)%cnt, hmonth_report(i,hm,y)%date
+             print *, "rep_report%hmonth_report(",i, ",",hm,",",y,")%val,cnt,date", rep_report%hmonth_report(i,hm,y)%val,   &
+                  rep_report%hmonth_report(i,hm,y)%cnt, rep_report%hmonth_report(i,hm,y)%date
            END IF
          END DO
          DO hm=24,24
-           IF (.not. ASSOCIATED(hmonth_report(i,hm,y)%date,hmonth_dates(hm,y))) THEN
-               print *, "Error: hmonth_report(",i,hm,y,")%date not ASSOCIATED with hmonth_dates(",hm,y,")"
+           IF (.not. ASSOCIATED(rep_report%hmonth_report(i,hm,y)%date,hmonth_dates(hm,y))) THEN
+               print *, "Error: rep_report%hmonth_report(",i,hm,y,")%date not ASSOCIATED with hmonth_dates(",hm,y,")"
            ELSE
-             print *, "hmonth_report(",i, ",",hm,",",y,")%val,cnt,date", hmonth_report(i,hm,y)%val,   &
-                  hmonth_report(i,hm,y)%cnt, hmonth_report(i,hm,y)%date
+             print *, "rep_report%hmonth_report(",i, ",",hm,",",y,")%val,cnt,date", rep_report%hmonth_report(i,hm,y)%val,   &
+                  rep_report%hmonth_report(i,hm,y)%cnt, rep_report%hmonth_report(i,hm,y)%date
            END IF
          END DO
        END DO
@@ -533,37 +536,37 @@ SUBROUTINE init_report_vars(nperiods, nrot_yrs, ncycles)
 
      DO i=Min_period_vars,Min_period_vars
          DO p=1,1
-           IF (.not. ASSOCIATED(period_report(i,p)%date,period_dates(p))) THEN
-              print *, "Error: period_report(",i,p,")%date not ASSOCIATED with period_dates(",p,")"
+           IF (.not. ASSOCIATED(rep_report%period_report(i,p)%date,period_dates(p))) THEN
+              print *, "Error: rep_report%period_report(",i,p,")%date not ASSOCIATED with period_dates(",p,")"
            ELSE
-              print *, "period_report(",i,",",p,")%val,cnt,date", period_report(i,p)%val,   &
-                 period_report(i,p)%cnt,period_report(i,p)%date
+              print *, "rep_report%period_report(",i,",",p,")%val,cnt,date", rep_report%period_report(i,p)%val,   &
+                 rep_report%period_report(i,p)%cnt,rep_report%period_report(i,p)%date
            END IF
          END DO
          DO p=nperiods,nperiods
-           IF (.not. ASSOCIATED(period_report(i,p)%date,period_dates(p))) THEN
-              print *, "Error: period_report(",i,p,")%date not ASSOCIATED with period_dates(",p,")"
+           IF (.not. ASSOCIATED(rep_report%period_report(i,p)%date,period_dates(p))) THEN
+              print *, "Error: rep_report%period_report(",i,p,")%date not ASSOCIATED with period_dates(",p,")"
            ELSE
-              print *, "period_report(",i,",",p,")%val,cnt,date", period_report(i,p)%val,   &
-                 period_report(i,p)%cnt,period_report(i,p)%date
+              print *, "rep_report%period_report(",i,",",p,")%val,cnt,date", rep_report%period_report(i,p)%val,   &
+                 rep_report%period_report(i,p)%cnt,rep_report%period_report(i,p)%date
            END IF
          END DO
      END DO
      DO i=Max_period_vars,Max_period_vars
          DO p=1,1
-           IF (.not. ASSOCIATED(period_report(i,p)%date,period_dates(p))) THEN
-              print *, "Error: period_report(",i,p,")%date not ASSOCIATED with period_dates(",p,")"
+           IF (.not. ASSOCIATED(rep_report%period_report(i,p)%date,period_dates(p))) THEN
+              print *, "Error: rep_report%period_report(",i,p,")%date not ASSOCIATED with period_dates(",p,")"
            ELSE
-              print *, "period_report(",i,",",p,")%val,cnt,date", period_report(i,p)%val,   &
-                 period_report(i,p)%cnt,period_report(i,p)%date
+              print *, "rep_report%period_report(",i,",",p,")%val,cnt,date", rep_report%period_report(i,p)%val,   &
+                 rep_report%period_report(i,p)%cnt,rep_report%period_report(i,p)%date
            END IF
          END DO
          DO p=nperiods,nperiods
-           IF (.not. ASSOCIATED(period_report(i,p)%date,period_dates(p))) THEN
-              print *, "Error: period_report(",i,p,")%date not ASSOCIATED with period_dates(",p,")"
+           IF (.not. ASSOCIATED(rep_report%period_report(i,p)%date,period_dates(p))) THEN
+              print *, "Error: rep_report%period_report(",i,p,")%date not ASSOCIATED with period_dates(",p,")"
            ELSE
-              print *, "period_report(",i,",",p,")%val,cnt,date", period_report(i,p)%val,   &
-                 period_report(i,p)%cnt,period_report(i,p)%date
+              print *, "rep_report%period_report(",i,",",p,")%val,cnt,date", rep_report%period_report(i,p)%val,   &
+                 rep_report%period_report(i,p)%cnt,rep_report%period_report(i,p)%date
            END IF
          END DO
      END DO
@@ -571,11 +574,11 @@ SUBROUTINE init_report_vars(nperiods, nrot_yrs, ncycles)
      ! For a year by year report of yearly (and rotation year) averaged variables
      DO i=Min_yrly_vars,Min_yrly_vars
        DO y=1,nrot_yrs*ncycles
-         IF (.not. ASSOCIATED(yr_report(i,y)%date,yr_dates(y))) THEN
-           print *, "Error: yr_report(",i,y,")%date not ASSOCIATED with yr_dates(",y,")"
+         IF (.not. ASSOCIATED(rep_report%yr_report(i,y)%date,yr_dates(y))) THEN
+           print *, "Error: rep_report%yr_report(",i,y,")%date not ASSOCIATED with yr_dates(",y,")"
          ELSE
-           print *, "yr_report(",i,",",y,")%val,cnt,date", yr_report(i,y)%val,   &
-                  yr_report(i,y)%cnt, yr_report(i,y)%date
+           print *, "rep_report%yr_report(",i,",",y,")%val,cnt,date", rep_report%yr_report(i,y)%val,   &
+                  rep_report%yr_report(i,y)%cnt, rep_report%yr_report(i,y)%date
          END IF
        END DO
      END DO

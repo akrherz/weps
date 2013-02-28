@@ -242,7 +242,6 @@ SUBROUTINE get_calib_yield(sr,rotation_no,mass_removed, mass_left)
     ! rotation and "harvested" in the first year of the rotation prior to
     ! the next "planting"( so the next harvest yield will be "adjusted").
 
-!    IF (n_rot_cycles == rotation_no)  THEN   !Done with this crop, adjust bioflag
     IF (calibrate_rotcycles == rotation_no)  THEN   !Done with this crop, adjust bioflag
 
         c_no = Calib_Yield%YP%YData%calib_yield_info%crop_ptr%idx

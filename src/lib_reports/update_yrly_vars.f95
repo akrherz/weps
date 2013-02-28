@@ -4,15 +4,16 @@
 !$Revision$
 !$HeadURL$
 !
-SUBROUTINE update_yrly_update_vars()
+SUBROUTINE update_yrly_update_vars(yrly_update, yrot_update, yr_update)
 
-    USE pd_dates_vars
-    USE pd_update_vars
-    USE pd_report_vars
-
+    USE pd_var_type_def
     USE pd_var_tables
 
     IMPLICIT NONE
+
+    TYPE (pd_var_type), DIMENSION(:), intent(inout) :: yrly_update
+    TYPE (pd_var_type), DIMENSION(:), intent(inout) :: yrot_update
+    TYPE (pd_var_type), DIMENSION(:), intent(inout) :: yr_update
 
     include "w1clig.inc"        ! precip
     include "p1werm.inc"        ! mntime (maximum # of time steps/day)
@@ -406,18 +407,21 @@ SUBROUTINE update_yrly_update_vars()
 END SUBROUTINE update_yrly_update_vars
 
 
-SUBROUTINE update_yrly_report_vars(cur_year, nrot_years)
+SUBROUTINE update_yrly_report_vars(cur_year, nrot_years, yrly_update, yrot_update, yr_update, yrly_report, yr_report)
 
     USE pd_dates_vars
-    USE pd_update_vars
-    USE pd_report_vars
-
+    USE pd_var_type_def
     USE pd_var_tables
 
     IMPLICIT NONE
 
     INTEGER, INTENT (IN) :: nrot_years
     INTEGER, INTENT (IN) :: cur_year
+    TYPE (pd_var_type), DIMENSION(:), intent(inout) :: yrly_update
+    TYPE (pd_var_type), DIMENSION(:), intent(inout) :: yrot_update
+    TYPE (pd_var_type), DIMENSION(:), intent(inout) :: yr_update
+    TYPE (pd_var_type), DIMENSION(:,:), intent(inout) :: yrly_report
+    TYPE (pd_var_type), DIMENSION(:,:), intent(inout) :: yr_report
 
     INTEGER :: i        ! local loop variables
     INTEGER :: rot_y    ! local variables

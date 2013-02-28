@@ -7,7 +7,7 @@
 MODULE alloc_pd_vars_func
 
 contains
-  FUNCTION alloc_pd_vars (nperiods, nrot_yrs, ncycles)
+  FUNCTION alloc_pd_vars (nperiods, nrot_yrs, ncycles, rep_report, rep_update)
 
     USE pd_var_type_def
     USE pd_dates_vars
@@ -24,6 +24,8 @@ contains
     INTEGER, INTENT (IN) :: nperiods    ! Number of total periods
     INTEGER, INTENT (IN) :: nrot_yrs    ! Number of rotation years
     INTEGER, INTENT (IN) :: ncycles    ! number of rotation cycles
+    type(reporting_report), intent(inout) :: rep_report
+    type(reporting_update), intent(inout) :: rep_update
 
     INTRINSIC ASSOCIATED                ! use to verify status of pointers
 
@@ -39,109 +41,109 @@ contains
 
 
 ! Allocate for "update" variables
-    IF (ALLOCATED (yrly_update) .neqv. .TRUE.) then
-        ALLOCATE (yrly_update(Min_yrly_vars:Max_yrly_vars), STAT = alloc_status) 
+    IF (ALLOCATED (rep_update%yrly_update) .neqv. .TRUE.) then
+        ALLOCATE (rep_update%yrly_update(Min_yrly_vars:Max_yrly_vars), STAT = alloc_status) 
         IF (alloc_status /= 0) THEN
-           print *, "Error allocating yrly_update(Max_yrly_vars)"
+           print *, "Error allocating rep_update%yrly_update(Max_yrly_vars)"
            ret_status = ret_status + alloc_status
         END IF
     END IF
 
-    IF (ALLOCATED (monthly_update) .neqv. .TRUE.) then
-        ALLOCATE (monthly_update(Min_monthly_vars:Max_monthly_vars), STAT = alloc_status) 
+    IF (ALLOCATED (rep_update%monthly_update) .neqv. .TRUE.) then
+        ALLOCATE (rep_update%monthly_update(Min_monthly_vars:Max_monthly_vars), STAT = alloc_status) 
         IF (alloc_status /= 0) THEN
-            print *, "Error allocating monthly_update(Min_monthly_vars:Max_monthly_vars)"
+            print *, "Error allocating rep_update%monthly_update(Min_monthly_vars:Max_monthly_vars)"
             ret_status = ret_status + alloc_status
         END IF
     END IF
 
-    IF (ALLOCATED (hmonth_update) .neqv. .TRUE.) then
-        ALLOCATE (hmonth_update(Min_hmonth_vars:Max_hmonth_vars), STAT = alloc_status) 
+    IF (ALLOCATED (rep_update%hmonth_update) .neqv. .TRUE.) then
+        ALLOCATE (rep_update%hmonth_update(Min_hmonth_vars:Max_hmonth_vars), STAT = alloc_status) 
         IF (alloc_status /= 0) THEN
-            print *, "Error allocating hmonth_update(Min_hmonth_vars:Max_hmonth_vars)"
+            print *, "Error allocating rep_update%hmonth_update(Min_hmonth_vars:Max_hmonth_vars)"
             ret_status = ret_status + alloc_status
         END IF
     END IF
 
-    IF (ALLOCATED (period_update) .neqv. .TRUE.) then
-        ALLOCATE (period_update(Min_period_vars:Max_period_vars), STAT = alloc_status) 
+    IF (ALLOCATED (rep_update%period_update) .neqv. .TRUE.) then
+        ALLOCATE (rep_update%period_update(Min_period_vars:Max_period_vars), STAT = alloc_status) 
         IF (alloc_status /= 0) THEN
-            print *, "Error allocating period_update(Min_period_vars:Max_period_vars)"
+            print *, "Error allocating rep_update%period_update(Min_period_vars:Max_period_vars)"
             ret_status = ret_status + alloc_status
         END IF
     END IF
 
 
-    IF (ALLOCATED (yrot_update) .neqv. .TRUE.) then
-        ALLOCATE (yrot_update(Min_yrly_vars:Max_yrly_vars), STAT = alloc_status) 
+    IF (ALLOCATED (rep_update%yrot_update) .neqv. .TRUE.) then
+        ALLOCATE (rep_update%yrot_update(Min_yrly_vars:Max_yrly_vars), STAT = alloc_status) 
         IF (alloc_status /= 0) THEN
-            print *, "Error allocating yrot_update(Max_yrly_vars)"
+            print *, "Error allocating rep_update%yrot_update(Max_yrly_vars)"
             ret_status = ret_status + alloc_status
         END IF
     END IF
 
-    IF (ALLOCATED (mrot_update) .neqv. .TRUE.) then
-        ALLOCATE (mrot_update(Min_monthly_vars:Max_monthly_vars,12), STAT = alloc_status) 
+    IF (ALLOCATED (rep_update%mrot_update) .neqv. .TRUE.) then
+        ALLOCATE (rep_update%mrot_update(Min_monthly_vars:Max_monthly_vars,12), STAT = alloc_status) 
         IF (alloc_status /= 0) THEN
-            print *, "Error allocating mrot_update(Min_monthly_vars:Max_monthly_vars,12)"
+            print *, "Error allocating rep_update%mrot_update(Min_monthly_vars:Max_monthly_vars,12)"
             ret_status = ret_status + alloc_status
         END IF
     END IF
 
-    IF (ALLOCATED (hmrot_update) .neqv. .TRUE.) then
-        ALLOCATE (hmrot_update(Min_hmonth_vars:Max_hmonth_vars,24), STAT = alloc_status) 
+    IF (ALLOCATED (rep_update%hmrot_update) .neqv. .TRUE.) then
+        ALLOCATE (rep_update%hmrot_update(Min_hmonth_vars:Max_hmonth_vars,24), STAT = alloc_status) 
         IF (alloc_status /= 0) THEN
-            print *, "Error allocating hmrot_update(Min_hmonth_vars:Max_hmonth_vars,24)"
+            print *, "Error allocating rep_update%hmrot_update(Min_hmonth_vars:Max_hmonth_vars,24)"
             ret_status = ret_status + alloc_status
         END IF
     END IF
 
     ! For a year by year report of yearly (and rotation year) averaged variables
-    IF (ALLOCATED (yr_update) .neqv. .TRUE.) then
-        ALLOCATE (yr_update(Min_yrly_vars:Max_yrly_vars), STAT = alloc_status) 
+    IF (ALLOCATED (rep_update%yr_update) .neqv. .TRUE.) then
+        ALLOCATE (rep_update%yr_update(Min_yrly_vars:Max_yrly_vars), STAT = alloc_status) 
         IF (alloc_status /= 0) THEN
-            print *, "Error allocating yr_update(Max_yr_vars)"
+            print *, "Error allocating rep_update%yr_update(Max_yr_vars)"
             ret_status = ret_status + alloc_status
         END IF
     END IF
 
 
 ! Allocate for all "report" variables
-    IF (.not. ALLOCATED (yrly_report)) then
-        ALLOCATE (yrly_report(Min_yrly_vars:Max_yrly_vars,0:nrot_yrs), STAT = alloc_status) 
+    IF (.not. ALLOCATED (rep_report%yrly_report)) then
+        ALLOCATE (rep_report%yrly_report(Min_yrly_vars:Max_yrly_vars,0:nrot_yrs), STAT = alloc_status) 
         IF (alloc_status /= 0) THEN
-            print *, "Error allocating yrly_report(Min_yrly_vars:Max_yrly_vars,0:nrot_yrs)"
+            print *, "Error allocating rep_report%yrly_report(Min_yrly_vars:Max_yrly_vars,0:nrot_yrs)"
             ret_status = ret_status + alloc_status
         END IF
     END IF
-    IF (.not. ALLOCATED (monthly_report)) then
-        ALLOCATE (monthly_report(Min_monthly_vars:Max_monthly_vars,1:12,0:nrot_yrs), STAT = alloc_status) 
+    IF (.not. ALLOCATED (rep_report%monthly_report)) then
+        ALLOCATE (rep_report%monthly_report(Min_monthly_vars:Max_monthly_vars,1:12,0:nrot_yrs), STAT = alloc_status) 
         IF (alloc_status /= 0) THEN
-            print *, "Error allocating monthly_report(Min_monthly_vars:Max_monthly_vars,1:12,0:nrot_yrs)"
+            print *, "Error allocating rep_report%monthly_report(Min_monthly_vars:Max_monthly_vars,1:12,0:nrot_yrs)"
             ret_status = ret_status + alloc_status
         END IF
     END IF
-    IF (.not. ALLOCATED (hmonth_report)) then
-        ALLOCATE (hmonth_report(Min_hmonth_vars:Max_hmonth_vars,1:24,0:nrot_yrs), STAT = alloc_status) 
+    IF (.not. ALLOCATED (rep_report%hmonth_report)) then
+        ALLOCATE (rep_report%hmonth_report(Min_hmonth_vars:Max_hmonth_vars,1:24,0:nrot_yrs), STAT = alloc_status) 
         IF (alloc_status /= 0) THEN
-            print *, "Error allocating hmonth_report(Min_hmonth_vars:Max_hmonth_vars,1:24,0:nrot_yrs)"
+            print *, "Error allocating rep_report%hmonth_report(Min_hmonth_vars:Max_hmonth_vars,1:24,0:nrot_yrs)"
             ret_status = ret_status + alloc_status
         END IF
     END IF
 
-    IF (.not. ALLOCATED (period_report)) then
-        ALLOCATE (period_report(Min_period_vars:Max_period_vars,1:nperiods), STAT = alloc_status) 
+    IF (.not. ALLOCATED (rep_report%period_report)) then
+        ALLOCATE (rep_report%period_report(Min_period_vars:Max_period_vars,1:nperiods), STAT = alloc_status) 
         IF (alloc_status /= 0) THEN
-            print *, "Error allocating period_report(Min_period_vars:Max_period_vars,1:nperiods)"
+            print *, "Error allocating rep_report%period_report(Min_period_vars:Max_period_vars,1:nperiods)"
             ret_status = ret_status + alloc_status
         END IF
     END IF
 
     ! For a year by year report of yearly (and rotation year) averaged variables
-    IF (.not. ALLOCATED (yr_report)) then
-        ALLOCATE (yr_report(Min_yrly_vars:Max_yrly_vars,1:nrot_yrs*ncycles), STAT = alloc_status) 
+    IF (.not. ALLOCATED (rep_report%yr_report)) then
+        ALLOCATE (rep_report%yr_report(Min_yrly_vars:Max_yrly_vars,1:nrot_yrs*ncycles), STAT = alloc_status) 
         IF (alloc_status /= 0) THEN
-            print *, "Error allocating yr_report(Min_yrly_vars:Max_yrly_vars,1:nrot_yrs*n_rot_cycles)"
+            print *, "Error allocating rep_report%yr_report(Min_yrly_vars:Max_yrly_vars,1:nrot_yrs*ncycles)"
             ret_status = ret_status + alloc_status
         END IF
     END IF
@@ -189,11 +191,11 @@ contains
 ! Associate "dates" pointers in "report" variable structures
     do i=Min_yrly_vars, Max_yrly_vars
       do y=0, nrot_yrs
-        yrly_report(i,y)%date => yrly_dates(y)
-        IF (.not. ASSOCIATED(yrly_report(i,y)%date)) THEN
-        !IF (.not. ASSOCIATED(yrly_report(i,y)%date,yrly_dates(y))) THEN
-           write(0,*) "Error: yrly_report(",i,y,")%date not ASSOCIATED with yrly_dates(",y,")"
-           write(0,*) "Error: yrly_report var not associated with a yrly_dates var"
+        rep_report%yrly_report(i,y)%date => yrly_dates(y)
+        IF (.not. ASSOCIATED(rep_report%yrly_report(i,y)%date)) THEN
+        !IF (.not. ASSOCIATED(rep_report%yrly_report(i,y)%date,yrly_dates(y))) THEN
+           write(0,*) "Error: rep_report%yrly_report(",i,y,")%date not ASSOCIATED with yrly_dates(",y,")"
+           write(0,*) "Error: rep_report%yrly_report var not associated with a yrly_dates var"
            call exit (1)
         END IF
       end do
@@ -202,11 +204,11 @@ contains
     do i=Min_monthly_vars, Max_monthly_vars
       do m=1, 12 !for each month
         do y=0, nrot_yrs
-        monthly_report(i,m,y)%date => monthly_dates(m,y)
-        IF (.not. ASSOCIATED(monthly_report(i,m,y)%date)) THEN
-        !IF (.not. ASSOCIATED(monthly_report(i,m,y)%date,monthly_dates(m,y))) THEN
-           write(0,*) "Error: monthly_report(",i,m,y,")%date not ASSOCIATED with monthly_dates(",m,y,")"
-           write(0,*) "Error: monthly_report var not associated with a monthly_dates var"
+        rep_report%monthly_report(i,m,y)%date => monthly_dates(m,y)
+        IF (.not. ASSOCIATED(rep_report%monthly_report(i,m,y)%date)) THEN
+        !IF (.not. ASSOCIATED(rep_report%monthly_report(i,m,y)%date,monthly_dates(m,y))) THEN
+           write(0,*) "Error: rep_report%monthly_report(",i,m,y,")%date not ASSOCIATED with monthly_dates(",m,y,")"
+           write(0,*) "Error: rep_report%monthly_report var not associated with a monthly_dates var"
            call exit (1)
         END IF
         end do
@@ -216,11 +218,11 @@ contains
     do i=Min_hmonth_vars, Max_hmonth_vars
       do hm=1, 24
         do y=0, nrot_yrs
-          hmonth_report(i,hm,y)%date => hmonth_dates(hm,y)
-          IF (.not. ASSOCIATED(hmonth_report(i,hm,y)%date)) THEN
-          !IF (.not. ASSOCIATED(hmonth_report(i,hm,y)%date,hmonth_dates(hm,y))) THEN
-             write(0,*) "Error: hmonth_report(",i,hm,y,")%date not ASSOCIATED with hmonth_dates(",hm,y,")"
-             write(0,*) "Error: hmonth_report var not associated with a hmonth_dates var"
+          rep_report%hmonth_report(i,hm,y)%date => hmonth_dates(hm,y)
+          IF (.not. ASSOCIATED(rep_report%hmonth_report(i,hm,y)%date)) THEN
+          !IF (.not. ASSOCIATED(rep_report%hmonth_report(i,hm,y)%date,hmonth_dates(hm,y))) THEN
+             write(0,*) "Error: rep_report%hmonth_report(",i,hm,y,")%date not ASSOCIATED with hmonth_dates(",hm,y,")"
+             write(0,*) "Error: rep_report%hmonth_report var not associated with a hmonth_dates var"
              call exit (1)
           END IF
         end do
@@ -229,11 +231,11 @@ contains
 
     do i=Min_period_vars, Max_period_vars
       do p=1, nperiods
-        period_report(i,p)%date => period_dates(p)
-        IF (.not. ASSOCIATED(period_report(i,p)%date)) THEN
-        !IF (.not. ASSOCIATED(period_report(i,p)%date,period_dates(p))) THEN
-           write(0,*) "Error: period_report(",i,p,")%date not ASSOCIATED with period_dates(",p,")"
-           write(0,*) "Error: period_report var not associated with a period_dates var"
+        rep_report%period_report(i,p)%date => period_dates(p)
+        IF (.not. ASSOCIATED(rep_report%period_report(i,p)%date)) THEN
+        !IF (.not. ASSOCIATED(rep_report%period_report(i,p)%date,period_dates(p))) THEN
+           write(0,*) "Error: rep_report%period_report(",i,p,")%date not ASSOCIATED with period_dates(",p,")"
+           write(0,*) "Error: rep_report%period_report var not associated with a period_dates var"
            call exit (1)
         END IF
       end do
@@ -242,11 +244,11 @@ contains
     ! For a year by year report of yearly (and rotation year) averaged variables
     do i=Min_yrly_vars, Max_yrly_vars
       do y=1, nrot_yrs*ncycles
-        yr_report(i,y)%date => yr_dates(y)
-        IF (.not. ASSOCIATED(yr_report(i,y)%date)) THEN
-        !IF (.not. ASSOCIATED(yr_report(i,y)%date,yr_dates(y))) THEN
-           write(0,*) "Error: yr_report(",i,y,")%date not ASSOCIATED with yr_dates(",y,")"
-           write(0,*) "Error: yr_report var not associated with a yr_dates var"
+        rep_report%yr_report(i,y)%date => yr_dates(y)
+        IF (.not. ASSOCIATED(rep_report%yr_report(i,y)%date)) THEN
+        !IF (.not. ASSOCIATED(rep_report%yr_report(i,y)%date,yr_dates(y))) THEN
+           write(0,*) "Error: rep_report%yr_report(",i,y,")%date not ASSOCIATED with yr_dates(",y,")"
+           write(0,*) "Error: rep_report%yr_report var not associated with a yr_dates var"
            call exit (1)
         END IF
       end do
@@ -258,13 +260,13 @@ contains
 !  print *, "Max_yrly_vars: ", Max_yrly_vars
 !  print *, "Wind_energy: ", Wind_energy
 !  do y=0, nrot_yrs
-!    IF (ASSOCIATED (yrly_report(Wind_energy,y)%date)) THEN
+!    IF (ASSOCIATED (rep_report%yrly_report(Wind_energy,y)%date)) THEN
 !        print *, "alloc: %date is associated"
 !    ELSE
 !        print *, "alloc: %date is NOT associated"
 !    END IF
-!    print *, "alloc: ", y, yrly_report(Wind_energy,y)%date
-!    write (UNIT=6,FMT="(9(i3))",ADVANCE="YES")y, yrly_report(Wind_energy,y)%date
+!    print *, "alloc: ", y, rep_report%yrly_report(Wind_energy,y)%date
+!    write (UNIT=6,FMT="(9(i3))",ADVANCE="YES")y, rep_report%yrly_report(Wind_energy,y)%date
 !  end do
 
 
@@ -272,38 +274,38 @@ contains
 ! (initially point to first "pd_report_dates" for each var)
 
     DO i=Min_yrly_vars, Max_yrly_vars
-        yrly_update(i)%date => yrly_dates(1)         ! Use yrly dates
+        rep_update%yrly_update(i)%date => yrly_dates(1)         ! Use yrly dates
     END DO
     DO i=Min_monthly_vars, Max_monthly_vars
-        monthly_update(i)%date => monthly_dates(1,1) ! 1st mon of 1st yr dates
+        rep_update%monthly_update(i)%date => monthly_dates(1,1) ! 1st mon of 1st yr dates
     END DO
 
     DO i=Min_hmonth_vars, Max_hmonth_vars
-        hmonth_update(i)%date => hmonth_dates(1,1)   ! 1st half month period
+        rep_update%hmonth_update(i)%date => hmonth_dates(1,1)   ! 1st half month period
     END DO
 
     DO i=Min_period_vars, Max_period_vars
-        period_update(i)%date => period_dates(1)     ! 1st period of rotation
+        rep_update%period_update(i)%date => period_dates(1)     ! 1st period of rotation
     END DO
 
     DO i=Min_yrly_vars, Max_yrly_vars
-        yrot_update(i)%date => yrly_dates(0)         ! Use yrly dates
+        rep_update%yrot_update(i)%date => yrly_dates(0)         ! Use yrly dates
     END DO
     DO i=Min_monthly_vars, Max_monthly_vars
       DO m = 1,12
-        mrot_update(i,m)%date => monthly_dates(m,0)    ! 1st mon of 1st yr dates
+        rep_update%mrot_update(i,m)%date => monthly_dates(m,0)    ! 1st mon of 1st yr dates
       END DO
     END DO
 
     DO i=Min_hmonth_vars, Max_hmonth_vars
       DO hm = 1,24
-        hmrot_update(i,hm)%date => hmonth_dates(hm,0)    ! 1st half month period
+        rep_update%hmrot_update(i,hm)%date => hmonth_dates(hm,0)    ! 1st half month period
       END DO
     END DO
 
     ! For a year by year report of yearly (and rotation year) averaged variables
     DO i=Min_yrly_vars, Max_yrly_vars
-        yr_update(i)%date => yr_dates(1)         ! Use yr dates
+        rep_update%yr_update(i)%date => yr_dates(1)         ! Use yr dates
     END DO
 
     if (report_debug >= 1) then   !Validate pd vars allocation sizes
@@ -313,22 +315,22 @@ contains
         print *, "Error in allocated size of yrly vars"
         print *, "Max-Min: ", Max_yrly_vars-Min_yrly_vars+1,"N_yrly: ", N_yrly
       end if
-      if (size(yrly_update) /= N_yrly) then
-        print *, "Error in allocated size of yrly_update vars"
+      if (size(rep_update%yrly_update) /= N_yrly) then
+        print *, "Error in allocated size of rep_update%yrly_update vars"
       end if
-      if (size(yrot_update) /= N_yrly) then
-        print *, "Error in allocated size of yrot_update vars"
+      if (size(rep_update%yrot_update) /= N_yrly) then
+        print *, "Error in allocated size of rep_update%yrot_update vars"
       end if
-      if (size(yrly_report,1) /= N_yrly) then
-        print *, "Error in allocated size of yrly_report vars"
+      if (size(rep_report%yrly_report,1) /= N_yrly) then
+        print *, "Error in allocated size of rep_report%yrly_report vars"
       end if
 
       ! For a year by year report of yearly (and rotation year) averaged variables
-      if (size(yr_update) /= N_yrly) then
-        print *, "Error in allocated size of yrly_update vars"
+      if (size(rep_update%yr_update) /= N_yrly) then
+        print *, "Error in allocated size of rep_update%yrly_update vars"
       end if
-      if (size(yr_report,1) /= N_yrly) then
-        print *, "Error in allocated size of yrly_report vars"
+      if (size(rep_report%yr_report,1) /= N_yrly) then
+        print *, "Error in allocated size of rep_report%yr_report vars"
       end if
 
       N_monthly = N_yrly
@@ -336,14 +338,14 @@ contains
         print *, "Error in allocated size of monthly vars"
         print *, "Max-Min: ", Max_monthly_vars-Min_monthly_vars+1,"N_monthly: ", N_monthly
       end if
-      if (size(monthly_update) /= N_monthly) then
-        print *, "Error in allocated size of monthly_update vars"
+      if (size(rep_update%monthly_update) /= N_monthly) then
+        print *, "Error in allocated size of rep_update%monthly_update vars"
       end if
-      if (size(mrot_update,1) /= N_monthly) then
-        print *, "Error in allocated size of mrot_update vars"
+      if (size(rep_update%mrot_update,1) /= N_monthly) then
+        print *, "Error in allocated size of rep_update%mrot_update vars"
       end if
-      if (size(monthly_report,1) /= N_monthly) then
-        print *, "Error in allocated size of monthly_report vars"
+      if (size(rep_report%monthly_report,1) /= N_monthly) then
+        print *, "Error in allocated size of rep_report%monthly_report vars"
       end if
 
       N_hmonth = N_cli_vars
@@ -351,14 +353,14 @@ contains
         print *, "Error in allocated size of hmonth vars"
         print *, "Max-Min: ", Max_hmonth_vars-Min_hmonth_vars+1,"N_hmonth: ", N_hmonth
       end if
-      if (size(hmonth_update) /= N_hmonth) then
-        print *, "Error in allocated size of hmonth_update vars"
+      if (size(rep_update%hmonth_update) /= N_hmonth) then
+        print *, "Error in allocated size of rep_update%hmonth_update vars"
       end if
-      if (size(hmrot_update,1) /= N_hmonth) then
-        print *, "Error in allocated size of hmrot_update vars"
+      if (size(rep_update%hmrot_update,1) /= N_hmonth) then
+        print *, "Error in allocated size of rep_update%hmrot_update vars"
       end if
-      if (size(hmonth_report,1) /= N_hmonth) then
-        print *, "Error in allocated size of hmonth_report vars"
+      if (size(rep_report%hmonth_report,1) /= N_hmonth) then
+        print *, "Error in allocated size of rep_report%hmonth_report vars"
       end if
 
       N_period = N_eave_vars+N_lave_vars+N_dave_vars+N_tave_vars+N_mave_vars+N_eop_vars
@@ -366,11 +368,11 @@ contains
         print *, "Error in allocated size of period vars"
         print *, "Max-Min: ", Max_period_vars-Min_period_vars+1,"N_period: ", N_period
       end if
-      if (size(period_update) /= N_period) then
-        print *, "Error in allocated size of period_update vars"
+      if (size(rep_update%period_update) /= N_period) then
+        print *, "Error in allocated size of rep_update%period_update vars"
       end if
-      if (size(period_report,1) /= N_period) then
-        print *, "Error in allocated size of period_report vars"
+      if (size(rep_report%period_report,1) /= N_period) then
+        print *, "Error in allocated size of rep_report%period_report vars"
       end if
     end if
 

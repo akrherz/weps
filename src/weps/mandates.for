@@ -13,20 +13,19 @@
 ! necessary space for "mandate".  Then it re-reads the file to
 ! fill it with the date and names info.
 
-! NOTE:  This array "mandate" gets updated within the "management"
-!        submodel where the harvest operations get associated with
-!        their respective crops.  Currently that src file is:
-!        manage/report_harvest.for
+! Harvest operations are updated in "report_harvest" to have the 
+! name of the harvested crop associated with them.
 
-      subroutine mandates(sr)
+      subroutine mandates(sr, mandate)
 
-      use mandate_vars    ! Load shared mandates() array
+      use mandate_mod, only: opercrop_date, create_mandate    ! Load shared mandate() array
 
       include 'p1werm.inc'
       include 'command.inc'
       include 'manage/man.inc'
 
       integer sr
+      type (opercrop_date), dimension(:), allocatable :: mandate
 
       integer linidx
       character*256 line
@@ -36,14 +35,9 @@
       logical cnt_em
       integer i
 
-!     type :: man_opcrop_dates_type
-!          integer :: d, m, y 
-!          character(65) :: opname, cropname
-!     end type man_opcrop_dates_type
-
-!     type (man_opcrop_dates_type), dimension(:),
-!    &        allocatable, target :: mandate
-!     type (man_opcrop_dates_type), dimension(:), pointer :: mp
+      if (allocated (mandate)) then
+         return   ! already allocated so values are already populated (calibration mode)
+      end if
 
       cnt_man_dates = 0
 
@@ -103,13 +97,8 @@
          cnt_em = .FALSE.
          !print *, "cnt_em", cnt_em, cnt_man_dates
 
-         if (allocated (mandate)) then
-            goto 999   !already allocated - must be in calibrate mode
-         else
-            allocate (mandate(1:cnt_man_dates))
-         endif
+         allocate (mandate(1:cnt_man_dates))
 
-         mp => mandate
          i = 0
 
          goto 1               ! Parse again, but this time grab dates and names
@@ -118,17 +107,15 @@
       if( report_debug >= 1 ) then
           do 30 i = 1, cnt_man_dates
 
-              print *, i, mp(i)%d, mp(i)%m, mp(i)%y,                    &
-     &            trim(mp(i)%opname)," ",trim(mp(i)%cropname)
               print *, i, mandate(i)%d, mandate(i)%m, mandate(i)%y,     &
      &            trim(mandate(i)%opname)," ",trim(mandate(i)%cropname)
-              print *, 'mp', mp(i)
+              print *, 'mandate', mandate(i)
 
 30        end do
           print *, 'size of mandate', size(mandate)
       end if
 
-999   return
+      return
 
 !
 ! Error stops

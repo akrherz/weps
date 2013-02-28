@@ -3,7 +3,7 @@
 !$Revision$
 !$HeadURL$
 
-      subroutine   input
+      subroutine   input( n_rot_cycles )
 
 !     + + + PURPOSE + + +
 !     This subroutine perforns some screen I/O, reads in the
@@ -27,6 +27,9 @@
 
 !     + + + GLOBAL COMMON BLOCKS + + +
       use weps_interface_defs
+
+!     + + + ARGUMENT DECLARATIONS + + +
+      integer, intent(out) :: n_rot_cycles
 
       include 'p1werm.inc'
       include 'wpath.inc'
@@ -57,7 +60,7 @@
       end if
 
 !     load the simulation run file
-      call inprun
+      call inprun(n_rot_cycles)
 
 !     Moving this call into weps.for so that the IFC file can be re-read and re-initialized
 !     for calibration run purposes.

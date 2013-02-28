@@ -43,6 +43,7 @@
       use file_io_mod, only: luo_egrd, luo_erod, luomandate, luod_above, luod_below, luowepperod, luoweppplot, luoweppsum
       use biomaterial
       use debug_mod
+      use mandate_mod
 
 ! build and release info, fpp created by cook
       include 'build.inc'
@@ -88,14 +89,17 @@
       common / datetime / dt, mstring
       save :: /datetime/
 
-      integer pd, nperiods
+      integer, dimension(:), allocatable :: nperiods       ! number of reporting periods being accumulated
+      integer, dimension(:), allocatable :: pd             ! index counter into reporting periods
+      integer, dimension(:), allocatable :: n_rot_cycles   ! actual number of rotation cycles simulated
+
       integer cd, cm, cy,                                               &
      &        end_init_jday, end_init_d, end_init_m, end_init_y,        &
      &        ndiy,                                                     &
      &        isr, ipl,                                                 &
      &        o_unit,                                                   &
      &        simyrs,                                                   &
-     &        yrsim
+     &        yrsim, run_rot_cycles
       integer lcaljday, keep(mnsub)
       integer ci_flag, ci_year
       real    ci
@@ -104,6 +108,11 @@
       type(biomatter), dimension(:,:), allocatable :: residue
       type(biototal), dimension(:), allocatable :: restot, biotot
       type(decomp_factors), dimension(:), allocatable :: decompfac
+      type(mandate_array), dimension(:), allocatable :: mandatbs
+
+      type(reporting_report), dimension(:), target, allocatable :: rep_report
+      type(reporting_update), dimension(:), target, allocatable :: rep_update
+
       integer :: alloc_stat, sum_stat
 
 !     + + + LOCAL DEFINITIONS + + +
@@ -291,7 +300,7 @@
       if (calibrate_crops > 3) max_calib_cycles = calibrate_crops
 
 !     open input files and read run files
-      call input
+      call input(run_rot_cycles)
 
       write(*,*) "Made it here after input"
      
@@ -301,17 +310,34 @@
       sum_stat = sum_stat + alloc_stat
       allocate(residue(mnbpls, nsubr), stat=alloc_stat)
       sum_stat = sum_stat + alloc_stat
-      allocate(restot(nsubr), stat=alloc_stat)
-      sum_stat = sum_stat + alloc_stat
-      allocate(biotot(nsubr), stat=alloc_stat)
-      sum_stat = sum_stat + alloc_stat
       allocate(decompfac(nsubr), stat=alloc_stat)
       sum_stat = sum_stat + alloc_stat
+
+      ! summary / total types are allocated with 0 for total simulation area
+      allocate(restot(0:nsubr), stat=alloc_stat)
+      sum_stat = sum_stat + alloc_stat
+      allocate(biotot(0:nsubr), stat=alloc_stat)
+      sum_stat = sum_stat + alloc_stat
+      ! allocate management data arrays for reports
+      allocate(mandatbs(0:nsubr), stat=alloc_stat)
+      sum_stat = sum_stat + alloc_stat
+      ! report cummulation arrays
+      allocate(rep_report(0:nsubr), stat=alloc_stat)
+      sum_stat = sum_stat + alloc_stat
+      allocate(rep_update(0:nsubr), stat=alloc_stat)
+      sum_stat = sum_stat + alloc_stat
+      allocate(nperiods(0:nsubr), stat=alloc_stat)
+      sum_stat = sum_stat + alloc_stat
+      allocate(pd(0:nsubr), stat=alloc_stat)
+      sum_stat = sum_stat + alloc_stat
+      allocate(n_rot_cycles(0:nsubr), stat=alloc_stat)
+      sum_stat = sum_stat + alloc_stat
+
       if( sum_stat .gt. 0 ) then
-         Write(*,*) 'ERROR: unable to allocate crop and residue'
+         Write(*,*) 'ERROR: unable to allocate crop, residue and man_ds'
       end if
-      ! complete allocation of layers
       do isr = 1, nsubr
+         ! complete allocation of layers
          crop(isr) = create_biomatter(nslay(isr), mncz)
          do ipl = 1, mnbpls
             residue(ipl,isr) = create_biomatter(nslay(isr), mncz)
@@ -327,7 +353,7 @@
 
 ! save variabled for each subregion by JG
       do isr =1, nsubr 
-      call save_soil(isr)  
+         call save_soil(isr)  
       end do
 
       write(*,*) "Made it here after save_soil"
@@ -338,7 +364,7 @@
       ! for calibration run purposes.
       ! call input_ifc  !Changed bck for now
       do  isr =1, nsubr   
-      call restore_soil(isr)  !Assuming only one subregion for now
+         call restore_soil(isr)  !Assuming only one subregion for now
       end do
 
       write(*,*) "Made it here after restore_soil"
@@ -352,7 +378,7 @@
 
       call openfils(residue)
 
-      do isr =1, nsubr
+      do isr = 1, nsubr
           ! this prints header to plot.out file (isr not yet set)
           call plotdata(isr, restot(isr))  ! print to plot data file
           ! this prints header to decomp.out file (isr not yet set)
@@ -362,36 +388,44 @@
           call mfinit(isr, tinfil(isr))
       end do
 
-      ! find maxper, which is the least common multiple of the number of year in each rotation
+      ! find maxper, which is the least common multiple of the number of years in each rotation
       maxper = lcm_n( nsubr, mperod )
 
 !     check for consistency maxper, n_rot_cycles, number of years to run
-      if( maxper*n_rot_cycles .ne. ly-iy+1 ) then
-          write(*,*) 'Warning: Number of rotations (',n_rot_cycles,') ',&
+      if( maxper*run_rot_cycles .ne. ly-iy+1 ) then
+          write(*,*) 'Warning: Number of rotations (',run_rot_cycles,') ',&
      &               'times Years in rotation (',maxper,') ',           &
      &               ' does not match Number of simulation years (',    &
      &               ly-iy+1,') '
-          n_rot_cycles = (ly-iy+1) / maxper
+          run_rot_cycles = (ly-iy+1) / maxper
           if( mod( (ly-iy+1), maxper ) .gt. 0 ) then
               write(*,*) 'Warning: Not simulating complete rotations'
-              n_rot_cycles = n_rot_cycles + 1
+              run_rot_cycles = run_rot_cycles + 1
           end if
       end if
       if (calibrate_rotcycles .eq. 0) then
-         calibrate_rotcycles = n_rot_cycles
+         calibrate_rotcycles = run_rot_cycles
       endif
 
 !     This is all the initialization for the new output reporting code
-      do isr =1, nsubr
-          call mandates(isr)  !Get man dates, op names, and crop names
+      do isr = 1, nsubr
+          mandatbs(isr)%mperod = mperod(isr)
+          call mandates(isr, mandatbs(isr)%mandate)  !Get man dates, op names, and crop names
       end do
-      nperiods = get_nperiods(maxper)   !Get # of periods for reports
-      if( report_debug >= 1 ) then
-          write(*,*) '# rot years', maxper, "nperiods", nperiods,      &
-     &    '# cycles', n_rot_cycles
-      end if
-      call init_report_vars(nperiods, maxper, n_rot_cycles)
-      pd = 1
+      ! initialize full mandate series for all subregions for full maxper length.
+      mandatbs(0)%mperod = maxper
+      call allmandates(mandatbs)  ! examine dates for all subregions and put composite list into 0 array
+
+      do isr = 0, nsubr
+          n_rot_cycles(isr) = run_rot_cycles * maxper / mandatbs(isr)%mperod
+          nperiods(isr) = get_nperiods(mandatbs(isr)%mperod, mandatbs(isr)%mandate)   !Get # of periods for reports ( 0 is for global simulation area)
+          if( report_debug >= 1 ) then
+              write(*,*) '# rot years', maxper, "nperiods", nperiods, '# cycles', n_rot_cycles(isr)
+          end if
+          call init_report_vars(nperiods(0), mandatbs(0)%mperod, n_rot_cycles(0), mandatbs(0)%mandate, &
+                                rep_report(isr), rep_update(isr))
+          pd(isr) = 1
+      end do
 
       call asdini()
       call erodinit
@@ -446,7 +480,7 @@
       endif
 
       if ((run_erosion.eq.2).or.(run_erosion.eq.3)) then
-      	     call init_wepp(0)        ! specific wepp initializations
+          call init_wepp(0)        ! specific wepp initializations
       end if
       
 ! begin initialization simulation phase
@@ -468,7 +502,7 @@
          do isr=1,nsubr   ! do multiple subregion      
 !         isr = 1 !Note: we are no longer dealing with multiple subregions here
           call submodels(isr, cd, cm, cy, residue(1:size(residue,1),isr), restot(isr),  &
-     &                   biotot(isr), decompfac(isr))
+     &                   biotot(isr), decompfac(isr), mandatbs(isr)%mandate)
           ! set initialization flag to .false. after first day
           if (am0ifl) am0ifl = .false.
 
@@ -549,7 +583,7 @@
 !            isr = 1 !Note: we are no longer dealing with multiple subregions here
             do isr=1,nsubr   ! do multiple subregion     
             call submodels(isr, cd, cm, cy, residue(1:size(residue,1),isr), restot(isr),&
-     &                     biotot(isr), decompfac(isr))
+     &                     biotot(isr), decompfac(isr), mandatbs(isr)%mandate)
 
             call plotdata(isr, restot(isr))  ! print to plot data file
 
@@ -645,8 +679,8 @@
 !           if (am0jd.eq.ljday) call dbgdmp(daysim, isr, residue(isr))
 
             do isr=1,nsubr   ! do multiple subregion     
-            call submodels(isr, cd, cm, cy, residue(1:size(residue,1),isr), restot(isr),&
-     &                   biotot(isr), decompfac(isr))
+               call submodels(isr, cd, cm, cy, residue(1:size(residue,1),isr), restot(isr), biotot(isr), decompfac(isr), &
+                              mandatbs(isr)%mandate)
             end do
 
             if (run_erosion > 0) then   ! Are we simulating erosion in this RUN
@@ -654,7 +688,7 @@
                   ! write(*,*) "Start calcwu"
                   call calcwu
                   ! write(*,*) "Start erosion"
-                  call erosion (5.0)         
+                  call erosion (5.0)
                   if (btest(am0efl,0) .or. btest(am0efl,1)) then
                      call daily_erodout (luo_egrd,luo_erod)
                   endif
@@ -701,41 +735,45 @@
                end if
             end if
 
-            ! Compute yrly values
-            call update_yrly_update_vars()
-            if ( (cm == 12) .and. (cd == 31) ) then          ! end of current year
-               call update_yrly_report_vars(yrsim, maxper)
-            end if
+            do isr = 0, nsubr   ! 0 is whole region, and then all subregion     
+               ! Compute yrly values
+               call update_yrly_update_vars(rep_update(isr)%yrly_update, rep_update(isr)%yrot_update, rep_update(isr)%yr_update)
+               if ( (cm == 12) .and. (cd == 31) ) then          ! end of current year
+                  call update_yrly_report_vars(yrsim, maxper, rep_update(isr)%yrly_update, rep_update(isr)%yrot_update, &
+                                               rep_update(isr)%yr_update, rep_report(isr)%yrly_report, rep_report(isr)%yrly_report)
+               end if
 
-            ! Compute monthly values
-            call update_monthly_update_vars(cm)
-            if (cd == lstday(cm,cy)) then                    ! end of current month
-               call update_monthly_report_vars(cm, yrsim, maxper)
-            end if
+               ! Compute monthly values
+               call update_monthly_update_vars(cm, rep_update(isr)%monthly_update, rep_update(isr)%mrot_update)
+               if (cd == lstday(cm,cy)) then                    ! end of current month
+                  call update_monthly_report_vars(cm, yrsim, maxper, &
+                       rep_update(isr)%monthly_update, rep_update(isr)%mrot_update, rep_report(isr)%monthly_report)
+               end if
 
-            ! Compute half month values
-            call update_hmonth_update_vars(cd, cm)
-            if ((cd == 14) .or. (cd == lstday(cm,cy))) then  ! end of half month
-               call update_hmonth_report_vars(cd, cm, yrsim, maxper)
-            end if
+               ! Compute half month values
+               call update_hmonth_update_vars(cd, cm, rep_update(isr)%hmonth_update, rep_update(isr)%hmrot_update)
+               if ((cd == 14) .or. (cd == lstday(cm,cy))) then  ! end of half month
+                  call update_hmonth_report_vars(cd, cm, yrsim, maxper)
+               end if
 
-            ! Compute period values
-            call update_period_update_vars()
-            ! print *, pd, "  ",cy,cm,cd,"  ", period_dates(pd)
-            if ( (cd == 14) .or. (cd == lstday(cm,cy)) .or.             &
-     &           ((cd == period_dates(pd)%ed) .and.                     &
-     &            (cm == period_dates(pd)%em) .and.                     &
-     &           ((mod((cy-1),maxper)+1) == period_dates(pd)%ey)) )     &
-     &                                                              then
+               ! Compute period values
+               call update_period_update_vars(isr, rep_update(isr)%period_update, restot(isr))
+               ! print *, pd, "  ",cy,cm,cd,"  ", period_dates(pd(isr))
+
+            end do
+
+            ! check for end of period and increment period counter
+            if ( (cd == 14) .or. (cd == lstday(cm,cy)) .or. ( (cd == period_dates(pd(0))%ed) .and. (cm == period_dates(pd(0))%em) &
+                .and. ((mod((cy-1),mandatbs(0)%mperod)+1) == period_dates(pd(0))%ey) ) ) then
                ! end of period
-               call update_period_report_vars                           &
-     &                                  (pd,nperiods,cd,cm,yrsim,maxper)
-               ! print *, "eop",pd,"  ",cy,cm,cd,"  ", period_dates(pd)
+               call update_period_report_vars( pd(0), nperiods(isr), cd, cm, yrsim, mandatbs(0)%mperod, &
+                                               rep_update(isr)%period_update, rep_report(isr)%period_report)
+               ! print *, "eop",pd,"  ",cy,cm,cd,"  ", period_dates(pd(0))
                ! Update the current period index
-               if (pd == nperiods) then   ! Keep track of number of periods
-                  pd = 1
+               if (pd(0) == nperiods(0)) then   ! Keep track of number of periods
+                  pd(0) = 1
                else
-                  pd = pd + 1
+                 pd(0) = pd(0) + 1
                endif
             end if
 
@@ -743,7 +781,7 @@
                ! calculate confidence interval
                ! early exit not implemented
                if( calc_confidence .gt. 0 ) then
-                 call confidence_interval(ci,maxper,ncycles,ci_year)
+                 call confidence_interval(ci, maxper, ncycles, ci_year, rep_report(0)%yrly_report, rep_report(0)%yr_report)
                end if
             endif
 
@@ -755,16 +793,18 @@
 ! End of "report" section
 ! Done with simulation here ..................
 
-      if (report_debug >= 1) then
-          call print_report_vars(nperiods, maxper)
-      end if
-      if (report_debug >= 2) then
-          call print_yr_report_vars(nperiods, maxper, n_rot_cycles)
-      end if
-      call sci_report
-      call print_ui1_output(nperiods, maxper, n_rot_cycles) !Use for new WEPS gui
-      call print_mandate_output(luomandate)
-     
+      do isr = 0, nsubr   ! 0 is whole region, and then all subregion     
+          if (report_debug >= 1) then
+              call print_report_vars(nperiods(isr), mandatbs(isr)%mperod, rep_report(isr), mandatbs(isr)%mandate)
+          end if
+          if (report_debug >= 2) then
+              call print_yr_report_vars(nperiods(0), mandatbs(0)%mperod, n_rot_cycles(0), rep_report(isr)%yr_report)
+          end if
+          call sci_report
+          call print_ui1_output(nperiods(0), mandatbs(0)%mperod, n_rot_cycles(0), rep_report(isr), mandatbs(0)%mandate) !Use for new WEPS gui
+          call print_mandate_output(luomandate, mandatbs(isr)%mandate)
+      end do
+
       if ((run_erosion.eq.2).or.(run_erosion.eq.3)) then
           call weppsum(luoweppplot,luoweppsum,simyrs)
       endif

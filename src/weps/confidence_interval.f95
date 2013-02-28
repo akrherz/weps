@@ -8,10 +8,10 @@
 ! rotation as one number. No confidence interval can be obtained until
 ! three rotation cycles have been completed.
 
-subroutine confidence_interval(ci, nrot_yrs, n1cycles, ci_year)
+subroutine confidence_interval(ci, nrot_yrs, n1cycles, ci_year, yrly_report, yr_report)
 
     use weps_interface_defs
-    use pd_report_vars
+    USE pd_var_type_def
     use pd_var_tables
     use file_io_mod, only: luoci
 
@@ -21,6 +21,9 @@ subroutine confidence_interval(ci, nrot_yrs, n1cycles, ci_year)
     integer, intent (in) :: nrot_yrs ! number of year in a rotation cycle
     integer, intent (in) :: n1cycles ! one more than the number of rotation cycles completed
     integer, intent (inout) :: ci_year ! indicates how many years of data have been printed into ci.out
+    TYPE (pd_var_type), DIMENSION(:,:), intent(in) :: yrly_report
+    TYPE (pd_var_type), DIMENSION(:,:), intent(in) :: yr_report
+
     integer :: ncycles      ! the number of rotation cycles completed
     integer :: idy          ! local loop variable
     integer :: nrot         ! index of which time through the rotation

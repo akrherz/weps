@@ -20,17 +20,19 @@ MODULE pd_update_vars
 
     IMPLICIT NONE
 
-    ! Specify "pd_update_vars" variable structures
-    ! (rotation year, months per rotation year, and half-months per rotation year)
-    TYPE (pd_var_type), DIMENSION(:), TARGET, ALLOCATABLE :: yrly_update
-    TYPE (pd_var_type), DIMENSION(:), TARGET, ALLOCATABLE :: monthly_update
-    TYPE (pd_var_type), DIMENSION(:), TARGET, ALLOCATABLE :: hmonth_update
-    TYPE (pd_var_type), DIMENSION(:), TARGET, ALLOCATABLE :: period_update
-    TYPE (pd_var_type), DIMENSION(:), TARGET, ALLOCATABLE :: yr_update
-    ! "Rotation length" update variable structures
-    ! (yrs, months, and half-months across rotation years)
-    TYPE (pd_var_type), DIMENSION(:), TARGET, ALLOCATABLE :: yrot_update
-    TYPE (pd_var_type), DIMENSION(:,:), TARGET, ALLOCATABLE :: mrot_update
-    TYPE (pd_var_type), DIMENSION(:,:), TARGET, ALLOCATABLE :: hmrot_update
+    type :: reporting_update
+       ! Specify "pd_update_vars" variable structures
+       ! (rotation year, months per rotation year, and half-months per rotation year)
+       TYPE (pd_var_type), DIMENSION(:), ALLOCATABLE :: yrly_update
+       TYPE (pd_var_type), DIMENSION(:), ALLOCATABLE :: monthly_update
+       TYPE (pd_var_type), DIMENSION(:), ALLOCATABLE :: hmonth_update
+       TYPE (pd_var_type), DIMENSION(:), ALLOCATABLE :: period_update
+       TYPE (pd_var_type), DIMENSION(:), ALLOCATABLE :: yr_update
+       ! "Rotation length" update variable structures
+       ! (yrs, months, and half-months across rotation years)
+       TYPE (pd_var_type), DIMENSION(:), ALLOCATABLE :: yrot_update
+       TYPE (pd_var_type), DIMENSION(:,:), ALLOCATABLE :: mrot_update
+       TYPE (pd_var_type), DIMENSION(:,:), ALLOCATABLE :: hmrot_update
+    end type reporting_update
 
 END MODULE pd_update_vars
