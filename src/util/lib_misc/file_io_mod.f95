@@ -117,8 +117,8 @@ contains
         character*(*), intent(in) :: filstatus
         integer           ios
 
-        open(newunit(filnumber), FILE=filname(1:len_trim(filname)), STATUS=filstatus, POSITION='REWIND', ERR=100, IOSTAT=ios)
-        write(*,FMT="(' Opened file: ',a,' on unit ',i3,' with status ',a)") filname(1:len_trim(filname)), filnumber, filstatus
+        open(newunit(filnumber), FILE=trim(filname), STATUS=filstatus, POSITION='REWIND', ERR=100, IOSTAT=ios)
+        write(*,FMT="(' Opened file: ',a,' on unit ',i3,' with status ',a)") trim(filname), filnumber, filstatus
         return
 
 100     write(0,FMT="(' Cannot open file: ',a,' on unit ',i3,' with status ',a, ' and I/O status ', i5)") &
@@ -152,14 +152,51 @@ contains
     end function newunit
 
     subroutine makedir(pathplusdirname)
-        character(LEN = *) :: pathplusdirname
-        character(LEN = len_trim(pathplusdirname)+6) :: command
+        character(LEN = *), intent(in) :: pathplusdirname
+        character(LEN = len_trim(pathplusdirname)+8) :: command
 
-        !character delimiter
-        !CALL getenv('DELIMITER',delimiter)
+        character(LEN = len_trim(pathplusdirname)) :: tempname
+        integer :: npass
+        integer :: cdx
+        character :: delimiter
+        integer :: filnumber
 
-        command='mkdir '//pathplusdirname
-        CALL system(command)
+        !npass = 1           ! initial entry
+        !delimiter = '/'     ! default value used in input string
+
+        ! check for existence of subdirectory
+  10    open(newunit(filnumber), FILE=trim(pathplusdirname)//'exist.txt', STATUS='UNKNOWN', ERR=100)
+        ! no error, subdirectory exists
+        close( filnumber, STATUS='DELETE')
+        return
+        
+ 100    continue       
+
+        ! try alternate delimiter character
+        !if( npass .eq. 2 ) then
+        !    delimiter = '\'
+        !end if
+
+        tempname = trim(pathplusdirname) ! assign name to internal variable so it can be modified
+        !if( delimiter .ne. '/' ) then
+        !    ! try alternate file path delimiter, change it
+        !    cdx = index( tempname, '/' )     ! location of delimiter character
+        !    do while( cdx .gt. 0 )
+        !        tempname(cdx:cdx) = delimiter    ! replace '/' with delimiter
+        !        cdx = index( tempname, '/' )     ! location of delimiter character
+        !    end do
+        !end if
+
+        ! commented out alternate method since putting quotes around command
+        ! makes forward slashes work on windows XP both under DOS and CYGWIN
+        command='mkdir '//'"'//tempname//'"'     ! command to create subdirectory
+        !command='mkdir '//tempname     ! command to create subdirectory
+
+        !write(*,*) command
+
+        CALL system(command)                     ! create subdirectory
+        !npass = npass + 1
+        !goto 10
     end subroutine makedir
 
 end module file_io_mod

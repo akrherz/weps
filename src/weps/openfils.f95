@@ -35,14 +35,14 @@
       ! create subregion directory names
       write( subr_format, '(i0)' ) nsubr
       idx = len_trim(subr_format)
-      write( subr_format, '(a8, i0, a5)' ), '(a9, i0.', idx, ', a1)'
+      write( subr_format, '(a8, i0, a5)' ) '(a9, i0.', idx, ', a1)'
 
-      write(*,*) 'subregion name format string', trim(subr_format)
+      !write(*,*) 'subregion name format string', trim(subr_format)
 
       do idx = 1, nsubr
           write( subr_text(idx), subr_format) 'subregion', idx, '/'
           ! create the subdirectory
-          call makedir(trim(rootp) // trim(subr_text(idx)) )
+          call makedir(trim(rootp)//trim(subr_text(idx)) )
       end do
 
 !     the main output file is opened at all times
