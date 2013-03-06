@@ -435,8 +435,10 @@
       subroutine erodinit()  
       end subroutine erodinit
 !---------------------------
-      subroutine erosion (min_erosion_awu)
+      subroutine erosion (min_erosion_awu, subrsurf)
+      use erosion_data_struct_defs
       real min_erosion_awu
+      type(subregionsurfacestate), dimension(:) :: subrsurf
       end subroutine erosion
 !---------------------------
       subroutine saeinp()
@@ -1130,6 +1132,16 @@
       subroutine   dmpall(filnam)   
       character*(*) filnam
       end subroutine dmpall
+!------------------------------
+    subroutine erodsubr_update( sr, restot, croptot, biotot, subrsurf )
+    use biomaterial, only: biototal
+    use erosion_data_struct_defs, only: subregionsurfacestate
+    integer sr                               ! subregion index (eventually obsolete)
+    type(biototal), intent(in) :: restot
+    type(biototal), intent(in) :: croptot
+    type(biototal), intent(in) :: biotot
+    type(subregionsurfacestate) :: subrsurf  ! subregion surface conditions (erosion specific set)
+    end subroutine erodsubr_update
 !-----------------------------
       integer   function g_argc()    
       end function g_argc     

@@ -10,7 +10,11 @@
 !     MAIN for SWEEP
 !**********************************************************************
       program sweep
-!
+
+      use sweep_interface_defs
+      use file_io_mod, only: fopenk
+      use erosion_data_struct_defs
+
 !     +++  PURPOSE +++
 !
 !     To start a standalone version of the EROSION submodel
@@ -23,8 +27,6 @@
 !     +++ ARGUMENT DECLARATIONS +++
 !
 !     + + + GLOBAL COMMON BLOCKS + + +
-
-      use file_io_mod, only: fopenk
       include 'p1werm.inc'
       include 'p1const.inc'
       include 'm1sim.inc'
@@ -49,6 +51,8 @@
 !     erodout
 
 !     ++++ LOCAL VARIABLES +++
+
+      type(subregionsurfacestate), dimension(:), allocatable :: subrsurf
 
       integer        julday    !utility date function
       character*1024 exe_filepath
@@ -427,21 +431,18 @@
       inquire(unit=o_egrd_unit, opened=opnd)
       if (opnd .eqv. .true.) then
          !write(0,*) 'calling erodin with output unit no: ', o_egrd_unit
-         call erodin(i_unit, o_egrd_unit,                               &
-     &               force_debug_flag, already_read_inputs) !Put copy of input in .egrd file
+         call erodin(i_unit, o_egrd_unit, force_debug_flag, already_read_inputs, subrsurf) !Put copy of input in .egrd file
          already_read_inputs = already_read_inputs + 1
       endif
 
       inquire(unit=o_einp_unit, opened=opnd)
       if (opnd .eqv. .true.) then
          !write(0,*) 'calling erodin with output unit no: ', o_einp_unit
-         call erodin(i_unit, o_einp_unit,                               &
-     &               force_debug_flag, already_read_inputs) !Echo input to a file
+         call erodin(i_unit, o_einp_unit, force_debug_flag, already_read_inputs, subrsurf) !Echo input to a file
          already_read_inputs = already_read_inputs + 1
       else
          !write(0,*) 'calling erodin with output unit no: ', o_unit
-         call erodin(i_unit, o_unit,                                    &
-     &               force_debug_flag, already_read_inputs)  !Doesn't echo input to file
+         call erodin(i_unit, o_unit, force_debug_flag, already_read_inputs, subrsurf)  !Doesn't echo input to file
          already_read_inputs = already_read_inputs + 1
       endif
 
@@ -528,7 +529,7 @@
 !
 !     write (*,*) 'call to erosion '
 !     start erosion
-      call erosion (min_erosion_awu)
+      call erosion (min_erosion_awu, subrsurf)
 
       !tsterode will generate the final grid values and the summarized erosion totals
       if (btest(am0efl,0).or.btest(am0efl,1).or.btest(am0efl,3)) then

@@ -3,7 +3,7 @@
 !$Revision$
 !$HeadURL$
 
-      subroutine erodin (i_unit,o_unit,cmdebugflag,already_read_inputs)
+      subroutine erodin (i_unit, o_unit, cmdebugflag, already_read_inputs, subrsurf)
 
 !     +++ PURPOSE +++
 !     Utility to read initial conditions and variables from
@@ -14,11 +14,12 @@
 !     + + + Modules Used + + +
       use Polygons_Mod
       use subregions_mod, only: subr_poly
+      use erosion_data_struct_defs, only: subregionsurfacestate, create_subregionsurfacestate
 
 !     +++ ARGUMENT DECLARATIONS +++
-!
       integer i_unit, o_unit, cmdebugflag, already_read_inputs
-!
+      type(subregionsurfacestate), dimension(:), allocatable :: subrsurf
+
 !     +++ ARGUMENT DEFINITIONS +++
 !
 !
@@ -26,8 +27,9 @@
 !
       integer mrcl
       parameter (mrcl = 512)
-!
-!     +++ ARGUMENT DECLARATIONS & +++
+      integer xchl
+      parameter (xchl = 12)
+
 !     + + + GLOBAL COMMON BLOCKS + + +
       include 'p1werm.inc'
       include 'c1gen.inc'
@@ -36,16 +38,6 @@
       include 'm1flag.inc'
       include 'm1subr.inc'
       include 'm1geo.inc'
-      include 'b1glob.inc'
-      include 'c1glob.inc'
-      include 'd1glob.inc'
-      include 's1layr.inc'
-      include 's1phys.inc'
-      include 's1dbh.inc'
-      include 's1agg.inc'
-      include 's1surf.inc'
-      include 's1sgeo.inc'
-      include 'h1db1.inc'
       include 'w1wind.inc'
       include 'w1pavg.inc'
 !
@@ -56,7 +48,7 @@
       common /flags/ debugflg
 !
       integer xplot,xflag
-      character*12 xcharin(30)
+      character*(xchl) xcharin(30)
       real xin(30)
       common /plot/ xplot, xcharin, xin
 !
@@ -66,7 +58,8 @@
       integer wflg
       real f(mntime), wfcalm, wuc, w0k, step, wu(mntime)
       integer subr_np, ipol
-!
+      integer alloc_stat, sum_stat
+
 !     + + + LOCAL VARIABLE DEFINITIONS + + +
 !     i, j, k = do-loop indices
 !     x,y,sr,b,a,l,h = do-loop indices
@@ -82,8 +75,10 @@
 !     xcharin(i)= indep. variable name(s) used in plot
 !     xin(i)    = indep. variable value(s) used in plot
 !     subr_np   = number of points to be read in for a subregion polygon
-!     ipol      + index used to count reading in of polygon points
-!
+!     ipol      = index used to count reading in of polygon points
+!     alloc_stat = indicates status of memory allocation attempt
+!     sum_stat  = accumulates for multiple allocations, one error statement.
+
 !     +++ FUNCTIONS CALLED +++
 !     getline
 !
@@ -188,8 +183,18 @@
       read (line,*) nsubr
 !     read (getline(i_unit),*) nsubr
 
+      ! create data array to hold input and derived values for each subregion
+      sum_stat = 0
+      allocate(subrsurf(nsubr), stat=alloc_stat)
+      sum_stat = sum_stat + alloc_stat
+
       ! create subregion polygon array
-      allocate(subr_poly(nsubr))
+      allocate(subr_poly(nsubr), stat=alloc_stat)
+      sum_stat = sum_stat + alloc_stat
+
+      if( sum_stat .gt. 0 ) then
+         Write(*,*) 'ERROR: memory allocation, subrsurf, subr_poly'
+      end if
 
 !     Dimensions, Biomass, Soil, and Hydrology (by subregion)
       do 100  sr=1, nsubr
@@ -217,43 +222,44 @@
 !       Now reads in average "residue height" instead of "biomass height'
 !       LEW - 1/26/06
         line = getline(i_unit)
-        read (line,*)  adzht_ave(sr)
+        read (line,*)  subrsurf(sr)%adzht_ave
 
 !     c1glob.inc
 
 !       Crop height
         line = getline(i_unit)
-        read (line,*)  aczht(sr)
+        read (line,*)  subrsurf(sr)%aczht
 
 !       Crop stem area index and leaf area index
         line = getline(i_unit)
-        read (line,*) acrsai(sr), acrlai(sr)
+        read (line,*) subrsurf(sr)%acrsai, subrsurf(sr)%acrlai
 
 !     d1glob.inc
 
 !       Residue stem area index and leaf area index
         line = getline(i_unit)
-        read (line,*) adrsaitot(sr), adrlaitot(sr)
+        read (line,*) subrsurf(sr)%adrsaitot, subrsurf(sr)%adrlaitot
 
 !       use crop and residue values to find the total value
 !       sum the stem area index and leaf area index values
-        abrsai(sr) = acrsai(sr) + adrsaitot(sr)
-        abrlai(sr) = acrlai(sr) + adrlaitot(sr)
-      ! Compute the weighted average "biomass height" (residues and crop)
-      ! which is used internally by the erosion code - LEW 1/26/06
-        if (abrsai(sr) .le. 0.0) then
-            abzht(sr) = 0.0
+        subrsurf(sr)%abrsai = subrsurf(sr)%acrsai + subrsurf(sr)%adrsaitot
+        subrsurf(sr)%abrlai = subrsurf(sr)%acrlai + subrsurf(sr)%adrlaitot
+
+        ! Compute the weighted average "biomass height" (residues and crop)
+        ! which is used internally by the erosion code - LEW 1/26/06
+        if (subrsurf(sr)%abrsai .le. 0.0) then
+            subrsurf(sr)%abzht = 0.0
         else
-            abzht(sr) = ( adzht_ave(sr)*adrsaitot(sr)                   &
-     &                    + aczht(sr)*acrsai(sr) ) / abrsai(sr)
+            subrsurf(sr)%abzht = ( subrsurf(sr)%adzht_ave*subrsurf(sr)%adrsaitot                   &
+                               + subrsurf(sr)%aczht*subrsurf(sr)%acrsai ) / subrsurf(sr)%abrsai
         endif
 !     c1gen.inc
 
 !       addition to code for biodrag
 !       crop row spacing and seed location
         line = getline(i_unit)
-        read (line,*) acxrow(sr), ac0rg(sr)
-!
+        read (line,*) subrsurf(sr)%acxrow, subrsurf(sr)%ac0rg
+
 !       These aren't used in EROSION yet
 !       Biomass stem area index by height
 !       read (getline(i_unit),*) (abrsaz(h,sr), h=1,mncz)
@@ -264,8 +270,7 @@
 !       read (getline(i_unit),*) abffcv(sr), abfscv(sr), abftcv(sr)
 !       Only flat fraction cover used yet
         line = getline(i_unit)
-        read (line,*) abffcv(sr)
-!       read (getline(i_unit),*) abffcv(sr)
+        read (line,*) subrsurf(sr)%abffcv
 
 !     +++ SOIL +++
 
@@ -273,107 +278,99 @@
 
 !       Number of soil layers (in this subregion)
         line = getline(i_unit)
-        read (line,*) nslay(sr)
-!       read (getline(i_unit),*) nslay(sr)
+        read (line,*) subrsurf(sr)%nslay
+
+        ! allocate arrays for soil layer and surface wetness values
+        call create_subregionsurfacestate(subrsurf(sr)%nslay, 24, subrsurf(sr))
 
 !       Soil layer thickness
         line = getline(i_unit)
-        read (line,*) (aszlyt(l,sr),l=1,nslay(sr))
-!       read (getline(i_unit),*) (aszlyt(l,sr),l=1,nslay(sr))
+        read (line,*) (subrsurf(sr)%bsl(l)%aszlyt,l=1,subrsurf(sr)%nslay)
 
 !       Soil layer bulk density
         line = getline(i_unit)
-        read (line,*) (asdblk(l,sr), l=1,nslay(sr))
-!       read (getline(i_unit),*) (asdblk(l,sr), l=1,nslay(sr))
+        read (line,*) (subrsurf(sr)%bsl(l)%asdblk, l=1,subrsurf(sr)%nslay)
 
 !       Sand, silt, and clay fractions
         line = getline(i_unit)
-        read (line,*) (asfsan(l,sr), l=1,nslay(sr))
-!       read (getline(i_unit),*) (asfsan(l,sr), l=1,nslay(sr))
+        read (line,*) (subrsurf(sr)%bsl(l)%asfsan, l=1,subrsurf(sr)%nslay)
 
 !       read very fine sand content edit 6-9-01 LH
         line = getline(i_unit)
-        read (line,*) (asfvfs(l,sr), l=1,nslay(sr))
+        read (line,*) (subrsurf(sr)%bsl(l)%asfvfs, l=1,subrsurf(sr)%nslay)
 
         line = getline(i_unit)
-        read (line,*) (asfsil(l,sr), l=1,nslay(sr))
-!       read (getline(i_unit),*) (asfsil(l,sr), l=1,nslay(sr))
+        read (line,*) (subrsurf(sr)%bsl(l)%asfsil, l=1,subrsurf(sr)%nslay)
 
         line = getline(i_unit)
-        read (line,*) (asfcla(l,sr), l=1,nslay(sr))
-!       read (getline(i_unit),*) (asfcla(l,sr), l=1,nslay(sr))
+        read (line,*) (subrsurf(sr)%bsl(l)%asfcla, l=1,subrsurf(sr)%nslay)
 
 !       Volume of rock fraction
         line = getline(i_unit)
-        read (line,*) (asvroc(l,sr), l=1,nslay(sr))
+        read (line,*) (subrsurf(sr)%bsl(l)%asvroc, l=1,subrsurf(sr)%nslay)
 
 !       s1agg.inc
 !       Soil layer aggregate density
         line = getline(i_unit)
-        read (line,*) (asdagd(l,sr), l=1,nslay(sr))
+        read (line,*) (subrsurf(sr)%bsl(l)%asdagd, l=1,subrsurf(sr)%nslay)
 
 !       Soil layer aggregate stability
         line = getline(i_unit)
-        read (line,*) (aseags(l,sr), l=1,nslay(sr))
+        read (line,*) (subrsurf(sr)%bsl(l)%aseags, l=1,subrsurf(sr)%nslay)
 
 ! Check these variables with ASD inc files and Hagen's EROSION inc files - LEW
 !       Soil layer ASD parms (gmd, min, max, gsd)
         line = getline(i_unit)
-        read (line,*) (aslagm(l,sr), l=1,nslay(sr))
+        read (line,*) (subrsurf(sr)%bsl(l)%aslagm, l=1,subrsurf(sr)%nslay)
 
         line = getline(i_unit)
-        read (line,*) (aslagn(l,sr), l=1,nslay(sr))
+        read (line,*) (subrsurf(sr)%bsl(l)%aslagn, l=1,subrsurf(sr)%nslay)
 
         line = getline(i_unit)
-        read (line,*) (aslagx(l,sr), l=1,nslay(sr))
+        read (line,*) (subrsurf(sr)%bsl(l)%aslagx, l=1,subrsurf(sr)%nslay)
 
         line = getline(i_unit)
-        read (line,*) (as0ags(l,sr), l=1,nslay(sr))
+        read (line,*) (subrsurf(sr)%bsl(l)%as0ags, l=1,subrsurf(sr)%nslay)
 
 !       s1surf.inc & s1sgeo.inc
 
 !       Crust parms (fraction, thickness)
         line = getline(i_unit)
-        read (line,*) asfcr(sr), aszcr(sr),                             &
-!       read (getline(i_unit),*) asfcr(sr), aszcr(sr),
+        read (line,*) subrsurf(sr)%asfcr, subrsurf(sr)%aszcr, &
 !       Crust parms (fraction cover of loose material, mass loose material)
-     &       asflos(sr), asmlos(sr),                                    &
+             subrsurf(sr)%asflos, subrsurf(sr)%asmlos, &
 !       Crust parms (crust density and stability)
-     &       asdcr(sr), asecr(sr)
+             subrsurf(sr)%asdcr, subrsurf(sr)%asecr
 
 !       Random Roughness
         line = getline(i_unit)
-        read (line,*) aslrr(sr)
-!       read (getline(i_unit),*) aslrr(sr)
+        read (line,*) subrsurf(sr)%aslrr
 
         !Lower and upper limits of grid cell RR allowed by erosion submodel
-        if (aslrr(sr) < SLRR_MIN) then
-           write(0,*) 'slrr: ', aslrr(sr),' < ', SLRR_MIN
+        if (subrsurf(sr)%aslrr < SLRR_MIN) then
+           write(0,*) 'slrr: ', subrsurf(sr)%aslrr,' < ', SLRR_MIN
         end if
-        if (aslrr(sr) > SLRR_MAX) then
-           write(0,*) 'slrr: ', aslrr(sr),' < ', SLRR_MIN
+        if (subrsurf(sr)%aslrr > SLRR_MAX) then
+           write(0,*) 'slrr: ', subrsurf(sr)%aslrr,' < ', SLRR_MIN
         end if
 
         !Lower and upper limits of grid cell aerodynamic roughness allowed
         !by erosion submodel (currently determined by equation used here)
-        if (aslrr(sr) < (WZZO_MIN/0.3)) then
-           write(0,*) 'slrr: ', aslrr(sr)
-           write(0,*) 'wzzo < WZZO_MIN: ', aslrr(sr)*0.3,' < ', WZZO_MIN
-        else if(aslrr(sr) > (WZZO_MAX/0.3)) then
-           write(0,*) 'slrr: ', aslrr(sr)
-           write(0,*) 'wzzo > WZZO_MAX: ', aslrr(sr)*0.3,' > ', WZZO_MAX
+        if (subrsurf(sr)%aslrr < (WZZO_MIN/0.3)) then
+           write(0,*) 'slrr: ', subrsurf(sr)%aslrr
+           write(0,*) 'wzzo < WZZO_MIN: ', subrsurf(sr)%aslrr*0.3,' < ', WZZO_MIN
+        else if(subrsurf(sr)%aslrr > (WZZO_MAX/0.3)) then
+           write(0,*) 'slrr: ', subrsurf(sr)%aslrr
+           write(0,*) 'wzzo > WZZO_MAX: ', subrsurf(sr)%aslrr*0.3,' > ', WZZO_MAX
         end if
 
 !       Oriented Roughness (ridge ht, spacing, width, orientation)
         line = getline(i_unit)
-        read (line,*) aszrgh(sr), asxrgs(sr),                           &
-!       read (getline(i_unit),*) aszrgh(sr), asxrgs(sr),
-     &       asxrgw(sr), asargo(sr)
+        read (line,*) subrsurf(sr)%aszrgh, subrsurf(sr)%asxrgs, subrsurf(sr)%asxrgw, subrsurf(sr)%asargo
 
 !       Oriented Roughness ( spacing)
         line = getline(i_unit)
-        read (line,*) asxdks(sr)
-!       read (getline(i_unit),*) asxdkh(sr), asxdks(sr)
+        read (line,*) subrsurf(sr)%asxdks
 
 !     +++ HYDROLOGY +++
 
@@ -381,24 +378,23 @@
 
 !       Snow depth
         line = getline(i_unit)
-        read (line,*) ahzsnd(sr)
-!       read (getline(i_unit),*) ahzsnd(sr)
+        read (line,*) subrsurf(sr)%ahzsnd
 
 !       Soil layer wilting point
         line = getline(i_unit)
-        read (line,*) (ahrwcw(l,sr), l=1,nslay(sr))
-!       read (getline(i_unit),*) (ahrwcw(l,sr), l=1,nslay(sr))
+        read (line,*) (subrsurf(sr)%bsl(l)%ahrwcw, l=1,subrsurf(sr)%nslay)
+
 !       Soil layer water content
         line = getline(i_unit)
-        read (line,*) (ahrwca(l,sr), l=1,nslay(sr))
-!       read (getline(i_unit),*) (ahrwca(l,sr), l=1,nslay(sr))
+        read (line,*) (subrsurf(sr)%bsl(l)%ahrwca, l=1,subrsurf(sr)%nslay)
+
 !       Soil surface hourly water content
         line = getline(i_unit)
-        read (line,*) (ahrwc0(h,sr), h=1,12)
-!       read (getline(i_unit),*) (ahrwc0(h,sr), h=1,12)
+        read (line,*) (subrsurf(sr)%ahrwc0(h), h=1,12)
+
         line = getline(i_unit)
-        read (line,*) (ahrwc0(h,sr), h=13,24)
-!       read (getline(i_unit),*) (ahrwc0(h,sr), h=13,24)
+        read (line,*) (subrsurf(sr)%ahrwc0(h), h=13,24)
+
   100 continue
 
 !     +++ WEATHER +++
@@ -408,17 +404,14 @@
 !     Air density
       line = getline(i_unit)
       read (line,*) awdair
-!     read (getline(i_unit),*) awdair
 
 !     Wind Direction
       line = getline(i_unit)
       read (line,*) awadir
-!     read (getline(i_unit),*) awadir
 
 !     Number of "steps" during 24 hours (96 = 15 minute intervals)
       line = getline(i_unit)
       read (line,*) ntstep
-!     read (getline(i_unit),*) ntstep
 
 !     anemometer height, zo at anemom, and location (station or field)
 !     note if flag=1, at field, awwzo will be changed to field value
@@ -428,7 +421,6 @@
 !     Weibull wind flag (0 - read Weibull parms, 1 - read wind speeds)
       line = getline(i_unit)
       read (line,*) wflg
-!     read (getline(i_unit),*) wflg
 
 !     w1wind.inc
 
@@ -438,7 +430,6 @@
 !       Weibull parms (fraction calm, c, k)
         line = getline(i_unit)
         read (line,*) wfcalm, wuc, w0k
-!       read (getline(i_unit),*) wfcalm, wuc, w0k
 
 !       calculate daily max wind speed (99% speed)
 !       awudmx = wuc*(-log((1.0-0.99)/(1-wfcalm)))**(1.0/w0k)
@@ -524,7 +515,7 @@
         if (xflag .eq. 1) then
           xplot = xplot + 1
           line = getline(i_unit)
-          xcharin(xplot) = line
+          xcharin(xplot) = line(1:xchl)
           xin(xplot) = amxsim(1,2) - amxsim(1,1)
         else
           line = getline(i_unit)
@@ -542,15 +533,15 @@
         if (xflag .eq. 1) then
           xplot = xplot + 1
           line = getline(i_unit)
-          xcharin(xplot) = line
-          xin(xplot) = abzht(1)
+          xcharin(xplot) = line(1:xchl)
+          xin(xplot) = subrsurf(1)%abzht
         else
           line = getline(i_unit)
         endif
 ! ^^^ tmp out
 !     write (*,*) 'tmp out from erod.for line 474'
 !     write (*,*)  'xplot =', xplot
-!     write (*,*)  'abzht(1)=', abzht(1)
+!     write (*,*)  'subrsurf(1)%abzht=', subrsurf(1)%abzht
 !     write (*,*) 'xin(xplot=', xin(xplot)
 ! ^^^ end tmp
 !     biomass stem area index
@@ -559,8 +550,8 @@
         if (xflag .eq. 1) then
           xplot = xplot + 1
           line = getline(i_unit)
-          xcharin(xplot) = line
-          xin(xplot) = abrsai(1)
+          xcharin(xplot) = line(1:xchl)
+          xin(xplot) = subrsurf(1)%abrsai
         else
           line = getline(i_unit)
         endif
@@ -570,8 +561,8 @@
         if (xflag .eq. 1) then
           xplot = xplot + 1
           line = getline(i_unit)
-          xcharin(xplot) = line
-          xin(xplot) = abrlai(1)
+          xcharin(xplot) = line(1:xchl)
+          xin(xplot) = subrsurf(1)%abrlai
         else
           line = getline(i_unit)
         endif
@@ -581,8 +572,8 @@
         if (xflag .eq. 1) then
           xplot = xplot + 1
           line = getline(i_unit)
-          xcharin(xplot) = line
-          xin(xplot) = abffcv(1)
+          xcharin(xplot) = line(1:xchl)
+          xin(xplot) = subrsurf(1)%abffcv
         else
           line = getline(i_unit)
         endif
@@ -592,8 +583,8 @@
         if (xflag .eq. 1) then
           xplot = xplot + 1
           line = getline(i_unit)
-          xcharin(xplot) = line
-          xin(xplot) = asfvfs(1,1)
+          xcharin(xplot) = line(1:xchl)
+          xin(xplot) = subrsurf(1)%bsl(1)%asfvfs
         else
           line = getline(i_unit)
         endif
@@ -603,8 +594,8 @@
         if (xflag .eq. 1) then
           xplot = xplot + 1
           line = getline(i_unit)
-          xcharin(xplot) = line
-          xin(xplot) =  asfsan(1,1)
+          xcharin(xplot) = line(1:xchl)
+          xin(xplot) =  subrsurf(1)%bsl(1)%asfsan
         else
           line = getline(i_unit)
         endif
@@ -614,8 +605,8 @@
         if (xflag .eq. 1) then
           xplot = xplot + 1
           line = getline(i_unit)
-          xcharin(xplot) = line
-          xin(xplot) = asfsil(1,1)
+          xcharin(xplot) = line(1:xchl)
+          xin(xplot) = subrsurf(1)%bsl(1)%asfsil
         else
           line = getline(i_unit)
         endif
@@ -625,8 +616,8 @@
         if (xflag .eq. 1) then
           xplot = xplot + 1
           line = getline(i_unit)
-          xcharin(xplot) = line
-          xin(xplot) =  asfcla(1,1)
+          xcharin(xplot) = line(1:xchl)
+          xin(xplot) =  subrsurf(1)%bsl(1)%asfcla
         else
           line = getline(i_unit)
         endif
@@ -636,8 +627,8 @@
         if (xflag .eq. 1) then
           xplot = xplot + 1
           line = getline(i_unit)
-          xcharin(xplot) = line
-          xin(xplot) =  asvroc(1,1)
+          xcharin(xplot) = line(1:xchl)
+          xin(xplot) =  subrsurf(1)%bsl(1)%asvroc
         else
           line = getline(i_unit)
         endif
@@ -647,8 +638,8 @@
         if (xflag .eq. 1) then
           xplot = xplot + 1
           line = getline(i_unit)
-          xcharin(xplot) = line
-          xin(xplot) = asdagd(1,1)
+          xcharin(xplot) = line(1:xchl)
+          xin(xplot) = subrsurf(1)%bsl(1)%asdagd
         else
           line = getline(i_unit)
         endif
@@ -658,8 +649,8 @@
         if (xflag .eq. 1) then
           xplot = xplot + 1
           line = getline(i_unit)
-          xcharin(xplot) = line
-          xin(xplot) =  aseags(1,1)
+          xcharin(xplot) = line(1:xchl)
+          xin(xplot) =  subrsurf(1)%bsl(1)%aseags
         else
           line = getline(i_unit)
         endif
@@ -669,8 +660,8 @@
         if (xflag .eq. 1) then
           xplot = xplot + 1
           line = getline(i_unit)
-          xcharin(xplot) = line
-          xin(xplot) =  aslagm(1,1)
+          xcharin(xplot) = line(1:xchl)
+          xin(xplot) =  subrsurf(1)%bsl(1)%aslagm
         else
           line = getline(i_unit)
         endif
@@ -680,8 +671,8 @@
         if (xflag .eq. 1) then
           xplot = xplot + 1
           line = getline(i_unit)
-          xcharin(xplot) = line
-          xin(xplot) =  aslagn(1,1)
+          xcharin(xplot) = line(1:xchl)
+          xin(xplot) =  subrsurf(1)%bsl(1)%aslagn
         else
           line = getline(i_unit)
         endif
@@ -691,8 +682,8 @@
         if (xflag .eq. 1) then
           xplot = xplot + 1
           line = getline(i_unit)
-          xcharin(xplot) = line
-          xin(xplot) =  aslagx(1,1)
+          xcharin(xplot) = line(1:xchl)
+          xin(xplot) =  subrsurf(1)%bsl(1)%aslagx
         else
           line = getline(i_unit)
         endif
@@ -702,8 +693,8 @@
         if (xflag .eq. 1) then
           xplot = xplot + 1
           line = getline(i_unit)
-          xcharin(xplot) = line
-          xin(xplot) =  as0ags(1,1)
+          xcharin(xplot) = line(1:xchl)
+          xin(xplot) =  subrsurf(1)%bsl(1)%as0ags
         else
           line = getline(i_unit)
         endif
@@ -713,8 +704,8 @@
         if (xflag .eq. 1) then
           xplot = xplot + 1
           line = getline(i_unit)
-          xcharin(xplot) = line
-          xin(xplot) = asfcr(1)
+          xcharin(xplot) = line(1:xchl)
+          xin(xplot) = subrsurf(1)%asfcr
         else
           line = getline(i_unit)
         endif
@@ -725,8 +716,8 @@
         if (xflag .eq. 1) then
           xplot = xplot + 1
           line = getline(i_unit)
-          xcharin(xplot) = line
-          xin(xplot) = aszcr(1)
+          xcharin(xplot) = line(1:xchl)
+          xin(xplot) = subrsurf(1)%aszcr
         else
           line = getline(i_unit)
         endif
@@ -736,8 +727,8 @@
         if (xflag .eq. 1) then
           xplot = xplot + 1
           line = getline(i_unit)
-          xcharin(xplot) = line
-          xin(xplot) =  asflos(1)
+          xcharin(xplot) = line(1:xchl)
+          xin(xplot) =  subrsurf(1)%asflos
         else
           line = getline(i_unit)
         endif
@@ -747,8 +738,8 @@
         if (xflag .eq. 1) then
           xplot = xplot + 1
           line = getline(i_unit)
-          xcharin(xplot) = line
-          xin(xplot) =  asmlos(1)
+          xcharin(xplot) = line(1:xchl)
+          xin(xplot) =  subrsurf(1)%asmlos
         else
           line = getline(i_unit)
         endif
@@ -758,8 +749,8 @@
         if (xflag .eq. 1) then
           xplot = xplot + 1
           line = getline(i_unit)
-          xcharin(xplot) = line
-          xin(xplot) =  asecr(1)
+          xcharin(xplot) = line(1:xchl)
+          xin(xplot) =  subrsurf(1)%asecr
         else
           line = getline(i_unit)
         endif
@@ -769,8 +760,8 @@
         if (xflag .eq. 1) then
           xplot = xplot + 1
           line = getline(i_unit)
-          xcharin(xplot) = line
-          xin(xplot) = aslrr(1)
+          xcharin(xplot) = line(1:xchl)
+          xin(xplot) = subrsurf(1)%aslrr
         else
           line = getline(i_unit)
         endif
@@ -780,8 +771,8 @@
         if (xflag .eq. 1) then
           xplot = xplot + 1
           line = getline(i_unit)
-          xcharin(xplot) = line
-          xin(xplot) =  aszrgh(1)
+          xcharin(xplot) = line(1:xchl)
+          xin(xplot) =  subrsurf(1)%aszrgh
         else
           line = getline(i_unit)
         endif
@@ -791,8 +782,8 @@
         if (xflag .eq. 1) then
           xplot = xplot + 1
           line = getline(i_unit)
-          xcharin(xplot) = line
-          xin(xplot) =  asxrgs(1)
+          xcharin(xplot) = line(1:xchl)
+          xin(xplot) =  subrsurf(1)%asxrgs
         else
           line = getline(i_unit)
         endif
@@ -802,8 +793,8 @@
         if (xflag .eq. 1) then
           xplot = xplot + 1
           line = getline(i_unit)
-          xcharin(xplot) = line
-          xin(xplot) =  asxrgw(1)
+          xcharin(xplot) = line(1:xchl)
+          xin(xplot) =  subrsurf(1)%asxrgw
         else
           line = getline(i_unit)
         endif
@@ -813,8 +804,8 @@
         if (xflag .eq. 1) then
           xplot = xplot + 1
           line = getline(i_unit)
-          xcharin(xplot) = line
-          xin(xplot) =  asargo(1)
+          xcharin(xplot) = line(1:xchl)
+          xin(xplot) =  subrsurf(1)%asargo
         else
           line = getline(i_unit)
         endif
@@ -829,18 +820,13 @@
 ! ^^^ end temp out
 
 !     + + + OUTPUT SECTION + + +
-!
-  200 format (1x, f6.2, 6f8.2)
-  210 format (1x, f8.2)
+
   220 format (1x, 2f8.2)
   230 format (1x, 3f8.2)
-  240 format (1x, 4f8.3)
   250 format (1x, i4)
   251 format (1x, 2f8.2)
   260 format (1x, 6f8.2)
   270 format (1x, 7f8.2)
-  280 format (1x, 8f8.2)
-  300 format (1x, 8i5)
   350 format (1x, i3, 7f8.2)
   400 format (1x, i3, 1x, l6, 4x, i3, 4x, i3, 4x, i3, 4x, i3)
 
@@ -908,68 +894,69 @@
         write(o_unit,*) '+++ BIOMASS +++'
         write (o_unit,*)
         write (o_unit,*) 'Biomass ht,  flat cover'
-        write (o_unit,220) abzht(sr), abffcv(sr)
+        write (o_unit,220) subrsurf(sr)%abzht, subrsurf(sr)%abffcv
 
         write (o_unit,*)
         write (o_unit,*) 'Crop height, SAI,    LAI'
-        write (o_unit,230) aczht(sr), acrsai(sr), acrlai(sr)
+        write (o_unit,230) subrsurf(sr)%aczht, subrsurf(sr)%acrsai, subrsurf(sr)%acrlai
 
         write (o_unit,*)
         write (o_unit,*) 'Residue height, SAI,    LAI'
-        write (o_unit,230) adzht_ave(sr), adrsaitot(sr), adrlaitot(sr)
+        write (o_unit,230) subrsurf(sr)%adzht_ave, subrsurf(sr)%adrsaitot, subrsurf(sr)%adrlaitot
 
         write (o_unit,*)
         write (o_unit,*) '+++ SOIL +++ '
         write (o_unit,*)
         write (o_unit,*) 'nslay - number of soil layers'
-        write (o_unit,*) nslay(sr)
+        write (o_unit,*) subrsurf(sr)%nslay
 
         write (o_unit,*)
         write (o_unit,*) 'layer depth b.density ',                      &
      &                   'vfsand   sand   silt   clay    rock vol'
-        do 1030 l = 1, nslay(sr)
-          write (o_unit,350) l, aszlyt(l,sr), asdblk(l,sr),             &
-     &                       asfvfs(l,sr), asfsan(l,sr), asfsil(l,sr),  &
-     &                       asfcla(l,sr), asvroc(l,sr)
+        do 1030 l = 1, subrsurf(sr)%nslay
+          write (o_unit,350) l, subrsurf(sr)%bsl(l)%aszlyt, subrsurf(sr)%bsl(l)%asdblk, &
+                 subrsurf(sr)%bsl(l)%asfvfs, subrsurf(sr)%bsl(l)%asfsan, subrsurf(sr)%bsl(l)%asfsil, &
+                 subrsurf(sr)%bsl(l)%asfcla, subrsurf(sr)%bsl(l)%asvroc
  1030   continue
 
         write (o_unit,*)
           write (o_unit,*) 'layer    AgD     AgS ',                     &
      &                   ' GMD    GMDmn     GMDmx    GSD'
-        do 1040 l = 1, nslay(sr)
-          write (o_unit,350) l, asdagd(l,sr), aseags(l,sr),             &
-     &           aslagm(l,sr),aslagn(l,sr), aslagx(l,sr), as0ags(l,sr)
+        do 1040 l = 1, subrsurf(sr)%nslay
+          write (o_unit,350) l, subrsurf(sr)%bsl(l)%asdagd, subrsurf(sr)%bsl(l)%aseags, &
+                 subrsurf(sr)%bsl(l)%aslagm, subrsurf(sr)%bsl(l)%aslagn,   &
+                 subrsurf(sr)%bsl(l)%aslagx, subrsurf(sr)%bsl(l)%as0ags
  1040   continue
 
         write (o_unit,*)
         write (o_unit,*) 'Crust frac thick mass LOS frac.LOS, ',        &
      &                   'density stability'
-        write (o_unit,260)asfcr(sr),aszcr(sr),asmlos(sr),asflos(sr),    &
-     &                    asdcr(sr),asecr(sr)
+        write (o_unit,260) subrsurf(sr)%asfcr, subrsurf(sr)%aszcr, subrsurf(sr)%asmlos, subrsurf(sr)%asflos,    &
+                           subrsurf(sr)%asdcr, subrsurf(sr)%asecr
 
         write (o_unit,*)
         write (o_unit,*) '    RR,    Rg ht,  width, spacing, ',         &
      &                   'orient., dike spacing'
-        write (o_unit,270) aslrr(sr), aszrgh(sr), asxrgw(sr),           &
-     &                     asxrgs(sr), asargo(sr), asxdks(sr)
+        write (o_unit,270) subrsurf(sr)%aslrr, subrsurf(sr)%aszrgh, subrsurf(sr)%asxrgw,           &
+                           subrsurf(sr)%asxrgs, subrsurf(sr)%asargo, subrsurf(sr)%asxdks
 
         write (o_unit,*)
         write (o_unit,*) '+++ HYDROLOGY +++ '
         write (o_unit,*)
 
         write (o_unit,*) 'Snow depth (mm)'
-        write (o_unit,*) ahzsnd(sr)
+        write (o_unit,*) subrsurf(sr)%ahzsnd
 
         write (o_unit,*)
         write (o_unit,*) 'layer  wilting and actual water contents'
-        do 1050 l = 1, nslay(sr)
-          write (o_unit,350) l, ahrwcw (l,sr), ahrwca(l,sr)
+        do 1050 l = 1, subrsurf(sr)%nslay
+          write (o_unit,350) l, subrsurf(sr)%bsl(l)%ahrwcw , subrsurf(sr)%bsl(l)%ahrwca
  1050   continue
         write (o_unit,*) 'Hourly water contents - ahrwc0'
-        write (o_unit,260) (ahrwc0(h,sr), h=1,6)
-        write (o_unit,260) (ahrwc0(h,sr), h=7,12)
-        write (o_unit,260) (ahrwc0(h,sr), h=13,18)
-        write (o_unit,260) (ahrwc0(h,sr), h=19,24)
+        write (o_unit,260) (subrsurf(sr)%ahrwc0(h), h=1,6)
+        write (o_unit,260) (subrsurf(sr)%ahrwc0(h), h=7,12)
+        write (o_unit,260) (subrsurf(sr)%ahrwc0(h), h=13,18)
+        write (o_unit,260) (subrsurf(sr)%ahrwc0(h), h=19,24)
 
  1100 continue
 

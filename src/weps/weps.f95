@@ -44,6 +44,7 @@
       use biomaterial
       use debug_mod
       use mandate_mod
+      use erosion_data_struct_defs
 
 ! build and release info, fpp created by cook
       include 'build.inc'
@@ -111,6 +112,8 @@
       type(biototal), dimension(:), allocatable :: biotot
       type(decomp_factors), dimension(:), allocatable :: decompfac
       type(mandate_array), dimension(:), allocatable :: mandatbs
+
+      type(subregionsurfacestate), dimension(:), allocatable :: subrsurf   ! subregion surface state needed by erosion
 
       type(reporting_report), dimension(:), target, allocatable :: rep_report
       type(reporting_update), dimension(:), target, allocatable :: rep_update
@@ -325,6 +328,11 @@
       ! allocate management data arrays for reports
       allocate(mandatbs(0:nsubr), stat=alloc_stat)
       sum_stat = sum_stat + alloc_stat
+
+      ! erosion submodel arrays
+      allocate(subrsurf(nsubr), stat=alloc_stat)
+      sum_stat = sum_stat + alloc_stat
+
       ! report cummulation arrays
       allocate(rep_report(0:nsubr), stat=alloc_stat)
       sum_stat = sum_stat + alloc_stat
@@ -338,7 +346,7 @@
       sum_stat = sum_stat + alloc_stat
 
       if( sum_stat .gt. 0 ) then
-         Write(*,*) 'ERROR: unable to allocate crop, residue and man_ds'
+         Write(*,*) 'ERROR: unable to allocate enough memory for weps main data arrays'
       end if
       do isr = 1, nsubr
          ! complete allocation of layers
@@ -690,10 +698,14 @@
 
             if (run_erosion > 0) then   ! Are we simulating erosion in this RUN
                if (awudmx .gt. 8.0) then ! if wind is great enough, call erosion
+                  ! transfer data values from submodel structures into erosion input structure
+                  do isr=1,nsubr   ! do multiple subregion     
+                     call erodsubr_update( isr, restot(isr), croptot(isr), biotot(isr), subrsurf(isr) )
+                  end do
                   ! write(*,*) "Start calcwu"
                   call calcwu
                   ! write(*,*) "Start erosion"
-                  call erosion (5.0)
+                  call erosion (5.0, subrsurf)
                   if (btest(am0efl,0) .or. btest(am0efl,1)) then
                      call daily_erodout (luo_egrd,luo_erod)
                   endif

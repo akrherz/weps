@@ -71,13 +71,14 @@
 !
 !     + + + END SPECIFICATIONS + + +
 
-!     assign subregion index, currently only one
-      icsr = 1
       rusust = 0.1
 
 !     loop through grid interior to update
       do 40 i = 1, imax-1
       do 30 j = 1, jmax-1
+
+      ! assign subregion index for grid point
+      icsr = csr(i,j)
 
 !     update aerodynamic roughness
 ! ^^^ tmp out

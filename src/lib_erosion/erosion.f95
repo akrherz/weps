@@ -3,7 +3,7 @@
 !$Revision$
 !$HeadURL$
 
-      subroutine erosion (min_erosion_awu)
+      subroutine erosion (min_erosion_awu, subrsurf)
 
 !     +++ PURPOSE +++
 !     subroutine erosion is the control subroutine and calls other
@@ -19,11 +19,11 @@
 
       use weps_interface_defs
       use file_io_mod, only: luo_sgrd, luo_emit
+      use erosion_data_struct_defs
 
 !     +++ ARGUMENT DECLARATIONS +++
-
-      real min_erosion_awu       !Minimum erosive wind speed (m/s)
-                                 !to evaluate for erosion loss
+      real min_erosion_awu       !Minimum erosive wind speed (m/s) to evaluate for erosion loss
+      type(subregionsurfacestate), dimension(:) :: subrsurf  ! subregion surface conditions (erosion specific set)
 
 !     +++ ARGUMENT DEFINITIONS +++
 
@@ -36,20 +36,10 @@
 
 !     + + + GLOBAL COMMON BLOCKS + + +
       include  'p1werm.inc'
-      include  'c1gen.inc'
       include  'm1subr.inc'
       include  'p1const.inc'
-      include  'b1glob.inc'
-      include  'c1glob.inc'
-      include  'd1glob.inc'
 !      include  'm1geo.inc'
       include  'w1wind.inc'
-      include  's1dbh.inc'
-      include  's1phys.inc'
-      include  's1agg.inc'
-      include  's1surf.inc'
-      include  's1sgeo.inc'
-      include  'h1db1.inc'
       include  'm1flag.inc'
       include  'm1sim.inc'
       include  'timer.inc'
@@ -185,7 +175,7 @@
 !*****this check cannot be done if subhourly wind is used  FAF
       do 20 icsr=1, nsubr
        ! If snow depth > 20 mm in all subregions, then no erosion
-       if (ahzsnd(icsr) .le. SNODEP) then
+       if (subrsurf(icsr)%ahzsnd .le. SNODEP) then
         ! Have insufficient snow depth
         ne_snowdepth(icsr) = 0
 
@@ -193,29 +183,28 @@
         ! subregions without hill and barrier effects
 
         ! calc. ridge spacing parallel the wind
-        if (aszrgh(icsr) > 5.0) then
-          sina = abs(sin(PID180*abs(awdir(icsr) - asargo(icsr))))
+        if (subrsurf(icsr)%aszrgh > 5.0) then
+          sina = abs(sin(PID180*abs(awdir(icsr) - subrsurf(icsr)%asargo)))
           sina = max(0.10, sina)
-          sxprg(icsr) = asxrgs(icsr)/sina
-            if (asxdks(icsr) > asxrgs(icsr)/3.) then
-             sxprg(icsr) = amin1(sxprg(icsr), asxdks(icsr))
-             endif
+          sxprg(icsr) = subrsurf(icsr)%asxrgs/sina
+            if (subrsurf(icsr)%asxdks > subrsurf(icsr)%asxrgs/3.) then
+             sxprg(icsr) = amin1(sxprg(icsr), subrsurf(icsr)%asxdks)
+            endif
         else
-	  sxprg(icsr) = 1000
+            sxprg(icsr) = 1000
         endif
 
         ! Compute Zo (wzzo) of surface
-        call sbzo                                                       &
-     &   (sxprg(icsr), aszrgh(icsr), aslrr(icsr),                       &
-     &    wzoflg, adrlaitot(icsr), adrsaitot(icsr), abzht(icsr),        &
-     &    acrlai(icsr), acrsai(icsr), aczht(icsr),                      &
-     &    acxrow(icsr), ac0rg(icsr), wzorg, wzorr,                      &
-     &    wzzo, wzzov, awzzo, brcd)
+        call sbzo( sxprg(icsr), subrsurf(icsr)%aszrgh, subrsurf(icsr)%aslrr, &
+          wzoflg, subrsurf(icsr)%adrlaitot, subrsurf(icsr)%adrsaitot, subrsurf(icsr)%abzht, &
+          subrsurf(icsr)%acrlai, subrsurf(icsr)%acrsai, subrsurf(icsr)%aczht, &
+          subrsurf(icsr)%acxrow, subrsurf(icsr)%ac0rg, wzorg, wzorr, &
+          wzzo, wzzov, awzzo, brcd )
 
         ! Calculate soil clod fraction less than 0.84 mm diameter
         ! calc soil mass < 0.84 mm
-        call sbsfdi( aslagm(1,icsr), as0ags(1,icsr), aslagn(1,icsr),    &
-     &       aslagx(1,icsr), 0.84, sfd84(icsr) )
+        call sbsfdi( subrsurf(icsr)%bsl(1)%aslagm, subrsurf(icsr)%bsl(1)%as0ags, subrsurf(icsr)%bsl(1)%aslagn, &
+             subrsurf(icsr)%bsl(1)%aslagx, 0.84, subrsurf(icsr)%sfd84 )
 
         ! save the initial sf84 value
         sf84ic = sfd84(icsr)
@@ -245,10 +234,10 @@
           dmlos(1,1) = 0.0
           smaglos(1,1) = 0.0
           smaglosmx(1,1)= 0.0
-          call sbwust( sfd84(icsr), asdagd(1,icsr), asfcr(icsr),        &
-     &                 asvroc(1,icsr), asflos(icsr),abffcv(icsr), wzzo, &
-     &                 ahrwc0(hidx,icsr), ahrwcw(1,icsr), wus, sf84ic,  &
-     &                 asvroc(1,icsr), dmlos(1,1), wust, wusp,          &
+          call sbwust( sfd84(icsr), subrsurf(icsr)%bsl(1)%asdagd, subrsurf(icsr)%asfcr, &
+     &                 subrsurf(icsr)%bsl(1)%asvroc, subrsurf(icsr)%asflos, subrsurf(icsr)%abffcv, wzzo, &
+     &                 subrsurf(icsr)%ahrwc0(hidx), subrsurf(icsr)%bsl(1)%ahrwcw, wus, sf84ic,  &
+     &                 subrsurf(icsr)%bsl(1)%asvroc, dmlos(1,1), wust, wusp, &
      &                 wusto, sf84mn(1,1), smaglos(1,1),smaglosmx(1,1), &
      &                 wubsts, wucsts, wucwts, wucdts, sfcv)
 
@@ -272,7 +261,7 @@
              ne_ag_den(icsr) = wucdts
              ne_wust(icsr) = wust
              ne_sfd84(icsr) = sfd84(icsr)
-             ne_asvroc(icsr) = asvroc(1,icsr)
+             ne_asvroc(icsr) = subrsurf(icsr)%bsl(1)%asvroc
              ne_wzzo(icsr) = wzzo
              ne_sfcv(icsr) = sfcv
            end if

@@ -237,6 +237,8 @@
       croptot%ftcancov = bcfcancov     ! fraction of soil surface covered by canopy across pools (m^2/m^2)
       croptot%evapredu = 0.0     ! composite evaporation reduction from across pools (ea/ep ratio)
 
+      croptot%xrow = bcxrow
+      croptot%c0rg = bc0rg
 
       return
       end
