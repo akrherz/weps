@@ -34,12 +34,12 @@ module erosion_data_struct_defs
 
   type subregionsurfacestate
      ! ERODIN inputs
-     real :: adzht_ave  ! adzht_ave(s), R, (d1glob.inc) Average residue height (m)
+     real :: adzht_ave  ! adzht_ave(s), R, Average residue height (m)
      real :: aczht      ! aczht(s), R, (c1glob.inc) Crop height (m)
      real :: acrsai     ! acrsai(s), R, (c1glob.inc) Crop stem area index (m^2/m^2)
      real :: acrlai     ! acrlai(s), R, (c1glob.inc) Crop leaf area index (m^2/m^2)
-     real :: adrsaitot  ! adrsaitot(s), R, (d1glob.inc) Residue stem area index (m^2/m^2)
-     real :: adrlaitot  ! adrlaitot(s), R, (d1glob.inc) Residue leaf area index (m^2/m^2)
+     real :: adrsaitot  ! adrsaitot(s), R, Residue stem area index (m^2/m^2)
+     real :: adrlaitot  ! adrlaitot(s), R, Residue leaf area index (m^2/m^2)
      real :: acxrow     ! acxrow(s) Crop row spacing (m)
      integer :: ac0rg   ! ac0rg(s)  Crop seed placement (0 - furrow, 1 - ridge)
      real :: abffcv     ! abffcv(s), R, (b1geom.inc) Flat biomass cover (m^2/m^2)

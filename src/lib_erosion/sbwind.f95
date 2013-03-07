@@ -5,8 +5,8 @@
 !***********************************************************************
 !*     subroutine sbwind
 !***********************************************************************
-      subroutine sbwind (wustfl,awu, wind_dir, ntstep, intstep, rusust)
-!
+      subroutine sbwind (wustfl,awu, wind_dir, ntstep, intstep, rusust, subrsurf)
+
 !     +++ PURPOSE +++
 !     to update wzzo at each grid point;
 !     To update  soil friction velocity on each grid point
@@ -16,11 +16,13 @@
 !     friction velocity
 
       use weps_interface_defs
+      use erosion_data_struct_defs
 
 !     +++ ARGUMENT DECLARATIONS +++
       integer wustfl,intstep, ntstep
       real awu, rusust, wind_dir
-!
+      type(subregionsurfacestate), dimension(:) :: subrsurf  ! subregion surface conditions (erosion specific set)
+
 !     +++ ARGUMENT DEFINITIONS +++
 !     intstep  - current index of ntstep thru time
 !     ntstep   - max. no. of time steps in day
@@ -38,16 +40,8 @@
 !     + + + GLOBAL COMMON BLOCKS + + +
 
       include  'p1werm.inc'
-      include  'c1gen.inc'
       include  'm1geo.inc'
-      include  'b1glob.inc'
-      include  'c1glob.inc'
-      include  'd1glob.inc'
-      include  'h1db1.inc'
       include  'p1const.inc'
-      include  's1agg.inc'
-      include  's1dbh.inc'
-      include  's1sgeo.inc'
 !
 !     + + + LOCAL COMMON BLOCKS + + +
       include  'erosion/m2geo.inc'
@@ -84,12 +78,11 @@
 ! ^^^ tmp out
 !     write (*,*) 'in sbwind, call to sbzo'
 
-      call sbzo                                                         &
-     & (sxprg(icsr), szrgh(i,j), slrr(i,j),                             &
-     &    wzoflg, adrlaitot(icsr), adrsaitot(icsr), abzht(icsr),        &
-     &    acrlai(icsr), acrsai(icsr), aczht(icsr),                      &
-     &    acxrow(icsr), ac0rg(icsr), wzorg, wzorr,                      &
-     &    wzzo, wzzov, awzzo, brcd)
+      call sbzo( sxprg(icsr), szrgh(i,j), slrr(i,j), &
+           wzoflg, subrsurf(icsr)%adrlaitot, subrsurf(icsr)%adrsaitot, subrsurf(icsr)%abzht,  &
+           subrsurf(icsr)%acrlai, subrsurf(icsr)%acrsai, subrsurf(icsr)%aczht, &
+           subrsurf(icsr)%acxrow, subrsurf(icsr)%ac0rg, wzorg, wzorr, &
+           wzzo, wzzov, awzzo, brcd)
 
 ! ^^^ tmp out
 !      write (*,*) 'in sbwind, call to sbwus'
@@ -113,12 +106,11 @@
         rintstep = intstep
         k = aint(rintstep*23.75/ntstep) + 1
 
-        call sbwust                                                     &
-     &  (sf84(i,j), asdagd(1,icsr), sfcr(i,j), svroc(i,j),              &
-     &  sflos(i,j), abffcv(icsr),wzzo, ahrwc0(k,icsr), ahrwcw(1,icsr),  &
-     &  wus(i,j), sf84ic, asvroc(1,1), dmlos(i,j),                      & 
-     &  wust(i,j), wusp(i,j), wusto, sf84mn(i,j), smaglos(i,j),         &
-     &  smaglosmx(i,j), wubsts, wucsts, wucwts, wucdts, sfcv)
+        call sbwust( sf84(i,j), subrsurf(icsr)%bsl(1)%asdagd, sfcr(i,j), svroc(i,j), &
+             sflos(i,j), subrsurf(icsr)%abffcv, wzzo, subrsurf(icsr)%ahrwc0(k), subrsurf(icsr)%bsl(1)%ahrwcw, &
+             wus(i,j), sf84ic, subrsurf(icsr)%bsl(1)%asvroc, dmlos(i,j), & 
+             wust(i,j), wusp(i,j), wusto, sf84mn(i,j), smaglos(i,j), &
+             smaglosmx(i,j), wubsts, wucsts, wucwts, wucdts, sfcv)
 
 ! ^^^ tmp out
 !      if( wust(i,j) .le. 0.0 ) then
@@ -126,14 +118,14 @@
 !       write(*,*) "sbwind: wus(i,j), wust(i,j), rusust",                &
 !     &            wus(i,j), wust(i,j), rusust
 !       write(*,*) "sf84(i,j) = ", sf84(i,j)
-!       write(*,*) "asdagd(1,icsr)", asdagd(1,icsr)
+!       write(*,*) "subrsurf(icsr)%bsl(1)%asdagd", subrsurf(icsr)%bsl(1)%asdagd
 !       write(*,*) "sfcr(i,j)", sfcr(i,j)
 !       write(*,*) "svroc(i,j)", svroc(i,j)
 !       write(*,*) "sflos(i,j) ",sflos(i,j)
-!       write(*,*) "abffcv(icsr)", abffcv(icsr)
+!       write(*,*) "subrsurf(icsr)%abffcv", subrsurf(icsr)%abffcv
 !       write(*,*) "wzzo", wzzo
-!       write(*,*) "ahrwc0(k,icsr)", ahrwc0(k,icsr)
-!       write(*,*) "ahrwcw(1,icsr)", ahrwcw(1,icsr)
+!       write(*,*) "subrsurf(icsr)%ahrwc0(k)", subrsurf(icsr)%ahrwc0(k)
+!       write(*,*) "subrsurf(icsr)%bsl(1)%ahrwcw", subrsurf(icsr)%bsl(1)%ahrwcw
 !       write(*,*) "wus(i,j)", wus(i,j)
 !       write(*,*) "sf84ic", sf84ic
 !       write(*,*) "rusust", rusust

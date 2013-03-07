@@ -138,14 +138,14 @@
               call caldat (am0jd,day,mon,yr)
               write(*,*) 'Stand alone erosion input file created D/M/Y',&
      &                day,'/',mon,'/',yr,'simulation day',saeinp_daysim
-              call saeinp    ! output daily erosion stuff
+              call saeinp( subrsurf )    ! output daily erosion stuff
           end if
       else if( saeinp_jday.gt.0 ) then
           if ((am0jd).eq.saeinp_jday) then
               call caldat (am0jd,day,mon,yr)
               write(*,*) 'Stand alone erosion input file created D/M/Y',&
      &                day,'/',mon,'/',yr,'simulation day',am0jd-ijday+1
-              call saeinp    ! output daily erosion stuff
+              call saeinp( subrsurf )    ! output daily erosion stuff
           end if
       end if
    ! We need to ensure that sbemit only gets called once here to write the header
@@ -456,7 +456,7 @@
             ! updates the fric. vel and threshold fric. vel on grid
             ! and calc. max. for  rusust = wus/wust
             ! this subroutine calls sbzo and sbwus
-            call sbwind (wustfl, awu(i), awdir(i), ntstep, i, rusust)
+            call sbwind (wustfl, awu(i), awdir(i), ntstep, i, rusust, subrsurf)
             wuref = awu(i)
             wr = 1
 
@@ -490,7 +490,7 @@
             else
                ! print out initial state, even if we never call sberode()
                if (btest(am0efl,3).and.(j .eq. 1).and.(i .eq. 1)) then
-                  call sbwind (wustfl,awu(i),awdir(i),ntstep,i,rusust)
+                  call sbwind (wustfl,awu(i),awdir(i),ntstep,i,rusust, subrsurf)
                   wuref = awu(i)
                   call sb1out (j, n, hrs, awu(i), awdir(i), luo_sgrd)
                endif

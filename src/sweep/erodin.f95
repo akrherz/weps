@@ -234,8 +234,6 @@
         line = getline(i_unit)
         read (line,*) subrsurf(sr)%acrsai, subrsurf(sr)%acrlai
 
-!     d1glob.inc
-
 !       Residue stem area index and leaf area index
         line = getline(i_unit)
         read (line,*) subrsurf(sr)%adrsaitot, subrsurf(sr)%adrlaitot

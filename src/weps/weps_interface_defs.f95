@@ -441,7 +441,9 @@
       type(subregionsurfacestate), dimension(:) :: subrsurf
       end subroutine erosion
 !---------------------------
-      subroutine saeinp()
+      subroutine saeinp( subrsurf )
+      use erosion_data_struct_defs, only: subregionsurfacestate
+      type(subregionsurfacestate), dimension(:) :: subrsurf  ! subregion surface conditions (erosion specific set)
       end subroutine saeinp
 !---------------------------
       subroutine sb1out (jj, nn, hr, ws, wdir, o_unit)
@@ -526,9 +528,11 @@
       real slagm, s0ags, slagn, slagx, sldi, sfdi         
       end subroutine sbsfdi
 !-----------------------------
-      subroutine sbwind (wustfl,awu, wind_dir, ntstep, intstep, rusust)
+      subroutine sbwind (wustfl,awu, wind_dir, ntstep, intstep, rusust, subrsurf)
+      use erosion_data_struct_defs
       integer wustfl,intstep, ntstep
       real awu, rusust, wind_dir
+      type(subregionsurfacestate), dimension(:) :: subrsurf  ! subregion surface conditions (erosion specific set)
       end subroutine sbwind
 !-------------------------------
       subroutine sbwus (anemht, awzzo, awu, wzzov, brcd, wus)
