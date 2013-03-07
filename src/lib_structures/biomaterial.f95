@@ -17,11 +17,12 @@ module biomaterial
      real :: flatrootstore  ! flat storage root mass (kg/m^2)
      real :: flatrootfiber  ! flat fibrous root mass (kg/m^2)
      ! defines mass of plant parts that are below ground by soil layer
-     real, dimension(:), allocatable :: stemz          ! buried stem mass by layer (kg/m^2)
-     real, dimension(:), allocatable :: leafz          ! buried leaf mass by layer (kg/m^2)
-     real, dimension(:), allocatable :: storez         ! buried (from above ground) storage mass by layer (kg/m^2)
-     real, dimension(:), allocatable :: rootstorez     ! buried storage root mass by layer (kg/m^2)
-     real, dimension(:), allocatable :: rootfiberz     ! buried fibrous root mass by layer (kg/m^2)
+     ! note: in this context, allocatable does not work, pointer does!
+     real, dimension(:), pointer :: stemz          ! buried stem mass by layer (kg/m^2)
+     real, dimension(:), pointer :: leafz          ! buried leaf mass by layer (kg/m^2)
+     real, dimension(:), pointer :: storez         ! buried (from above ground) storage mass by layer (kg/m^2)
+     real, dimension(:), pointer :: rootstorez     ! buried storage root mass by layer (kg/m^2)
+     real, dimension(:), pointer :: rootfiberz     ! buried fibrous root mass by layer (kg/m^2)
   end type biostate_mass
 
   type biostate_geometry
@@ -69,7 +70,7 @@ module biomaterial
      integer :: resyear   ! index counting each new residue initiation
      real :: cumdds       ! cumulative decomp days for standing res. by pool (days)
      real :: cumddf       ! cummlative decomp days for surface res. by pool (days)
-     real, dimension(:), allocatable :: cumddg       ! cumm. decomp days below ground res by pool and layer (days)
+     real, dimension(:), pointer :: cumddg       ! cumm. decomp days below ground res by pool and layer (days)
   end type biostate_decomp
 
   type bioderived
@@ -85,13 +86,13 @@ module biomaterial
      real :: mf           ! Flat mass (flatstem + flatleaf + flatstore) (kg/m^2)
      real :: mrt          ! Buried root mass (rootfiber + rootstore)(kg/m^2)
      real :: mbg          ! Buried mass (kg/m^2) Excludes root mass below the surface.
-     real, dimension(:), allocatable :: mrtz           ! Buried root mass by soil layer (kg/m^2)
-     real, dimension(:), allocatable :: mbgz           ! Buried mass by soil layer (kg/m^2)
+     real, dimension(:), pointer :: mrtz           ! Buried root mass by soil layer (kg/m^2)
+     real, dimension(:), pointer :: mbgz           ! Buried mass by soil layer (kg/m^2)
 
      real :: rsai         ! Residue stem area index (m^2/m^2)
      real :: rlai         ! Residue leaf area index (m^2/m^2)
-     real, dimension(:), allocatable :: rsaz           ! stem area index by height (1/m)
-     real, dimension(:), allocatable :: rlaz           ! leaf area index by height (1/m)
+     real, dimension(:), pointer :: rsaz           ! stem area index by height (1/m)
+     real, dimension(:), pointer :: rlaz           ! leaf area index by height (1/m)
 
      real :: rcd          ! effective Biomass silhouette area (SAI+LAI) (m^2/m^2)
                           ! (combination of leaf area and stem area indices)
@@ -155,13 +156,13 @@ module biomaterial
      real :: mrttot       ! Buried root mass across pools (kg/m^2)
      real :: mrttotto4    ! Buried (to a 4 inch depth) root mass across pools (kg/m^2)
      real :: mrttotto15   ! Buried (to a 15 cm depth) root mass across pools (kg/m^2)
-     real, dimension(:), allocatable :: mrtz           ! Buried root mass by soil layer (kg/m^2)
-     real, dimension(:), allocatable :: mbgz           ! Buried mass by soil layer (kg/m^2)
+     real, dimension(:), pointer :: mrtz           ! Buried root mass by soil layer (kg/m^2)
+     real, dimension(:), pointer :: mbgz           ! Buried mass by soil layer (kg/m^2)
 
      real :: rsaitot      ! total of stem area index across pools (m^2/m^2)
      real :: rlaitot      ! total of leaf area index across pools (m^2/m^2)
-     real, dimension(:), allocatable :: rsaz           ! stem area index by height (1/m)
-     real, dimension(:), allocatable :: rlaz           ! leaf area index by height (1/m)
+     real, dimension(:), pointer :: rsaz           ! stem area index by height (1/m)
+     real, dimension(:), pointer :: rlaz           ! leaf area index by height (1/m)
 
      real :: rcdtot       ! effective Biomass silhouette area across pools (SAI+LAI) (m^2/m^2)
                           ! (combination of leaf area and stem area indices)
@@ -216,9 +217,9 @@ module biomaterial
      real :: iddf   ! daily decomposition day for surface residue (0 to 1)
      real :: itcf   ! daily temperature coef. for above ground res. (0 to 1)
      real :: iwcf   ! daily water coefficient for surface residues (0 to 1)
-     real, dimension(:), allocatable :: iddg   ! decomp. day for below ground residue by soil layer (0 to 1)
-     real, dimension(:), allocatable :: itcg   ! temperature coef. below ground res. by soil layer (0 to 1)
-     real, dimension(:), allocatable :: iwcg   ! water coef. for below ground res. by soil layer (0 to 1)
+     real, dimension(:), pointer :: iddg   ! decomp. day for below ground residue by soil layer (0 to 1)
+     real, dimension(:), pointer :: itcg   ! temperature coef. below ground res. by soil layer (0 to 1)
+     real, dimension(:), pointer :: iwcg   ! water coef. for below ground res. by soil layer (0 to 1)
   end type decomp_factors
 
 contains

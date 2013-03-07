@@ -643,7 +643,7 @@
          ! passing in reduced saturation instead of full saturation
 
          slen = amxsim(2,2)-amxsim(2,1)
-         write(*,*) 'daysim:', daysim
+         !write(*,*) 'daysim:', daysim
 
          call waterbal(layrsn, thetas, thetes, thetaf, thetaw,          &
      &                   bszlyt, bszlyd, bhrsk,                         &
