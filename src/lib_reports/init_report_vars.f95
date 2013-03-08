@@ -278,8 +278,8 @@ SUBROUTINE init_report_vars(nperiods, nrot_yrs, ncycles, mandate, rep_report, re
               end if
             end do
         END SELECT
-      END DO    
-    END DO    
+      END DO
+    END DO
 
     IF (i /= nperiods) THEN
        write(0,*) "init_report_vars: No. periods computed here doesn't match nperiods: ",i,"<>",nperiods
