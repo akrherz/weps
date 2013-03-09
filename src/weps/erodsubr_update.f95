@@ -26,7 +26,6 @@ subroutine erodsubr_update( sr, restot, croptot, biotot, subrsurf )
 !     + + + GLOBAL COMMON BLOCKS + + +
       include  'p1werm.inc'
       include  'p1const.inc'
-      include  'b1glob.inc'
       include  'm1geo.inc'
       include  'w1wind.inc'
       include  'w1pavg.inc'
@@ -41,7 +40,6 @@ subroutine erodsubr_update( sr, restot, croptot, biotot, subrsurf )
       include  'm1sim.inc'
       include  'm1subr.inc'
       include  'wpath.inc'
-      include  'c1gen.inc'
 !
 !     + + + LOCAL COMMON BLOCKS + + +
       include 'erosion/e2grid.inc'
