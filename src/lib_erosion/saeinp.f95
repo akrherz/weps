@@ -216,8 +216,8 @@
      &'#      subrsurf(s)adzht_ave, R, Average residue height (m)')
       write(luo_saeinp,*) subrsurf(sr)%adzht_ave
 ! Changed above to use "average residue height" instead of "overall height" - LEW 1/26/06
-!     &'#       abzht(s), R, (b1glob.inc) Overall biomass height (m)')
-!      write(luo_saeinp,*) abzht(sr)
+!     &'#       biotot(s)%zht_ave, R, Overall biomass height (m)')
+!      write(luo_saeinp,*) biotot(s)%zht_ave
 
       write(luo_saeinp,2146)
  2146 format('#',/,                                                     &

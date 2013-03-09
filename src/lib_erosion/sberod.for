@@ -30,7 +30,6 @@
       include  's1sgeo.inc'
       include  's1surf.inc'
       include  's1dbh.inc'
-      include  'b1glob.inc'
       include  'm1sim.inc'
       include  'h1db1.inc'
       include  'timer.inc'

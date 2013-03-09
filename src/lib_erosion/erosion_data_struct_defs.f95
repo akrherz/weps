@@ -60,10 +60,20 @@ module erosion_data_struct_defs
      real :: ahzsnd     ! ahzsnd(s), R, (s1sgeo.inc) Snow depth (mm)
      real, dimension(:), allocatable :: ahrwc0
      ! derived
-     real :: sfd84      ! sfd84(s)- soil fraction with diameter < 0.84 mm
      real :: abrsai     ! abrsai - Biomass stem area index (m^2/m^2)
      real :: abrlai     ! abrlai - Biomass leaf area index (m^2/m^2)
      real :: abzht      ! abzht  - Composite weighted average biomass height (m)
+     real :: sxprg      ! sxprg  - ridge spacing parallel the wind direction(mm)
+     real :: acanag     ! acanag - coeffienct of abrasion for aggregates (1/m)
+     real :: acancr     ! acancr - coeffienct of abrasion for crust (1/m)
+     real :: asf10an    ! asf10an - soil fraction pm10 in abraded suspension
+     real :: asf10en    ! asf10en - soil fraction pm10 in emitted suspension
+     real :: asf10bk    ! asf10bk - soil fraction pm10 in saltation breakage suspension
+     real :: sfd1       ! soil fraction less than 0.01 mm diameter
+     real :: sfd10      ! soil fraction less than 0.1 mm diameter
+     real :: sfd84      ! soil fraction less than 0.84 mm diameter
+     real :: sfd200     ! soil fraction less than 2.0 mm diameter
+
   end type subregionsurfacestate
 
 contains

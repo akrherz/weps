@@ -14,9 +14,6 @@
 !     - calculates soil loss/deposition, suspension, PM-10 on grid
 !     - updates soil  variables changed by erosion.
 
-! ****See user modifications at start of code to enable test
-!      output subroutines sb1out and sb2out
-
       use weps_interface_defs
       use file_io_mod, only: luo_sgrd, luo_emit
       use erosion_data_struct_defs
@@ -57,14 +54,14 @@
       include 'erosion/threshold.inc'
 
 !     +++ LOCAL VARIABLES +++
-      integer i,j,wustfl, icsr, outfl
+      integer i,j,wustfl, icsr
       integer nhill, n
       integer day, mon, yr, hidx
       real wuref, rusust, rut
 !      real rusust_preros(ntstep)
       real wzorg, wzorr, wzzo, wzzov
       real wus, wust, wusp, brcd, wusto
-      real wr, sfd84(mnsub), time
+      real wr, time
       real sina, prev_dir
       real hr, sub_ntstep, hrs
       real wuse, wuste, enge
@@ -75,7 +72,6 @@
 !     i,j      - index
 !     wustfl   - flag to update threshold friction velocity
 !     icsr     - index of current subregion (now only one)
-!     outfl    - flag to call sb1out & sb2out for subdaily info
 !     nhill    - number of hills
 !     hidx     - hour index (for referencing surface water content)
 !     wuref    - reference wind speed (m/s) 
@@ -95,7 +91,6 @@
 !     sina     - sin of the acute angle between ridge and wind angles
 !     prev_dir - prior direction
 !     rut      - updated ratio of rusust
-!     sfd84(mnsub)- soil fraction with diameter < 0.84 mm
 !     time     - time (s)
 !     wuse     - est. of max. wus on grid at ntstep
 !     wuste    - est. of min wust on grid at ntstep 
@@ -164,11 +159,6 @@
 !          rusust_preros(i) = 0.0
       end do
 
-! ****Important notes to users of this submodel
-! ****flag to enable subdaily output for validation
-!      turn off, i.e. set = 0 in WEPS
-      outfl = 0
-
       ! set ratio: defined as the ratio wus/wust
       rusust = 0
 
@@ -186,16 +176,16 @@
         if (subrsurf(icsr)%aszrgh > 5.0) then
           sina = abs(sin(PID180*abs(awdir(icsr) - subrsurf(icsr)%asargo)))
           sina = max(0.10, sina)
-          sxprg(icsr) = subrsurf(icsr)%asxrgs/sina
+          subrsurf(icsr)%sxprg = subrsurf(icsr)%asxrgs/sina
             if (subrsurf(icsr)%asxdks > subrsurf(icsr)%asxrgs/3.) then
-             sxprg(icsr) = amin1(sxprg(icsr), subrsurf(icsr)%asxdks)
+             subrsurf(icsr)%sxprg = amin1(subrsurf(icsr)%sxprg, subrsurf(icsr)%asxdks)
             endif
         else
-            sxprg(icsr) = 1000
+            subrsurf(icsr)%sxprg = 1000
         endif
 
         ! Compute Zo (wzzo) of surface
-        call sbzo( sxprg(icsr), subrsurf(icsr)%aszrgh, subrsurf(icsr)%aslrr, &
+        call sbzo( subrsurf(icsr)%sxprg, subrsurf(icsr)%aszrgh, subrsurf(icsr)%aslrr, &
           wzoflg, subrsurf(icsr)%adrlaitot, subrsurf(icsr)%adrsaitot, subrsurf(icsr)%abzht, &
           subrsurf(icsr)%acrlai, subrsurf(icsr)%acrsai, subrsurf(icsr)%aczht, &
           subrsurf(icsr)%acxrow, subrsurf(icsr)%ac0rg, wzorg, wzorr, &
@@ -207,7 +197,7 @@
              subrsurf(icsr)%bsl(1)%aslagx, 0.84, subrsurf(icsr)%sfd84 )
 
         ! save the initial sf84 value
-        sf84ic = sfd84(icsr)
+        sf84ic = subrsurf(icsr)%sfd84
         sf84ic = min (0.9999, max(sf84ic,0.0001))    ! edit ljh 1-23-05
      
         do i=1, ntstep
@@ -234,7 +224,7 @@
           dmlos(1,1) = 0.0
           smaglos(1,1) = 0.0
           smaglosmx(1,1)= 0.0
-          call sbwust( sfd84(icsr), subrsurf(icsr)%bsl(1)%asdagd, subrsurf(icsr)%asfcr, &
+          call sbwust( subrsurf(icsr)%sfd84, subrsurf(icsr)%bsl(1)%asdagd, subrsurf(icsr)%asfcr, &
      &                 subrsurf(icsr)%bsl(1)%asvroc, subrsurf(icsr)%asflos, subrsurf(icsr)%abffcv, wzzo, &
      &                 subrsurf(icsr)%ahrwc0(hidx), subrsurf(icsr)%bsl(1)%ahrwcw, wus, sf84ic,  &
      &                 subrsurf(icsr)%bsl(1)%asvroc, dmlos(1,1), wust, wusp, &
@@ -260,7 +250,7 @@
              ne_surf_wet(icsr) = wucwts
              ne_ag_den(icsr) = wucdts
              ne_wust(icsr) = wust
-             ne_sfd84(icsr) = sfd84(icsr)
+             ne_sfd84(icsr) = subrsurf(icsr)%sfd84
              ne_asvroc(icsr) = subrsurf(icsr)%bsl(1)%asvroc
              ne_wzzo(icsr) = wzzo
              ne_sfcv(icsr) = sfcv
@@ -318,7 +308,8 @@
 !     sbinit calls sbsdfi to get sf< 0.01,0.1,0.84,2.0 mm
 !     and writes to grid, writes other var. to grid and
 !     zeros eros output arrays.
-      call sbinit
+      call sbinit( subrsurf )
+
 !     calc. sweep direction based on wind direction for sberod
       prev_dir = awdir(1)+ 1.0   !make different to force calculation
       call sbdirini( awdir(1), prev_dir )
@@ -468,7 +459,7 @@
                ! erosion will occur this time step
                ! wustfl = 1
                if (btest(am0efl,3)) then
-                  call sb1out (j, n, hrs, awu(i), awdir(i), luo_sgrd)
+                  call sb1out (j, n, hrs, awu(i), awdir(i), luo_sgrd, subrsurf(1))
                endif
 
                ! stop gneral timer and start sberod timer
@@ -492,7 +483,7 @@
                if (btest(am0efl,3).and.(j .eq. 1).and.(i .eq. 1)) then
                   call sbwind (wustfl,awu(i),awdir(i),ntstep,i,rusust, subrsurf)
                   wuref = awu(i)
-                  call sb1out (j, n, hrs, awu(i), awdir(i), luo_sgrd)
+                  call sb1out (j, n, hrs, awu(i), awdir(i), luo_sgrd, subrsurf(1))
                endif
 
                ! set to get out of inner loop and go to next wind speed - wustfl = 0

@@ -446,9 +446,11 @@
       type(subregionsurfacestate), dimension(:) :: subrsurf  ! subregion surface conditions (erosion specific set)
       end subroutine saeinp
 !---------------------------
-      subroutine sb1out (jj, nn, hr, ws, wdir, o_unit)
+      subroutine sb1out (jj, nn, hr, ws, wdir, o_unit, subrsurf)
+      use erosion_data_struct_defs
       real ws, wdir, hr
       integer  jj, nn, o_unit
+      type(subregionsurfacestate), intent(in) :: subrsurf  ! subregion surface conditions (erosion specific set)
       end subroutine sb1out   
 !----------------------------
       subroutine sb2out (jj, nn, hr, ws, wdir, o_unit)
@@ -488,7 +490,9 @@
       subroutine sbigrd()   
       end subroutine sbigrd   
 !----------------------------
-      subroutine sbinit()
+      subroutine sbinit( subrsurf )
+      use erosion_data_struct_defs
+      type(subregionsurfacestate), dimension(:), intent(inout) :: subrsurf  ! subregion surface conditions (erosion specific set)
       end subroutine sbinit
 !----------------------------
       subroutine sbpm10                                                 &

@@ -5,18 +5,20 @@
 !**********************************************************************
 !     subroutine sb1out
 !**********************************************************************
-      subroutine sb1out (jj, nn, hr, ws, wdir, o_unit)
+      subroutine sb1out (jj, nn, hr, ws, wdir, o_unit, subrsurf)
 !
 !     + + + PURPOSE + + +
 !     To print to file tst.out some key variables used in erosion
 !     use wind dir of 270 for most to see output along wind direction
 
       use weps_interface_defs
+      use erosion_data_struct_defs
 
 !     + + + ARGUEMENT DECLARATIONS + + +
       real ws, wdir, hr
       integer  jj, nn, o_unit
-!
+      type(subregionsurfacestate), intent(in) :: subrsurf  ! subregion surface conditions (erosion specific set)
+
 !     + + + ARGUMENT DEFINITIONS + + +
 !     anemht =
 !     awzzo =
@@ -29,17 +31,12 @@
 !     + + + GLOBAL COMMON BLOCKS + + +
 
       include 'p1werm.inc'
-      include 'h1db1.inc'
-      include 'b1glob.inc'
-      include 'c1gen.inc'
-      include 's1surf.inc'
       include 'w1clig.inc'
 !
 !     + + + LOCAL COMMON BLOCKS + + +
 !
       include 'p1const.inc'
       include 'm1sim.inc'
-      include 's1dbh.inc'
       include 'm1geo.inc'
       include 'erosion/s2agg.inc'
       include 'erosion/s2surf.inc'
@@ -51,7 +48,7 @@
 !
 !     + + + LOCAL VARIABLES + + +
 !
-      integer m, n, k, icsr, x, y
+      integer m, n, k, x, y
       integer initflag, ipd, npd
       save    initflag, ipd, npd
       integer yr, mo, da
@@ -66,9 +63,6 @@
 !     outflag = 0 - print heading output, 1 - no more heading
 
 !     + + + END SPECIFICATIONS + + +
-
-!     define index of current subregions
-      icsr = 1
 
 !     output headings?
       if (initflag .eq. 0) then
@@ -106,20 +100,22 @@
 
        write (o_unit,*) "Surface properties"
       write (o_unit,fmt="(a,f8.2,a)")                                   &
-     &  "Ridge spacing parallel to wind direction", sxprg(icsr), " (mm)"
+     &  "Ridge spacing parallel to wind direction",                     &
+     &   subrsurf%sxprg, " (mm)"
       write (o_unit,fmt="(a,f5.2,a)")                                   &
-     &  "Crop row spacing", acxrow(icsr), " (mm)"
+     &  "Crop row spacing", subrsurf%acxrow, " (mm)"
       write (o_unit,fmt="(a,i2,a)")                                     &
-     &  "Crop seeding location relative to ridge", ac0rg(icsr),         &
+     &  "Crop seeding location relative to ridge", subrsurf%ac0rg,      &
      &  " (0 - furrow, 1 - ridge)"
       write (o_unit,fmt="(a,f5.2,a)")                                   &
-     &  "Composite weighted average biomass height", abzht(icsr), " (m)"
+     &  "Composite weighted average biomass height",                    &
+     &   subrsurf%abzht, " (m)"
       write (o_unit,fmt="(a,f5.2,a)")                                   &
-     &  "Biomass leaf area index", abrlai(icsr), " (m^2/m^2)"
+     &  "Biomass leaf area index", subrsurf%abrlai, " (m^2/m^2)"
       write (o_unit,fmt="(a,f5.2,a)")                                   &
-     &  "Biomass stem area index", abrsai(icsr), " (m^2/m^2)"
+     &  "Biomass stem area index", subrsurf%abrsai, " (m^2/m^2)"
       write (o_unit,fmt="(a,f5.2,a)")                                   &
-     &  "Biomass flat cover", abffcv(icsr), " (m^2/m^2)"
+     &  "Biomass flat cover", subrsurf%abffcv, " (m^2/m^2)"
 
       write (o_unit,fmt="(a,f8.2,a)")                                   &
      &       "Average yearly total precipitation ", awzypt, " (mm)"
@@ -156,7 +152,8 @@
 
       write (o_unit,*) "Surface layer properties"
       write (o_unit,fmt="(a,f5.2,a)")                                   &
-     &       "Surface course fragments", asvroc(1,1), " (m^3/m^3)"
+     &       "Surface course fragments",                                &
+     &       subrsurf%bsl%asvroc, " (m^3/m^3)"
       write (o_unit,fmt="(a,a,f5.2,a)") "Initial soil ",                &
      & "mass fraction in surface layer < 0.10 mm ", sf10ic, " (kg/kg)"
       write (o_unit,fmt="(a,a,f5.2,a)") "Initial soil ",                &
@@ -164,15 +161,18 @@
 
       write (o_unit,*) "PM10 emission properties"
       write (o_unit,fmt="(a,f5.2,a)")                                   &
-     &       "Soil fraction PM10 in abraded suspension ", asf10an(1)
+     &       "Soil fraction PM10 in abraded suspension ",               &
+     &       subrsurf%asf10an
       write (o_unit,fmt="(a,f5.2,a)")                                   &
-     &       "Soil fraction PM10 in emitted suspension ", asf10en(1)
+     &       "Soil fraction PM10 in emitted suspension ",               &
+     &       subrsurf%asf10en
       write (o_unit,fmt="(a,f5.2,a)")                                   &
-     & "Soil fraction PM10 in saltation breakage suspension ",asf10bk(1)
+     &       "Soil fraction PM10 in saltation breakage suspension ",    &
+     &       subrsurf%asf10bk
       write (o_unit,fmt="(a,f5.2,a)")                                   &
-     &       "Coefficient of abrasion of aggregates ", acanag(1)
+     &       "Coefficient of abrasion of aggregates ", subrsurf%acanag
       write (o_unit,fmt="(a,f5.2,a)")                                   &
-     &       "Coefficient of abrasion of crust ", acancr(1)
+     &       "Coefficient of abrasion of crust ", subrsurf%acancr
 
 !Grid cell data
 
@@ -346,10 +346,11 @@
 
 !      write (o_unit,29)  (szrgh(k,n),k=1,(imax-1),m)
 !      write (o_unit,30)  (slrr(k,n),k=1,(imax-1),m)
-!      write (o_unit,38)   sxprg(icsr),  abzht(icsr), abrlai(icsr),      &
-!     &                    abrsai(icsr), abffcv(icsr)
-!      write (o_unit,41)   acxrow(icsr), ac0rg(icsr)
-!      write (o_unit,31)  ahrwcw(1,1), ahrwc0(12,1)
+!      write (o_unit,38)   subrsurf%sxprg,  subrsurf%abzht,              &
+!     &                    subrsurf%abrlai,                              &
+!     &                    subrsurf%abrsai, subrsurf%abffcv
+!      write (o_unit,41)   subrsurf%acxrow, subrsurf%ac0rg
+!      write (o_unit,31)  subrsurf%ahrwcw(1), subrsurf%ahrwc0(12)
 !      write (o_unit,32)  (wus(k,n),k=1,(imax-1),m)
 !      write (o_unit,33)  (wusp(k,n),k=1,(imax-1),m)
 !      write (o_unit,34)  (wust(k,n),k=1,(imax-1),m)
@@ -357,42 +358,42 @@
 !      write (o_unit,*)
 
 !     output formats
-   10 format (1x, 'sf10an =',f6.3,'  sf10en =',f6.3,'  sf10bk =',f6.3) 
+!   10 format (1x, 'sf10an =',f6.3,'  sf10en =',f6.3,'  sf10bk =',f6.3) 
 !   15 format (1x, ' (m)          (m/s)    ')
-   18 format (1x, 'i..n,j', 3i6, 17i7)
-   20 format (1x, 'anemht wzoflg  kbr jj ws',                           &
-     &  f6.0, 3i6, f6.2)
+!   18 format (1x, 'i..n,j', 3i6, 17i7)
+!   20 format (1x, 'anemht wzoflg  kbr jj ws',                           &
+!     &  f6.0, 3i6, f6.2)
 
-   21 format (1x, 'egt=', 20f6.2)
-   22 format (1x, 'egtss=', 20f6.2)
+!   21 format (1x, 'egt=', 20f6.2)
+!   22 format (1x, 'egtss=', 20f6.2)
 
-   13 format (1x, 'sf1= ', 20f7.4)
-   23 format (1x, 'sf10= ', 20f7.3)
-   24 format (1x, 'sf84= ', 20f7.3)
-   12 format (1x, 'svroc=', 20f7.3)   !edit ljh 1-22-05
-   35 format (1x, 'sf200=', 20f7.3)
-   36 format (1x, 'dmlos=', 20f7.3)
-   37 format (1x, 'smaglos=',20f7.3)
-   43 format (1x, 'smaglosmx=',20f7.3)
-   39 format (1x, 'sf84mn=',20f7.3)
-   40 format (1x, 'sf84ic =',f4.2,'  sf10ic =',f4.2,'   asvroc=',f4.2)
-   42 format (1x, 'canag =', f6.3,'   cancr = 'f6.3,'  awzypt=',f6.0)
-   41 format (1x, 'acxrow=', f6.2, '  ac0rg=', i3)
+!   13 format (1x, 'sf1= ', 20f7.4)
+!   23 format (1x, 'sf10= ', 20f7.3)
+!   24 format (1x, 'sf84= ', 20f7.3)
+!   12 format (1x, 'svroc=', 20f7.3)   !edit ljh 1-22-05
+!   35 format (1x, 'sf200=', 20f7.3)
+!   36 format (1x, 'dmlos=', 20f7.3)
+!   37 format (1x, 'smaglos=',20f7.3)
+!   43 format (1x, 'smaglosmx=',20f7.3)
+!   39 format (1x, 'sf84mn=',20f7.3)
+!   40 format (1x, 'sf84ic =',f4.2,'  sf10ic =',f4.2,'   asvroc=',f4.2)
+!   42 format (1x, 'canag =', f6.3,'   cancr = 'f6.3,'  awzypt=',f6.0)
+!   41 format (1x, 'acxrow=', f6.2, '  ac0rg=', i3)
 
-   25 format (1x, 'szcr= ', 20f7.2)
-   26 format (1x, 'sfcr= ', 20f7.3)
-   27 format (1x, 'smlos=', 20f7.3)
-   28 format (1x, 'sflos=', 20f7.3)
+!   25 format (1x, 'szcr= ', 20f7.2)
+!   26 format (1x, 'sfcr= ', 20f7.3)
+!   27 format (1x, 'smlos=', 20f7.3)
+!   28 format (1x, 'sflos=', 20f7.3)
 
-   29 format (1x, 'szrgh=', 20f7.2)
-   30 format (1x, 'slrr= ', 20f7.2)
-   38 format (1x, 'sxprg=', f6.0, '  abzht=', f6.2, '  abrlai=', f4.2,  &
-     &             '  abrsai=', f5.3, '  abffcv=',f4.3)
-   31 format (1x, 'ahrwcw=',f4.2,'  ahrwc0(icsr,12)=', f6.2)
-   32 format (1x, 'wus= ', 20f7.3)
-   33 format (1x, 'wusp=', 20f7.3)
-   34 format (1x, 'wust=', 20f7.3)
-   44 format (1x, 'wusto=', f5.3)
+!   29 format (1x, 'szrgh=', 20f7.2)
+!   30 format (1x, 'slrr= ', 20f7.2)
+!   38 format (1x, 'sxprg=', f6.0, '  abzht=', f6.2, '  abrlai=', f4.2,  &
+!     &             '  abrsai=', f5.3, '  abffcv=',f4.3)
+!   31 format (1x, 'ahrwcw=',f4.2,'  ahrwc0(12)=', f6.2)
+!   32 format (1x, 'wus= ', 20f7.3)
+!   33 format (1x, 'wusp=', 20f7.3)
+!   34 format (1x, 'wust=', 20f7.3)
+!   44 format (1x, 'wusto=', f5.3)
 
       return
       end
