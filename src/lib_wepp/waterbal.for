@@ -272,7 +272,7 @@
       wp_peakro = peakro
       wp_effdrn = effdrn
       wp_effint = effint
-      wp_effdrr	= effdrr
+      wp_effdrr = effdrr
       wp_qout = 0.0
       wp_qin = 0.0
       wp_qsout = 0.0
@@ -306,7 +306,7 @@
                ! reset theta to adjusted value
                theta(idx) = ( st(idx)/layth(idx) ) + thetaw(idx)
           else if( st(idx) .lt. ul(idx)                                 &
-     &     .and. (settle_seep .gt. 0.0) ) then
+     &         .and. (settle_seep .gt. 0.0) ) then
                ! capacity available and water available to be inserted
                dval = ul(idx) - st(idx)
                if( dval .ge. settle_seep ) then
@@ -409,7 +409,7 @@
           end if
           
 !         Adjust conductivity (ks) for frozen soil in top layers
-          Do i = 1, nsl
+          do i = 1, nsl
              slsic(i) = 0
              ! only implemented for landuse = 1, croplands. Rangeland not implemented.
              ssc(i) = effksat(1, bsfcla(i),  bsfsan(i), bsfcec(i), 0.0, &
@@ -419,10 +419,10 @@
              dg(i) = bszlyt(i) * mmtom
              bottom = bottom + dg(i)
              if (bhfice(i).ge.0.5) then
-		        frdp = bottom
-		        LNfrst = i
-		        slsic(i) = (theta(i) - thetaw(i)) * dg(i)
-			 endif
+                    frdp = bottom
+                    LNfrst = i
+                    slsic(i) = (theta(i) - thetaw(i)) * dg(i)
+             endif
           end do
           
           if (frdp.gt.0.0) then
@@ -476,48 +476,48 @@
 
           ! insert infiltration water into soil
           if (xfin.gt.0.0) then
-	      ! check available storage in surface layers
-	      surfcap = 0.0
-	      do idx = 1, nsl
-	        laycap(idx) = ul(idx) - st(idx)
-	        surfcap = surfcap + laycap(idx)
-	      end do
-	      ! Starting at top, infiltrate water into each layer.
-	      do idx = 1, layrsn
-	       ! check for layer being in surface layer and having capacity
-	       if( (idx .le. nsl) .and. (surfcap .gt. 0.0) ) then
-		   ! prorate infiltration water into surface layers
-		   temp = xfin * laycap(idx) / surfcap  * weightsurf   ! weight by available capacity
+            ! check available storage in surface layers
+            surfcap = 0.0
+            do idx = 1, nsl
+              laycap(idx) = ul(idx) - st(idx)
+              surfcap = surfcap + laycap(idx)
+            end do
+            ! Starting at top, infiltrate water into each layer.
+            do idx = 1, layrsn
+             ! check for layer being in surface layer and having capacity
+             if( (idx .le. nsl) .and. (surfcap .gt. 0.0) ) then
+               ! prorate infiltration water into surface layers
+               temp = xfin * laycap(idx) / surfcap  * weightsurf   ! weight by available capacity
                                                                ! skew toward surface
-		   temp = min( temp, xfin )                            ! can't put in more than ya' got
-		   surfcap = surfcap - laycap(idx)                     ! adjust so next layer gets enough
-		   st(idx) = st(idx) + temp                            ! adding the water to the layer
-		   xfin = xfin - temp                                  ! infiltrated amount remaining for next layer
-	       else
-		   ! fill layer to capacity
-		   st(idx) = st(idx) + xfin
-		   xfin = 0.0
-	       end if
-	       if( st(idx) .gt. ul(idx) ) then
-		   ! this is more water than this layer can hold
-		   xfin = xfin + st(idx) - ul(idx)
-		   st(idx) = ul(idx)
-	       end if
-	       if( xfin .le. 0.0 ) then
-		   ! use bottom of this layer as infiltration depth
-		   bhzwid = bszlyd(idx)
-		   ! no more water to be inserted, stop looping
-		   exit
-	       end if
-	      end do
-	      ! check for excess water at bottom
-	      if( xfin .gt. 0.0 ) then
-	        ! add excess to drainage
-	        inf_seep = xfin
-	        xfin = 0.0
-	        ! use bottom of profile as infiltration depth
-	        bhzwid = bszlyd(layrsn)
-	      end if
+               temp = min( temp, xfin )                            ! can't put in more than ya' got
+               surfcap = surfcap - laycap(idx)                     ! adjust so next layer gets enough
+               st(idx) = st(idx) + temp                            ! adding the water to the layer
+               xfin = xfin - temp                                  ! infiltrated amount remaining for next layer
+             else
+               ! fill layer to capacity
+               st(idx) = st(idx) + xfin
+               xfin = 0.0
+             end if
+             if( st(idx) .gt. ul(idx) ) then
+               ! this is more water than this layer can hold
+               xfin = xfin + st(idx) - ul(idx)
+               st(idx) = ul(idx)
+             end if
+             if( xfin .le. 0.0 ) then
+               ! use bottom of this layer as infiltration depth
+               bhzwid = bszlyd(idx)
+               ! no more water to be inserted, stop looping
+               exit
+             end if
+            end do
+            ! check for excess water at bottom
+            if( xfin .gt. 0.0 ) then
+              ! add excess to drainage
+              inf_seep = xfin
+              xfin = 0.0
+              ! use bottom of profile as infiltration depth
+              bhzwid = bszlyd(layrsn)
+            end if
           end if
        else
          ! set return values
@@ -565,7 +565,7 @@
       !  effdrr - maybe (effective duration)
       !
         if ((wepp_hydro .gt. 1).and.(init_loop.eqv..false.).and.        &
-     &	      (calib_loop.eqv..false.)) then
+     &      (calib_loop .eqv. .false.)) then
             write(luowepphdrive,                                        &
      &      fmt="(1X,i4,4X,i4,1X,i3,5(3X,f6.1),3X,f8.2)")               &
      &      cd,cm,cy,precipmm, bhzrun, peakro, effdrn,                  &
@@ -621,12 +621,12 @@
               end if
           end do
           ! check for excess water at bottom
-	  if( xfin .gt. 0.0 ) then
-	      ! add excess to drainage
-	      irr_seep = xfin
-	      xfin = 0.0
-	      ! use bottom of profile as infiltration depth
-	      bhzwid = bszlyd(layrsn)
+        if( xfin .gt. 0.0 ) then
+            ! add excess to drainage
+            irr_seep = xfin
+            xfin = 0.0
+            ! use bottom of profile as infiltration depth
+            bhzwid = bszlyd(layrsn)
           end if
       end if
 
@@ -816,7 +816,7 @@
       wp_peakro = peakro/(mtomm * hrtosec)
       wp_effdrn = effdrn*hrtomin
       wp_effint = effint
-      wp_effdrr	= effdrr*hrtomin
+      wp_effdrr = effdrr*hrtomin
       
 !     accumulate total amounts for WEPP
    

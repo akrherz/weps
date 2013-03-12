@@ -127,7 +127,7 @@
       if( (hui < 1.0) .and. (mature_warn_flg .gt. 0)                    &
      &    .and. ( (bc0idc.eq.1) .or. (bc0idc.eq.2)                      &
      &       .or. (bc0idc.eq.4) .or. (bc0idc.eq.5) ) ) then
-         write(UNIT=6,FMT="(1x,3(a),i2,'/',i2,'/',i2,a,f5.1,a,a)")      &
+         write(UNIT=6,FMT="(1x,3(a),i0,'/',i0,'/',i0,a,f5.1,a,a)")      &
      &       'Warning: ',                                               &
      &       bc0nam(1:len_trim(bc0nam)),                                &
      &       ' harvested ',                                             &

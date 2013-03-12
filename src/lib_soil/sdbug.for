@@ -51,7 +51,7 @@
       type(biototal), intent(in) :: biotot
 
 !     + + + LOCAL VARIABLES + + +
-      integer cd, cm, cy, i, l
+      integer cd, cm, cy, l
 
 !     + + + LOCAL DEFINITIONS + + +
 

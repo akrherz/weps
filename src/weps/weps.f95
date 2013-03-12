@@ -434,7 +434,7 @@
           n_rot_cycles(isr) = run_rot_cycles * maxper / mandatbs(isr)%mperod
           nperiods(isr) = get_nperiods(mandatbs(isr)%mperod, mandatbs(isr)%mandate)   !Get # of periods for reports ( 0 is for global simulation area)
           if( report_debug >= 1 ) then
-              write(*,*) '# rot years', maxper, "nperiods", nperiods, '# cycles', n_rot_cycles(isr)
+              write(*,*) '# rot years', maxper, "nperiods", nperiods(isr), '# cycles', n_rot_cycles(isr)
           end if
           call init_report_vars(nperiods(0), mandatbs(0)%mperod, n_rot_cycles(0), mandatbs(0)%mandate, &
                                 rep_report(isr), rep_update(isr))
@@ -758,7 +758,7 @@
                call update_yrly_update_vars(rep_update(isr)%yrly_update, rep_update(isr)%yrot_update, rep_update(isr)%yr_update)
                if ( (cm == 12) .and. (cd == 31) ) then          ! end of current year
                   call update_yrly_report_vars(yrsim, maxper, rep_update(isr)%yrly_update, rep_update(isr)%yrot_update, &
-                                               rep_update(isr)%yr_update, rep_report(isr)%yrly_report, rep_report(isr)%yrly_report)
+                                               rep_update(isr)%yr_update, rep_report(isr)%yrly_report, rep_report(isr)%yr_report)
                end if
 
                ! Compute monthly values
@@ -786,7 +786,7 @@
                 .and. ((mod((cy-1),mandatbs(0)%mperod)+1) == period_dates(pd(0))%ey) ) ) then
                ! end of period
                do isr = 0, nsubr   ! 0 is whole region, and then all subregion     
-                  call update_period_report_vars( pd(0), nperiods(0), cd, cm, yrsim, mandatbs(0)%mperod, &
+                  call update_period_report_vars( pd(0), nperiods(0), yrsim, mandatbs(0)%mperod, &
                                                rep_update(isr)%period_update, rep_report(isr)%period_report)
                end do
                ! print *, "eop",pd,"  ",cy,cm,cd,"  ", period_dates(pd(0))

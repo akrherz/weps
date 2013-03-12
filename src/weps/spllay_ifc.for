@@ -41,9 +41,10 @@
 !      character    line*256
       integer       isr
       real          max_depth, add_depth
-      real          totthk, curdep, tgtthk
-      integer       otnlay(mnsz)
-      real          newthk(mnsz)
+      real          totthk, tgtthk
+      ! real          curdep
+      ! integer       otnlay(mnsz)
+      ! real          newthk(mnsz)
       integer       oldcur, newcur, tmpcur
       integer       dolcur
       integer       ldx

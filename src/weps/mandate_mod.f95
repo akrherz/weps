@@ -211,7 +211,7 @@
 
         if( npass .eq. 1 ) then
           ! create 0 index mandate array
-          write(*,*) 'create 0 mandate count:', cnt_dates
+          !write(*,*) 'create 0 mandate count:', cnt_dates
           call create_mandate( cnt_dates, mandatbs(lbound(mandatbs,1))%mandate )
 
           ldx(osr) = lbound(mandatbs(osr)%mandate,1)

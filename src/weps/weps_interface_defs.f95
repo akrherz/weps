@@ -2049,12 +2049,10 @@ SUBROUTINE update_period_update_vars(sbr, period_update, restot, croptot)
     type(biototal), intent(in) :: croptot  ! contains:
     end subroutine  update_period_update_vars
 !-------------------------
-    SUBROUTINE update_period_report_vars(pd,npd,cur_day,cur_month,cur_yr,nrot_years, period_update, period_report)
+SUBROUTINE update_period_report_vars(pd, npd, cur_yr, nrot_years, period_update, period_report)
     USE pd_var_type_def
     USE pd_var_tables
     INTEGER, INTENT (IN) :: pd, npd
-    INTEGER, INTENT (IN) :: cur_day
-    INTEGER, INTENT (IN) :: cur_month
     INTEGER, INTENT (IN) :: cur_yr
     INTEGER, INTENT (IN) :: nrot_years
     TYPE (pd_var_type), DIMENSION(Min_period_vars:), intent(inout) :: period_update

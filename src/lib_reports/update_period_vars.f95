@@ -62,14 +62,13 @@ SUBROUTINE update_period_update_vars(sbr, period_update, restot, croptot, biotot
 
 !    REAL :: biodrag		! biodrag() function in util/misc/biodrag.for
 
-    REAL :: tmp
     REAL :: ef84                ! erodible agg. size fraction below 0.84mm
 
-    INTEGER :: i,j,idx          ! local loop variables
+    INTEGER :: i,j              ! local loop variables
     INTEGER :: ngdpt            ! number of simulation grid datapoints
     REAL    :: gdpt_area        ! area of a grid cell (point) in m^2
 
-    INTEGER :: cnt              ! number of simulation grid datapoints
+    ! INTEGER :: cnt              ! number of simulation grid datapoints
     REAL    :: sum_salt_loss
     REAL    :: sum_salt_dep
 
@@ -157,29 +156,29 @@ SUBROUTINE update_period_update_vars(sbr, period_update, restot, croptot, biotot
     period_update(Surface_Cr_CA)%cnt = period_update(Surface_Cr_CA)%cnt + 1
 
 ! Crop vars
-    period_update(Crop_canopy_cov)%val = acfcancov(sbr)
+    period_update(Crop_canopy_cov)%val = croptot%ftcancov
     period_update(Crop_canopy_cov)%cnt = period_update(Crop_canopy_cov)%cnt + 1
 
-    period_update(Crop_stand_sil)%val = acrcd(sbr)
+    period_update(Crop_stand_sil)%val = croptot%rcdtot
     period_update(Crop_stand_sil)%cnt = period_update(Crop_stand_sil)%cnt + 1
 
-   !period_update(Crop_flat_mass)%val = acmf(sbr)
+   !period_update(Crop_flat_mass)%val = croptot%mftot
    !period_update(Crop_flat_mass)%cnt = period_update(Crop_flat_mass)%cnt + 1
 
    !Note currently we report this as "Above Ground Mass" not "Standing Mass"
    !Note that we are also subtracting the "store" portion
    !which contains the reproductive (seed and fruit) components
     ! Remove live standing and flat crop reproductive mass from reported value
-    period_update(Crop_stand_mass)%val = acmst(sbr) + acmf(sbr) - acmstandstore(sbr) - acmflatstore(sbr)
+    period_update(Crop_stand_mass)%val = croptot%msttot + croptot%mftot - acmstandstore(sbr) - acmflatstore(sbr)
     period_update(Crop_stand_mass)%cnt = period_update(Crop_stand_mass)%cnt + 1
 
-    period_update(Crop_root_mass)%val = acmrt(sbr) 
+    period_update(Crop_root_mass)%val = croptot%mrttot
     period_update(Crop_root_mass)%cnt = period_update(Crop_root_mass)%cnt + 1
 
-    period_update(Crop_stand_height)%val = aczht(sbr) 
+    period_update(Crop_stand_height)%val = croptot%zht_ave
     period_update(Crop_stand_height)%cnt = period_update(Crop_stand_height)%cnt + 1
 
-    period_update(Crop_number_stems)%val = acdstm(sbr) 
+    period_update(Crop_number_stems)%val = croptot%dstmtot
     period_update(Crop_number_stems)%cnt = period_update(Crop_number_stems)%cnt + 1
 
   end if
@@ -225,7 +224,7 @@ SUBROUTINE update_period_update_vars(sbr, period_update, restot, croptot, biotot
     period_update(All_stand_mass)%val = biotot%msttot - acmstandstore(sbr)
     period_update(All_stand_mass)%cnt = period_update(All_stand_mass)%cnt + 1
 
-    period_update(All_buried_mass)%val = acmrt(sbr) + restot%mrttot + restot%mbgtot
+    period_update(All_buried_mass)%val = croptot%mrttot + restot%mrttot + restot%mbgtot
     period_update(All_buried_mass)%cnt = period_update(All_buried_mass)%cnt + 1
 
   end if
@@ -395,7 +394,7 @@ SUBROUTINE update_period_update_vars(sbr, period_update, restot, croptot, biotot
 END SUBROUTINE update_period_update_vars
 
 
-SUBROUTINE update_period_report_vars(pd,npd,cur_day,cur_month,cur_yr,nrot_years, period_update, period_report)
+SUBROUTINE update_period_report_vars(pd, npd, cur_yr, nrot_years, period_update, period_report)
 
     USE pd_dates_vars
     USE pd_var_type_def
@@ -404,8 +403,6 @@ SUBROUTINE update_period_report_vars(pd,npd,cur_day,cur_month,cur_yr,nrot_years,
     IMPLICIT NONE
 
     INTEGER, INTENT (IN) :: pd, npd
-    INTEGER, INTENT (IN) :: cur_day
-    INTEGER, INTENT (IN) :: cur_month
     INTEGER, INTENT (IN) :: cur_yr
     INTEGER, INTENT (IN) :: nrot_years
     TYPE (pd_var_type), DIMENSION(Min_period_vars:), intent(inout) :: period_update

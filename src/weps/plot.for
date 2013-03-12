@@ -148,11 +148,11 @@
      &                    aslagm(1,sr), aseags(1,sr), asfcr(sr),        &
      &                    asmlos(sr), asflos(sr), asdblk(1,sr),         &
      &                    biotot%ffcvtot, biotot%fscvtot,               &
-     &                    acrlai(sr), acrsai(sr),                       &
-     &                    acmst(sr), acfcancov(sr)
+     &                    croptot%rlaitot, croptot%rsaitot,             &
+     &                    croptot%msttot, croptot%ftcancov
 
         write (luoplt, 2081, ADVANCE="NO")                              &
-     &       aczht(sr), acxstmrep(sr), acrcd(sr), acftcv(sr)
+     &   croptot%zht_ave, acxstmrep(sr), croptot%rcdtot, croptot%ftcvtot
 
         write (luoplt, 2082, ADVANCE="NO")                              &
      &       restot%zht_ave, restot%rsaitot, restot%rlaitot,            &
