@@ -1136,7 +1136,7 @@
     integer, intent (in) :: nrot_yrs ! number of year in a rotation cycle
     integer, intent (in) :: n1cycles ! one more than the number of rotation cycles completed
     integer, intent (inout) :: ci_year ! indicates how many years of data have been printed into ci.out
-    TYPE (pd_var_type), DIMENSION(:,:), intent(in) :: yrly_report
+    TYPE (pd_var_type), DIMENSION(:,0:), intent(in) :: yrly_report
     TYPE (pd_var_type), DIMENSION(:,:), intent(in) :: yr_report
     end subroutine confidence_interval
 !------------------------------
@@ -2077,7 +2077,7 @@ SUBROUTINE update_period_update_vars(sbr, period_update, restot, croptot)
     TYPE (pd_var_type), DIMENSION(Min_yrly_vars:), intent(inout) :: yrly_update
     TYPE (pd_var_type), DIMENSION(Min_yrly_vars:), intent(inout) :: yrot_update
     TYPE (pd_var_type), DIMENSION(Min_yrly_vars:), intent(inout) :: yr_update
-    TYPE (pd_var_type), DIMENSION(Min_yrly_vars:,:), intent(inout) :: yrly_report
+    TYPE (pd_var_type), DIMENSION(Min_yrly_vars:,0:), intent(inout) :: yrly_report
     TYPE (pd_var_type), DIMENSION(Min_yrly_vars:,:), intent(inout) :: yr_report
     end SUBROUTINE update_yrly_report_vars
 !-------------------------            

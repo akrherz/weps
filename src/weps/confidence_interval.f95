@@ -21,7 +21,7 @@ subroutine confidence_interval(ci, nrot_yrs, n1cycles, ci_year, yrly_report, yr_
     integer, intent (in) :: nrot_yrs ! number of year in a rotation cycle
     integer, intent (in) :: n1cycles ! one more than the number of rotation cycles completed
     integer, intent (inout) :: ci_year ! indicates how many years of data have been printed into ci.out
-    TYPE (pd_var_type), DIMENSION(:,:), intent(in) :: yrly_report
+    TYPE (pd_var_type), DIMENSION(:,0:), intent(in) :: yrly_report
     TYPE (pd_var_type), DIMENSION(:,:), intent(in) :: yr_report
 
     integer :: ncycles      ! the number of rotation cycles completed

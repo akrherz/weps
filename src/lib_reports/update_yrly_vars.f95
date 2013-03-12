@@ -421,7 +421,7 @@ SUBROUTINE update_yrly_report_vars(cur_year, nrot_years, yrly_update, yrot_updat
     TYPE (pd_var_type), DIMENSION(Min_yrly_vars:), intent(inout) :: yrly_update
     TYPE (pd_var_type), DIMENSION(Min_yrly_vars:), intent(inout) :: yrot_update
     TYPE (pd_var_type), DIMENSION(Min_yrly_vars:), intent(inout) :: yr_update
-    TYPE (pd_var_type), DIMENSION(Min_yrly_vars:,:), intent(inout) :: yrly_report
+    TYPE (pd_var_type), DIMENSION(Min_yrly_vars:,0:), intent(inout) :: yrly_report
     TYPE (pd_var_type), DIMENSION(Min_yrly_vars:,:), intent(inout) :: yr_report
 
     INTEGER :: i        ! local loop variables

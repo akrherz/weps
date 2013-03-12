@@ -136,29 +136,30 @@
          end do
       endif
       if ((am0dfl .eq. 2).or.(am0dfl.eq.3)) then
+
+        ! create dbelow.out unit number array for subregions
+        allocate( luod_below(nsubr), stat=alloc_stat )
+        if( alloc_stat .gt. 0 ) then
+           write(*,*) 'ERROR: unable to allocate luod_below array'
+        end if
+         
         ! open files to match number of biomass pools
         write( dec_format, '(i0)' ) mnbpls
         idx = len_trim(dec_format)
-        write( dec_format, '(a8, i0, a5)' ) '(a3, i0.', idx, ', a4)'
+        write( dec_format, '(a8, i0, a5)' ) '(a3, i0.', idx, ', a5)'
         ! create age pool output file names, set unit numbers and open files
         do idx = 1, nsubr
+           ! open dbelow.out in each subregion
+           call fopenk (luod_below(idx), trim(rootp) // trim(subr_text(idx)) // 'dbelow.out', 'unknown')
 
            do jdx = 1,mnbpls
              ! create the name
-             write( dec_text, dec_format) 'dec', idx, '.btmp'
+             write( dec_text, dec_format) 'dec', jdx, '.btmp'
              ! display created file
              !write(*,*) 'File name created: ', dec_text
              ! assign logical unit number of opening file to array
-             call fopenk (residue(jdx,idx)%luo%dec, rootp(1:len_trim(rootp)) // subr_text(idx) // dec_text, 'unknown')
+             call fopenk (residue(jdx,idx)%luo%dec, trim(rootp) // trim(subr_text(idx)) // trim(dec_text), 'unknown')
            end do
-
-            allocate( luod_below(nsubr), stat=alloc_stat )
-            if( alloc_stat .gt. 0 ) then
-               Write(*,*) 'ERROR: unable to allocate luod_below array'
-            end if
-
-         
-            call fopenk (luod_below(idx), rootp(1:len_trim(rootp)) // subr_text(idx) // 'dbelow.out', 'unknown')
          end do
       endif
 
