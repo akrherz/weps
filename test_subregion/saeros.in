@@ -1,0 +1,651 @@
+# day mon yr  1 10    15
+#*****************************************************************
+#      file:  erod.in
+#*****************************************************************
+#
+# +++ PURPOSE +++
+#
+#     Input file which is read by stand alone erosion model
+#
+# +++ DEFINITIONS +++
+#
+#     Lines beginning with a "#" character are comments
+#
+#     * = inputs NOT presently used by erosion
+#
+#     All other input values must be correctly specified.
+#
+#     Comments prior to each line of data have the following format
+#
+#     Variable_Name, Var_type, (inc file) Text Definition
+#
+#     where Var_type is: I = integer, L = logical, R = real
+#
+# +++ DEBUG FLAG +++
+#
+#     debugflg - debug flag for providing different levels of debug output
+#                value of 0 will print no debug output
+#                value of 1 will print out and number all input  lines
+#                value of 2 will print out and number all data input lines
+#                value of 3 will do both 1 and 2 input line debug output
+ 0
+#
+# +++ INITIALIZATIONS +++
+#
+#     am0eif, L, (m1flag.inc) EROSION initialization flag
+ .TRUE.
+#    am0efl, L, (m1flag.inc) EROSION "print" flag
+ 1
+#
+# +++ SIMULATION REGION +++
+#
+#     amxsim(x,y), R, (m1geo.inc) Simulation Region coordinates (m)
+#              Input x,y coordinates in this form: x1,y1  x2,y2
+   0.0000000       0.0000000       365.76001       365.76001    
+#
+#     amxsim(x,y), R, (m1geo.inc) Simulation Region orientation angle
+#     clockwise with 0=north
+   0.0000000    
+#
+#  +++ ACCOUNTING REGIONS +++
+#
+# nacctr, I, (m1geo.inc) Number of accounting regions
+           4
+#
+#     amxar(x,y,a), R, (m1geo.inc) Accounting Region coordinates (m)
+#                     Input x,y coordinates in this form: x1,y1  x2,y2
+#                     for each accounting region specified (nacctr)
+   0.0000000       0.0000000       183.00000       183.00000    
+   0.0000000       183.00000       183.00000       366.00000    
+   183.00000       0.0000000       366.00000       183.00000    
+   183.00000       183.00000       366.00000       366.00000    
+#
+# +++ BARRIERS +++
+#
+#     nbr, I, (m1geo.inc) Number of barriers (0-5) 
+           0
+#
+#     NOTE: Remaining BARRIER inputs are repeated for each barrier specified
+#     If no barriers specified (nbr=0), then no BARRIER inputs will be here
+#
+#     amxbr(x,y,b), R, (m1geo.inc) Accounting Region coordinates (m)
+#             Input x,y coordinates in this form: x1,y1 x2,y2
+#             for each barrier specified (nbr)
+#    0.0, 0.0  0.0  100.0
+#
+#       amzbr(b), R, (m1geo.inc) Barrier height (m)
+#       ampbr(b), R, (m1geo.inc) Barrier porosity (m^2/m^2)
+#       amxbrw(b), R, (m1geo.inc) Barrier width (m)
+#  1.2 0.50 2.0
+#
+#
+# +++ SUBREGIONS +++
+#
+#     nsubr, I, (m1subr.inc) Number of subregions (1-5)
+           4
+#
+#     NOTE: Remaining SUBREGION inputs (BIOMASS, SOIL, and HYDROLOGY,
+#     ie. variables defined by subregion) are repeated for nsubr 
+#     subregions specified
+#
+#     subregion polygon, count, xy pairs (subregions_mod)
+#         polygons can be:
+#         - open (the last point connects to the first point)
+#         - closed (last point is same as first point)
+#         - complex (multiple closed polygons entered as one)
+           4
+   0.0000000       183.00000    
+   183.00000       183.00000    
+   183.00000       366.00000    
+   0.0000000       366.00000    
+#
+#     +++ BIOMASS +++
+#
+#      subrsurf(s)adzht_ave, R, Average residue height (m)
+   0.0000000    
+#
+#       aczht(s), R, (c1glob.inc) Crop height (m)
+  8.25914070E-02
+#
+#       acrsai(s), R, (c1glob.inc) Crop stem area index (m^2/m^2)
+#       acrlai(s), R, (c1glob.inc) Crop leaf area index (m^2/m^2)
+   0.0000000       0.0000000    
+#
+#       subrsurf(s)%adrsaitot, R, Residue stem area index (m^2/m^2)
+#       subrsurf(s)%adrlaitot, R, Residue leaf area index (m^2/m^2)
+   0.0000000       0.0000000    
+#
+#       acxrow(s) Crop row spacing (m)
+#       ac0rg(s)  Crop seed placement (0 - furrow, 1 - ridge)
+  0.76200157               0
+#
+# These are not implemented within EROSION
+#       abrsaz(h,s), R, (b1geom.inc) Biomass stem area index by ht (1/m)
+#             (should be 5 values here when used)
+#       abrlaz(h,s), R, (b1geom.inc) Biomass leaf area index by ht (1/m)
+#             (should be 5 values here when used)
+#
+# Only abffcv(s) is currently implemented within EROSION
+#       abffcv(s), R, (b1geom.inc) Flat biomass cover (m^2/m^2)
+#       abfscv(s), R, (b1geom.inc) Standing biomass cover (m^2/m^2)
+#       abftcv(s), R, (b1geom.inc) Total biomass cover (m^2/m^2)
+#             (should be 3 values here when abffcv(s) and abfscv(s) are used)
+  0.40146920    
+#
+#     +++ SOIL +++
+#
+#     nslay(s), I, (s1layr.inc) Number of soil layers (3-10)
+          28
+#
+#     NOTE: Remaining SOIL inputs are repeated for each layer specified
+#
+#     aszlyt(l,s), R, (s1layr.inc) Soil layer thickness (mm)
+   2.6753600       3.3442121       4.1802835       5.2253528       6.5316978       8.1645813       10.205776       12.757265       15.947042       19.835867       24.794741       30.993137       38.745495       48.578003       60.941605       54.021194       40.313171       63.430717       79.288399       99.110489       123.88811       154.86015       193.57518       241.96896       302.46124       378.07654       472.59567       590.74463    
+#
+#     asdblk(l,s), R, (s1phys.inc) Soil layer bulk density (Mg/m^3
+  0.93444586      0.93444586      0.93444586      0.93444586      0.93444586      0.93444586      0.93444586      0.93444586      0.93441892      0.93903065      0.93903065      0.93903613      0.93894184      0.93611872      0.93274844      0.93280625       1.2500000       1.3500000       1.3500000       1.3500001       1.3500000       1.3500000       1.3500000       1.3500001       1.3500000       1.3500000       1.3500000       1.3500000    
+#
+#     asfsan(l,s),R,(s1dbh.inc) Soil layer sand content (Mg/Mg)
+  0.30400008      0.30400008      0.30400008      0.30400008      0.30400008      0.30400008      0.30400008      0.30400008      0.30400008      0.30400008      0.30400008      0.30400008      0.30400008      0.30400008      0.30400011      0.30400002      0.30399999      0.30399999      0.30399999      0.30399999      0.30399999      0.30399999      0.30399999      0.30399999      0.30399999      0.30399999      0.30399999      0.30399999    
+#
+#     asfvfs(l,s), R, (s1dbh.inc) Soil layer very fine sand (Mg/Mg)
+  9.79999900E-02  9.79999900E-02  9.79999900E-02  9.79999900E-02  9.79999900E-02  9.79999900E-02  9.79999900E-02  9.79999900E-02  9.79999900E-02  9.79999974E-02  9.79999974E-02  9.79999974E-02  9.79999825E-02  9.79999900E-02  9.79999900E-02  9.79999751E-02  9.79999974E-02  9.79999974E-02  9.79999974E-02  9.79999974E-02  9.79999974E-02  9.79999974E-02  9.79999974E-02  9.79999974E-02  9.79999974E-02  9.79999974E-02  9.79999974E-02  9.79999974E-02
+#
+#     asfsil(l,s),R,(s1dbh.inc) Soil layer silt content (Mg/Mg)
+  0.55599999      0.55599999      0.55599999      0.55599999      0.55599999      0.55599999      0.55599999      0.55599999      0.55599999      0.55600005      0.55600005      0.55600005      0.55599999      0.55599999      0.55600005      0.55599988      0.55599999      0.55599999      0.55599999      0.55599999      0.55599999      0.55599999      0.55599999      0.55599999      0.55599999      0.55599999      0.55599999      0.55599999    
+#
+#     asfcla(l,s),R,(s1dbh.inc) Soil layer clay content (Mg/Mg)
+  0.14000002      0.14000002      0.14000002      0.14000002      0.14000002      0.14000002      0.14000002      0.14000002      0.14000002      0.14000003      0.14000003      0.14000003      0.14000000      0.14000002      0.14000002      0.13999999      0.14000000      0.14000000      0.14000000      0.14000000      0.14000000      0.14000000      0.14000000      0.14000000      0.14000000      0.14000000      0.14000000      0.14000000    
+#
+#     asvroc(l,s), R, (s1dbh.inc) Soil layer rock volume (m^3/m^3)
+   0.0000000       0.0000000       0.0000000       0.0000000       0.0000000       0.0000000       0.0000000       0.0000000       0.0000000       0.0000000       0.0000000       0.0000000       0.0000000       0.0000000       0.0000000       0.0000000       0.0000000       0.0000000       0.0000000       0.0000000       0.0000000       0.0000000       0.0000000       0.0000000       0.0000000       0.0000000       0.0000000       0.0000000    
+#
+#     asdagd(l,s),R,(s1agg.inc) Soil layer agg density (Mg/m^3)
+   1.8000000       1.8000000       1.8000000       1.8000000       1.8000000       1.8000000       1.8000000       1.8000000       1.8000000       1.8000000       1.8000000       1.8000000       1.8000000       1.8000000       1.8000000       1.8000000       1.8000000       1.8000000       1.8000000       1.8000000       1.8000000       1.8000000       1.8000000       1.8000000       1.8000000       1.8000000       1.8000000       1.8000000    
+#
+#     aseags(l,s), R, (s1agg.inc) Soil layer agg stability ln(J/kg)
+   2.2174528       2.1875026       2.1715620       2.1712267       2.1716983       2.2332385       2.2330174       2.2326579       2.2327564       2.2567718       2.2528086       2.2565482       2.2747707       2.2913618       2.2639799       2.2215984       2.5620000       2.5620000       2.5620000       2.5620000       2.5620000       2.5620000       2.5620000       2.5620000       2.5620000       2.5620000       2.5620000       2.5620000    
+#
+#     aslagm(l,s), R, (s1agg.inc) Soil layer GMD (mm)
+   1.7764577       1.7640676       1.6799817       1.6825663       1.6896293       2.0502768       1.8707596       1.8528305       1.9807799       2.0879500       2.1023004       2.0621407       2.1253099       2.3784752       2.2504866       2.1046674       7.4658303       7.2482104       7.2482104       7.7040930       7.7040925       7.7040925       7.7040925       7.7040925       5.8800120       4.4269342       4.5045509       7.2482095    
+#
+#     aslagn(l,s), R, (s1agg.inc) Soil layer minimum agg size (mm)
+  9.99999978E-03  9.99999978E-03  9.99999978E-03  9.99999978E-03  9.99999978E-03  9.99999978E-03  9.99999978E-03  9.99999978E-03  9.99999978E-03  9.99999978E-03  9.99999978E-03  9.99999978E-03  9.99999978E-03  9.99999978E-03  9.99999978E-03  9.99999978E-03  9.99999978E-03  9.99999978E-03  9.99999978E-03  9.99999978E-03  9.99999978E-03  9.99999978E-03  9.99999978E-03  9.99999978E-03  9.99999978E-03  9.99999978E-03  9.99999978E-03  9.99999978E-03
+#
+#     aslagx(l,s), R, (s1agg.inc) Soil layer maximum agg size (mm)
+   34.732849       34.710110       34.565308       34.569500       34.581043       35.313538       34.916744       34.880367       35.153278       35.403629       35.438519       35.341675       35.495068       36.163551       35.815598       35.444298       41.824829       41.561951       41.561951       42.110573       42.110577       42.110577       42.110577       42.110577       39.863369       37.960381       38.064701       41.561954    
+#
+#     as0ags(l,s), R, (s1agg.inc) Soil layer GSD (mm/mm)
+   10.880111       10.874092       10.827079       10.828690       10.833035       10.959135       10.918640       10.912280       10.948274       10.962640       10.963554       10.960413       10.964527       10.939757       10.960047       10.963677       16.374287       16.380497       16.380497       16.361597       16.361597       16.361597       16.361597       16.361597       16.272873       15.754827       15.797011       16.380497    
+#
+#     asfcr(s), R, (s1surf.inc) Surface crust fraction (m^2/m^2)
+#     aszcr(s), R, (s1surf.inc) Surface crust thickness (mm)
+#     asflos(s), R, (s1surf.inc) Fraction of loose material on surface (m^2/m^2)
+#     asmlos(s), R, (s1surf.inc) Mass of loose material on crust (kg/m^2)
+#     asdcr(s), R, (s1surf.inc) Soil crust density (Mg/m^3)
+#     asecr(s), R, (s1surf.inc) Soil crust stability ln(J/kg)
+   0.0000000       7.5999994       0.0000000       0.0000000       1.3037391       2.2174528    
+#
+#     aslrr(s), R, (s1sgeo.inc) Allmaras random roughness (mm)
+   6.9334378    
+#
+#     aszrgh(s), R, (s1sgeo.inc) Ridge height (mm)
+#     asxrgs(s), R, (s1sgeo.inc) Ridge spacing (mm)
+#     asxrgw(s), R, (s1sgeo.inc) Ridge width (mm)
+#     asargo(s), R, (s1sgeo.inc) Ridge orientation (deg)
+   50.800102       762.00153       0.0000000       0.0000000    
+#
+#     asxdks(s), R, (s1sgeo.inc) Dike spacing (mm)
+   0.0000000    
+#
+#     +++ HYDROLOGY +++
+#
+#     ahzsnd(s), R, (s1sgeo.inc) Snow depth (mm)
+   0.0000000    
+#
+#     ahrwcw(l,s), R, (h1db1.inc) Soil layer wilting point water content (Mg/Mg)
+  0.12844849      0.12844849      0.12844849      0.12844849      0.12844849      0.12844849      0.12844849      0.12844849      0.12845294      0.12769192      0.12769192      0.12769100      0.12770648      0.12817150      0.12873057      0.12872092      8.98047835E-02  8.15992877E-02  8.15992877E-02  8.15992802E-02  8.15992877E-02  8.15992877E-02  8.15992877E-02  8.15992802E-02  8.15992877E-02  8.15992877E-02  8.15992877E-02  8.15992877E-02
+#
+#     ahrwca(l,s), R, (h1db1.inc) Soil layer water content (Mg/Mg)
+  0.16553104      0.16553104      0.16553104      0.16553104      0.16553104      0.16553104      0.16553104      0.16553104      0.16553755      0.16443107      0.16443107      0.16442978      0.16445227      0.16512823      0.16594139      0.16592737      0.11084047      9.98194888E-02  9.98194888E-02  9.98194814E-02  9.98194888E-02  9.98194888E-02  9.98194888E-02  9.98194814E-02  9.98194888E-02  9.98194888E-02  9.98194888E-02  9.98194888E-02
+#
+#     ahrwc0(h,s), R, (h1db1.inc) Surface layer water content (Mg/Mg)
+#                  NOTE: the near surface water content is specified on an
+#                        hourly basis.  We read in the hrly water content
+#                        on two lines, with 12 values in each line.
+  0.0967882  0.0967882  0.0967882  0.0967882  0.0967882  0.0967882  0.0967882  0.0967882  0.0967882  0.0967882  0.0967882  0.0967882
+  0.0967882  0.0967882  0.0967882  0.0967882  0.0967882  0.0967882  0.0967882  0.0967882  0.0967882  0.0967882  0.0967882  0.0967882
+#
+#     subregion polygon, count, xy pairs (subregions_mod)
+#         polygons can be:
+#         - open (the last point connects to the first point)
+#         - closed (last point is same as first point)
+#         - complex (multiple closed polygons entered as one)
+           4
+   183.00000       183.00000    
+   366.00000       183.00000    
+   366.00000       366.00000    
+   183.00000       366.00000    
+#
+#     +++ BIOMASS +++
+#
+#      subrsurf(s)adzht_ave, R, Average residue height (m)
+   0.0000000    
+#
+#       aczht(s), R, (c1glob.inc) Crop height (m)
+   0.0000000    
+#
+#       acrsai(s), R, (c1glob.inc) Crop stem area index (m^2/m^2)
+#       acrlai(s), R, (c1glob.inc) Crop leaf area index (m^2/m^2)
+   0.0000000      2.41906522E-03
+#
+#       subrsurf(s)%adrsaitot, R, Residue stem area index (m^2/m^2)
+#       subrsurf(s)%adrlaitot, R, Residue leaf area index (m^2/m^2)
+   0.0000000       0.0000000    
+#
+#       acxrow(s) Crop row spacing (m)
+#       ac0rg(s)  Crop seed placement (0 - furrow, 1 - ridge)
+  0.20320041               0
+#
+# These are not implemented within EROSION
+#       abrsaz(h,s), R, (b1geom.inc) Biomass stem area index by ht (1/m)
+#             (should be 5 values here when used)
+#       abrlaz(h,s), R, (b1geom.inc) Biomass leaf area index by ht (1/m)
+#             (should be 5 values here when used)
+#
+# Only abffcv(s) is currently implemented within EROSION
+#       abffcv(s), R, (b1geom.inc) Flat biomass cover (m^2/m^2)
+#       abfscv(s), R, (b1geom.inc) Standing biomass cover (m^2/m^2)
+#       abftcv(s), R, (b1geom.inc) Total biomass cover (m^2/m^2)
+#             (should be 3 values here when abffcv(s) and abfscv(s) are used)
+  1.23496837E-04
+#
+#     +++ SOIL +++
+#
+#     nslay(s), I, (s1layr.inc) Number of soil layers (3-10)
+          28
+#
+#     NOTE: Remaining SOIL inputs are repeated for each layer specified
+#
+#     aszlyt(l,s), R, (s1layr.inc) Soil layer thickness (mm)
+   3.0734079       3.8417716       4.8022399       6.0027924       7.5034966       9.3792877       11.666856       14.583651       18.229492       22.786766       28.253016       35.316227       44.145416       47.386433       47.375229       66.529800       50.902004       63.627499       79.534370       99.417969       124.27246       155.34058       194.17574       242.71965       303.39957       379.24945       474.06183       592.57739    
+#
+#     asdblk(l,s), R, (s1phys.inc) Soil layer bulk density (Mg/m^3
+  0.81342548      0.81342548      0.81342548      0.81342548      0.81342548      0.81342548      0.81742239      0.81742239      0.81742239      0.81742454      0.82409036      0.82409036      0.82408977      0.82408792      0.82428169      0.82630885       1.3500000       1.3500000       1.3500000       1.3500000       1.3500000       1.3500000       1.3500000       1.3500000       1.3500000       1.3500000       1.3500000       1.3500000    
+#
+#     asfsan(l,s),R,(s1dbh.inc) Soil layer sand content (Mg/Mg)
+  0.30400002      0.30400002      0.30400002      0.30400002      0.30400002      0.30400002      0.30400002      0.30400002      0.30400002      0.30400002      0.30399999      0.30399999      0.30399999      0.30399999      0.30399999      0.30399999      0.30399999      0.30399999      0.30399999      0.30399999      0.30399999      0.30399999      0.30399999      0.30399999      0.30399999      0.30399999      0.30399999      0.30399999    
+#
+#     asfvfs(l,s), R, (s1dbh.inc) Soil layer very fine sand (Mg/Mg)
+  9.79999900E-02  9.79999900E-02  9.79999900E-02  9.79999900E-02  9.79999900E-02  9.79999900E-02  9.79999900E-02  9.79999900E-02  9.79999900E-02  9.79999900E-02  9.79999900E-02  9.79999900E-02  9.79999900E-02  9.79999900E-02  9.79999900E-02  9.79999900E-02  9.79999974E-02  9.79999974E-02  9.79999974E-02  9.79999974E-02  9.79999974E-02  9.79999974E-02  9.79999974E-02  9.79999974E-02  9.79999974E-02  9.79999974E-02  9.79999974E-02  9.79999974E-02
+#
+#     asfsil(l,s),R,(s1dbh.inc) Soil layer silt content (Mg/Mg)
+  0.55599993      0.55599993      0.55599993      0.55599993      0.55599993      0.55599993      0.55599993      0.55599993      0.55599993      0.55599993      0.55599993      0.55599993      0.55599993      0.55599993      0.55599993      0.55599993      0.55599999      0.55599999      0.55599999      0.55599999      0.55599999      0.55599999      0.55599999      0.55599999      0.55599999      0.55599999      0.55599999      0.55599999    
+#
+#     asfcla(l,s),R,(s1dbh.inc) Soil layer clay content (Mg/Mg)
+  0.13999999      0.13999999      0.13999999      0.13999999      0.13999999      0.13999999      0.13999999      0.13999999      0.13999999      0.13999999      0.13999999      0.13999999      0.13999999      0.13999999      0.13999999      0.13999999      0.14000000      0.14000000      0.14000000      0.14000000      0.14000000      0.14000000      0.14000000      0.14000000      0.14000000      0.14000000      0.14000000      0.14000000    
+#
+#     asvroc(l,s), R, (s1dbh.inc) Soil layer rock volume (m^3/m^3)
+   0.0000000       0.0000000       0.0000000       0.0000000       0.0000000       0.0000000       0.0000000       0.0000000       0.0000000       0.0000000       0.0000000       0.0000000       0.0000000       0.0000000       0.0000000       0.0000000       0.0000000       0.0000000       0.0000000       0.0000000       0.0000000       0.0000000       0.0000000       0.0000000       0.0000000       0.0000000       0.0000000       0.0000000    
+#
+#     asdagd(l,s),R,(s1agg.inc) Soil layer agg density (Mg/m^3)
+   1.8000000       1.8000000       1.8000000       1.8000000       1.8000000       1.8000000       1.7999998       1.7999998       1.7999998       1.7999998       1.7999998       1.7999998       1.7999998       1.7999998       1.7999998       1.7999998       1.8000000       1.8000000       1.8000000       1.8000000       1.8000000       1.8000000       1.8000000       1.8000000       1.8000000       1.8000000       1.8000000       1.8000000    
+#
+#     aseags(l,s), R, (s1agg.inc) Soil layer agg stability ln(J/kg)
+   2.0939777       2.0939288       2.0939133       2.0939140       2.0939152       2.0939169       2.0940113       2.0940275       2.0940418       2.0941596       2.0943370       2.0944746       2.0949442       2.0936785       2.0709772       2.0709772       1.7655848       3.3953552       3.1803198       2.2963297       2.2963297       2.2963297       2.2963297       2.2963297       2.2963297       2.2963297       2.2963297       2.2963297    
+#
+#     aslagm(l,s), R, (s1agg.inc) Soil layer GMD (mm)
+  0.12285426      0.12287919      0.12285359      0.12285582      0.12284460      0.12292799      0.18975694      0.18984473      0.18981771      0.18993904      0.23484173      0.23557660      0.23678738      0.23756480      0.23012911      0.22436287       2.2542067       6.9640388       6.9640388       4.6936026       4.6936026       4.6936026       4.6936026       4.6936026       4.6936026       4.6936026       2.8699782       4.6936026    
+#
+#     aslagn(l,s), R, (s1agg.inc) Soil layer minimum agg size (mm)
+  9.99999978E-03  9.99999978E-03  9.99999978E-03  9.99999978E-03  9.99999978E-03  9.99999978E-03  9.99999978E-03  9.99999978E-03  9.99999978E-03  9.99999978E-03  9.99999978E-03  9.99999978E-03  9.99999978E-03  9.99999978E-03  9.99999978E-03  9.99999978E-03  9.99999978E-03  9.99999978E-03  9.99999978E-03  9.99999978E-03  9.99999978E-03  9.99999978E-03  9.99999978E-03  9.99999978E-03  9.99999978E-03  9.99999978E-03  9.99999978E-03  9.99999978E-03
+#
+#     aslagx(l,s), R, (s1agg.inc) Soil layer maximum agg size (mm)
+   35.103485       35.175194       35.101551       35.107822       35.076538       35.325119       35.235180       35.348595       35.312965       35.478115       35.674786       36.214127       37.322910       38.267479       34.174458       35.499928       35.028450       41.215870       41.215870       38.317593       38.317593       38.317593       38.317593       38.317593       38.317593       38.317593       35.833847       38.317593    
+#
+#     as0ags(l,s), R, (s1agg.inc) Soil layer GSD (mm/mm)
+   5.7363424       5.7361050       5.7363458       5.7363286       5.7364297       5.7356248       6.2222438       6.2217693       6.2219205       6.2212315       6.5209217       6.5196896       6.5173483       6.5064144       6.5244823       6.5249681       13.460551       16.380184       16.380184       15.891850       15.891850       15.891850       15.891850       15.891850       15.891850       15.891850       14.388889       15.891850    
+#
+#     asfcr(s), R, (s1surf.inc) Surface crust fraction (m^2/m^2)
+#     aszcr(s), R, (s1surf.inc) Surface crust thickness (mm)
+#     asflos(s), R, (s1surf.inc) Fraction of loose material on surface (m^2/m^2)
+#     asmlos(s), R, (s1surf.inc) Mass of loose material on crust (kg/m^2)
+#     asdcr(s), R, (s1surf.inc) Soil crust density (Mg/m^3)
+#     asecr(s), R, (s1surf.inc) Soil crust stability ln(J/kg)
+   0.0000000       7.5999994       0.0000000       0.0000000       1.3093332       2.0939777    
+#
+#     aslrr(s), R, (s1sgeo.inc) Allmaras random roughness (mm)
+   7.2222776    
+#
+#     aszrgh(s), R, (s1sgeo.inc) Ridge height (mm)
+#     asxrgs(s), R, (s1sgeo.inc) Ridge spacing (mm)
+#     asxrgw(s), R, (s1sgeo.inc) Ridge width (mm)
+#     asargo(s), R, (s1sgeo.inc) Ridge orientation (deg)
+   25.400051       203.20041       25.400051       0.0000000    
+#
+#     asxdks(s), R, (s1sgeo.inc) Dike spacing (mm)
+   0.0000000    
+#
+#     +++ HYDROLOGY +++
+#
+#     ahzsnd(s), R, (s1sgeo.inc) Snow depth (mm)
+   0.0000000    
+#
+#     ahrwcw(l,s), R, (h1db1.inc) Soil layer wilting point water content (Mg/Mg)
+  0.15175040      0.15175040      0.15175040      0.15175040      0.15175040      0.15175040      0.15086603      0.15086603      0.15086603      0.15086554      0.14941080      0.14941080      0.14941093      0.14941129      0.14936940      0.14894855      8.16668421E-02  8.16668421E-02  8.16668421E-02  8.16668421E-02  8.16668421E-02  8.16668421E-02  8.16668421E-02  8.16668421E-02  8.16668421E-02  8.16668421E-02  8.16668421E-02  8.16668421E-02
+#
+#     ahrwca(l,s), R, (h1db1.inc) Soil layer water content (Mg/Mg)
+  0.19984202      0.19984202      0.19984202      0.19984202      0.19984202      0.19984202      0.19852972      0.19852972      0.19852972      0.19852905      0.19637208      0.19637208      0.19637227      0.19637287      0.19631071      0.19570139      9.99381989E-02  9.99381989E-02  9.99381989E-02  9.99381989E-02  9.99381989E-02  9.99381989E-02  9.99381989E-02  9.99381989E-02  9.99381989E-02  9.99381989E-02  9.99381989E-02  9.99381989E-02
+#
+#     ahrwc0(h,s), R, (h1db1.inc) Surface layer water content (Mg/Mg)
+#                  NOTE: the near surface water content is specified on an
+#                        hourly basis.  We read in the hrly water content
+#                        on two lines, with 12 values in each line.
+  0.0960242  0.0960242  0.0960242  0.0960242  0.0960242  0.0960242  0.0960242  0.0960242  0.0960242  0.0960242  0.0960242  0.0960242
+  0.0960242  0.0960242  0.0960242  0.0960242  0.0960242  0.0960242  0.0960242  0.0960242  0.0960242  0.0960242  0.0960242  0.0960242
+#
+#     subregion polygon, count, xy pairs (subregions_mod)
+#         polygons can be:
+#         - open (the last point connects to the first point)
+#         - closed (last point is same as first point)
+#         - complex (multiple closed polygons entered as one)
+           4
+   0.0000000       0.0000000    
+   183.00000       0.0000000    
+   183.00000       183.00000    
+   0.0000000       183.00000    
+#
+#     +++ BIOMASS +++
+#
+#      subrsurf(s)adzht_ave, R, Average residue height (m)
+  0.50167775    
+#
+#       aczht(s), R, (c1glob.inc) Crop height (m)
+   0.0000000    
+#
+#       acrsai(s), R, (c1glob.inc) Crop stem area index (m^2/m^2)
+#       acrlai(s), R, (c1glob.inc) Crop leaf area index (m^2/m^2)
+   0.0000000      2.41906522E-03
+#
+#       subrsurf(s)%adrsaitot, R, Residue stem area index (m^2/m^2)
+#       subrsurf(s)%adrlaitot, R, Residue leaf area index (m^2/m^2)
+  3.46677862E-02  0.82794654    
+#
+#       acxrow(s) Crop row spacing (m)
+#       ac0rg(s)  Crop seed placement (0 - furrow, 1 - ridge)
+  0.20320041               0
+#
+# These are not implemented within EROSION
+#       abrsaz(h,s), R, (b1geom.inc) Biomass stem area index by ht (1/m)
+#             (should be 5 values here when used)
+#       abrlaz(h,s), R, (b1geom.inc) Biomass leaf area index by ht (1/m)
+#             (should be 5 values here when used)
+#
+# Only abffcv(s) is currently implemented within EROSION
+#       abffcv(s), R, (b1geom.inc) Flat biomass cover (m^2/m^2)
+#       abfscv(s), R, (b1geom.inc) Standing biomass cover (m^2/m^2)
+#       abftcv(s), R, (b1geom.inc) Total biomass cover (m^2/m^2)
+#             (should be 3 values here when abffcv(s) and abfscv(s) are used)
+  0.35392976    
+#
+#     +++ SOIL +++
+#
+#     nslay(s), I, (s1layr.inc) Number of soil layers (3-10)
+          29
+#
+#     NOTE: Remaining SOIL inputs are repeated for each layer specified
+#
+#     aszlyt(l,s), R, (s1layr.inc) Soil layer thickness (mm)
+   2.9261441       3.6576891       4.5721083       5.7151332       7.1439252       8.9298887       8.9646111       11.205712       14.007134       17.508896       21.886055       27.357672       34.197201       25.015671       24.889420       39.480659       43.360435       54.200542       67.750671       78.790115       98.487640       123.10956       153.88695       192.35867       240.44836       300.56042       375.70056       469.62567       587.03198    
+#
+#     asdblk(l,s), R, (s1phys.inc) Soil layer bulk density (Mg/m^3
+   1.1482662       1.1482662       1.1482662       1.1482662       1.1482662       1.1482664       1.4297818       1.4297823       1.4297819       1.4297818       1.4297818       1.4297835       1.4297843       1.4264624       1.4336985       1.4760745       1.6799999       1.6799999       1.6799999       1.6000000       1.6000000       1.6000000       1.6000000       1.6000001       1.6000000       1.6000000       1.6000000       1.6000000       1.6000000    
+#
+#     asfsan(l,s),R,(s1dbh.inc) Soil layer sand content (Mg/Mg)
+  0.79199994      0.79199994      0.79199994      0.79199994      0.79199994      0.79199994      0.79199994      0.79199994      0.79199994      0.79199994      0.79199994      0.79199994      0.79199994      0.79199994      0.79199994      0.79199994      0.79200000      0.79200000      0.79200000      0.55800003      0.55800003      0.55800003      0.55800003      0.55800003      0.55800003      0.55800003      0.55800003      0.55800003      0.55800003    
+#
+#     asfvfs(l,s), R, (s1dbh.inc) Soil layer very fine sand (Mg/Mg)
+  0.15400001      0.15400001      0.15400001      0.15400001      0.15400001      0.15400001      0.15400001      0.15400001      0.15400001      0.15400001      0.15400001      0.15400000      0.15400000      0.15400000      0.15400000      0.15400000      0.15400000      0.15400000      0.15400000      0.11300000      0.11300000      0.11300000      0.11300000      0.11300000      0.11300000      0.11300000      0.11300000      0.11300000      0.11300000    
+#
+#     asfsil(l,s),R,(s1dbh.inc) Soil layer silt content (Mg/Mg)
+  0.15799999      0.15799999      0.15799999      0.15799999      0.15799999      0.15799999      0.15799999      0.15799999      0.15799999      0.15799999      0.15799999      0.15799999      0.15799999      0.15799999      0.15799999      0.15799999      0.15800001      0.15800001      0.15800001      0.17700000      0.17700000      0.17700000      0.17700000      0.17700000      0.17700000      0.17700000      0.17700000      0.17700000      0.17700000    
+#
+#     asfcla(l,s),R,(s1dbh.inc) Soil layer clay content (Mg/Mg)
+  4.99999970E-02  4.99999970E-02  4.99999970E-02  4.99999970E-02  4.99999970E-02  4.99999970E-02  4.99999970E-02  4.99999970E-02  4.99999970E-02  4.99999970E-02  4.99999970E-02  4.99999970E-02  4.99999970E-02  4.99999970E-02  5.00000007E-02  5.00000007E-02  5.00000007E-02  5.00000007E-02  5.00000007E-02  0.26499999      0.26499999      0.26499999      0.26499999      0.26499999      0.26499999      0.26499999      0.26499999      0.26499999      0.26499999    
+#
+#     asvroc(l,s), R, (s1dbh.inc) Soil layer rock volume (m^3/m^3)
+   0.0000000       0.0000000       0.0000000       0.0000000       0.0000000       0.0000000       0.0000000       0.0000000       0.0000000       0.0000000       0.0000000       0.0000000       0.0000000       0.0000000       0.0000000       0.0000000       0.0000000       0.0000000       0.0000000       0.0000000       0.0000000       0.0000000       0.0000000       0.0000000       0.0000000       0.0000000       0.0000000       0.0000000       0.0000000    
+#
+#     asdagd(l,s),R,(s1agg.inc) Soil layer agg density (Mg/m^3)
+   1.8000000       1.8000000       1.8000000       1.8000000       1.8000000       1.8000000       1.8000000       1.8000000       1.8000000       1.8000000       1.8000000       1.8000000       1.8000000       1.8000000       1.8000000       1.8000000       1.8000000       1.8000000       1.8000000       1.8000000       1.8000000       1.8000000       1.8000000       1.8000000       1.8000000       1.8000000       1.8000000       1.8000000       1.8000000    
+#
+#     aseags(l,s), R, (s1agg.inc) Soil layer agg stability ln(J/kg)
+   1.3855281       1.3617576       1.3507768       1.3519517       1.3547697       1.3652908       1.4136076       1.4270527       1.4426267       1.4585199       1.4816809       1.5119637       1.5485699       1.8311656       1.9556627       1.9556627       2.0771303       2.0771303       2.0771303       4.3135881       4.3135881       4.3135881       2.2430661       2.2430661       2.2430661       2.2430661       2.2430661       2.2430661       3.1661232    
+#
+#     aslagm(l,s), R, (s1agg.inc) Soil layer GMD (mm)
+  0.35381997      0.31889302      0.31033370      0.30474037      0.31317654      0.32521012      0.52931523      0.54637134      0.58671516      0.61976945      0.67651910      0.72002572      0.79867268       1.1149871       1.1125726       1.1007168       1.1022667       1.1022667       1.1022667       4.3266110       4.3266110       4.3266110      9.76681709E-02  0.10879454      6.33172765E-02   1.5152236       1.5152241       1.5152236       3.6370058    
+#
+#     aslagn(l,s), R, (s1agg.inc) Soil layer minimum agg size (mm)
+  9.99999978E-03  9.99999978E-03  9.99999978E-03  9.99999978E-03  9.99999978E-03  9.99999978E-03  9.99999978E-03  9.99999978E-03  9.99999978E-03  9.99999978E-03  9.99999978E-03  9.99999978E-03  9.99999978E-03  9.99999978E-03  9.99999978E-03  9.99999978E-03  9.99999978E-03  9.99999978E-03  9.99999978E-03  9.99999978E-03  9.99999978E-03  9.99999978E-03  9.99999978E-03  9.99999978E-03  9.99999978E-03  9.99999978E-03  9.99999978E-03  9.99999978E-03  9.99999978E-03
+#
+#     aslagx(l,s), R, (s1agg.inc) Soil layer maximum agg size (mm)
+   37.725513       38.349110       38.520508       38.636948       38.462688       38.227623       35.782677       35.662018       35.408207       35.229179       34.972248       34.811359       34.583912       34.190235       34.191128       34.195915       34.195255       34.195255       34.195255       37.825123       37.825123       37.825123       48.452335       47.362431       52.867359       34.278996       34.279003       34.278996       36.884895    
+#
+#     as0ags(l,s), R, (s1agg.inc) Soil layer GSD (mm/mm)
+   6.8667417       6.5944734       6.5250525       6.4790697       6.5482349       6.6449981       8.0312853       8.1305113       8.3574371       8.5358086       8.8277349       9.0404358       9.4032755       10.642222       10.633856       10.592573       10.597989       10.597989       10.597989       15.697366       15.697366       15.697366       4.2075472       4.3773909       3.6038194       11.856450       11.856452       11.856450       15.201293    
+#
+#     asfcr(s), R, (s1surf.inc) Surface crust fraction (m^2/m^2)
+#     aszcr(s), R, (s1surf.inc) Surface crust thickness (mm)
+#     asflos(s), R, (s1surf.inc) Fraction of loose material on surface (m^2/m^2)
+#     asmlos(s), R, (s1surf.inc) Mass of loose material on crust (kg/m^2)
+#     asdcr(s), R, (s1surf.inc) Soil crust density (Mg/m^3)
+#     asecr(s), R, (s1surf.inc) Soil crust stability ln(J/kg)
+   0.0000000       7.5999994       0.0000000       0.0000000       1.4405303       1.3855281    
+#
+#     aslrr(s), R, (s1sgeo.inc) Allmaras random roughness (mm)
+   5.7574582    
+#
+#     aszrgh(s), R, (s1sgeo.inc) Ridge height (mm)
+#     asxrgs(s), R, (s1sgeo.inc) Ridge spacing (mm)
+#     asxrgw(s), R, (s1sgeo.inc) Ridge width (mm)
+#     asargo(s), R, (s1sgeo.inc) Ridge orientation (deg)
+   25.400051       203.20041       25.400051       0.0000000    
+#
+#     asxdks(s), R, (s1sgeo.inc) Dike spacing (mm)
+   0.0000000    
+#
+#     +++ HYDROLOGY +++
+#
+#     ahzsnd(s), R, (s1sgeo.inc) Snow depth (mm)
+   0.0000000    
+#
+#     ahrwcw(l,s), R, (h1db1.inc) Soil layer wilting point water content (Mg/Mg)
+  5.62221445E-02  5.62221445E-02  5.62221445E-02  5.62221445E-02  5.62221445E-02  5.62221259E-02  4.32466455E-02  4.32466418E-02  4.32466529E-02  4.32466455E-02  4.32466455E-02  4.32465933E-02  4.32465598E-02  4.33684923E-02  4.31037135E-02  4.16759811E-02  3.58092934E-02  3.58092934E-02  3.58092934E-02  9.55889076E-02  9.55889076E-02  9.55889076E-02  9.55889076E-02  9.55889076E-02  9.55889076E-02  9.55889076E-02  9.55889076E-02  9.55889076E-02  9.55889076E-02
+#
+#     ahrwca(l,s), R, (h1db1.inc) Soil layer water content (Mg/Mg)
+  8.22247267E-02  8.22247267E-02  8.22247267E-02  8.22247267E-02  8.22247267E-02  8.22246820E-02  5.26727848E-02  5.26727661E-02  5.26727997E-02  5.26727848E-02  5.26727848E-02  5.26726656E-02  5.26726097E-02  5.29426597E-02  5.23562841E-02  4.94546182E-02  3.64917070E-02  3.64917070E-02  3.64917070E-02  5.37935644E-02  5.37935644E-02  5.37935644E-02  5.37935644E-02  5.37935644E-02  5.37935644E-02  5.37935644E-02  5.37935644E-02  5.37935644E-02  5.37935644E-02
+#
+#     ahrwc0(h,s), R, (h1db1.inc) Surface layer water content (Mg/Mg)
+#                  NOTE: the near surface water content is specified on an
+#                        hourly basis.  We read in the hrly water content
+#                        on two lines, with 12 values in each line.
+  0.0905493  0.0905493  0.0905493  0.0905493  0.0905493  0.0905493  0.0905493  0.0905493  0.0905493  0.0905493  0.0905493  0.0905493
+  0.0905493  0.0905493  0.0905493  0.0905493  0.0905493  0.0905493  0.0905493  0.0905493  0.0905493  0.0905493  0.0905493  0.0905493
+#
+#     subregion polygon, count, xy pairs (subregions_mod)
+#         polygons can be:
+#         - open (the last point connects to the first point)
+#         - closed (last point is same as first point)
+#         - complex (multiple closed polygons entered as one)
+           4
+   183.00000       0.0000000    
+   366.00000       0.0000000    
+   366.00000       183.00000    
+   183.00000       183.00000    
+#
+#     +++ BIOMASS +++
+#
+#      subrsurf(s)adzht_ave, R, Average residue height (m)
+   0.0000000    
+#
+#       aczht(s), R, (c1glob.inc) Crop height (m)
+   0.0000000    
+#
+#       acrsai(s), R, (c1glob.inc) Crop stem area index (m^2/m^2)
+#       acrlai(s), R, (c1glob.inc) Crop leaf area index (m^2/m^2)
+   0.0000000      2.41906522E-03
+#
+#       subrsurf(s)%adrsaitot, R, Residue stem area index (m^2/m^2)
+#       subrsurf(s)%adrlaitot, R, Residue leaf area index (m^2/m^2)
+   0.0000000       0.0000000    
+#
+#       acxrow(s) Crop row spacing (m)
+#       ac0rg(s)  Crop seed placement (0 - furrow, 1 - ridge)
+  0.38100079               0
+#
+# These are not implemented within EROSION
+#       abrsaz(h,s), R, (b1geom.inc) Biomass stem area index by ht (1/m)
+#             (should be 5 values here when used)
+#       abrlaz(h,s), R, (b1geom.inc) Biomass leaf area index by ht (1/m)
+#             (should be 5 values here when used)
+#
+# Only abffcv(s) is currently implemented within EROSION
+#       abffcv(s), R, (b1geom.inc) Flat biomass cover (m^2/m^2)
+#       abfscv(s), R, (b1geom.inc) Standing biomass cover (m^2/m^2)
+#       abftcv(s), R, (b1geom.inc) Total biomass cover (m^2/m^2)
+#             (should be 3 values here when abffcv(s) and abfscv(s) are used)
+  1.42312059E-02
+#
+#     +++ SOIL +++
+#
+#     nslay(s), I, (s1layr.inc) Number of soil layers (3-10)
+          28
+#
+#     NOTE: Remaining SOIL inputs are repeated for each layer specified
+#
+#     aszlyt(l,s), R, (s1layr.inc) Soil layer thickness (mm)
+   2.8134010       3.5167663       4.3959484       5.4949365       6.8686700       8.5858736       10.732298       13.415387       16.769228       20.961525       25.523544       24.592747       30.741009       39.436554       45.474731       40.313156       40.313171       63.430717       79.288399       99.110489       123.88811       154.86015       193.57518       241.96896       302.46124       378.07654       472.59567       590.74463    
+#
+#     asdblk(l,s), R, (s1phys.inc) Soil layer bulk density (Mg/m^3
+  0.88860148      0.88860154      0.88860154      0.88860160      0.88860154      0.88860154      0.88860154      0.88860154      0.88860154      0.88860160      0.91222072       1.1834283       1.1834282       1.1531094       1.2500001       1.2500000       1.2500000       1.3500000       1.3500000       1.3500001       1.3500000       1.3500000       1.3500000       1.3500001       1.3500000       1.3500000       1.3500000       1.3500000    
+#
+#     asfsan(l,s),R,(s1dbh.inc) Soil layer sand content (Mg/Mg)
+  0.30400002      0.30400002      0.30400002      0.30400002      0.30400002      0.30400002      0.30400002      0.30400002      0.30400002      0.30400002      0.30400002      0.30399999      0.30399999      0.30399999      0.30399999      0.30399999      0.30399999      0.30399999      0.30399999      0.30399999      0.30399999      0.30399999      0.30399999      0.30399999      0.30399999      0.30399999      0.30399999      0.30399999    
+#
+#     asfvfs(l,s), R, (s1dbh.inc) Soil layer very fine sand (Mg/Mg)
+  9.79999974E-02  9.79999974E-02  9.79999974E-02  9.79999974E-02  9.79999974E-02  9.79999974E-02  9.79999974E-02  9.79999974E-02  9.79999974E-02  9.79999974E-02  9.79999974E-02  9.80000049E-02  9.80000049E-02  9.80000049E-02  9.79999974E-02  9.79999974E-02  9.79999974E-02  9.79999974E-02  9.79999974E-02  9.79999974E-02  9.79999974E-02  9.79999974E-02  9.79999974E-02  9.79999974E-02  9.79999974E-02  9.79999974E-02  9.79999974E-02  9.79999974E-02
+#
+#     asfsil(l,s),R,(s1dbh.inc) Soil layer silt content (Mg/Mg)
+  0.55599999      0.55599999      0.55599999      0.55599999      0.55599999      0.55599999      0.55599999      0.55599999      0.55599999      0.55599999      0.55599999      0.55599999      0.55599999      0.55599999      0.55599999      0.55599999      0.55599999      0.55599999      0.55599999      0.55599999      0.55599999      0.55599999      0.55599999      0.55599999      0.55599999      0.55599999      0.55599999      0.55599999    
+#
+#     asfcla(l,s),R,(s1dbh.inc) Soil layer clay content (Mg/Mg)
+  0.14000002      0.14000002      0.14000002      0.14000002      0.14000002      0.14000002      0.14000002      0.14000002      0.14000002      0.14000002      0.14000002      0.14000002      0.14000002      0.14000002      0.14000000      0.14000000      0.14000000      0.14000000      0.14000000      0.14000000      0.14000000      0.14000000      0.14000000      0.14000000      0.14000000      0.14000000      0.14000000      0.14000000    
+#
+#     asvroc(l,s), R, (s1dbh.inc) Soil layer rock volume (m^3/m^3)
+   0.0000000       0.0000000       0.0000000       0.0000000       0.0000000       0.0000000       0.0000000       0.0000000       0.0000000       0.0000000       0.0000000       0.0000000       0.0000000       0.0000000       0.0000000       0.0000000       0.0000000       0.0000000       0.0000000       0.0000000       0.0000000       0.0000000       0.0000000       0.0000000       0.0000000       0.0000000       0.0000000       0.0000000    
+#
+#     asdagd(l,s),R,(s1agg.inc) Soil layer agg density (Mg/m^3)
+   1.8000000       1.8000000       1.8000000       1.8000000       1.8000000       1.8000000       1.8000000       1.8000000       1.8000000       1.8000000       1.8000000       1.8000000       1.8000000       1.8000000       1.8000000       1.8000000       1.8000000       1.8000000       1.8000000       1.8000000       1.8000000       1.8000000       1.8000000       1.8000000       1.8000000       1.8000000       1.8000000       1.8000000    
+#
+#     aseags(l,s), R, (s1agg.inc) Soil layer agg stability ln(J/kg)
+   2.2285383       2.2130308       2.2075691       2.2078180       2.2082210       2.2039585       2.2315583       2.2354417       2.2387538       2.2411020       2.2494576       2.3039665       2.3336186       2.3283129       3.3953552       2.4748294       1.7655848       1.7655848       2.4974923       2.7285132       2.7285132       2.7285132       2.7285132       2.7285132       2.7285132       2.7285132       2.7285132       2.7285132    
+#
+#     aslagm(l,s), R, (s1agg.inc) Soil layer GMD (mm)
+   2.2345052       2.1873081       2.1864362       2.1948326       2.2124064       2.2141140       2.3438058       2.3886991       2.4384482       2.4927626       2.5857565       5.7466245       6.1103158       6.2344975       8.3276930       7.0224972       2.6955824       2.7384405       7.2226868       7.4429474       7.4440460       7.4452353       7.4461441       7.4464903       7.4460316       7.4445462       7.4419398       7.4355059    
+#
+#     aslagn(l,s), R, (s1agg.inc) Soil layer minimum agg size (mm)
+  9.99999978E-03  9.99999978E-03  9.99999978E-03  9.99999978E-03  9.99999978E-03  9.99999978E-03  9.99999978E-03  9.99999978E-03  9.99999978E-03  9.99999978E-03  9.99999978E-03  9.99999978E-03  9.99999978E-03  9.99999978E-03  9.99999978E-03  9.99999978E-03  9.99999978E-03  9.99999978E-03  9.99999978E-03  9.99999978E-03  9.99999978E-03  9.99999978E-03  9.99999978E-03  9.99999978E-03  9.99999978E-03  9.99999978E-03  9.99999978E-03  9.99999978E-03
+#
+#     aslagx(l,s), R, (s1agg.inc) Soil layer maximum agg size (mm)
+   35.004166       34.946594       34.945534       34.955715       34.977108       34.979198       35.140472       35.197495       35.261299       35.331615       35.453430       39.693142       40.155254       40.311584       42.848984       41.287327       35.599197       35.656540       41.530998       41.797272       41.798595       41.800030       41.801121       41.801537       41.800983       41.799202       41.796059       41.788311    
+#
+#     as0ags(l,s), R, (s1agg.inc) Soil layer GSD (mm/mm)
+   13.425665       13.340599       13.339007       13.354305       13.386101       13.389174       13.614723       13.689292       13.769916       13.855595       13.996816       16.245806       16.311726       16.328766       16.302691       16.381069       14.155124       14.214521       16.380871       16.375187       16.375145       16.375099       16.375065       16.375051       16.375069       16.375128       16.375225       16.375469    
+#
+#     asfcr(s), R, (s1surf.inc) Surface crust fraction (m^2/m^2)
+#     aszcr(s), R, (s1surf.inc) Surface crust thickness (mm)
+#     asflos(s), R, (s1surf.inc) Fraction of loose material on surface (m^2/m^2)
+#     asmlos(s), R, (s1surf.inc) Mass of loose material on crust (kg/m^2)
+#     asdcr(s), R, (s1surf.inc) Soil crust density (Mg/m^3)
+#     asecr(s), R, (s1surf.inc) Soil crust stability ln(J/kg)
+  1.10414829E-02   7.5999994      5.96487373E-02  8.98268968E-02   1.3037391       2.2285383    
+#
+#     aslrr(s), R, (s1sgeo.inc) Allmaras random roughness (mm)
+   7.6821942    
+#
+#     aszrgh(s), R, (s1sgeo.inc) Ridge height (mm)
+#     asxrgs(s), R, (s1sgeo.inc) Ridge spacing (mm)
+#     asxrgw(s), R, (s1sgeo.inc) Ridge width (mm)
+#     asargo(s), R, (s1sgeo.inc) Ridge orientation (deg)
+   101.60020       381.00076       177.80035       0.0000000    
+#
+#     asxdks(s), R, (s1sgeo.inc) Dike spacing (mm)
+   0.0000000    
+#
+#     +++ HYDROLOGY +++
+#
+#     ahzsnd(s), R, (s1sgeo.inc) Snow depth (mm)
+   0.0000000    
+#
+#     ahrwcw(l,s), R, (h1db1.inc) Soil layer wilting point water content (Mg/Mg)
+  0.13706273      0.13706273      0.13706273      0.13706273      0.13706273      0.13706273      0.13706273      0.13706273      0.13706273      0.13706273      0.13275097      9.62134749E-02  9.62134749E-02  9.94041115E-02  8.98047835E-02  8.98047835E-02  8.98047835E-02  8.15992877E-02  8.15992877E-02  8.15992802E-02  8.15992877E-02  8.15992877E-02  8.15992877E-02  8.15992802E-02  8.15992877E-02  8.15992877E-02  8.15992877E-02  8.15992877E-02
+#
+#     ahrwca(l,s), R, (h1db1.inc) Soil layer water content (Mg/Mg)
+  0.17811549      0.17811549      0.17811549      0.17811549      0.17811549      0.17811549      0.17811549      0.17811549      0.17811549      0.17811549      0.17180310      0.11965580      0.11965579      0.12408860      0.11084045      0.11084047      0.11084047      9.98194888E-02  9.98194888E-02  9.98194814E-02  9.98194888E-02  9.98194888E-02  9.98194888E-02  9.98194814E-02  9.98194888E-02  9.98194888E-02  9.98194888E-02  9.98194888E-02
+#
+#     ahrwc0(h,s), R, (h1db1.inc) Surface layer water content (Mg/Mg)
+#                  NOTE: the near surface water content is specified on an
+#                        hourly basis.  We read in the hrly water content
+#                        on two lines, with 12 values in each line.
+  0.2252489  0.2252489  0.2252489  0.2252489  0.2252489  0.2252489  0.2252489  0.2252489  0.2252489  0.2252489  0.2252489  0.2252489
+  0.2252489  0.2252489  0.2252489  0.2252489  0.2252489  0.2252489  0.2252489  0.2252489  0.2252489  0.2252489  0.2252489  0.2252490
+#
+# NOTE: This is the end of the SUBREGION variables
+#
+#     +++ WEATHER +++
+#
+#     awdair, R, (w1pavg.inc) Air density (kg/m^3)
+   1.1536973    
+#
+#     awadir, R, (w1wind.inc) Wind direction (deg)
+   202.50000    
+#
+#     ntstep, I, (local variable) Number of intervals/day to run EROSION
+          24
+#
+#     anemht, R  anemometer height (m)
+#     awzzo,  R  aerodynamic roughness at anemometer site (mm)
+#     wzoflg, I (global variable) zo location flag
+#               (flag =0 - zo fixed at wx sta. location)
+#               (flag = 1 - zo variable at field location)
+   10.000000       25.000000               0
+#
+#     wflg, I, (local variable) Wind/Weibull flag
+#              (0 - read in Weibull parameters, 1 - read in wind speeds)
+ 1
+#
+# NOTE: This is only present when the above (wflg=0)
+#     wfcalm, R, (local variable) Fraction of time winds are calm (hr/hr)
+#     wuc, R, (local variable) Weibull "c" factor (m/s)
+#     w0k, R, (local variable) Weibull "k" factor (fraction)
+#   0.263    5.856    1.720#
+# NOTE: The remaining data is only present when (wflg=1)
+#       wflg=1 uses standard input from windgen in WEPS.
+#
+#       awu(i), R, (w1wind) Wind speed for (ntstep) intervals (m/s)
+#
+# I think I can read multiple lines with variable number of values
+# We will try and see - LEW  Must use 6 values per line LH.
+#
+   0.0000000       0.0000000       0.0000000       0.0000000       0.0000000      0.69999999    
+   1.9000000       2.3000000       3.0999999       4.0000000       4.5999999       10.700000    
+   14.900000       15.300000       17.299999       14.900000       12.300000       5.6999998    
+   4.3000002       3.4000001       2.8000000       2.0999999       1.5000000       0.0000000    
+#
+#    + + + DATA TO PLOT + + +
+#
+#   names and values to input for plot
+#   place 1 flag in 1st line after #-name line for variables to include in plot
+#
+#   initial xplot value,I, (-1=no plot, 0 = plot indep.variables with 1 flag)
+ -1

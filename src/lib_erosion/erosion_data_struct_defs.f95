@@ -8,10 +8,26 @@ module erosion_data_struct_defs
 
   ! defines state variables for each grid cell
   type cellsurfacestate
-     real :: csr     ! index of current subregion at grid point x,y
+     integer :: csr          ! index of current subregion at grid point x,y
      integer :: surflay   ! index of the soil layer at the surface (0 indicates deposition horizon)
      real :: surfthk      ! thickness of the soil layer at the surface (mm) (could be thinner than original layer)
-
+     real :: sf1          ! soil mass fraction in surface layer < 0.01 mm
+     real :: sf10         ! soil mass fraction in surface layer < 0.1 mm
+     real :: sf84         ! soil mass fraction in surface layer < 0.84 mm
+     real :: sf200        ! soil mass fraction in surface layer < 2.00 mm
+     real :: sf84mn       ! "effective" soil mass fraction in surface layer < 0.84 mm
+                          ! needed for u* to be the threshold friction velocity.
+     real :: svroc        ! soil rock volume in surface layer  !edit ljh 1-22-05
+     real :: szcr         ! Consolidated (crust) thickness (mm)
+     real :: sfcr         ! soil fraction with crust cover (decimal)
+     real :: smlos        ! mass of loose erodible soil on crust (kg/m^2)
+     real :: sflos        ! soil fraction covered with loose erodible soil on the crusted area
+     real :: smaglos      ! mobile soil mass removable from aggregated surface by u* (kg/m^2).
+     real :: dmlos        ! mobile soil mass change from erosion of aggregated
+     real :: smaglosmx    ! max mobile soil reservoir of aggregateed sfc.(kg/m^2)
+     real :: szrgh        ! Ridge height (mm)
+     real :: sxprg        ! ridge spacing parallel the wind direction(mm)
+     real :: slrr         ! soil random roughness (mm)
   end type cellsurfacestate
 
   type by_soil_layer
@@ -73,6 +89,8 @@ module erosion_data_struct_defs
      real :: sfd10      ! soil fraction less than 0.1 mm diameter
      real :: sfd84      ! soil fraction less than 0.84 mm diameter
      real :: sfd200     ! soil fraction less than 2.0 mm diameter
+     real :: sf10ic     ! initial condition (modified) of soil fraction less than 0.1 mm diameter
+     real :: sf84ic     ! initial condition (modified) of soil fraction less than 0.84 mm diameter
 
   end type subregionsurfacestate
 
@@ -104,25 +122,25 @@ contains
   function create_cellsurfacestate(xdim, ydim) result(cellstate)
      integer, intent(in) :: xdim
      integer, intent(in) :: ydim
-     type(cellsurfacestate) :: cellstate
+     type(cellsurfacestate), dimension(:,:), allocatable :: cellstate
 
      ! local variable
      integer :: alloc_stat  ! allocation status return
      integer :: sum_stat    ! accumulates allocation status results so only one write/exit statement needed
 
      sum_stat = 0
-     ! allocate soil layer arrays
-!     allocate(cellstate%  (0:xdim,0:ydim), stat=alloc_stat)
+     allocate(cellstate(0:xdim,0:ydim), stat=alloc_stat)
      sum_stat = sum_stat + alloc_stat
+     ! allocate soil layer arrays
 
      if( sum_stat .gt. 0 ) then
-        write(*,*) 'ERROR: unable to allocate memory for biomatter'
+        write(*,*) 'ERROR: unable to allocate memory for cellstate'
         stop 1
      end if
   end function create_cellsurfacestate
 
   subroutine destroy_cellsurfacestate(cellstate)
-     type(cellsurfacestate), intent(inout) :: cellstate
+     type(cellsurfacestate), dimension(:,:), allocatable, intent(inout) :: cellstate
 
      ! local variable
      integer :: dealloc_stat
@@ -130,11 +148,11 @@ contains
 
      sum_stat = 0
      ! deallocate arrays
-!     deallocate(cellstate% , stat=dealloc_stat)
+     deallocate(cellstate, stat=dealloc_stat)
      sum_stat = sum_stat + dealloc_stat
 
      if( sum_stat .gt. 0 ) then
-        write(*,*) 'ERROR: unable to deallocate memory for biomatter'
+        write(*,*) 'ERROR: unable to deallocate memory for cellstate'
      end if
   end subroutine destroy_cellsurfacestate
 
@@ -147,6 +165,8 @@ contains
      ! local variable
      integer :: alloc_stat  ! allocation status return
      integer :: sum_stat    ! accumulates allocation status results so only one write/exit statement needed
+
+     subrsurf%nslay = nslay
 
      sum_stat = 0
      ! allocate soil layer array
@@ -179,6 +199,42 @@ contains
         write(*,*) 'ERROR: unable to deallocate memory for biomatter'
      end if
   end subroutine destroy_subregionsurfacestate
+
+  function create_threshold(nsubr) result(noerod)
+     integer, intent(in) :: nsubr
+     type(threshold), dimension(:), allocatable :: noerod
+
+     ! local variable
+     integer :: alloc_stat  ! allocation status return
+     integer :: sum_stat    ! accumulates allocation status results so only one write/exit statement needed
+
+     sum_stat = 0
+     allocate(noerod(nsubr), stat=alloc_stat)
+     sum_stat = sum_stat + alloc_stat
+     ! allocate soil layer arrays
+
+     if( sum_stat .gt. 0 ) then
+        write(*,*) 'ERROR: unable to allocate memory for noerod'
+        stop 1
+     end if
+  end function create_threshold
+
+  subroutine destroy_threshold(noerod)
+     type(threshold), dimension(:), allocatable, intent(inout) :: noerod
+
+     ! local variable
+     integer :: dealloc_stat
+     integer :: sum_stat    ! accumulates allocation status results so only one write/exit statement needed
+
+     sum_stat = 0
+     ! deallocate arrays
+     deallocate(noerod, stat=dealloc_stat)
+     sum_stat = sum_stat + dealloc_stat
+
+     if( sum_stat .gt. 0 ) then
+        write(*,*) 'ERROR: unable to deallocate memory for noerod'
+     end if
+  end subroutine destroy_threshold
 
 end module erosion_data_struct_defs
 

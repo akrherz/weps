@@ -12,6 +12,7 @@
       program sweep
 
       use sweep_interface_defs
+      use weps_interface_defs
       use file_io_mod, only: fopenk
       use erosion_data_struct_defs
 
@@ -30,6 +31,8 @@
       include 'p1werm.inc'
       include 'p1const.inc'
       include 'm1sim.inc'
+      include 'm1geo.inc'
+      include 'm1subr.inc'
       include 'm1flag.inc'
       include 'erosion/m2geo.inc'
       include 'w1clig.inc'        !Requires yrly average precip.....
@@ -51,22 +54,22 @@
 !     erodout
 
 !     ++++ LOCAL VARIABLES +++
-
       type(subregionsurfacestate), dimension(:), allocatable :: subrsurf
+      type(threshold), dimension(:), allocatable :: noerod                 ! report values to show which factors prevented erosion
+      type(cellsurfacestate), dimension(:,:), allocatable :: cellstate     ! grid cell state values (allocate in erodinit)
 
-      integer        julday    !utility date function
+      integer :: alloc_stat, sum_stat
+
+!      integer        julday    !utility date function
       character*1024 exe_filepath
       character*1024 input_filepath
       integer i_unit
       integer o_unit
 
-      integer        cmd_iarg  !Temp var for retrieving integer cmdline args
-
       character*1024 argv      !For Fortran 2k commandline parsing
       integer        i
       integer        numarg
       integer        ll, ss
-      integer        iostat
       logical        opnd
       integer        already_read_inputs
  
@@ -87,7 +90,7 @@
       integer        o_sgrd_unit   !Unit number for grid subdaily erosion
       integer        o_erod_unit   !Unit number for total erosion
       integer        o_emit_unit   !Unit number for detail grid erosion
-      integer        o_eplt_unit   !Unit number for Hagen plot file
+      !integer        o_eplt_unit   !Unit number for Hagen plot file
 
       character*80   o_einp_ext    !generated input file extension
       character*80   o_egrd_ext    !grid summary erosion file extension
@@ -113,6 +116,8 @@
 
       real min_erosion_awu       !Minimum erosiove wind speed (m/s)
                                  !to evaluate for erosion loss
+
+
       integer :: dt(8)
       character(len=3) :: mstring
       common / datetime / dt, mstring
@@ -202,7 +207,7 @@
            !write(0,*) 'argv ',i,' is: ', trim(argv) ! debug print of arg list
 
            if (argv(1:1) .ne. '-') then   !make sure all options start with '-'
-		      write(0,*) 'Option ignored, no option flag: ', trim(argv)
+              write(0,*) 'Option ignored, no option flag: ', trim(argv)
               goto 09     !Go get next arg    
            endif
 
@@ -418,6 +423,8 @@
              write (0,*) 'Ignoring uknown option: ', trim(argv)
            endif
  09     continue
+      else
+        input_filename = 'from_stdin'
       endif
 
       if (((xgdpt > 0) .and. (ygdpt == 0)) .or.                         &
@@ -523,13 +530,35 @@
 
 !     Initialize erosion code, create grid, etc:
 !     (must come after sim field size, & no. subr specified)
-!     write (*,*) 'call to erodinit '
-          !write(0,*) 'Before erodinit(), am0eif is:', am0eif
-          call erodinit
-!
+
+      ! Grid is created at least once.
+      if (am0eif .eqv. .true.) then
+         ! check to see if grid dimensions specified via cmdline args
+         if ((xgdpt > 0) .and. (ygdpt > 0)) then
+           imax = xgdpt + 1
+           jmax = ygdpt + 1
+           ix = (amxsim(1,2) - amxsim(1,1)) / xgdpt
+           jy = (amxsim(2,2) - amxsim(2,1)) / ygdpt
+         else          !use Hagen's grid dimensioning as the default
+           call sbgrid
+         endif
+
+         ! allocate cellstate array to cover grid
+         sum_stat = 0
+         allocate(noerod(nsubr), stat=alloc_stat)
+         sum_stat = sum_stat + alloc_stat
+         allocate(cellstate(0:imax,0:jmax), stat=alloc_stat)
+         sum_stat = sum_stat + alloc_stat
+         if( sum_stat .gt. 0 ) then
+            Write(*,*) 'ERROR: unable to allocate enough memory for weps main data arrays'
+         end if
+
+         call erodinit( noerod, cellstate )
+      endif
+
 !     write (*,*) 'call to erosion '
 !     start erosion
-      call erosion (min_erosion_awu, subrsurf)
+      call erosion( min_erosion_awu, subrsurf, noerod, cellstate )
 
       !tsterode will generate the final grid values and the summarized erosion totals
       if (btest(am0efl,0).or.btest(am0efl,1).or.btest(am0efl,3)) then
@@ -548,7 +577,7 @@
       close(o_egrd_unit)
       close(o_sgrd_unit)
       close(o_emit_unit)
-      close(o_eplt_unit)
+      !close(o_eplt_unit)
 
       stop
       end program

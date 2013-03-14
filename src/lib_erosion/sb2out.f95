@@ -5,18 +5,20 @@
 !**********************************************************************
 !     subroutine sb2out
 !**********************************************************************
-      subroutine sb2out (jj, nn, hr, ws, wdir, o_unit)
-!
+      subroutine sb2out (jj, nn, hr, o_unit, cellstate)
+
 !     + + + PURPOSE + + +
 !     To print to file tst.out some key variables used in erosion
 !     use wind direction of 270 to see output along downwind direction
 
       use weps_interface_defs
+      use erosion_data_struct_defs, only: cellsurfacestate
 
 !     + + + ARGUEMENT DECLARATIONS + + +
-      real ws, wdir, hr
+      real hr
       integer  jj, nn, o_unit
-!
+      type(cellsurfacestate), dimension(0:,0:), intent(inout) :: cellstate     ! initialized grid cell state values
+
 !     + + + ARGUMENT DEFINITIONS + + +
 !     anemht = anemometer height (m)
 !     awzzo =  aerodynamic roughness at anemometer (mm)
@@ -35,11 +37,6 @@
       include 'm1sim.inc'
 !
 !     + + + LOCAL COMMON BLOCKS + + +
-!
-
-      include 'erosion/s2agg.inc'
-      include 'erosion/s2surf.inc'
-      include 'erosion/s2sgeo.inc'
       include 'erosion/w2wind.inc'
       include 'erosion/m2geo.inc'
       include 'erosion/e2erod.inc'
@@ -138,14 +135,14 @@
      &  yr, mo, da, hr,                                                 &
      & 'Surface Random Roughness (after)', 'random roughness', '(mm)'
       do j = jmax-1, 1, -1
-        write (o_unit, fmt="(500f12.4)") (slrr(i,j), i = 1, imax-1)
+        write (o_unit, fmt="(500f12.4)") (cellstate(i,j)%slrr, i = 1, imax-1)
       end do
       write(o_unit,fmt="(' </grid data>')")
       write(o_unit,fmt="(' <grid data> |',i5,2(i3),f7.3,3('|',a))")     &
      &  yr, mo, da, hr,                                                 &
      & 'Surface Oriented Roughness (after)', 'ridge height', '(mm)'
       do j = jmax-1, 1, -1
-        write (o_unit, fmt="(500f12.4)") (szrgh(i,j), i = 1, imax-1)
+        write (o_unit, fmt="(500f12.4)") (cellstate(i,j)%szrgh, i = 1, imax-1)
       end do
       write(o_unit,fmt="(' </grid data>')")
       write(o_unit,fmt="(' <grid data> |',i5,2(i3),f7.3,3('|',a))")     &
@@ -153,7 +150,7 @@
      & 'Surface Rock (after)',                                          &
      & 'surface volume rock fraction', '(m^3/m^3)'
       do j = jmax-1, 1, -1
-        write (o_unit, fmt="(500f12.4)") (svroc(i,j), i = 1, imax-1)
+        write (o_unit, fmt="(500f12.4)") (cellstate(i,j)%svroc, i = 1, imax-1)
       end do
       write(o_unit,fmt="(' </grid data>')")
       write (o_unit,*)
@@ -162,28 +159,28 @@
      &  yr, mo, da, hr,                                                 &
      & 'Soil Agg. Size < 0.01','mass fraction < 0.01 mm size','(fract.)'
       do j = jmax-1, 1, -1
-        write (o_unit, fmt="(500f12.4)") (sf1(i,j), i = 1, imax-1)
+        write (o_unit, fmt="(500f12.4)") (cellstate(i,j)%sf1, i = 1, imax-1)
       end do
       write(o_unit,fmt="(' </grid data>')")
       write(o_unit,fmt="(' <grid data> |',i5,2(i3),f7.3,3('|',a))")     &
      &  yr, mo, da, hr,                                                 &
      & 'Soil Agg. Size < 0.1', 'mass fraction < 0.1 mm size', '(fract.)'
       do j = jmax-1, 1, -1
-        write (o_unit, fmt="(500f12.4)") (sf10(i,j), i = 1, imax-1)
+        write (o_unit, fmt="(500f12.4)") (cellstate(i,j)%sf10, i = 1, imax-1)
       end do
       write(o_unit,fmt="(' </grid data>')")
       write(o_unit,fmt="(' <grid data> |',i5,2(i3),f7.3,3('|',a))")     &
      &  yr, mo, da, hr,                                                 &
      & 'Soil Agg. Size < 0.84','mass fraction < 0.84 mm size','(fract.)'
       do j = jmax-1, 1, -1
-        write (o_unit, fmt="(500f12.4)") (sf84(i,j), i = 1, imax-1)
+        write (o_unit, fmt="(500f12.4)") (cellstate(i,j)%sf84, i = 1, imax-1)
       end do
       write(o_unit,fmt="(' </grid data>')")
       write(o_unit,fmt="(' <grid data> |',i5,2(i3),f7.3,3('|',a))")     &
      &  yr, mo, da, hr,                                                 &
      & 'Soil Agg. Size < 2.0', 'mass fraction < 2.0 mm size', '(fract.)'
       do j = jmax-1, 1, -1
-        write (o_unit, fmt="(500f12.4)") (sf200(i,j), i = 1, imax-1)
+        write (o_unit, fmt="(500f12.4)") (cellstate(i,j)%sf200, i = 1, imax-1)
       end do
       write(o_unit,fmt="(' </grid data>')")
       write(o_unit,fmt="(' <grid data> |',i5,2(i3),f7.3,3('|',a))")     &
@@ -191,7 +188,7 @@
      & 'Soil Agg. Size for u* to be the thresh. friction velocity (af)',&
      &'"effective" mass fraction < 0.84 mm size', '(fract.)'
       do j = jmax-1, 1, -1
-        write (o_unit, fmt="(500f12.4)") (sf84mn(i,j), i = 1, imax-1)
+        write (o_unit, fmt="(500f12.4)") (cellstate(i,j)%sf84mn, i = 1, imax-1)
       end do
       write(o_unit,fmt="(' </grid data>')")
       write(o_unit,fmt="(' <grid data> |',i5,2(i3),f7.3,3('|',a))")     &
@@ -199,7 +196,7 @@
      & 'Mobile soil removable from aggregated surface (after)',         &
      & 'mass removable', '(kg/m^2)'
       do j = jmax-1, 1, -1
-        write (o_unit, fmt="(500f12.4)") (smaglos(i,j), i = 1, imax-1)
+        write (o_unit, fmt="(500f12.4)") (cellstate(i,j)%smaglos, i = 1, imax-1)
       end do
       write(o_unit,fmt="(' </grid data>')")
       write(o_unit,fmt="(' <grid data> |',i5,2(i3),f7.3,3('|',a))")     &
@@ -207,7 +204,7 @@
      & 'Change in mobile soil on aggregated surface (after)',           &
      & 'net mass change', '(kg/m^2)'
       do j = jmax-1, 1, -1
-        write (o_unit, fmt="(500f12.4)") (dmlos(i,j), i = 1, imax-1)
+        write (o_unit, fmt="(500f12.4)") (cellstate(i,j)%dmlos, i = 1, imax-1)
       end do
       write(o_unit,fmt="(' </grid data>')")
 
@@ -216,7 +213,7 @@
      &  yr, mo, da, hr,                                                 &
      & 'Consolidated crust thickness (after)', 'crust thickness', '(mm)'
       do j = jmax-1, 1, -1
-        write (o_unit, fmt="(500f12.4)") (szcr(i,j), i = 1, imax-1)
+        write (o_unit, fmt="(500f12.4)") (cellstate(i,j)%szcr, i = 1, imax-1)
       end do
       write(o_unit,fmt="(' </grid data>')")
       write(o_unit,fmt="(' <grid data> |',i5,2(i3),f7.3,3('|',a))")     &
@@ -224,7 +221,7 @@
      & 'Fraction of Surface covered with Crust (after)',                &
      & 'crust cover','(fract.)'
       do j = jmax-1, 1, -1
-        write (o_unit, fmt="(500f12.4)") (sfcr(i,j), i = 1, imax-1)
+        write (o_unit, fmt="(500f12.4)") (cellstate(i,j)%sfcr, i = 1, imax-1)
       end do
       write(o_unit,fmt="(' </grid data>')")
       write(o_unit,fmt="(' <grid data> |',i5,2(i3),f7.3,3('|',a))")     &
@@ -232,7 +229,7 @@
      &'Fraction of Crusted Surface covered with Loose Erodible Soil(a)', &
      & 'loose erodible material', '(fract.)'
       do j = jmax-1, 1, -1
-        write (o_unit, fmt="(500f12.4)") (sflos(i,j), i = 1, imax-1)
+        write (o_unit, fmt="(500f12.4)") (cellstate(i,j)%sflos, i = 1, imax-1)
       end do
       write(o_unit,fmt="(' </grid data>')")
       write(o_unit,fmt="(' <grid data> |',i5,2(i3),f7.3,3('|',a))")     &
@@ -240,15 +237,13 @@
      & 'Mass of Loose Erodible Soil on Crusted Surface (after)',        &
      & 'loose erodible material', '(kg/m^2)'
       do j = jmax-1, 1, -1
-        write (o_unit, fmt="(500f12.4)") (smlos(i,j), i = 1, imax-1)
+        write (o_unit, fmt="(500f12.4)") (cellstate(i,j)%smlos, i = 1, imax-1)
       end do
       write(o_unit,fmt="(' </grid data>')")
       write (o_unit,*)
 
 !!      endif
 
-!      write (o_unit,20)  anemht,wzoflg,ws,kbr
-!
 !     set output increment
       m = (imax - 1)/8
       m = max0(m,1)
@@ -293,32 +288,29 @@
       write (o_unit,*) '----------------------------------------------'
 
 !     output formats
-!   10 format (1x, 'anemht wzoflg   ws    kbr')
-   18 format(1x, 'i..n,j', 20i6)
+!   18 format(1x, 'i..n,j', 20i6)
 !   15 format (1x, ' (m)          (m/s)    ')
-   20 format (1x, 'anemht wzoflg ws kbr',                               &
-     &  f6.0, i6, f8.2, i6)
 
-   21 format (1x, 'egt=   ', 20f6.2)
-   22 format (1x, 'egtss= ', 20f6.2)
-   23 format (1x, 'egtss/egt=', 20f6.2)
+!   21 format (1x, 'egt=   ', 20f6.2)
+!   22 format (1x, 'egtss= ', 20f6.2)
+!   23 format (1x, 'egtss/egt=', 20f6.2)
    35 format (1x, 'egavg = ', 20f6.2)
-   36 format (1x, 'corrected for Sf12')
-   37 format (1x, 'smaglos=', 20f6.2)
-   24 format (1x, 'sf84=', 20f6.2)
+!   36 format (1x, 'corrected for Sf12')
+!   37 format (1x, 'smaglos=', 20f6.2)
+!   24 format (1x, 'sf84=', 20f6.2)
 
-   25 format (1x, 'szcr=', 20f6.2)
-   26 format (1x, 'sfcr=', 20f6.2)
-   27 format (1x, 'smlos=', 20f6.2)
-   28 format (1x, 'sflos=', 20f6.2)
+!   25 format (1x, 'szcr=', 20f6.2)
+!   26 format (1x, 'sfcr=', 20f6.2)
+!   27 format (1x, 'smlos=', 20f6.2)
+!   28 format (1x, 'sflos=', 20f6.2)
 
-   29 format (1x, 'szrgh=', 20f6.2)
-   30 format (1x, 'slrr=', 20f6.2)
+!   29 format (1x, 'szrgh=', 20f6.2)
+!   30 format (1x, 'slrr=', 20f6.2)
 
-   31 format (1x, 'ahrwc0(icsr,12)', f6.2)
-   32 format (1x, 'wus=', 20f6.2)
-   33 format (1x, 'wusp=', 20f6.2)
-   34 format (1x, 'wust=', 20f6.2)
+!   31 format (1x, 'ahrwc0(icsr,12)', f6.2)
+!   32 format (1x, 'wus=', 20f6.2)
+!   33 format (1x, 'wusp=', 20f6.2)
+!   34 format (1x, 'wust=', 20f6.2)
 
       return
       end

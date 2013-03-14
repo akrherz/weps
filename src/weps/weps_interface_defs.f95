@@ -432,16 +432,18 @@
       integer  o_unit, o_E_unit
       end subroutine daily_erodout
 !---------------------------
-      subroutine erodinit( noerod )
+      subroutine erodinit( noerod, cellstate )
       use erosion_data_struct_defs
-      type(threshold), dimension(:), intent(out) :: noerod                 ! report values to show which factors prevented erosion
+      type(threshold), dimension(:), intent(inout) :: noerod                 ! report values to show which factors prevented erosion
+      type(cellsurfacestate), dimension(0:,0:), intent(inout) :: cellstate     ! initialized grid cell state values
       end subroutine erodinit
 !---------------------------
-      subroutine erosion (min_erosion_awu, subrsurf, noerod)
+      subroutine erosion( min_erosion_awu, subrsurf, noerod, cellstate )
       use erosion_data_struct_defs
       real min_erosion_awu       !Minimum erosive wind speed (m/s) to evaluate for erosion loss
       type(subregionsurfacestate), dimension(:) :: subrsurf  ! subregion surface conditions (erosion specific set)
-      type(threshold), dimension(:), intent(out) :: noerod                 ! report values to show which factors prevented erosion
+      type(threshold), dimension(:), intent(out) :: noerod   ! report values to show which factors prevented erosion
+      type(cellsurfacestate), dimension(0:,0:) :: cellstate
       end subroutine erosion
 !---------------------------
       subroutine saeinp( subrsurf )
@@ -449,16 +451,19 @@
       type(subregionsurfacestate), dimension(:) :: subrsurf  ! subregion surface conditions (erosion specific set)
       end subroutine saeinp
 !---------------------------
-      subroutine sb1out (jj, nn, hr, ws, wdir, o_unit, subrsurf)
+      subroutine sb1out( jj, nn, hr, ws, wdir, o_unit, subrsurf, cellstate )
       use erosion_data_struct_defs
       real ws, wdir, hr
       integer  jj, nn, o_unit
       type(subregionsurfacestate), intent(in) :: subrsurf  ! subregion surface conditions (erosion specific set)
+      type(cellsurfacestate), dimension(0:,0:), intent(inout) :: cellstate     ! initialized grid cell state values
       end subroutine sb1out   
 !----------------------------
-      subroutine sb2out (jj, nn, hr, ws, wdir, o_unit)
-      real ws, wdir, hr
+      subroutine sb2out (jj, nn, hr, o_unit, cellstate)
+      use erosion_data_struct_defs, only: cellsurfacestate
+      real hr
       integer  jj, nn, o_unit
+      type(cellsurfacestate), dimension(0:,0:), intent(inout) :: cellstate     ! initialized grid cell state values
       end subroutine sb2out    
 !----------------------------
       subroutine sbaglos (wus, wust, wusto, sf84ic, asvroc,             &
@@ -482,11 +487,12 @@
       real           ws, hhr      
       end subroutine sbemit
 !----------------------------
-      subroutine sberod (time,flg, subrsurf)
+      subroutine sberod (time,flg, subrsurf, cellstate)
       use erosion_data_struct_defs
       real      time
       integer   flg    !Surface update flag (1=on, 0=off)
-      type(subregionsurfacestate), dimension(:) :: subrsurf  ! subregion surface conditions (erosion specific set)
+      type(subregionsurfacestate), dimension(:), intent(in) :: subrsurf  ! subregion surface conditions (erosion specific set)
+      type(cellsurfacestate), dimension(0:,0:), intent(inout) :: cellstate     ! initialized grid cell state values
       end subroutine sberod
 !----------------------------
       subroutine sbgrid()
@@ -495,9 +501,10 @@
       subroutine sbigrd()   
       end subroutine sbigrd   
 !----------------------------
-      subroutine sbinit( subrsurf )
+      subroutine sbinit( subrsurf, cellstate )
       use erosion_data_struct_defs
       type(subregionsurfacestate), dimension(:), intent(inout) :: subrsurf  ! subregion surface conditions (erosion specific set)
+      type(cellsurfacestate), dimension(0:,0:), intent(out) :: cellstate     ! initialized grid cell state values
       end subroutine sbinit
 !----------------------------
       subroutine sbpm10                                                 &
@@ -537,11 +544,12 @@
       real slagm, s0ags, slagn, slagx, sldi, sfdi         
       end subroutine sbsfdi
 !-----------------------------
-      subroutine sbwind (wustfl,awu, wind_dir, ntstep, intstep, rusust, subrsurf)
+      subroutine sbwind( wustfl, awu, ntstep, intstep, rusust, subrsurf, cellstate)
       use erosion_data_struct_defs
       integer wustfl,intstep, ntstep
-      real awu, rusust, wind_dir
+      real awu, rusust
       type(subregionsurfacestate), dimension(:) :: subrsurf  ! subregion surface conditions (erosion specific set)
+      type(cellsurfacestate), dimension(0:,0:), intent(inout) :: cellstate     ! initialized grid cell state values
       end subroutine sbwind
 !-------------------------------
       subroutine sbwus (anemht, awzzo, awu, wzzov, brcd, wus)

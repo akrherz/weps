@@ -63,6 +63,15 @@ none
 4
 #   Accounting region coordinates (meters)
 0.0  0.0
+183  183
+#   Accounting region coordinates (meters)
+0.0  183
+183  366
+#   Accounting region coordinates (meters)
+183  0.0
+366  183
+#   Accounting region coordinates (meters)
+183  183
 366  366
 #
 #  number of subregions

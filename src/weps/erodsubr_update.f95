@@ -19,7 +19,7 @@ subroutine erodsubr_update( sr, restot, croptot, biotot, subrsurf )
     type(biototal), intent(in) :: restot
     type(biototal), intent(in) :: croptot
     type(biototal), intent(in) :: biotot
-    type(subregionsurfacestate) :: subrsurf  ! subregion surface conditions (erosion specific set)
+    type(subregionsurfacestate), intent(inout) :: subrsurf  ! subregion surface conditions (erosion specific set)
 
 !     +++ ARGUMENT DEFINITIONS +++
 
@@ -45,9 +45,6 @@ subroutine erodsubr_update( sr, restot, croptot, biotot, subrsurf )
       include 'erosion/e2grid.inc'
       include 'erosion/e3grid.inc'
       include 'erosion/m2geo.inc'
-      include 'erosion/s2sgeo.inc'
-      include 'erosion/s2agg.inc'
-      include 'erosion/s2surf.inc'
 
 !     +++ LOCAL VARIABLES +++
       integer :: idx

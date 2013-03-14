@@ -276,17 +276,17 @@
 
 !     output formats
 
-    6 format (1x,'  Passing Border Grid Cells - Total  egt+egtss(kg/m)')
+!    6 format (1x,'  Passing Border Grid Cells - Total  egt+egtss(kg/m)')
     7 format (1x,'  Passing Border Grid Cells - Salt/Creep   egt(kg/m)')
     8 format (1x,'  Passing Border Grid Cells - Suspension egtss(kg/m)')
     9 format (1x,'  Passing Border Grid Cells - PM10       egt10(kg/m)')
 
-   50 format (1x,'  Leaving Field Grid Cells - Total       egt(kg/m^2)')
-   60 format (1x,'  Leaving Field Grid Cells - Salt/Creep egt-egtss(kg/m&
-     &^2)')
-   70 format (1x,'  Leaving Field Grid Cells - Suspension egtss(kg/m^2) &
-     &')
-   80 format (1x,'  Leaving Field Grid Cells - PM10      egt10(kg/m^2)')
+!   50 format (1x,'  Leaving Field Grid Cells - Total       egt(kg/m^2)')
+!   60 format (1x,'  Leaving Field Grid Cells - Salt/Creep egt-egtss(kg/m&
+!     &^2)')
+!   70 format (1x,'  Leaving Field Grid Cells - Suspension egtss(kg/m^2) &
+!     &')
+!   80 format (1x,'  Leaving Field Grid Cells - PM10      egt10(kg/m^2)')
 
    10 format (1x, 500f12.4)
    11 format (1x, 500f12.6)

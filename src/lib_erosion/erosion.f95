@@ -3,7 +3,7 @@
 !$Revision$
 !$HeadURL$
 
-      subroutine erosion (min_erosion_awu, subrsurf, noerod)
+      subroutine erosion( min_erosion_awu, subrsurf, noerod, cellstate )
 
 !     +++ PURPOSE +++
 !     subroutine erosion is the control subroutine and calls other
@@ -22,6 +22,7 @@
       real min_erosion_awu       !Minimum erosive wind speed (m/s) to evaluate for erosion loss
       type(subregionsurfacestate), dimension(:) :: subrsurf  ! subregion surface conditions (erosion specific set)
       type(threshold), dimension(:), intent(out) :: noerod                 ! report values to show which factors prevented erosion
+      type(cellsurfacestate), dimension(0:,0:), intent(out) :: cellstate     ! initialized grid cell state values
 
 !     +++ ARGUMENT DEFINITIONS +++
 
@@ -36,7 +37,6 @@
       include  'p1werm.inc'
       include  'm1subr.inc'
       include  'p1const.inc'
-!      include  'm1geo.inc'
       include  'w1wind.inc'
       include  'm1flag.inc'
       include  'm1sim.inc'
@@ -46,16 +46,11 @@
 
 !     + + + LOCAL COMMON BLOCKS + + +
       include 'erosion/p1erode.inc'  !Needs the SURF_UPD_FLG variable
-!      include 'erosion/e2grid.inc'
-!      include 'erosion/e3grid.inc'
-!      include 'erosion/m2geo.inc'
-      include 'erosion/s2sgeo.inc'
-      include 'erosion/s2agg.inc'
-      include 'erosion/s2surf.inc'
 
 !     +++ LOCAL VARIABLES +++
       integer i,j,wustfl, icsr
-      integer nhill, n
+!      integer nhill
+      integer n
       integer day, mon, yr, hidx
       real wuref, rusust, rut
 !      real rusust_preros(ntstep)
@@ -67,6 +62,7 @@
       real wuse, wuste, enge
       real wus_anemom, wus_random, wus_ridge, wus_biodrag
       real wubsts, wucsts, wucwts, wucdts, sfcv
+      real :: dmlos_tmp, sf84mn_tmp, smaglos_tmp, smaglosmx_tmp
 
 !     + + + LOCAL VARIABLE DEFINITIONS + + +
 !     i,j      - index
@@ -103,6 +99,7 @@
 !     wucsts - surface cover addition to bare soil threshold friction velocity
 !     wucwts - surface wetness addition to bare soil threshold friction velocity
 !     wucdts - aggregate density addition to bare soil threshold friction velocity
+!     cellstate - structure containing the cell state variables
 
 !     +++ SUBROUTINES CALLED +++
 !     sbzo
@@ -163,6 +160,7 @@
       rusust = 0
 
 !*****this check cannot be done if subhourly wind is used  FAF
+! for subhourly, surface water content values should be interpolated. see hidx calculation
       do 20 icsr=1, nsubr
        ! If snow depth > 20 mm in all subregions, then no erosion
        if (subrsurf(icsr)%ahzsnd .le. SNODEP) then
@@ -197,8 +195,8 @@
              subrsurf(icsr)%bsl(1)%aslagx, 0.84, subrsurf(icsr)%sfd84 )
 
         ! save the initial sf84 value
-        sf84ic = subrsurf(icsr)%sfd84
-        sf84ic = min (0.9999, max(sf84ic,0.0001))    ! edit ljh 1-23-05
+        subrsurf(icsr)%sf84ic = subrsurf(icsr)%sfd84
+        subrsurf(icsr)%sf84ic = min (0.9999, max(subrsurf(icsr)%sf84ic,0.0001))    ! edit ljh 1-23-05
      
         do i=1, ntstep
           ! find hour index (1-24)
@@ -221,14 +219,14 @@
 
           ! Compute friction velocity threshold for entrainment (wust) and
           ! transport friction velocity threshold (wusp)
-          dmlos(1,1) = 0.0
-          smaglos(1,1) = 0.0
-          smaglosmx(1,1)= 0.0
+          dmlos_tmp = 0.0
+          smaglos_tmp = 0.0
+          smaglosmx_tmp = 0.0
           call sbwust( subrsurf(icsr)%sfd84, subrsurf(icsr)%bsl(1)%asdagd, subrsurf(icsr)%asfcr, &
      &                 subrsurf(icsr)%bsl(1)%asvroc, subrsurf(icsr)%asflos, subrsurf(icsr)%abffcv, wzzo, &
-     &                 subrsurf(icsr)%ahrwc0(hidx), subrsurf(icsr)%bsl(1)%ahrwcw, wus, sf84ic,  &
-     &                 subrsurf(icsr)%bsl(1)%asvroc, dmlos(1,1), wust, wusp, &
-     &                 wusto, sf84mn(1,1), smaglos(1,1),smaglosmx(1,1), &
+     &                 subrsurf(icsr)%ahrwc0(hidx), subrsurf(icsr)%bsl(1)%ahrwcw, wus, subrsurf(icsr)%sf84ic,  &
+     &                 subrsurf(icsr)%bsl(1)%asvroc, dmlos_tmp, wust, wusp, &
+     &                 wusto, sf84mn_tmp, smaglos_tmp, smaglosmx_tmp, &
      &                 wubsts, wucsts, wucwts, wucdts, sfcv)
 
           ! Checks to find maximum ratio between surface friction velocity
@@ -308,7 +306,7 @@
 !     sbinit calls sbsdfi to get sf< 0.01,0.1,0.84,2.0 mm
 !     and writes to grid, writes other var. to grid and
 !     zeros eros output arrays.
-      call sbinit( subrsurf )
+      call sbinit( subrsurf, cellstate )
 
 !     calc. sweep direction based on wind direction for sberod
       prev_dir = awdir(1)+ 1.0   !make different to force calculation
@@ -447,7 +445,7 @@
             ! updates the fric. vel and threshold fric. vel on grid
             ! and calc. max. for  rusust = wus/wust
             ! this subroutine calls sbzo and sbwus
-            call sbwind (wustfl, awu(i), awdir(i), ntstep, i, rusust, subrsurf)
+            call sbwind( wustfl, awu(i), ntstep, i, rusust, subrsurf, cellstate )
             wuref = awu(i)
             wr = 1
 
@@ -459,14 +457,14 @@
                ! erosion will occur this time step
                ! wustfl = 1
                if (btest(am0efl,3)) then
-                  call sb1out (j, n, hrs, awu(i), awdir(i), luo_sgrd, subrsurf(1))
+                  call sb1out (j, n, hrs, awu(i), awdir(i), luo_sgrd, subrsurf(1), cellstate)
                endif
 
                ! stop gneral timer and start sberod timer
                call timer(TIMEROS,TIMSTOP)
                call timer(TIMSBEROD,TIMSTART)
 
-               call sberod (time,SURF_UPD_FLG, subrsurf)
+               call sberod (time,SURF_UPD_FLG, subrsurf, cellstate)
 
                call timer(TIMSBEROD,TIMSTOP)
                call timer(TIMEROS,TIMSTART)
@@ -474,16 +472,16 @@
                hrs = hrs + sub_ntstep !Compute end-of-period time in fraction of hours
 
                if (btest(am0efl,3)) then
-                  call sb2out (j, n, hrs, awu(i), awdir(i), luo_sgrd)
+                  call sb2out (j, n, hrs, luo_sgrd, cellstate)
                endif
 
                j = j + 1
             else
                ! print out initial state, even if we never call sberode()
                if (btest(am0efl,3).and.(j .eq. 1).and.(i .eq. 1)) then
-                  call sbwind (wustfl,awu(i),awdir(i),ntstep,i,rusust, subrsurf)
+                  call sbwind( wustfl, awu(i), ntstep, i, rusust, subrsurf, cellstate )
                   wuref = awu(i)
-                  call sb1out (j, n, hrs, awu(i), awdir(i), luo_sgrd, subrsurf(1))
+                  call sb1out (j, n, hrs, awu(i), awdir(i), luo_sgrd, subrsurf(1), cellstate)
                endif
 
                ! set to get out of inner loop and go to next wind speed - wustfl = 0

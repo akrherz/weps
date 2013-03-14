@@ -5,7 +5,7 @@
 !***********************************************************************
 !*     subroutine sbwind
 !***********************************************************************
-      subroutine sbwind (wustfl,awu, wind_dir, ntstep, intstep, rusust, subrsurf)
+      subroutine sbwind( wustfl, awu, ntstep, intstep, rusust, subrsurf, cellstate)
 
 !     +++ PURPOSE +++
 !     to update wzzo at each grid point;
@@ -20,8 +20,9 @@
 
 !     +++ ARGUMENT DECLARATIONS +++
       integer wustfl,intstep, ntstep
-      real awu, rusust, wind_dir
-      type(subregionsurfacestate), dimension(:) :: subrsurf  ! subregion surface conditions (erosion specific set)
+      real awu, rusust
+      type(subregionsurfacestate), dimension(:), intent(in) :: subrsurf  ! subregion surface conditions (erosion specific set)
+      type(cellsurfacestate), dimension(0:,0:), intent(inout) :: cellstate     ! initialized grid cell state values
 
 !     +++ ARGUMENT DEFINITIONS +++
 !     intstep  - current index of ntstep thru time
@@ -35,8 +36,7 @@
 !                hills and barriers (m/s).
 !     wust     - threshold fr. vel. for en. at grid points
 !     wusp     - threshold fr. vel. for trans. cap. at grid points
-!     wind_dir - direction of wind (degrees from north)
-!
+
 !     + + + GLOBAL COMMON BLOCKS + + +
 
       include  'p1werm.inc'
@@ -48,9 +48,6 @@
       include  'erosion/w2wind.inc'
       include  'erosion/e2grid.inc'
       include  'erosion/e3grid.inc'
-      include  'erosion/s2agg.inc'
-      include  'erosion/s2sgeo.inc'
-      include  'erosion/s2surf.inc'
 !
 !     +++ LOCAL VARIABLES +++
       integer i,j, icsr,k
@@ -72,13 +69,13 @@
       do 30 j = 1, jmax-1
 
       ! assign subregion index for grid point
-      icsr = csr(i,j)
+      icsr = cellstate(i,j)%csr
 
 !     update aerodynamic roughness
 ! ^^^ tmp out
 !     write (*,*) 'in sbwind, call to sbzo'
 
-      call sbzo( sxprg(icsr), szrgh(i,j), slrr(i,j), &
+      call sbzo( subrsurf(icsr)%sxprg, cellstate(i,j)%szrgh, cellstate(i,j)%slrr, &
            wzoflg, subrsurf(icsr)%adrlaitot, subrsurf(icsr)%adrsaitot, subrsurf(icsr)%abzht,  &
            subrsurf(icsr)%acrlai, subrsurf(icsr)%acrsai, subrsurf(icsr)%aczht, &
            subrsurf(icsr)%acxrow, subrsurf(icsr)%ac0rg, wzorg, wzorr, &
@@ -106,35 +103,35 @@
         rintstep = intstep
         k = aint(rintstep*23.75/ntstep) + 1
 
-        call sbwust( sf84(i,j), subrsurf(icsr)%bsl(1)%asdagd, sfcr(i,j), svroc(i,j), &
-             sflos(i,j), subrsurf(icsr)%abffcv, wzzo, subrsurf(icsr)%ahrwc0(k), subrsurf(icsr)%bsl(1)%ahrwcw, &
-             wus(i,j), sf84ic, subrsurf(icsr)%bsl(1)%asvroc, dmlos(i,j), & 
-             wust(i,j), wusp(i,j), wusto, sf84mn(i,j), smaglos(i,j), &
-             smaglosmx(i,j), wubsts, wucsts, wucwts, wucdts, sfcv)
+        call sbwust( cellstate(i,j)%sf84, subrsurf(icsr)%bsl(1)%asdagd, cellstate(i,j)%sfcr, cellstate(i,j)%svroc, &
+             cellstate(i,j)%sflos, subrsurf(icsr)%abffcv, wzzo, subrsurf(icsr)%ahrwc0(k), subrsurf(icsr)%bsl(1)%ahrwcw, &
+             wus(i,j), subrsurf(icsr)%sf84ic, subrsurf(icsr)%bsl(1)%asvroc, cellstate(i,j)%dmlos, & 
+             wust(i,j), wusp(i,j), wusto, cellstate(i,j)%sf84mn, cellstate(i,j)%smaglos, &
+             cellstate(i,j)%smaglosmx, wubsts, wucsts, wucwts, wucdts, sfcv)
 
 ! ^^^ tmp out
 !      if( wust(i,j) .le. 0.0 ) then
 !       write(*,*) "sbwind: i,j", i, j
 !       write(*,*) "sbwind: wus(i,j), wust(i,j), rusust",                &
 !     &            wus(i,j), wust(i,j), rusust
-!       write(*,*) "sf84(i,j) = ", sf84(i,j)
+!       write(*,*) "sf84(i,j) = ", cellstate(i,j)%sf84
 !       write(*,*) "subrsurf(icsr)%bsl(1)%asdagd", subrsurf(icsr)%bsl(1)%asdagd
-!       write(*,*) "sfcr(i,j)", sfcr(i,j)
-!       write(*,*) "svroc(i,j)", svroc(i,j)
-!       write(*,*) "sflos(i,j) ",sflos(i,j)
+!       write(*,*) "sfcr(i,j)", cellstate(i,j)%sfcr
+!       write(*,*) "svroc(i,j)", cellstate(i,j)%svroc
+!       write(*,*) "sflos(i,j) ", cellstate(i,j)%sflos
 !       write(*,*) "subrsurf(icsr)%abffcv", subrsurf(icsr)%abffcv
 !       write(*,*) "wzzo", wzzo
 !       write(*,*) "subrsurf(icsr)%ahrwc0(k)", subrsurf(icsr)%ahrwc0(k)
 !       write(*,*) "subrsurf(icsr)%bsl(1)%ahrwcw", subrsurf(icsr)%bsl(1)%ahrwcw
 !       write(*,*) "wus(i,j)", wus(i,j)
-!       write(*,*) "sf84ic", sf84ic
+!       write(*,*) "sf84ic", subrsurf(icsr)%sf84ic
 !       write(*,*) "rusust", rusust
 !       write(*,*) "asvroc(1,1)", asvroc(1,1)
-!       write(*,*) "dmlos(i,j)", dmlos(i,j)
+!       write(*,*) "dmlos(i,j)", cellstate(i,j)%dmlos
 !       write(*,*) "wust(i,j)", wust(i,j)
 !       write(*,*) "wusp(i,j)", wusp(i,j)
-!       write(*,*) "sf84mn(i,j)", sf84mn(i,j)
-!       write(*,*) "smaglos(i,j)", smaglos(i,j)
+!       write(*,*) "sf84mn(i,j)", cellstate(i,j)%sf84mn
+!       write(*,*) "smaglos(i,j)", cellstate(i,j)%smaglos
 !       stop
 !      end if
 

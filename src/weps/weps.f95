@@ -114,6 +114,7 @@
 
       type(subregionsurfacestate), dimension(:), allocatable :: subrsurf   ! subregion surface state needed by erosion
       type(threshold), dimension(:), allocatable :: noerod                 ! report values to show which factors prevented erosion
+      type(cellsurfacestate), dimension(:,:), allocatable :: cellstate     ! grid cell state values (allocate in erodinit)
 
       type(reporting_report), dimension(:), target, allocatable :: rep_report
       type(reporting_update), dimension(:), target, allocatable :: rep_update
@@ -329,7 +330,7 @@
       allocate(mandatbs(0:nsubr), stat=alloc_stat)
       sum_stat = sum_stat + alloc_stat
 
-      ! erosion submodel arrays
+      ! erosion subregion surface values array
       allocate(subrsurf(nsubr), stat=alloc_stat)
       sum_stat = sum_stat + alloc_stat
       allocate(noerod(nsubr), stat=alloc_stat)
@@ -445,7 +446,29 @@
       end do
 
       call asdini()
-      call erodinit( noerod )
+
+      ! Grid is created at least once.
+      if (am0eif .eqv. .true.) then
+         ! check to see if grid dimensions specified via cmdline args
+         if ((xgdpt > 0) .and. (ygdpt > 0)) then
+           imax = xgdpt + 1
+           jmax = ygdpt + 1
+           ix = (amxsim(1,2) - amxsim(1,1)) / xgdpt
+           jy = (amxsim(2,2) - amxsim(2,1)) / ygdpt
+         else          !use Hagen's grid dimensioning as the default
+           call sbgrid
+         endif
+
+         ! allocate cellstate array to cover grid
+         sum_stat = 0
+         allocate(cellstate(0:imax,0:jmax), stat=alloc_stat)
+         sum_stat = sum_stat + alloc_stat
+         if( sum_stat .gt. 0 ) then
+            Write(*,*) 'ERROR: unable to allocate enough memory for weps main data arrays'
+         end if
+
+         call erodinit( noerod, cellstate )
+      endif
       am0gdf = .true.
 
 !     Likely that we will put all management data into memory
@@ -709,7 +732,7 @@
                   ! write(*,*) "Start calcwu"
                   call calcwu
                   ! write(*,*) "Start erosion"
-                  call erosion (5.0, subrsurf, noerod)
+                  call erosion( 5.0, subrsurf, noerod, cellstate )
                   if (btest(am0efl,0) .or. btest(am0efl,1)) then
                      call daily_erodout (luo_egrd,luo_erod)
                   endif

@@ -3,7 +3,7 @@
 !$Revision$
 !$HeadURL$
 !**********************************************************************
-      subroutine erodinit( noerod )
+      subroutine erodinit( noerod, cellstate )
 
 !     +++ PURPOSE +++
 !
@@ -31,11 +31,11 @@
       include  'm1geo.inc'
       include  'm1subr.inc'
       include  'erosion/m2geo.inc'
-      include  'erosion/e2grid.inc'  !needed for initialization of csr(*,*)
       include  's1surf.inc'
       
 !     +++ ARGUMENT DECLARATIONS +++
-      type(threshold), dimension(:), intent(out) :: noerod                 ! report values to show which factors prevented erosion
+      type(threshold), dimension(:), intent(inout) :: noerod                 ! report values to show which factors prevented erosion
+      type(cellsurfacestate), dimension(0:,0:), intent(inout) :: cellstate     ! initialized grid cell state values
 
 !     +++ SUBROUTINES CALLED +++
 !     sbgrid
@@ -54,16 +54,6 @@
 
       ! Grid is created at least once.
       if (am0eif .eqv. .true.) then
-         ! check to see if grid dimensions specified via cmdline args
-         if ((xgdpt > 0) .and. (ygdpt > 0)) then
-           imax = xgdpt + 1
-           jmax = ygdpt + 1
-           ix = (amxsim(1,2) - amxsim(1,1)) / xgdpt
-           jy = (amxsim(2,2) - amxsim(2,1)) / ygdpt
-         else          !use Hagen's grid dimensioning as the default
-           call sbgrid
-         endif
-
          ! assign subregion number to each grid cell
          ! code lifted from sbgrid because it is initialized there - LEW
          do j = 1, jmax-1
@@ -77,13 +67,13 @@
                if( pnpoly(centroid, subr_poly(sr)) .ge. 0) then
                   ! centroid of grid cell is inside or on edge of subregion polygon
                   ! set subregion index
-                  csr(i,j) = sr
+                  cellstate(i,j)%csr = sr
                   ! default to first polygon if on edge by exiting the subregion do loop
                   exit
                end if
              end do
              ! check final status
-             if( csr(i,j) .eq. 0 ) then
+             if( cellstate(i,j)%csr .eq. 0 ) then
                  ! this grid cell not assigned to a subregion
                  write(*,*) 'ERROR: no subregion for grid cell ',i,':',j
                  write(*,*) 'Subregion coverage is not complete'

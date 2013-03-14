@@ -6,7 +6,7 @@
 !     subroutine sbinit
 !**********************************************************************
 
-      subroutine sbinit( subrsurf )
+      subroutine sbinit( subrsurf, cellstate )
 
 !     +++ purpose +++
 !     Input subregion values of variables from other submodels
@@ -19,6 +19,7 @@
 
 !     + + + ARGUEMENT DECLARATIONS + + +
       type(subregionsurfacestate), dimension(:), intent(inout) :: subrsurf  ! subregion surface conditions (erosion specific set)
+      type(cellsurfacestate), dimension(0:,0:), intent(out) :: cellstate     ! initialized grid cell state values
 
 !     + + + GLOBAL COMMON BLOCKS + + +
 
@@ -30,12 +31,8 @@
       include 'erosion/p1erode.inc'
       include 'erosion/m2geo.inc'
       include 'erosion/e2grid.inc'
-      include 'erosion/s2agg.inc'
-      include 'erosion/s2surf.inc'
-      include 'erosion/s2sgeo.inc'
       include 'erosion/e2erod.inc'
-!
-!
+
 !     + + + LOCAL VARIABLES + + +
       integer  icsr, i, j
 
@@ -62,10 +59,10 @@
          call sbsfdi( subrsurf(icsr)%bsl(1)%aslagm, subrsurf(icsr)%bsl(1)%as0ags, &
               subrsurf(icsr)%bsl(1)%aslagn, subrsurf(icsr)%bsl(1)%aslagx, 0.84, subrsurf(icsr)%sfd84 )
          ! store initial sf84
-         sf84ic = subrsurf(icsr)%sfd84
-         sf84ic = min(0.9999, max(sf84ic,0.0001))            !set limits
+         subrsurf(icsr)%sf84ic = subrsurf(icsr)%sfd84
+         subrsurf(icsr)%sf84ic = min(0.9999, max(subrsurf(icsr)%sf84ic,0.0001))            !set limits
          ! store initial sf10
-         sf10ic = subrsurf(icsr)%sfd10
+         subrsurf(icsr)%sf10ic = subrsurf(icsr)%sfd10
 
          call sbsfdi( subrsurf(icsr)%bsl(1)%aslagm, subrsurf(icsr)%bsl(1)%as0ags, &
               subrsurf(icsr)%bsl(1)%aslagn, subrsurf(icsr)%bsl(1)%aslagx, 2.0, subrsurf(icsr)%sfd200 )
@@ -75,35 +72,35 @@
       do 10 i = 1, imax-1
 
 !     determine subregion
-      icsr = csr(i,j)
+      icsr = cellstate(i,j)%csr
 !     input variables to grid cells
-      sf1  (i,j) = subrsurf(icsr)%sfd1
-      sf10 (i,j) = subrsurf(icsr)%sfd10
-      sf84 (i,j) = subrsurf(icsr)%sfd84
-      sf200(i,j) = subrsurf(icsr)%sfd200
+      cellstate(i,j)%sf1 = subrsurf(icsr)%sfd1
+      cellstate(i,j)%sf10 = subrsurf(icsr)%sfd10
+      cellstate(i,j)%sf84 = subrsurf(icsr)%sfd84
+      cellstate(i,j)%sf200 = subrsurf(icsr)%sfd200
 !     edit ljh - 1-22-04
-      svroc(i,j) = subrsurf(icsr)%bsl(1)%asvroc    ! if ifc has surface rock, 1st index maybe 0.
+      cellstate(i,j)%svroc = subrsurf(icsr)%bsl(1)%asvroc    ! if ifc has surface rock, 1st index maybe 0.
 !
-      szcr(i,j)  = subrsurf(icsr)%aszcr
-      sfcr(i,j)  = subrsurf(icsr)%asfcr
-      smlos(i,j) = subrsurf(icsr)%asmlos
-      sflos(i,j) = subrsurf(icsr)%asflos
+      cellstate(i,j)%szcr = subrsurf(icsr)%aszcr
+      cellstate(i,j)%sfcr = subrsurf(icsr)%asfcr
+      cellstate(i,j)%smlos = subrsurf(icsr)%asmlos
+      cellstate(i,j)%sflos = subrsurf(icsr)%asflos
 !
-      szrgh(i,j) = subrsurf(icsr)%aszrgh
+      cellstate(i,j)%szrgh = subrsurf(icsr)%aszrgh
 
       !initialize RR values for each grid cell
-      slrr(i,j)  = subrsurf(icsr)%aslrr
+      cellstate(i,j)%slrr = subrsurf(icsr)%aslrr
 
-      if (slrr(i,j) < SLRR_MIN) then
-          slrr(i,j) = SLRR_MIN
-      else if (slrr(i,j) > SLRR_MAX) then
-          slrr(i,j) = SLRR_MAX
+      if (cellstate(i,j)%slrr < SLRR_MIN) then
+          cellstate(i,j)%slrr = SLRR_MIN
+      else if (cellstate(i,j)%slrr > SLRR_MAX) then
+          cellstate(i,j)%slrr = SLRR_MAX
       endif
 
-      dmlos(i,j) = 0.0
-      smaglos(i,j) = 0.0
-      smaglosmx(i,j) = 0.0
-      sf84mn(i,j) = 0.0
+      cellstate(i,j)%dmlos = 0.0
+      cellstate(i,j)%smaglos = 0.0
+      cellstate(i,j)%smaglosmx = 0.0
+      cellstate(i,j)%sf84mn = 0.0
 !
 !     initialize output array- now in sbigrd
 !      egt(i,j)    = 0

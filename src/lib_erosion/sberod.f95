@@ -5,7 +5,7 @@
 !**********************************************************************
 !     subroutine sberod
 !**********************************************************************
-      subroutine sberod (time,flg, subrsurf)
+      subroutine sberod (time,flg, subrsurf, cellstate)
 
 !     To calc loss/dep of saltation/creep, susp. and PM-10 at cells
 !     To call sbqout to calc. qo, qsso, q10o for each cell
@@ -19,7 +19,8 @@
 !     +++ ARGUMENT DECLARATIONS +++
       real      time
       integer   flg    !Surface update flag (1=on, 0=off)
-      type(subregionsurfacestate), dimension(:) :: subrsurf  ! subregion surface conditions (erosion specific set)
+      type(subregionsurfacestate), dimension(:), intent(in) :: subrsurf  ! subregion surface conditions (erosion specific set)
+      type(cellsurfacestate), dimension(0:,0:), intent(inout) :: cellstate     ! initialized grid cell state values
 
 !     +++ ARGUMENT DEFINITIONS +++
 !     time     = time interval (seconds)
@@ -35,9 +36,6 @@
       include  'erosion/m2geo.inc'
       include  'erosion/e2grid.inc'
       include  'erosion/e3grid.inc'
-      include  'erosion/s2agg.inc'
-      include  'erosion/s2surf.inc'
-      include  'erosion/s2sgeo.inc'
       include  'erosion/e2erod.inc'
       include  'erosion/w2wind.inc'
 !
@@ -121,7 +119,7 @@
       q10i = (q10x(i-i3,j)*jy + q10y(i,j-i6)*ix)/ly
 
 !       calc. output discharge
-      icsr = csr(i,j)
+      icsr = cellstate(i,j)%csr
 !^^^ tmp out
 !      if (j .eq. 1 .and. i .eq. 1) then
 !        write (*,*) 'out from sberod line 131'
@@ -139,17 +137,17 @@
       call timer(TIMSBQOUT,TIMSTART)
 
        call sbqout (flg, &
-       wus(i,j), wust(i,j), wusp(i,j), sf10(i,j), sf84(i,j), &
-       sf200(i,j), szcr(i,j), sfcr(i,j), sflos(i,j), smlos(i,j), &
-       szrgh(i,j), subrsurf(icsr)%asxrgs, subrsurf(icsr)%sxprg, slrr(i,j), &
+       wus(i,j), wust(i,j), wusp(i,j), cellstate(i,j)%sf10, cellstate(i,j)%sf84, &
+       cellstate(i,j)%sf200, cellstate(i,j)%szcr, cellstate(i,j)%sfcr, cellstate(i,j)%sflos, cellstate(i,j)%smlos, &
+       cellstate(i,j)%szrgh, subrsurf(icsr)%asxrgs, subrsurf(icsr)%sxprg, cellstate(i,j)%slrr, &
        subrsurf(icsr)%bsl(1)%asfcla, subrsurf(icsr)%bsl(1)%asfsan, &
-       subrsurf(icsr)%bsl(1)%asfvfs,svroc(i,j), subrsurf(icsr)%abrsai, subrsurf(icsr)%abzht, &  !edit ljh 1-22-05  
+       subrsurf(icsr)%bsl(1)%asfvfs, cellstate(i,j)%svroc, subrsurf(icsr)%abrsai, subrsurf(icsr)%abzht, &  !edit ljh 1-22-05  
        subrsurf(icsr)%abffcv, time, &
        subrsurf(icsr)%acanag, subrsurf(icsr)%acancr, subrsurf(icsr)%asf10an, &
        subrsurf(icsr)%asf10en, subrsurf(icsr)%asf10bk, &
        lx, qi, qssi, q10i, i, j, imax, jmax, &
-       smaglos(i,j), dmlos(i,j), sf84mn(i,j), sf84ic, sf10ic, &  !edit ljh 1-22-05
-       subrsurf(icsr)%bsl(1)%asvroc, smaglosmx(i,j), &
+       cellstate(i,j)%smaglos, cellstate(i,j)%dmlos, cellstate(i,j)%sf84mn, subrsurf(icsr)%sf84ic, subrsurf(icsr)%sf10ic, &  !edit ljh 1-22-05
+       subrsurf(icsr)%bsl(1)%asvroc, cellstate(i,j)%smaglosmx, &
        qo, qsso, q10o )
 
       call timer(TIMSBQOUT,TIMSTOP)

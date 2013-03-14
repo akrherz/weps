@@ -148,6 +148,9 @@
 !     Accounting Region diagonal corners (x1,y1) and (x2,y2)
       do 20 a = 1, nacctr
         line = getline(i_unit)
+
+        write(*,*) 'erodin: a, line:', a, line
+
         read (line,*) ((amxar (x,y,a), x=1,2), y=1,2)
 !       read (getline(i_unit),*) ((amxar (x,y,a), x=1,2), y=1,2)
    20 continue
@@ -821,7 +824,7 @@
 
   220 format (1x, 2f8.2)
   230 format (1x, 3f8.2)
-  250 format (1x, i4)
+  250 format (1x, i0)
   251 format (1x, 2f8.2)
   260 format (1x, 6f8.2)
   270 format (1x, 7f8.2)
@@ -842,7 +845,7 @@
       write (o_unit,*)
       write (o_unit,*) 'orientation and dimensions of sim region'
       write (o_unit,*) 'amasim(deg)  amxsim - (x1,y1) (x2,y2)'
-      write (o_unit,250) amasim,  ((amxsim(x,y), x=1,2), y=1,2)
+      write (o_unit,260) amasim,  ((amxsim(x,y), x=1,2), y=1,2)
 
       write (o_unit,*)
       write (o_unit,*)  '+++ ACCOUNTING REGIONS +++'
@@ -851,7 +854,7 @@
       write (o_unit,*) nacctr
       write (o_unit,*) 'accounting region dimensions (x1,y1) (x2,y2)'
       do 1000 a = 1, nacctr
-        write (o_unit,250) ((amxar (x,y,a), x=1,2), y=1,2)
+        write (o_unit,260) ((amxar (x,y,a), x=1,2), y=1,2)
  1000 continue
 
       write (o_unit,*)

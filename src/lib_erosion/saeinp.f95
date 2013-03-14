@@ -23,21 +23,9 @@
       include  'm1geo.inc'
       include  'w1wind.inc'
       include  'w1pavg.inc'
-      include  'm1flag.inc'
       include  'm1sim.inc'
-      include  'm1subr.inc'
       include  'wpath.inc'
-      include  'c1gen.inc'
-!
-!     + + + LOCAL COMMON BLOCKS + + +
-      include 'erosion/e2grid.inc'
-      include 'erosion/e3grid.inc'
-      include 'erosion/m2geo.inc'
-      include 'erosion/s2sgeo.inc'
-      include 'erosion/s2agg.inc'
-      include 'erosion/s2surf.inc'
-!      include  'erosion/w2wind.inc'
-!
+
 !     +++ LOCAL VARIABLES +++
       integer k,l, sr, ip
       integer b
@@ -48,14 +36,9 @@
 !     sr - index used in subregion loop
 !     ip - index to polygon coordinates
 
-!     +++ SUBROUTINES CALLED +++
-!
-!     +++ FUNCTION DECLARATIONS +++
-!
 !     +++ END SPECIFICATIONS +++
-!
-      call fopenk (luo_saeinp,                                          &
-     &     rootp(1:len_trim(rootp)) //'saeros.in','unknown')
+
+      call fopenk (luo_saeinp, trim(rootp) //'saeros.in','unknown')
       call caldat (am0jd,day,mon,yr)
       write(luo_saeinp,2101) day, mon, yr
  2101 format('# day mon yr',2(1x,i2),2x,i4)
@@ -126,8 +109,7 @@
  2110 format('#',/,                                                     &
      &'#  +++ ACCOUNTING REGIONS +++',/,                                &
      &'#',/,                                                            &
-     &'# nacctr, I, (m1geo.inc) Number of accounting regions (must be 1 &
-     &for now)')
+     &'# nacctr, I, (m1geo.inc) Number of accounting regions')
       write(luo_saeinp,*) nacctr
       write(luo_saeinp,2115)
  2115 format('#',/,                                                     &
@@ -137,8 +119,10 @@
      &x2,y2',/,                                                         &
      &'#                     for each accounting region specified (nacct&
      &r)')
-      write(luo_saeinp,*) amxar(1,1,nacctr), amxar(2,1,nacctr),         &
-     &            amxar(1,2,nacctr),amxar(2,2,nacctr)
+      do b = 1, nacctr
+         write(luo_saeinp,*) amxar(1,1,b), amxar(2,1,b),                &
+     &            amxar(1,2,b),amxar(2,2,b)
+      end do
 !       barriers
       write(luo_saeinp,2120)
  2120 format ('#',/,                                                    &

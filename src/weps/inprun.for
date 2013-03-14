@@ -312,14 +312,19 @@
         read (line,*,err=80) sclsim, sclbar
       case (23)
         read (line,*,err=80) nacctr
- ! set up iar for reading in next lines
+        ! set counter iar for reading in next lines
         iar = 1
       case (24)
         read (line,*,err=80) amxar(1,1,iar), amxar(2,1,iar)
      
       case (25)
         read (line,*,err=80) amxar(1,2,iar), amxar(2,2,iar)
-      
+        iar = iar + 1
+        if( iar .le. nacctr ) then
+           ! read another accounting region
+           typidx = typidx - 2
+        end if
+
       case (26)
         ! read Subregion count
         read (line,*,err=80) nsubr
