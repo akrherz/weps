@@ -42,7 +42,6 @@ subroutine erodsubr_update( sr, restot, croptot, biotot, subrsurf )
       include  'wpath.inc'
 !
 !     + + + LOCAL COMMON BLOCKS + + +
-      include 'erosion/e2grid.inc'
       include 'erosion/e3grid.inc'
       include 'erosion/m2geo.inc'
 

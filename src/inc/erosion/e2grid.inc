@@ -10,7 +10,7 @@
 
 !     + + + VARIABLE DECLARATIONS + + +
 
-      integer          csr(0:mngdpt, 0:mngdpt)
+!      integer          csr(0:mngdpt, 0:mngdpt)
       real      w0br(0:mngdpt,0:mngdpt,8)
 !      real      w0hill(0:mngdpt, 0:mngdpt,8)
 
@@ -18,7 +18,7 @@
 
 
       common /e2grid/                                                   &
-     &                csr,                                              &
+!     &                csr,                                              &
      &                     w0br
 !    &                          w0hill
 

@@ -30,7 +30,6 @@
 !     + + +  LOCAL COMMON BLOCKS + + +
       include 'erosion/p1erode.inc'
       include 'erosion/m2geo.inc'
-      include 'erosion/e2grid.inc'
       include 'erosion/e2erod.inc'
 
 !     + + + LOCAL VARIABLES + + +

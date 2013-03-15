@@ -80,7 +80,6 @@
       include 'erosion/m2geo.inc'   !Need tsterode cmdline arg vars(xgdpt,ygdpt)
       include 'erosion/e2erod.inc'
     
-      include 'erosion/e2grid.inc' 
 !     + + + LOCAL VARIABLES + + +
       logical first
 
@@ -744,7 +743,7 @@
                   call water_erosion(isr,cd,cm,cy,luowepperod,luoweppsum, restot(isr), croptot(isr))
                end if
 
-               call sci_cum(isr, restot(isr))   ! Keep running total for soil conditioning index (SCI)
+               call sci_cum( isr, restot(isr), cellstate )   ! Keep running total for soil conditioning index (SCI)
                call plotdata( isr, restot(isr), croptot(isr), biotot(isr), noerod(isr) )  ! print to plot data file
                ! write decomposition biomass pool amounts to files
                call bpools(cd,cm,cy,isr, residue(1:size(residue,1),isr), restot(isr), croptot(isr), biotot(isr), decompfac(isr))
@@ -847,7 +846,7 @@
           if (report_debug >= 2) then
               call print_yr_report_vars(nperiods(0), mandatbs(0)%mperod, n_rot_cycles(0), rep_report(isr)%yr_report)
           end if
-          call sci_report
+          call sci_report( cellstate )
           call print_ui1_output(nperiods(0), mandatbs(0)%mperod, n_rot_cycles(0), rep_report(isr), mandatbs(0)%mandate) !Use for new WEPS gui
           call print_mandate_output(luomandate, mandatbs(isr)%mandate)
       end do

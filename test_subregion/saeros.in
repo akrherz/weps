@@ -63,7 +63,7 @@
 # +++ BARRIERS +++
 #
 #     nbr, I, (m1geo.inc) Number of barriers (0-5) 
-           0
+           1
 #
 #     NOTE: Remaining BARRIER inputs are repeated for each barrier specified
 #     If no barriers specified (nbr=0), then no BARRIER inputs will be here
@@ -78,6 +78,10 @@
 #       amxbrw(b), R, (m1geo.inc) Barrier width (m)
 #  1.2 0.50 2.0
 #
+# amxar(1,1,b), amxar(2,1), amxar(1,2),amxar(2,2)
+   0.0000000       366.00000       366.00000       366.00000    
+#, amzbr(b), ampbr(b), amxbrw(b)
+   2.0000000      0.69999999       2.0000000    
 #
 # +++ SUBREGIONS +++
 #

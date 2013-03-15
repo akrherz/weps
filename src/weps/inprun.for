@@ -389,7 +389,13 @@
 !       read in barrier info
         read (line,*,err=80) nbr
  !     write(6,*) ' reading barriers ', nbr
-        ibr = 1
+        if( nbr .lt. 1 ) then
+           ! skip reading barrier information
+           typidx = typidx + 6
+        else
+           ! set index for first barrier
+           ibr = 1
+        end if
       case (35)
         read (line,*,err=80) amxbr(1,1,ibr), amxbr(2,1,ibr)
       case (36)

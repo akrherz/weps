@@ -28,6 +28,7 @@ module erosion_data_struct_defs
      real :: szrgh        ! Ridge height (mm)
      real :: sxprg        ! ridge spacing parallel the wind direction(mm)
      real :: slrr         ! soil random roughness (mm)
+     real :: w0br(8)      ! barrier wind reduction factor for the grid cell from each of 8 cardinal directions
   end type cellsurfacestate
 
   type by_soil_layer

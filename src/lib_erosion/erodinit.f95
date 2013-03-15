@@ -92,7 +92,7 @@
 
          ! check for barriers
          if (nbr .gt. 0) then
-         call sbbr
+         call sbbr( cellstate )
          endif
 
          ! Turn off grid creation flag

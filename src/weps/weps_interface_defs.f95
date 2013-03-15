@@ -473,7 +473,9 @@
       real smaglosmx, smaglos, sf84mn, sf84 
       end subroutine sbaglos
 !-----------------------------
-      subroutine sbbr()
+      subroutine sbbr( cellstate )
+      use erosion_data_struct_defs, only: cellsurfacestate
+      type(cellsurfacestate), dimension(0:,0:), intent(inout) :: cellstate     ! initialized grid cell state values
       end subroutine sbbr
 !-----------------------------
       subroutine sbdirini(wind_dir, prev_dir)
@@ -1225,11 +1227,18 @@
       integer isr
       end subroutine save_soil
 !--------------------------------
-      subroutine sci_cum( isr, restot )
+      subroutine sci_cum( isr, restot, cellstate )
       use biomaterial, only: biototal
+      use erosion_data_struct_defs, only: cellsurfacestate
       integer, intent(in) :: isr
       type(biototal), intent(in) :: restot
+      type(cellsurfacestate), dimension(0:,0:), intent(in) :: cellstate     ! initialized grid cell state values
       end subroutine sci_cum
+!--------------------------------
+      subroutine sci_report( cellstate )
+      use erosion_data_struct_defs, only: cellsurfacestate
+      type(cellsurfacestate), dimension(0:,0:), intent(in) :: cellstate     ! initialized grid cell state values
+      end subroutine sci_report
 !--------------------------------
       subroutine sort (iarr,n,p1,p5,p9)
       integer  n

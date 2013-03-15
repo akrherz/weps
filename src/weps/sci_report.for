@@ -2,23 +2,27 @@
 !$Date$
 !$Revision$
 !$HeadURL$
-      subroutine sci_report
-
-!     + + + INCLUDE + + +
-      use weps_interface_defs
-      use file_io_mod, only: luosci
-      include 'p1werm.inc'
-      include 'command.inc'
-      include 'm1subr.inc'
-      include 's1dbh.inc'
-      include 'erosion/e2grid.inc'
-      include 'erosion/m2geo.inc'
-      include 'main/sci_report_val.inc'
-      include 'manage/man.inc'
+      subroutine sci_report( cellstate )
 
 !     + + + PURPOSE + + +
 !     each time it is called, it adds a value to the total biomass increments
 !     the counter for number of values added together.
+
+      use weps_interface_defs
+      use file_io_mod, only: luosci
+      use erosion_data_struct_defs, only: cellsurfacestate
+
+!     + + + ARGUMENT DECLARATIONS + + +
+      type(cellsurfacestate), dimension(0:,0:), intent(in) :: cellstate     ! initialized grid cell state values
+
+!     + + + INCLUDE + + +
+      include 'p1werm.inc'
+      include 'command.inc'
+      include 'm1subr.inc'
+      include 's1dbh.inc'
+      include 'erosion/m2geo.inc'
+      include 'main/sci_report_val.inc'
+      include 'manage/man.inc'
 
 !     + + + LOCAL VARIABLES + + +
       integer isr, texclass
@@ -84,7 +88,7 @@
 
           do idx = 1, imax-1
               do jdy = 1, jmax-1
-                  if( csr(idx,jdy) .eq. isr ) then
+                  if( cellstate(idx,jdy)%csr .eq. isr ) then
                       sarea = sarea + cellarea
                   end if
                end do

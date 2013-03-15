@@ -3,13 +3,15 @@
 !$Revision$
 !$HeadURL$
 
-      subroutine sci_cum( isr, restot )
+      subroutine sci_cum( isr, restot, cellstate )
 
       use biomaterial, only: biototal
+      use erosion_data_struct_defs, only: cellsurfacestate
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer, intent(in) :: isr
       type(biototal), intent(in) :: restot
+      type(cellsurfacestate), dimension(0:,0:), intent(in) :: cellstate     ! initialized grid cell state values
 
 !     + + + ARGUMENT DEFINITIONS + + +
 !     isr - subregion index
@@ -19,7 +21,6 @@
       include 'p1werm.inc'
       include 'command.inc'
       include 'erosion/e2erod.inc'
-      include 'erosion/e2grid.inc'
       include 'erosion/m2geo.inc'
       include 'main/sci_report_val.inc'
 
@@ -39,7 +40,7 @@
       ngdpt = 0
       do idx = 1, imax-1
           do jdy = 1, jmax-1
-              if( csr(idx,jdy) .eq. isr ) then
+              if( cellstate(idx,jdy)%csr .eq. isr ) then
                   total = total + egt(idx,jdy)
                   ngdpt = ngdpt + 1
               end if

@@ -46,7 +46,6 @@
 !     + + + LOCAL COMMON BLOCKS + + +
       include  'erosion/m2geo.inc'
       include  'erosion/w2wind.inc'
-      include  'erosion/e2grid.inc'
       include  'erosion/e3grid.inc'
 !
 !     +++ LOCAL VARIABLES +++
@@ -94,7 +93,7 @@
 !
 !     correct friction velocity for barriers
       if (nbr .ne. 0 ) then
-         wus(i,j) = wus (i,j) * w0br (i,j,kbr)
+         wus(i,j) = wus (i,j) * cellstate(i,j)%w0br(kbr)
       endif
 
       if (wustfl .eq. 1) then

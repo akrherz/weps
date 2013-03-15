@@ -5,7 +5,7 @@
 !**********************************************************************
 !     subroutine sbbar       3/20/98
 !**********************************************************************
-      subroutine sbbr
+      subroutine sbbr( cellstate )
 ! ^^^ note must add wlen to call for tst version
 !     + + + PURPOSE + + +
 !     to calculate the fraction of open field friction velocity
@@ -13,6 +13,7 @@
 !     at all interior nodes
 
       use weps_interface_defs
+      use erosion_data_struct_defs, only: cellsurfacestate
 
 !     to assign the 8 fractons calculated at each node to as 3-d
 !     array (W0br(i,j,k)) for all nodes inside sim. region.
@@ -22,25 +23,26 @@
 
 !     + + + PARAMETERS + + +
 
-!     + + + ARGUMENT DEFINITIONS  + + +
-!     wlen = windward(-) and leeward(+) distances from barrier
-!            calculated for each wind direction;
-!  ^^^ used only in test version
+!     + + + ARGUMENT DECLARATIONS + + +
+      type(cellsurfacestate), dimension(0:,0:), intent(inout) :: cellstate     ! initialized grid cell state values
 
 !     + + + GLOBAL COMMON BLOCKS + + +
-
       include 'p1werm.inc'
       include 'm1geo.inc'
       include 'p1const.inc'
 
 !     + + + LOCAL COMMON BLOCKS + + +
-      include 'erosion/e2grid.inc'
       include 'erosion/e3grid.inc'
       include 'erosion/m2geo.inc'
 
 !     + + + ARGUMENT DECLARATIONS + + +
 ! ^^^ used only in test version
 !      real wlen(0:mngdpt, 0:mngdpt, 8)
+
+!     + + + ARGUMENT DEFINITIONS  + + +
+!     wlen = windward(-) and leeward(+) distances from barrier
+!            calculated for each wind direction;
+!  ^^^ used only in test version
 
 !     + + + LOCAL VARIABLES + + +
 
@@ -77,7 +79,7 @@
       do 10 i = 0, imax
         do 10 j = 0, jmax
           do 10 k = 1, 8
-            w0br(i,j,k) = 1.0
+            cellstate(i,j)%w0br(k) = 1.0
    10 continue
 
 !     + + + END SPECIFICATIONS + + +
@@ -123,9 +125,9 @@
             if ((a+c) .le. b) then
               do 50 k =1,8
                 w = 0
-                tmpw0 = w0br(i,j,k)
-                w0br(i,j,k) = fu(w, amzbr(n), ampbr(n), amxbrw(n))
-                w0br(i,j,k) = min (tmpw0, w0br(i,j,k))
+                tmpw0 = cellstate(i,j)%w0br(k)
+                cellstate(i,j)%w0br(k) = fu( w, amzbr(n), ampbr(n), amxbrw(n) )
+                cellstate(i,j)%w0br(k) = min( tmpw0, cellstate(i,j)%w0br(k) )
 ! ^^^ used only in test version
 !        wlen(i,j,k) = 0
 
@@ -211,9 +213,9 @@
                   w = sin(ca)*a/sin(waa) 
 
                   ! calc. min fraction unsheltered friction vel.
-                  tmpw0 = w0br(i,j,k)
-                  w0br(i,j,k) = fu(w, amzbr(n),ampbr(n), amxbrw(n))
-                  w0br(i,j,k) = min(tmpw0, w0br(i,j,k))
+                  tmpw0 = cellstate(i,j)%w0br(k)
+                  cellstate(i,j)%w0br(k) = fu(w, amzbr(n), ampbr(n), amxbrw(n))
+                  cellstate(i,j)%w0br(k) = min(tmpw0, cellstate(i,j)%w0br(k))
 
 ! ^^^^  tmp used only in test version
 !            wlen(i,j,k) = w
@@ -221,9 +223,9 @@
                 elseif (dmin .lt. 5*amzbr(n)) then
                   ! is x(i,j) within 5H of barrier
                   ! calc. frac. friction vel. for other directions
-                  tmpw0 = w0br(i,j,k)
-                  w0br(i,j,k) = fu(-dmin, amzbr(n), ampbr(n), amxbrw(n))
-                  w0br(i,j,k) = min( tmpw0, w0br(i,j,k))
+                  tmpw0 = cellstate(i,j)%w0br(k)
+                  cellstate(i,j)%w0br(k) = fu( -dmin, amzbr(n), ampbr(n), amxbrw(n) )
+                  cellstate(i,j)%w0br(k) = min( tmpw0, cellstate(i,j)%w0br(k) )
 
 ! ^^^     tmp used only in test version
 !              wlen(i,j,k) = -dmin
@@ -243,7 +245,7 @@
 !      write (*,310) (i, i=0,imax,n)
 !      do 220 k = 1,8
 !      do 220 j = jmax,0,-1
-!      write (*,300) (j, (w0br(i,j,k),i=0,imax,n))
+!      write (*,300) (j, (cellstate(i,j)%w0br(k),i=0,imax,n))
 !  220 continue
 !      write (*,*) 'BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB'
 !  300 format (1x, i3,1x, 30(f4.2,1x))

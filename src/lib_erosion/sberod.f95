@@ -34,7 +34,6 @@
 !
 !     + + + LOCAL COMMON BLOCKS + + +
       include  'erosion/m2geo.inc'
-      include  'erosion/e2grid.inc'
       include  'erosion/e3grid.inc'
       include  'erosion/e2erod.inc'
       include  'erosion/w2wind.inc'

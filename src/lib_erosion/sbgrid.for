@@ -15,10 +15,6 @@
 !     A max 'interior' square grid of 29X29 is assigned-no barriers
 !     A max 'interior' rectangular grid of 59X59 is assigned barriers
 !     to assign subregion index no. to each grid point.
-!
-!     +++ ARGUMENT DECLARATION +++
-
-!
 
 !     +++ LOCAL DEFINITIONS +++
 !     imax  - no. grid intervals in x-direction
@@ -26,27 +22,24 @@
 !     ix    - grid interval in x-direction (m)
 !     jy    - grid interval in y-direction (m)
 !     dxmin - minimum grid interval (m)
-!     csr   - current subr. index at grid point i,j
-!     icsr  - same as csr but not an array
-!     i,j   - do loop indexes
+!     i     - do loop index
 !
 !     + + + GLOBAL COMMON BLOCKS + + +
 
       include  'p1werm.inc'
       include  'm1geo.inc'
       include  'm1subr.inc'
-!
+
 !     + + + LOCAL COMMON BLOCKS + + +
       include  'erosion/m2geo.inc'
-      include  'erosion/e2grid.inc'
-!
+
 !     +++ LOCAL VARIABLES +++
       integer  ngdpt
-      integer  icsr, i, j
+      integer  i
       real     dxmin, lx, ly
-!
+
 !     +++ END SPECIFICATIONS +++
-!
+
 !     set min grid spacing
        dxmin = MIN_GRID_SP
 !     set max no. of grid points with no barrier

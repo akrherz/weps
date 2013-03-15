@@ -161,20 +161,15 @@ Canola, fall; Fallow_ Wheat, winter; Fallow; mulch till, Z50.man
 0.0000
 #
 #   RFD-BarrierNo
-0
+1
 #   RFD-BarrierS coordinates (meters) | type | height (meters) | width (meters) | porosity
-0 0 
-0 0 
-none
-0
-0
-0.0
-#0 366 
-#366 366
-#Shrubs 1row leafoff
-#2
-#2
-#0.7
+#   Note: subregion mod included skipping reading barriers is there are 0. No placeholder necessary.
+0 366 
+366 366
+Shrubs 1row leafoff
+2
+2
+0.7
 #
 # --CIRCULAR FIELD INFORMATION
 # Note: These fields are not used by the weps simulation.
