@@ -55,7 +55,7 @@
       real wuref, rusust, rut
 !      real rusust_preros(ntstep)
       real wzorg, wzorr, wzzo, wzzov
-      real wus, wust, wusp, brcd, wusto
+      real wus, wust, wusp, brcd, wusto  ! these are just used to screen subregions for erosion. Global cellstate values are computed elsewhere.
       real wr, time
       real sina, prev_dir
       real hr, sub_ntstep, hrs

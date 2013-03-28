@@ -21,14 +21,8 @@
       type(cellsurfacestate), dimension(0:,0:), intent(inout) :: cellstate     ! initialized grid cell state values
 
 !     + + + ARGUMENT DEFINITIONS + + +
-!     anemht =
-!     awzzo =
-!     wzz0  =
-!     awu   =
-!     wus   =
-!     wust  =
 !     o_unit= Unit number for output file
-!
+
 !     + + + GLOBAL COMMON BLOCKS + + +
 
       include 'p1werm.inc'
@@ -38,7 +32,6 @@
       include 'p1const.inc'
       include 'm1sim.inc'
       include 'm1geo.inc'
-      include 'erosion/w2wind.inc'
       include 'erosion/m2geo.inc'
       include 'erosion/e3grid.inc'
 !
@@ -179,7 +172,7 @@
      &  yr, mo, da, hr,                                                 &
      & 'Surface Friction Velocity', 'friction velocity', '(m/s)'
       do j = jmax-1, 1, -1
-        write (o_unit, fmt="(500f12.4)") (wus(i,j), i = 1, imax-1)
+        write (o_unit, fmt="(500f12.4)") (cellstate(i,j)%wus, i = 1, imax-1)
       end do
       write(o_unit,fmt="(' </grid data>')")
       write(o_unit,fmt="(' <grid data> |',i5,2(i3),f7.3,3('|',a))")     &
@@ -187,7 +180,7 @@
      & 'Threshold Surface Friction Velocity',                           &
      & 'threshold friction velocity', '(m/s)'
        do j = jmax-1, 1, -1
-        write (o_unit, fmt="(500f12.4)") (wust(i,j), i = 1, imax-1)
+        write (o_unit, fmt="(500f12.4)") (cellstate(i,j)%wust, i = 1, imax-1)
       end do
       write(o_unit,fmt="(' </grid data>')")
       write(o_unit,fmt="(' <grid data> |',i5,2(i3),f7.3,3('|',a))")     &
@@ -195,7 +188,7 @@
      & 'Transport Threshold Surface Friction Velocity',                 &
      & 'transport threshold friction velocity', '(m/s)'
       do j = jmax-1, 1, -1
-        write (o_unit, fmt="(500f12.4)") (wusp(i,j), i = 1, imax-1)
+        write (o_unit, fmt="(500f12.4)") (cellstate(i,j)%wusp, i = 1, imax-1)
       end do
       write(o_unit,fmt="(' </grid data>')")
       write (o_unit,*)
@@ -327,33 +320,33 @@
 !      write (o_unit,18)  (k , k=1,(imax-1),m), n
       
 !      write (o_unit,13)  (cellstate(k,n)%sf1,k=1,(imax-1),m)
-!      write (o_unit,23)  (cellstate(k,n)sf10,k=1,(imax-1),m)
-!      write (o_unit,24)  (cellstate(k,n)sf84,k=1,(imax-1),m)
-!      write (o_unit,35)  (cellstate(k,n)sf200,k=1,(imax-1),m)
-!      write (o_unit,12)  (cellstate(k,n)svroc,k=1,(imax-1),m)! edit ljh 1-22-05
-!      write (o_unit,36)  (cellstate(k,n)dmlos,k=1,(imax-1),m)
-!      write (o_unit,37)  (cellstate(k,n)smaglos,k=1,(imax-1),m)
-!      write (o_unit,43)  (cellstate(k,n)smaglosmx,k=1,(imax-1),m)
-!      write (o_unit,39)  (cellstate(k,n)sf84mn,k=1,(imax-1),m)
+!      write (o_unit,23)  (cellstate(k,n)%sf10,k=1,(imax-1),m)
+!      write (o_unit,24)  (cellstate(k,n)%sf84,k=1,(imax-1),m)
+!      write (o_unit,35)  (cellstate(k,n)%sf200,k=1,(imax-1),m)
+!      write (o_unit,12)  (cellstate(k,n)%svroc,k=1,(imax-1),m)! edit ljh 1-22-05
+!      write (o_unit,36)  (cellstate(k,n)%dmlos,k=1,(imax-1),m)
+!      write (o_unit,37)  (cellstate(k,n)%smaglos,k=1,(imax-1),m)
+!      write (o_unit,43)  (cellstate(k,n)%smaglosmx,k=1,(imax-1),m)
+!      write (o_unit,39)  (cellstate(k,n)%sf84mn,k=1,(imax-1),m)
 !      write (o_unit,40)   subrsurf%sf84ic, subrsurf(icsr)%sf10ic, asvroc(1,1) !edit ljh 1-22-05
 !      write (o_unit,42)   acanag(1), acancr(1), awzypt
 !      write (o_unit,10)   asf10an(1), asf10en(1), asf10bk(1)
-!      write (o_unit,25)  (cellstate(k,n)szcr,k=1,(imax-1),m)
-!      write (o_unit,26)  (cellstate(k,n)sfcr,k=1,(imax-1),m)
-!      write (o_unit,27)  (cellstate(k,n)smlos,k=1,(imax-1),m)
-!      write (o_unit,28)  (cellstate(k,n)sflos,k=1,(imax-1),m)
+!      write (o_unit,25)  (cellstate(k,n)%szcr,k=1,(imax-1),m)
+!      write (o_unit,26)  (cellstate(k,n)%sfcr,k=1,(imax-1),m)
+!      write (o_unit,27)  (cellstate(k,n)%smlos,k=1,(imax-1),m)
+!      write (o_unit,28)  (cellstate(k,n)%sflos,k=1,(imax-1),m)
 
-!      write (o_unit,29)  (cellstate(k,n)szrgh,k=1,(imax-1),m)
-!      write (o_unit,30)  (cellstate(k,n)slrr,k=1,(imax-1),m)
+!      write (o_unit,29)  (cellstate(k,n)%szrgh,k=1,(imax-1),m)
+!      write (o_unit,30)  (cellstate(k,n)%slrr,k=1,(imax-1),m)
 !      write (o_unit,38)   subrsurf%sxprg,  subrsurf%abzht,              &
 !     &                    subrsurf%abrlai,                              &
 !     &                    subrsurf%abrsai, subrsurf%abffcv
 !      write (o_unit,41)   subrsurf%acxrow, subrsurf%ac0rg
 !      write (o_unit,31)  subrsurf%ahrwcw(1), subrsurf%ahrwc0(12)
-!      write (o_unit,32)  (wus(k,n),k=1,(imax-1),m)
-!      write (o_unit,33)  (wusp(k,n),k=1,(imax-1),m)
-!      write (o_unit,34)  (wust(k,n),k=1,(imax-1),m)
-!      write (o_unit,44)   wusto
+!      write (o_unit,32)  (cellstate(k,n)%wus,k=1,(imax-1),m)
+!      write (o_unit,33)  (cellstate(k,n)%wusp,k=1,(imax-1),m)
+!      write (o_unit,34)  (cellstate(k,n)%wust,k=1,(imax-1),m)
+!      write (o_unit,44)  (cellstate(k,n)%wusto,k=1,(imax-1),m)
 !      write (o_unit,*)
 
 !     output formats
@@ -392,7 +385,7 @@
 !   32 format (1x, 'wus= ', 20f7.3)
 !   33 format (1x, 'wusp=', 20f7.3)
 !   34 format (1x, 'wust=', 20f7.3)
-!   44 format (1x, 'wusto=', f5.3)
+!   44 format (1x, 'wusto=', 20f5.3)
 
       return
       end

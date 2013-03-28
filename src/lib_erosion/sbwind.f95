@@ -45,14 +45,13 @@
 !
 !     + + + LOCAL COMMON BLOCKS + + +
       include  'erosion/m2geo.inc'
-      include  'erosion/w2wind.inc'
       include  'erosion/e3grid.inc'
 !
 !     +++ LOCAL VARIABLES +++
       integer i,j, icsr,k
       real wzorg, wzorr, wzzo, wzzov
       real at, rintstep, brcd
-      real wubsts, wucsts, wucwts, wucdts, sfcv
+      real wubsts, wucsts, wucwts, wucdts, sfcv ! these are placeholders in call to sbwust are are not used anywhere else.
 !
 !     +++ SUBROUTINES CALLED
 !     sbzo
@@ -84,16 +83,16 @@
 !      write (*,*) 'in sbwind, call to sbwus'
 !     update surface (below canopy) friction velocity
  
-      call sbwus (anemht, awzzo, awu, wzzov, brcd, wus(i,j) )
+      call sbwus (anemht, awzzo, awu, wzzov, brcd, cellstate(i,j)%wus )
 
 !     correct friction velocity for hills
 !      if (nhill .ne. 0 ) then
-!           wus(i,j) = wus(i,j) * w0hill(i,j,kbr)
+!           cellstate(i,j)%wus = cellstate(i,j)%wus * w0hill(i,j,kbr)
 !        endif
 !
 !     correct friction velocity for barriers
       if (nbr .ne. 0 ) then
-         wus(i,j) = wus (i,j) * cellstate(i,j)%w0br(kbr)
+         cellstate(i,j)%wus = cellstate(i,j)%wus * cellstate(i,j)%w0br(kbr)
       endif
 
       if (wustfl .eq. 1) then
@@ -104,15 +103,15 @@
 
         call sbwust( cellstate(i,j)%sf84, subrsurf(icsr)%bsl(1)%asdagd, cellstate(i,j)%sfcr, cellstate(i,j)%svroc, &
              cellstate(i,j)%sflos, subrsurf(icsr)%abffcv, wzzo, subrsurf(icsr)%ahrwc0(k), subrsurf(icsr)%bsl(1)%ahrwcw, &
-             wus(i,j), subrsurf(icsr)%sf84ic, subrsurf(icsr)%bsl(1)%asvroc, cellstate(i,j)%dmlos, & 
-             wust(i,j), wusp(i,j), wusto, cellstate(i,j)%sf84mn, cellstate(i,j)%smaglos, &
+             cellstate(i,j)%wus, subrsurf(icsr)%sf84ic, subrsurf(icsr)%bsl(1)%asvroc, cellstate(i,j)%dmlos, & 
+             cellstate(i,j)%wust, cellstate(i,j)%wusp, cellstate(i,j)%wusto, cellstate(i,j)%sf84mn, cellstate(i,j)%smaglos, &
              cellstate(i,j)%smaglosmx, wubsts, wucsts, wucwts, wucdts, sfcv)
 
 ! ^^^ tmp out
-!      if( wust(i,j) .le. 0.0 ) then
+!      if( cellstate(i,j)%wust .le. 0.0 ) then
 !       write(*,*) "sbwind: i,j", i, j
-!       write(*,*) "sbwind: wus(i,j), wust(i,j), rusust",                &
-!     &            wus(i,j), wust(i,j), rusust
+!       write(*,*) "sbwind: cellstate(i,j)%wus, cellstate(i,j)%wust, rusust",                &
+!     &            cellstate(i,j)%wus, wust(i,j), rusust
 !       write(*,*) "sf84(i,j) = ", cellstate(i,j)%sf84
 !       write(*,*) "subrsurf(icsr)%bsl(1)%asdagd", subrsurf(icsr)%bsl(1)%asdagd
 !       write(*,*) "sfcr(i,j)", cellstate(i,j)%sfcr
@@ -122,28 +121,28 @@
 !       write(*,*) "wzzo", wzzo
 !       write(*,*) "subrsurf(icsr)%ahrwc0(k)", subrsurf(icsr)%ahrwc0(k)
 !       write(*,*) "subrsurf(icsr)%bsl(1)%ahrwcw", subrsurf(icsr)%bsl(1)%ahrwcw
-!       write(*,*) "wus(i,j)", wus(i,j)
+!       write(*,*) "cellstate(i,j)%wus", cellstate(i,j)%wus
 !       write(*,*) "sf84ic", subrsurf(icsr)%sf84ic
 !       write(*,*) "rusust", rusust
 !       write(*,*) "asvroc(1,1)", asvroc(1,1)
 !       write(*,*) "dmlos(i,j)", cellstate(i,j)%dmlos
-!       write(*,*) "wust(i,j)", wust(i,j)
-!       write(*,*) "wusp(i,j)", wusp(i,j)
-!       write(*,*) "sf84mn(i,j)", cellstate(i,j)%sf84mn
-!       write(*,*) "smaglos(i,j)", cellstate(i,j)%smaglos
+!       write(*,*) "cellstate(i,j)%wust", cellstate(i,j)%wust
+!       write(*,*) "cellstate(i,j)%wusp", cellstate(i,j)%wusp
+!       write(*,*) "cellstate(i,j)%sf84mn", cellstate(i,j)%sf84mn
+!       write(*,*) "cellstate(i,j)%smaglos", cellstate(i,j)%smaglos
 !       stop
 !      end if
 
       endif
 
-      at = wus(i,j)/wust(i,j)
+      at = cellstate(i,j)%wus/cellstate(i,j)%wust
       rusust = amax1(rusust, at)
 
    30 continue
    40 continue
 
 !     write (*,*) 'at exit sbwind rusust =', rusust
-!     write (*,*) ' wus(3,3), wust(3,3)', wus(3,3), wust(3,3)
+!     write (*,*) ' cellstate(3,3)%wus, cellstate(3,3)%wust', cellstate(3,3)%wus, cellstate(3,3)%wust
 
       return
       end

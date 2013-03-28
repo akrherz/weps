@@ -20,15 +20,8 @@
       type(cellsurfacestate), dimension(0:,0:), intent(inout) :: cellstate     ! initialized grid cell state values
 
 !     + + + ARGUMENT DEFINITIONS + + +
-!     anemht = anemometer height (m)
-!     awzzo =  aerodynamic roughness at anemometer (mm)
-!     wzz0  =  aerodynamic roughness length (mm) 
-!     awu   =  wind speed (m/s)
-!     wus   =  friction velocity (m/s)
-!     wust  =  threshold friction velocity (m/s)
-!     wzoflg = flag to showing anemometer at field (1) or wx sta (0)
 !     o_unit= Unit number for output file
-!
+
 !     + + + GLOBAL COMMON BLOCKS + + +
 
       include 'p1werm.inc'
@@ -37,7 +30,6 @@
       include 'm1sim.inc'
 !
 !     + + + LOCAL COMMON BLOCKS + + +
-      include 'erosion/w2wind.inc'
       include 'erosion/m2geo.inc'
       include 'erosion/e3grid.inc'
 !
@@ -307,9 +299,6 @@
 !   30 format (1x, 'slrr=', 20f6.2)
 
 !   31 format (1x, 'ahrwc0(icsr,12)', f6.2)
-!   32 format (1x, 'wus=', 20f6.2)
-!   33 format (1x, 'wusp=', 20f6.2)
-!   34 format (1x, 'wust=', 20f6.2)
 
       return
       end

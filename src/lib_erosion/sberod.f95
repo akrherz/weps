@@ -35,25 +35,19 @@
 !     + + + LOCAL COMMON BLOCKS + + +
       include  'erosion/m2geo.inc'
       include  'erosion/e3grid.inc'
-      include  'erosion/w2wind.inc'
-!
-!     +++ PARAMETERS +++
-!
+
 !     +++ LOCAL VARIABLES +++
       integer i, j, icsr
-!*
+
       real lx,aa,bb,dd,la,lb,ld,ly
-!
+
       real  qi, qssi, q10i, qo, qsso, q10o, eg, egss, eg10
       real qx(0:mngdpt, 0:mngdpt)
       real qy(0:mngdpt, 0:mngdpt)
       real qssx(0:mngdpt, 0:mngdpt), qssy(0:mngdpt, 0:mngdpt)
       real q10x(0:mngdpt, 0:mngdpt), q10y(0:mngdpt, 0:mngdpt)
-!     c wzzo,
-!     c slagm(0:mngdpt, 0:mngdpt), s0ags(0:mngdpt, 0:mngdpt)
-!
+
 !     +++ LOCAL VARIABLE DEFINITIONS +++
-!     cc      =
 !     i, j    =
 !     qi,qssi, q10i =
 !     qo,qsso, q10o =
@@ -65,9 +59,9 @@
 !     egt10   =
 !     qx      =
 !     qy      =
-!
+
 !     +++ END SPECIFICATIONS +++
-!
+
 !     set initial conditions to zero
       do 50 j = 0, jmax
       do 45 i = 0, imax
@@ -124,8 +118,8 @@
 !        write (*,*)  'imax   jmax  icsr  sxprg'
 !        write (*,*)  imax, jmax, icsr, sxprg(icsr)
 !        write (*,*) 'wus    wust     wusp   sf1  sf10   sf84'
-!        write (*,300) wus(i,j),wust(i,j), wusp(i,j), sf1(i,j),
-!     &         sf10(i,j), sf84(i,j)
+!        write (*,300) cellstate(i,j)%wus,cellstate(i,j)%wust, cellstate(i,j)%wusp, cellstate(i,j)%sf1, &
+!     &         cellstate(i,j)%sf10, cellstate(i,j)%sf84
 !        write (*,*)
 !  300   format(1x, 10f8.3)
 !      endif
@@ -135,7 +129,7 @@
       call timer(TIMSBQOUT,TIMSTART)
 
        call sbqout (flg, &
-       wus(i,j), wust(i,j), wusp(i,j), cellstate(i,j)%sf10, cellstate(i,j)%sf84, &
+       cellstate(i,j)%wus, cellstate(i,j)%wust, cellstate(i,j)%wusp, cellstate(i,j)%sf10, cellstate(i,j)%sf84, &
        cellstate(i,j)%sf200, cellstate(i,j)%szcr, cellstate(i,j)%sfcr, cellstate(i,j)%sflos, cellstate(i,j)%smlos, &
        cellstate(i,j)%szrgh, subrsurf(icsr)%asxrgs, subrsurf(icsr)%sxprg, cellstate(i,j)%slrr, &
        subrsurf(icsr)%bsl(1)%asfcla, subrsurf(icsr)%bsl(1)%asfsan, &
@@ -217,19 +211,19 @@
 ! ^^^ tmp output
 !     if (i .eq. 1   .and. j .eq. 1) then
 !        write (*,*)
-!        write (*,*) 'out at sberod 1,1 call sbwust sf84=', sf84(i,j)
+!        write (*,*) 'out at sberod 1,1 call sbwust sf84=', cellstate(i,j)%sf84
 !
 !        write (*,*)
 !     i slagm(i,j), s0ags(i,j), aslagn(1,icsr), aslagx(1,icsr),
 !     i ' slagm, s0ags, aslagn,aslagx'
 !        write(*,*)
-!     i asdagd(1,icsr), sfcr(i,j), smlos(i,j), sflos(i,j),
+!     i asdagd(1,icsr), cellstate(i,j)%sfcr, cellstate(i,j)%smlos, cellstate(i,j)%sflos,
 !     i  ' asdagd, sfcr, smlos, sflos'
 !        Write (*,*)
 !     i abffcv(icsr), wzzo, ahrwc0(12,icsr), ahrwcw(1,icsr),
 !     i ' abffcv, wzzo, ahrwc0, ahrwcw'
 !        write (*,*)
-!     i szrgh(i,j), slrr(i,j), wust(i,j), wusp(i,j),
+!     i cellstate(i,j)%szrgh, cellstate(i,j)%slrr, cellstate(i,j)%wust, cellstate(i,j)%wusp,
 !     i ' szrgh, slrr, wust, wusp'
 !
 !      endif
@@ -237,35 +231,35 @@
 !
 !      if (i .eq. (imax-1)/2   .and. j .eq. 1) then
 !       write (*,*) 'out at sberod (imax-1)/2,1 call
-!     i             sbwust sf84=', sf84((imax-1)/2,j)
+!     i             sbwust sf84=', cellstate(i,j)%sf84
 !         write (*,*)
-!     i slagm(i,j), s0ags(i,j), aslagn(1,icsr), aslagx(1,icsr),
+!     i cellstate(i,j)%slagm, cellstate(i,j)%s0ags, aslagn(1,icsr), aslagx(1,icsr),
 !     i ' slagm, s0ags, aslagn,aslagx'
 !        write(*,*)
-!     i asdagd(1,icsr), sfcr(i,j), smlos(i,j), sflos(i,j),
+!     i asdagd(1,icsr), cellstate(i,j)%sfcr, cellstate(i,j)%smlos, cellstate(i,j)%sflos,
 !     i  ' asdagd, sfcr, smlos, sflos'
 !        Write (*,*)
 !     i abffcv(icsr), wzzo, ahrwc0(12,icsr), ahrwcw(1,icsr),
 !     i ' abffcv, wzzo, ahrwc0, ahrwcw'
 !        write (*,*)
-!     i szrgh(i,j), slrr(i,j),wust(i,j), wusp(i,j),
+!     i cellstate(i,j)%szrgh, cellstate(i,j)%slrr,cellstate(i,j)%wust, cellstate(i,j)%wusp,
 !     i  ' szrgh, slrr, wust, wusp'
 !
 !      endif
 !      if (i .eq. imax-1   .and. j .eq.1) then
 !      write (*,*) 'out at sberod imax-1,1 call sbwust sf84=',
-!     i      sf84(imax-1,j)
+!     i      cellstate(i,j)%sf84
 !        write (*,*)
-!     i slagm(i,j), s0ags(i,j), aslagn(1,icsr), aslagx(1,icsr),
+!     i cellstate(i,j)%slagm, cellstate(i,j)%s0ags, aslagn(1,icsr), aslagx(1,icsr),
 !     i ' slagm, s0ags, aslagn,aslagx'
 !        write(*,*)
-!     i asdagd(1,icsr), sfcr(i,j), smlos(i,j), sflos(i,j),
+!     i asdagd(1,icsr), cellstate(i,j)%sfcr, cellstate(i,j)%smlos, cellstate(i,j)%sflos,
 !     i  ' asdagd, sfcr, smlos, sflos'
 !        Write (*,*)
 !     i abffcv(icsr), wzzo, ahrwc0(12,icsr), ahrwcw(1,icsr),
 !     i ' abffcv, wzzo, ahrwc0, ahrwcw'
 !        write (*,*)
-!     i  szrgh(i,J), slrr(i,j), wust(i,j), wusp(i,j),
+!     i  cellstate(i,j)%szrgh, cellstate(i,j)%slrr, cellstate(i,j)%wust, cellstate(i,j)%wusp,
 !     i ' szrgh, slrr, wust, wusp'
 !
 !      endif
