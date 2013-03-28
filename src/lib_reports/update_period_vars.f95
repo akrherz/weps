@@ -10,6 +10,7 @@ SUBROUTINE update_period_update_vars(isr, period_update, restot, croptot, biotot
     USE pd_var_type_def
     use biomaterial, only: biototal
     use erosion_data_struct_defs, only: cellsurfacestate
+    use grid_geo_def, only: imax, jmax
 
     IMPLICIT NONE
 
@@ -46,8 +47,6 @@ SUBROUTINE update_period_update_vars(isr, period_update, restot, croptot, biotot
                                 ! aszrgh(isr) Ridge height
                                 ! asxrgs(isr) Ridge spacing
                                 ! asargo(isr) Ridge dir
-
-    include "erosion/m2geo.inc" ! imax, jmax, ix, iy of simulation grid
 
     include "s1agg.inc"         ! aslagm, as0ags, aslagn, aslagx (ASD parms)
                                 ! aseags (agg stability), asdagd (agg density)

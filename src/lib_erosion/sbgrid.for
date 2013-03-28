@@ -6,7 +6,7 @@
 !     subroutine sbgrid
 !**********************************************************************
       subroutine sbgrid
-!
+
 !     +++ PURPOSE +++
 !     to calculate grid size and spacing for EROSION.
 !     grid size assumes outer points are outside field boundary
@@ -16,6 +16,9 @@
 !     A max 'interior' rectangular grid of 59X59 is assigned barriers
 !     to assign subregion index no. to each grid point.
 
+      use grid_geo_def, only: imax, jmax, ix, jy,                       &
+     &                        N_G_DPT, B_G_DPT, MIN_GRID_SP
+
 !     +++ LOCAL DEFINITIONS +++
 !     imax  - no. grid intervals in x-direction
 !     jmax  - no. grid intervals in y-direction.
@@ -23,15 +26,12 @@
 !     jy    - grid interval in y-direction (m)
 !     dxmin - minimum grid interval (m)
 !     i     - do loop index
-!
+
 !     + + + GLOBAL COMMON BLOCKS + + +
 
       include  'p1werm.inc'
       include  'm1geo.inc'
       include  'm1subr.inc'
-
-!     + + + LOCAL COMMON BLOCKS + + +
-      include  'erosion/m2geo.inc'
 
 !     +++ LOCAL VARIABLES +++
       integer  ngdpt
@@ -83,7 +83,7 @@
            jmax  = int (ly / dxmin)
            jmax  = min(jmax, ngdpt)
          else
-           jmax = anint(ly/ix) + 1
+           jmax = nint(ly/ix) + 1
          endif
 
         jmax = max(jmax,2)
@@ -100,7 +100,7 @@
            imax  = int (lx / dxmin)
            imax  = min(imax,ngdpt)
         else
-           imax = anint(lx/jy) + 1
+           imax = nint(lx/jy) + 1
         endif
         imax = max(imax,2)
         ix = lx/(imax-1)

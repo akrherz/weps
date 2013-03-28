@@ -15,6 +15,7 @@
 
       use weps_interface_defs
       use erosion_data_struct_defs
+      use grid_geo_def, only: i1, i2, i3, i4, i5, i6, sin_awa, cos_awa, tan_awa, imax, jmax, ix, jy
 
 !     +++ ARGUMENT DECLARATIONS +++
       real      time
@@ -31,10 +32,6 @@
       include  'm1sim.inc'
       include  'timer.inc'
       include  'w1clig.inc'
-!
-!     + + + LOCAL COMMON BLOCKS + + +
-      include  'erosion/m2geo.inc'
-      include  'erosion/e3grid.inc'
 
 !     +++ LOCAL VARIABLES +++
       integer i, j, icsr

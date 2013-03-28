@@ -13,6 +13,9 @@
 !     Calc. sweep sequence for update of grid cells
 !     calc. ridge spacing parallel the wind
 
+      use grid_geo_def, only: imax, jmax, i1, i2, i3, i4, i5, i6,       &
+     &                        kbr, awa, sin_awa, cos_awa, tan_awa
+
 !     +++ ARGUMENT DECLARATIONS +++
       real wind_dir
       real prev_dir
@@ -26,16 +29,11 @@
       parameter(pid180 = 3.14159/180.)
 !
 !     + + + GLOBAL COMMON BLOCKS + + +
-
       include 'p1werm.inc'
       include 'm1geo.inc'
       include 'm1subr.inc'
       include 's1sgeo.inc'
       include 'w1wind.inc'
-
-!     + + +  LOCAL COMMON BLOCKS + + +
-      include 'erosion/m2geo.inc'
-      include 'erosion/e3grid.inc'
 
 !     + + + END SPECIFICATION + + +
 

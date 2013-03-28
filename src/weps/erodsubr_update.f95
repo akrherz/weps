@@ -40,10 +40,6 @@ subroutine erodsubr_update( sr, restot, croptot, biotot, subrsurf )
       include  'm1sim.inc'
       include  'm1subr.inc'
       include  'wpath.inc'
-!
-!     + + + LOCAL COMMON BLOCKS + + +
-      include 'erosion/e3grid.inc'
-      include 'erosion/m2geo.inc'
 
 !     +++ LOCAL VARIABLES +++
       integer :: idx

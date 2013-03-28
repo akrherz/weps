@@ -10,6 +10,7 @@
       use biomaterial, only: biototal
       use erosion_data_struct_defs, only: threshold
       use erosion_data_struct_defs, only: cellsurfacestate
+      use grid_geo_def, only: imax, jmax
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer, intent(in) :: sr
@@ -36,7 +37,6 @@
       include 'w1wind.inc'
       include 'h1hydro.inc'
       include 'm1subr.inc'
-      include 'erosion/m2geo.inc'
       include 'manage/oper.inc'
       include 'main/main.inc'
       include 'main/plot.inc'

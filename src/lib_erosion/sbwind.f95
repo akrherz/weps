@@ -17,6 +17,7 @@
 
       use weps_interface_defs
       use erosion_data_struct_defs
+      use grid_geo_def, only: kbr, imax, jmax
 
 !     +++ ARGUMENT DECLARATIONS +++
       integer wustfl,intstep, ntstep
@@ -42,11 +43,7 @@
       include  'p1werm.inc'
       include  'm1geo.inc'
       include  'p1const.inc'
-!
-!     + + + LOCAL COMMON BLOCKS + + +
-      include  'erosion/m2geo.inc'
-      include  'erosion/e3grid.inc'
-!
+
 !     +++ LOCAL VARIABLES +++
       integer i,j, icsr,k
       real wzorg, wzorr, wzzo, wzzov
@@ -99,7 +96,7 @@
         ! update threshold friction velocities
         ! calculate hour k for surface water content
         rintstep = intstep
-        k = aint(rintstep*23.75/ntstep) + 1
+        k = int(rintstep*23.75/ntstep) + 1
 
         call sbwust( cellstate(i,j)%sf84, subrsurf(icsr)%bsl(1)%asdagd, cellstate(i,j)%sfcr, cellstate(i,j)%svroc, &
              cellstate(i,j)%sflos, subrsurf(icsr)%abffcv, wzzo, subrsurf(icsr)%ahrwc0(k), subrsurf(icsr)%bsl(1)%ahrwcw, &

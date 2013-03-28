@@ -7,6 +7,7 @@
 
       use biomaterial, only: biototal
       use erosion_data_struct_defs, only: cellsurfacestate
+      use grid_geo_def, only: imax, jmax
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer, intent(in) :: isr
@@ -20,7 +21,6 @@
 !     + + + INCLUDE + + +
       include 'p1werm.inc'
       include 'command.inc'
-      include 'erosion/m2geo.inc'
       include 'main/sci_report_val.inc'
 
 !     + + + PURPOSE + + +

@@ -13,6 +13,7 @@
 
       use weps_interface_defs
       use erosion_data_struct_defs
+      use grid_geo_def, only: awa, kbr, imax, jmax
 
 !     + + + ARGUEMENT DECLARATIONS + + +
       real ws, wdir, hr
@@ -32,11 +33,9 @@
       include 'p1const.inc'
       include 'm1sim.inc'
       include 'm1geo.inc'
-      include 'erosion/m2geo.inc'
-      include 'erosion/e3grid.inc'
-!
+
 !     + + + LOCAL VARIABLES + + +
-!
+
       !integer m, n, k
       integer x, y
       integer initflag, ipd, npd

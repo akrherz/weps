@@ -14,6 +14,7 @@
 
       use weps_interface_defs
       use erosion_data_struct_defs, only: cellsurfacestate
+      use grid_geo_def, only: imax, jmax, ix, jy
 
 !     to assign the 8 fractons calculated at each node to as 3-d
 !     array (W0br(i,j,k)) for all nodes inside sim. region.
@@ -30,10 +31,6 @@
       include 'p1werm.inc'
       include 'm1geo.inc'
       include 'p1const.inc'
-
-!     + + + LOCAL COMMON BLOCKS + + +
-      include 'erosion/e3grid.inc'
-      include 'erosion/m2geo.inc'
 
 !     + + + ARGUMENT DECLARATIONS + + +
 ! ^^^ used only in test version

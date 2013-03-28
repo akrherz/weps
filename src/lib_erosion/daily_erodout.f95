@@ -10,6 +10,7 @@
 
       use weps_interface_defs
       use erosion_data_struct_defs, only: cellsurfacestate
+      use grid_geo_def, only: imax, jmax
 
 !     +++ ARGUMENT DECLARATIONS +++
       integer o_unit, o_E_unit
@@ -29,9 +30,6 @@
       include 'p1werm.inc'
       include 'm1geo.inc'
       include 'm1flag.inc'
-
-!     + + + LOCAL COMMON BLOCKS
-      include 'erosion/m2geo.inc'
 
       integer x, y
       integer :: dt(8)

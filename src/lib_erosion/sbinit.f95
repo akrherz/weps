@@ -15,6 +15,7 @@
 
       use weps_interface_defs
       use erosion_data_struct_defs
+      use grid_geo_def, only: imax, jmax
 
 !     + + + ARGUEMENT DECLARATIONS + + +
       type(subregionsurfacestate), dimension(:), intent(inout) :: subrsurf  ! subregion surface conditions (erosion specific set)
@@ -28,7 +29,6 @@
 !
 !     + + +  LOCAL COMMON BLOCKS + + +
       include 'erosion/p1erode.inc'
-      include 'erosion/m2geo.inc'
 
 !     + + + LOCAL VARIABLES + + +
       integer  icsr, i, j

@@ -11,6 +11,7 @@
       use weps_interface_defs
       use file_io_mod, only: luosci
       use erosion_data_struct_defs, only: cellsurfacestate
+      use grid_geo_def, only: imax, jmax, ix, jy
 
 !     + + + ARGUMENT DECLARATIONS + + +
       type(cellsurfacestate), dimension(0:,0:), intent(in) :: cellstate     ! initialized grid cell state values
@@ -20,7 +21,6 @@
       include 'command.inc'
       include 'm1subr.inc'
       include 's1dbh.inc'
-      include 'erosion/m2geo.inc'
       include 'main/sci_report_val.inc'
       include 'manage/man.inc'
 

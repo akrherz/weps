@@ -45,6 +45,7 @@
       use debug_mod
       use mandate_mod
       use erosion_data_struct_defs
+      use grid_geo_def, only: imax, jmax, ix, jy, xgdpt, ygdpt
 
 ! build and release info, fpp created by cook
       include 'build.inc'
@@ -77,7 +78,6 @@
       include 'manage/man.inc'
       include 'manage/oper.inc'
       include 'erosion/p1erode.inc' !Needs the SURF_UPD_FLG variable
-      include 'erosion/m2geo.inc'   !Need tsterode cmdline arg vars(xgdpt,ygdpt)
     
 !     + + + LOCAL VARIABLES + + +
       logical first
@@ -831,7 +831,8 @@
                end if
             endif
 
-           call clear_erosion( cellstate )
+           ! set erosion accumulators on grid to zero
+           call sbigrd( cellstate )
 
          end do   ! end of "reporting" loop
          report_loop = .false.

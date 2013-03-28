@@ -9,6 +9,7 @@
 !     To print output desired from standalone EROSION submodel
 
       use erosion_data_struct_defs, only: cellsurfacestate
+      use grid_geo_def, only: imax, jmax
 
 !     +++ ARGUMENT DECLARATIONS +++
       integer o_unit, o_E_unit, sgrd_u
@@ -32,9 +33,7 @@
       include 'm1geo.inc'
       include 'm1flag.inc'
 
-!     + + + LOCAL COMMON BLOCKS
-      include 'erosion/m2geo.inc'
-!
+!     ++++ LOCAL VARIABLES +++
       integer xplot, x, y
       character*12 xcharin(30)
       real xin(30)

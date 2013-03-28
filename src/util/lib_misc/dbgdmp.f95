@@ -52,7 +52,6 @@
 !     + + + LOCAL COMMON BLOCKS + + +
       include 'main/main.inc'
       include 'manage/man.inc'
-      include 'erosion/m2geo.inc'
 
       integer  idx,jdx
 !

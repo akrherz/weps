@@ -24,13 +24,13 @@
       use pnpoly_mod
       use subregions_mod
       use erosion_data_struct_defs
+      use grid_geo_def, only: imax, jmax, ix, jy
 
 !     + + + GLOBAL COMMON BLOCKS + + +
       include  'p1werm.inc'
       include  'm1flag.inc'
       include  'm1geo.inc'
       include  'm1subr.inc'
-      include  'erosion/m2geo.inc'
       include  's1surf.inc'
       
 !     +++ ARGUMENT DECLARATIONS +++

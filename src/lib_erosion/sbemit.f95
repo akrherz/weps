@@ -28,6 +28,7 @@
 
       use weps_interface_defs
       use erosion_data_struct_defs
+      use grid_geo_def, only: imax, jmax
 
 !     +++ ARGUMENT DECLARATIONS +++
       integer        ounit   !Unit number for detail grid erosion
@@ -41,11 +42,6 @@
       include 'p1werm.inc'
       include 'm1sim.inc'
       include 'm1flag.inc'
-
-!     + + + LOCAL COMMON BLOCKS + + +
-      include  'erosion/m2geo.inc'
-
-!     +++ PARAMETERS +++
 
 !     +++ LOCAL VARIABLES +++
       integer        initflg

@@ -15,6 +15,7 @@
       use weps_interface_defs
       use file_io_mod, only: fopenk
       use erosion_data_struct_defs
+      use grid_geo_def, only: imax, jmax, ix, jy, xgdpt, ygdpt
 
 !     +++  PURPOSE +++
 !
@@ -34,7 +35,6 @@
       include 'm1geo.inc'
       include 'm1subr.inc'
       include 'm1flag.inc'
-      include 'erosion/m2geo.inc'
       include 'w1clig.inc'        !Requires yrly average precip.....
 
       include 'util/misc/f2kcli.inc' !declarations for f2k commandline functions

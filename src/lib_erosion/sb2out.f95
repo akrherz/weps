@@ -13,6 +13,7 @@
 
       use weps_interface_defs
       use erosion_data_struct_defs, only: cellsurfacestate
+      use grid_geo_def, only: imax, jmax
 
 !     + + + ARGUEMENT DECLARATIONS + + +
       real hr
@@ -28,11 +29,7 @@
       include 'h1db1.inc'
       include 'p1const.inc'
       include 'm1sim.inc'
-!
-!     + + + LOCAL COMMON BLOCKS + + +
-      include 'erosion/m2geo.inc'
-      include 'erosion/e3grid.inc'
-!
+
 !     + + + LOCAL VARIABLES + + +
 
       real egavg(mngdpt)
