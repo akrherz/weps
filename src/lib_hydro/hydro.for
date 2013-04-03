@@ -205,7 +205,6 @@
       include 'p1const.inc'
       include 'p1werm.inc'
       include 'p1solar.inc'
-      include 'm1subr.inc'
       include 'm1sim.inc'
       include 'm1flag.inc'
       include 'h1et.inc'
@@ -307,10 +306,6 @@
 !      real volwatadsorb
 
 !     + + + OUTPUT FORMATS + + +
- 2000 format('#    ')
-! 2009 format('# Daily HYDROLOGY output ')
-! 2010 format (/,'#',18x,5('*'),'   soil   data - Subregion #',i4,3x,    &
-!     &        5('*'),16x)
 ! 2020 format ('#',79('-')/'#soil  depth',t16,'initial',t25,'saturated', &
 !     &  t36,'field',t45,'wilting',t54,'bh0cb',t60,'air',t69,'sat.',t76, &
 !     &  'bulk'/'#layer',t17,'water',t27,'water',t35,                    &
@@ -380,8 +375,6 @@
 
 !     Echo print of input soil data
 
-!         write(luohydro,2009)
-!         write(luohydro,2010) am0csr
 !         write(luohydro,2020)
 !         do 130 l=1,layrsn
 !            write(luohydro,2030) l,bszlyd(l),theta(l),thetas(l),thetaf(l),
@@ -725,7 +718,6 @@
       if ((am0hfl .eq. 1).or.(am0hfl .eq. 3).or.(am0hfl .eq. 5).or.     &
      &   (am0hfl .eq.7)) then
          call caldatw(day,mo,yr)
-         if ((am0csr .eq. 1) .and. (nsubr .gt. 1)) write(luohydro,2000)
          ! insert double blank line to break years into blocks for graphing
          if( idoy .eq. 1 ) then
              write(luohydro,*)

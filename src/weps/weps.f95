@@ -510,8 +510,6 @@
       if( end_init_y .eq. 0 ) end_init_y = -1
       end_init_jday = julday(end_init_d, end_init_m, end_init_y)
 
-      am0csr = 1  ! set global current subregion variable?
-
       if (init_cycle > 0) then   ! to avoid printing it when not being done
           write(6,*) "Starting initialization phase"
       else

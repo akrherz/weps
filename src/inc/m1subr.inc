@@ -14,7 +14,6 @@
 !     + + + VARIABLE DECLARATIONS + + +
 
       integer          nsubr
-      integer          am0csr
       integer          amnryr(mnsub)
       real             amrslp(mnsub)
       real             SFCov(mnsub)
@@ -27,7 +26,6 @@
 
       common   / m1subr /                                               &
      &                   nsubr,                                         &
-     &                   am0csr,                                        &
      &                   amnryr,                                        &
      &                   amrslp,                                        &
      &                   SFCov,                                         &
@@ -43,7 +41,6 @@
 !     + + + VARIABLE DEFINITIONS + + +
 
 !    nsubr  - Number of subregions
-!    am0csr - Current subregion
 !    amnryr - Counter for current rotation year
 
 !    amrslp - Average subregion slope (m/m)

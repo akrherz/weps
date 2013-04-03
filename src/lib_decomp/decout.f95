@@ -17,7 +17,6 @@
 !  +  + +  COMMON  BLOCKS + + +
 
       include 'p1werm.inc'
-      include 'm1subr.inc'
       include 'm1flag.inc'
       include 's1layr.inc'
 
@@ -105,7 +104,7 @@
 !      if(daysim.eq.outday(i)) then
 !     output above ground data on a daily basis
       if ((am0dfl .eq. 1) .or. (am0dfl .eq. 3)) then
-         write (luod_above(isr),2001) am0csr, cd, cm, cy,                    &
+         write (luod_above(isr),2001) isr, cd, cm, cy,                    &
      &   residue(1)%geometry%dstm, residue(1)%decomp%cumdds, residue(1)%deriv%mst,           &
      &   residue(1)%decomp%cumddf, residue(1)%deriv%mf, residue(1)%deriv%fscv,            &
      &   residue(1)%deriv%ffcv, residue(1)%deriv%rsai,                            &
@@ -117,8 +116,8 @@
 
 !     output below ground residues
       if ((am0dfl .eq. 2) .or. (am0dfl .eq. 3)) then
-         write(luod_below(isr),2005) cd, cm, cy, am0csr
-         do 100 isz = 1, nslay(am0csr)
+         write(luod_below(isr),2005) cd, cm, cy, isr
+         do 100 isz = 1, nslay(isr)
          write (luod_below(isr),2010)                                        &
      &         isz,residue(1)%decomp%cumddg(isz),residue(2)%decomp%cumddg(isz),           &
      &         residue(1)%deriv%mbgz(isz),residue(2)%deriv%mbgz(isz),               &

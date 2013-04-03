@@ -474,9 +474,6 @@
       if (nsubr.lt.1.or.nsubr.gt.4)                                     &
      &  write(*,*) 'day ',day,' nsubr ', nsubr
 !
-      if (am0csr.lt.1.or.am0csr.gt.4)                                   &
-     &  write(*,*) 'day ',day,' am0csr ', am0csr
-!
        if (amnryr(sr).lt.1.or.amnryr(sr).gt.10)                          &
      &  write(*,*) 'day ',day,' amnryr ', amnryr(sr)
 !
