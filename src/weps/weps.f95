@@ -47,6 +47,10 @@
       use erosion_data_struct_defs
       use grid_geo_def, only: imax, jmax, ix, jy, xgdpt, ygdpt
       use saeinp_mod, only: mksaeinp
+      use stir_soil_texture_mod, only: create_stir_soil_multiplier, destroy_stir_soil_multiplier
+      use sci_soil_texture_mod, only: create_sci_soil_multiplier, destroy_sci_soil_multiplier
+      use stir_report_mod, only: create_stir_accumulator, destroy_stir_accumulator
+      use sci_report_mod
 
 ! build and release info, fpp created by cook
       include 'build.inc'
@@ -102,6 +106,7 @@
       real    ci
 
       integer :: SURF_UPD_FLG              ! erosion surface updating (0 - disabled, 1 - enabled)
+      integer :: nsubr                     ! total number of subregions (read in inprun, derived from allocated subr_poly)
 
       type(biomatter), dimension(:), allocatable :: crop            ! structure with crop state and parameters
       type(biototal), dimension(:), allocatable :: croptot          ! structure with totalized values of crop state
@@ -145,7 +150,6 @@
 !   maxper    - The maximum number of years in a rotation of all
 !               subregions.
 !   ndiy      - The number of days in the year.
-!   nsubr     - This variable holds the total number of subregions.
 !   ngdpt     - This variable holds the total number of grig points in an
 !               accounting region.
 !   period    - The number of years in a management rotation.  This
@@ -306,9 +310,21 @@
 
 !     open input files and read run files
       call input(run_rot_cycles)
-
       write(*,*) "Made it here after input"
+
+      ! set total number of subregions from size of allocated subr_poly array
+      nsubr = size(subr_poly)
      
+      ! create sci and stir arrays (before input_ifc which needs them)
+      call create_sci_soil_multiplier(nsubr)
+      call create_stir_soil_multiplier(nsubr)
+      call create_stir_accumulator(nsubr, 400)   ! note, conceivably, the operation count could be tallied in advance, 400 for now.
+
+      ! done before allocations which use layers
+      do isr = 1, nsubr 
+         call input_ifc(isr)  ! read soil file and setup layers
+      end do
+
       ! allocate subregion crop and residue pool arrays
       sum_stat = 0
       allocate(crop(nsubr), stat=alloc_stat)
@@ -335,7 +351,7 @@
       allocate(noerod(nsubr), stat=alloc_stat)
       sum_stat = sum_stat + alloc_stat
 
-      ! report cummulation arrays
+      ! report accummulation arrays
       allocate(rep_report(0:nsubr), stat=alloc_stat)
       sum_stat = sum_stat + alloc_stat
       allocate(rep_update(0:nsubr), stat=alloc_stat)
@@ -345,6 +361,8 @@
       allocate(pd(0:nsubr), stat=alloc_stat)
       sum_stat = sum_stat + alloc_stat
       allocate(n_rot_cycles(0:nsubr), stat=alloc_stat)
+      sum_stat = sum_stat + alloc_stat
+      allocate(scisum(nsubr), stat=alloc_stat)
       sum_stat = sum_stat + alloc_stat
 
       if( sum_stat .gt. 0 ) then
@@ -366,10 +384,10 @@
       end do
 
       ! allocate debug local arrays
-      call create_decomp_debug(nsubr, tddbug)
+      call create_decomp_debug(nsubr)
 
 ! save variabled for each subregion by JG
-      do isr =1, nsubr 
+      do isr = 1, nsubr 
          call save_soil(isr)  
       end do
 
@@ -484,7 +502,7 @@
          ! initialize all dependent variables
          call updres(isr, residue(1:size(residue,1), isr), restot(isr))
          call sumbio(isr, residue(1:size(residue,1), isr), restot(isr), croptot(isr), biotot(isr))
-         call sci_init(isr)
+         call sci_stir_init(isr)
 
 !       Initialize the water holding capacity variable
         call hydrinit(isr)
@@ -863,7 +881,7 @@
           if (report_debug >= 2) then
               call print_yr_report_vars(nperiods(0), mandatbs(0)%mperod, n_rot_cycles(0), rep_report(isr)%yr_report)
           end if
-          call sci_report( cellstate )
+          call sci_report( isr, cellstate )
           call print_ui1_output(nperiods(0), mandatbs(0)%mperod, n_rot_cycles(0), rep_report(isr), mandatbs(0)%mandate) !Use for new WEPS gui
           call print_mandate_output(luomandate, mandatbs(isr)%mandate)
       end do
@@ -913,6 +931,13 @@
          Write(*,*) 'ERROR: unable to deallocate crop and residue'
       end if
 
+      ! remove debug local arrays
+      call destroy_decomp_debug
+
+      ! remove sci and stir arrays
+      call destroy_sci_soil_multiplier
+      call destroy_stir_soil_multiplier
+      call destroy_stir_accumulator(nsubr)
 
       write (*,*) 'The WEPS simulation run is finished'
 

@@ -24,6 +24,7 @@
       use file_io_mod, only: luomanage
       use biomaterial, only: biomatter, biototal
       use mandate_mod, only: opercrop_date
+      use stir_report_mod, only: stir_report
 
 !     + + + PARAMETERS AND COMMON BLOCKS + + +
       include 'p1werm.inc'

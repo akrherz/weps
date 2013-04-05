@@ -36,7 +36,6 @@
 
 !     + + + GLOBAL COMMON BLOCKS + + +
       include  'p1werm.inc'
-      include  'm1subr.inc'  ! nsubr
       include  'p1const.inc' ! anemht, awzzo, wzoflg
       include  'w1wind.inc'  ! awadir, awudmx, awdir, awu
       include  'm1flag.inc'  ! am0efl
@@ -138,7 +137,7 @@
 
 !*****this check cannot be done if subhourly wind is used  FAF
 ! for subhourly, surface water content values should be interpolated. see hidx calculation
-      do 20 icsr=1, nsubr
+      do 20 icsr=1, size(subrsurf)
        ! If snow depth > 20 mm in all subregions, then no erosion
        if (subrsurf(icsr)%ahzsnd .le. SNODEP) then
         ! Have insufficient snow depth

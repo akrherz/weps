@@ -24,7 +24,6 @@
 
 !     + + + GLOBAL COMMON BLOCKS + + +
       include 'p1werm.inc'
-      include 'm1subr.inc'  ! nsubr
       include 'w1clig.inc'  ! awzypt
 
 !     + + + LOCAL VARIABLES + + +
@@ -40,7 +39,7 @@
 !     + + + END SPECIFICATION + + +
 
 !     calculate abrasion and pm10 parameters    edit LH 3-4-05
-      do icsr = 1, nsubr
+      do icsr = 1, size(subrsurf)
          call sbpm10( subrsurf(icsr)%bsl(1)%aseags, subrsurf(icsr)%asecr, subrsurf(icsr)%bsl(1)%asfcla, &
               subrsurf(icsr)%bsl(1)%asfsan, awzypt, subrsurf(icsr)%acanag, subrsurf(icsr)%acancr, &
               subrsurf(icsr)%asf10an, subrsurf(icsr)%asf10en, subrsurf(icsr)%asf10bk )

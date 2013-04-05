@@ -4,13 +4,16 @@
 !$Revision$
 !$HeadURL$
 !
-      subroutine spllay
+      subroutine spllay(isr)
 ! ***************************************************************** wjr
 ! Converts NASIS layered IFC files into 10,40,50,... IFC files
 !
 !     Edit History
 !     07-Feb-01   wjr   created
       use weps_interface_defs
+
+!     + + + ARGUMENTS + + +
+      integer       isr
 
       include 'p1werm.inc'
       include 'wpath.inc'
@@ -36,7 +39,6 @@
 !     + + + LOCAL VARIABLES + + +
 !      integer      lay
 !      character    line*256
-      integer       isr
       real          totthk, curdep, tgtthk
       integer       otnlay(mnsz)
       real          newthk(mnsz)
@@ -69,7 +71,7 @@
 
       ! set multiplier factor
       mfac = 1.0 + layer_infla/100.0
-      do isr = 1,nsubr
+!      do isr = 1,nsubr
 
         ! alternative layering
         targetthk(1) = layer_scale
@@ -282,11 +284,11 @@
         ! recalculate  depth to bottom of soil layer
         call depthini( nslay(isr), aszlyt(1,isr), aszlyd(1,isr) )
 
-      end do
+!      end do
 
       return
 
-      do isr = 1,nsubr
+!      do isr = 1,nsubr
 
       oldcur = 0
       newcur = 0
@@ -600,7 +602,7 @@
         asfcle(ldx, isr) = asfcle(otnlay(ldx), isr)
       end do
  120  continue
-      end do
+!      end do
 
       return
       end

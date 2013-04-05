@@ -1,22 +1,24 @@
-!
 !$Author$
 !$Date$
 !$Revision$
 !$HeadURL$
-!
-      subroutine input_ifc
+
+      subroutine input_ifc(isr)
 ! ***************************************************************** wjr
 ! reads initial field conditions (IFC) file (Version: 1.0)
-!
+
 !     Edit History
 !     Fri Oct  8 16:54:30 CDT 2004 - LEW
 !     based upon "inpsub.for" routine
-!
           
 !     + + + MODULES + + +
       use weps_interface_defs
-      use stir_soil_texture, only : update_stir_soil_multiplier
+      use sci_soil_texture_mod, only : update_sci_soil_multiplier
+      use stir_soil_texture_mod, only : update_stir_soil_multiplier
       use file_io_mod, only: fopenk      
+
+!     + + + ARGUMENTS + + +
+      integer, intent(in) :: isr
 
       include 'p1werm.inc'
       include 'wpath.inc'
@@ -43,7 +45,6 @@
 !     + + + LOCAL VARIABLES + + +
       integer       lay
       character     line*512
-      integer       isr
       integer       lui1
 
 !     + + + LOCAL DEFINITIONS + + +
@@ -55,24 +56,23 @@
       integer linnum
       data linnum /1/
 
-      do isr = 1, nsubr   
-         call fopenk (lui1, sinfil(isr), 'old') ! open IFC file
+      call fopenk (lui1, sinfil(isr), 'old') ! open IFC file
        
 !     Check to see if this is a "versioned" IFC file
-         read (lui1,'(a)',err=901) line
-         if (line(1:12) .eq. 'Version: 1.0') then
-           call inp_ifc_v1(isr, lui1)  ! For version 1.0 IFC file format only
-         else if (line(1:12) .eq. 'Version: 1.1') then
-           call inp_ifc_v1_1(isr, lui1)  ! For version 1.1 IFC file format only
-         else  ! Assuming obsolete unversioned IFC file formats only
-           close (lui1)    
-           call inpsub(isr)  ! For obsolete IFC file formats only
-           return            ! initialization is already done in inpsub
-         end if
-                   
+      read (lui1,'(a)',err=901) line
+      if (line(1:12) .eq. 'Version: 1.0') then
+         call inp_ifc_v1(isr, lui1)  ! For version 1.0 IFC file format only
+      else if (line(1:12) .eq. 'Version: 1.1') then
+         call inp_ifc_v1_1(isr, lui1)  ! For version 1.1 IFC file format only
+      else  ! Assuming obsolete unversioned IFC file formats only
          close (lui1)    
+         call inpsub(isr)  ! For obsolete IFC file formats only
+         return            ! initialization is already done in inpsub
+      end if
+                   
+      close (lui1)    
      
- 901     write(*,9001) trim(sinfil(isr)), linnum, trim(line)
+ 901  write(*,9001) trim(sinfil(isr)), linnum, trim(line)
 
 !! removed code reading IFC file data - moved to inp_ifc.for
 !! which now handles both version 1.0 and version 1.1 IFC file formats
@@ -229,10 +229,9 @@
       
       !Update the stir soil texture multiplier.  This is called only once after the soil 
       !is read so layer mixing does not affect the texture multiplier.  Only the top layer used.   
-      !only handles a single subregion for now
-      call update_stir_soil_multiplier(isr,asfsan(1,1),asfcla(1,1))
+      call update_sci_soil_multiplier(isr,asfsan(1,isr),asfcla(1,isr))
+      call update_stir_soil_multiplier(isr,asfsan(1,isr),asfcla(1,isr))
 
-      end do !end of do loop to assign values for multiple subregions
       return
 
 ! 901  write(*,9001) trim(sinfil(isr)), linnum, trim(line)

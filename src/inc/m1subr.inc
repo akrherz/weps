@@ -13,7 +13,7 @@
 
 !     + + + VARIABLE DECLARATIONS + + +
 
-      integer          nsubr
+!      integer          nsubr
       integer          amnryr(mnsub)
       real             amrslp(mnsub)
       real             SFCov(mnsub)
@@ -25,7 +25,7 @@
       character*20     SoilLossTol(mnsub)
 
       common   / m1subr /                                               &
-     &                   nsubr,                                         &
+!     &                   nsubr,                                         &
      &                   amnryr,                                        &
      &                   amrslp,                                        &
      &                   SFCov,                                         &

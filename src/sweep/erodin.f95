@@ -36,7 +36,6 @@
       include 'p1const.inc'  ! anemht, awzzo, wzoflg
       include 'm1sim.inc'    ! ntstep
       include 'm1flag.inc'   ! am0efl, am0eif
-      include 'm1subr.inc'   ! nsubr
       include 'm1geo.inc'    ! amasim, nacctr, nbr, amxsim, amxar, amxbr, amzbr, ampbr, amxbrw
       include 'w1wind.inc'   ! awadir, awu
       include 'w1pavg.inc'   ! awdair
@@ -57,6 +56,7 @@
       real f(mntime), wfcalm, wuc, w0k, step, wu(mntime)
       integer subr_np, ipol
       integer alloc_stat, sum_stat
+      integer :: nsubr       ! number of subregions (read from input file)
 
 !     + + + LOCAL VARIABLE DEFINITIONS + + +
 !     i, j, k = do-loop indices

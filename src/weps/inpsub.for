@@ -269,7 +269,7 @@
 
 
       ! set layer thickness of the soils as is appropriate for the simulation
-      call spllay
+      call spllay(isr)
 
       ! calculate wet albedo from dry
       asfalw(isr) = asfald(isr)/((1.33**2.)*(1-asfald(isr))+asfald(isr))

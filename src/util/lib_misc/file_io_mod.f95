@@ -82,8 +82,8 @@ module file_io_mod
     integer, dimension(:), allocatable :: luocrp1         ! write decomp.out for select decomp pools detail
     integer, dimension(:), allocatable :: luobio1         ! bio1.btmp for residue totals detail
 
-    integer :: luosci          ! write sci_energy.out for soil conditioning index detail
-    integer :: luostir         ! write stir_energy.out for soil tillage intesity rating detail
+    integer, dimension(:), allocatable :: luosci          ! write sci_energy.out for soil conditioning index detail
+    integer, dimension(:), allocatable :: luostir         ! write stir_energy.out for soil tillage intesity rating detail
 
     integer :: luohydro        ! write hydro.out for hydrology surface details
     integer :: luohlayers      ! write hlayers.out for hydrology subsurface details

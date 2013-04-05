@@ -27,9 +27,19 @@
       type(biomatter), dimension(:,:), intent(out) :: residue
 
 !     + + +   LOCAL VARIABLES + + +
+      integer :: nsubr
       integer idx, jdx, alloc_stat, sum_stat
-      character*30 :: subr_text(nsubr) ! subregion subdirectory text string
+      character*30, dimension(:), allocatable :: subr_text ! subregion subdirectory text string
       character*30 :: dec_text ! decomposition detail age pool output file name text string
+
+      ! use allocation of resiude array for number of subregions
+      nsubr = size(residue,2)
+
+      ! allocate the subregion name, number combination text for subregions
+      allocate( subr_text(nsubr), stat=alloc_stat)
+      if( alloc_stat .gt. 0 ) then
+         Write(*,*) 'ERROR: unable to allocate subr_text array'
+      end if
 
       ! create subregion directory names
       do idx = 1, nsubr
@@ -91,8 +101,19 @@
 
 !     open output file for soil conditioning index
       if( soil_cond .gt. 0 ) then
-          call fopenk (luosci, rootp(1:len_trim(rootp)) // 'sci_energy.out', 'unknown')
-          call fopenk (luostir, rootp(1:len_trim(rootp)) // 'stir_energy.out', 'unknown')
+         sum_stat = 0
+         allocate( luosci(0:nsubr), stat=alloc_stat )
+         sum_stat = sum_stat + alloc_stat
+         allocate( luostir(nsubr), stat=alloc_stat )
+         sum_stat = sum_stat + alloc_stat
+         if( sum_stat .gt. 0 ) then
+            Write(*,*) 'ERROR: unable to allocate luosci, luostir array'
+         end if
+         call fopenk (luosci(0), trim(rootp) // 'sci_energy.out', 'unknown')
+         do idx = 1, nsubr
+            call fopenk (luosci(idx), trim(rootp) // trim(subr_text(idx)) // 'sci_energy.out', 'unknown')
+            call fopenk (luostir(idx), trim(rootp) // trim(subr_text(idx)) // 'stir_energy.out', 'unknown')
+         end do
       end if
 
 !     open detailed output files for hydro
@@ -222,5 +243,12 @@
          write(luoweppsum,*) 'March 3, 2009  (2009.3)'
          write(luoweppsum,*) '---------------------------------------'
        endif
+
+      ! free memory from local subregion text strings
+      deallocate( subr_text, stat=alloc_stat)
+      if( alloc_stat .gt. 0 ) then
+         Write(*,*) 'ERROR: unable to deallocate subr_text array'
+      end if
+
 
       end

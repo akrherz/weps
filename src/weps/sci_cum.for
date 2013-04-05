@@ -8,6 +8,7 @@
       use biomaterial, only: biototal
       use erosion_data_struct_defs, only: cellsurfacestate
       use grid_geo_def, only: imax, jmax
+      use sci_report_mod, only: scisum
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer, intent(in) :: isr
@@ -21,7 +22,6 @@
 !     + + + INCLUDE + + +
       include 'p1werm.inc'
       include 'command.inc'
-      include 'main/sci_report_val.inc'
 
 !     + + + PURPOSE + + +
 !     each time it is called, it adds a value to the total biomass increments
@@ -49,12 +49,12 @@
           total = total/ngdpt
       end if
 
-      ! allbiomass_sum(isr) = allbiomass_sum(isr) + admtotto4(isr)
-      allbiomass_sum(isr) = allbiomass_sum(isr) + restot%mftot          &
+      ! scisum(isr)%allbiomass = scisum(isr)%allbiomass + admtotto4(isr)
+      scisum(isr)%allbiomass = scisum(isr)%allbiomass + restot%mftot    &
      &      + restot%msttot + restot%mbgtot + restot%mrttotto4
 
-      allerosion_sum(isr) = allerosion_sum(isr) + total
-      days_sum(isr) = days_sum(isr) + 1
+      scisum(isr)%allerosion = scisum(isr)%allerosion + total
+      scisum(isr)%days = scisum(isr)%days + 1
 
       return
       end

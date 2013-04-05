@@ -32,7 +32,6 @@
       include 'p1werm.inc'  ! mnsub, mnbpt, mnbr, mnarpt, mnar, mnspt, mngdpt
       include 'm1sim.inc'   ! am0jd, erod_interval, ntstep
       include 'm1geo.inc'   ! amxsim
-      include 'm1subr.inc'  ! nsubr
       include 'm1flag.inc'  ! am0eif, am0efl
       include 'w1clig.inc'  ! awzypt, Requires yrly average precip.....
 
@@ -45,6 +44,7 @@
 !     erodout
 
 !     ++++ LOCAL VARIABLES +++
+      integer :: nsubr       ! number of subregions (found from size of subrsurf)
       type(subregionsurfacestate), dimension(:), allocatable :: subrsurf
       type(threshold), dimension(:), allocatable :: noerod                 ! report values to show which factors prevented erosion
       type(cellsurfacestate), dimension(:,:), allocatable :: cellstate     ! grid cell state values (allocate in erodinit)
@@ -443,6 +443,9 @@
          call erodin(i_unit, o_unit, force_debug_flag, already_read_inputs, subrsurf)  !Doesn't echo input to file
          already_read_inputs = already_read_inputs + 1
       endif
+
+      ! Set based on allocated size of subrsurf
+      nsubr = size(subrsurf)
 
 ! Check for invalid commandline input values which are dependent
 ! upon erodin input values.

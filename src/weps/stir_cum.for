@@ -4,6 +4,8 @@
 !$HeadURL$
       subroutine stir_cum(isr, speed, depth, tilltype, fracarea)
 
+      use stir_report_mod, only: stircum
+
 !     + + + ARGUMENT DECLARATIONS + + +
       integer isr
       real speed, depth
@@ -27,7 +29,6 @@
       include 'p1werm.inc'
       include 'command.inc'
       include 'm1flag.inc'
-      include 'main/stir_report_val.inc'
 
 !     + + + PURPOSE + + +
 !     each time it is called, it calculates the Soil Tillage Intensity Rating
@@ -49,7 +50,7 @@
 
       ! only do if flag is set 
       if( (soil_cond .eq. 0) .or. (report_loop .neqv. .true.)             &
-     &  .or. done_flg(isr) ) return
+     &  .or. stircum(isr)%done_flg ) return
 
       select case (tilltype)
       case (1)  ! Mixing, some inversion
@@ -71,8 +72,8 @@
      &         * depth * mmtoin                                         &
      &         * fracarea
 
-      stir_op_sum(isr) = stir_op_sum(isr) + stir_val
-      proc_cnt(isr) = proc_cnt(isr) + 1
+      stircum(isr)%stir_op_sum = stircum(isr)%stir_op_sum + stir_val
+      stircum(isr)%proc_cnt = stircum(isr)%proc_cnt + 1
 
       return
       end

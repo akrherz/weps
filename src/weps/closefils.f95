@@ -11,7 +11,6 @@
       include 'p1werm.inc'
       include 'wpath.inc'
 
-      include 'm1subr.inc'   ! nsubr
       include 'm1flag.inc'
       include 'm1dbug.inc'
       include 'command.inc'
@@ -31,7 +30,7 @@
       if (am0sdb .eq. 1) close(luosdb)
       if (am0tdb .eq. 1) close(luotdb)
       if (am0cdb .eq. 1) close(luocdb)
-      do idx = 1, nsubr
+      do idx = 1, size(luoddb)
          if (am0ddb .eq. 1) close(luoddb(idx))
       end do
 
@@ -90,8 +89,10 @@
 
 !     output file for soil conditioning index
       if( soil_cond .gt. 0 ) then
-          close(luosci)
-          close(luostir)
+         do idx = 1, size(luosci)
+            close(luosci(idx))
+            close(luostir(idx))
+         end do
       end if
 
 !     detailed output files for hydro
@@ -111,7 +112,7 @@
 
 ! files for outputing the crop and decomp biomass variables - LEW
 
-      do idx = 1, nsubr
+      do idx = 1, size(luocrp1)
          if ((am0dfl .eq. 1).or.(am0dfl.eq.3)) then
             close(luocrp1(idx))
             close(luobio1(idx))

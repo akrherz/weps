@@ -1,17 +1,20 @@
-module stir_soil_texture
+!$Author:$
+!$Date:$
+!$Revision:$
+!$HeadURL:$
+
+module stir_soil_texture_mod
     implicit none
     private
     
-    include "p1werm.inc"
-
     !soil texture multiplier calculated after the soil is read in
-    real :: soil_texture_multiplier (mnsub)
+    real, dimension(:), allocatable :: soil_texture_multiplier
     save soil_texture_multiplier
 
     public :: update_stir_soil_multiplier
     public :: get_stir_soil_multiplier
-
-    
+    public :: create_stir_soil_multiplier
+    public :: destroy_stir_soil_multiplier
 
 contains
 
@@ -21,7 +24,7 @@ contains
 
         use weps_interface_defs
 
-        integer, intent(in) :: sub
+        integer, intent(in) :: sub       ! subregion number
         real, intent(in) :: sand, clay
 
         integer :: texclass
@@ -64,7 +67,7 @@ contains
         
     end subroutine
 
-    !return the stored texture multiplier.  
+    ! return the stored texture multiplier.  
     function get_stir_soil_multiplier(sub) result(multiplier)
         real :: multiplier
         integer, intent(in) :: sub
@@ -72,5 +75,26 @@ contains
         multiplier = soil_texture_multiplier(sub)
     end function
 
+    ! allocate space for the stored texture multiplier.  
+    subroutine create_stir_soil_multiplier(sub)
+        integer, intent(in) :: sub
+        integer :: alloc_stat
 
-end module
+        allocate( soil_texture_multiplier(sub), stat=alloc_stat )
+
+        if( alloc_stat .gt. 0 ) then
+           Write(*,*) 'ERROR: unable to allocate enough memory for stir_soil_multiplier array'
+        end if
+    end subroutine create_stir_soil_multiplier
+
+    subroutine destroy_stir_soil_multiplier
+        integer :: dealloc_stat
+
+        deallocate( soil_texture_multiplier, stat=dealloc_stat )
+
+        if( dealloc_stat .gt. 0 ) then
+           Write(*,*) 'ERROR: unable to deallocate memory for stir_soil_multiplier array'
+        end if
+    end subroutine destroy_stir_soil_multiplier
+
+end module stir_soil_texture_mod

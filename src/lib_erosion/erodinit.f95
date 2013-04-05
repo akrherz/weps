@@ -30,7 +30,6 @@
       include  'p1werm.inc'
       include  'm1flag.inc'  ! am0eif
       include  'm1geo.inc'   ! nbr
-      include  'm1subr.inc'  ! nsubr
       include  's1surf.inc'  ! acanag, acancr
       
 !     +++ ARGUMENT DECLARATIONS +++
@@ -44,13 +43,15 @@
 !     sbbr
 
 !     +++ LOCAL VARIABLES +++
-      integer i, j, sr
+      integer i, j, sr, nsubr
       type(point) :: centroid
 
 !     + + + LOCAL VARIABLE DEFINITIONS + + +
 !     nbr  = number of barriers (from m1geo.inc)
 
 !     +++ END SPECIFICATIONS +++
+
+      nsubr = size(subr_poly)
 
       ! Grid is created at least once.
       if (am0eif .eqv. .true.) then
@@ -62,7 +63,7 @@
              ! with subregion polygon to select grid cell subregion
              centroid%x = 0.5 * (i-1+i) * ix
              centroid%y = 0.5 * (j-1+j) * jy
-             do sr = 1,nsubr
+             do sr = 1, nsubr
                ! Check if it is inside subregion polygon
                if( pnpoly(centroid, subr_poly(sr)) .ge. 0) then
                   ! centroid of grid cell is inside or on edge of subregion polygon

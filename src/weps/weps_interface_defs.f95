@@ -1187,7 +1187,8 @@
       integer, intent(out) :: n_rot_cycles
       end subroutine input
 !------------------------------
-      subroutine input_ifc()
+      subroutine input_ifc(isr)
+      integer, intent(in) :: isr
       end subroutine input_ifc
 !------------------------------
       subroutine mandates(sr, mandate)
@@ -1217,6 +1218,10 @@
       integer isr
       end subroutine save_soil
 !--------------------------------
+      subroutine sci_stir_init(isr)
+      integer isr
+      end subroutine sci_stir_init
+!--------------------------------
       subroutine sci_cum( isr, restot, cellstate )
       use biomaterial, only: biototal
       use erosion_data_struct_defs, only: cellsurfacestate
@@ -1225,17 +1230,13 @@
       type(cellsurfacestate), dimension(0:,0:), intent(in) :: cellstate     ! initialized grid cell state values
       end subroutine sci_cum
 !--------------------------------
-      subroutine sci_report( cellstate )
-      use erosion_data_struct_defs, only: cellsurfacestate
-      type(cellsurfacestate), dimension(0:,0:), intent(in) :: cellstate     ! initialized grid cell state values
-      end subroutine sci_report
-!--------------------------------
       subroutine sort (iarr,n,p1,p5,p9)
       integer  n
       real iarr(*),p1, p5, p9
       end subroutine sort
 !--------------------------------
-      subroutine spllay()
+      subroutine spllay(isr)
+      integer       isr
       end subroutine spllay
 !--------------------------------
       subroutine spllay_ifc (isr)

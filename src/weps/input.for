@@ -62,10 +62,6 @@
 !     load the simulation run file
       call inprun(n_rot_cycles)
 
-!     Moving this call into weps.for so that the IFC file can be re-read and re-initialized
-!     for calibration run purposes.
-      call input_ifc  ! Put back in for now
-
 !     If this is a simulation that does water erosion read any extra WEPP
 !     input data.
       if (run_erosion.gt.1) call inpwepp

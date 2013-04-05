@@ -44,6 +44,7 @@
       include 'main/main.inc'
 
 !     + + + LOCAL VARIABLES + + +
+      integer    :: nsubr
       integer       i, isr, iar, ios, ibr, ipol
       character     line*256
       real          sclsim, sclbar
