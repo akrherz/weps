@@ -12,7 +12,7 @@
 !     use wind dir of 270 for most to see output along wind direction
 
       use weps_interface_defs
-      use erosion_data_struct_defs
+      use erosion_data_struct_defs, only: subregionsurfacestate, cellsurfacestate, awzypt, anemht, wzoflg, ntstep
       use grid_geo_def, only: awa, kbr, imax, jmax
 
 !     + + + ARGUEMENT DECLARATIONS + + +
@@ -27,11 +27,8 @@
 !     + + + GLOBAL COMMON BLOCKS + + +
 
       include 'p1werm.inc'
-      include 'w1clig.inc' ! awzypt
 
 !     + + + LOCAL COMMON BLOCKS + + +
-      include 'p1const.inc'  ! anemht, wzoflg
-      include 'm1sim.inc'    ! ntstep
       include 'm1geo.inc'    ! amasim, amxsim
 
 !     + + + LOCAL VARIABLES + + +

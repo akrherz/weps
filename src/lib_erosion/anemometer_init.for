@@ -23,8 +23,7 @@
 !
 ! + + + END SPECIFICATIONS + + +
 
-          ! named common block where these are declared
-          include 'p1const.inc' ! anemht, awzzo, awzdisp, wzoflg
+      use erosion_data_struct_defs, only: anemht, awzzo, awzdisp, wzoflg
 
           ! set the default data values
           anemht =  10.0

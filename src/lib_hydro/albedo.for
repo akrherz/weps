@@ -30,7 +30,6 @@
 !     sndp     - depth of snow, mm
 
 !     + + + COMMON BLOCK + + +
-      include 'p1const.inc'
       include 'p1werm.inc'
       include 'hydro/htheta.inc'
       include 'hydro/snowprop.inc'

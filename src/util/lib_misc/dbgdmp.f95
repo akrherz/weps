@@ -11,6 +11,7 @@
 !       01-Mar-99       wjr     original coding
 
       use biomaterial, only: biomatter, biototal
+      use erosion_data_struct_defs, only: awdair, awadir, awhrmx, awudmx, awudmn, awudav, subday, ntstep
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer, intent(in) :: day
@@ -41,7 +42,6 @@
       include 'c1db3.inc'
       include 'c1glob.inc'
       include 'w1clig.inc'
-      include 'w1wind.inc'
       include 'w1pavg.inc'
       include 'h1hydro.inc'
       include 'h1scs.inc'
@@ -154,9 +154,6 @@
       if (awhrmx.lt.1.0.or.awhrmx.gt.24.0)                              &
      &  write(*,*) 'day ',day,' awhrmx ', awhrmx
 !
-      if (awrmxn.lt.0.0.or.awrmxn.gt.tstmax)                            &
-     &  write(*,*) 'day ',day,' awrmxn ', awrmxn
-!
 ! wjr,  test values based on definition
       if (awudmx.lt.0.0.or.awudmx.gt.50.0)                              &
      &  write(*,*) 'day ',day,' awudmx ', awudmx
@@ -171,8 +168,8 @@
 !
       do 10 idx=1,mntime
 ! wjr,  test values based on definition
-        if (awu(idx).lt.0.0.or.awu(idx).gt.35.0)                        &
-     &    write(*,*) 'day ',day,' awu(',idx,') ', awu(idx)
+        if( subday(idx)%awu .lt. 0.0 .or. subday(idx)%awu .gt. 35.0 )   &
+     &    write(*,*) 'day ',day,' awu(',idx,') ',  subday(idx)%awu
 10    continue     
 !
 ! w1pagv

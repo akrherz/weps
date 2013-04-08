@@ -25,10 +25,6 @@ subroutine erodsubr_update( sr, restot, croptot, biotot, subrsurf )
 
 !     + + + GLOBAL COMMON BLOCKS + + +
       include  'p1werm.inc'
-      include  'p1const.inc'
-      include  'm1geo.inc'
-      include  'w1wind.inc'
-      include  'w1pavg.inc'
       include  's1dbh.inc'
       include  's1layr.inc'
       include  's1phys.inc'
@@ -36,10 +32,6 @@ subroutine erodsubr_update( sr, restot, croptot, biotot, subrsurf )
       include  's1surf.inc'
       include  's1sgeo.inc'
       include  'h1db1.inc'
-      include  'm1flag.inc'
-      include  'm1sim.inc'
-      include  'm1subr.inc'
-      include  'wpath.inc'
 
 !     +++ LOCAL VARIABLES +++
       integer :: idx

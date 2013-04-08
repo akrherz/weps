@@ -90,8 +90,8 @@ module erosion_data_struct_defs
      real :: abrlai     ! abrlai - Biomass leaf area index (m^2/m^2)
      real :: abzht      ! abzht  - Composite weighted average biomass height (m)
      real :: sxprg      ! sxprg  - ridge spacing parallel the wind direction(mm)
-     real :: acanag     ! acanag - coeffienct of abrasion for aggregates (1/m)
-     real :: acancr     ! acancr - coeffienct of abrasion for crust (1/m)
+     real :: acanag     ! acanag - coefficient of abrasion for aggregates (1/m)
+     real :: acancr     ! acancr - coefficient of abrasion for crust (1/m)
      real :: asf10an    ! asf10an - soil fraction pm10 in abraded suspension
      real :: asf10en    ! asf10en - soil fraction pm10 in emitted suspension
      real :: asf10bk    ! asf10bk - soil fraction pm10 in saltation breakage suspension
@@ -126,6 +126,35 @@ module erosion_data_struct_defs
      real :: sfcv    ! fraction of soil surface which is non emitting
 
   end type threshold
+
+  type subdailyvalues
+     real :: awu   ! Average subdaily wind speed (m/s)
+                   ! This variable contains the value of the average subdaily wind speeds for the day
+                   ! (valid only when wind speed is greater than the threshold velocity).
+     real :: awdir ! Average subdaily wind direction (degrees)
+                   ! This variable contains the value of the average subdaily wind direction
+                   ! corresponding to the average subdaily wind speed for the subdaily period.
+  end type subdailyvalues
+
+!  type simulationregionvalues
+     real :: awdair           ! Daily average air density (Kg/m^3) (set by getcli daily) 
+     real :: awzypt           ! Average yearly total precipitation (mm)
+     integer :: ntstep        ! Number of timesteps per day for erosion.
+     integer :: erod_interval ! surface updating interval within erosion.
+                              ! This variable contains the number of seconds the surface is updated within the erosion submodel.
+                              ! (currently settable as a commandline option within the standalone version of the erosion submodel)
+     real :: anemht           ! Standardized anemometer height (m)
+     real :: awzzo            ! Weather station aerodynamic roughness height (mm)
+     real :: awzdisp          ! Weather station zero plane displacement height (mm)
+     integer :: wzoflg        ! Flag = 0 for anem. and  constant awwzo at wx. stations
+                              ! Flag = 1 for anem. and variable awwzo at field.
+     real :: awadir           ! Predominant daily wind direction (degrees)
+     real :: awhrmx           ! Hour maximum daily wind speed occurs (hr)
+     real :: awudmx           ! Maximum daily wind speed (m/s)
+     real :: awudmn           ! Minimum daily wind speed (m/s)
+     real :: awudav           ! Average daily wind speed (m/s)
+     type(subdailyvalues), dimension(:), allocatable :: subday
+ ! end type simulationregionvalues
 
 contains
 

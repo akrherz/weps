@@ -30,7 +30,6 @@
       include  'p1werm.inc'
       include  'm1flag.inc'  ! am0eif
       include  'm1geo.inc'   ! nbr
-      include  's1surf.inc'  ! acanag, acancr
       
 !     +++ ARGUMENT DECLARATIONS +++
       type(threshold), dimension(:), intent(inout) :: noerod                 ! report values to show which factors prevented erosion
@@ -121,10 +120,6 @@
            noerod(sr)%asvroc = 0
            noerod(sr)%wzzo = 0
            noerod(sr)%sfcv = 0
-
-           ! initialize surface condition reporting values
-           acanag = 0
-           acancr = 0
       end do
 
       return

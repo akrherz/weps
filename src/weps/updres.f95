@@ -17,7 +17,6 @@
 !     Update geometric properties of the decomp residue pools
 
       include 'p1werm.inc'
-      include 'p1const.inc'
       include 's1layr.inc'
 
 !     + + + END SPECIFICATIONS + + +

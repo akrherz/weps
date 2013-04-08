@@ -10,6 +10,7 @@
       use biomaterial, only: biototal
       use erosion_data_struct_defs, only: threshold
       use erosion_data_struct_defs, only: cellsurfacestate
+      use erosion_data_struct_defs, only: awadir, awudmx
       use grid_geo_def, only: imax, jmax
 
 !     + + + ARGUMENT DECLARATIONS + + +
@@ -24,7 +25,6 @@
 !       04-Mar-99       wjr     created
 
       include 'p1werm.inc'
-! ***      include 'm1sim.inc'
       include 'm1flag.inc'
       include 'c1glob.inc'
       include 'h1db1.inc'
@@ -34,7 +34,6 @@
       include 's1agg.inc'
       include 's1surf.inc'
       include 'w1clig.inc'
-      include 'w1wind.inc'
       include 'h1hydro.inc'
       include 'm1subr.inc'
       include 'manage/oper.inc'

@@ -7,7 +7,7 @@ SUBROUTINE update_yrly_update_vars(isr, yrly_update, yrot_update, yr_update, cel
 
     USE pd_var_type_def
     USE pd_var_tables
-    use erosion_data_struct_defs, only: cellsurfacestate
+    use erosion_data_struct_defs, only: cellsurfacestate, awdair, awudmx, subday, ntstep 
     use grid_geo_def, only: imax, jmax
 
     IMPLICIT NONE
@@ -20,9 +20,6 @@ SUBROUTINE update_yrly_update_vars(isr, yrly_update, yrot_update, yr_update, cel
 
     include "w1clig.inc"        ! precip
     include "p1werm.inc"        ! mntime (maximum # of time steps/day)
-    include "w1wind.inc"        ! awu(mntime), awudmx
-    include "w1pavg.inc"        ! awdair
-    include "m1sim.inc"         ! ntstep (actual # of time steps/day)
     include "m1geo.inc"         ! sim_area - area of simulation region (m^2)
 
     include "h1et.inc"          ! ah0drat (dryness ratio)
@@ -383,8 +380,8 @@ SUBROUTINE update_yrly_update_vars(isr, yrly_update, yrot_update, yr_update, cel
   we = 0.0
   IF (awudmx > wind_energy_thresh) THEN
      DO i = 1, ntstep
-        IF (awu(i) > wind_energy_thresh) THEN
-          we = we + 0.5*awdair*(awu(i)**2) * (awu(i) - wind_energy_thresh) *        &
+        IF (subday(i)%awu > wind_energy_thresh) THEN
+          we = we + 0.5*awdair*(subday(i)%awu**2) * (subday(i)%awu - wind_energy_thresh) *        &
              (86400.0/ntstep) * (0.001)    ! (s/day) and (J/kJ)
         END IF
      END DO

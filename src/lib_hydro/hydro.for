@@ -48,6 +48,7 @@
       use biomaterial, only: biototal
       use p1unconv_mod, only: mtomm
       use timer_def, only: TIMHYDR, TIMDARC, TIMSTART, TIMSTOP
+      use erosion_data_struct_defs, only: anemht, awzzo, awzdisp, wzoflg
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer layrsn
@@ -202,7 +203,6 @@
 !     restot - structure containing summary residue pool amounts
 
 !     + + + COMMON BLOCKS + + +
-      include 'p1const.inc'
       include 'p1werm.inc'
       include 'p1solar.inc'
       include 'm1sim.inc'
@@ -466,7 +466,7 @@
 
       ! Convert global to net radiation
       rn = radnet(bcrlai,bweirr, bhzsno, bhzsnd, bwtdmx, bwtdmn, amalat,&
-     &                 bsfalw, bsfald, idoy, bwtdpt, bwzdpt )
+     &                 bsfalw, bsfald, idoy, bwtdpt )
 
       ! partition radiation between canopy and surface
       ! added exponential to keep above zero for very low lai

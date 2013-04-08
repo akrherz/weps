@@ -28,18 +28,14 @@ module saeinp_mod
       use weps_interface_defs
       use file_io_mod, only: fopenk, makenamnum
       use subregions_mod
-      use erosion_data_struct_defs, only: subregionsurfacestate
+      use erosion_data_struct_defs, only: subregionsurfacestate, awdair, anemht, awzzo, wzoflg, awadir, subday, ntstep
 
 !     +++ ARGUMENT DECLARATIONS +++
       type(subregionsurfacestate), dimension(:) :: subrsurf  ! subregion surface conditions (erosion specific set)
 
 !     + + + GLOBAL COMMON BLOCKS + + +
       include  'p1werm.inc'
-      include  'p1const.inc' ! anemht, awzzo, wzoflg
       include  'm1geo.inc'   ! amasim, nacctr, nbr, amxsim, amxar, amxbr, amzbr, ampbr, amxbrw
-      include  'w1wind.inc'  ! awadir, awu
-      include  'w1pavg.inc'  ! awdair
-      include  'm1sim.inc'   ! ntstep
 
 !     +++ LOCAL VARIABLES +++
       integer k,l, sr, ip
@@ -409,11 +405,11 @@ module saeinp_mod
      &'#',/,                                                            &
      &'#     +++ WEATHER +++',/,                                        &
      &'#',/,                                                            &
-     &'#     awdair, R, (w1pavg.inc) Air density (kg/m^3)')
+     &'#     awdair, R, Air density (kg/m^3)')
       write(luo_saeinp,*) awdair
       write(luo_saeinp,2275)
  2275 format('#',/,                                                     &
-     &'#     awadir, R, (w1wind.inc) Wind direction (deg)')
+     &'#     awadir, R, Wind direction (deg)')
       write(luo_saeinp,*) awadir
       write(luo_saeinp,2280)
  2280 format('#',/,                                                     &
@@ -452,10 +448,10 @@ module saeinp_mod
      &s',/,                                                             &
      &'# We will try and see - LEW  Must use 6 values per line LH.',/,  &
      &'#')
-      write(luo_saeinp,*) (awu(k), k=1,6)
-      write(luo_saeinp,*) (awu(k), k=7,12)
-      write(luo_saeinp,*) (awu(k), k=13,18)
-      write(luo_saeinp,*) (awu(k), k=19,24)
+      write(luo_saeinp,*) (subday(k)%awu, k=1,6)
+      write(luo_saeinp,*) (subday(k)%awu, k=7,12)
+      write(luo_saeinp,*) (subday(k)%awu, k=13,18)
+      write(luo_saeinp,*) (subday(k)%awu, k=19,24)
       write(luo_saeinp,2300)
  2300 format('#',/,                                                     &
      &     '#    + + + DATA TO PLOT + + +',/,                           &

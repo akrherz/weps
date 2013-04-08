@@ -13,9 +13,10 @@
 
       use weps_interface_defs
       use file_io_mod, only: luiwin
+      use erosion_data_struct_defs, only: awadir, awhrmx, awudmx,       &
+     &                                    awudmn, awudav, subday
 
       include 'p1werm.inc'
-      include 'w1wind.inc'
       include 'm1flag.inc'
       include 'command.inc'
 
@@ -239,7 +240,7 @@
       else                               ! wind_gen2 file format
          awudav = wawudav(daywdx)
          do i = 1,24
-            awu(i) = wawu(i,daywdx)
+            subday(i)%awu = wawu(i,daywdx)
          end do
       endif
       daywdx = daywdx + 1

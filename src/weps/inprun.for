@@ -15,6 +15,7 @@
       use subregions_mod
       use file_io_mod, only: fopenk, luicli, luiwin, luiwsd,            &
      &                       luomanage, luolog
+      use erosion_data_struct_defs, only: subday, ntstep
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer, intent(out) :: n_rot_cycles
@@ -38,7 +39,6 @@
       include 'h1scs.inc'
       include 'h1db1.inc'
       include 'w1clig.inc'
-      include 'w1wind.inc'
 
 !     + + + LOCAL COMMON BLOCKS + + +
       include 'main/main.inc'
@@ -53,6 +53,8 @@
       real          wepsrun_version
       integer       subr_np
       integer       lui1
+      integer    :: alloc_stat
+      character*80     awwisn   ! made local since not used anywhere else
 
 !     + + + Local Variable Definitions + + +
 !     i   - local index counter
@@ -171,6 +173,14 @@
         end if
       case (11)
         read (line,*,err=80) ntstep
+
+      ! allocate wind direction and speed array
+        allocate(subday(ntstep), stat=alloc_stat)
+        if( alloc_stat .gt. 0 ) then
+           Write(*,*) 'ERROR: memory alloc., wind direction and speed'
+        end if
+
+
 !     read CLIGEN file name
       case (12)
         write(luolog, *) 'line0: ', line

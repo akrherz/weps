@@ -36,10 +36,7 @@
 
 !     + + + GLOBAL COMMON BLOCKS + + +
       include  'p1werm.inc'
-      include  'p1const.inc' ! anemht, awzzo, wzoflg
-      include  'w1wind.inc'  ! awadir, awudmx, awdir, awu
       include  'm1flag.inc'  ! am0efl
-      include  'm1sim.inc'   ! erod_interval, ntstep
 
 !     +++ LOCAL VARIABLES +++
       integer i,j,wustfl, icsr
@@ -57,6 +54,7 @@
       real wus_anemom, wus_random, wus_ridge, wus_biodrag
       real wubsts, wucsts, wucwts, wucdts, sfcv
       real :: dmlos_tmp, sf84mn_tmp, smaglos_tmp, smaglosmx_tmp
+      logical :: first_emit  ! pass to sbemit on first entry to zero out daily accumulators
 
 !     + + + LOCAL VARIABLE DEFINITIONS + + +
 !     i,j      - index
@@ -112,6 +110,7 @@
 !     start general erosion timer
       call timer(TIMEROS,TIMSTART)
 
+      first_emit = .true.
       hr = 0.0
       sub_ntstep = 0.0
       hrs = 0.0
@@ -120,7 +119,7 @@
    ! multiple days in WEPS will mess this up.
   !    if (btest(am0efl,2)) then
   !       write(0,*) 'i is:', i, 'hr is:',hr,'should be header only here'
-  !       call sbemit (luo_emit, awu(i), hr)  !Should only write the header one time
+  !       call sbemit (luo_emit, subday(i)%awu, hr)  !Should only write the header one time
   !    endif
 
 !     initialize wind direction array for subhourly values
@@ -128,14 +127,13 @@
 !     erosion stand alone may want to input wind speed
 !     and direction as subhourly pairs. If so, this can be disabled.
       do i =1, ntstep
-          awdir(i) = awadir
+          subday(i)%awdir = awadir
 !          rusust_preros(i) = 0.0
       end do
 
       ! set ratio: defined as the ratio wus/wust
       rusust = 0
 
-!*****this check cannot be done if subhourly wind is used  FAF
 ! for subhourly, surface water content values should be interpolated. see hidx calculation
       do 20 icsr=1, size(subrsurf)
        ! If snow depth > 20 mm in all subregions, then no erosion
@@ -145,25 +143,6 @@
 
         ! calc if daily max friction vel. exceeds threshold in any 
         ! subregions without hill and barrier effects
-
-        ! calc. ridge spacing parallel the wind
-        if (subrsurf(icsr)%aszrgh > 5.0) then
-          sina = abs(sin(PID180*abs(awdir(icsr) - subrsurf(icsr)%asargo)))
-          sina = max(0.10, sina)
-          subrsurf(icsr)%sxprg = subrsurf(icsr)%asxrgs/sina
-            if (subrsurf(icsr)%asxdks > subrsurf(icsr)%asxrgs/3.) then
-             subrsurf(icsr)%sxprg = amin1(subrsurf(icsr)%sxprg, subrsurf(icsr)%asxdks)
-            endif
-        else
-            subrsurf(icsr)%sxprg = 1000
-        endif
-
-        ! Compute Zo (wzzo) of surface
-        call sbzo( subrsurf(icsr)%sxprg, subrsurf(icsr)%aszrgh, subrsurf(icsr)%aslrr, &
-          wzoflg, subrsurf(icsr)%adrlaitot, subrsurf(icsr)%adrsaitot, subrsurf(icsr)%abzht, &
-          subrsurf(icsr)%acrlai, subrsurf(icsr)%acrsai, subrsurf(icsr)%aczht, &
-          subrsurf(icsr)%acxrow, subrsurf(icsr)%ac0rg, wzorg, wzorr, &
-          wzzo, wzzov, awzzo, brcd )
 
         ! Calculate soil clod fraction less than 0.84 mm diameter
         ! calc soil mass < 0.84 mm
@@ -175,23 +154,43 @@
         subrsurf(icsr)%sf84ic = min (0.9999, max(subrsurf(icsr)%sf84ic,0.0001))    ! edit ljh 1-23-05
      
         do i=1, ntstep
+
+          ! calc. ridge spacing parallel the wind
+          if (subrsurf(icsr)%aszrgh > 5.0) then
+            sina = abs(sin(PID180*abs(subday(i)%awdir - subrsurf(icsr)%asargo)))
+            sina = max(0.10, sina)
+            subrsurf(icsr)%sxprg = subrsurf(icsr)%asxrgs/sina
+              if (subrsurf(icsr)%asxdks > subrsurf(icsr)%asxrgs/3.) then
+                subrsurf(icsr)%sxprg = amin1(subrsurf(icsr)%sxprg, subrsurf(icsr)%asxdks)
+              endif
+          else
+              subrsurf(icsr)%sxprg = 1000
+          endif
+
+          ! Compute Zo (wzzo) of surface
+          call sbzo( subrsurf(icsr)%sxprg, subrsurf(icsr)%aszrgh, subrsurf(icsr)%aslrr, &
+                     wzoflg, subrsurf(icsr)%adrlaitot, subrsurf(icsr)%adrsaitot, subrsurf(icsr)%abzht, &
+                     subrsurf(icsr)%acrlai, subrsurf(icsr)%acrsai, subrsurf(icsr)%aczht, &
+                     subrsurf(icsr)%acxrow, subrsurf(icsr)%ac0rg, wzorg, wzorr, &
+                     wzzo, wzzov, awzzo, brcd )
+
           ! find hour index (1-24)
           hidx = int(i*23.75/ntstep) + 1
 
           ! (comparison) anemometer location surface friction velocity
-          call sbwus( anemht, awzzo, awu(i), awzzo, 0.0, wus_anemom )
+          call sbwus( anemht, awzzo, subday(i)%awu, awzzo, 0.0, wus_anemom )
 
           ! (comparison) site random roughness surface friction velocity
-          call sbwus( anemht, awzzo, awu(i), wzorr, 0.0, wus_random )
+          call sbwus( anemht, awzzo, subday(i)%awu, wzorr, 0.0, wus_random )
 
           ! (comparison) site ridge (pattern) roughness surface friction velocity
-          call sbwus( anemht, awzzo, awu(i), wzorg, 0.0, wus_ridge )
+          call sbwus( anemht, awzzo, subday(i)%awu, wzorg, 0.0, wus_ridge )
 
           ! (comparison) site biodrag surface friction velocity
-          call sbwus( anemht, awzzo, awu(i), awzzo, brcd, wus_biodrag )
+          call sbwus( anemht, awzzo, subday(i)%awu, awzzo, brcd, wus_biodrag )
 
           ! Compute soil surface friction velocity (wus)
-          call sbwus( anemht, awzzo, awu(i), wzzov, brcd, wus )
+          call sbwus( anemht, awzzo, subday(i)%awu, wzzov, brcd, wus )
 
           ! Compute friction velocity threshold for entrainment (wust) and
           ! transport friction velocity threshold (wusp)
@@ -291,8 +290,8 @@
       call sbinit( subrsurf, cellstate )
 
 !     calc. sweep direction based on wind direction for sberod
-      prev_dir = awdir(1)+ 1.0   !make different to force calculation
-      call sbdirini( awdir(1), prev_dir )
+      prev_dir = subday(1)%awdir+ 1.0   !make different to force calculation
+      call sbdirini( subday(1)%awdir, prev_dir )
 
 !     set flag on to update threshold fric. vel. on grid
       wustfl = 1
@@ -302,23 +301,23 @@
 
 !     step thru each periodic wind speed
       do 41 i =1, ntstep
-          ! check for erodible wind speed
-         if (awu(i) .lt. min_erosion_awu) then
+          ! check for erosive wind speed
+         if (subday(i)%awu .lt. min_erosion_awu) then
              hr = hr + (24.0/ntstep)  !No sub_ntstep's (no erosion calculated for this 'ntstep'
             go to 40
          endif
          ! calc. sweep direction based on wind direction for sberod
          ! only needed if one reads hourly wind directions for input
-         ! call sbdirini( awdir(i), prev_dir )
+         ! call sbdirini( subday(i)%awdir, prev_dir )
 
-          !rut = rusust_preros(i)  This change sabotaged code logic
+         !rut = rusust_preros(i)  This change sabotaged code logic
           
-           rut = rusust*awu(i)/wuref
-          !if (wustfl < 1) then
+         rut = rusust*subday(i)%awu/wuref
+         !if (wustfl < 1) then
             ! no erosion aka surface updating has occurred yet
             !if( rusust_preros(i) .gt. wr ) then
                ! erosion will occur, updated surface requires full grid calculation
-             !  wustfl = 1
+            !  wustfl = 1
             
 
             if (rut .le. wr) then
@@ -383,7 +382,7 @@
             ! useful to allow enough updates of surface
             n = max(1,96/ntstep)
             ! modify time step to more or less than 15 minutes
-!           if (awu(i) .lt. 15.0) then
+!           if (subday(i)%awu .lt. 15.0) then
 !            if (rut < 1.1 ) then
 !               n = n - 2
 !            elseif (rut > 1.4) then
@@ -397,7 +396,7 @@
 !
 !         est. n as fn. of approx max. erosive energy 9-6-06 LH
 
-            wuse = 0.06*awu(i)
+            wuse = 0.06*subday(i)%awu
             wuste = wuse/rut
             enge  = wuse*wuse*(wuse-wuste)
             n = nint((0.5 + 4.6*enge)*n)
@@ -427,8 +426,8 @@
             ! updates the fric. vel and threshold fric. vel on grid
             ! and calc. max. for  rusust = wus/wust
             ! this subroutine calls sbzo and sbwus
-            call sbwind( wustfl, awu(i), ntstep, i, rusust, subrsurf, cellstate )
-            wuref = awu(i)
+            call sbwind( wustfl, subday(i)%awu, ntstep, i, rusust, subrsurf, cellstate )
+            wuref = subday(i)%awu
             wr = 1
 
             ! stop sbwind timer and start general timer
@@ -439,7 +438,7 @@
                ! erosion will occur this time step
                ! wustfl = 1
                if (btest(am0efl,3)) then
-                  call sb1out (j, n, hrs, awu(i), awdir(i), luo_sgrd, subrsurf(1), cellstate)
+                  call sb1out (j, n, hrs, subday(i)%awu, subday(i)%awdir, luo_sgrd, subrsurf(1), cellstate)
                endif
 
                ! stop gneral timer and start sberod timer
@@ -461,9 +460,9 @@
             else
                ! print out initial state, even if we never call sberode()
                if (btest(am0efl,3).and.(j .eq. 1).and.(i .eq. 1)) then
-                  call sbwind( wustfl, awu(i), ntstep, i, rusust, subrsurf, cellstate )
-                  wuref = awu(i)
-                  call sb1out (j, n, hrs, awu(i), awdir(i), luo_sgrd, subrsurf(1), cellstate)
+                  call sbwind( wustfl, subday(i)%awu, ntstep, i, rusust, subrsurf, cellstate )
+                  wuref = subday(i)%awu
+                  call sb1out (j, n, hrs, subday(i)%awu, subday(i)%awdir, luo_sgrd, subrsurf(1), cellstate)
                endif
 
                ! set to get out of inner loop and go to next wind speed - wustfl = 0
@@ -481,7 +480,7 @@
          if (btest(am0efl,2)) then
             ! write(0,*) 'i is:', i, 'hr is:', hr
             ! Note that we use "hr" not "hrs" here so we report the end of the "ntstep" hr period
-            call sbemit (luo_emit, awu(i), hr, cellstate)  !Should only write data here
+            call sbemit (luo_emit, subday(i)%awu, hr, cellstate, first_emit)  !Should only write data here
          endif
 
    41 continue

@@ -8,6 +8,7 @@ SUBROUTINE update_hmonth_update_vars(cd, cm, hmonth_update, hmrot_update)
 
     USE pd_var_type_def
     USE pd_var_tables
+    use erosion_data_struct_defs, only: subday, awudmx, awdair, ntstep
 
     IMPLICIT NONE
 
@@ -18,9 +19,6 @@ SUBROUTINE update_hmonth_update_vars(cd, cm, hmonth_update, hmrot_update)
 
     include "w1clig.inc"        ! precip
     include "p1werm.inc"        ! mntime (maximum # of time steps/day)
-    include "w1wind.inc"        ! awu(mntime), awudmx
-    include "w1pavg.inc"        ! awdair
-    include "m1sim.inc"         ! ntstep (actual # of time steps/day)
 
     include "h1et.inc"          ! ah0drat (dryness ratio)
 
@@ -47,8 +45,8 @@ SUBROUTINE update_hmonth_update_vars(cd, cm, hmonth_update, hmrot_update)
     we = 0.0
     IF (awudmx > 8.0) THEN
        DO i = 1, ntstep
-          IF (awu(i) > 8.0) THEN
-            we = we + 0.5*awdair*(awu(i)**2) * (awu(i) - 8.0) *        &
+          IF (subday(i)%awu > 8.0) THEN
+            we = we + 0.5*awdair*(subday(i)%awu**2) * (subday(i)%awu - 8.0) *        &
                (86400.0/ntstep) * (0.001)    ! (s/day) and (J/kJ)
           END IF
        END DO

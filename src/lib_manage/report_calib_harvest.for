@@ -24,7 +24,6 @@
 
 !     + + + PARAMETERS AND COMMON BLOCKS + + +
       include 'p1werm.inc'
-      include 'p1const.inc'
       include 'm1flag.inc'
       include 'main/main.inc'
       include 'c1info.inc'

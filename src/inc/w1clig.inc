@@ -18,7 +18,7 @@
       real             awrrh
       real             awtdav
       real             awtyav
-      real             awzypt
+!      real             awzypt
       real             awtmav(12)
       real             awtmnav(12)
       real             awtmxav(12)
@@ -36,7 +36,8 @@
       character*80     awclsn
 
       common / w1clig /                                                 &
-     &                  awrrh, awtdav, awzypt,                          &
+!     &                  awrrh, awtdav, awzypt,                          &
+     &                  awrrh, awtdav,                                  &
      &                  awtyav, awtmav, awtmnav, awtmxav, awzmpt,       &
      &                  awtdmxprev, awtdmn, awtdmx, awtdmnnext,         &
      &                  awtdpt, awzdpt, awdurpt, awpeaktpt, awpeakipt,  &

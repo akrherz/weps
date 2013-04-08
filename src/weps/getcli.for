@@ -10,6 +10,8 @@
 !     09-Mar-99   wjr   created
 
       use file_io_mod, only: luicli
+      use erosion_data_struct_defs, only: awdair
+
       include 'p1werm.inc'
       include 'w1clig.inc'
       include 'm1sim.inc'

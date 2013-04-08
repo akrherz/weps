@@ -19,6 +19,7 @@
       use weps_interface_defs
       use file_io_mod, only: luosdb
       use biomaterial, only: biototal
+      use erosion_data_struct_defs, only: awadir, awhrmx, awudmx, awudmn
 
 !     + + + GLOBAL COMMON BLOCKS + + +
       include 'p1werm.inc'
@@ -36,7 +37,6 @@
       include 'c1gen.inc'
       include 'c1glob.inc'
       include 'w1clig.inc'
-      include 'w1wind.inc'
       include 'h1hydro.inc'
       include 'h1scs.inc'
       include 'h1db1.inc'

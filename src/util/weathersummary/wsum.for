@@ -24,7 +24,6 @@
       include 'p1werm.inc'
       include 'wpath.inc'
       include 'w1clig.inc'
-      include 'w1wind.inc'
       include 'w1pavg.inc'
       include 'm1sim.inc'
 

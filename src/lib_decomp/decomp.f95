@@ -28,8 +28,6 @@
 
       include 'p1werm.inc'
       include 'w1clig.inc'
-      include 's1layr.inc'
-      include 'p1const.inc'
       include 'm1flag.inc'
       include 'm1dbug.inc'
 
@@ -60,13 +58,9 @@
 
 !     + + + VARIABLE DECLARATIONS + + +
 
-      integer iage
-      integer isz
-
-! + + + VARIABLE DEFINITIONS + + +
-
-!     iage   - residue pool age index
-!     isz     - soil layer indexing variable
+      integer :: iage    ! residue pool age index
+      integer :: isz     ! soil layer indexing variable
+      integer :: nslay   ! maximum number of soil layers
 
 ! + + +  ADDITIONAL LOCAL VARIABLES NOT IN DECOMP.KOM + + +
 !     These are used in tc function.
@@ -96,7 +90,10 @@
 !
       data dbgflg /.false./
 
-      if (am0ddb .eq. 1) call ddbug(isr, nslay(isr), residue)
+      ! set the number of soil layers from previously allocated structure
+      nslay = size(decompfac%iwcg)
+
+      if (am0ddb .eq. 1) call ddbug(isr, nslay, residue)
 
       if (dbgflg) write(*,*) 'decomp 1'
 
@@ -165,14 +162,14 @@
 
 ! code changed to use global hydrology variables HHS 1-4-1994
 !
-!      do 30 isz = 1 , nslay(isr)
+!      do 30 isz = 1 , nslay
 !          decompfac%iwcg(isz) = theta(isz)/ thetaf(isz)
 !          if (decompfac%iwcg(isz) .gt. 1.) decompfac%iwcg(isz) = 1.
 !   30 continue
 
       if (dbgflg) write(*,*) 'decomp 3'
 
-      do isz = 1 , nslay(isr)
+      do isz = 1 , nslay
          decompfac%iwcg(isz) = ahrwc(isz,isr)/ ahrwcf(isz,isr)
 !        water factor = water content of soil layer / optimum water content of soil layer
          if (decompfac%iwcg(isz) .gt. 1.0) decompfac%iwcg(isz) = 1.0
@@ -192,7 +189,7 @@
 ! Below ground biomass tc calculated for each soil layer
 !!use average of max and min for calculation
 
-      do isz = 1, nslay(isr)
+      do isz = 1, nslay
 
 ! Code changed to use global hydrology soil temp variable
 !              tsavg= (tsmax(isz) + tsmin(isz))/2.
@@ -208,7 +205,7 @@
 !  for standing, flat and buried residues
       decompfac%idds = min(decompfac%iwcs,decompfac%itcs) !standing
       decompfac%iddf = min(decompfac%iwcf,decompfac%itcf) !flat
-      do isz = 1, nslay(isr)
+      do isz = 1, nslay
          decompfac%iddg(isz) = min(decompfac%iwcg(isz),decompfac%itcg(isz)) !buried
       end do
 
@@ -222,7 +219,7 @@
          ! decomposition days
          residue(iage)%decomp%cumdds = residue(iage)%decomp%cumdds + decompfac%idds
          residue(iage)%decomp%cumddf = residue(iage)%decomp%cumddf + decompfac%iddf
-         do isz = 1, nslay(isr)
+         do isz = 1, nslay
             residue(iage)%decomp%cumddg(isz) = residue(iage)%decomp%cumddg(isz) + decompfac%iddg(isz)
          end do
       end do
@@ -261,7 +258,7 @@
         residue(iage)%mass%flatrootstore = residue(iage)%mass%flatrootstore * dec_fac
         residue(iage)%mass%flatrootfiber = residue(iage)%mass%flatrootfiber * dec_fac
 
-        do isz = 1, nslay(isr)
+        do isz = 1, nslay
           ! buried surface biomass
           dec_fac = max(0.0, 1.0-residue(iage)%database%dkrate(3)*decompfac%iddg(isz))
           residue(iage)%mass%stemz(isz) = residue(iage)%mass%stemz(isz) * dec_fac
@@ -311,7 +308,7 @@
       end do
 
       if (dbgflg) write(*,*) 'decomp 10'
-      if (am0ddb .eq. 1) call ddbug(isr, nslay(isr), residue)
+      if (am0ddb .eq. 1) call ddbug(isr, nslay, residue)
       if ((am0dfl .eq. 1).or.(am0dfl .eq. 2).or.(am0dfl .eq.3)) call decout(isr, residue)
 
       return

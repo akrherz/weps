@@ -14,7 +14,7 @@
 !
       real             awtmmx
       real             awtmmn
-      real             awdair
+!      real             awdair
       real             awztpt
       real             awtpav
       real             awupav
@@ -22,7 +22,8 @@
       real             aweuet
 !
       common / w1pavg /                                                 &
-     &                  awtmmx, awtmmn, awdair, awztpt, awtpav,         &
+!     &                  awtmmx, awtmmn, awdair, awztpt, awtpav,         &
+     &                  awtmmx, awtmmn, awztpt, awtpav,                 &
      &                  awupav, awnuet, aweuet
 
       save :: /w1pavg/

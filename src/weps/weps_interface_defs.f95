@@ -474,11 +474,12 @@
       real prev_dir                           
       end subroutine sbdirini
 !-----------------------------
-      subroutine sbemit (ounit, ws, hhr, cellstate)
+      subroutine sbemit (ounit, ws, hhr, cellstate, first_emit)
       use erosion_data_struct_defs
       integer        ounit   !Unit number for detail grid erosion
       real           ws, hhr
       type(cellsurfacestate), dimension(0:,0:), intent(inout) :: cellstate     ! initialized grid cell state values
+      logical, intent(inout) :: first_emit
       end subroutine sbemit
 !----------------------------
       subroutine sberod (time,flg, subrsurf, cellstate)
@@ -539,10 +540,10 @@
       end subroutine sbsfdi
 !-----------------------------
       subroutine sbwind( wustfl, awu, ntstep, intstep, rusust, subrsurf, cellstate)
-      use erosion_data_struct_defs
+      use erosion_data_struct_defs, only: subregionsurfacestate, cellsurfacestate
       integer wustfl,intstep, ntstep
       real awu, rusust
-      type(subregionsurfacestate), dimension(:) :: subrsurf  ! subregion surface conditions (erosion specific set)
+      type(subregionsurfacestate), dimension(:), intent(in) :: subrsurf  ! subregion surface conditions (erosion specific set)
       type(cellsurfacestate), dimension(0:,0:), intent(inout) :: cellstate     ! initialized grid cell state values
       end subroutine sbwind
 !-------------------------------
@@ -984,13 +985,12 @@
       real siltm  
       end subroutine psd
 !---------------------------------
-      real function radnet (bcrlai, bweirr, snwc, sndp, bwtdmx, bwtdmn, &
-     &                      bmalat, bsfalw, bsfald, idoy, bwtdpt,bwzdpt)
-
+      real function radnet( bcrlai, bweirr, snwc, sndp, bwtdmx, bwtdmn, &
+     &                      bmalat, bsfalw, bsfald, idoy, bwtdpt )
       real bcrlai, bweirr, snwc, sndp, bwtdmx, bwtdmn
       real bmalat, bsfalw, bsfald
       integer idoy
-      real bwtdpt,bwzdpt  
+      real bwtdpt
       end function radnet
 !---------------------------------
       subroutine ratedura(bhzirr, bhratirr, bhdurirr)

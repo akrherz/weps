@@ -156,16 +156,17 @@ contains
         character(LEN = len_trim(pathplusdirname)+8) :: command
 
         character(LEN = len_trim(pathplusdirname)) :: tempname
-        integer :: npass
-        integer :: cdx
-        character :: delimiter
+!        integer :: npass
+!        integer :: cdx
+!        character :: delimiter
         integer :: filnumber
 
         !npass = 1           ! initial entry
         !delimiter = '/'     ! default value used in input string
 
         ! check for existence of subdirectory
-  10    open(newunit(filnumber), FILE=trim(pathplusdirname)//'exist.txt', STATUS='UNKNOWN', ERR=100)
+!  10    open(newunit(filnumber), FILE=trim(pathplusdirname)//'exist.txt', STATUS='UNKNOWN', ERR=100)
+        open(newunit(filnumber), FILE=trim(pathplusdirname)//'exist.txt', STATUS='UNKNOWN', ERR=100)
         ! no error, subdirectory exists
         close( filnumber, STATUS='DELETE')
         return

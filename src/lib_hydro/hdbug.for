@@ -20,6 +20,7 @@
       use weps_interface_defs
       use file_io_mod, only: luohdb
       use biomaterial, only: biototal
+      use erosion_data_struct_defs, only: awadir, awhrmx, awudmx, awudmn
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer isr                   
@@ -44,7 +45,6 @@
       include 'c1gen.inc'
       include 'c1glob.inc'
       include 'w1clig.inc'
-      include 'w1wind.inc'
       include 'h1et.inc'
       include 'h1hydro.inc'
       include 'h1scs.inc'

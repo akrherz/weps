@@ -44,7 +44,8 @@
       use biomaterial
       use debug_mod
       use mandate_mod
-      use erosion_data_struct_defs
+      use erosion_data_struct_defs, only: create_subregionsurfacestate, subregionsurfacestate, threshold, cellsurfacestate
+      use erosion_data_struct_defs, only: erod_interval, awudmx
       use grid_geo_def, only: imax, jmax, ix, jy, xgdpt, ygdpt
       use saeinp_mod, only: mksaeinp
       use stir_soil_texture_mod, only: create_stir_soil_multiplier, destroy_stir_soil_multiplier
@@ -57,7 +58,7 @@
       include 'p1werm.inc'
       include 'wpath.inc'
       include 'm1subr.inc'
-      include 'm1sim.inc'
+      include 'm1sim.inc'  ! am0jd
       include 'm1geo.inc'
       include 'm1flag.inc'
       include 'm1dbug.inc'
@@ -66,9 +67,6 @@
       include 's1phys.inc'
       include 'c1info.inc'
       include 'c1gen.inc'
-      include 'w1clig.inc'
-      include 'w1wind.inc'
-      include 'w1pavg.inc'
 
       include 'c1glob.inc'
       include 'c1db1.inc'

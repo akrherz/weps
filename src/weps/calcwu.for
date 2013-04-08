@@ -22,12 +22,13 @@
       use weps_interface_defs
       use file_io_mod, only: luiwsd, luo_subday
       use p1unconv_mod, only: pi
+      use erosion_data_struct_defs, only: awadir, awhrmx, awudmx, awudmn
+      use erosion_data_struct_defs, only: awudav, subday, ntstep
 
 !     + + + GLOBAL COMMON BLOCKS + + +
       include 'p1werm.inc'
-      include 'm1sim.inc'    ! am0jd, ntstep
+      include 'm1sim.inc'    ! am0jd
       include 'm1flag.inc'   ! am0efl, wind_gen_fmt_flag
-      include 'w1wind.inc'   ! awadir, awu
 
 !     + + + LOCAL COMMON BLOCKS + + +
       include 'main/main.inc'  ! subfil, subflg
@@ -90,7 +91,7 @@
          backspace (unit = luiwsd)
          subflg = .false.
    30    read (luiwsd, *, end = 80, err = 90) day, month, year, awadir, &
-     &                                   (awu(i), i = 1,ntstep)
+     &                                   (subday(i)%awu, i = 1,ntstep)
 
 !        test for current date
 !        write (*,*) 'julday',day, month,year
@@ -102,8 +103,8 @@
 
 !        find max, min, and avg
 !         do 40 i = 1, ntstep
-!            large = max(large, awu(i))
-!            small = min(small, awu(i))
+!            large = max(large, subday(i)%awu)
+!            small = min(small, subday(i)%awu)
 !   40    continue
 !         awudmx = large
 !         awudmn = small
@@ -116,11 +117,11 @@
 !     if 'real' data does not exist - generate (for original wind_gen data only)
    50 if (wind_gen_fmt_flag == 1) then   ! original wind_gen file format
          do 60 i = 1, ntstep
-            awu(i) = awudav + 0.5 * (awudmx - awudmn) * cos( 2. * pi *  &
-     &               ((ntstep * 24) / ntstep - awhrmx + i) / ntstep)
+            subday(i)%awu = awudav + 0.5 * (awudmx - awudmn) *          &
+     &      cos( 2.*pi * ((ntstep * 24) / ntstep - awhrmx + i) / ntstep)
    60    continue
       else                               ! wind_gen2/3 file format
-         !awu(i) array should already be populated
+         !subday(i)%awu array should already be populated
          if (ntstep .ne. 24) then
             write(0,*) 'ntstep not equal to 24 - code changes needed!'
             goto 500
@@ -135,7 +136,8 @@
 
   600 call caldatw (day,month,year)
       if( am0efl.gt.0) then
-        write(luo_subday,2000) day,month,year,awadir,(awu(i),i=1,ntstep)
+        write(luo_subday,2000)                                          &
+     &        day, month, year, awadir, (subday(i)%awu,i=1,ntstep)
       endif
 
       return

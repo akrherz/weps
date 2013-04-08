@@ -3,8 +3,8 @@
 !$Revision$
 !$HeadURL$
 
-      real function radnet (bcrlai, bweirr, snwc, sndp, bwtdmx, bwtdmn, &
-     &                      bmalat, bsfalw, bsfald, idoy, bwtdpt,bwzdpt)
+      real function radnet( bcrlai, bweirr, snwc, sndp, bwtdmx, bwtdmn, &
+     &                      bmalat, bsfalw, bsfald, idoy, bwtdpt )
 
 !     + + + purpose + + +
 !     this function estimates the net radiation for a given area (Mj/m^2/day)
@@ -19,7 +19,7 @@
       real bcrlai, bweirr, snwc, sndp, bwtdmx, bwtdmn
       real bmalat, bsfalw, bsfald
       integer idoy
-      real bwtdpt,bwzdpt
+      real bwtdpt
 
 !     + + + argument definitions + + +
 !     bcrlai - plant leaf area index
@@ -33,10 +33,6 @@
 !     bsfald - dry albedo
 !     idoy   - julian day of year, 1-366
 !     bwtdpt - dew point temperature, c
-!     bwzdpt - daily amount of percipitation, mm
-
-!     + + + COMMON BLOCK + + +
-      include 'p1const.inc'
 
 !     + + + local variables + + +
       real albt
@@ -80,11 +76,11 @@
 
 !     + + + end specifications + + +
 
-      tmaxk = bwtdmx + 273.15									!prereq h-17
-      tmink = bwtdmn + 273.15									!prereq h-17
+      tmaxk = bwtdmx + 273.15         !prereq h-17
+      tmink = bwtdmn + 273.15         !prereq h-17
 
       ra = radext(idoy, bmalat)
-      rso = 0.75*ra												!h-19
+      rso = 0.75*ra            !h-19
 
       if( rso.gt.1.0e-36 ) then
           if ((bweirr/rso).gt.(0.7)) then
@@ -94,17 +90,17 @@
             a = 1.017
             b = -0.06
           end if
-          a1 = 0.26 + 0.1*exp(-((0.0154*(idoy - 180))**2))			!h-18
+          a1 = 0.26 + 0.1*exp(-((0.0154*(idoy - 180))**2))   !h-18
           e = exp((16.78*bwtdpt - 117)/(bwtdpt + 237.3))
-          rno = (sbc*(tmaxk**4+tmink**4)/2)*(a1 - 0.139 * sqrt(e))	!h-17(b)
+          rno = (sbc*(tmaxk**4+tmink**4)/2)*(a1 - 0.139 * sqrt(e)) !h-17(b)
 
           albt = albedo (bcrlai, snwc, sndp, bsfalw, bsfald)
 
-          rna = (1-albt)*bweirr										!h-17(a)
+          rna = (1-albt)*bweirr          !h-17(a)
 
-          rnb = (a*(bweirr/rso) + b)								!h-17(c)
+          rnb = (a*(bweirr/rso) + b)        !h-17(c)
 
-          radnet = rna-(rno*rnb)									!h-17
+          radnet = rna-(rno*rnb)         !h-17
       else
           radnet = 0.0
       end if

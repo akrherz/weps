@@ -16,7 +16,7 @@
 !     friction velocity
 
       use weps_interface_defs
-      use erosion_data_struct_defs
+      use erosion_data_struct_defs, only: subregionsurfacestate, cellsurfacestate, anemht, awzzo, wzoflg
       use grid_geo_def, only: kbr, imax, jmax
 
 !     +++ ARGUMENT DECLARATIONS +++
@@ -42,7 +42,6 @@
 
       include  'p1werm.inc'
       include  'm1geo.inc'   ! nbr
-      include  'p1const.inc' ! anemht, awzzo, wzoflg
 
 !     +++ LOCAL VARIABLES +++
       integer i,j, icsr,k

@@ -32,15 +32,6 @@
 ! statements below added by Simon
 
       include 'w1clig.inc'
-!      include 's1layr.inc'
-!      include 'p1const.inc'
-!      include 'm1dbug.inc'
-
-!   These hydrology common blocks provide soil temp, moisture and irrigation
-
-!      include 'h1temp.inc'
-!      include 'h1db1.inc'
-!      include 'h1hydro.inc'
 
 !     + + + LOCAL VARIABLES + + +
       integer doy, idx

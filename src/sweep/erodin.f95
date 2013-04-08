@@ -14,7 +14,8 @@
 !     + + + Modules Used + + +
       use Polygons_Mod
       use subregions_mod, only: subr_poly
-      use erosion_data_struct_defs, only: subregionsurfacestate, create_subregionsurfacestate
+      use erosion_data_struct_defs, only: subregionsurfacestate, create_subregionsurfacestate, awdair, anemht, awzzo, wzoflg, &
+                                          ntstep, awadir, awudmx, subday
       use p1erode_def, only: SLRR_MIN, SLRR_MAX, WZZO_MIN, WZZO_MAX
 
 !     +++ ARGUMENT DECLARATIONS +++
@@ -33,12 +34,8 @@
 
 !     + + + GLOBAL COMMON BLOCKS + + +
       include 'p1werm.inc'
-      include 'p1const.inc'  ! anemht, awzzo, wzoflg
-      include 'm1sim.inc'    ! ntstep
       include 'm1flag.inc'   ! am0efl, am0eif
       include 'm1geo.inc'    ! amasim, nacctr, nbr, amxsim, amxar, amxbr, amzbr, ampbr, amxbrw
-      include 'w1wind.inc'   ! awadir, awu
-      include 'w1pavg.inc'   ! awdair
 
 !     + + + LOCAL COMMON BLOCKS + + +
       integer debugflg
@@ -53,7 +50,8 @@
       integer i,j,k
       integer x,y,sr,b,a,l,h
       integer wflg
-      real f(mntime), wfcalm, wuc, w0k, step, wu(mntime)
+      real, dimension(:), allocatable :: f, wu
+      real wfcalm, wuc, w0k, step
       integer subr_np, ipol
       integer alloc_stat, sum_stat
       integer :: nsubr       ! number of subregions (read from input file)
@@ -65,7 +63,7 @@
 !     debugflg = flag to output debug data (0 = none, 1 = input, 2 = more, etc.)
 !     xplot    = flag to put plot data in arrays
 !               (value>0 = no. indep input variable, 0= none)
-!     f(mntime) = cumulative frequency of wind at speeds <awu(i)
+!     f(mntime) = cumulative frequency of wind at speeds < subday(i)%awu
 !     wfcalm    = wind fraction intercept (+calm, - no calm in period)
 !     wuc       = Weibull wind speed distribution scale factor (m/s)
 !     w0k       = Weibull wind speed distribution shape factor
@@ -84,9 +82,7 @@
       character*(mrcl) line
 
 !     +++ END SPECIFICATIONS +++
-!
-!      read  +++ MAIN  COMMON BLOCKS +++
-!
+
 !     +++ INIT STUFF +++
       if (already_read_inputs .gt. 0) goto 999  !Only write output 
 
@@ -188,11 +184,9 @@
       sum_stat = 0
       allocate(subrsurf(nsubr), stat=alloc_stat)
       sum_stat = sum_stat + alloc_stat
-
       ! create subregion polygon array
       allocate(subr_poly(nsubr), stat=alloc_stat)
       sum_stat = sum_stat + alloc_stat
-
       if( sum_stat .gt. 0 ) then
          Write(*,*) 'ERROR: memory allocation, subrsurf, subr_poly'
       end if
@@ -398,7 +392,7 @@
 
 !     +++ WEATHER +++
 
-! We need to check on the units for air density - w1pavg.inc says (kg/m^3)
+! We need to check on the units for air density - variable definition says (kg/m^3)
 ! Also, we need to see why it currently isn't being used - LJH said it was
 !     Air density
       line = getline(i_unit)
@@ -412,6 +406,12 @@
       line = getline(i_unit)
       read (line,*) ntstep
 
+      ! allocate wind direction and speed array
+      allocate(subday(ntstep), stat=alloc_stat)
+      if( alloc_stat .gt. 0 ) then
+         Write(*,*) 'ERROR: memory allocation, erodin wind direction and speed'
+      end if
+
 !     anemometer height, zo at anemom, and location (station or field)
 !     note if flag=1, at field, awwzo will be changed to field value
       line = getline(i_unit)
@@ -421,11 +421,21 @@
       line = getline(i_unit)
       read (line,*) wflg
 
-!     w1wind.inc
-
 !     wind data inputs as the Weibull paramters
 !     (wfcalm, wuc, w0k) is indicated by code ntstep = 99
       if (wflg .eq. 0) then
+
+        ! allocate temporary arrays used in Weibull creation of wind speeds
+        sum_stat = 0
+        allocate(f(ntstep), stat=alloc_stat)
+        sum_stat = sum_stat + alloc_stat
+        sum_stat = 0
+        allocate(wu(ntstep), stat=alloc_stat)
+        sum_stat = sum_stat + alloc_stat
+        if( sum_stat .gt. 0 ) then
+           Write(*,*) 'ERROR: memory allocation, erodin weibull creation arrays'
+        end if
+
 !       Weibull parms (fraction calm, c, k)
         line = getline(i_unit)
         read (line,*) wfcalm, wuc, w0k
@@ -442,53 +452,61 @@
           if (f(i) .lt. wfcalm) then
             f(i) = wfcalm
           endif
-          awu(i) = wuc*(-log((1.0-f(i))/(1.0-wfcalm)))**(1.0/w0k)
+          subday(i)%awu = wuc*(-log((1.0-f(i))/(1.0-wfcalm)))**(1.0/w0k)
   198   end do
 !       Use greatest interval wind speed rather than 99% speed above
-        awudmx = awu(ntstep)
+        awudmx = subday(ntstep)%awu
 !
 !       change weibull wind speed dist. to a symmetric shape similar
 !       to the daily distribution from wind gen
-!
+
 !       insure that ntstep is an even no.
         ntstep = (ntstep/2)*2
-!
+
 !       store wind speed in temp array
         do 110 i = 1, ntstep
-          wu(i) = awu(i)
+          wu(i) = subday(i)%awu
   110   end do
 !
 !       generate the symmetric distribution
         i = -1
         do 115 j = 1, ntstep/2
            i = i+2
-           awu(j) = wu(i)
+           subday(j)%awu = wu(i)
   115   continue
         i = ntstep+2
         do 125 j = (ntstep/2+1),ntstep
            i = i-2
-           awu(j) = wu(i)
+           subday(j)%awu = wu(i)
   125   continue
-!
+
+        ! deallocate temporary arrays used in Weibull creation of wind speeds
+        sum_stat = 0
+        deallocate(f, stat=alloc_stat)
+        sum_stat = sum_stat + alloc_stat
+        sum_stat = 0
+        deallocate(wu, stat=alloc_stat)
+        sum_stat = sum_stat + alloc_stat
+        if( sum_stat .gt. 0 ) then
+           Write(*,*) 'ERROR: memory deallocation, erodin weibull creation arrays'
+        end if
+
       else     ! when (wflg .eq. 1) input wind period data directly
         do 191 j = 1, ntstep/6
           line = getline(i_unit)
-          read (line,*) (awu(i),i=(j-1)*6+1,(j-1)*6+6)
-!         read (getline(i_unit),*) (awu(i),i=(j-1)*6+1,(j-1)*6+6)
+          read (line,*) (subday(i)%awu,i=(j-1)*6+1,(j-1)*6+6)
 191     end do
 !       If not divisible evenly by 6, then get the remaining values
         if (mod(ntstep,6) .ne. 0) then
           line = getline(i_unit)
-          read (line,*)                                                 &
-!         read (getline(i_unit),*)
-     &      (awu(i),i=(j-1)*6+1,(j-1)*6+mod(ntstep,6))
+          read (line,*) (subday(i)%awu,i=(j-1)*6+1,(j-1)*6+mod(ntstep,6))
         endif
 
 !     Determine the maximum wind speed during the day
         awudmx = 0.0
         do 193 i = 1, ntstep
-           if (awudmx .lt. awu(i)) then
-              awudmx = awu(i)
+           if( awudmx .lt. subday(i)%awu ) then
+              awudmx = subday(i)%awu
            endif
   193   end do
 
@@ -972,13 +990,13 @@
       k = 6
       j = 1
   860 if(k .lt. ntstep) then
-        write (o_unit,260) (awu(i), i=j,k)
+        write (o_unit,260) (subday(i)%awu, i=j,k)
         j = k+1
         k = k+6
         go to 860
       else
         k = ntstep
-        write (o_unit,260) (awu(i), i=j,k)
+        write (o_unit,260) (subday(i)%awu, i=j,k)
       endif
       write (o_unit,*)
       write (o_unit,*) 'END OF INPUTS'

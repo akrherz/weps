@@ -14,17 +14,13 @@
 !     Calc. soil fraction of 4 dia. from asd, & rr shelter angles
 
       use weps_interface_defs
-      use erosion_data_struct_defs
+      use erosion_data_struct_defs, only: subregionsurfacestate, cellsurfacestate, awzypt
       use grid_geo_def, only: imax, jmax
       use p1erode_def, only: SLRR_MIN, SLRR_MAX
 
 !     + + + ARGUEMENT DECLARATIONS + + +
       type(subregionsurfacestate), dimension(:), intent(inout) :: subrsurf  ! subregion surface conditions (erosion specific set)
       type(cellsurfacestate), dimension(0:,0:), intent(out) :: cellstate     ! initialized grid cell state values
-
-!     + + + GLOBAL COMMON BLOCKS + + +
-      include 'p1werm.inc'
-      include 'w1clig.inc'  ! awzypt
 
 !     + + + LOCAL VARIABLES + + +
       integer  icsr, i, j

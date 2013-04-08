@@ -12,7 +12,7 @@
 !     use wind direction of 270 to see output along downwind direction
 
       use weps_interface_defs
-      use erosion_data_struct_defs, only: cellsurfacestate
+      use erosion_data_struct_defs, only: cellsurfacestate, ntstep
       use grid_geo_def, only: imax, jmax
 
 !     + + + ARGUEMENT DECLARATIONS + + +
@@ -23,11 +23,7 @@
 !     + + + ARGUMENT DEFINITIONS + + +
 !     o_unit= Unit number for output file
 
-!     + + + GLOBAL COMMON BLOCKS + + +
-      include 'm1sim.inc'  ! ntstep
-
 !     + + + LOCAL VARIABLES + + +
-
       real egavg(imax)
       integer m, n, k, icsr
       integer initflag, ipd, npd

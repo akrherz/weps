@@ -13,19 +13,20 @@
 
 !     + + + VARIABLE DECLARATIONS + + +
 
-      real             awadir
-      real             awhrmx
+!      real             awadir
+!      real             awhrmx
       real             awrmxn
-      real             awudmx
-      real             awudmn
-      real             awudav
-      real             awu(mntime)
-      real             awdir(mntime)
+!      real             awudmx
+!      real             awudmn
+!      real             awudav
+!      real             awu(mntime)
+!      real             awdir(mntime)
       character*80     awwisn
 
       common / w1wind /                                                 &
-     &                  awadir, awhrmx, awrmxn, awudmx, awudmn,         &
-     &                  awudav, awu, awdir, awwisn
+!     &                  awadir, awhrmx, awrmxn, awudmx, awudmn,         &
+!     &                  awudav, awu, awdir, awwisn
+     &                  awrmxn, awwisn
 
       save :: /w1wind/
 

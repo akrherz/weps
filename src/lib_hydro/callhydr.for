@@ -11,6 +11,7 @@
       use weps_interface_defs
       use biomaterial, only: biototal
       use timer_def, only: TIMHYDR, TIMSTART, TIMSTOP
+      use erosion_data_struct_defs, only: awudav
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer daysim
@@ -40,7 +41,6 @@
       include 'h1db1.inc'
       include 'h1scs.inc'
       include 'h1balance.inc'
-      include 'w1wind.inc'
       include 'w1clig.inc'
 
       call timer(TIMHYDR,TIMSTART)      
