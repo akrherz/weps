@@ -50,7 +50,7 @@
       integer i,j,k
       integer x,y,sr,b,a,l,h
       integer wflg
-      real, dimension(:), allocatable :: f, wu
+      real :: f(ntstep), wu(ntstep)
       real wfcalm, wuc, w0k, step
       integer subr_np, ipol
       integer alloc_stat, sum_stat
@@ -425,17 +425,6 @@
 !     (wfcalm, wuc, w0k) is indicated by code ntstep = 99
       if (wflg .eq. 0) then
 
-        ! allocate temporary arrays used in Weibull creation of wind speeds
-        sum_stat = 0
-        allocate(f(ntstep), stat=alloc_stat)
-        sum_stat = sum_stat + alloc_stat
-        sum_stat = 0
-        allocate(wu(ntstep), stat=alloc_stat)
-        sum_stat = sum_stat + alloc_stat
-        if( sum_stat .gt. 0 ) then
-           Write(*,*) 'ERROR: memory allocation, erodin weibull creation arrays'
-        end if
-
 !       Weibull parms (fraction calm, c, k)
         line = getline(i_unit)
         read (line,*) wfcalm, wuc, w0k
@@ -479,17 +468,6 @@
            i = i-2
            subday(j)%awu = wu(i)
   125   continue
-
-        ! deallocate temporary arrays used in Weibull creation of wind speeds
-        sum_stat = 0
-        deallocate(f, stat=alloc_stat)
-        sum_stat = sum_stat + alloc_stat
-        sum_stat = 0
-        deallocate(wu, stat=alloc_stat)
-        sum_stat = sum_stat + alloc_stat
-        if( sum_stat .gt. 0 ) then
-           Write(*,*) 'ERROR: memory deallocation, erodin weibull creation arrays'
-        end if
 
       else     ! when (wflg .eq. 1) input wind period data directly
         do 191 j = 1, ntstep/6

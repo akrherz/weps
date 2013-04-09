@@ -14,7 +14,7 @@
       use weps_interface_defs
       use file_io_mod, only: luiwin
       use erosion_data_struct_defs, only: awadir, awhrmx, awudmx,       &
-     &                                    awudmn, awudav, subday
+     &                                    awudmn, awudav, subday, ntstep
 
       include 'p1werm.inc'
       include 'm1flag.inc'
@@ -63,7 +63,7 @@
           wwudmx(daywdx) = wwudmx(newyrwdx)
           wwudmn(daywdx) = wwudmn(newyrwdx)
           wwhrmx(daywdx) = wwhrmx(newyrwdx)
-          do i = 1, 24
+          do i = 1, ntstep
             wawu(i,daywdx) = wawu(i,newyrwdx)
           end do
           twe(daywdx) = twe(newyrwdx)
@@ -199,7 +199,7 @@
             wwudmx(daywdx) = wwudmx(daywdx-1)
             wwudmn(daywdx) = wwudmn(daywdx-1)
             wwhrmx(daywdx) = wwhrmx(daywdx-1)
-            do i = 1, 24
+            do i = 1, ntstep
               wawu(i,daywdx) = wawu(i,daywdx-1)
             end do
             twe(daywdx) = twe(daywdx-1)
@@ -239,7 +239,7 @@
          awudav = (awudmx + awudmn) / 2.
       else                               ! wind_gen2 file format
          awudav = wawudav(daywdx)
-         do i = 1,24
+         do i = 1,ntstep
             subday(i)%awu = wawu(i,daywdx)
          end do
       endif
@@ -261,16 +261,18 @@
      &                        wwudmx, wwudmn, wwhrmx,                   &
      &                        wawu, twe, wewudav, wawudav)
 
+      use erosion_data_struct_defs, only: ntstep
+
 !     + + + Arguments + + +
       integer luiwin, ioc, formatflg, maxflg, wwd, wwm, wwy
       real wind_max, wwadir
       real wwudmx, wwudmn, wwhrmx
-      real wawu(24), twe, wewudav, wawudav
+      real wawu(ntstep), twe, wewudav, wawudav
 
-      character line*256
+      character line*1024
       integer i
       integer, dimension(1) :: tmp_hrmax     ! tmp array for hour of max wind speed
-      real tmp_array(24)                     ! tmp array for hrly wind speed
+      real tmp_array(ntstep)                     ! tmp array for hrly wind speed
 
       ! read single line from file
       read (luiwin,'(a)',iostat=ioc) line
@@ -299,46 +301,46 @@
           wwd = -1
           wwm = -1
           wwy = -1
-          do i = 1, 24
+          do i = 1, ntstep
             wawu(i) = 0.0
           end do
         else
           read(line, *, iostat=ioc) wwd, wwm, wwy, wwadir,              &
-     &                             (wawu(i), i=1,24)
+     &                             (wawu(i), i=1,ntstep)
 
           if( ioc .ne. 0 ) then
             ! error reading individual line
             ioc = 1
           end if
           if (maxflg == 1) then   ! Cap winds greater than specified maximum
-            do i = 1, 24
+            do i = 1, ntstep
               wawu(i) = min(wawu(i), wind_max)
             end do
           end if
 
           ! compute the total wind energy for the day
           twe = 0.0
-          do i = 1, 24
-            twe = twe + 0.5 * (wawu(i)**3.0) * 3600.0 / 1000.0
+          do i = 1, ntstep
+            twe = twe + 0.5 * (wawu(i)**3.0) * (86400./ntstep) / 1000.0
           end do
 
           ! compute the average wind speed to generate
           ! the total wind energy for the day
           ! (this is not the same as daily average wind speed)
-          wewudav = (twe/24.0) * 2.0 * 1000.0/3600.0
+          wewudav = (twe/ntstep) * 2.0 * 1000.0/(86400./ntstep)
           wewudav = (wewudav)**(1.0/3.0)
 
           ! Determine the "old" variable values needed within the model
           ! Some of these may not be 100% correct, but they are the best
           ! have come up with for the time being.
-          do i = 1, 24
+          do i = 1, ntstep
             tmp_array(i) = wawu(i)
           end do
           tmp_hrmax = maxloc(tmp_array)
           wwhrmx = tmp_hrmax(1) 
-          wawudav = sum(tmp_array)/24
+          wawudav = sum(tmp_array)/ntstep
           wwudmx = maxval(tmp_array)
-          wwudmn = wwudmx - sum(tmp_array)/24
+          wwudmn = wwudmx - sum(tmp_array)/ntstep
         end if
       end if
 
