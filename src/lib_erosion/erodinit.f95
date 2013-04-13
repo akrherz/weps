@@ -41,7 +41,7 @@
 !     sbbr
 
 !     +++ LOCAL VARIABLES +++
-      integer i, j, sr, nsubr
+      integer i, j, sr, nsubr, nacctr
       type(point) :: centroid
 
 !     + + + LOCAL VARIABLE DEFINITIONS + + +
@@ -50,6 +50,7 @@
 !     +++ END SPECIFICATIONS +++
 
       nsubr = size(subr_poly)
+      nacctr = size(acct_poly)
 
       ! Grid is created at least once.
       if (am0eif .eqv. .true.) then
@@ -78,6 +79,17 @@
                  write(*,*) 'Subregion coverage is not complete'
                  stop
              end if
+             ! do same assignment check for accounting regions
+             do sr = 1, nacctr
+               ! Check if it is inside subregion polygon
+               if( pnpoly(centroid, acct_poly(sr)) .ge. 0) then
+                  ! centroid of grid cell is inside or on edge of subregion polygon
+                  ! set accounting region index
+                  cellstate(i,j)%car = sr
+                  ! default to first polygon if on edge by exiting the accounting region do loop
+                  exit
+               end if
+             end do
            end do          
         end do
 
@@ -89,10 +101,10 @@
 !        call sbhill
 !        endif
 
-         ! check for barriers
-         if (nbr .gt. 0) then
-         call sbbr( cellstate )
-         endif
+         ! check for barriers - move to erosion to use actual wind angles
+!         if (nbr .gt. 0) then
+!         call sbbr( cellstate )
+!         endif
 
          ! Turn off grid creation flag
          am0eif = .false.

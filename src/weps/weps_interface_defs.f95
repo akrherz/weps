@@ -464,14 +464,17 @@
       real smaglosmx, smaglos, sf84mn, sf84 
       end subroutine sbaglos
 !-----------------------------
-      subroutine sbbr( cellstate )
+      subroutine sbbr( rel_wind_angle, cellstate )
       use erosion_data_struct_defs, only: cellsurfacestate
+      real, intent(in) :: rel_wind_angle  ! angle of the wind relative the grid positive y-axis (see sbdirini)
       type(cellsurfacestate), dimension(0:,0:), intent(inout) :: cellstate     ! initialized grid cell state values
       end subroutine sbbr
 !-----------------------------
-      subroutine sbdirini(wind_dir, prev_dir)
-      real wind_dir
-      real prev_dir                           
+      subroutine sbdirini(wind_dir, prev_dir, cellstate)
+      use erosion_data_struct_defs, only: cellsurfacestate
+      real wind_dir  ! direction of the wind in degrees from north
+      real prev_dir  ! previously computed direction of the wind
+      type(cellsurfacestate),dimension(0:,0:),intent(inout) :: cellstate     ! grid cell state for sbbr
       end subroutine sbdirini
 !-----------------------------
       subroutine sbemit (ounit, ws, hhr, cellstate, first_emit)

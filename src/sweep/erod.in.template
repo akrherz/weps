@@ -74,18 +74,19 @@
 #
 # +++ ACCOUNTING REGIONS +++
 #
-#     nacctr, I, Number of accounting regions (must always be 1 for now)
+#     nacctr, I, Number of accounting regions
  1
 #
-#     amxar(x,y,a), R, Accounting Region diagonal coordinates (meters)
-#                      Input (x,y) coordinates in this form: x1,y1 x2,y2
-#                      for each Accounting Region specified (nacctr)
-#
-#                      NOTE:  Accounting Region coordinate values must
-#                             match Simulation Region coordinates above
-#
- 0.0, 0.0 1000.0, 200.0
-#
+#     accounting region polygon, count, xy pairs (subregions_mod)
+#         polygons can be:
+#         - open (the last point connects to the first point)
+#         - closed (last point is same as first point)
+#         - complex (multiple closed polygons entered as one)
+4
+0.0 0.0
+1000.0 0.0
+1000.0 200.0
+0.0 200.0
 #
 # +++ BARRIERS +++
 #
@@ -95,31 +96,44 @@
 #           If no barriers specified (nbr=0), then no BARRIER inputs will
 #           be listed here.
 #
-#     amxbr(x,y,b), R, Barrier linear coordinates (meters)
-#                      Input (x,y) coordinates in this form: x1,y1 x2,y2
-#                      for each barrier specified (nbr)
- 0.0, 0.0 0.0, 200.0
+#     barrier(b)%np, I, number of points in barrier polyline
 #
-#       amzbr(b),  R, Barrier height (meters)
-#       ampbr(b),  R, Barrier porosity (i.e., optical density) (m^2/m^2)
-#       amxbrw(b), R, Barrier width (meters)
+#     NOTE: point pairs and barrier parameters for each point are read
+#           in up to the total number of points
+2
+#     barrier(b)%point(p)%x, barrier(b)%point(p)%y, R, Barrier (x,y) coordinates
+ 0.0 0.0
 #
- 0.2 0.5 15.0
+#       barrier(b)%param(p)%amzbr,  R, Barrier height (meters)
+#       barrier(b)%param(p)%amxbrw, R, Barrier width (meters)
+#       barrier(b)%param(p)%ampbr,  R, Barrier porosity (i.e., optical density) (m^2/m^2)
 #
-#       Repeat previous two input lines for each additional barrier
+ 0.2 15.0 0.5
 #
-#       Barrier #2 coordinates (x1,y1) (x2,y2)
- 0.0, 0.0 1000.0, 0.0
-#       Barrier #2 height, porosity and width
- 0.2 0.5 15.0
+#       Repeat previous two input lines for each additional point
+ 0.0 200.0
+ 0.2 15.0 0.5
 #
+#       Barrier #2 number of points
+ 3
+#       Barrier #2 coordinates (x1,y1)
+ 0.0 0.0
+#       Barrier #2 height, width and porosity 1
+ 0.2 15.0 0.5
 #
+#       Barrier #2 coordinates (x2,y2)
+ 500.0 10.0
+#       Barrier #2 height, width and porosity 2
+ 0.3 10.0 0.4
+#
+#       Barrier #2 coordinates (x3,y3)
+ 1000.0 0.0
+#       Barrier #2 height, width and porosity 3
+ 0.2 15.0 0.5
 # +++ SUBREGION REGIONS +++
 #
-#     nsubr, I, Number of subregions (1-5)
-#               NOTE:  Currently not fully tested for multiple subregions
-#                      Only use value of 1
-#
+#     nsubr, I, Number of subregions
+#            NOTE: must be at least 1, and together all must cover simulation region
  1
 #
 #     NOTE: Remaining SUBREGION inputs (BIOMASS, SOIL, and HYDROLOGY,

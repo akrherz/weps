@@ -287,7 +287,7 @@
 
 !     calc. sweep direction based on wind direction for sberod
       prev_dir = subday(1)%awdir+ 1.0   !make different to force calculation
-      call sbdirini( subday(1)%awdir, prev_dir )
+      call sbdirini( subday(1)%awdir, prev_dir, cellstate )
 
 !     set flag on to update threshold fric. vel. on grid
       wustfl = 1
@@ -304,7 +304,7 @@
          endif
          ! calc. sweep direction based on wind direction for sberod
          ! only needed if one reads hourly wind directions for input
-         ! call sbdirini( subday(i)%awdir, prev_dir )
+         ! call sbdirini( subday(i)%awdir, prev_dir, cellstate )
 
          !rut = rusust_preros(i)  This change sabotaged code logic
           

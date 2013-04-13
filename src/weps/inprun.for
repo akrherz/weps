@@ -16,6 +16,7 @@
       use file_io_mod, only: fopenk, luicli, luiwin, luiwsd,            &
      &                       luomanage, luolog
       use erosion_data_struct_defs, only: subday, ntstep, am0efl
+      use barriers_mod
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer, intent(out) :: n_rot_cycles
@@ -24,7 +25,7 @@
       include 'wpath.inc'
       include 'm1subr.inc'
       include 'm1sim.inc'
-      include 'm1geo.inc'
+!      include 'm1geo.inc'
       include 'm1flag.inc'
       include 'm1dbug.inc'
       include 's1layr.inc'
@@ -44,14 +45,16 @@
       include 'main/main.inc'
 
 !     + + + LOCAL VARIABLES + + +
-      integer    :: nsubr
+      integer :: nacctr   ! Number of accounting regions
+      integer :: nsubr    ! Number of subregions
+      integer :: nbr      ! number of barriers
+      integer :: poly_np  ! number of points in polygon or polyline
       integer       i, isr, iar, ios, ibr, ipol
       character     line*256
       real          sclsim, sclbar
       real          cligen_version
       logical       fexist
       real          wepsrun_version
-      integer       subr_np
       integer       lui1
       integer    :: alloc_stat
       character*80     awwisn   ! made local since not used anywhere else
@@ -76,7 +79,7 @@
 !     wepsrun_version - version of the weps.run file being read
 
 !     subr_poly - polygons defining each subregion extent
-!     subr_np - number of points in polygon read from file
+!     poly_np - number of points in polygon read from file
 !     lui1 - unit number for input of weps.run file
 
       integer linnum, typidx
@@ -179,7 +182,6 @@
         if( alloc_stat .gt. 0 ) then
            Write(*,*) 'ERROR: memory alloc., wind direction and speed'
         end if
-
 
 !     read CLIGEN file name
       case (12)
@@ -321,36 +323,58 @@
       case (22)
  !       These values are scaling factors for interface, not used in WEPS
         read (line,*,err=80) sclsim, sclbar
+
       case (23)
-        read (line,*,err=80) nacctr
+        read (line,*,err=80) nacctr    ! must be at least 1
         ! set counter iar for reading in next lines
         iar = 1
+        ! create array of accounting region polygons
+        allocate(acct_poly(nacctr), stat = alloc_stat)
+        if( alloc_stat .gt. 0 ) then
+           Write(*,*) 'ERROR: memory alloc., accounting region polygons'
+        end if
+
       case (24)
-        read (line,*,err=80) amxar(1,1,iar), amxar(2,1,iar)
-     
+        ! read accounting region polygon point count
+        read (line,*,err=80) poly_np
+        ! create polygon point storage
+        acct_poly(iar) = create_polygon(poly_np)
+        ! set counter for reading each point pair
+        ipol = 1
+
       case (25)
-        read (line,*,err=80) amxar(1,2,iar), amxar(2,2,iar)
-        iar = iar + 1
-        if( iar .le. nacctr ) then
-           ! read another accounting region
-           typidx = typidx - 2
+        ! read point pair
+        read (line,*,err=80) acct_poly(isr)%points(ipol)%x,             &
+     &                       acct_poly(isr)%points(ipol)%y
+        ! read next point pair
+        ipol = ipol + 1
+        if( ipol .le. poly_np ) then
+           ! read another point pair
+           typidx = typidx - 1
+        else
+           iar = iar + 1
+           if( iar .le. nacctr ) then
+              ! read another accounting region
+              typidx = typidx - 2
+           end if
         end if
 
       case (26)
         ! read Subregion count
         read (line,*,err=80) nsubr
-
         ! set up isr for reading in next lines for each subregion
         isr = 1
-
         ! create array of subregion polygons
-        allocate(subr_poly(nsubr))
+        allocate(subr_poly(nsubr), stat=alloc_stat)
+        if( alloc_stat .gt. 0 ) then
+           Write(*,*) 'ERROR: memory alloc., subregion polygons'
+        end if
 
       case (27)
         ! read subregion polygon point count
-        read (line,*,err=80) subr_np
+        read (line,*,err=80) poly_np
         ! create polygon point storage
-        subr_poly(isr) = create_polygon(subr_np)
+        subr_poly(isr) = create_polygon(poly_np)
         ! set counter for reading each point pair
         ipol = 1
 
@@ -360,7 +384,7 @@
      &                       subr_poly(isr)%points(ipol)%y
         ! read next point pair
         ipol = ipol + 1
-        if( ipol .le. subr_np ) then
+        if( ipol .le. poly_np ) then
             ! read another point pair
             typidx = typidx - 1
         end if
@@ -397,6 +421,19 @@
         end if
 
       case (34)
+
+!  These barriers as entered are consdered to be thin, having no real
+!  area effect such as erodible material source or deposition area.
+!  The polyline entered is the "effective location".
+
+!  Barriers wider than anything approaching the scale of a cell (1/10th
+!  a cell width)should probably be entered as subregions and the erosion
+!  submodel changed to consider their wind shadow effect on adjoining cells
+
+!  Note: the barrier point number must be read first and the barrier storage
+!  allocated, then the barrier level data populated. (hence the barrier type
+!  string now comes last)
+
 !       read in barrier info
         read (line,*,err=80) nbr
  !     write(6,*) ' reading barriers ', nbr
@@ -406,78 +443,50 @@
         else
            ! set index for first barrier
            ibr = 1
+           ! allocate structure for barriers
+           allocate(barrier(nbr), stat = alloc_stat)
+           if( alloc_stat .gt. 0 ) then
+              Write(*,*) 'ERROR: memory alloc., barriers'
+           end if
         end if
+
       case (35)
-        read (line,*,err=80) amxbr(1,1,ibr), amxbr(2,1,ibr)
+        ! number of points in barrier polyline
+        read (line,*,err=80) poly_np
+        ! crate storage for point and barrier data
+        barrier(ibr) = create_barrier(poly_np)
+        ! set counter for reading each point pair
+        ipol = 1
+
       case (36)
-        read (line,*,err=80) amxbr(1,2,ibr), amxbr(2,2,ibr)
+        ! read point pair
+        read (line,*,err=80) barrier(ibr)%points(ipol)%x,               &
+     &                       barrier(ibr)%points(ipol)%y
+
       case (37)
-        read (line,*,err=80) amzbt(ibr)
+        ! barrier height
+        read (line,*,err=80) barrier(ibr)%param(ipol)%amzbr
       case (38)
-        read (line,*,err=80) amzbr(ibr)
+        ! barrier width
+        read (line,*,err=80) barrier(ibr)%param(ipol)%amxbrw
       case (39)
-        read (line,*,err=80) amxbrw(ibr)
+        ! barrier porosity
+        read (line,*,err=80) barrier(ibr)%param(ipol)%ampbr
+        ! read next group of point and barrier data
+        ipol = ipol + 1
+        if( ipol .le. poly_np ) then
+            ! read another group of point and barrier data
+            typidx = typidx - 4
+        end if
       case (40)
-        read (line,*,err=80) ampbr(ibr)
-
-!      write(6,*) 'Barrier Number: ',ibr,'before (x,y)'
-!      write(6,*) amxbr(1,1,ibr), amxbr(2,1,ibr)
-!      write(6,*) amxbr(1,2,ibr), amxbr(2,2,ibr)
-
-!  Convert (x,y) barrier rectangular corner coordinates to
-!  (x,y) midline coordinates and width as currently defined in WEPS.
-
-!  I don't like the different coordinate systems within WEPS.
-!  We should eventually move to a uniform spatial coordinate
-!  system for all spatial objects (simulation region, subregions,
-!  accounting regions, barriers, etc.).  LEW AUG 23, 2000  8:04 AM
-!
-!  NOTE:  We don't convert to true midline coordinates because
-!         the erosion submodel assumes the midline is the barrier
-!         edge at this time.  Since WEPS 1.0 only handles barriers
-!         that exist on the simulation region (field) boundary, the
-!         the barrier (x,y) coordinates are set to match the simulation
-!         region boundary coordinates, not to the actual barrier
-!         midline coordinates.  LEW AUG 23, 2000  8:07 AM
-
-!     if (Xs1 == Xb1) && (Xs2 == Xb2) then N or S barrier
-!        if (Ys1 == Yb2) then S barrier (Ys1 >= Yb1)
-!        if (Ys2 == Yb1) then N barrier (Ys2 <= Yb2)
-!     if (Ys1 == Yb1) && (Ys2 == Yb2) then E or W barrier
-!        if (Xs1 == Xb2) then E barrier (Xs1 >= Xb1)
-!        if (Xs2 == Xb1) then W barrier (Xs2 <= Xb2)
-
-      if ((amxsim(1,1) .eq. amxbr(1,1,ibr)) .and.                       &
-     &   (amxsim(1,2) .eq. amxbr(1,2,ibr))) then          ! N or S barrier
-
-         if (amxsim(2,1) .eq. amxbr(2,2,ibr)) then       ! S barrier
-            amxbr(2,1,ibr) = amxsim(2,1)
-!            write(6,*) 'South barrier'
-         else if (amxsim(2,2) .eq. amxbr(2,1,ibr)) then  ! N barrier
-            amxbr(2,2,ibr) = amxsim(2,2)
-!            write(6,*) 'North barrier'
-         endif
-
-      else if ((amxsim(2,1) .eq. amxbr(2,1,ibr)) .and.                  &
-     &   (amxsim(2,2) .eq. amxbr(2,2,ibr))) then          ! E or W barrier
-
-         if (amxsim(1,1) .eq. amxbr(1,2,ibr)) then       ! W barrier
-            amxbr(1,1,ibr) = amxsim(1,1)
-!            write(6,*) 'West barrier'
-         else if (amxsim(1,2) .eq. amxbr(1,1,ibr)) then  ! E barrier
-            amxbr(1,2,ibr) = amxsim(1,2)
-!            write(6,*) 'East barrier'
-         endif
-      else
-         write(6,*) 'No barrier match for barrier: ', ibr
-      endif
-
-!      write(6,*) 'Barrier Number: ',ibr,'after (x,y)'
-!      write(6,*) amxbr(1,1,ibr), amxbr(2,1,ibr)
-!      write(6,*) amxbr(1,2,ibr), amxbr(2,2,ibr)
-
+        ! barrier type character string
+        read (line,*,err=80) barrier(ibr)%amzbt
+        ! increment for next barrier
         ibr = ibr + 1
-        if (ibr.le.nbr) typidx=typidx-6
+        if (ibr.le.nbr) then
+            ! read in next barrier
+            typidx=typidx-6
+        end if
 
       case (41)
         ! this does nothing but skip the line for shape name

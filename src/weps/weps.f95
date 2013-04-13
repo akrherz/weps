@@ -40,6 +40,7 @@
       USE pd_var_tables
       use Polygons_Mod, only: destroy_polygon
       use subregions_mod, only: subr_poly
+      use barriers_mod
       use file_io_mod, only: luo_egrd, luo_erod, luomandate, luod_above, luod_below, luowepperod, luoweppplot, luoweppsum, makedir
       use biomaterial
       use debug_mod
@@ -891,6 +892,14 @@
       ! close all open files
       call closefils
 
+      ! deallocate accounting region polygon storage, no longer needed
+      do isr = 1, size(acct_poly)
+          ! free memory in polygon point arrays
+          call destroy_polygon(acct_poly(isr))
+      end do
+      ! free memory for array of polygons
+      deallocate(acct_poly)
+
       ! deallocate subregion polygon storage, no longer needed
       do isr = 1, nsubr
           ! free memory in polygon point arrays
@@ -898,6 +907,15 @@
       end do
       ! free memory for array of polygons
       deallocate(subr_poly)
+
+      ! deallocate barrier storage arrays
+      if( allocated(barrier) ) then
+          do isr = 1, size(barrier)
+              ! clear internal storage for each barrier
+              destroy_barrier(barrier(isr))
+          end do
+          deallocate(barrier)
+      end if
 
       ! deallocate subregion crop and residue pool arrays
       ! destroy layers

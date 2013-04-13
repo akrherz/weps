@@ -62,17 +62,37 @@ none
 #   RFD-AccNo
 4
 #   Accounting region coordinates (meters)
+# number of coordinates
+4
+# list of coordinates
 0.0  0.0
-183  183
-#   Accounting region coordinates (meters)
-0.0  183
-183  366
-#   Accounting region coordinates (meters)
 183  0.0
-366  183
-#   Accounting region coordinates (meters)
 183  183
+0.0  183
+#   Accounting region coordinates (meters)
+# number of coordinates
+4
+# list of coordinates
+0.0  183
+183  183
+183  366
+0.0  366
+#   Accounting region coordinates (meters)
+# number of coordinates
+4
+# list of coordinates
+183  0.0
+366  0.0
+366  183
+183  183
+#   Accounting region coordinates (meters)
+# number of coordinates
+4
+# list of coordinates
+183  183
+366  183
 366  366
+183  366
 #
 #  number of subregions
 4
@@ -162,14 +182,22 @@ Canola, fall; Fallow_ Wheat, winter; Fallow; mulch till, Z50.man
 #
 #   RFD-BarrierNo
 1
-#   RFD-BarrierS coordinates (meters) | type | height (meters) | width (meters) | porosity
+#   RFD-BarrierS coordinates (meters) | height (meters) | width (meters) | porosity
 #   Note: subregion mod included skipping reading barriers is there are 0. No placeholder necessary.
+# number of coordinates
+2
+# first coordinate pair and data
 0 366 
-366 366
-Shrubs 1row leafoff
 2
 2
 0.7
+# second coordinate pair and data
+366 366
+2
+2
+0.7
+#   RFD-BarrierT  type 
+Shrubs 1row leafoff
 #
 # --CIRCULAR FIELD INFORMATION
 # Note: These fields are not used by the weps simulation.

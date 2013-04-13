@@ -28,6 +28,7 @@ module saeinp_mod
       use weps_interface_defs
       use file_io_mod, only: fopenk, makenamnum
       use subregions_mod
+      use barriers_mod
       use erosion_data_struct_defs, only: subregionsurfacestate, awdair, anemht, awzzo, wzoflg, awadir, subday, ntstep
 
 !     +++ ARGUMENT DECLARATIONS +++
@@ -35,7 +36,7 @@ module saeinp_mod
 
 !     + + + GLOBAL COMMON BLOCKS + + +
       include  'p1werm.inc'
-      include  'm1geo.inc'   ! amasim, nacctr, nbr, amxsim, amxar, amxbr, amzbr, ampbr, amxbrw
+      include  'm1geo.inc'   ! amasim, nbr, amxsim, amxbr, amzbr, ampbr, amxbrw
 
 !     +++ LOCAL VARIABLES +++
       integer k,l, sr, ip
@@ -99,10 +100,10 @@ module saeinp_mod
      & '#',/,                                                           &
      & '# +++ INITIALIZATIONS +++',/,                                   &
      & '#',/,                                                           &
-     & '#     am0eif, L, (m1flag.inc) EROSION initialization flag')
+     & '#     am0eif, L, EROSION initialization flag')
       write(luo_saeinp,*) '.TRUE.'
       write(luo_saeinp,2005)
- 2005 format('#    am0efl, L, (m1flag.inc) EROSION "print" flag')
+ 2005 format('#    am0efl, L, EROSION "print" flag')
       write(luo_saeinp,*) '1'
       write(luo_saeinp,2100)
  2100 format ('#',/,                                                    &
@@ -125,55 +126,65 @@ module saeinp_mod
      &'#  +++ ACCOUNTING REGIONS +++',/,                                &
      &'#',/,                                                            &
      &'# nacctr, I, (m1geo.inc) Number of accounting regions')
-      write(luo_saeinp,*) nacctr
+      write(luo_saeinp,*) size(acct_poly)
+
+      ! loop through all accounting regions
+      do sr = 1, size(acct_poly)
+
       write(luo_saeinp,2115)
  2115 format('#',/,                                                     &
-     &'#     amxar(x,y,a), R, (m1geo.inc) Accounting Region coordinates &
-     &(m)',/,                                                           &
-     &'#                     Input x,y coordinates in this form: x1,y1  &
-     &x2,y2',/,                                                         &
-     &'#                     for each accounting region specified (nacct&
-     &r)')
-      do b = 1, nacctr
-         write(luo_saeinp,*) amxar(1,1,b), amxar(2,1,b),                &
-     &            amxar(1,2,b),amxar(2,2,b)
+     &'# accounting region polygon, count, xy pairs (subregions_mod)',/,&
+     &'#         polygons can be:',/,                                   &
+     &'#         - open (the last point connects to the first point)',/,&
+     &'#         - closed (last point is same as first point)',/,       &
+     &'#         - complex (multiple closed polygons entered as one)')
+      ! number of coordinate pairs in polygon
+      write(luo_saeinp,*) acct_poly(sr)%np
+      ! the coordinate pairs
+      do ip = 1, acct_poly(sr)%np
+        write(luo_saeinp,*) acct_poly(sr)%points(ip)%x, acct_poly(sr)%points(ip)%y
       end do
+
+      end do
+
 !       barriers
       write(luo_saeinp,2120)
  2120 format ('#',/,                                                    &
      &'# +++ BARRIERS +++',/,                                           &
      &'#',/,                                                            &
-     &'#     nbr, I, (m1geo.inc) Number of barriers (0-5) ')
-      write(luo_saeinp,*) nbr
+     &'#     nbr, I, Number of barriers (0-5) ')
+      write(luo_saeinp,*) size(barrier)
       write(luo_saeinp,2122)
  2122 format ('#',/,                                                    &
-     &'#     NOTE: Remaining BARRIER inputs are repeated for each barrie&
-     &r specified',/,                                                   &
-     &'#     If no barriers specified (nbr=0), then no BARRIER inputs wi&
-     &ll be here',/,                                                    &
-     &'#',/,                                                            &
-     &'#     amxbr(x,y,b), R, (m1geo.inc) Accounting Region coordinates &
-     &(m)',/,                                                           &
-     &'#             Input x,y coordinates in this form: x1,y1 x2,y2',/,&
-     &'#             for each barrier specified (nbr)',/,               &
-     &'#    0.0, 0.0  0.0  100.0',/,                                    &
-     &'#',/,                                                            &
-     &'#       amzbr(b), R, (m1geo.inc) Barrier height (m)',/,          &
-     &'#       ampbr(b), R, (m1geo.inc) Barrier porosity (m^2/m^2)',/,  &
-     &'#       amxbrw(b), R, (m1geo.inc) Barrier width (m)',/,          &
-     &'#  1.2 0.50 2.0',/,                                              &
+     &'#     NOTE: Remaining BARRIER inputs are repeated for each barrier specified',/, &
+     &'#     If no barriers specified (nbr=0), then no BARRIER inputs will be here',/, &
+     &'#',/, &
+     &'#     barrier(b)%np, I, number of points in barrier polyline',/, &
+     &'#     Inputs are repeated for each point specified',/, &
+     &'#     barrier(b)%point(n)%x, barrier(b)%point(n)%y, R, x,y coordinate pair',/, &
+     &'#  0.0 500.0 ',/, &
+     &'#     barrier(b)%point(n)%amzbr, R, Barrier height (m)',/, &
+     &'#     barrier(b)%point(n)%amxbrw, R, Barrier width (m)',/, &
+     &'#     barrier(b)%point(n)%ampbr, R, Barrier porosity (m^2/m^2)',/, &
+     &'#  1.2 2.0 0.50 ',/, &
+     &'#     After all points, the text string is given for barrier type',/, &
      &'#')
 
-      do 33 b = 1,nbr
+      do b = 1, size(barrier)
          write(luo_saeinp,2125)
- 2125    format('# amxar(1,1,b), amxar(2,1), amxar(1,2),amxar(2,2)')
-         write(luo_saeinp,*)                                            &
-     &   amxbr(1,1,b), amxbr(2,1,b), amxbr(1,2,b), amxbr(2,2,b)
+ 2125    format('# barrier(b)%np, I, number of points in barrier polyline')
+         write(luo_saeinp,*) barrier(b)%np
 
-         write (luo_saeinp,2130)
- 2130    format('#, amzbr(b), ampbr(b), amxbrw(b)')
-         write (luo_saeinp,*) amzbr(b), ampbr(b), amxbrw(b)
-   33 continue
+         do ip = 1, barrier(b)%np
+            write(luo_saeinp,2127)
+ 2127       format('# barrier(b)%point(n)%x, barrier(b)%point(n)%y, R, x,y coordinate pair')
+            write(luo_saeinp,*) barrier(b)%point(ip)%x, barrier(b)%point(ip)%y
+
+            write (luo_saeinp,2130)
+ 2130       format('#, amzbr(b), amxbrw(b), ampbr(b)')
+            write (luo_saeinp,*) barrier(b)%param(ip)%amzbr, barrier(b)%param(ip)%amxbrw, barrier(b)%param(ip)%ampbr
+         end do
+      end do
 
 !       subregions
       write(luo_saeinp,2135)
@@ -181,7 +192,7 @@ module saeinp_mod
      &'# +++ SUBREGIONS +++',/,                                         &
      &'#',/,                                                            &
      &'#     nsubr, I, (m1subr.inc) Number of subregions (1-5)')
-      write(luo_saeinp,*) size(subrsurf)
+      write(luo_saeinp,*) size(subr_poly)
       write(luo_saeinp,2137)
  2137 format('#',/,                                                     &
      &'#     NOTE: Remaining SUBREGION inputs (BIOMASS, SOIL, and HYDROL&
@@ -191,7 +202,7 @@ module saeinp_mod
      &'#     subregions specified')
 
       ! loop through all subregions
-      do sr = 1, size(subrsurf)
+      do sr = 1, size(subr_poly)
 
       write(luo_saeinp,2138)
  2138 format('#',/,                                                     &
@@ -204,8 +215,7 @@ module saeinp_mod
       write(luo_saeinp,*) subr_poly(sr)%np
       ! the coordinate pairs
       do ip = 1, subr_poly(sr)%np
-        write(luo_saeinp,*)                                             &
-     &  subr_poly(sr)%points(ip)%x,subr_poly(sr)%points(ip)%y
+        write(luo_saeinp,*) subr_poly(sr)%points(ip)%x, subr_poly(sr)%points(ip)%y
       end do
 
       write(luo_saeinp,2140)

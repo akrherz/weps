@@ -13,10 +13,11 @@
 
 !     + + + Modules Used + + +
       use Polygons_Mod
-      use subregions_mod, only: subr_poly
+      use subregions_mod, only: subr_poly, acct_poly
       use erosion_data_struct_defs, only: subregionsurfacestate, create_subregionsurfacestate, awdair, anemht, awzzo, wzoflg, &
                                           ntstep, awadir, awudmx, subday, am0efl, am0eif
       use p1erode_def, only: SLRR_MIN, SLRR_MAX, WZZO_MIN, WZZO_MAX
+      use barrier_mod
 
 !     +++ ARGUMENT DECLARATIONS +++
       integer i_unit, o_unit, cmdebugflag, already_read_inputs
@@ -34,7 +35,7 @@
 
 !     + + + GLOBAL COMMON BLOCKS + + +
       include 'p1werm.inc'
-      include 'm1geo.inc'    ! amasim, nacctr, nbr, amxsim, amxar, amxbr, amzbr, ampbr, amxbrw
+      include 'm1geo.inc'    ! amasim, amxsim
 
 !     + + + LOCAL COMMON BLOCKS + + +
       integer debugflg
@@ -51,9 +52,13 @@
       integer wflg
       real :: f(ntstep), wu(ntstep)
       real wfcalm, wuc, w0k, step
-      integer subr_np, ipol
-      integer alloc_stat, sum_stat
+      integer :: poly_np     ! number of points to be read in for polygon or polyline
+      integer :: ipol        ! index counter for reading in polygon or polyline points
+      integer :: alloc_stat  ! indicates status of memory allocation attempt
+      integer :: sum_stat    ! accumulates for multiple allocations, one error statement.
       integer :: nsubr       ! number of subregions (read from input file)
+      integer :: nacctr      ! number of accounting regions (read from input file)
+      integer :: nbr         ! number of barriers (read from input file)
 
 !     + + + LOCAL VARIABLE DEFINITIONS + + +
 !     i, j, k = do-loop indices
@@ -69,10 +74,6 @@
 !     step      = tmp real variable for ntstep
 !     xcharin(i)= indep. variable name(s) used in plot
 !     xin(i)    = indep. variable value(s) used in plot
-!     subr_np   = number of points to be read in for a subregion polygon
-!     ipol      = index used to count reading in of polygon points
-!     alloc_stat = indicates status of memory allocation attempt
-!     sum_stat  = accumulates for multiple allocations, one error statement.
 
 !     +++ FUNCTIONS CALLED +++
 !     getline
@@ -134,16 +135,25 @@
 !     Number of accounting regions
       line = getline(i_unit)
       read (line,*) nacctr
-!     read (getline(i_unit),*) nacctr
 
-!     Accounting Region diagonal corners (x1,y1) and (x2,y2)
-      do 20 a = 1, nacctr
+      ! create accounting region polygon array
+      allocate(acct_poly(nsubr), stat=alloc_stat)
+      if( alloc_stat .gt. 0 ) then
+         Write(*,*) 'ERROR: memory allocation, acct_poly'
+      end if
+
+      do 20  a = 1, nacctr
+        ! read accounting region polygon point count
         line = getline(i_unit)
-
-        write(*,*) 'erodin: a, line:', a, line
-
-        read (line,*) ((amxar (x,y,a), x=1,2), y=1,2)
-!       read (getline(i_unit),*) ((amxar (x,y,a), x=1,2), y=1,2)
+        read (line,*) poly_np
+        ! create polygon point storage
+        acct_poly(sr) = create_polygon(poly_np)
+        ! read in points
+        do ipol = 1, poly_np
+            ! read point pair
+            line = getline(i_unit)
+            read (line,*) acct_poly(sr)%points(ipol)%x, acct_poly(sr)%points(ipol)%y
+        end do
    20 continue
 
 !     +++ BARRIERS +++
@@ -153,20 +163,32 @@
 !     Number of barriers
       line = getline(i_unit)
       read (line,*) nbr
-!     read (getline(i_unit),*) nbr
 
 !     NOTE: Barrier data must not be in the input file if "nbr = 0"
+      if( nbr .gt. 0 ) then
+        ! allocate structure for barriers
+        allocate(barrier(nbr), stat = alloc_stat)
+        if( alloc_stat .gt. 0 ) then
+           Write(*,*) 'ERROR: memory alloc., barriers'
+        end if
+      end if
 
-      do 30 b = 1, nbr
-!       Barrier linear endpoints (x1,y1) and (x2,y2)
+      do b = 1, nbr
+        ! number of points in barrier polyline
         line = getline(i_unit)
-        read (line,*) ((amxbr(x,y,b), x=1,2), y=1,2)
-!       read (getline(i_unit),*) ((amxbr(x,y,b), x=1,2), y=1,2)
-!       Barrier ht, porosity, and width
-        line = getline(i_unit)
-        read (line,*) amzbr(b), ampbr(b), amxbrw(b)
-!       read (getline(i_unit),*)  amzbr(b), ampbr(b), amxbrw(b)
-   30 continue
+        read (line,*,err=80) poly_np
+        ! crate storage for point and barrier data
+        barrier(b) = create_barrier(poly_np)
+        ! read in points and point data
+        do ipol = 1, poly_np
+           ! read point pair
+           line = getline(i_unit)
+           read (line,*,err=80) barrier(ibr)%points(ipol)%x, barrier(ibr)%points(ipol)%y
+           ! barrier height, width, porosity
+           line = getline(i_unit)
+           read (line,*,err=80) barrier(ibr)%param(ipol)%amzbr, barrier(ibr)%param(ipol)%amxbrw, barrier(ibr)%param(ipol)%ampbr
+        end do
+      end do
 
 !     +++ SUBREGION REGIONS +++
 
@@ -175,7 +197,6 @@
 !     Number of subregions
       line = getline(i_unit)
       read (line,*) nsubr
-!     read (getline(i_unit),*) nsubr
 
       ! create data array to hold input and derived values for each subregion
       sum_stat = 0
@@ -192,15 +213,14 @@
       do 100  sr=1, nsubr
         ! read subregion polygon point count
         line = getline(i_unit)
-        read (line,*) subr_np
+        read (line,*) poly_np
         ! create polygon point storage
-        subr_poly(sr) = create_polygon(subr_np)
+        subr_poly(sr) = create_polygon(poly_np)
         ! read in points
-        do ipol = 1, subr_np
+        do ipol = 1, poly_np
             ! read point pair
             line = getline(i_unit)
-            read (line,*) subr_poly(sr)%points(ipol)%x,                 &
-     &                    subr_poly(sr)%points(ipol)%y
+            read (line,*) subr_poly(sr)%points(ipol)%x, subr_poly(sr)%points(ipol)%y
         end do
 
 !     +++ BIOMASS +++
@@ -843,9 +863,12 @@
       write (o_unit,*)
       write (o_unit,*) 'nacctr - number of accounting regions'
       write (o_unit,*) nacctr
-      write (o_unit,*) 'accounting region dimensions (x1,y1) (x2,y2)'
+      write (o_unit,*) 'accounting region polygon, count, xy pairs'
       do 1000 a = 1, nacctr
-        write (o_unit,260) ((amxar (x,y,a), x=1,2), y=1,2)
+        write (o_unit,250) acct_poly(a)%np
+        do ipol = 1, acct_poly(a)%np
+            write (o_unit,251) acct_poly(a)%points(ipol)%x, acct_poly(a)%points(ipol)%y
+        end do
  1000 continue
 
       write (o_unit,*)
@@ -871,8 +894,7 @@
       do 1020 sr = 1, nsubr
         write (o_unit,250) subr_poly(sr)%np
         do ipol = 1, subr_poly(sr)%np
-            write (o_unit,251) subr_poly(sr)%points(ipol)%x,            &
-     &                       subr_poly(sr)%points(ipol)%y
+            write (o_unit,251) subr_poly(sr)%points(ipol)%x, subr_poly(sr)%points(ipol)%y
         end do
  1020 continue
 

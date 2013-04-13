@@ -4,11 +4,15 @@
 !$HeadURL$
 
 module erosion_data_struct_defs
+
+  use Polygons_Mod
+
   implicit none
 
   ! defines state variables for each grid cell
   type cellsurfacestate
-     integer :: csr          ! index of current subregion at grid point x,y
+     integer :: csr       ! index of current subregion at grid point x,y
+     integer :: car       ! index of current accounting region at grid point x,y
      integer :: surflay   ! index of the soil layer at the surface (0 indicates deposition horizon)
      real :: surfthk      ! thickness of the soil layer at the surface (mm) (could be thinner than original layer)
      real :: sf1          ! soil mass fraction in surface layer < 0.01 mm
