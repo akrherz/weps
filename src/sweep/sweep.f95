@@ -13,7 +13,7 @@
 
       use sweep_interface_defs
       use weps_interface_defs
-      use file_io_mod, only: fopenk
+      use file_io_mod, only: fopenk, luo_sgrd, luo_emit
       use erosion_data_struct_defs, only: subregionsurfacestate, threshold, cellsurfacestate, erod_interval, ntstep, awzypt, subday
       use erosion_data_struct_defs, only: am0eif, am0efl
       use grid_geo_def, only: imax, jmax, ix, jy, xgdpt, ygdpt, amxsim
@@ -364,7 +364,9 @@
              o_sgrd_fpath = trim(fpath_bname)//trim(o_sgrd_ext)
 
              call fopenk(o_sgrd_unit, o_sgrd_fpath, 'unknown')
-		 
+             ! set module level unit value
+             luo_sgrd = o_sgrd_unit
+
            else if (argv(2:5) == 'Emit') then
              !write(0,*) '"-Emit" option specified'
              force_emit_val = 4
@@ -378,7 +380,9 @@
              o_emit_fpath = trim(fpath_bname)//trim(o_emit_ext)
 
              call fopenk(o_emit_unit, o_emit_fpath, 'unknown')
-			 
+             ! set module level unit value
+             luo_emit = o_emit_unit
+
            else if (argv(2:5) == 'Erod') then
              !write(0,*) '"-Erod" option specified'
              if (.not. have_ifile) then
