@@ -40,7 +40,7 @@ module sweep_io_mod
                                           awzypt, awdair, anemht, awzzo, wzoflg, &
                                           ntstep, awadir, awudmx, subday, am0eif
       use p1erode_def, only: SLRR_MIN, SLRR_MAX, WZZO_MIN, WZZO_MAX
-      use barriers_mod
+      use barriers_mod, only: create_barrier, barrier
       use grid_geo_def, only: amasim, amxsim
       use sae_in_out_mod, only: saeinp
 
@@ -571,7 +571,6 @@ module sweep_io_mod
       use erosion_data_struct_defs, only: subregionsurfacestate, awdair, anemht, awzzo, wzoflg, &
                                           ntstep, awadir, awudmx, subday, am0eif
       use p1erode_def, only: SLRR_MIN, SLRR_MAX, WZZO_MIN, WZZO_MAX
-      use barriers_mod
       use grid_geo_def, only: amasim, amxsim
 
 

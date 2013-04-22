@@ -18,6 +18,7 @@
      &                       kbr, awa, sin_awa, cos_awa, tan_awa, amasim
       use erosion_data_struct_defs, only: cellsurfacestate
       use p1unconv_mod, only: degtorad
+      use barriers_mod, only: sbbr
 
 !     +++ ARGUMENT DECLARATIONS +++
       real wind_dir  ! direction of the wind in degrees from north

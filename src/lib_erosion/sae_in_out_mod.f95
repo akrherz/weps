@@ -34,7 +34,7 @@ module sae_in_out_mod
       use file_io_mod, only: fopenk, makenamnum
       use grid_geo_def, only: amxsim, amasim
       use subregions_mod
-      use barriers_mod
+      use barriers_mod, only: barrier
       use erosion_data_struct_defs, only: subregionsurfacestate, awzypt, awdair, anemht, awzzo, wzoflg, awadir, subday, ntstep
 
 !     +++ ARGUMENT DECLARATIONS +++

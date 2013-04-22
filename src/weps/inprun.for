@@ -16,7 +16,7 @@
       use file_io_mod, only: fopenk, luicli, luiwin, luiwsd,            &
      &                       luomanage, luolog
       use erosion_data_struct_defs, only: subday, ntstep, am0efl
-      use barriers_mod
+      use barriers_mod, only: create_barrier, barrier
       use grid_geo_def, only: amasim, amxsim, sim_area
 
 !     + + + ARGUMENT DECLARATIONS + + +

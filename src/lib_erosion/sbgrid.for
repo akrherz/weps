@@ -18,7 +18,7 @@
 
       use grid_geo_def, only: imax, jmax, ix, jy, amxsim,               &
      &                        N_G_DPT, B_G_DPT, MIN_GRID_SP
-      use barriers_mod
+      use barriers_mod, only: barrier
 
 !     +++ LOCAL DEFINITIONS +++
 !     imax  - no. grid intervals in x-direction

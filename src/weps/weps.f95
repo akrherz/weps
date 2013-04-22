@@ -41,7 +41,7 @@
       USE pd_var_tables
       use Polygons_Mod, only: destroy_polygon
       use subregions_mod, only: subr_poly, acct_poly
-      use barriers_mod
+      use barriers_mod, only: destroy_barrier, barrier
       use file_io_mod, only: luo_egrd, luo_erod, luo_emit, luo_sgrd
       use file_io_mod, only: luomandate, luod_above, luod_below, luowepperod, luoweppplot, luoweppsum, makedir
       use biomaterial

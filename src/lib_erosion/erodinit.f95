@@ -12,8 +12,6 @@
 !       initialize Erosion submodel output array to zero (sbigrd).
 !       calculate normalized effect of hills on friction velocity 
 !        on grid for each wind direction (not activated)
-!       calculate normalized effect of barriers on friction velocity
-!        on grid for each wind direction (sbbr)
 !       initialize reporting variables that need to have a value even
 !        when erosion is not being called.
 
@@ -34,7 +32,6 @@
 !     sbgrid
 !     sbigrd
 !     sbhill (not activated)
-!     sbbr
 
 !     +++ LOCAL VARIABLES +++
       integer i, j, sr, nsubr, nacctr
@@ -97,10 +94,7 @@
 !        call sbhill
 !        endif
 
-         ! check for barriers - move to erosion to use actual wind angles
-!         if (nbr .gt. 0) then
-!         call sbbr( cellstate )
-!         endif
+         ! check for barriers - moved to erosion to use actual wind angles
 
          ! Turn off grid creation flag
          am0eif = .false.
