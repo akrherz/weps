@@ -458,13 +458,6 @@
       real smaglosmx, smaglos, sf84mn, sf84 
       end subroutine sbaglos
 !-----------------------------
-      subroutine sbdirini(wind_dir, prev_dir, cellstate)
-      use erosion_data_struct_defs, only: cellsurfacestate
-      real wind_dir  ! direction of the wind in degrees from north
-      real prev_dir  ! previously computed direction of the wind
-      type(cellsurfacestate),dimension(0:,0:),intent(inout) :: cellstate     ! grid cell state for sbbr
-      end subroutine sbdirini
-!-----------------------------
       subroutine sbemit (ounit, ws, hhr, cellstate, first_emit)
       use erosion_data_struct_defs
       integer        ounit   !Unit number for detail grid erosion
@@ -522,54 +515,6 @@
       real slagm, s0ags, slagn, slagx, sldi, sfdi         
       end subroutine sbsfdi
 !-----------------------------
-      subroutine sbwind( wustfl, awu, ntstep, intstep, rusust, subrsurf, cellstate)
-      use erosion_data_struct_defs, only: subregionsurfacestate, cellsurfacestate
-      integer wustfl,intstep, ntstep
-      real awu, rusust
-      type(subregionsurfacestate), dimension(:), intent(in) :: subrsurf  ! subregion surface conditions (erosion specific set)
-      type(cellsurfacestate), dimension(0:,0:), intent(inout) :: cellstate     ! initialized grid cell state values
-      end subroutine sbwind
-!-------------------------------
-      subroutine sbwus (anemht, awzzo, awu, wzzov, brcd, wus)
-
-      real  anemht, awzzo, awu, wzzov
-      real  brcd, wus 
-      end subroutine sbwus
-!-------------------------------
-      subroutine sbwust (sf84, sdagd, sfcr, svroc, sflos, bffcv,        &
-     &  wzzo, hrwc, hrwcw, wus, sf84ic, asvroc, dmlos,                  &
-     &  wust, wusp, wusto, sf84mn, smaglos, smaglosmx,                  &
-     &  wubsts, wucsts, wucwts, wucdts, sfcv)
-      real sf84, sdagd, sfcr, svroc, sflos, bffcv
-      real wzzo, hrwc, hrwcw, wus, sf84ic, asvroc, dmlos
-      real wust, wusp, sf84mn, smaglos
-      real smaglosmx, wusto
-      real wubsts, wucsts, wucwts, wucdts, sfcv
-      end subroutine sbwust
-!--------------------------------
-      subroutine sbzdisp (szrgh, bcxrow, bc0rg, wzoflg,                 &
-     &                 bdrlai, bdrsai, bbzht, bcrlai, bcrsai, bczht,    &
-     &                 awzdisp, wzdisp)
-      real szrgh, bcxrow
-      integer bc0rg, wzoflg
-      real bdrlai, bdrsai, bbzht
-      real bcrlai, bcrsai, bczht
-      real awzdisp, wzdisp
-      end subroutine sbzdisp
-!---------------------------------
-      subroutine sbzo (sxprg, szrgh, slrr,                              &
-     &                 wzoflg, bdrlai, bdrsai, bbzht,                   &
-     &                 bcrlai, bcrsai, bczht,                           &
-     &                 bcxrow, bc0rg, wzorg, wzorr,                     &
-     &                 wzzo, wzzov, awzzo, brcd)
-      real sxprg, szrgh, slrr
-      integer wzoflg
-      real bdrlai, bdrsai, bbzht
-      real bcrlai, bcrsai, bczht, bcxrow
-      integer bc0rg
-      real wzorg, wzorr, wzzo, wzzov, awzzo, brcd
-      end subroutine sbzo   
-!-----------------------------------
 
 !---------------  HYDRO Routines -----------------------------
       real function acplwu (awcr, awcr_crit, wup)
@@ -2705,13 +2650,6 @@ SUBROUTINE update_yrly_update_vars(isr, yrly_update, yrot_update, yr_update, cel
       character*(*) val
       end function begtrm
 !----------------------------------
-      real function biodrag (bdrlai, bdrsai, bcrlai, bcrsai, bc0rg,     &
-     &                       bcxrow, bczht, bszrgh)
-      real    bdrlai, bdrsai, bcrlai, bcrsai
-      integer bc0rg
-      real    bcxrow, bczht, bszrgh
-      end function biodrag
-!------------------------------------
       subroutine dbgdmp(day,sr, residue, biotot)
       use biomaterial, only: biomatter, biototal
       integer, intent(in) :: day

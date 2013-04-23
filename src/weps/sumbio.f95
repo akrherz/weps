@@ -6,6 +6,7 @@
       subroutine sumbio(isr, residue, restot, croptot, biotot)
 
       use biomaterial, only: biomatter, biototal
+      use wind_mod, only: biodrag
 
 !     + + +   ARGUMENT DECLARATIONS + + +
       integer, intent(in) :: isr
@@ -29,7 +30,6 @@
       real atotal, aheight, a(0:size(residue))
 
 !     + + + FUNCTIONS CALLED + + +
-      real    biodrag
       real    resevapredu
 
 ! *****************************************************************

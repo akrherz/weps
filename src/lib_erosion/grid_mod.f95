@@ -207,4 +207,66 @@ module grid_mod
 
     end subroutine init_regions_grid
 
+    subroutine sbdirini(wind_dir, cellstate)
+
+!     +++ purpose +++
+!     Calc. wind angle on the sim. region
+!     Calc. sweep sequence for update of grid cells
+
+      use erosion_data_struct_defs, only: cellsurfacestate
+      use p1unconv_mod, only: degtorad
+
+!     +++ ARGUMENT DECLARATIONS +++
+      real wind_dir  ! direction of the wind in degrees from north
+      type(cellsurfacestate),dimension(0:,0:),intent(inout) :: cellstate     ! grid cell state for sbbr
+
+!     + + + END SPECIFICATION + + +
+
+!     calc wind angle relative to the field Y-axis (+, - 45 deg. range)
+      awa = wind_dir - amasim
+      if (awa .lt. 0.0 ) awa = awa + 360.0
+      if (awa .gt. 360.0) awa = awa - 360.0
+
+      sin_awa = sin(awa*degtorad)
+      cos_awa = cos(awa*degtorad)
+      tan_awa = tan(awa*degtorad)
+
+!     find wind quadrant relative to sim region & select sweep sequence
+
+      If (awa .ge. 0.0 .and. awa .lt. 90.0) then
+        i1 = imax - 1
+        i2 = 1
+        i3 = -1
+        i4 = jmax - 1
+        i5 = 1
+        i6 = -1
+
+      elseif (awa .ge. 90.0 .and. awa .lt. 180.0) then
+        i1 = imax - 1
+        i2 = 1
+        i3 = -1
+        i4 = 1
+        i5 = jmax - 1
+        i6 = 1
+
+      elseif (awa .ge. 180.0 .and. awa .lt. 270.0) then
+        i1 = 1
+        i2 = imax - 1
+        i3 = 1
+        i4 = 1
+        i5 = jmax - 1
+        i6 = 1
+
+      else
+        i1 = 1
+        i2 = imax - 1
+        i3 = 1
+        i4 = jmax - 1
+        i5 = 1
+        i6 = -1
+
+      endif
+
+    end subroutine sbdirini
+
 end module grid_mod

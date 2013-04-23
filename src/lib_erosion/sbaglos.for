@@ -29,7 +29,7 @@
 !             effects (m/s)
 !     sf84ic- surface soil fraction <0.84 mm initial condition
 !     asvroc - surface soil volume rock (m^3/m^3)
-!     smaglosmx - max mobile soil reservoir of aggregateed sfc.(kg/m^2)
+!     smaglosmx - max mobile soil reservoir of aggregated sfc.(kg/m^2)
 !     smaglos- potential mobile soil reservoir of aggregated sfc.(kg/m^2)
 !     sf84mn- surface soil fraction <0.84 mm where wust= wus of ag.sfc.
 !     sf84   - soil mass fraction in surface layer < 0.84 mm

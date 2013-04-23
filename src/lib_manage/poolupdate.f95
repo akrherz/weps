@@ -13,6 +13,7 @@
       use weps_interface_defs
       use biomaterial, only: biomatter, biototal
       use p1unconv_mod, only: pi
+      use wind_mod, only: biodrag
 
 !     + + +   ARGUMENT DECLARATIONS + + +
       integer :: bnslay
@@ -22,9 +23,6 @@
 
 !     INCLUDE
       include 'p1werm.inc'
-
-!     + + + FUNCTION DECLARATIONS + + +
-!      real biodrag
 
 !     + + + VARIABLE DEFINITIONS + + +
 

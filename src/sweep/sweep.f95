@@ -18,6 +18,7 @@
       use erosion_data_struct_defs, only: subregionsurfacestate, threshold, cellsurfacestate, erod_interval, ntstep, awzypt, &
                                           subday, am0eif, am0efl
       use barriers_mod, only: minht_barriers
+      use wind_mod, only: anemometer_init
       use grid_mod, only: sbgrid, imax, jmax, ix, jy, xgdpt, ygdpt, amxsim
       use sae_in_out_mod, only: mksaeinp, mksaeout, in_weps
       use p1unconv_mod, only: SEC_PER_DAY

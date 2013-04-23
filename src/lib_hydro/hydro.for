@@ -51,6 +51,7 @@
       use erosion_data_struct_defs, only: anemht, awzzo, awzdisp, wzoflg
       use grid_mod, only: amxsim
       use Points_Mod, only: slen
+      use wind_mod, only: sbzdisp, sbzo, biodrag
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer layrsn
@@ -533,18 +534,16 @@
          ah0drat = rn / (vlh * bwzdpt)
       end if
 
+      ! biodrag used for roughness length and below for surface evaporation reduction
+      brcd = biodrag( restot%rlaitot, restot%rsaitot, bcrlai, bcrsai,   &
+     &                bc0rg, bcxrow, bczht, bszrgh )
+
       ! find roughness length of the surface for et wind speed adjustment to 2m
-      ! biodrag returned and used below for surface evaporation reduction
-      call sbzo (bsxrgs, bszrgh, bslrr, wzoflg,                         &
-     &           restot%rlaitot, restot%rsaitot, bbzht,                 &
-     &           bcrlai, bcrsai, bczht,                                 &
-     &           bcxrow, bc0rg, loc_zorr, loc_zordg,                    &
-     &           loc_zo, loc_zov, awzzo, brcd)
+      call sbzo (bsxrgs, bszrgh, bslrr, bbzht, brcd, wzoflg,            &
+     &           loc_zordg, loc_zorr, loc_zo, loc_zov, awzzo)
 
       ! find zero plane displacement of location
-      call sbzdisp (bszrgh, bcxrow, bc0rg, wzoflg,                      &
-     &      restot%rlaitot, restot%rsaitot, bbzht,                      &
-     &      bcrlai, bcrsai, bczht, awzdisp, loc_zd)
+      call sbzdisp (wzoflg, brcd, bbzht, bczht, awzdisp, loc_zd)
 
       ! set location adjusted meteorological height (mm)
       ! see RZWQM manual pages 69-70

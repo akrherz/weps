@@ -50,6 +50,7 @@
       use erosion_data_struct_defs, only: create_subregionsurfacestate, subregionsurfacestate, threshold, cellsurfacestate
       use erosion_data_struct_defs, only: erod_interval, awudmx, am0eif, am0efl
       use barriers_mod, only: minht_barriers
+      use wind_mod, only: anemometer_init
       use grid_mod, only: sbgrid, sbigrd, imax, jmax, ix, jy, xgdpt, ygdpt, amxsim
       use sae_in_out_mod, only: mksaeinp, mksaeout, in_weps
       use stir_soil_texture_mod, only: create_stir_soil_multiplier, destroy_stir_soil_multiplier

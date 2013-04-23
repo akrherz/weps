@@ -68,21 +68,20 @@ contains
     end if
   end subroutine destroy_barrier
 
-  subroutine sbbr( rel_wind_angle, cellstate )
+  subroutine sbbr( cellstate )
 
 !     + + + PURPOSE + + +
 !     to calculate the fraction of open field friction velocity
 !     in from up wind and down wind sources of shelter at all interior nodes
 
       use erosion_data_struct_defs, only: cellsurfacestate
-      use grid_mod, only: imax, jmax, ix, jy, amxsim
+      use grid_mod, only: imax, jmax, ix, jy, amxsim, awa
       use p1unconv_mod, only: pi
       use Points_Mod, only: point
       use pnt_polyline_mod, only: location_intersect, pl_intersect
       use lin_interp_mod, only: lin_interp
 
 !     + + + ARGUMENT DECLARATIONS + + +
-      real, intent(in) :: rel_wind_angle  ! angle of the wind relative the grid positive y-axis (see sbdirini)
       type(cellsurfacestate), dimension(0:,0:), intent(inout) :: cellstate     ! initialized grid cell state values
 
 !     + + + LOCAL VARIABLES + + +
@@ -109,7 +108,7 @@ contains
           w0br_min = 1.0   ! maximum value for parameter
           do n = 1, size(barrier)
             ! look for barrier up wind
-            if( pl_intersect( pnt_grid, rel_wind_angle, barrier(n)%points, loc_intersect ) ) then
+            if( pl_intersect( pnt_grid, awa, barrier(n)%points, loc_intersect ) ) then
               ! intersection point found (it is minimum distance for this barrier)
               dist = slen(pnt_grid, loc_intersect%pnt)
 
@@ -130,7 +129,7 @@ contains
             end if
 
             ! look for barrier down wind
-            if( pl_intersect( pnt_grid, rel_wind_angle-180.0, barrier(n)%points, loc_intersect ) ) then
+            if( pl_intersect( pnt_grid, awa-180.0, barrier(n)%points, loc_intersect ) ) then
               ! intersection point found (it is minimum distance for this barrier)
               dist = slen(pnt_grid, loc_intersect%pnt)
 

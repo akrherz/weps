@@ -54,6 +54,7 @@ subroutine erodsubr_update( sr, restot, croptot, biotot, subrsurf )
     subrsurf%ac0rg = croptot%c0rg
 
     subrsurf%abffcv = biotot%ffcvtot
+    subrsurf%abzht = biotot%zht_ave
 
     do idx = 1, nslay(sr)
 

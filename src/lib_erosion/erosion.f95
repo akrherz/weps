@@ -20,6 +20,9 @@
       use sae_in_out_mod, only: mksaeinp, mksaeout, saeinp, daily_erodout
       use p1unconv_mod, only: SEC_PER_DAY
       use timer_def, only: TIMEROS, TIMSBEROD, TIMSBWIND, TIMSTART, TIMSTOP
+      use barriers_mod, only: sbbr
+      use grid_mod, only: sbdirini
+      use wind_mod, only: sbwind, sbzo, sbwus, sbwust, biodrag
 
 !     +++ ARGUMENT DECLARATIONS +++
       real min_erosion_awu       !Minimum erosive wind speed (m/s) to evaluate for erosion loss
@@ -49,7 +52,6 @@
       real wuse, wuste, enge
       real wus_anemom, wus_random, wus_ridge, wus_biodrag
       real wubsts, wucsts, wucwts, wucdts, sfcv
-      real :: dmlos_tmp, sf84mn_tmp, smaglos_tmp, smaglosmx_tmp
       logical :: first_emit  ! pass to sbemit on first entry to zero out daily accumulators
       integer :: luo_saeinp  ! used here to tell saeinp to make it's own file
 
@@ -95,12 +97,11 @@
 !     sbwus
 !     sbwust
 !     sbinit
-!     sbdirini
-!     sbwind
 !     sberod
 !     sbsfdi
 
 !     +++ FUNCTION DECLARATIONS +++
+!      real biodrag
 
 !     +++ END SPECIFICATIONS +++
 
@@ -164,42 +165,38 @@
               subrsurf(icsr)%sxprg = 1000
           endif
 
+          ! calculate "effective" biomass drag coefficient
+          brcd = biodrag( subrsurf(icsr)%adrlaitot, subrsurf(icsr)%adrsaitot, subrsurf(icsr)%acrlai, subrsurf(icsr)%acrsai, &
+                          subrsurf(icsr)%ac0rg, subrsurf(icsr)%acxrow, subrsurf(icsr)%aczht, subrsurf(icsr)%aszrgh )
+
           ! Compute Zo (wzzo) of surface
-          call sbzo( subrsurf(icsr)%sxprg, subrsurf(icsr)%aszrgh, subrsurf(icsr)%aslrr, &
-                     wzoflg, subrsurf(icsr)%adrlaitot, subrsurf(icsr)%adrsaitot, subrsurf(icsr)%abzht, &
-                     subrsurf(icsr)%acrlai, subrsurf(icsr)%acrsai, subrsurf(icsr)%aczht, &
-                     subrsurf(icsr)%acxrow, subrsurf(icsr)%ac0rg, wzorg, wzorr, &
-                     wzzo, wzzov, awzzo, brcd )
+          call sbzo( subrsurf(icsr)%sxprg, subrsurf(icsr)%aszrgh, subrsurf(icsr)%aslrr, subrsurf(icsr)%abzht, brcd, &
+                     wzoflg, wzorg, wzorr, wzzo, wzzov, awzzo )
 
           ! find hour index (1-24)
           hidx = int(i*23.75/ntstep) + 1
 
           ! (comparison) anemometer location surface friction velocity
-          call sbwus( anemht, awzzo, subday(i)%awu, awzzo, 0.0, wus_anemom )
+          wus_anemom = sbwus( anemht, awzzo, subday(i)%awu, awzzo, 0.0 )
 
           ! (comparison) site random roughness surface friction velocity
-          call sbwus( anemht, awzzo, subday(i)%awu, wzorr, 0.0, wus_random )
+          wus_random = sbwus( anemht, awzzo, subday(i)%awu, wzorr, 0.0 )
 
           ! (comparison) site ridge (pattern) roughness surface friction velocity
-          call sbwus( anemht, awzzo, subday(i)%awu, wzorg, 0.0, wus_ridge )
+          wus_ridge = sbwus( anemht, awzzo, subday(i)%awu, wzorg, 0.0 )
 
           ! (comparison) site biodrag surface friction velocity
-          call sbwus( anemht, awzzo, subday(i)%awu, awzzo, brcd, wus_biodrag )
+          wus_biodrag = sbwus( anemht, awzzo, subday(i)%awu, awzzo, brcd )
 
           ! Compute soil surface friction velocity (wus)
-          call sbwus( anemht, awzzo, subday(i)%awu, wzzov, brcd, wus )
+          wus = sbwus( anemht, awzzo, subday(i)%awu, wzzov, brcd )
 
           ! Compute friction velocity threshold for entrainment (wust) and
           ! transport friction velocity threshold (wusp)
-          dmlos_tmp = 0.0
-          smaglos_tmp = 0.0
-          smaglosmx_tmp = 0.0
           call sbwust( subrsurf(icsr)%sfd84, subrsurf(icsr)%bsl(1)%asdagd, subrsurf(icsr)%asfcr, &
      &                 subrsurf(icsr)%bsl(1)%asvroc, subrsurf(icsr)%asflos, subrsurf(icsr)%abffcv, wzzo, &
-     &                 subrsurf(icsr)%ahrwc0(hidx), subrsurf(icsr)%bsl(1)%ahrwcw, wus, subrsurf(icsr)%sf84ic,  &
-     &                 subrsurf(icsr)%bsl(1)%asvroc, dmlos_tmp, wust, wusp, &
-     &                 wusto, sf84mn_tmp, smaglos_tmp, smaglosmx_tmp, &
-     &                 wubsts, wucsts, wucwts, wucdts, sfcv)
+     &                 subrsurf(icsr)%ahrwc0(hidx), subrsurf(icsr)%bsl(1)%ahrwcw, subrsurf(icsr)%sf84ic,  &
+     &                 subrsurf(icsr)%bsl(1)%asvroc, wust, wusp, wusto, wubsts, wucsts, wucwts, wucdts, sfcv)
 
           ! Checks to find maximum ratio between surface friction velocity
           ! and friction velocity threshold among all time steps and subregion surfaces.
@@ -301,7 +298,13 @@
 
 !     calc. sweep direction based on wind direction for sberod
       prev_dir = subday(1)%awdir+ 1.0   !make different to force calculation
-      call sbdirini( subday(1)%awdir, prev_dir, cellstate )
+      ! NOTE: this would be moved into subday loop if daily direction array is populated and surface updating can handle changing directions
+      if( subday(1)%awdir .ne. prev_dir ) then
+         call sbdirini( subday(1)%awdir, cellstate )
+         ! determine barrier influence
+         call sbbr( cellstate )
+         prev_dir = subday(1)%awdir
+      end if
 
 !     set flag on to update threshold fric. vel. on grid
       wustfl = 1
@@ -318,7 +321,12 @@
          endif
          ! calc. sweep direction based on wind direction for sberod
          ! only needed if one reads hourly wind directions for input
-         ! call sbdirini( subday(i)%awdir, prev_dir, cellstate )
+         !if( subday(1)%awdir .ne. prev_dir ) then
+         !   call sbdirini( subday(1)%awdir, cellstate )
+         !   ! determine barrier influence
+         !   call sbbr( cellstate )
+         !   prev_dir = subday(1)%awdir
+         !end if
 
          !rut = rusust_preros(i)  This change sabotaged code logic
           
