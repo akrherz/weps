@@ -17,7 +17,7 @@
       use weps_interface_defs
       use file_io_mod, only: fopenk, makenamnum, luo_erod, luo_egrd, luo_emit, luo_sgrd
       use erosion_data_struct_defs
-      use sae_in_out_mod, only: mksaeinp, mksaeout, saeinp, daily_erodout
+      use sae_in_out_mod, only: mksaeinp, mksaeout, saeinp, daily_erodout, sb1out, sb2out, sbemit
       use p1unconv_mod, only: SEC_PER_DAY
       use timer_def, only: TIMEROS, TIMSBEROD, TIMSBWIND, TIMSTART, TIMSTOP
       use barriers_mod, only: sbbr
