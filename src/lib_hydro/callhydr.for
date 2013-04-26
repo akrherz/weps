@@ -10,7 +10,7 @@
 
       use weps_interface_defs
       use biomaterial, only: biototal
-      use timer_def, only: TIMHYDR, TIMSTART, TIMSTOP
+      use timer_mod, only: timer, TIMHYDR, TIMSTART, TIMSTOP
       use erosion_data_struct_defs, only: awudav
 
 !     + + + ARGUMENT DECLARATIONS + + +

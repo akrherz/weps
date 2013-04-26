@@ -34,7 +34,9 @@
 !     + + + GLOBAL COMMON BLOCKS + + +
 
       use weps_interface_defs
-      use datetime_mod, only: update_system_time, get_systime_string
+      use timer_mod, only: timer, TIMWEPS, TIMSTART, TIMSTOP, TIMPRINT
+      use datetime_mod, only: update_system_time, get_systime_string, julday, lstday, isleap, &
+                              update_simulation_date, get_simdate, get_simdate_doy
       USE pd_dates_vars
       USE pd_update_vars
       USE pd_report_vars
@@ -47,8 +49,9 @@
       use biomaterial
       use debug_mod
       use mandate_mod
-      use erosion_data_struct_defs, only: create_subregionsurfacestate, subregionsurfacestate, threshold, cellsurfacestate
-      use erosion_data_struct_defs, only: erod_interval, awudmx, am0eif, am0efl
+      use erosion_mod, only: erosion, erodinit
+      use erosion_data_struct_defs, only: create_subregionsurfacestate, subregionsurfacestate, threshold, cellsurfacestate, &
+                                          erod_interval, awudmx, am0eif, am0efl
       use barriers_mod, only: minht_barriers
       use wind_mod, only: anemometer_init
       use grid_mod, only: sbgrid, sbigrd, imax, jmax, ix, jy, xgdpt, ygdpt, amxsim
@@ -74,7 +77,6 @@
       include 'c1glob.inc'
       include 'c1db1.inc'
       include 'h1hydro.inc'
-      include 'timer.inc'
       include 'command.inc'   !declarations for commandline args
       include 'precision.inc' !declaration for portable math range checking
 
@@ -390,10 +392,10 @@
       call openfils(residue)
 
       do isr = 1, nsubr
-          ! this prints header to plot.out file (isr not yet set)
+          ! this prints header to plot.out file
           call plotdata( isr, restot(isr), croptot(isr), biotot(isr), noerod(isr), cellstate )  ! print to plot data file
-          ! this prints header to decomp.out file (isr not yet set)
-          call bpools(1,1,1,isr, residue(1:size(residue,1),isr), restot(isr), croptot(isr), biotot(isr), decompfac(isr))
+          ! this prints header to decomp.out file
+          call bpools( isr, residue(1:size(residue,1),isr), restot(isr), croptot(isr), biotot(isr), decompfac(isr) )
 
           ! Initialize the management file and rotation counters
           call mfinit(isr, tinfil(isr))
@@ -517,12 +519,15 @@
 ! begin initialization simulation phase
       init_loop = .true. ! Signifies that we are in the "initialization" loop
       do am0jd = ijday, end_init_jday   !will not enter if end before beginning
-        
-         call caldatw (cd, cm, cy)
-      ! determine number of days in the year
+
+         ! store day for use in simulation date routines
+         call update_simulation_date( am0jd )
+         call get_simdate( cd, cm, cy )
+
+         ! determine number of days in the year
          ndiy = 365; if (isleap(cy) .eqv. .true.) ndiy = 366
          call getcli(cd, cm, cy); call getwin(cd, cm, cy)
-      ! print current day of simulation to screen periodically
+         ! print current day of simulation to screen periodically
          daysim = daysim + 1
          if ((cm .eq. 1) .and. (cd .eq. 1)) then
             yrsim = yrsim + 1
@@ -531,20 +536,20 @@
             call flush(6)
          end if
          do isr=1,nsubr   ! do multiple subregion      
-!         isr = 1 !Note: we are no longer dealing with multiple subregions here
-          call submodels(isr, cd, cm, cy, residue(1:size(residue,1),isr), restot(isr), croptot(isr),  &
+          ! isr = 1 !Note: we are no longer dealing with multiple subregions here
+          call submodels(isr, residue(1:size(residue,1),isr), restot(isr), croptot(isr),  &
      &                   biotot(isr), decompfac(isr), mandatbs(isr)%mandate)
           ! set initialization flag to .false. after first day
           if (am0ifl) am0ifl = .false.
 
           call plotdata( isr, restot(isr), croptot(isr), biotot(isr), noerod(isr), cellstate )  ! print to plot data file
           ! write decomposition biomass pool amounts to files
-          call bpools(cd,cm,cy,isr, residue(1:size(residue,1),isr), restot(isr), croptot(isr), biotot(isr), decompfac(isr))
+          call bpools(isr, residue(1:size(residue,1),isr), restot(isr), croptot(isr), biotot(isr), decompfac(isr))
 !        write(*,*) 'weps:yrsim cd,cm,cy am0jd,daysim',                 &
 !     &              yrsim," ",cd,cm,cy," ",am0jd,daysim
 
          ! if last day of year, check for end of rotation
-         if (dayear(cd,cm,cy) .eq. ndiy) then
+         if (get_simdate_doy() .eq. ndiy) then
             ! check if at end of subregion's rotation cycle
             if (mod(amnryr(isr),mperod(isr)) == 0) then
                amnryr(isr) = 1
@@ -565,6 +570,7 @@
       call init_wepp(1)
 
       am0jd = ijday           ! Reset loop counter to first day of simulation
+      call update_simulation_date( am0jd ) ! store for use by simulation day routines
       daysim = 0              ! Reset to zero (blkdat.for)
       yrsim = 0               ! Reset to zero (weps.for)
       call getcli(0, cm, cy)  ! Reset cligen file (day == 0)
@@ -592,7 +598,10 @@
 
          do am0jd = ijday,lcaljday
 
-            call caldatw (cd, cm, cy)
+            ! store day for use in simulation date routines
+            call update_simulation_date( am0jd )
+            call get_simdate (cd, cm, cy)
+
             ! determine number of days in the year
             ndiy = 365; if (isleap(cy) .eqv. .true.) ndiy = 366
             call getcli(cd, cm, cy); call getwin(cd, cm, cy)
@@ -613,19 +622,19 @@
 
 !            isr = 1 !Note: we are no longer dealing with multiple subregions here
             do isr=1,nsubr   ! do multiple subregion     
-            call submodels(isr, cd, cm, cy, residue(1:size(residue,1),isr), restot(isr), croptot(isr),&
+            call submodels(isr, residue(1:size(residue,1),isr), restot(isr), croptot(isr),&
      &                     biotot(isr), decompfac(isr), mandatbs(isr)%mandate)
 
             call plotdata( isr, restot(isr), croptot(isr), biotot(isr), noerod(isr), cellstate )  ! print to plot data file
 
             ! write decomposition biomass pool amounts to files
-            call bpools(cd,cm,cy,isr, residue(1:size(residue,1),isr), restot(isr), croptot(isr), biotot(isr), decompfac(isr))
+            call bpools(isr, residue(1:size(residue,1),isr), restot(isr), croptot(isr), biotot(isr), decompfac(isr))
 
             ! set initialization flag to .false. after first day
             if (am0ifl) am0ifl = .false.
 
             ! if last day of year, check for end of rotation
-            if (dayear(cd,cm,cy) .eq. ndiy) then
+            if (get_simdate_doy() .eq. ndiy) then
                ! check if at end of subregion's rotation cycle
                if (mod(amnryr(isr),mperod(isr)) == 0) then
                   amnryr(isr) = 1
@@ -666,6 +675,8 @@
          am0cgf = .false.
          am0ifl = .false.
          am0jd = ijday           ! Reset loop counter to first day of simulation
+         ! store day for use in simulation date routines
+         call update_simulation_date( am0jd )
          daysim = 0              ! Reset to zero (blkdat.for)
          yrsim = 0               ! Reset to zero (weps.for)
          call getcli(0, cm, cy)  ! Reset cligen file (day == 0)
@@ -708,7 +719,9 @@
          report_loop = .true.  ! Signifies that we are in the "report" loop
          do am0jd = ijday,ljday
 
-            call caldatw (cd, cm, cy)
+            ! store day for use in simulation date routines
+            call update_simulation_date( am0jd )
+            call get_simdate (cd, cm, cy)
 
             ! determine number of days in the year
             ndiy = 365; if (isleap(cy) .eqv. .true.) ndiy = 366
@@ -731,7 +744,7 @@
 !           if (am0jd.eq.ljday) call dbgdmp(daysim, isr, residue(isr), biotot(isr))
 
             do isr=1,nsubr   ! do multiple subregion     
-               call submodels(isr, cd, cm, cy, residue(1:size(residue,1),isr), restot(isr), croptot(isr), &
+               call submodels(isr, residue(1:size(residue,1),isr), restot(isr), croptot(isr), &
                               biotot(isr), decompfac(isr), mandatbs(isr)%mandate)
             end do
 
@@ -778,13 +791,13 @@
                call sci_cum( isr, restot(isr), cellstate )   ! Keep running total for soil conditioning index (SCI)
                call plotdata( isr, restot(isr), croptot(isr), biotot(isr), noerod(isr), cellstate )  ! print to plot data file
                ! write decomposition biomass pool amounts to files
-               call bpools(cd,cm,cy,isr, residue(1:size(residue,1),isr), restot(isr), croptot(isr), biotot(isr), decompfac(isr))
+               call bpools(isr, residue(1:size(residue,1),isr), restot(isr), croptot(isr), biotot(isr), decompfac(isr))
 
 !           write(*,*) 'weps:yrsim cd,cm,cy am0jd,daysim',              &
 !    &              yrsim," ",cd,cm,cy," ",am0jd,daysim
 
                ! if last day of year, check for end of rotation
-               if (dayear(cd,cm,cy) .eq. ndiy) then
+               if (get_simdate_doy() .eq. ndiy) then
                   ! check if at end of subregion's rotation cycle
                   if (mod(amnryr(isr),mperod(isr)) == 0) then
                      ! end of management rotation cycle
@@ -802,7 +815,7 @@
             if (am0ifl) am0ifl = .false.
 
             ! how many times have we passed maxper
-            if (dayear(cd,cm,cy) .eq. ndiy) then
+            if (get_simdate_doy() .eq. ndiy) then
                if (mod(cy,maxper) == 0) then
                   ncycles = ncycles + 1
                   ! trigger confidence interval calculation

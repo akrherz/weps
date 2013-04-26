@@ -17,7 +17,7 @@
 !     wind, erosion, hydrology, tillage, soil, crop, decomposition
 !     management
 
-      use weps_interface_defs
+      use datetime_mod, only: get_simdate
       use file_io_mod, only: luocdb
       use biomaterial, only: biototal
       use erosion_data_struct_defs, only: awadir, awhrmx, awudmx, awudmn
@@ -85,7 +85,7 @@
           tyr = -1
           tisr = -1
       end if
-      call caldatw (cd, cm, cy)
+      call get_simdate (cd, cm, cy)
 
 !     + + + INPUT FORMATS + + +
 

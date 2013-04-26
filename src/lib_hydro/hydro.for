@@ -44,10 +44,11 @@
 !     hydrology
 
       use weps_interface_defs
+      use datetime_mod, only: get_simdate, get_simdate_doy
       use file_io_mod, only: luohydro, luohlayers, luowepphdrive
       use biomaterial, only: biototal
       use p1unconv_mod, only: mtomm
-      use timer_def, only: TIMHYDR, TIMDARC, TIMSTART, TIMSTOP
+      use timer_mod, only: timer, TIMHYDR, TIMDARC, TIMSTART, TIMSTOP
       use erosion_data_struct_defs, only: anemht, awzzo, awzdisp, wzoflg
       use grid_mod, only: amxsim
       use Points_Mod, only: slen
@@ -299,7 +300,6 @@
 !     caldat
 
 !     + + + FUNCTION DECLARATIONS + + +
-!      integer dayear
 !      real dawn
 !      real daylen
 !      real radnet
@@ -355,8 +355,8 @@
 
 !     + + + DATA INITIALIZATIONS + + +
 !     Calculate hour of sunrise
-      call caldatw(day, mo, yr)
-      idoy = dayear(day, mo, yr)
+      call get_simdate(day, mo, yr)
+      idoy = get_simdate_doy()
       rise = dawn(amalat, amalon, idoy, beamrise)
       daylength = daylen(amalat, idoy, beamrise)
 
@@ -719,7 +719,6 @@
 !     Print the daily soil water balance results to hydro.out
       if ((am0hfl .eq. 1).or.(am0hfl .eq. 3).or.(am0hfl .eq. 5).or.     &
      &   (am0hfl .eq.7)) then
-         call caldatw(day,mo,yr)
          ! insert double blank line to break years into blocks for graphing
          if( idoy .eq. 1 ) then
              write(luohydro,*)

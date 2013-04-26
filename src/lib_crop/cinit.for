@@ -12,7 +12,6 @@
      &           bsmno3,                                                &
      &           bc0fd1, bc0fd2, bctopt, bctmin,                        &
      &           cc0fd1, cc0fd2,                                        &
-     &           dd, mm, yy,                                            &
      &           bcthudf, bctdtm, bcthum, bc0hue, bcdmaxshoot,          &
      &           bc0shoot, bc0growdepth, bc0storeinit,                  &
      &           bcmstandstem, bcmstandleaf, bcmstandstore,             &
@@ -34,11 +33,12 @@
 !     Initialization
 
       use weps_interface_defs
+      use datetime_mod, only: get_simdate_doy
       use file_io_mod, only: luoinpt
       use p1unconv_mod, only: mgtokg, mmtom
 
 !     + + + ARGUMENT DECLARATIONS + + +
-      integer bnslay, dd, mm, yy, bcthudf, bctdtm
+      integer bnslay, bcthudf, bctdtm
       real bszlyt(*)  ! added so a local variable would be set correctly - LEW
       real bszlyd(*), bsdblk(*), bsfcce(*), bsfcec(*), bsfsmb(*)
       real bsfom(*), bsfcla(*), bs0ph(*)
@@ -144,7 +144,6 @@
       include 'crop/p1crop.inc'
 
 !     + + + FUNCTION DECLARATIONS + + +
-!      integer dayear
 !      real daylen
 !      real huc1
 
@@ -392,8 +391,7 @@
       hlmx = daylen(amalat, sdmx, civilrise)
 
 !     planting day of year
-      call caldatw(dd, mm, yy)
-      pdate = dayear(dd, mm, yy)
+      pdate = get_simdate_doy()
 
 !     initial daylength calculations
       hrlt = daylen(amalat, pdate, civilrise)

@@ -3,7 +3,7 @@
 !$Revision$
 !$HeadURL$
 
-      subroutine manage( sr, dd, mm, yyyy, syear, lopdd, lopmm, lopyy,  &
+      subroutine manage( sr, syear, lopdd, lopmm, lopyy,                &
      &                   residue, biotot, mandate)
 
 !     + + + PURPOSE + + +
@@ -21,6 +21,7 @@
 !     tillage, management
 
       use weps_interface_defs
+      use datetime_mod, only: difdat, get_simdate
       use file_io_mod, only: luomanage
       use biomaterial, only: biomatter, biototal
       use mandate_mod, only: opercrop_date
@@ -37,7 +38,7 @@
 ! ***      include 's1layr.inc'      
 
 !     + + + ARGUMENT DECLARATIONS + + +
-      integer sr, dd, mm, yyyy, syear
+      integer sr, syear
       integer lopdd, lopmm, lopyy
       type(biomatter), dimension(:), intent(inout) :: residue
       type(biototal), intent(in) :: biotot
@@ -45,18 +46,18 @@
 
 !     + + + ARGUMENT DEFINITIONS + + +
 !        sr - the subregion number
-!        dd - current simulation day
-!        mm - current simulation month
-!      yyyy - current simulation year
 !     syear - starting year of the simulation run
 !     lopdd - day of last operation
 !     lopmm - month of last operation
 !     lopyy - year of last operation
 
 !     + + + LOCAL VARIABLES + + +
-      integer myear, month, day, year
+      integer dd, mm, yyyy, myear, month, day, year
       character*256   line
 
+!        dd - current simulation day
+!        mm - current simulation month
+!      yyyy - current simulation year
 !     myear - determines the "year offset" within a period of years
 !     month - month from the management file
 !       day - day from the management file
@@ -78,6 +79,9 @@
         write(*,*) 'Sub-region not in data file', sr
         return
       endif
+
+      ! get current simulation day, month, year
+      call get_simdate( dd, mm, yyyy )
 
       ! reset any global variables whose setting should only be valid
       ! for one day

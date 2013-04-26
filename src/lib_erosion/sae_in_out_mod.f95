@@ -31,7 +31,7 @@ module sae_in_out_mod
 !     print out input file for stand alone erosion
 
 !     + + + Modules Used + + +
-      use weps_interface_defs
+      use datetime_mod, only: caldat
       use file_io_mod, only: fopenk, makenamnum
       use grid_mod, only: amxsim, amasim
       use subregions_mod
@@ -462,9 +462,8 @@ module sae_in_out_mod
 !     +++  PURPOSE +++
 !     To print output desired from standalone EROSION submodel
 
-      use weps_interface_defs
       use file_io_mod, only: fopenk, makenamnum
-      use datetime_mod, only: get_systime_string
+      use datetime_mod, only: get_systime_string, caldat
       use erosion_data_struct_defs, only: cellsurfacestate, am0efl
       use grid_mod, only: imax, jmax, amasim, amxsim
 
@@ -773,8 +772,7 @@ module sae_in_out_mod
 !     To print to file tst.out some key variables used in erosion
 !     use wind dir of 270 for most to see output along wind direction
 
-      use weps_interface_defs
-      use datetime_mod, only: get_systime_string
+      use datetime_mod, only: get_systime_string, caldat
       use erosion_data_struct_defs, only: subregionsurfacestate, cellsurfacestate, awzypt, anemht, wzoflg, ntstep
       use grid_mod, only: awa, kbr, imax, jmax, amasim, amxsim
 
@@ -998,7 +996,7 @@ module sae_in_out_mod
 !     To print to file tst.out some key variables used in erosion
 !     use wind direction of 270 to see output along downwind direction
 
-      use weps_interface_defs
+      use datetime_mod, only: caldat
       use erosion_data_struct_defs, only: cellsurfacestate, ntstep
       use grid_mod, only: imax, jmax
 
@@ -1234,8 +1232,7 @@ module sae_in_out_mod
 !           & sets  ae0efl to 99, then calls sbemit
 !            to print period emissions for an erosion day.
 
-      use weps_interface_defs
-      use datetime_mod, only: get_systime_string
+      use datetime_mod, only: get_systime_string, caldat
       use erosion_data_struct_defs, only: cellsurfacestate, ntstep
       use grid_mod, only: imax, jmax
 

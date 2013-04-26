@@ -60,6 +60,7 @@
 !     Wind erosion crop model
 
       use weps_interface_defs
+      use datetime_mod, only: get_simdate_doy
       use file_io_mod, only: luocrop, luoshoot
       use p1unconv_mod, only: mgtokg
 
@@ -264,13 +265,12 @@
       include 'crop/cfert.inc'
 
 !     + + + LOCAL VARIABLES + + +
-      integer lay, dd, mm, yy
+      integer lay
       real root_store_rel, pot_stems, pot_leaf_mass
       real vern_delay, photo_delay, hu_delay, trend
       integer regrowth_flg
 
 !     + + + LOCAL VARIABLE DEFINITIONS + + +
-!     dd,mm,yy - the current day, month, and year
 !     root_store_rel - root storage which could be released for regrowth
 !     pot_stems - potential number of stems which could be released for regrowth
 !     pot_leaf_mass - potential leaf mass which could be released for regrowth.
@@ -318,22 +318,19 @@
 !             0 - returns the shoot number constrained by bcdmaxshoot
 
 !     + + + SUBROUTINES CALLED + + +
-!     caldat
 !     cinit
 !     huc1
 !     growth
 !     npcy
 !
 !     + + + FUNCTION DECLARATIONS + + +
-!      integer dayear
 !      real huc1
 !      real daylen
 
 !     + + + END OF SPECIFICATIONS + + +
 
 !     day of year
-      call caldatw(dd, mm, yy)
-      jd = dayear(dd, mm, yy)
+      jd = get_simdate_doy()
 
       do 5 lay = 1, bnslay
          bsfcce(lay) = bsfcce(lay) * 100.
@@ -354,7 +351,6 @@
      &              bsmno3,                                             &
      &              bc0fd1, bc0fd2, bctopt, bctmin,                     &
      &              cc0fd1, cc0fd2,                                     &
-     &              dd, mm, yy,                                         &
      &              bcthudf, bctdtm, bcthum, bc0hue, bcdmaxshoot,       &
      &              bc0shoot, bc0growdepth, bc0storeinit,               &
      &              bcmstandstem, bcmstandleaf, bcmstandstore,          &

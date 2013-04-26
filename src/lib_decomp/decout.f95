@@ -10,7 +10,7 @@
 !       + + +  PURPOSE + + + +
 !      This subroutine writes decomposition output
 
-      use weps_interface_defs
+      use datetime_mod, only: get_simdate
       use file_io_mod, only: luod_above, luod_below
       use biomaterial, only: biomatter
 
@@ -42,7 +42,7 @@
 
 ! + + + END SPECIFICATIONS + + +
 
-       call caldatw(cd, cm, cy)
+       call get_simdate(cd, cm, cy)
 
 ! write output for subregion 1 only
 ! standing and surface residues

@@ -18,6 +18,7 @@
 
 !     + + + GLOBAL COMMON BLOCKS + + +
       use weps_interface_defs
+      use datetime_mod, only: julday
       use file_io_mod, only: fopenk, luolog
 
       include 'p1werm.inc'

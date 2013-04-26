@@ -9,6 +9,7 @@
 !     Edit History
 !     09-Mar-99   wjr   created
 
+      use datetime_mod, only: isleap
       use file_io_mod, only: luicli
       use erosion_data_struct_defs, only: awdair
 
@@ -29,10 +30,6 @@
       character   line*256
       integer     ioc
       real        dummy
-
-!     + + + FUNCTION DECLARATIONS + + +
-
-      logical isleap
 
 ! This code added to re-initialize the reading of a cligen file
 ! following the "initialization" phase.  It is triggered if the

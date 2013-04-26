@@ -12,6 +12,7 @@
 !     09-Mar-99   wjr   created
 
       use weps_interface_defs
+      use datetime_mod, only: isleap
       use file_io_mod, only: luiwin
       use erosion_data_struct_defs, only: awadir, awhrmx, awudmx,       &
      &                                    awudmn, awudav, subday, ntstep

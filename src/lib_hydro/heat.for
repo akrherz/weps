@@ -29,6 +29,7 @@
 !     + + + COMMON BLOCKS + + +
 
       use weps_interface_defs
+      use datetime_mod, only: get_simdate
       use file_io_mod, only: luotempsoil
       use p1unconv_mod, only: mmtom, pi, secperday
 
@@ -353,7 +354,7 @@
 
       if ((am0hfl .eq. 4) .or. (am0hfl .eq. 5) .or. (am0hfl .eq. 6)     &
      &   .or. (am0hfl .eq. 7)) then
-         call caldatw (day,mo,yr)
+         call get_simdate (day,mo,yr)
          write(luotempsoil,2040) day,mo,yr,(bhtsmn(lay), bhtsmx(lay),   &
      &      lay=1,layrsn)
       end if

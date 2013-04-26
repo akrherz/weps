@@ -17,7 +17,7 @@ module sberod_mod
 
       use erosion_data_struct_defs
       use grid_mod, only: i1, i2, i3, i4, i5, i6, sin_awa, cos_awa, tan_awa, imax, jmax, ix, jy
-      use timer_def, only: TIMSBEROD, TIMSBQOUT, TIMSTART, TIMSTOP
+      use timer_mod, only: timer, TIMSBEROD, TIMSBQOUT, TIMSTART, TIMSTOP
       use process_mod, only: sbqout
 
 !     +++ ARGUMENT DECLARATIONS +++
@@ -283,7 +283,7 @@ module sberod_mod
       use grid_mod, only: kbr, imax, jmax
       use barriers_mod, only: barrier
       use wind_mod, only: biodrag, sbzo, sbwus
-      use process_mod, only: sbwust
+      use process_mod, only: sbwust, sbaglos
 
 !     +++ ARGUMENT DECLARATIONS +++
       integer, intent(in) :: wustfl

@@ -39,13 +39,24 @@ module datetime_mod
   public :: get_systime
   public :: get_systime_string
 
-!  public :: update_simulation_date
+  public :: update_simulation_date
 
-!  public interface get_simdate
-!      module procedure get_simdate_day_month_year
-!      module procedure get_simdate_mname_day_year
-!      module procedure get_simdate_jday_doy
-!  end interface get_simdate
+  interface get_simdate
+      module procedure get_simdate_day_month_year
+      module procedure get_simdate_mname_day_year
+      module procedure get_simdate_jday_doy
+  end interface get_simdate
+
+  public :: get_simdate
+  public :: get_simdate_doy
+  public :: get_simdate_year
+
+  public :: caldat
+  public :: julday
+  public :: difdat
+  public :: dayear
+  public :: lstday
+  public :: isleap
 
 contains
 
@@ -85,6 +96,18 @@ contains
       write( systime_string, "(a3,' ',i2.2,', ',i4,' ', i2.2,':',i2.2,':',i2.2)" ) mname, day, year, hour, minute, second
     end function get_systime_string
 
+    subroutine update_simulation_date( julian_day )
+      integer, intent(in) :: julian_day
+      ! set julian_day
+      sim_date%julian_day = julian_day
+      ! set day, month, year
+      call caldat( julian_day, sim_date%dt(3), sim_date%dt(2), sim_date%dt(1) ) 
+      ! set three letter abbreviation for month of year
+      sim_date%mstring = find_month_string( sim_date%dt(2) )
+      ! set day_of_year
+      sim_date%day_of_year = dayear( sim_date%dt(3), sim_date%dt(2), sim_date%dt(1) )
+    end subroutine update_simulation_date
+
     subroutine get_simdate_day_month_year( day, month, year )
       integer, intent(out) :: day, month, year
       ! call internal routine with time desired
@@ -102,6 +125,16 @@ contains
       integer, intent(out) :: julian_day, day_of_year
       call get_time_jday_doy( sim_date, julian_day, day_of_year )
     end subroutine get_simdate_jday_doy
+
+    function get_simdate_doy() result( day_of_year )
+      integer :: day_of_year
+      day_of_year = get_time_doy( sim_date )
+    end function get_simdate_doy
+
+    function get_simdate_year() result( year )
+      integer :: year
+      year = get_time_year( sim_date )
+    end function get_simdate_year
 
     subroutine get_time_day_month_year( datetime, day, month, year )
       type(date_time_numbers_strings), intent(in) :: datetime
@@ -131,6 +164,18 @@ contains
       day_of_year = datetime%day_of_year
     end subroutine get_time_jday_doy
 
+    function get_time_doy( datetime ) result( day_of_year )
+      type(date_time_numbers_strings), intent(in) :: datetime
+      integer :: day_of_year
+      day_of_year = datetime%day_of_year
+    end function get_time_doy
+
+    function get_time_year( datetime ) result( year )
+      type(date_time_numbers_strings), intent(in) :: datetime
+      integer :: year
+      year = datetime%dt(1)
+    end function get_time_year
+
     function find_month_string( num_month ) result( mstring )
       integer, intent(in) :: num_month
       character(len=3) :: mstring
@@ -152,6 +197,64 @@ contains
         case default; mstring = "???"
       end select
     end function find_month_string
+
+    subroutine caldat (julian, dd, mm, yyyy)
+
+!     CALDAT is taken from _Numerical_Recipes:_The_Art_of_Scientific_Computing_
+
+!     + + + PURPOSE + + +
+!     Inverse of the function JULDAY. Here 'julian' is input as a Julian Day
+!     Number, and the routine outputs the dd, mm, and yyyy on which the
+!     specified Julian Day started at noon.
+
+!     problems were found with the method above for long runs such as:
+!     - the ten missing days in 1582 (we really just need 365.25 day in each year)
+!     - after 1700, leap years return feb 31, not 29 and the wrong year
+!     - it may only be the fortran implementation and floating point problems
+
+!     Based on info from http://en.wikipedia.org/wiki/Julian_day, which references
+!     http://www.astro.uu.nl/~strous/AA/en/reken/juliaansedag.html, the code
+!     was revised to use the Astronomical Gregorian calendar, which takes the
+!     present pattern of leap years back into the past. This is ideal for
+!     our purposes with no year getting short changed. Integer math method
+!     is taken from Wikipedia article.
+
+!     + + + ARGUMENT DECLARATIONS + + +
+      integer, intent(in) :: julian ! Julian Day Number
+      integer, intent(out) :: dd     ! day of month in the range 1-31
+      integer, intent(out) :: mm     ! month of year in the range 1-12
+      integer, intent(out) :: yyyy   ! year (positive A.D., negative B.C.)
+
+!     + + + PARAMETERS + + +
+!     Gregorian Calendar was adopted on Oct. 15, 1582.
+!      parameter   (igreg=2299161)
+
+!     + + + LOCAL VARIABLES + + +
+      integer s1, s2, s3, s4, n_n, i_i, q_q
+
+!     + + + END SPECIFICATIONS + + +
+
+      s1 = julian + 68569 
+
+      n_n = floor(4*s1/146097.0)
+
+      s2 = s1 - floor((146097*n_n + 3)/4.0)
+
+      i_i = floor(4000*(s2 + 1)/1461001.0)
+
+      s3 = s2 - floor(1461*i_i/4.0) + 31 
+
+      q_q = floor(80*s3/2447.0)
+
+      s4 = floor(q_q/11.0)
+
+      dd = s3 - floor(2447*q_q/80.0)
+
+      mm = q_q + 2 - 12*s4 
+
+      yyyy = 100*(n_n - 49) + i_i + s4 
+
+    end subroutine caldat
 
     function julday( dd, mm, yyyy ) result( julian_day )
 
@@ -187,9 +290,9 @@ contains
                  + (367 * (mm - 2 - 12 * ((mm - 14)/12)))/12 &
                  - (3 * ((yyyy + 4900 + (mm - 14)/12)/100))/4 + dd - 32075
 
-      end function julday
+    end function julday
 
-      function difdat( d1, m1, yyy1, d2, m2, yyy2 ) result( diff )
+    function difdat( d1, m1, yyy1, d2, m2, yyy2 ) result( diff )
 
 !     + + + PURPOSE + + +
 !     Two dates are passed to this function and the number of days between
@@ -214,9 +317,9 @@ contains
 
       diff = julday (d2, m2, yyy2) - julday (d1, m1, yyy1)
 
-      end function difdat
+    end function difdat
 
-      function dayear( dd, mm, yyyy ) result( day_of_year )
+    function dayear( dd, mm, yyyy ) result( day_of_year )
 
 !     + + + PURPOSE + + +
 !     Given a date in dd/mm/yyyy format,
@@ -233,6 +336,65 @@ contains
 !     Get the difference in days + 1
       day_of_year = difdat( 1, 1, yyyy, dd, mm, yyyy ) + 1
 
-      end function dayear
+    end function dayear
+
+    function lstday( mm, yyyy ) result( last_day_of_month )
+
+!     + + + PURPOSE + + +
+!     Given a date in mm/yyyy format, lstday will return the last day
+!     of that month.
+
+!     + + + ARGUMENT DECLARATIONS + + +
+      integer, intent(in) ::mm     ! month
+      integer, intent(in) ::yyyy   ! year
+      integer :: last_day_of_month
+
+!     + + + LOCAL VARIABLES + + +
+      integer lm, ld, ly  ! local month, day, year
+      integer julian      ! julian day value
+
+!     + + + END SPECIFICATIONS + + +
+
+      ! Go to the first day of the next month (This is exactly one day after the day we want to find)
+      lm = mm + 1
+      ld = 1
+      ly = yyyy
+      if( lm .eq. 13 ) then
+         lm = 1
+         ly = yyyy + 1
+      end if
+
+      ! We simply find the Julian Day and subtract 1 day to get the last day of the previous month
+      julian = julday( ld, lm, ly ) - 1
+
+      ! Now convert back to gregorian calendar to get the actual day
+      call caldat( julian, ld, lm, ly )
+      last_day_of_month = ld
+
+    end function lstday
+
+    function isleap (yyyy) result( leap_year_TF )
+
+!     + + + PURPOSE + + +
+!     Given a year in yyyy format, isleap will return
+!     a .true. if it is a leap year or a .false. if it is not a leap year.
+
+!     + + + ARGUMENT DECLARATIONS + + +
+      integer, intent(in) :: yyyy  ! year to be tested
+      logical :: leap_year_TF
+
+!     + + + LOCAL VARIABLES + + +
+      integer ld   ! local day
+
+!     + + + END SPECIFICATIONS + + +
+
+      ! Go to the last day of February and see if the 29th exists
+      ld = lstday(2, yyyy)
+      if (ld.eq.29) then
+         leap_year_TF = .TRUE.
+      else
+         leap_year_TF = .FALSE.
+      endif
+    end function isleap
 
 end module datetime_mod

@@ -50,9 +50,9 @@
 
     subroutine allmandates( mandatbs )
 
-       type(mandate_array), dimension(:) :: mandatbs
+       use datetime_mod, only: difdat
 
-       integer :: difdat ! function definition
+       type(mandate_array), dimension(:) :: mandatbs
 
        integer :: npass       ! counter 1 = count dates prior to allocation, 2 = populate date array
        integer :: alloc_stat

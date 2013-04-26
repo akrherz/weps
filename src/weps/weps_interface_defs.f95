@@ -69,7 +69,6 @@
      &           bsmno3,                                                &
      &           bc0fd1, bc0fd2, bctopt, bctmin,                        &
      &           cc0fd1, cc0fd2,                                        &
-     &           dd, mm, yy,                                            &
      &           bcthudf, bctdtm, bcthum, bc0hue, bcdmaxshoot,          &
      &           bc0shoot, bc0growdepth, bc0storeinit,                  &
      &           bcmstandstem, bcmstandleaf, bcmstandstore,             &
@@ -417,32 +416,9 @@
       type(biomatter), dimension(:), intent(in) :: residue
       end subroutine decout
 !---------------- EROSION Routines ---------------------------
-      subroutine erosion( min_erosion_awu, SURF_UPD_FLG, subrsurf, noerod, cellstate )
-      use file_io_mod, only: luo_sgrd, luo_emit
-      use erosion_data_struct_defs
-      real min_erosion_awu       !Minimum erosive wind speed (m/s) to evaluate for erosion loss
-      integer :: SURF_UPD_FLG    ! erosion surface updating (0 - disabled, 1 - enabled)
-      type(subregionsurfacestate), dimension(:) :: subrsurf  ! subregion surface conditions (erosion specific set)
-      type(threshold), dimension(:), intent(out) :: noerod                 ! report values to show which factors prevented erosion
-      type(cellsurfacestate), dimension(0:,0:), intent(out) :: cellstate     ! initialized grid cell state values
-      end subroutine erosion
-!---------------------------
       subroutine calcwu()
       end subroutine calcwu
 !---------------------------
-      subroutine erodinit( noerod, cellstate )
-      use erosion_data_struct_defs
-      type(threshold), dimension(:), intent(inout) :: noerod                 ! report values to show which factors prevented erosion
-      type(cellsurfacestate), dimension(0:,0:), intent(inout) :: cellstate     ! initialized grid cell state values
-      end subroutine erodinit
-!---------------------------
-      subroutine sbaglos (wus, wust, wusto, sf84ic, asvroc,             &
-     &                    smaglosmx, smaglos, sf84mn, sf84)
-
-      real wus, wust, wusto, sf84ic, asvroc
-      real smaglosmx, smaglos, sf84mn, sf84 
-      end subroutine sbaglos
-!-----------------------------
 
 !---------------  HYDRO Routines -----------------------------
       real function acplwu (awcr, awcr_crit, wup)
@@ -971,9 +947,9 @@
 !------------------------------      
 
 !---------------- MAIN Routines ------------------------------
-      subroutine bpools (cd, cm, cy, isr, residue, restot, croptot, biotot, decompfac)
+      subroutine bpools (isr, residue, restot, croptot, biotot, decompfac)
       use biomaterial, only: biomatter, biototal, decomp_factors
-      integer cd, cm, cy, isr
+      integer isr
       type(biomatter), dimension(:), intent(in) :: residue
       type(biototal), intent(in) :: restot
       type(biototal), intent(in) :: croptot
@@ -1099,10 +1075,10 @@
       integer       isr
       end subroutine spllay_ifc
 !--------------------------------
-      subroutine submodels (isr, cd, cm, cy, residue, restot, croptot, biotot, decompfac, mandate)
+      subroutine submodels (isr, residue, restot, croptot, biotot, decompfac, mandate)
       use biomaterial, only: biomatter, biototal, decomp_factors
       use mandate_mod, only: opercrop_date
-      integer isr, cd, cm, cy
+      integer isr
       type(biomatter), dimension(:), intent(inout) :: residue
       type(biototal), intent(inout) :: restot, croptot, biotot
       type(decomp_factors), intent(inout) :: decompfac
@@ -1196,10 +1172,10 @@
       REAL    :: mass_left
       end subroutine get_calib_yield
 !--------------------------
-      subroutine manage( sr, dd, mm, yyyy, syear, lopdd, lopmm, lopyy, residue, biotot, mandate)
+      subroutine manage( sr, syear, lopdd, lopmm, lopyy, residue, biotot, mandate)
       use biomaterial, only: biomatter, biototal
       use mandate_mod, only: opercrop_date
-      integer sr, dd, mm, yyyy, syear
+      integer sr, syear
       integer lopdd, lopmm, lopyy
       type(biomatter), dimension(:), intent(inout) :: residue
       type(biototal), intent(in) :: biotot
@@ -2612,34 +2588,6 @@ SUBROUTINE update_yrly_update_vars(isr, yrly_update, yrot_update, yr_update, cel
       integer ai_flag
       real depthtop, depthbot      
       end function valbydepth
-!-------------------------------------
-      subroutine   caldat (ijulian, dd, mm, yyyy)
-      integer   ijulian, dd, mm, yyyy
-      end subroutine caldat
-!-------------------------------------
-      subroutine   caldatw (dd, mm, yyyy)
-      integer   dd, mm, yyyy
-      end subroutine caldatw 
-!-------------------------------------
-      integer   function   dayear (dd, mm, yyyy)
-      integer dd, mm, yyyy
-      end function dayear
-!------------------------------------
-      integer   function   difdat (d1, m1, yyy1, d2, m2, yyy2)
-      integer d1, m1, yyy1, d2, m2, yyy2      
-      end function difdat
-!-----------------------------------
-      logical   function   isleap (yyyy)
-      integer yyyy   
-      end function isleap   
-!------------------------------------
-      integer   function   julday (dd, mm, yyyy)
-      integer   dd, mm, yyyy 
-      end function  julday    
-!------------------------------------
-      integer function  lstday (mm, yyyy)
-      integer mm, yyyy   
-      end function lstday   
 !------------------------------------
       subroutine   mvdate (delta, dd, mm, yyyy, nday, nmonth, nyear)
       integer delta, dd, mm, yyyy, nday, nmonth, nyear      

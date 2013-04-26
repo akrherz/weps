@@ -18,6 +18,7 @@
 !     management
 
       use weps_interface_defs
+      use datetime_mod, only: get_simdate
       use file_io_mod, only: luohdb
       use biomaterial, only: biototal
       use erosion_data_struct_defs, only: awadir, awhrmx, awudmx, awudmn
@@ -77,7 +78,7 @@
 
 !     + + + DATA INITIALIZATIONS + + +
 
-         call caldatw (cd, cm, cy)
+         call get_simdate (cd, cm, cy)
 
 
       if (am0ifl  .eqv. .true.) then

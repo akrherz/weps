@@ -38,6 +38,7 @@
 !     + + + GLOBAL COMMON BLOCKS + + +
 
       use weps_interface_defs
+      use datetime_mod, only: get_simdate_doy, get_simdate_year
       use file_io_mod, only: luosoilsurf, luosoillay
       include 'p1werm.inc'
       include 'wpath.inc'
@@ -141,7 +142,7 @@
       real szlyd(0:mnsz), laycenter(mnsz)
       real bsmls0
       real dcump
-      integer day, mo, yr, idoy
+      integer yr, idoy
       integer ldx, trigger(bslay)
 
 !     + + + LOCAL DEFINITIONS + + +
@@ -156,8 +157,6 @@
 !   laycenter - depth to middle of each soil layer, mm
 !   bsmls0    - prior value of bsmlos before update by SOIL, kg/m^2
 !   dcump     - total rain + sprinkler + snow-melt for current day.
-!   day       - current day of simulation for output.
-!   mo        - current month of simulation for output.
 !   yr        - current year of simulation for output.
 !   idoy      - day of year for output
 !   ldx       - index for layers
@@ -174,12 +173,6 @@
 !               5   - drying
 !               6   - warm_puddling
 !               7   - wet_bulk_den
-
-!     + + + FUNCTIONS CALLED + + +
-!      integer dayear
-
-!     + + + SUBROUTINES CALLED + + +
-!   caldat    - input: julian day, output: day, mo, yr
 
 !     + + + END SPECIFICATIONS + + +
 
@@ -259,8 +252,8 @@
 
       if ((am0sfl .eq. 1)) then
          ! get some date, day variables
-         call caldatw(day,mo,yr)
-         idoy = dayear(day, mo, yr)
+         yr = get_simdate_year()
+         idoy = get_simdate_doy()
 
          ! write output headers
          if( daysim .eq. 1 ) then

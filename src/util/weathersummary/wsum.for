@@ -13,6 +13,8 @@
 !     This subroutine summarizes the WINDGEN and CLIGEN weather
 !     simulation output files by month and year.
 
+      use datetime_mod, only: lstday
+
 !     author: John Tatarko
 !     version: 04/02/92
 

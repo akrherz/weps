@@ -10,13 +10,14 @@
 ! crop and individual biomass pools (not all pools have the same variables)
 
 
-      subroutine bpools (cd, cm, cy, isr, residue, restot, croptot, biotot, decompfac)
+      subroutine bpools( isr, residue, restot, croptot, biotot, decompfac )
 
+      use datetime_mod, only: get_simdate_doy, get_simdate_year
       use biomaterial, only: biomatter, biototal, decomp_factors
       use file_io_mod, only: luocrp1, luobio1
 
 !     + + + ARGUMENT DECLARATIONS + + +
-      integer cd, cm, cy, isr
+      integer isr
       type(biomatter), dimension(:), intent(in) :: residue
       type(biototal), intent(in) :: restot
       type(biototal), intent(in) :: croptot
@@ -34,15 +35,15 @@
       include 'w1clig.inc'
 
 !     + + + LOCAL VARIABLES + + +
-      integer doy, idx
+      integer doy, cy, idx
       real total   !, saitotal !added by Simon
-
-!     + + + FUNCTIONS CALLED + + +
-      integer dayear
 
 !     + + + END OF SPECIFICATIONS + + +
 
-      doy = dayear (cd, cm, cy)
+      if( .not. am0ifl ) then
+        cy = get_simdate_year()
+        doy = get_simdate_doy()
+      end if
 
       if ((am0dfl .eq. 1).or.(am0dfl.eq.3)) then
 

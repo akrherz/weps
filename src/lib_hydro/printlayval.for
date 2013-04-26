@@ -15,6 +15,7 @@
 !     output hydro
 
       use weps_interface_defs
+      use datetime_mod, only: get_simdate_doy, get_simdate_year
       use file_io_mod, only: luohlayers
 
 !     + + + ARGUMENT DECLARATIONS + + +
@@ -51,7 +52,7 @@
       include 'hydro/clayomprop.inc'
 
 !     + + + LOCAL VARIABLES + + +
-      integer    idx, day, mo, yr
+      integer    idx, yr
       integer    idoy
       real       availwat, temp
       real       unsatcond, matricpot, soilrh
@@ -60,8 +61,6 @@
 
 !     + + + LOCAL DEFINITIONS + + +
 !     idx   - array index for loops
-!     day      - day of month
-!     mo       - month of year
 !     yr       - year of simulation
 !     availwat  - soil plant availale water content (for output)
 !     unsatcond - unsaturated hydraulic conductivity (m/s) (for output)
@@ -73,7 +72,6 @@
 !     slsoda - livermore solver for ordinary differential equations
 
 !     + + + FUNCTION DECLARATIONS + + +
-!      integer dayear
 !      real    availwc
 !      real    unsatcond_bc
 !      real    volwatadsorb
@@ -81,8 +79,8 @@
 
 !     + + + END SPECIFICATIONS + + +
 
-      call caldatw(day,mo,yr)
-      idoy = dayear(day, mo, yr)
+      yr = get_simdate_year()
+      idoy = get_simdate_doy()
       if( idoy .eq. 1 ) then
          ! insert double blank line to break years into blocks for graphing
          write(luohlayers,*)

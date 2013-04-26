@@ -22,6 +22,7 @@
 !     soil water redistribution, evaporation, runoff, deep percolation
 
       use weps_interface_defs
+      use datetime_mod, only: get_simdate_doy, get_simdate_year
       use file_io_mod, only: luowater
       use p1unconv_mod, only: pi, hrtosec, mtomm, mmtom
 
@@ -118,7 +119,7 @@
       integer    itol, itask, jt, iopt, neq(2)
       real       tday,tout,relerr(1),abserr(numeq)
       real       volw(numeq)
-      integer    kindex, hourstep, day, mo, yr
+      integer    kindex, hourstep, yr
 !      real       swc
       real       swci, ref_ranrough, ranrough
 !      integer    lstep,lfunc,ljac
@@ -154,8 +155,6 @@
 !                   (imaxlay+1) depth of water drained (m)
 !     kindex   - array index for loops
 !     hourstep - step counter for 24 hourly steps
-!     day      - day of month
-!     mo       - month of year
 !     yr       - year of simulation
 !     swc      - total depth of water in soil profile (mm)
 !     swci     - total depth of water in soil profile a start of day (mm)
@@ -189,7 +188,6 @@
 !      real   atmpreselev, depstore, fricfact, store
 !      real   calctht0
 !      real   evapredu
-!      integer dayear
 !      real   availwc
 !      real   intersect
 
@@ -432,8 +430,8 @@
 !  print out zero hour initialization values
       if ((am0hfl .eq. 2) .or. (am0hfl .eq. 3) .or.                     &
      &    (am0hfl .eq. 6) .or. (am0hfl .eq. 7)) then
-         call caldatw(day,mo,yr)
-         idoy = dayear(day, mo, yr)
+         yr = get_simdate_year()
+         idoy = get_simdate_doy()
          if( idoy .eq. 1 ) then
              write(luowater,*)
              write(luowater,*)

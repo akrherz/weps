@@ -6,6 +6,7 @@
       subroutine plotdata(sr, restot, croptot, biotot, noerod, cellstate)
 
       use weps_interface_defs
+      use datetime_mod, only: get_simdate, get_simdate_doy
       use file_io_mod, only: luoplt
       use biomaterial, only: biototal
       use erosion_data_struct_defs, only: threshold
@@ -128,8 +129,8 @@
            end if
         end if
 
-        call caldatw(day,month,year)
-        doy = dayear (day, month, year)
+        call get_simdate(day,month,year)
+        doy = get_simdate_doy()
 
         ! make operation name available for this day
         if ((lopday .eq. day) .and. (lopmon .eq. month) .and.           &

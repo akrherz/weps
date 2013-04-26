@@ -11,6 +11,7 @@
 
 !     + + + Modules Used + + +
       use weps_interface_defs
+      use datetime_mod, only: lstday
       use Polygons_Mod, only: create_polygon
       use subregions_mod, only: acct_poly, subr_poly
       use file_io_mod, only: fopenk, luicli, luiwin, luiwsd,            &

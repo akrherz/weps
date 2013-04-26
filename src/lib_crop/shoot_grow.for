@@ -23,6 +23,7 @@
 !     shoot growth
 
       use weps_interface_defs
+      use datetime_mod, only: get_simdate_doy, get_simdate_year
       use file_io_mod, only: luoshoot
       use p1unconv_mod, only: mgtokg, mmtom
 
@@ -105,7 +106,7 @@
       include 'command.inc'
 
 !     + + + LOCAL VARIABLES + + +
-      integer day, mo, yr, doy
+      integer yr, doy
       integer lay
       real shoot_hui, shoot_huiy
       real fexp_hui, fexp_huiy
@@ -119,8 +120,6 @@
       real lost_mass, dlfwt, dstwt, drpwt, drswt
 
 !     + + + LOCAL VARIABLE DEFINITIONS + + +
-!     day - day of month
-!     mo - month of year
 !     yr - year
 !     doy - day of year
 !     lay - index into soil layers for looping
@@ -169,13 +168,12 @@
 !     rootf - fraction of biomass allocated to roots when growing from seed
 
 !     + + + FUNCTIONS CALLED + + +
-!      integer dayear
       real frac_lay
 
 !     + + + END OF SPECIFICATIONS + + +
 
-      call caldatw(day, mo, yr)
-      doy = dayear (day, mo, yr)
+      yr = get_simdate_year()
+      doy = get_simdate_doy()
 
       ! fraction of shoot growth from stored reserves (today and yesterday)
       shoot_hui = min( 1.0, (hui - bcthu_shoot_beg)                     &

@@ -21,7 +21,7 @@
 !     + + + KEYWORDS + + +
 !     crop model status
 
-      use weps_interface_defs
+      use datetime_mod, only: get_simdate
       use file_io_mod, only: luoseason
 
 !     + + + ARGUMENT DECLARATIONS + + +
@@ -91,7 +91,7 @@
 !     + + + END OF SPECIFICATIONS + + +
 
 !     day of year
-      call caldatw(dd, mm, yy)
+      call get_simdate(dd, mm, yy)
 
       ! end of season print statements when crop submodel output flag set
       ! added initialization flag to prevent printing if crop not yet initialized

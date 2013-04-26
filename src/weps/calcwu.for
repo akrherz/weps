@@ -20,6 +20,7 @@
 !     wind speed, wind direction, sub-daily wind speed
 
       use weps_interface_defs
+      use datetime_mod, only: julday, get_simdate
       use file_io_mod, only: luiwsd, luo_subday
       use p1unconv_mod, only: pi
       use erosion_data_struct_defs, only: awadir, awhrmx, awudmx, awudmn
@@ -134,7 +135,7 @@
   500 call exit (1)
 ! 500 stop
 
-  600 call caldatw (day,month,year)
+  600 call get_simdate (day,month,year)
       if( am0efl.gt.0) then
         write(luo_subday,2000)                                          &
      &        day, month, year, awadir, (subday(i)%awu,i=1,ntstep)

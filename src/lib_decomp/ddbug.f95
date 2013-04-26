@@ -21,6 +21,7 @@
 !     management
 
       use weps_interface_defs
+      use datetime_mod, only: get_simdate
       use file_io_mod, only: luoddb
       use biomaterial, only: biomatter
       use debug_mod, only: tddbug
@@ -75,7 +76,7 @@
           tddbug(isr)%tmo = -1
           tddbug(isr)%tyr = -1
       end if
-      call caldatw (cd, cm, cy)
+      call get_simdate (cd, cm, cy)
 
 !     + + + INPUT FORMATS + + +
 

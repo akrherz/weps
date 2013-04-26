@@ -3,7 +3,7 @@
 !$Revision$
 !$HeadURL$
 
-      subroutine submodels (isr, cd, cm, cy, residue, restot, croptot,  &
+      subroutine submodels (isr, residue, restot, croptot,              &
      &                      biotot, decompfac, mandate)
 
       use weps_interface_defs
@@ -15,7 +15,7 @@
       include 'main/main.inc'   !daysim, lopday, lopmon, lopyr, iy
 
 !     + + + ARGUMENT DECLARATIONS + + +
-      integer isr, cd, cm, cy
+      integer isr
       type(biomatter), dimension(:), intent(inout) :: residue
       type(biototal), intent(inout) :: restot, croptot, biotot
       type(decomp_factors), intent(inout) :: decompfac
@@ -25,8 +25,7 @@
 !     restot          - structure array containing summary residue pool amounts for all subregions
 
 !        write(*,*) "Start manage"      !MANAGEment (tillage) submodel
-        call manage (isr, cd, cm, cy,iy,lopday,lopmon,lopyr, residue,   &
-     &               biotot, mandate)
+        call manage( isr,iy,lopday,lopmon,lopyr,residue,biotot,mandate )
 
 !        write(*,*) "Start updres"
         call updres(isr, residue, restot)                 !update decomp residue pools

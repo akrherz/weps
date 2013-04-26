@@ -8,7 +8,7 @@
 
       use weps_interface_defs
       use biomaterial, only: biototal
-      use timer_def, only: TIMSOIL, TIMSTART, TIMSTOP
+      use timer_mod, only: timer, TIMSOIL, TIMSTART, TIMSTOP
 
 ! Arguments
       integer daysim

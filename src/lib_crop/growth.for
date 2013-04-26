@@ -33,6 +33,7 @@
 !     biomass
 
       use weps_interface_defs
+      use datetime_mod, only: get_simdate_doy, get_simdate_year
       use file_io_mod, only: luocrop
       use p1unconv_mod, only: hatom2, mmtom, pi
 
@@ -168,7 +169,7 @@
       real huf, hufy, pchty, pcht, strs, ts
       real stem_propor, prdy, prd
       real eff_lai, trad_lai
-      integer day, mo, yr, doy
+      integer yr, doy
       integer i   
       real    wcg, wmaxd
       real lost_mass
@@ -236,8 +237,6 @@
 !     prd - potential root depth today
 !     eff_lai - single plant effective leaf area index (based on maximum single plant coverage area)
 !     trad_lai - leaf area index based on whole field area (traditional)
-!     day - day of month
-!     mo - month of year
 !     yr - year
 !     doy - day of year
 !     i - array index used in loops
@@ -273,11 +272,9 @@
 !             1 - returns the shoot number unconstrained by bcdmaxshoot
 
 !     + + + FUNCTIONS CALLED + + +
-!      integer dayear
 !      real temps
 
 !     + + + SUBROUTINES CALLED + + +
-!     caldatw
 !     nuse       !disabled
 !     najn       !disabled
 !     najna      !disabled
@@ -286,8 +283,8 @@
 
 !     + + + END OF SPECIFICATIONS + + +
 
-      call caldatw(day, mo, yr)
-      doy = dayear (day, mo, yr)
+      yr = get_simdate_year()
+      doy = get_simdate_doy()
 
       ! find the heat unit index that indicates the start of scenescence
       hui0f=bcehu0-bcehu0*.1
