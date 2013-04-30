@@ -2,7 +2,7 @@
 !$Date$
 !$Revision$
 !$HeadURL$
-      subroutine heat(layrsn, bszlyd, bszlyt, theta, thetas,            &
+      subroutine heat(isr, layrsn, bszlyd, bszlyt, theta, thetas,       &
      &                bsfsan, bsfsil, bsfcla, bsfom, bsdblk,            &
      &                bwtdmn, bwtdmx, bwtyav, rad_net, bdmres,          &
      &                bhtsmn, bhtsmx, bhtsav, bhfice,                   &
@@ -29,8 +29,8 @@
 !     + + + COMMON BLOCKS + + +
 
       use weps_interface_defs
-      use datetime_mod, only: get_simdate
       use file_io_mod, only: luotempsoil
+      use datetime_mod, only: get_simdate
       use p1unconv_mod, only: mmtom, pi, secperday
 
       include 'm1flag.inc'
@@ -39,6 +39,7 @@
       include 'hydro/snowprop.inc'
 
 !     + + + ARGUMENT DECLARATIONS + + +
+      integer, intent(in) :: isr   ! subregion number
       integer layrsn
       real bszlyd(*), bszlyt(*), theta(0:*), thetas(*)
       real bsfsan(*), bsfsil(*), bsfcla(*), bsfom(*), bsdblk(*)
@@ -148,8 +149,8 @@
 
       if ((am0ifl .eqv. .true.).and.((am0hfl .eq. 4)                    &
      &  .or.(am0hfl .eq. 5).or.(am0hfl .eq. 6).or.(am0hfl .eq. 7))) then
-         write(luotempsoil,2009) layrsn
-         write(luotempsoil,2010)
+         write(luotempsoil(isr),2009) layrsn
+         write(luotempsoil(isr),2010)
       end if
 
       ! calculate simple (explicit) soil heat balance on a daily basis
@@ -355,8 +356,8 @@
       if ((am0hfl .eq. 4) .or. (am0hfl .eq. 5) .or. (am0hfl .eq. 6)     &
      &   .or. (am0hfl .eq. 7)) then
          call get_simdate (day,mo,yr)
-         write(luotempsoil,2040) day,mo,yr,(bhtsmn(lay), bhtsmx(lay),   &
-     &      lay=1,layrsn)
+         write(luotempsoil(isr),2040) day, mo, yr,                      &
+     &        (bhtsmn(lay), bhtsmx(lay), lay=1,layrsn)
       end if
 
       return

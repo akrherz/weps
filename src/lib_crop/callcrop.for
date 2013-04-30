@@ -61,7 +61,7 @@
 
          if (am0cdb.eq.1) call cdbug(sr, nslay(sr), restot)
 
-         call cropgrow(nslay(sr),                                       &
+         call cropgrow(sr, nslay(sr),                                   &
      &   aszlyt(1,sr), aszlyd(1,sr), asdblk(1,sr),                      &
      &   asfcce(1,sr), asfom(1,sr), asfcec(1,sr), asfsmb(1,sr),         &
      &   asfcla(1,sr), as0ph(1,sr), asftan(1,sr), asftap(1,sr),         &

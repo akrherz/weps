@@ -310,7 +310,7 @@
       read(line, 1001, err=901) prdumy, prcode, prname
  1001 format(a1,1x,i2,1x,a)
 
-      if (am0tfl .eq. 1) write (luomanage,2015) prcode,prname
+      if (am0tfl .eq. 1) write (luomanage(sr),2015) prcode,prname
 
 !     process calls follow
       select case (prcode)
@@ -977,7 +977,7 @@
      &           mandate)
             call report_calib_harvest(sr,bmrotation,mass_rem,mass_left)
             call report_hydrobal( sr, bmrotation )
-            call crop_endseason( ac0nam(sr), am0cfl,                    &
+            call crop_endseason( sr, ac0nam(sr), am0cfl,                &
      &        nslay(sr), ac0idc(sr), acdayam(sr),                       &
      &        acthum(sr), acxstmrep(sr),                                &
      &        prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
@@ -1031,7 +1031,7 @@
      &           mandate)
             call report_calib_harvest(sr,bmrotation,mass_rem,mass_left)
             call report_hydrobal( sr, bmrotation )
-            call crop_endseason( ac0nam(sr), am0cfl,                    &
+            call crop_endseason( sr, ac0nam(sr), am0cfl,                &
      &        nslay(sr), ac0idc(sr), acdayam(sr),                       &
      &        acthum(sr), acxstmrep(sr),                                &
      &        prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
@@ -1120,7 +1120,7 @@
       &          mandate)
             call report_calib_harvest(sr,bmrotation,mass_rem,mass_left)
             call report_hydrobal( sr, bmrotation )
-            call crop_endseason( ac0nam(sr), am0cfl,                    &
+            call crop_endseason( sr, ac0nam(sr), am0cfl,                &
      &        nslay(sr), ac0idc(sr), acdayam(sr),                       &
      &        acthum(sr), acxstmrep(sr),                                &
      &        prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
@@ -1174,7 +1174,7 @@
      &           mandate)
             call report_calib_harvest(sr,bmrotation,mass_rem,mass_left)
             call report_hydrobal( sr, bmrotation )
-            call crop_endseason( ac0nam(sr), am0cfl,                    &
+            call crop_endseason( sr, ac0nam(sr), am0cfl,                &
      &        nslay(sr), ac0idc(sr), acdayam(sr),                       &
      &        acthum(sr), acxstmrep(sr),                                &
      &        prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
@@ -1275,7 +1275,7 @@
             call report_harvest( sr, bmrotation, mass_rem, mass_left,   &
      &                           harv_unit_flg, mandate )
             call report_hydrobal( sr, bmrotation )
-            call crop_endseason( ac0nam(sr), am0cfl,                    &
+            call crop_endseason( sr, ac0nam(sr), am0cfl,                &
      &        nslay(sr), ac0idc(sr), acdayam(sr),                       &
      &        acthum(sr), acxstmrep(sr),                                &
      &        prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
@@ -1333,7 +1333,7 @@
             call report_harvest( sr, bmrotation, mass_rem, mass_left,   &
      &                           harv_unit_flg, mandate )
             call report_hydrobal( sr, bmrotation )
-            call crop_endseason( ac0nam(sr), am0cfl,                    &
+            call crop_endseason( sr, ac0nam(sr), am0cfl,                &
      &        nslay(sr), ac0idc(sr), acdayam(sr),                       &
      &        acthum(sr), acxstmrep(sr),                                &
      &        prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
@@ -1392,7 +1392,7 @@
             call report_harvest( sr, bmrotation, mass_rem, mass_left,   &
      &                           harv_unit_flg, mandate )
             call report_hydrobal( sr, bmrotation )
-            call crop_endseason( ac0nam(sr), am0cfl,                    &
+            call crop_endseason( sr, ac0nam(sr), am0cfl,                &
      &        nslay(sr), ac0idc(sr), acdayam(sr),                       &
      &        acthum(sr), acxstmrep(sr),                                &
      &        prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
@@ -1450,7 +1450,7 @@
             call report_harvest( sr, bmrotation, mass_rem, mass_left,   &
      &                           harv_unit_flg, mandate )
             call report_hydrobal( sr, bmrotation )
-            call crop_endseason( ac0nam(sr), am0cfl,                    &
+            call crop_endseason( sr, ac0nam(sr), am0cfl,                &
      &        nslay(sr), ac0idc(sr), acdayam(sr),                       &
      &        acthum(sr), acxstmrep(sr),                                &
      &        prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
@@ -1800,7 +1800,7 @@
      &           mandate)
             call report_calib_harvest(sr,bmrotation,mass_rem,mass_left)
             call report_hydrobal( sr, bmrotation )
-            call crop_endseason( ac0nam(sr), am0cfl,                    &
+            call crop_endseason( sr, ac0nam(sr), am0cfl,                &
      &        nslay(sr), ac0idc(sr), acdayam(sr),                       &
      &        acthum(sr), acxstmrep(sr),                                &
      &        prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
@@ -1867,7 +1867,7 @@
             call report_harvest( sr, bmrotation, mass_rem, mass_left,   &
      &                           harv_unit_flg, mandate )
             call report_hydrobal( sr, bmrotation )
-            call crop_endseason( ac0nam(sr), am0cfl,                    &
+            call crop_endseason( sr, ac0nam(sr), am0cfl,                &
      &        nslay(sr), ac0idc(sr), acdayam(sr),                       &
      &        acthum(sr), acxstmrep(sr),                                &
      &        prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &

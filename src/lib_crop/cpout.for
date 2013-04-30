@@ -3,13 +3,15 @@
 !$Revision$
 !$HeadURL$
 
-      subroutine cpout
+      subroutine cpout( isr )
 !     Author : A. Retta - 11/19/96
 !     + + + PURPOSE + + +
 !     Prints headers for the CROP submodel output files
 
       use file_io_mod, only: luoseason, luocrop, luoshoot, luoinpt
       include 'm1flag.inc'
+
+      integer, intent(in) :: isr   ! subregion number
 
 !     + + + OUTPUT FORMATS + + +
  2131 format ('#                           stand   stand   stand   flat &
@@ -53,24 +55,24 @@
 
 
       ! season.out headers
-      write(luoseason, 2033)
-      write(luoseason, 2034)
-      write(luoseason, 2035)
+      write(luoseason(isr), 2033)
+      write(luoseason(isr), 2034)
+      write(luoseason(isr), 2035)
 
       if (am0cfl.gt.0) then
 
          ! crop.out headers
-         write(luocrop, 2131)
-         write(luocrop, 2132)
-         write(luocrop, 2133)
+         write(luocrop(isr), 2131)
+         write(luocrop(isr), 2132)
+         write(luocrop(isr), 2133)
 
          ! shoot.out headers
-         write(luoshoot, 2231)
-         write(luoshoot, 2232)
+         write(luoshoot(isr), 2231)
+         write(luoshoot(isr), 2232)
 
          ! inpt.out headers
-         write(luoinpt, 6000)
-         write(luoinpt, 6001)
+         write(luoinpt(isr), 6000)
+         write(luoinpt(isr), 6001)
 
       endif
       return

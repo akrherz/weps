@@ -60,8 +60,8 @@
 
         if( bmrotation .gt. cprevrotation(sr) ) then
           ! write newline
-          write(unit=luoharvest_si,fmt=1001) ''
-          write(unit=luoharvest_en,fmt=1001) ''
+          write(unit=luoharvest_si(sr),fmt=1001) ''
+          write(unit=luoharvest_en(sr),fmt=1001) ''
         end if
 
         tot_mass = mass_rem + mass_left
@@ -71,7 +71,7 @@
           harvest_index = mass_rem/tot_mass
         end if
 
-        write(unit=luoharvest_si,fmt=1000,advance='NO')                 &
+        write(unit=luoharvest_si(sr),fmt=1000,advance='NO')             &
      &      lopday, lopmon, lopyr,                                      &
      &      ac0nam(sr)(1:len_trim(ac0nam(sr))),                         &
      &      mass_rem, 'kg/m^2',                                         &
@@ -84,7 +84,7 @@
         if( harv_unit_flg .eq. 0 ) then
           ! the conversion is from dry mass to wet weight
           ! and from kg/m^2 to acynmu units
-          write(unit=luoharvest_en,fmt=1000,advance='NO')               &
+          write(unit=luoharvest_en(sr),fmt=1000,advance='NO')           &
      &      lopday, lopmon, lopyr,                                      &
      &      ac0nam(sr)(1:len_trim(ac0nam(sr))),                         &
      &      mass_rem*KG_per_M2_to_LBS_per_ACRE, 'lb/ac',                &
@@ -96,7 +96,7 @@
         else
           ! the conversion is from dry mass to wet weight
           ! and from kg/m^2 to lbs/ac units
-          write(unit=luoharvest_en,fmt=1000,advance='NO')               &
+          write(unit=luoharvest_en(sr),fmt=1000,advance='NO')           &
      &      lopday, lopmon, lopyr,                                      &
      &      ac0nam(sr)(1:len_trim(ac0nam(sr))),                         &
      &      mass_rem*KG_per_M2_to_LBS_per_ACRE, 'lb/ac',                &

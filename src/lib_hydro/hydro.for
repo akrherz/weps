@@ -3,7 +3,7 @@
 !$Revision$
 !$HeadURL$
 
-      subroutine hydro ( layrsn, bmrslp, bbzht,                         &
+      subroutine hydro ( isr, layrsn, bmrslp, bbzht,                    &
      &                   bcrlai, bcrsai, bczht, bcdayap,                &
      &                   bcxrow, bc0rg, bbfcancov, bcfliveleaf,         &
      &                   bdmres, bbevapredu, bczrtd, bhfwsf,            &
@@ -55,6 +55,7 @@
       use wind_mod, only: sbzdisp, sbzo, biodrag
 
 !     + + + ARGUMENT DECLARATIONS + + +
+      integer, intent(in) :: isr   ! subregion number
       integer layrsn
       real bmrslp
       real bbzht
@@ -378,23 +379,23 @@
 
 !     Echo print of input soil data
 
-!         write(luohydro,2020)
+!         write(luohydro(isr),2020)
 !         do 130 l=1,layrsn
-!            write(luohydro,2030) l,bszlyd(l),theta(l),thetas(l),thetaf(l),
+!            write(luohydro(isr),2030) l,bszlyd(l),theta(l),thetas(l),thetaf(l),
 !     &                   thetaw(l),bh0cb(l),bheaep(l),bhrsk(l),bsdblk(l)
 !  130    continue
-!         write(luohydro,2040)
-!         write(luohydro,2050) theta(0)
-!         write(luohydro,2060) swci
-!         write(luohydro,2070)
-         write(luohydro,2080)
+!         write(luohydro(isr),2040)
+!         write(luohydro(isr),2050) theta(0)
+!         write(luohydro(isr),2060) swci
+!         write(luohydro(isr),2070)
+         write(luohydro(isr),2080)
 
          ! header for file for layer information
-         write(luohlayers, 3000) layrsn
+         write(luohlayers(isr), 3000) layrsn
 
          ! print out hydro values by layer (profile view)
          ! day zero values
-!         call printlayval( 0, layrsn,                                   &
+!         call printlayval( isr, 0, layrsn,                              &
 !     &        bszlyt, bszlyd, bsdblk,                                   &
 !     &        theta, thetas, thetaf, thetaw, thetar,                    &
 !     &        bhrsk, bheaep, bh0cb, bsfcla, bsfom, bhtsav )
@@ -491,7 +492,7 @@
 
       ! Do energy balance for soil and cover temperatures 
       ! and determine snow melt (if any) or soil heat flux
-      call heat( layrsn, bszlyd, bszlyt, theta, thetas,                 &
+      call heat( isr, layrsn, bszlyd, bszlyt, theta, thetas,            &
      &           bsfsan, bsfsil, bsfcla, bsfom, bsdblk,                 &
      &           bwtdmn, bwtdmx, bwtyav, rad_surf, bdmres,              &
      &           bhtsmn, bhtsmx, bhtsav, bhfice,                        &
@@ -611,7 +612,7 @@
          ! use darcy method
          numeq = layrsn + 6
 
-         call darcy( daysim, numeq, bszlyt, bszlyd, bsdblk,             &
+         call darcy( isr, daysim, numeq, bszlyt,bszlyd,bsdblk,          &
      &       theta, thetadmx, thetas, thetaf, thetaw, thetar,           &
      &       bhrsk, bheaep, bh0cb, bsfcla, bsfom, bhtsav,               &
      &       bwtdmxprev, bwtdmn, bwtdmx, bwtdmnnext, bwtdpt,            &
@@ -721,13 +722,13 @@
      &   (am0hfl .eq.7)) then
          ! insert double blank line to break years into blocks for graphing
          if( idoy .eq. 1 ) then
-             write(luohydro,*)
-             write(luohydro,*)
+             write(luohydro(isr),*)
+             write(luohydro(isr),*)
          end if
          accheck = lswc - swc + lsno - bhzsno + bhzirr + bwzdpt         &
      &           - ahzea - ahzpta - bhzper - bhzrun
 ! 2090 format(1x,i5,1x,i3,1x,i4,11(1x,f6.2),2(1x,f8.2),2(1x,f6.2),1x,f7.3,11(1x,f6.2))
-         write(luohydro,2090) daysim, idoy, yr, ahzetp, ahzep, ahzptp,  &
+         write(luohydro(isr),2090) daysim,idoy,yr,ahzetp, ahzep, ahzptp,&
      &       ahzea, ahzpta, bhzper, bhzirr, bwzdpt, dprecip, bhzrun,    &
      &       bhzinf, lswc, swc, bhzsnd, bhzsno, accheck, cropdp,        &
      &      plant_wat_t(0.0,cropdp*mtomm,theta(1),thetaw,bszlyd,layrsn),&
@@ -736,7 +737,7 @@
      &       standevapredu, bbevapredu, totalevapredu
 
       ! print out hydro values by layer (profile view)
-         call printlayval( daysim, layrsn,                              &
+         call printlayval( isr, daysim, layrsn,                         &
      &        bszlyt, bszlyd, bsdblk,                                   &
      &        theta, thetas, thetaf, thetaw, thetar,                    &
      &        bhrsk, bheaep, bh0cb, bsfcla, bsfom, bhtsav )

@@ -3,7 +3,7 @@
 !$Revision$
 !$HeadURL$
 
-      subroutine growth(bnslay, bszlyd, bc0ck, bcgrf,                   &
+      subroutine growth(isr, bnslay, bszlyd, bc0ck, bcgrf,              &
      &                 bcehu0, bczmxc, bc0idc, bc0nam,                  &
      &                 a_fr, b_fr, bcxrow, bc0diammax,                  &
      &                 bczmrt, bctmin, bctopt, cc0be,                   &
@@ -38,6 +38,7 @@
       use p1unconv_mod, only: hatom2, mmtom, pi
 
 !     + + + ARGUMENT DECLARATIONS + + +
+      integer, intent(in) :: isr   ! subregion number
       integer bnslay
       real bszlyd(*), bc0ck, bcgrf
       real bcehu0, bczmxc
@@ -738,7 +739,7 @@
               temp_stem = temp_stem + bcmbgstemz(i)
           end do
 
-          write(luocrop, 2130) daysim, doy, yr, bcdayap, hui,           &
+          write(luocrop(isr), 2130) daysim, doy, yr, bcdayap, hui,      &
      &                    bcmstandstem, bcmstandleaf, bcmstandstore,    &
      &                    bcmflatstem, bcmflatleaf, bcmflatstore,       &
      &                    temp_store, temp_fiber, temp_stem,            &

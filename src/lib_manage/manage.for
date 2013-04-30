@@ -103,8 +103,8 @@
       if (difdat (dd,mm,myear,day,month,year).ne.0) return
 
       if (am0tfl .eq. 1) then
-        write (luomanage,*)
-        write (luomanage,2015) dd,mm,yyyy,year,sr
+        write (luomanage(sr),*)
+        write (luomanage(sr),2015) dd,mm,yyyy,year,sr
       endif
 
 !     pass date of operation to MAIN for output purposes, used by STIR also

@@ -26,35 +26,30 @@
       close(luicli)
       close(luiwin)
       close(luiwsd)
-      if (am0tfl .eq. 1) close(luomanage)
       if (am0hdb .eq. 1) close(luohdb)
       if (am0sdb .eq. 1) close(luosdb)
       if (am0tdb .eq. 1) close(luotdb)
       if (am0cdb .eq. 1) close(luocdb)
       do idx = 1, size(luoddb)
          if (am0ddb .eq. 1) close(luoddb(idx))
+         if (am0tfl .eq. 1) close(luomanage(idx))
       end do
 
       ! files opened in cmdline.for
       close(luolog)
 
-!     the main output file is opened at all times
+!     these files are opened at all times
 
       close(luogui1)
-      close(luomandate)
 
-
-!     the harvest report ouput files are opened at all times
-
-      close(luoharvest_si)
-      close(luoharvest_en)
-
-!     the hydrobal report ouput file is opened at all times
-
-      close(luohydrobal)
-
-!     seasonal summaries of yield and biomass
-      close(luoseason)
+      close(luomandate(0))
+      do idx = 1, size(luoseason)
+         close(luomandate(idx))
+         close(luoharvest_si(idx))
+         close(luoharvest_en(idx))
+         close(luohydrobal(idx))
+         close(luoseason(idx))
+      end do
 
       if (calibrate_crops .gt. 0) then
           ! calibration harvest output file
@@ -75,7 +70,9 @@
 
 !     plot data file
       if((am0hfl.gt.0) .or. (am0sfl.gt.0) .or. (am0tfl.gt.0) .or. (am0cfl.gt.0) .or. (am0dfl.gt.0) .or. (am0efl.gt.0)) then
-          close(luoplt)
+         do idx = 1, size(luoplt)
+           close(luoplt(idx))
+         end do
       endif
 
 !     output file for soil conditioning index
@@ -89,16 +86,22 @@
 !     detailed output files for hydro
 
       if ((am0hfl .eq. 1) .or. (am0hfl .eq. 3) .or. (am0hfl .eq. 5) .or. (am0hfl .eq. 7)) then
-         close(luohydro)
-         close(luohlayers)
+         do idx = 1, size(luohydro)
+            close(luohydro(idx))
+            close(luohlayers(idx))
+         end do
       endif
 
       if ((am0hfl .eq. 2) .or. (am0hfl .eq. 6) .or. (am0hfl .eq. 3) .or. (am0hfl .eq. 7)) then
-         close(luowater)
+         do idx = 1, size(luowater)
+            close(luowater(idx))
+         end do
       end if
 
       if ((am0hfl .eq. 4) .or. (am0hfl .eq. 5) .or. (am0hfl .eq. 6) .or. (am0hfl .eq. 7)) then
-         close(luotempsoil)
+         do idx = 1, size(luotempsoil)
+            close(luotempsoil(idx))
+         end do
       end if
 
 ! files for outputing the crop and decomp biomass variables - LEW
@@ -121,20 +124,23 @@
       end do
 
       if (am0cfl .gt. 0) then
+        do idx = 1, size(luocrop)
 !         daily crop output of most state variables 
-          close(luocrop)
-          close(luoshoot)
-
+          close(luocrop(idx))
+          close(luoshoot(idx))
 !         echo crop input data - AR
-          close(luoinpt)
+          close(luoinpt(idx))
+        end do
       endif
 
       if ((am0sfl .eq. 1)) then
          ! soil detail output files
-         ! soil surface
-         close(luosoilsurf)
-         ! soil layers
-         close(luosoillay)
+         do idx = 1, size(luocrop)
+            ! soil surface
+            close(luosoilsurf(idx))
+            ! soil layers
+            close(luosoillay(idx))
+         end do
       endif
 
       if ((calc_confidence .gt. 0)) then

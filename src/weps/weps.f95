@@ -895,7 +895,7 @@
           end if
           call sci_report( isr, cellstate )
           call print_ui1_output(nperiods(0), mandatbs(0)%mperod, n_rot_cycles(0), rep_report(isr), mandatbs(0)%mandate) !Use for new WEPS gui
-          call print_mandate_output(luomandate, mandatbs(isr)%mandate)
+          call print_mandate_output(luomandate(isr), mandatbs(isr)%mperod, mandatbs(isr)%mandate)
       end do
 
       if ((run_erosion.eq.2).or.(run_erosion.eq.3)) then

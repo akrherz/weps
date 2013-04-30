@@ -3,7 +3,7 @@
 !$Revision$
 !$HeadURL$
 
-      subroutine soil (daysim, bhlocirr, bhzirr, bhzsmt,                &
+      subroutine soil (isr, daysim, bhlocirr, bhzirr, bhzsmt,           &
      &                 bhtsmx, bhtsmn,                                  &
      &                 bhrwc, bhrwcdmx, bhrwca,                         &
      &                 bhrwcw, bhrwcs, bszlyt, bslay,                   &
@@ -49,6 +49,7 @@
       include 'soil/cumulat.inc'
 
 !     + + + ARGUMENT DECLARATIONS + + +
+      integer, intent(in) :: isr   ! subregion number
       integer daysim
       real bhlocirr, bhzirr, bhzsmt
       real bhtsmx(mnsz), bhtsmn(mnsz)
@@ -257,25 +258,25 @@
 
          ! write output headers
          if( daysim .eq. 1 ) then
-             write(luosoilsurf,2100)
-             write(luosoillay,2300)
+             write(luosoilsurf(isr),2100)
+             write(luosoillay(isr),2300)
          end if
          ! insert single blank line to break layer blocks for graphing
-         write(luosoillay,*)
+         write(luosoillay(isr),*)
          ! insert additional blank line (make double) to break years into blocks for graphing
          if( idoy .eq. 1 ) then
-             write(luosoilsurf,*)
-             write(luosoilsurf,*)
-             write(luosoillay,*)
+             write(luosoilsurf(isr),*)
+             write(luosoilsurf(isr),*)
+             write(luosoillay(isr),*)
          end if
 
-         write(luosoilsurf, 2200) daysim, idoy, yr, cump, dcump, bszrgh,&
-     &               bsxrgs, bszrr, bszcr, bsfcr, bsecr, bsmlos, bsflos
+         write(luosoilsurf(isr), 2200) daysim, idoy, yr, cump, dcump,   &
+     &        bszrgh, bsxrgs, bszrr, bszcr, bsfcr, bsecr, bsmlos, bsflos
 
 ! output new values by layer to the soil output file.
          do ldx = 1,bslay
             laycenter(ldx) = 0.5 * ( szlyd(ldx-1) + szlyd(ldx) )
-            write (luosoillay,2400) daysim, idoy, yr, ldx,              &
+            write (luosoillay(isr),2400) daysim, idoy, yr, ldx,         &
      &          laycenter(ldx), bszlyt(ldx), bsdblk(ldx),               &
      &          bseags(ldx), bseagmn(ldx), bseagm(ldx), bseagmx(ldx),   &
      &          bslagn(ldx), bslmin(ldx), bslagm(ldx), bslmax(ldx),     &

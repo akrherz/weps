@@ -38,7 +38,7 @@
 
         if( bmrotation .gt. hprevrotation(isr) ) then
           ! write newline
-          write(unit=luohydrobal,fmt=1001) ''
+          write(unit=luohydrobal(isr),fmt=1001) ''
         end if
 
         ! check initial day and present day for order
@@ -54,7 +54,7 @@
             fallow_eff = 0.0
         end if
 
-        write(unit=luohydrobal,fmt=1000, advance='NO')                  &
+        write(unit=luohydrobal(isr),fmt=1000, advance='NO')             &
      &  lopday, lopmon, lopyr,                                          &
      &  opname(1:len_trim(opname)),                                     &
      &  'Start day,swc,snow', initday(isr), initswc(isr), initsnow(isr),&

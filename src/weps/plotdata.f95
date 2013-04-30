@@ -92,14 +92,14 @@
 
         ! write file header if still initializing
         if (am0ifl .eqv. .true.) then
-           write (luoplt, 2050, ADVANCE="NO")
-           write (luoplt, 2051, ADVANCE="NO")
-           write (luoplt, 2052, ADVANCE="NO")
-           write (luoplt, 2053, ADVANCE="NO")
-           write (luoplt, 2054, ADVANCE="NO")
-           write (luoplt, 2055, ADVANCE="NO")
-           write (luoplt, 2056, ADVANCE="NO")
-           write (luoplt, 2057, ADVANCE="YES")
+           write (luoplt(sr), 2050, ADVANCE="NO")
+           write (luoplt(sr), 2051, ADVANCE="NO")
+           write (luoplt(sr), 2052, ADVANCE="NO")
+           write (luoplt(sr), 2053, ADVANCE="NO")
+           write (luoplt(sr), 2054, ADVANCE="NO")
+           write (luoplt(sr), 2055, ADVANCE="NO")
+           write (luoplt(sr), 2056, ADVANCE="NO")
+           write (luoplt(sr), 2057, ADVANCE="YES")
            return
         endif
 
@@ -144,11 +144,11 @@
 
         ! insert double blank lines to demarcate years
         if( doy .eq. 1 ) then
-            write (luoplt,*)
-            write (luoplt,*)
+            write (luoplt(sr),*)
+            write (luoplt(sr),*)
         end if
 
-        write (luoplt, 2080, ADVANCE="NO")                              &
+        write (luoplt(sr), 2080, ADVANCE="NO")                              &
      &                    daysim, doy,                                  &
      &                    day, month, year,                             &
      &                    total, suspen, pmten,                         &
@@ -160,15 +160,15 @@
      &                    croptot%rlaitot, croptot%rsaitot,             &
      &                    croptot%msttot, croptot%ftcancov
 
-        write (luoplt, 2081, ADVANCE="NO")                              &
+        write (luoplt(sr), 2081, ADVANCE="NO")                              &
      &   croptot%zht_ave, acxstmrep(sr), croptot%rcdtot, croptot%ftcvtot
 
-        write (luoplt, 2082, ADVANCE="NO")                              &
+        write (luoplt(sr), 2082, ADVANCE="NO")                              &
      &       restot%zht_ave, restot%rsaitot, restot%rlaitot,            &
      &       restot%rcdtot, restot%ftcancov, restot%ftcvtot
 
         ! additional friction velocity and threshold outputs
-        write (luoplt, 2085, ADVANCE="NO")                              &
+        write (luoplt(sr), 2085, ADVANCE="NO")                              &
      &       noerod%erosion, noerod%snowdepth,                          &
      &       noerod%wus_anemom, noerod%wus_random, noerod%wus_ridge,    &
      &       noerod%wus_biodrag, noerod%wus, noerod%bare,               &
@@ -177,31 +177,31 @@
 
         if( noerod%wus .gt. 0.0 ) then
           ! ratios of friction velocity outputs
-          write (luoplt, 2086, ADVANCE="NO")                            &
+          write (luoplt(sr), 2086, ADVANCE="NO")                            &
      &       noerod%wus_anemom/noerod%wus, noerod%wus_random/noerod%wus,&
      &       noerod%wus_ridge/noerod%wus, noerod%wus_biodrag/noerod%wus
         else
           ! zero denominator, write zero values
-          write (luoplt, 2086, ADVANCE="NO") 0.0, 0.0, 0.0, 0.0
+          write (luoplt(sr), 2086, ADVANCE="NO") 0.0, 0.0, 0.0, 0.0
         end if
 
         if( noerod%wust .gt. 0.0 ) then
           ! ratios of friction velocity threshold outputs
-          write (luoplt, 2086, ADVANCE="NO")                            &
+          write (luoplt(sr), 2086, ADVANCE="NO")                            &
      &       noerod%bare/noerod%wust, noerod%flat_cov/noerod%wust,      &
      &       noerod%surf_wet/noerod%wust, noerod%ag_den/noerod%wust
         else
           ! zero denominator, write zero values
-          write (luoplt, 2086, ADVANCE="NO") 0.0, 0.0, 0.0, 0.0
+          write (luoplt(sr), 2086, ADVANCE="NO") 0.0, 0.0, 0.0, 0.0
         end if
 
         ! soil related threshold values
-        write (luoplt, 2086, ADVANCE="NO") noerod%sfd84, noerod%asvroc, &
+        write (luoplt(sr), 2086, ADVANCE="NO") noerod%sfd84, noerod%asvroc, &
      &    noerod%wzzo, noerod%sfcv
 
 
-        write (luoplt, 2090, ADVANCE="NO") operat
-        write (luoplt, 2091, ADVANCE="YES") crname
+        write (luoplt(sr), 2090, ADVANCE="NO") operat
+        write (luoplt(sr), 2091, ADVANCE="YES") crname
 
  2080   format (' ',i6,' ',i3,' ',i2,' ',i2,' ',i4,' ',                 &
      &            3(f10.3,' '),                                         &

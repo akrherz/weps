@@ -7,8 +7,8 @@
 !       this routine thinks.  I believe I have "quick fixed" the problems here.
 !       5/14/99 - LEW
 
-      subroutine cinit(bnslay, bszlyt, bszlyd, bsdblk, bsfcce, bsfcec,  &
-     &           bsfsmb, bsfom, bsfcla, bs0ph,                          &
+      subroutine cinit(isr, bnslay, bszlyt, bszlyd, bsdblk, bsfcce,     &
+     &           bsfcec,  bsfsmb, bsfom, bsfcla, bs0ph,                 &
      &           bsmno3,                                                &
      &           bc0fd1, bc0fd2, bctopt, bctmin,                        &
      &           cc0fd1, cc0fd2,                                        &
@@ -38,6 +38,7 @@
       use p1unconv_mod, only: mgtokg, mmtom
 
 !     + + + ARGUMENT DECLARATIONS + + +
+      integer, intent(in) :: isr   ! subregion number
       integer bnslay, bcthudf, bctdtm
       real bszlyt(*)  ! added so a local variable would be set correctly - LEW
       real bszlyd(*), bsdblk(*), bsfcce(*), bsfcec(*), bsfsmb(*)
@@ -431,7 +432,7 @@
           d2(j)%cumheatunits=sphu
 !          if (am0cfl .gt. 0) then
 !              print for debugging
-!              write(luoinpt,*) d2(j)%day,d2(j)%heatunits,d2(j)%cumheatunits
+!              write(luoinpt(isr),*) d2(j)%day,d2(j)%heatunits,d2(j)%cumheatunits
 !          end if
       end do
       sphu=0.
@@ -469,7 +470,8 @@
 
       ! print out heat average heat unit and days to maturity
       if (am0cfl .gt. 0) then
-         write(luoinpt,2120) pdate,hdate,bcthudf,dtm,bctdtm, phu, bcthum
+         write(luoinpt(isr),2120)                                       &
+     &                      pdate,hdate,bcthudf,dtm,bctdtm, phu, bcthum
       end if
 
       ! after printing the value, set the global parameter for maximum

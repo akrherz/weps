@@ -4,28 +4,21 @@
 !$Revision$
 !$HeadURL$
 !
-SUBROUTINE print_mandate_output(lun, mandate)
+SUBROUTINE print_mandate_output(lun, mperod, mandate)
 
-!   USE pd_dates_vars
-!   USE pd_update_vars
-!   USE pd_report_vars
-
-!   USE pd_var_tables
     use mandate_mod, only: opercrop_date
 
     IMPLICIT NONE
 
-    INCLUDE 'p1werm.inc'       ! mnsub - (required for use of mperod() variable
-    INCLUDE 'manage/man.inc'   ! mperod(mnsub) - number of years in man rotation file
-
     INTEGER :: lun             ! output file unit number
+    integer :: mperod          ! number of years in man rotation file
     type (opercrop_date), dimension(:), intent(in) :: mandate
 
     INTEGER :: i               ! local loop variable
 
 
     WRITE (UNIT=lun,FMT="(i4,(A))",ADVANCE="YES")                            &
-          mperod(1), '  Number of years in WEPS management rotation file'
+          mperod, '  Number of years in WEPS management rotation file'
 
 ! Removed header lines to make it easier for the WEPS 1.0 interface
 ! to parse the mandate output file.  Shouldn't be a big issue as it

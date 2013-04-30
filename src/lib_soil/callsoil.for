@@ -35,7 +35,7 @@
       call timer(TIMSOIL,TIMSTART)      
 !
             if (am0sdb .eq. 1) call sdbug(isr, nslay(isr), biotot)
-            call soil (daysim, ahlocirr(isr), ahzirr(isr), ahzsmt(isr), &
+            call soil(isr,daysim,ahlocirr(isr),ahzirr(isr), ahzsmt(isr),&
      &                 ahtsmx(1,isr), ahtsmn(1,isr),                    &
      &                 ahrwc(1,isr), ahrwcdmx(1,isr), ahrwca(1,isr),    &
      &                 ahrwcw(1,isr), ahrwcs(1,isr),                    &

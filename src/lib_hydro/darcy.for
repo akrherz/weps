@@ -3,7 +3,7 @@
 !$Revision$
 !$HeadURL$
 
-      subroutine darcy(daysim, numeq, bszlyt, bszlyd, bulkden,          &
+      subroutine darcy(isr, daysim, numeq, bszlyt, bszlyd, bulkden,     &
      &       theta, thetadmx, bthetas, bthetaf, bthetaw, bthetar,       &
      &       bhrsk, bheaep, bh0cb, bsfcla, bsfom, bhtsav,               &
      &       bwtdmxprev, bwtdmn, bwtdmx, bwtdmnnext, bwtdpt,            &
@@ -22,11 +22,12 @@
 !     soil water redistribution, evaporation, runoff, deep percolation
 
       use weps_interface_defs
-      use datetime_mod, only: get_simdate_doy, get_simdate_year
       use file_io_mod, only: luowater
+      use datetime_mod, only: get_simdate_doy, get_simdate_year
       use p1unconv_mod, only: pi, hrtosec, mtomm, mmtom
 
 !     + + + ARGUMENT DECLARATIONS + + +
+      integer, intent(in) :: isr   ! subregion number
       integer daysim, numeq
       real bszlyt(*), bulkden(*), bszlyd(*), theta(0:*)
       real thetadmx(*), bthetas(*), bthetaf(*), bthetar(*), bthetaw(*)
@@ -227,7 +228,7 @@
      & .or. (am0hfl .eq. 3) .or. (am0hfl .eq. 6)                        &
      & .or. (am0hfl .eq. 7)) ) then
           ! write header information to hourly (or sub-hourly output file
-         write(luowater, 3000) numeq
+         write(luowater(isr), 3000) numeq
       end if
 !     initialize step reporting counters
 !      lstep = 0
@@ -433,32 +434,32 @@
          yr = get_simdate_year()
          idoy = get_simdate_doy()
          if( idoy .eq. 1 ) then
-             write(luowater,*)
-             write(luowater,*)
+             write(luowater(isr),*)
+             write(luowater(isr),*)
          else
              ! print a blank line to separate layer blocks
-             write(luowater,*)
+             write(luowater(isr),*)
          end if
          ! output from differencing array for above ground phenomena
          call dvolw(neq, t, volw, netflux)
          do kindex=1,5
-             write(luowater,3010) t, daysim, idoy, yr, kindex,          &
+             write(luowater(isr),3010) t, daysim, idoy, yr, kindex,     &
      &             0.0, volw(kindex), netflux(kindex), 0.0
          end do
          ! set surface water content value and output above thetat(1)
          evapratio = evapredu(bhzeasurf, evaplimit, vaptrans, bhzep)
          theta(0) = calctht0(bszlyd, theta, thetaw, evapratio)      !H-64,65,66
-         write(luowater,3010) t, daysim, idoy, yr, 0,                   &
+         write(luowater(isr),3010) t, daysim, idoy, yr, 0,              &
      &         0.0, 0.0, evapratio, theta(0)
          ! output from differencing array continued into soil layers
          do kindex=6,numeq-1
              laycenter = bszlyd(kindex-5)-0.5*bszlyt(kindex-5)
-             write(luowater,3010) t, daysim, idoy, yr, kindex,          & 
+             write(luowater(isr),3010) t, daysim, idoy, yr, kindex,     &
      &            laycenter,volw(kindex),netflux(kindex),theta(kindex-5)
          end do
          ! output from differencing array for drainage value
          kindex = numeq
-         write(luowater,3010) t, daysim, idoy, yr, kindex,              &
+         write(luowater(isr),3010) t, daysim, idoy, yr, kindex,         &
      &         0.0, volw(kindex), netflux(kindex), 0.0
       end if
 
@@ -553,7 +554,7 @@
       if ((am0hfl .eq. 2) .or. (am0hfl .eq. 3) .or. (am0hfl .eq. 6) .or.&
      &   (am0hfl .eq. 7)) then
          ! blank line to separate each layer block
-         write(luowater,*)
+         write(luowater(isr),*)
          ! other values
          do kindex=1,layrsn
            theta(kindex) = volw(kindex+5)/tlay(kindex)
@@ -561,24 +562,24 @@
          ! output from differencing array for above ground phenomena
          call dvolw(neq, t, volw, netflux)
          do kindex=1,5
-             write(luowater,3010) t, daysim, idoy, yr, kindex,          &
+             write(luowater(isr),3010) t, daysim, idoy, yr, kindex,     &
      &         0.0, volw(kindex), netflux(kindex), 0.0
          end do
          ! set surface water content value and output above thetat(1)
          surf_cum = bhzeasurf + bhzea + (volw(3) - prevvolw(3)) * mtomm
          evapratio = evapredu( surf_cum, evaplimit, vaptrans, bhzep )
          theta(0) = calctht0(bszlyd, theta, thetaw, evapratio)      !H-64,65,66
-         write(luowater,3010) t, daysim, idoy, yr, 0,                   &
+         write(luowater(isr),3010) t, daysim, idoy, yr, 0,              &
      &         0.0, 0.0, evapratio, theta(0)
          ! output from differencing array continued into soil layers
          do kindex=6,numeq-1
              laycenter = bszlyd(kindex-5) - 0.5*bszlyt(kindex-5)
-             write(luowater,3010) t, daysim, idoy, yr, kindex,          &
+             write(luowater(isr),3010) t, daysim, idoy, yr, kindex,     &
      &         laycenter, volw(kindex), netflux(kindex), theta(kindex-5)
          end do
          ! output from differencing array for drainage value
          kindex = numeq
-         write(luowater,3010) t, daysim, idoy, yr, kindex,              &
+         write(luowater(isr),3010) t, daysim, idoy, yr, kindex,         &
      &     0.0, volw(kindex), netflux(kindex), 0.0
       end if
 

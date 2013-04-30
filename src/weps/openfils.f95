@@ -50,23 +50,31 @@
           call makedir(trim(rootp)//trim(subr_text(idx)) )
       end do
 
-!     the main output file is opened at all times
-
+!     these files are opened at all times
       call fopenk (luogui1, rootp(1:len_trim(rootp)) // 'gui1_data.out', 'unknown')
-      call fopenk (luomandate,rootp(1:len_trim(rootp)) // 'mandate.out', 'unknown')
 
-
-!     the harvest report ouput files are opened at all times
-
-      call fopenk (luoharvest_si,rootp(1:len_trim(rootp)) // 'harvest_si.out', 'unknown')
-      call fopenk (luoharvest_en,rootp(1:len_trim(rootp)) // 'harvest_en.out', 'unknown')
-
-!     the hydrobal report ouput file is opened at all times
-
-      call fopenk(luohydrobal,rootp(1:len_trim(rootp)) // 'hydrobal.out', 'unknown')
-
-!     seasonal summaries of yield and biomass
-      call fopenk (luoseason, rootp(1:len_trim(rootp)) // 'season.out', 'unknown')
+      sum_stat = 0
+      allocate( luomandate(0:nsubr), stat=alloc_stat )
+      sum_stat = sum_stat + alloc_stat
+      allocate( luoharvest_si(nsubr), stat=alloc_stat )
+      sum_stat = sum_stat + alloc_stat
+      allocate( luoharvest_en(nsubr), stat=alloc_stat )
+      sum_stat = sum_stat + alloc_stat
+      allocate( luohydrobal(nsubr), stat=alloc_stat )
+      sum_stat = sum_stat + alloc_stat
+      allocate( luoseason(nsubr), stat=alloc_stat )
+      sum_stat = sum_stat + alloc_stat
+      if( sum_stat .gt. 0 ) then
+         Write(*,*) 'ERROR: unable to allocate luomandate, luoharvest_, luohydrobal, luoseason arrays'
+      end if
+      call fopenk (luomandate(0), trim(rootp) // 'mandate.out', 'unknown')
+      do idx = 1, nsubr
+         call fopenk (luomandate(idx), trim(rootp) // trim(subr_text(idx)) // 'mandate.out', 'unknown')
+         call fopenk (luoharvest_si(idx), trim(rootp) // trim(subr_text(idx)) // 'harvest_si.out', 'unknown')
+         call fopenk (luoharvest_en(idx), trim(rootp) // trim(subr_text(idx)) // 'harvest_en.out', 'unknown')
+         call fopenk (luohydrobal(idx), trim(rootp) // trim(subr_text(idx)) // 'hydrobal.out', 'unknown')
+         call fopenk (luoseason(idx), trim(rootp) // trim(subr_text(idx)) // 'season.out', 'unknown')
+      end do
 
       if (calibrate_crops .gt. 0) then
           ! calibration harvest output file
@@ -87,7 +95,15 @@
 
 !     open plot data file
       if((am0hfl.gt.0) .or. (am0sfl.gt.0) .or. (am0tfl.gt.0) .or. (am0cfl.gt.0) .or. (am0dfl.gt.0) .or. (am0efl.gt.0)) then
-          call fopenk (luoplt, rootp(1:len_trim(rootp)) // 'plot.out', 'unknown')
+         sum_stat = 0
+         allocate( luoplt(nsubr), stat=alloc_stat )
+         sum_stat = sum_stat + alloc_stat
+         if( sum_stat .gt. 0 ) then
+            Write(*,*) 'ERROR: unable to allocate luoplt array'
+         end if
+         do idx = 1, nsubr
+            call fopenk (luoplt(idx), trim(rootp) // trim(subr_text(idx)) // 'plot.out', 'unknown')
+         end do
       endif
 
 !     open output file for soil conditioning index
@@ -98,7 +114,7 @@
          allocate( luostir(nsubr), stat=alloc_stat )
          sum_stat = sum_stat + alloc_stat
          if( sum_stat .gt. 0 ) then
-            Write(*,*) 'ERROR: unable to allocate luosci, luostir array'
+            Write(*,*) 'ERROR: unable to allocate luosci, luostir arrays'
          end if
          call fopenk (luosci(0), trim(rootp) // 'sci_energy.out', 'unknown')
          do idx = 1, nsubr
@@ -110,16 +126,42 @@
 !     open detailed output files for hydro
 
       if ((am0hfl .eq. 1) .or. (am0hfl .eq. 3) .or. (am0hfl .eq. 5) .or. (am0hfl .eq. 7)) then
-         call fopenk (luohydro, rootp(1:len_trim(rootp)) // 'hydro.out', 'unknown')
-         call fopenk(luohlayers,rootp(1:len_trim(rootp))//'hlayers.out', 'unknown')
+         sum_stat = 0
+         allocate( luohydro(nsubr), stat=alloc_stat )
+         sum_stat = sum_stat + alloc_stat
+         allocate( luohlayers(nsubr), stat=alloc_stat )
+         sum_stat = sum_stat + alloc_stat
+         if( sum_stat .gt. 0 ) then
+            Write(*,*) 'ERROR: unable to allocate luohydro, luohlayers arrays'
+         end if
+         do idx = 1, nsubr
+            call fopenk (luohydro(idx), trim(rootp) // trim(subr_text(idx)) // 'hydro.out', 'unknown')
+            call fopenk (luohlayers(idx), trim(rootp) // trim(subr_text(idx)) // 'hlayers.out', 'unknown')
+         end do
       endif
 
       if ((am0hfl .eq. 2) .or. (am0hfl .eq. 6) .or. (am0hfl .eq. 3) .or. (am0hfl .eq. 7)) then
-         call fopenk (luowater, rootp(1:len_trim(rootp)) // 'water.out', 'unknown')
+         sum_stat = 0
+         allocate( luowater(nsubr), stat=alloc_stat )
+         sum_stat = sum_stat + alloc_stat
+         if( sum_stat .gt. 0 ) then
+            Write(*,*) 'ERROR: unable to allocate luowater array'
+         end if
+         do idx = 1, nsubr
+            call fopenk (luowater(idx), trim(rootp) // trim(subr_text(idx)) // 'water.out', 'unknown')
+         end do
       end if
 
       if ((am0hfl .eq. 4) .or. (am0hfl .eq. 5) .or. (am0hfl .eq. 6) .or. (am0hfl .eq. 7)) then
-         call fopenk(luotempsoil, rootp(1:len_trim(rootp)) // 'temp.out', 'unknown')
+         sum_stat = 0
+         allocate( luotempsoil(nsubr), stat=alloc_stat )
+         sum_stat = sum_stat + alloc_stat
+         if( sum_stat .gt. 0 ) then
+            Write(*,*) 'ERROR: unable to allocate luotempsoil array'
+         end if
+         do idx = 1, nsubr
+            call fopenk (luotempsoil(idx), trim(rootp) // trim(subr_text(idx)) // 'temp.out', 'unknown')
+         end do
       end if
 
 ! open files for outputing the crop and decomp biomass variables - LEW
@@ -168,25 +210,61 @@
       endif
 
       if (am0cfl .gt. 0) then
-!         daily crop output of most state variables 
-          call fopenk (luocrop, rootp(1:len_trim(rootp)) // 'crop.out', 'unknown')
-          call fopenk (luoshoot, rootp(1:len_trim(rootp)) // 'shoot.out', 'unknown')
+         sum_stat = 0
+         allocate( luocrop(nsubr), stat=alloc_stat )
+         sum_stat = sum_stat + alloc_stat
+         allocate( luoshoot(nsubr), stat=alloc_stat )
+         sum_stat = sum_stat + alloc_stat
+         allocate( luoinpt(nsubr), stat=alloc_stat )
+         sum_stat = sum_stat + alloc_stat
+         if( sum_stat .gt. 0 ) then
+            Write(*,*) 'ERROR: unable to allocate luocrop, luoshoot, luoinpt arrays'
+         end if
 
-!         echo crop input data - AR
-          call fopenk (luoinpt, rootp(1:len_trim(rootp)) // 'inpt.out', 'unknown')
+         do idx = 1, nsubr
+            ! daily crop output of most state variables 
+            call fopenk (luocrop(idx), trim(rootp) // trim(subr_text(idx)) // 'crop.out', 'unknown')
+            call fopenk (luoshoot(idx), trim(rootp) // trim(subr_text(idx)) // 'shoot.out', 'unknown')
+            ! echo crop input data - AR
+            call fopenk (luoinpt(idx), trim(rootp) // trim(subr_text(idx)) // 'inpt.out', 'unknown')
+         end do
       endif
 
-!     print headings for crop output files
-!     season.out, crop.out, shoot.out, inpt.out
-      call cpout
+        ! print headings for crop output files
+        ! season.out, crop.out, shoot.out, inpt.out
+      do idx = 1, nsubr
+        call cpout(idx)
+      end do
 
       if ((am0sfl .eq. 1)) then
          ! soil detail output files
-         ! soil surface
-         call fopenk(luosoilsurf, rootp(1:len_trim(rootp)) // 'soilsurf.out', 'unknown')
-         ! soil layers
-         call fopenk(luosoillay, rootp(1:len_trim(rootp)) // 'soillay.out', 'unknown')
+         sum_stat = 0
+         allocate( luosoilsurf(nsubr), stat=alloc_stat )
+         sum_stat = sum_stat + alloc_stat
+         allocate( luosoillay(nsubr), stat=alloc_stat )
+         sum_stat = sum_stat + alloc_stat
+         if( sum_stat .gt. 0 ) then
+            Write(*,*) 'ERROR: unable to allocate luosoilsurf, luosoillay arrays'
+         end if
+         do idx = 1, nsubr
+            ! soil surface
+            call fopenk(luosoilsurf(idx), trim(rootp) // trim(subr_text(idx)) // 'soilsurf.out', 'unknown')
+            ! soil layers
+            call fopenk(luosoillay(idx), trim(rootp) // trim(subr_text(idx)) // 'soillay.out', 'unknown')
+         end do
       endif
+
+      if (am0tfl .eq. 1) then
+         sum_stat = 0
+         allocate( luomanage(nsubr), stat=alloc_stat )
+         sum_stat = sum_stat + alloc_stat
+         if( sum_stat .gt. 0 ) then
+            Write(*,*) 'ERROR: unable to allocate luomanage array'
+         end if
+         do idx = 1, nsubr
+            call fopenk (luomanage(idx), trim(rootp) // trim(subr_text(idx)) // 'manage.out', 'unknown')
+         end do
+      end if
 
       if ((calc_confidence .gt. 0)) then
          ! Confidence Interval output file

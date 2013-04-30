@@ -47,7 +47,7 @@
 
       if (am0hdb .eq. 1) call hdbug(isr, nslay(isr), restot)
 
-      call hydro( nslay(isr), amrslp(isr), biotot%zht_ave,              &
+      call hydro( isr, nslay(isr), amrslp(isr), biotot%zht_ave,         &
      &            acrlai(isr), acrsai(isr), aczht(isr), acdayap(isr),   &
      &       acxrow(isr), ac0rg(isr), biotot%ftcancov, acfliveleaf(isr),&
      &         biotot%mftot, biotot%evapredu, aczrtd(isr), ahfwsf(isr), &

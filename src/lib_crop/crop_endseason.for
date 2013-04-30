@@ -3,7 +3,7 @@
 !$Revision$
 !$HeadURL$
 
-      subroutine crop_endseason ( bc0nam, bm0cfl,                       &
+      subroutine crop_endseason ( isr, bc0nam, bm0cfl,                  &
      &                 bnslay, bc0idc, bcdayam,                         &
      &                 bcthum, bcxstmrep,                               &
      &                 bprevstandstem, bprevstandleaf, bprevstandstore, &
@@ -25,6 +25,7 @@
       use file_io_mod, only: luoseason
 
 !     + + + ARGUMENT DECLARATIONS + + +
+      integer, intent(in) :: isr   ! subregion number
       character*(80) bc0nam
       integer bm0cfl, bnslay, bc0idc, bcdayam
       real bcthum, bcxstmrep
@@ -113,7 +114,7 @@
             root_fiber_sum = root_fiber_sum + bprevrootfiberz(lay)
         end do
 
-        write(luoseason,2013) yy,                                       &
+        write(luoseason(isr),2013) yy,                                  &
      &    bprevstandstem, bprevstandleaf, bprevstandstore,              &
      &    bprevflatstem, bprevflatleaf, bprevflatstore,                 &
      &    bg_stem_sum, root_store_sum, root_fiber_sum,                  &

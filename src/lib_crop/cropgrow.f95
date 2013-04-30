@@ -3,7 +3,7 @@
 !$Revision$
 !$HeadURL$
 
-      subroutine cropgrow (bnslay, bszlyt, bszlyd, bsdblk,              &
+      subroutine cropgrow (isr, bnslay, bszlyt, bszlyd, bsdblk,         &
      &                 bsfcce, bsfom, bsfcec, bsfsmb,                   &
      &                 bsfcla, bs0ph, bsftan, bsftap,                   &
      &                 bsmno3,                                          &
@@ -65,6 +65,7 @@
       use p1unconv_mod, only: mgtokg
 
 !     + + + ARGUMENT DECLARATIONS + + +
+      integer, intent(in) :: isr   ! subregion number
       integer bnslay, bctdtm, bcthudf
       real bszlyt(*)
       real bszlyd(*), bsdblk(*), bsfcec(*), bsfcce(*)
@@ -346,8 +347,8 @@
 !     initialize growth and nutrient variables when crop is planted
 !     bm0cif is flag to initialize crop at start of planting
       if (bm0cif) then
-          call cinit (bnslay, bszlyt, bszlyd, bsdblk, bsfcce, bsfcec,   &
-     &              bsfsmb, bsfom, bsfcla, bs0ph,                       &
+          call cinit( isr, bnslay, bszlyt, bszlyd, bsdblk, bsfcce,      &
+     &              bsfcec, bsfsmb, bsfom, bsfcla, bs0ph,               &
      &              bsmno3,                                             &
      &              bc0fd1, bc0fd2, bctopt, bctmin,                     &
      &              cc0fd1, cc0fd2,                                     &
@@ -391,10 +392,10 @@
 
           if (am0cfl .ge. 1) then
               ! put double blank lines in daily files to create growth blocks
-              write(luocrop,*)   ! crop.out
-              write(luocrop,*)   ! crop.out
-              write(luoshoot,*)  ! shoot.out
-              write(luoshoot,*)  ! shoot.out
+              write(luocrop(isr),*)   ! crop.out
+              write(luocrop(isr),*)   ! crop.out
+              write(luoshoot(isr),*)  ! shoot.out
+              write(luoshoot(isr),*)  ! shoot.out
           end if
 
           bm0cif = .false.  !turn off after initialization is complete
@@ -639,7 +640,7 @@
      &        .and. (hui  .gt. bcthu_shoot_beg) ) then
 
               ! daily shoot growth
-              call shoot_grow( bnslay, bszlyd, bcdpop,                  &
+              call shoot_grow( isr, bnslay, bszlyd, bcdpop,             &
      &                 bczmxc, bcfleafstem,                             &
      &                 bcfshoot, bc0ssa, bc0ssb, bc0diammax,            &
      &                 hui, huiy, bcthu_shoot_beg, bcthu_shoot_end,     &
@@ -661,7 +662,7 @@
               bczgrowpt = ( - bczloc_regrow )
               if (am0cfl .ge. 1) then
                   ! single blank line to separate shoot growth periods
-                  write(luoshoot,*)  ! shoot.out
+                  write(luoshoot(isr),*)  ! shoot.out
               end if
           end if
 
@@ -669,7 +670,7 @@
           call scrv1(bc0fd1,cc0fd1,bc0fd2,cc0fd2,a_fr,b_fr)
 
           ! calculate plant growth state variables
-          call growth( bnslay, bszlyd, bc0ck, bcgrf,                    &
+          call growth( isr, bnslay, bszlyd, bc0ck, bcgrf,               &
      &                 bcehu0, bczmxc, bc0idc, bc0nam,                  &
      &                 a_fr, b_fr, bcxrow, bc0diammax,                  &
      &                 bczmrt, bctmin, bctopt, bc0bceff,                &

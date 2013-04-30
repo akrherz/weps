@@ -3,7 +3,7 @@
 !$Revision$
 !$HeadURL$
 
-      subroutine printlayval( daysim, layrsn,                           &
+      subroutine printlayval( isr, daysim, layrsn,                      &
      &       bszlyt, bszlyd, bulkden,                                   &
      &       theta, thetas, thetaf, thetaw, thetar,                     &
      &       bhrsk, bheaep, bh0cb, bsfcla, bsfom, bhtsav )
@@ -15,10 +15,11 @@
 !     output hydro
 
       use weps_interface_defs
-      use datetime_mod, only: get_simdate_doy, get_simdate_year
       use file_io_mod, only: luohlayers
+      use datetime_mod, only: get_simdate_doy, get_simdate_year
 
 !     + + + ARGUMENT DECLARATIONS + + +
+      integer, intent(in) :: isr   ! subregion number
       integer daysim, layrsn
       real bszlyt(*), bszlyd(*), bulkden(*)
       real theta(0:*), thetas(*), thetaf(*), thetar(*), thetaw(*)
@@ -83,11 +84,11 @@
       idoy = get_simdate_doy()
       if( idoy .eq. 1 ) then
          ! insert double blank line to break years into blocks for graphing
-         write(luohlayers,*)
-         write(luohlayers,*)
+         write(luohlayers(isr),*)
+         write(luohlayers(isr),*)
       else
          ! print a single blank line to separate layer blocks
-         write(luohlayers,*)
+         write(luohlayers(isr),*)
       end if
       do idx=1,layrsn
          lambda = 1.0 / bh0cb(idx)
@@ -104,7 +105,7 @@
          laycenter = bszlyd(idx) - 0.5*bszlyt(idx)
          sat_rat = (theta(idx)-thetar(idx)) / (thetas(idx)-thetar(idx))
  2190    format(1x,i5,1x,i3,1x,i4,1x,i3,1x,16g11.3)
-         write(luohlayers,2190) daysim, idoy, yr, idx, laycenter,       &
+         write(luohlayers(isr),2190) daysim, idoy, yr, idx, laycenter,  &
      &         theta(idx), thetas(idx), thetaf(idx), thetaw(idx),       &
      &         thetar(idx), availwat, sat_rat, bhtsav(idx),             &
      &         unsatcond, -matricpot, soilrh, bulkden(idx),             &

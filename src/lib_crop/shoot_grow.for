@@ -3,7 +3,7 @@
 !$Revision$
 !$HeadURL$
 
-      subroutine shoot_grow( bnslay, bszlyd, bcdpop,                    &
+      subroutine shoot_grow( isr, bnslay, bszlyd, bcdpop,               &
      &                 bczmxc, bcfleafstem,                             &
      &                 bcfshoot, bc0ssa, bc0ssb, bc0diammax,            &
      &                 hui, huiy, bcthu_shoot_beg, bcthu_shoot_end,     &
@@ -28,6 +28,7 @@
       use p1unconv_mod, only: mgtokg, mmtom
 
 !     + + + ARGUMENT DECLARATIONS + + +
+      integer, intent(in) :: isr   ! subregion number
       integer bnslay
       real bszlyd(*), bcdpop
       real bczmxc, bcfleafstem
@@ -402,7 +403,7 @@
 !     the following write statements are for 'shoot.out'
 !     am0cfl is flag to print crop submodel output
       if (am0cfl .ge. 1) then
-          write(luoshoot, 1000) daysim, doy, yr, bcdayap, shoot_hui,    &
+          write(luoshoot(isr), 1000) daysim,doy, yr, bcdayap, shoot_hui,&
      &        s_root_sum, f_root_sum, tot_mass_req, end_shoot_mass,     &
      &        end_root_mass, d_root_mass, d_shoot_mass, d_s_root_mass,  &
      &        end_stem_mass, end_stem_area, end_shoot_len, bczshoot,    &

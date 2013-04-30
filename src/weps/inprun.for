@@ -14,8 +14,7 @@
       use datetime_mod, only: lstday
       use Polygons_Mod, only: create_polygon
       use subregions_mod, only: acct_poly, subr_poly
-      use file_io_mod, only: fopenk, luicli, luiwin, luiwsd,            &
-     &                       luomanage, luolog
+      use file_io_mod, only: fopenk, luicli, luiwin, luiwsd, luolog
       use erosion_data_struct_defs, only: subday, ntstep, am0efl
       use barriers_mod, only: create_barrier, barrier
       use grid_mod, only: amasim, amxsim, sim_area
@@ -300,8 +299,6 @@
 !     read flags to print submodel output
       case (17)
         read (line,*,err=80) am0hfl,am0sfl,am0tfl,am0cfl,am0dfl,am0efl
-        if (am0tfl .eq. 1) call fopenk(luomanage,                       &
-     &     rootp(1:len_trim(rootp)) // 'manage.out', 'unknown')
 
       case (18)
         ! debug flag line. Add zero integer to end to make sure six values

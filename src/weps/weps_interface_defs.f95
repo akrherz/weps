@@ -64,8 +64,8 @@
       real, intent(in) :: day_max_temp, day_min_temp            
       end subroutine chillu
 !----------------------
-      subroutine cinit(bnslay, bszlyt, bszlyd, bsdblk, bsfcce, bsfcec,  &
-     &           bsfsmb, bsfom, bsfcla, bs0ph,                          &
+      subroutine cinit(isr, bnslay, bszlyt, bszlyd, bsdblk, bsfcce,     &
+     &           bsfcec, bsfsmb, bsfom, bsfcla, bs0ph,                  &
      &           bsmno3,                                                &
      &           bc0fd1, bc0fd2, bctopt, bctmin,                        &
      &           cc0fd1, cc0fd2,                                        &
@@ -81,6 +81,7 @@
      &           bcleafareatrend, bcstemmasstrend, bctwarmdays,         &
      &           bctchillucum, bcthardnx, bcthu_shoot_beg,              &
      &           bcthu_shoot_end, bcdpop, bcdayspring)
+      integer, intent(in) :: isr   ! subregion number
       integer bnslay, dd, mm, yy, bcthudf, bctdtm
       real bszlyt(*)  ! added so a local variable would be set correctly - LEW
       real bszlyd(*), bsdblk(*), bsfcce(*), bsfcec(*), bsfsmb(*)
@@ -118,15 +119,42 @@
       real bcyld_coef, bcresid_int, bcgrf          
       end subroutine cookyield
 !-------------------------------
-      subroutine cpout()
+      subroutine cpout( isr )
+      integer, intent(in) :: isr   ! subregion number
       end subroutine cpout
 !-------------------------------
+      subroutine crop_endseason ( isr, bc0nam, bm0cfl,                  &
+     &                 bnslay, bc0idc, bcdayam,                         &
+     &                 bcthum, bcxstmrep,                               &
+     &                 bprevstandstem, bprevstandleaf, bprevstandstore, &
+     &                 bprevflatstem, bprevflatleaf, bprevflatstore,    &
+     &                 bprevbgstemz,                                    &
+     &                 bprevrootstorez, bprevrootfiberz,                &
+     &                 bprevht, bprevstm, bprevrtd,                     &
+     &                 bprevdayap, bprevhucum, bprevrthucum,            &
+     &                 bprevgrainf, bprevchillucum, bprevliveleaf,      &
+     &                 bprevdayspring, mature_warn_flg )
+      integer, intent(in) :: isr   ! subregion number
+      character*(80) bc0nam
+      integer bm0cfl, bnslay, bc0idc, bcdayam
+      real bcthum, bcxstmrep
+      real bprevstandstem, bprevstandleaf, bprevstandstore
+      real bprevflatstem, bprevflatleaf, bprevflatstore
+      real bprevbgstemz(*)
+      real bprevrootstorez(*), bprevrootfiberz(*)
+      real bprevht, bprevstm, bprevrtd
+      integer bprevdayap
+      real bprevhucum, bprevrthucum
+      real bprevgrainf, bprevchillucum, bprevliveleaf
+      integer bprevdayspring, mature_warn_flg
+      end subroutine crop_endseason
+!-----------------------------
       subroutine cprnl (hmx,bcthucum,day,mo,yr)
       integer   day, mo, yr
       real hmx, bcthucum  
       end subroutine cprnl
 !-----------------------------
-      subroutine cropgrow (bnslay, bszlyt, bszlyd, bsdblk,              &
+      subroutine cropgrow (isr, bnslay, bszlyt, bszlyd, bsdblk,         &
      &                 bsfcce, bsfom, bsfcec, bsfsmb,                   &
      &                 bsfcla, bs0ph, bsftan, bsftap,                   &
      &                 bsmno3,                                          &
@@ -172,6 +200,7 @@
      &                 bgmflatstem, bgmflatleaf, bgmflatstore,          &
      &                 bgmbgstemz,                                      &
      &                 bgzht, bgdstm, bgxstmrep, bggrainf )
+      integer, intent(in) :: isr   ! subregion number
       integer bnslay, bctdtm, bcthudf
       real bszlyt(*)
       real bszlyd(*), bsdblk(*), bsfcec(*), bsfcce(*)
@@ -233,7 +262,7 @@
       integer isr
       end subroutine cropinit
 !---------------------------
-      subroutine growth(bnslay, bszlyd, bc0ck, bcgrf,                   &
+      subroutine growth(isr, bnslay, bszlyd, bc0ck, bcgrf,              &
      &                 bcehu0, bczmxc, bc0idc, bc0nam,                  &
      &                 a_fr, b_fr, bcxrow, bc0diammax,                  &
      &                 bczmrt, bctmin, bctopt, cc0be,                   &
@@ -253,6 +282,7 @@
      &                 bczht, bcdstm, bczrtd, bcfliveleaf,              &
      &                 bcdayap, bcgrainf, bcdpop, daysim, regrowth_flg, &
      &                 bc0shoot, bcdmaxshoot )
+      integer, intent(in) :: isr   ! subregion number
       integer bnslay
       real bszlyd(*), bc0ck, bcgrf
       real bcehu0, bczmxc
@@ -331,7 +361,7 @@
       real dg, dg1, x(*)  
       end subroutine sdst
 !---------------------------------
-      subroutine shoot_grow( bnslay, bszlyd, bcdpop,                    &
+      subroutine shoot_grow( isr, bnslay, bszlyd, bcdpop,               &
      &                 bczmxc, bcfleafstem,                             &
      &                 bcfshoot, bc0ssa, bc0ssb, bc0diammax,            &
      &                 hui, huiy, bcthu_shoot_beg, bcthu_shoot_end,     &
@@ -343,6 +373,7 @@
      &                 bczgrowpt, bcfliveleaf, bc0nam,                  &
      &                 bchyfg, bcyld_coef, bcresid_int, bcgrf,          &
      &                 daysim, bcdayap )
+      integer, intent(in) :: isr   ! subregion number
       integer bnslay
       real bszlyd(*), bcdpop
       real bczmxc, bcfleafstem
@@ -476,7 +507,7 @@
       type(biototal), intent(in) :: restot
       end subroutine callhydr
 !---------------------------
-      subroutine darcy(daysim, numeq, bszlyt, bszlyd, bulkden,          &
+      subroutine darcy(isr, daysim, numeq, bszlyt, bszlyd, bulkden,     &
      &       theta, thetadmx, bthetas, bthetaf, bthetaw, bthetar,       &
      &       bhrsk, bheaep, bh0cb, bsfcla, bsfom, bhtsav,               &
      &       bwtdmxprev, bwtdmn, bwtdmx, bwtdmnnext, bwtdpt,            &
@@ -485,7 +516,7 @@
      &       bbdstm, bbffcv, bslrro, bslrr, bmzele, bhrwc0,             &
      &       bhzea, bhzper, bhzrun, bhzinf, bhzwid,                     &
      &       bhzeasurf, evaplimit, vaptrans, bmrslp )
-
+      integer, intent(in) :: isr   ! subregion number
       integer daysim, numeq
       real bszlyt(*), bulkden(*), bszlyd(*), theta(0:*)
       real thetadmx(*), bthetas(*), bthetaf(*), bthetar(*), bthetaw(*)
@@ -568,12 +599,13 @@
       type(biototal), intent(in) :: restot
       end subroutine hdbug
 !-------------------------
-      subroutine heat(layrsn, bszlyd, bszlyt, theta, thetas,            &
+      subroutine heat(isr, layrsn, bszlyd, bszlyt, theta, thetas,       &
      &                bsfsan, bsfsil, bsfcla, bsfom, bsdblk,            &
      &                bwtdmn, bwtdmx, bwtyav, rad_net, bdmres,          &
      &                bhtsmn, bhtsmx, bhtsav, bhfice,                   &
      &                bhzsno, bhtsno, bhfsnfrz, bhzsnd,                 &
      &                bhzsmt, soil_heat_flux )
+      integer, intent(in) :: isr   ! subregion number
       integer layrsn
       real bszlyd(*), bszlyt(*), theta(0:*), thetas(*)
       real bsfsan(*), bsfsil(*), bsfcla(*), bsfom(*), bsdblk(*)
@@ -621,7 +653,7 @@
       integer isr
       end subroutine hydrinit
 !-------------------------
-      subroutine hydro ( layrsn, bmrslp, bbzht,                         &
+      subroutine hydro ( isr, layrsn, bmrslp, bbzht,                    &
      &                   bcrlai, bcrsai, bczht, bcdayap,                &
      &                   bcxrow, bc0rg, bbfcancov, bcfliveleaf,         &
      &                   bdmres, bbevapredu, bczrtd, bhfwsf,            &
@@ -654,6 +686,7 @@
      &                   bhztranspdepth, restot )
       use file_io_mod, only: luohydro, luohlayers, luowepphdrive
       use biomaterial, only: biototal
+      integer, intent(in) :: isr   ! subregion number
       integer layrsn
       real bmrslp
       real bbzht
@@ -784,11 +817,11 @@
       real elevation      
       end function preslaps
 !------------------------------
-      subroutine printlayval( daysim, layrsn,                           &
+      subroutine printlayval( isr, daysim, layrsn,                      &
      &       bszlyt, bszlyd, bulkden,                                   &
      &       theta, thetas, thetaf, thetaw, thetar,                     &
      &       bhrsk, bheaep, bh0cb, bsfcla, bsfom, bhtsav )
-
+      integer, intent(in) :: isr   ! subregion number
       integer daysim, layrsn
       real bszlyt(*), bszlyd(*), bulkden(*)
       real theta(0:*), thetas(*), thetaf(*), thetar(*), thetaw(*)
@@ -1802,9 +1835,10 @@
     type(reporting_update), intent(inout) :: rep_update
     end subroutine init_report_vars
 !----------------------
-    SUBROUTINE print_mandate_output(lun, mandate)
+    SUBROUTINE print_mandate_output(lun, mperod, mandate)
     use mandate_mod, only: opercrop_date
     INTEGER :: lun             ! output file unit number
+    integer :: mperod             ! number of year in man rotation file
     type (opercrop_date), dimension(:), intent(in) :: mandate
     end subroutine print_mandate_output
 !----------------------
@@ -2036,7 +2070,7 @@ SUBROUTINE update_yrly_update_vars(isr, yrly_update, yrot_update, yr_update, cel
       integer trigger(*)
       end subroutine sinit
 !-----------------
-      subroutine soil (daysim, bhlocirr, bhzirr, bhzsmt,                &
+      subroutine soil (isr, daysim, bhlocirr, bhzirr, bhzsmt,           &
      &                 bhtsmx, bhtsmn,                                  &
      &                 bhrwc, bhrwcdmx, bhrwca,                         &
      &                 bhrwcw, bhrwcs, bszlyt, bslay,                   &
@@ -2053,6 +2087,7 @@ SUBROUTINE update_yrly_update_vars(isr, yrly_update, yrot_update, yr_update, cel
      &                 bsk4d, bslmin, bslmax,                           &
      &                 bbffcv, bbfscv,                                  &
      &                 bsfcce, bsfcec, bhzinf, bhzwid, bwzdpt, bwtdav)
+      integer, intent(in) :: isr   ! subregion number
       integer daysim
       real bhlocirr, bhzirr, bhzsmt
       real bhtsmx(*), bhtsmn(*)
