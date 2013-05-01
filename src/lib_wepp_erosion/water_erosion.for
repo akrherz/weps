@@ -3,11 +3,11 @@
 !$Revision$
 !$HeadURL$
 
-      SUBROUTINE water_erosion(isr, cd, cm, cy, luowepperod, sumfile,   &
-     &                         restot, croptot)
+      SUBROUTINE water_erosion(isr, cd, cm, cy, restot, croptot)
       
       use wepp_interface_defs
       use biomaterial, only: biototal
+      use file_io_mod, only: luowepperod, luoweppsum
 
 !----------------------------------------------------------------------
 !     water_erosion()
@@ -24,7 +24,7 @@
 !-----------------------------------------------------------------------
 	include 'wepp_erosion.inc'
 
-      integer, intent(in):: isr,cd,cm,cy,luowepperod,sumfile
+      integer, intent(in):: isr,cd,cm,cy
       type(biototal), intent(in) :: restot, croptot
 
 !     Local Variables
@@ -210,29 +210,27 @@
 !       a case 4 ofe and a case 2 ofe.  dcf 1-21-2005
 !
 
-      call sedseg(dslost,luowepperod,iyear,noout,dstot,stdist,wp_irdgdx,&
+      call sedseg(dslost,luowepperod(isr),iyear,noout,dstot,stdist,     &
+     & wp_irdgdx,                                                       &
      & ysdist,wp_avgslp,wp_slplen,wp_y,avedet,maxdet,ptdet,avedep,      &
      & maxdep,ptdep,detpt1, detpt2, dtavls, detstd, detmax, pdtmax,     &
      & detmin, pdtmin, deppt1, deppt2, dpavls, depstd, depmax, pdpmax,  &
      & depmin, pdpmin,ndetach,ndepos)
      
-   
       if(wp_qout.le.0.0) wp_qsout = 0.0
  
-!
 !     write output to erosion events file 
-!
-      
-      call write_event(luowepperod,cd, cm, cy, prcp,wp_runoff*1000,     &
+
+      call write_event(luowepperod(isr),cd, cm, cy, prcp,wp_runoff*1000,&
      &     wp_irdgdx,avedet,maxdet,ptdet,avedep,maxdep,ptdep,avsole,    &
      &     enrato)
  
-!     
+     
 !     if detailed output in main file write event output there also
 !     but in a different format 
-!     
+     
       if (wp_detailout .eq. 1) then   
-         call write_main_event(sumfile,cd, cm, cy, prcp,                &
+         call write_main_event(luoweppsum(isr),cd, cm, cy, prcp,        &
      &     wp_runoff*1000,                                              &
      &     wp_irdgdx,avedet,maxdet,ptdet,avedep,maxdep,ptdep,avsole,    &
      &        enrato,detpt1, detpt2, dtavls, detstd, detmax, pdtmax,    &
@@ -242,17 +240,14 @@
      &     wp_slplen,wp_fwidth,wp_avgslp,stdist,dslost,1,0)
        endif
          
-!         call write_plot(sumfile,stdist, ysdist, dstot)
+!         call write_plot(luoweppsum(isr),stdist, ysdist, dstot)
      
-!         call enrprt(sumfile,wp_npart,wp_frac,frcflw,wp_dia,wp_spg,     &
-!     &         wp_frsnd,wp_frslt, wp_frcly,wp_frorg,wp_enrato)
+!         call enrprt(luoweppsum(isr),wp_npart,wp_frac,frcflw,wp_dia,    &
+!     &         wp_spg, wp_frsnd,wp_frslt, wp_frcly,wp_frorg,wp_enrato)
 
 !      endif
-     
 
-!
       else
-!
 !       no runon or runoff for the ofe, then set soil loss,
 !       sediment, particle and enrichment outputs to zero.
 !

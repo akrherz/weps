@@ -30,6 +30,8 @@ module file_io_mod
     integer, dimension(:), allocatable :: luoharvest_en   ! write harvest_en.out for info in English units
     integer, dimension(:), allocatable :: luohydrobal     ! write hydrobal.out for water balance by crop harvest cycle
     integer, dimension(:), allocatable :: luoseason       ! write season.out for crop end of season (harvest) status
+    integer, dimension(:), allocatable :: luosci          ! write sci_energy.out for soil conditioning index detail
+    integer, dimension(:), allocatable :: luostir         ! write stir_energy.out for soil tillage intesity rating detail
 
     ! submodel detail output (set on/off in weps.run or with command line switches)
     integer, dimension(:), allocatable :: luoplt          ! write plot.out for erosion (and factors) detail
@@ -42,18 +44,15 @@ module file_io_mod
     integer, dimension(:), allocatable :: luocrp1         ! write decomp.out for select decomp pools detail
     integer, dimension(:), allocatable :: luobio1         ! bio1.btmp for residue totals detail
 
-    integer, dimension(:), allocatable :: luosci          ! write sci_energy.out for soil conditioning index detail
-    integer, dimension(:), allocatable :: luostir         ! write stir_energy.out for soil tillage intesity rating detail
-
     integer, dimension(:), allocatable :: luohydro        ! write hydro.out for hydrology surface details
     integer, dimension(:), allocatable :: luohlayers      ! write hlayers.out for hydrology subsurface details
     integer, dimension(:), allocatable :: luowater        ! write water.out for darcy detailed solution info
     integer, dimension(:), allocatable :: luotempsoil     ! write tempsoil.out for soil temperature details
 
-    integer :: luowepphdrive   ! write wepp_runoff.out for epp runoff details
-    integer :: luowepperod     ! write wepp_eroevents.out water erosion event details
-    integer :: luoweppplot     ! write wepp_eroplot.out
-    integer :: luoweppsum      ! write wepp_summary.out
+    integer, dimension(:), allocatable :: luowepphdrive   ! write wepp_runoff.out for wepp runoff details
+    integer, dimension(:), allocatable :: luowepperod     ! write wepp_eroevents.out water erosion event details
+    integer, dimension(:), allocatable :: luoweppplot     ! write wepp_eroplot.out
+    integer, dimension(:), allocatable :: luoweppsum      ! write wepp_summary.out
 
     integer, dimension(:), allocatable :: luosoilsurf     ! write "soilsurf.out" for soil surface details
     integer, dimension(:), allocatable :: luosoillay      ! write "soillay.out" for soil layer details

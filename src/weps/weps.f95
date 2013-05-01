@@ -45,7 +45,7 @@
       use subregions_mod, only: subr_poly, acct_poly
       use barriers_mod, only: destroy_barrier, barrier
       use file_io_mod, only: luo_egrd, luo_erod, luo_emit, luo_sgrd
-      use file_io_mod, only: luomandate, luod_above, luod_below, luowepperod, luoweppplot, luoweppsum, makedir
+      use file_io_mod, only: luomandate, luod_above, luod_below, makedir
       use biomaterial
       use debug_mod
       use mandate_mod
@@ -482,13 +482,15 @@
          call sumbio(isr, residue(1:size(residue,1), isr), restot(isr), croptot(isr), biotot(isr))
          call sci_stir_init(isr)
 
-!       Initialize the water holding capacity variable
+        ! Initialize the water holding capacity variable
         call hydrinit(isr)
 
-!       initialize soil depth to bottom of layers (mm) from layer thickness (mm)
-!       and initialize applied NO3
+        ! initialize soil depth to bottom of layers (mm) from layer thickness (mm)
         call soilinit(isr)
 
+        if ((run_erosion.eq.2).or.(run_erosion.eq.3)) then
+           call init_wepp(isr, 0)        ! specific wepp initializations
+        end if
       end do
 ! Subregion running loop
 ! move the subregion loop into dailly loop by JG
@@ -512,10 +514,6 @@
           lopyr = 1
       endif
 
-      if ((run_erosion.eq.2).or.(run_erosion.eq.3)) then
-          call init_wepp(0)        ! specific wepp initializations
-      end if
-      
 ! begin initialization simulation phase
       init_loop = .true. ! Signifies that we are in the "initialization" loop
       do am0jd = ijday, end_init_jday   !will not enter if end before beginning
@@ -566,8 +564,6 @@
 !     End of "initialization" section
 ! Do all resetting of variables necessary for "calibrate" and "report"
 ! portions of the simulation
-
-      call init_wepp(1)
 
       am0jd = ijday           ! Reset loop counter to first day of simulation
       call update_simulation_date( am0jd ) ! store for use by simulation day routines
@@ -688,7 +684,13 @@
 ! Start of "report" section
 
       else
-         call init_wepp(1)
+
+         if ((run_erosion.eq.2).or.(run_erosion.eq.3)) then
+            do isr = 1, nsubr
+               call init_wepp(isr, 1)        ! specific wepp initializations
+            end do
+         end if
+
          ncycles = 1   ! set here for use in confidence interval calculation (no other use?)
          am0sif = .false.  ! Done with all initialization and calibration phases
          ci_year = 0  ! nothing has yet been printed into ci.out
@@ -785,7 +787,7 @@
 
             do isr=1,nsubr   ! do multiple subregion     
                if ((run_erosion .eq. 2) .or. (run_erosion .eq. 3)) then
-                  call water_erosion(isr,cd,cm,cy,luowepperod,luoweppsum, restot(isr), croptot(isr))
+                  call water_erosion( isr, cd, cm, cy, restot(isr), croptot(isr) )
                end if
 
                call sci_cum( isr, restot(isr), cellstate )   ! Keep running total for soil conditioning index (SCI)
@@ -899,7 +901,7 @@
       end do
 
       if ((run_erosion.eq.2).or.(run_erosion.eq.3)) then
-          call weppsum(luoweppplot,luoweppsum,simyrs)
+          call weppsum(isr,simyrs)
       endif
 
       ! close all open files

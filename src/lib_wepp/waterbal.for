@@ -12,13 +12,14 @@
      &                   bbffcv, bbfcancov, bbzht, bcdayap,             &
      &                   bhzep, theta, thetadmx, bhrwc0,                &
      &                   bhzea, bhzper, bhzrun, bhzinf, bhzwid,         &
-     &                   slen, cd, cm, cy, luowepphdrive,               &
+     &                   slen, cd, cm, cy, isr,                         &
      &                   wepp_hydro,init_loop,calib_loop,bhfice)
 
 !     + + + PURPOSE + + +
 !     Implements soil water balance using routines from WEPP
 
       use weps_interface_defs
+      use file_io_mod, only: luowepphdrive
 
       implicit none
 
@@ -36,7 +37,7 @@
       real, intent(inout) :: theta(0:*), thetadmx(*), bhrwc0(*)
       real, intent(inout) :: bhzea, bhzper, bhzrun, bhzinf, bhzwid
       logical, intent(in) :: init_loop,calib_loop
-      integer, intent(in) :: cd, cm, cy, luowepphdrive, wepp_hydro
+      integer, intent(in) :: cd, cm, cy, isr, wepp_hydro
       real, intent(inout) :: slen
       real, intent(in) :: bhfice(*)
       
@@ -566,7 +567,7 @@
       !
         if ((wepp_hydro .gt. 1).and.(init_loop.eqv..false.).and.        &
      &      (calib_loop .eqv. .false.)) then
-            write(luowepphdrive,                                        &
+            write(luowepphdrive(isr),                                   &
      &      fmt="(1X,i4,4X,i4,1X,i3,5(3X,f6.1),3X,f8.2)")               &
      &      cd,cm,cy,precipmm, bhzrun, peakro, effdrn,                  &
      &      effintmm,  effdrr_min

@@ -45,7 +45,7 @@
 
       use weps_interface_defs
       use datetime_mod, only: get_simdate, get_simdate_doy
-      use file_io_mod, only: luohydro, luohlayers, luowepphdrive
+      use file_io_mod, only: luohydro, luohlayers
       use biomaterial, only: biototal
       use p1unconv_mod, only: mtomm
       use timer_mod, only: timer, TIMHYDR, TIMDARC, TIMSTART, TIMSTOP
@@ -639,7 +639,7 @@
      &                   bbffcv, bbfcancov, bbzht, bcdayap,             &
      &                   ahzep, theta, thetadmx, bhrwc0,                &
      &                   ahzea, bhzper, bhzrun, bhzinf, bhzwid,         &
-     &                   len_slope, day, mo, yr, luowepphdrive,         &
+     &                   len_slope, day, mo, yr, isr,                   &
      &                   wepp_hydro, init_loop, calib_loop, bhfice)
 
       end if

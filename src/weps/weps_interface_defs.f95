@@ -2154,7 +2154,7 @@ SUBROUTINE update_yrly_update_vars(isr, yrly_update, yrot_update, yr_update, cel
      &                   bbffcv, bbfcancov, bbzht, bcdayap,             &
      &                   bhzep, theta, thetadmx, bhrwc0,                &
      &                   bhzea, bhzper, bhzrun, bhzinf, bhzwid,         &
-     &                   slen, cd, cm, cy, luowepphdrive,               &
+     &                   slen, cd, cm, cy, isr,                         &
      &                   wepp_hydro,init_loop,calib_loop,bhfice)
       integer, intent(in) :: layrsn
       real, intent(in) :: thetas(*), thetes(*), thetaf(*), thetaw(*)
@@ -2169,7 +2169,7 @@ SUBROUTINE update_yrly_update_vars(isr, yrly_update, yrot_update, yr_update, cel
       real, intent(inout) :: theta(0:*), thetadmx(*), bhrwc0(*)
       real, intent(inout) :: bhzea, bhzper, bhzrun, bhzinf, bhzwid
       logical, intent(in) :: init_loop,calib_loop
-      integer, intent(in) :: cd, cm, cy, luowepphdrive, wepp_hydro
+      integer, intent(in) :: cd, cm, cy, isr, wepp_hydro
       real, intent(inout) :: slen
       real, intent(in) :: bhfice(*)
       end subroutine waterbal
@@ -2360,8 +2360,8 @@ SUBROUTINE update_yrly_update_vars(isr, yrly_update, yrot_update, yr_update, cel
       real, intent(out):: rtm(3), smrm(3), precip 
       end subroutine getFromWeps
 !---------------------------------
-      SUBROUTINE init_wepp(afterWarmup)
-      integer, intent(in) :: afterWarmup
+      SUBROUTINE init_wepp(isr, afterWarmup)
+      integer, intent(in) :: isr, afterWarmup
       end subroutine init_wepp
 !---------------------------------
       subroutine param(qin,qout,qostar,qshear,qsout,a,b,avgslp,         &
@@ -2548,14 +2548,14 @@ SUBROUTINE update_yrly_update_vars(isr, yrly_update, yrot_update, yr_update, cel
       real, intent(inout) :: factor, expon
       end subroutine undflo
 !----------------------------------
-      SUBROUTINE water_erosion(isr, cd, cm, cy, luowepperod, sumfile, restot, croptot)
+      SUBROUTINE water_erosion(isr, cd, cm, cy, restot, croptot)
       use biomaterial, only: biototal
-      integer, intent(in):: isr,cd,cm,cy,luowepperod,sumfile
+      integer, intent(in):: isr,cd,cm,cy
       type(biototal), intent(in) :: restot, croptot
       end subroutine water_erosion
 !----------------------------------
-     subroutine weppsum(luoweppplot, luoweppsum, years)
-      integer, intent(in) :: luoweppplot, luoweppsum, years   
+     subroutine weppsum(isr, years)
+      integer, intent(in) :: isr, years   
       end subroutine weppsum
 !-----------------------------------
       subroutine xcrit(a,b,c,tauc,xb,xe,xc1,xc2,mshear)

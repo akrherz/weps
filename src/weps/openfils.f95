@@ -330,24 +330,44 @@
 !   WEPP Related files
 !
        if (wepp_hydro .gt. 1) then
-         call fopenk(luowepphdrive, rootp(1:len_trim(rootp)) // 'wepp_runoff.out','unknown')
-         write(luowepphdrive,*) ' WEPP Flow Routing Output'
-         write(luowepphdrive,*) ' # day   mon  yr     precip  runoff    peakro  effdrn    effint   effdrr/rainfall excess'
-         write(luowepphdrive,*) '                      (mm)   (mm)     (mm/hr)  (min)    (mm/hr)     (min)'
+         allocate( luowepphdrive(nsubr), stat=alloc_stat )
+         if( alloc_stat .gt. 0 ) then
+            Write(*,*) 'ERROR: unable to allocate luowepphdrive array'
+         end if
+         do idx = 1, nsubr
+            call fopenk (luowepphdrive(idx), trim(rootp) // trim(subr_text(idx)) // 'wepp_runoff.out', 'unknown')
+            write(luowepphdrive(idx),*) ' WEPP Flow Routing Output'
+            write(luowepphdrive(idx),*) ' # day   mon  yr     precip  runoff    peakro  effdrn    effint   effdrr/rainfall excess'
+            write(luowepphdrive(idx),*) '                      (mm)   (mm)     (mm/hr)  (min)    (mm/hr)     (min)'
+         end do
        endif
 
        if ((run_erosion.eq.2).or.(run_erosion.eq.3)) then
-         call fopenk(luowepperod,rootp(1:len_trim(rootp)) // 'wepp_eroevents.out','unknown')
-         write(luowepperod,*) 'WEPP Erosion Events Output'
-         write(luowepperod,*) 'day mo  year    Precp  Runoff  IR-det Av-det Mx-det  Point  Av-dep Max-dep  Point Sed.Del    ER'
-         write(luowepperod,*) '--- --  ----     (mm)    (mm)  kg/m^2 kg/m^2 kg/m^2    (m)  kg/m^2  kg/m^2    (m)  (kg/m)  ----'
+         sum_stat = 0
+         allocate( luowepperod(nsubr), stat=alloc_stat )
+         sum_stat = sum_stat + alloc_stat
+         allocate( luoweppplot(nsubr), stat=alloc_stat )
+         sum_stat = sum_stat + alloc_stat
+         allocate( luoweppsum(nsubr), stat=alloc_stat )
+         sum_stat = sum_stat + alloc_stat
+         if( sum_stat .gt. 0 ) then
+            Write(*,*) 'ERROR: unable to allocate luowepperod, luoweppplot, luoweppsum arrays'
+         end if
+         do idx = 1, nsubr
+            call fopenk(luowepperod(idx), trim(rootp) // trim(subr_text(idx)) // 'wepp_eroevents.out','unknown')
+            write(luowepperod(idx),*) 'WEPP Erosion Events Output'
+            write(luowepperod(idx),*) &
+            'day mo  year    Precp  Runoff  IR-det Av-det Mx-det  Point  Av-dep Max-dep  Point Sed.Del    ER'
+            write(luowepperod(idx),*) &
+            '--- --  ----     (mm)    (mm)  kg/m^2 kg/m^2 kg/m^2    (m)  kg/m^2  kg/m^2    (m)  (kg/m)  ----'
 
-         call fopenk(luoweppplot,rootp(1:len_trim(rootp)) // 'wepp_eroplot.out','unknown')
+            call fopenk(luoweppplot(idx), trim(rootp) // trim(subr_text(idx)) // 'wepp_eroplot.out','unknown')
      
-         call fopenk(luoweppsum,rootp(1:len_trim(rootp)) // 'wepp_summary.out','unknown')
-         write(luoweppsum,*) 'WEPS/WEPP Common Model'
-         write(luoweppsum,*) 'March 3, 2009  (2009.3)'
-         write(luoweppsum,*) '---------------------------------------'
+            call fopenk(luoweppsum(idx), trim(rootp) // trim(subr_text(idx)) // 'wepp_summary.out','unknown')
+            write(luoweppsum(idx),*) 'WEPS/WEPP Common Model'
+            write(luoweppsum(idx),*) 'March 3, 2009  (2009.3)'
+            write(luoweppsum(idx),*) '---------------------------------------'
+         end do
        endif
 
       ! free memory from local subregion text strings

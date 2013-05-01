@@ -136,7 +136,7 @@
 
       if ((am0sfl .eq. 1)) then
          ! soil detail output files
-         do idx = 1, size(luocrop)
+         do idx = 1, size(luosoilsurf)
             ! soil surface
             close(luosoilsurf(idx))
             ! soil layers
@@ -150,13 +150,17 @@
       endif
 
       if (wepp_hydro .gt. 1) then
-         close (luowepphdrive)
+         do idx = 1, size(luowepphdrive)
+            close (luowepphdrive(idx))
+         end do
       endif
 	  
       if ((run_erosion.eq.2).or.(run_erosion.eq.3)) then
-         close (luowepperod)
-         close (luoweppplot)
-         close (luoweppsum)
+         do idx = 1, size(luowepperod)
+            close (luowepperod(idx))
+            close (luoweppplot(idx))
+            close (luoweppsum(idx))
+         end do
       endif
 
       end

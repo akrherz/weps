@@ -3,15 +3,16 @@
 !$Revision$
 !$HeadURL$
 
-      subroutine weppsum(luoweppplot, luoweppsum, years)
+      subroutine weppsum(isr, years)
       
       use wepp_interface_defs
-      
+      use file_io_mod, only: luoweppplot, luoweppsum
+
       implicit none
 
 	include 'wepp_erosion.inc'
       
-      integer, intent(in) :: luoweppplot, luoweppsum, years
+      integer, intent(in) :: isr, years
      
 
 	integer i
@@ -49,7 +50,7 @@
         enrato = 0.0
       end if
                                     !
-      call sedseg(wp_dsavg,luoweppsum,years,noout,dstot,stdist,         &
+      call sedseg(wp_dsavg,luoweppsum(isr),years,noout,dstot,stdist,    &
      & wp_irdgdx,                                                       &
      & ysdist,wp_avgslp,wp_slplen,wp_y,                                 &
      & avedet,maxdet,ptdet,avedep,                                      &
@@ -57,11 +58,11 @@
      & detmin, pdtmin, deppt1, deppt2, dpavls, depstd, depmax, pdpmax,  &
      & depmin, pdpmin,ndetach,ndepos)
      
-      call write_hydro_summary(luoweppsum,wp_totalPrecip,               &
+      call write_hydro_summary(luoweppsum(isr),wp_totalPrecip,          &
      &   wp_precipEvents,wp_totalRunoff,wp_runoffEvents,                &
      &   wp_totalSnowrunoff,wp_snowmeltEvents,years)
      
-      call write_main_event(luoweppsum,-1, -1, -1, prcp,                &
+      call write_main_event(luoweppsum(isr),-1, -1, -1, prcp,           &
      &     wp_runoff*1000,                                              &
      &     wp_irdgdx,avedet,maxdet,ptdet,avedep,maxdep,ptdep,avsole,    &
      &     enrato,detpt1, detpt2, dtavls, detstd, detmax, pdtmax,       &
@@ -70,10 +71,10 @@
      &     wp_spg,wp_frsnd,wp_frslt, wp_frcly,wp_frorg,                 &
      &     wp_slplen,wp_fwidth,wp_avgslp,stdist,wp_dsavg,years,1)
      
-      call write_plotfile(luoweppplot,stdist,ysdist,wp_dsavg,100)
+      call write_plotfile(luoweppplot(isr),stdist,ysdist,wp_dsavg,100)
 
-!      call sedout(luoweppsum, luoweppplot,wp_irdgdx,wp_dsavg,avsole,    &
-!     &    enrato,wp_npart,wp_frac,                                      &
+!      call sedout(luoweppsum(isr), luoweppplot(isr),wp_irdgdx,wp_dsavg, &
+!     &    avsole, enrato,wp_npart,wp_frac,                              &
 !     &    wp_dia,wp_spg,                                                &
 !     &    wp_frcly,wp_frslt,wp_frsnd,wp_frorg,frcflw,                   &
 !     &    wp_slplen,wp_fwidth,wp_avgslp,                                &

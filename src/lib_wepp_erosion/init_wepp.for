@@ -4,7 +4,7 @@
 !$HeadURL$
 
 !
-      SUBROUTINE init_wepp(afterWarmup)
+      SUBROUTINE init_wepp(isr, afterWarmup)
       
       use wepp_interface_defs
       use grid_mod, only: amxsim, sim_area
@@ -12,7 +12,7 @@
 
       implicit none
       
-      integer, intent(in) :: afterWarmup
+      integer, intent(in) :: isr, afterWarmup
 
 !----------------------------------------------------------------------------
 !
@@ -38,14 +38,14 @@
 !----------------------------------------------------------------------------
       include 'p1werm.inc'
       include 's1dbh.inc'
-	include 's1dbc.inc'
-	include 'm1subr.inc'
+      include 's1dbc.inc'
+      include 'm1subr.inc'
       include 'hydro/htheta.inc'
-	include 'wepp_erosion.inc'
+      include 'wepp_erosion.inc'
 
-!
+
 !    WEPS similar variables used for WEPP initialzation:
-!
+
 !    asfsan - Soil layer sand content (Mg/Mg)
 !    asfsil - Soil layer silt content (Mg/Mg)
 !    asfcla - Soil layer clay content (Mg/Mg)
@@ -55,7 +55,7 @@
 !    sim_area - area of simulation region (m^2)
 !    asvroc - Soil layer coarse fragments (m^3/m^3)
 !    theta - soil layer water content (m^3/m^3)
-!
+
 
 !      real falvel
       REAL sandf,siltf,clayf,orgmatf
@@ -65,7 +65,7 @@
 
 !      real SLPINP(MXSLP)
       real kconsd
-      integer jdx,isr,i
+      integer jdx, i
 
       wp_npart = 5
       
@@ -80,8 +80,6 @@
       if (afterWarmup.gt.0) then      
          return
       endif
-
-      isr = 1
 
       sandf = asfsan(1,isr)
       siltf = asfsil(1,isr)
