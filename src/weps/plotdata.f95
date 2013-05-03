@@ -14,6 +14,11 @@
       use erosion_data_struct_defs, only: awadir, awudmx
       use erosion_data_struct_defs, only: am0efl
       use grid_mod, only: imax, jmax
+      use hydro_data_struct_defs, only: am0hfl
+      use soil_data_struct_defs, only: am0sfl
+      use manage_data_struct_defs, only: am0tfl
+      use crop_data_struct_defs, only: am0cfl
+      use decomp_data_struct_defs, only: am0dfl
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer, intent(in) :: sr
@@ -87,8 +92,8 @@
 !     + + + END SPECIFICATIONS + + +
 
       ! Don't print plotdata "plot.out" file unless a debug flag is set
-      if((am0hfl.gt.0).or.(am0sfl.gt.0).or.(am0tfl.gt.0)                &
-     &  .or.(am0cfl.gt.0).or.(am0dfl.gt.0).or.(am0efl.gt.0)) then
+      if((am0hfl(sr).gt.0).or.(am0sfl(sr).gt.0).or.(am0tfl(sr).gt.0)                &
+     &  .or.(am0cfl(sr).gt.0).or.(am0dfl(sr).gt.0).or.(am0efl.gt.0)) then
 
         ! write file header if still initializing
         if (am0ifl .eqv. .true.) then

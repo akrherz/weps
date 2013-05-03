@@ -9,7 +9,7 @@
 !     Prints headers for the CROP submodel output files
 
       use file_io_mod, only: luoseason, luocrop, luoshoot, luoinpt
-      include 'm1flag.inc'
+      use crop_data_struct_defs, only: am0cfl
 
       integer, intent(in) :: isr   ! subregion number
 
@@ -59,7 +59,7 @@
       write(luoseason(isr), 2034)
       write(luoseason(isr), 2035)
 
-      if (am0cfl.gt.0) then
+      if (am0cfl(isr).gt.0) then
 
          ! crop.out headers
          write(luocrop(isr), 2131)

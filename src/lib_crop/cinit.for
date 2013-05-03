@@ -36,6 +36,7 @@
       use datetime_mod, only: get_simdate_doy
       use file_io_mod, only: luoinpt
       use p1unconv_mod, only: mgtokg, mmtom
+      use crop_data_struct_defs, only: am0cfl
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer, intent(in) :: isr   ! subregion number
@@ -127,8 +128,6 @@
 !     + + + GLOBAL COMMON BLOCKS + + +
       include 'p1werm.inc'
       include 'p1solar.inc'
-      include 'm1flag.inc'
-      include 'm1dbug.inc'
       include 'm1sim.inc'
       include 'c1gen.inc'
       include 'm1subr.inc'
@@ -430,7 +429,7 @@
       do j=1,730
           sphu=sphu+d2(j)%heatunits
           d2(j)%cumheatunits=sphu
-!          if (am0cfl .gt. 0) then
+!          if (am0cfl(isr) .gt. 0) then
 !              print for debugging
 !              write(luoinpt(isr),*) d2(j)%day,d2(j)%heatunits,d2(j)%cumheatunits
 !          end if
@@ -469,7 +468,7 @@
       end if
 
       ! print out heat average heat unit and days to maturity
-      if (am0cfl .gt. 0) then
+      if (am0cfl(isr) .gt. 0) then
          write(luoinpt(isr),2120)                                       &
      &                      pdate,hdate,bcthudf,dtm,bctdtm, phu, bcthum
       end if

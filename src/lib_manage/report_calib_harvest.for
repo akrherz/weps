@@ -46,8 +46,6 @@
  1041 format(g10.4,'|')
  1050 format(f12.3,'|',a,'|',f12.3,'|',a,'|')
 
- 1002 format(1x,i2,' ',i2,' ',i2,' ',i2,'|')
-
       if (init_loop .or. report_loop) then  ! not a calibrating cycle
           ! set to the beginning of simulation
           ! to eliminate newline at beginning of file

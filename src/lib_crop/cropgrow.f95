@@ -63,6 +63,7 @@
       use datetime_mod, only: get_simdate_doy
       use file_io_mod, only: luocrop, luoshoot
       use p1unconv_mod, only: mgtokg
+      use crop_data_struct_defs, only: am0cfl
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer, intent(in) :: isr   ! subregion number
@@ -254,7 +255,6 @@
 
 !     + + + GLOBAL COMMON BLOCKS + + +
       include 'p1werm.inc'
-      include 'm1flag.inc'
       include 'p1solar.inc'
 
 !     + + + COMMON BLOCKS + + +
@@ -390,7 +390,7 @@
           bprevliveleaf = bcfliveleaf
           bprevdayspring = bcdayspring
 
-          if (am0cfl .ge. 1) then
+          if (am0cfl(isr) .ge. 1) then
               ! put double blank lines in daily files to create growth blocks
               write(luocrop(isr),*)   ! crop.out
               write(luocrop(isr),*)   ! crop.out
@@ -660,7 +660,7 @@
               ! move growing point to regrowth depth after shoot growth complete
               ! remember, a negative number is above ground
               bczgrowpt = ( - bczloc_regrow )
-              if (am0cfl .ge. 1) then
+              if (am0cfl(isr) .ge. 1) then
                   ! single blank line to separate shoot growth periods
                   write(luoshoot(isr),*)  ! shoot.out
               end if

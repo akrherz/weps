@@ -3,7 +3,7 @@
 !$Revision$
 !$HeadURL$
 
-      subroutine dbgdmp(day,sr, residue, biotot)
+      subroutine dbgdmp(day, sr, residue, biotot)
 ! ****************************************************************** wjr
 !     The dumps variables that have gone out of range
 
@@ -26,7 +26,6 @@
       include 'm1subr.inc'
       include 'm1sim.inc'
       include 'm1flag.inc'
-      include 'm1dbug.inc'
       include 's1layr.inc'
       include 's1surf.inc'
       include 's1phys.inc'

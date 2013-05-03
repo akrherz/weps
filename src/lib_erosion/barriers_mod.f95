@@ -107,13 +107,13 @@ contains
           ! barrier sweep
           w0br_min = 1.0   ! maximum value for parameter
           do n = 1, size(barrier)
+            ! find number of points in barrier for interpolations
+            npt = size(barrier(n)%param)
+
             ! look for barrier up wind
             if( pl_intersect( pnt_grid, awa, barrier(n)%points, loc_intersect ) ) then
               ! intersection point found (it is minimum distance for this barrier)
               dist = slen(pnt_grid, loc_intersect%pnt)
-
-              ! find number of points in barrier for interpolations
-              npt = size(barrier(n)%param)
 
               ! barrier influence calculated down wind of barrier
               ! interpolate height along barrier segment

@@ -40,10 +40,11 @@
       use weps_interface_defs
       use datetime_mod, only: get_simdate_doy, get_simdate_year
       use file_io_mod, only: luosoilsurf, luosoillay
+      use soil_data_struct_defs, only: am0sfl
+
       include 'p1werm.inc'
       include 'wpath.inc'
       include 'm1subr.inc'
-      include 'm1flag.inc'
 
 !     + + + GLOBAL COMMON BLOCKS + + +
       include 'soil/cumulat.inc'
@@ -251,7 +252,7 @@
 
 !  + + +  OUTPUT SECTION  + + +
 
-      if ((am0sfl .eq. 1)) then
+      if ((am0sfl(isr) .eq. 1)) then
          ! get some date, day variables
          yr = get_simdate_year()
          idoy = get_simdate_doy()

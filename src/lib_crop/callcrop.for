@@ -9,6 +9,7 @@
       use weps_interface_defs
       use biomaterial, only: biomatter, biototal
       use timer_mod, only: timer, TIMCROP, TIMSTART, TIMSTOP
+      use crop_data_struct_defs, only: am0cdb
 
 !     + + +   ARGUMENT DECLARATIONS + + +
       integer daysim
@@ -26,7 +27,6 @@
       include 'c1glob.inc'
       include 'c1gen.inc'
       include 'm1flag.inc'
-      include 'm1dbug.inc'
       include 's1layr.inc'
       include 's1dbc.inc'
       include 's1dbh.inc'
@@ -59,7 +59,7 @@
 !     only continue if crop is growing
       if( am0cgf ) then
 
-         if (am0cdb.eq.1) call cdbug(sr, nslay(sr), restot)
+         if (am0cdb(sr).eq.1) call cdbug(sr, nslay(sr), restot)
 
          write(*,*) 'CALLCROP: acxrow(sr): ', acxrow(sr)
          call cropgrow(sr, nslay(sr),                                   &
@@ -110,7 +110,7 @@
      &   agmbgstemz(1,sr),                                              &
      &   agzht(sr), agdstm(sr), agxstmrep(sr), aggrainf(sr) )
 
-         if (am0cdb.eq.1) call cdbug(sr, nslay(sr), restot)
+         if (am0cdb(sr).eq.1) call cdbug(sr, nslay(sr), restot)
       end if
 
       ! check for abandoned stems in crop regrowth

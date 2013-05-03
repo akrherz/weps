@@ -26,10 +26,10 @@
       use biomaterial, only: biomatter, biototal
       use mandate_mod, only: opercrop_date
       use stir_report_mod, only: stir_report
+      use manage_data_struct_defs, only: am0tfl
 
 !     + + + PARAMETERS AND COMMON BLOCKS + + +
       include 'p1werm.inc'
-      include 'm1flag.inc'
       include 'manage/man.inc'
       include 'manage/asd.inc'
       include 'manage/oper.inc'
@@ -102,7 +102,7 @@
 
       if (difdat (dd,mm,myear,day,month,year).ne.0) return
 
-      if (am0tfl .eq. 1) then
+      if (am0tfl(sr) .eq. 1) then
         write (luomanage(sr),*)
         write (luomanage(sr),2015) dd,mm,yyyy,year,sr
       endif

@@ -25,6 +25,7 @@
       use file_io_mod, only: luowater
       use datetime_mod, only: get_simdate_doy, get_simdate_year
       use p1unconv_mod, only: pi, hrtosec, mtomm, mmtom
+      use hydro_data_struct_defs, only: am0hfl
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer, intent(in) :: isr   ! subregion number
@@ -224,9 +225,9 @@
 
 ! ***      write(*,*) 'in darcy'
 
-      if( (am0ifl .eqv. .true.) .and. ((am0hfl .eq. 2)                  &
-     & .or. (am0hfl .eq. 3) .or. (am0hfl .eq. 6)                        &
-     & .or. (am0hfl .eq. 7)) ) then
+      if( (am0ifl .eqv. .true.) .and. ((am0hfl(isr) .eq. 2)             &
+     & .or. (am0hfl(isr) .eq. 3) .or. (am0hfl(isr) .eq. 6)              &
+     & .or. (am0hfl(isr) .eq. 7)) ) then
           ! write header information to hourly (or sub-hourly output file
          write(luowater(isr), 3000) numeq
       end if
@@ -429,8 +430,8 @@
       hourstep = 1
 
 !  print out zero hour initialization values
-      if ((am0hfl .eq. 2) .or. (am0hfl .eq. 3) .or.                     &
-     &    (am0hfl .eq. 6) .or. (am0hfl .eq. 7)) then
+      if ((am0hfl(isr) .eq. 2) .or. (am0hfl(isr) .eq. 3) .or.           &
+     &    (am0hfl(isr) .eq. 6) .or. (am0hfl(isr) .eq. 7)) then
          yr = get_simdate_year()
          idoy = get_simdate_doy()
          if( idoy .eq. 1 ) then
@@ -551,8 +552,8 @@
 !-------------------------------------
 !     step was sucessful, continue on
 !-------------------------------------
-      if ((am0hfl .eq. 2) .or. (am0hfl .eq. 3) .or. (am0hfl .eq. 6) .or.&
-     &   (am0hfl .eq. 7)) then
+      if( (am0hfl(isr) .eq. 2) .or. (am0hfl(isr) .eq. 3)                &
+     &  .or. (am0hfl(isr) .eq. 6) .or. (am0hfl(isr) .eq. 7) ) then
          ! blank line to separate each layer block
          write(luowater(isr),*)
          ! other values
@@ -621,8 +622,8 @@
       prevvolw(numeq) = volw(numeq)
 
 !    output the hourly info here
-!      if ((am0hfl .eq. 2) .or. (am0hfl .eq. 3) .or. (am0hfl .eq. 6) .or.&
-!     &   (am0hfl .eq. 7)) then
+!      if( (am0hfl(isr) .eq. 2) .or. (am0hfl(isr) .eq. 3)                &
+!     &   .or. (am0hfl(isr) .eq. 6) .or. (am0hfl(isr) .eq. 7) ) then
 !          swc = sum(volw(iminlay:imaxlay)) * mtomm
 !          write(12,2050) hourstep,evap, runoff, drain,                  &
 !     &       swc,theta(0),(theta(kindex), kindex=1,layrsn)

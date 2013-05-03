@@ -26,8 +26,6 @@
 !      character        wsum*80
 
       integer          daysim
-      integer          erosrpt
-      integer          gnrpt(8)
       integer          id
       integer          im
       integer          iy
@@ -51,7 +49,7 @@
      &                  subfil, tinfil, usrid, usrloc, usrnam, winfil,  &
      &                  series,                                         &
 
-     &                  daysim, erosrpt, gnrpt,                         &
+     &                  daysim,                                         &
      &                  id, im, iy, ijday,                              &
      &                  ld, lm, ly, ljday,                              &
      &                  lopday, lopmon, lopyr,                          &
@@ -75,12 +73,6 @@
 !              typical            1         -
 !              ------------   ---------  ---------
 !     dinfil - This variable holds the decomp input file name.
-
-!    erosrpt - This varaible array holds flags for printing period.
-
-!     gnrpt  - This varaible array holds flags for printing
-!              general output forms where 1 = print output and
-!              0 = print no output.
 
 !     hinfil - This variable holds the hydrology input file name.
 

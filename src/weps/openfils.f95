@@ -15,6 +15,11 @@
       use file_io_mod
       use biomaterial, only: biomatter
       use erosion_data_struct_defs, only: am0efl
+      use hydro_data_struct_defs, only: am0hfl, am0hdb
+      use soil_data_struct_defs, only: am0sfl, am0sdb
+      use manage_data_struct_defs, only: am0tfl, am0tdb
+      use crop_data_struct_defs, only: am0cfl, am0cdb
+      use decomp_data_struct_defs, only: am0dfl, am0ddb
 
       include 'p1werm.inc'
       include 'wpath.inc'
@@ -22,7 +27,6 @@
       include 'm1flag.inc'
       include 'command.inc'
       include 'm1subr.inc'
-      include 'm1dbug.inc'
 
 !     + + + ARGUMENT DECLARATIONS + + +
       type(biomatter), dimension(:,:), intent(out) :: residue
@@ -32,6 +36,7 @@
       integer idx, jdx, alloc_stat, sum_stat
       character*30, dimension(:), allocatable :: subr_text ! subregion subdirectory text string
       character*30 :: dec_text ! decomposition detail age pool output file name text string
+      logical :: flag_set
 
       ! use allocation of resiude array for number of subregions
       nsubr = size(residue,2)
@@ -103,15 +108,17 @@
       endif
 
 !     open plot data file
-      if((am0hfl.gt.0) .or. (am0sfl.gt.0) .or. (am0tfl.gt.0) .or. (am0cfl.gt.0) .or. (am0dfl.gt.0) .or. (am0efl.gt.0)) then
-         sum_stat = 0
+      if(     (maxval(am0hfl).gt.0) .or. (maxval(am0sfl).gt.0) .or. (maxval(am0tfl).gt.0) &
+         .or. (maxval(am0cfl).gt.0) .or. (maxval(am0dfl).gt.0) .or. (am0efl.gt.0)) then
          allocate( luoplt(nsubr), stat=alloc_stat )
-         sum_stat = sum_stat + alloc_stat
-         if( sum_stat .gt. 0 ) then
+         if( alloc_stat .gt. 0 ) then
             Write(*,*) 'ERROR: unable to allocate luoplt array'
          end if
          do idx = 1, nsubr
-            call fopenk (luoplt(idx), trim(rootp) // trim(subr_text(idx)) // 'plot.out', 'unknown')
+            if(     (am0hfl(idx).gt.0) .or. (am0sfl(idx).gt.0) .or. (am0tfl(idx).gt.0) &
+               .or. (am0cfl(idx).gt.0) .or. (am0dfl(idx).gt.0) .or. (am0efl.gt.0)) then
+               call fopenk (luoplt(idx), trim(rootp) // trim(subr_text(idx)) // 'plot.out', 'unknown')
+            end if
          end do
       endif
 
@@ -133,8 +140,13 @@
       end if
 
 !     open detailed output files for hydro
-
-      if ((am0hfl .eq. 1) .or. (am0hfl .eq. 3) .or. (am0hfl .eq. 5) .or. (am0hfl .eq. 7)) then
+      flag_set = .false.
+      do idx = 1, nsubr
+         if ((am0hfl(idx) .eq. 1) .or. (am0hfl(idx) .eq. 3) .or. (am0hfl(idx) .eq. 5) .or. (am0hfl(idx) .eq. 7)) then
+            flag_set = .true.
+         end if
+      end do
+      if( flag_set ) then
          sum_stat = 0
          allocate( luohydro(nsubr), stat=alloc_stat )
          sum_stat = sum_stat + alloc_stat
@@ -144,38 +156,57 @@
             Write(*,*) 'ERROR: unable to allocate luohydro, luohlayers arrays'
          end if
          do idx = 1, nsubr
-            call fopenk (luohydro(idx), trim(rootp) // trim(subr_text(idx)) // 'hydro.out', 'unknown')
-            call fopenk (luohlayers(idx), trim(rootp) // trim(subr_text(idx)) // 'hlayers.out', 'unknown')
+            if ((am0hfl(idx) .eq. 1) .or. (am0hfl(idx) .eq. 3) .or. (am0hfl(idx) .eq. 5) .or. (am0hfl(idx) .eq. 7)) then
+               call fopenk (luohydro(idx), trim(rootp) // trim(subr_text(idx)) // 'hydro.out', 'unknown')
+               call fopenk (luohlayers(idx), trim(rootp) // trim(subr_text(idx)) // 'hlayers.out', 'unknown')
+            end if
          end do
       endif
 
-      if ((am0hfl .eq. 2) .or. (am0hfl .eq. 6) .or. (am0hfl .eq. 3) .or. (am0hfl .eq. 7)) then
-         sum_stat = 0
+      flag_set = .false.
+      do idx = 1, nsubr
+         if ((am0hfl(idx) .eq. 2) .or. (am0hfl(idx) .eq. 6) .or. (am0hfl(idx) .eq. 3) .or. (am0hfl(idx) .eq. 7)) then
+            flag_set = .true.
+         end if
+      end do
+      if( flag_set ) then
          allocate( luowater(nsubr), stat=alloc_stat )
-         sum_stat = sum_stat + alloc_stat
-         if( sum_stat .gt. 0 ) then
+         if( alloc_stat .gt. 0 ) then
             Write(*,*) 'ERROR: unable to allocate luowater array'
          end if
          do idx = 1, nsubr
-            call fopenk (luowater(idx), trim(rootp) // trim(subr_text(idx)) // 'water.out', 'unknown')
+            if ((am0hfl(idx) .eq. 2) .or. (am0hfl(idx) .eq. 6) .or. (am0hfl(idx) .eq. 3) .or. (am0hfl(idx) .eq. 7)) then
+               call fopenk (luowater(idx), trim(rootp) // trim(subr_text(idx)) // 'water.out', 'unknown')
+            end if
          end do
       end if
 
-      if ((am0hfl .eq. 4) .or. (am0hfl .eq. 5) .or. (am0hfl .eq. 6) .or. (am0hfl .eq. 7)) then
-         sum_stat = 0
+      flag_set = .false.
+      do idx = 1, nsubr
+         if ((am0hfl(idx) .eq. 4) .or. (am0hfl(idx) .eq. 5) .or. (am0hfl(idx) .eq. 6) .or. (am0hfl(idx) .eq. 7)) then
+            flag_set = .true.
+         end if
+      end do
+      if( flag_set ) then
          allocate( luotempsoil(nsubr), stat=alloc_stat )
-         sum_stat = sum_stat + alloc_stat
-         if( sum_stat .gt. 0 ) then
+         if( alloc_stat .gt. 0 ) then
             Write(*,*) 'ERROR: unable to allocate luotempsoil array'
          end if
          do idx = 1, nsubr
-            call fopenk (luotempsoil(idx), trim(rootp) // trim(subr_text(idx)) // 'temp.out', 'unknown')
+            if ((am0hfl(idx) .eq. 4) .or. (am0hfl(idx) .eq. 5) .or. (am0hfl(idx) .eq. 6) .or. (am0hfl(idx) .eq. 7)) then
+               call fopenk (luotempsoil(idx), trim(rootp) // trim(subr_text(idx)) // 'temp.out', 'unknown')
+            end if
          end do
       end if
 
 ! open files for outputing the crop and decomp biomass variables - LEW
-
-      if ((am0dfl .eq. 1).or.(am0dfl.eq.3)) then
+      flag_set = .false.
+      do idx = 1, nsubr
+         if ((am0dfl(idx) .eq. 1).or.(am0dfl(idx).eq.3)) then
+            flag_set = .true.
+         end if
+      end do
+      if( flag_set ) then
          sum_stat = 0
          allocate( luocrp1(nsubr), stat=alloc_stat )
          sum_stat = sum_stat + alloc_stat
@@ -188,37 +219,45 @@
          end if
 
          do idx = 1, nsubr
-            call fopenk (luocrp1(idx), trim(rootp) // trim(subr_text(idx)) // 'decomp.out', 'unknown')
-            call fopenk (luobio1(idx), trim(rootp) // trim(subr_text(idx)) // 'bio1.btmp', 'unknown')
-            call fopenk (luod_above(idx), trim(rootp) // trim(subr_text(idx)) // 'dabove.out', 'unknown')
-         end do
-      endif
-      if ((am0dfl .eq. 2).or.(am0dfl.eq.3)) then
-
-        ! create dbelow.out unit number array for subregions
-        allocate( luod_below(nsubr), stat=alloc_stat )
-        if( alloc_stat .gt. 0 ) then
-           write(*,*) 'ERROR: unable to allocate luod_below array'
-        end if
-         
-        do idx = 1, nsubr
-           ! open dbelow.out in each subregion
-           call fopenk (luod_below(idx), trim(rootp) // trim(subr_text(idx)) // 'dbelow.out', 'unknown')
-
-           ! open files to match number of biomass pools
-           ! create age pool output file names, set unit numbers and open files
-           do jdx = 1,mnbpls
-             ! create the name
-             dec_text = makenamnum( 'dec', jdx, mnbpls, '.btmp' )
-             ! display created file
-             !write(*,*) 'File name created: ', dec_text
-             ! assign logical unit number of opening file to array
-             call fopenk (residue(jdx,idx)%luo%dec, trim(rootp) // trim(subr_text(idx)) // trim(dec_text), 'unknown')
-           end do
+            if ((am0dfl(idx) .eq. 1).or.(am0dfl(idx).eq.3)) then
+               call fopenk (luocrp1(idx), trim(rootp) // trim(subr_text(idx)) // 'decomp.out', 'unknown')
+               call fopenk (luobio1(idx), trim(rootp) // trim(subr_text(idx)) // 'bio1.btmp', 'unknown')
+               call fopenk (luod_above(idx), trim(rootp) // trim(subr_text(idx)) // 'dabove.out', 'unknown')
+            end if
          end do
       endif
 
-      if (am0cfl .gt. 0) then
+      flag_set = .false.
+      do idx = 1, nsubr
+         if ((am0dfl(idx) .eq. 2).or.(am0dfl(idx).eq.3)) then
+            flag_set = .true.
+         end if
+      end do
+      if( flag_set ) then
+         ! create dbelow.out unit number array for subregions
+         allocate( luod_below(nsubr), stat=alloc_stat )
+         if( alloc_stat .gt. 0 ) then
+            write(*,*) 'ERROR: unable to allocate luod_below array'
+         end if
+         do idx = 1, nsubr
+            if ((am0dfl(idx) .eq. 2).or.(am0dfl(idx).eq.3)) then
+               ! open dbelow.out in each subregion
+               call fopenk (luod_below(idx), trim(rootp) // trim(subr_text(idx)) // 'dbelow.out', 'unknown')
+               ! open files to match number of biomass pools
+               ! create age pool output file names, set unit numbers and open files
+               do jdx = 1,mnbpls
+                  ! create the name
+                  dec_text = makenamnum( 'dec', jdx, mnbpls, '.btmp' )
+                  ! display created file
+                  !write(*,*) 'File name created: ', dec_text
+                  ! assign logical unit number of opening file to array
+                  call fopenk (residue(jdx,idx)%luo%dec, trim(rootp) // trim(subr_text(idx)) // trim(dec_text), 'unknown')
+               end do
+            end if
+         end do
+      endif
+
+      if( maxval(am0cfl) .gt. 0) then
          sum_stat = 0
          allocate( luocrop(nsubr), stat=alloc_stat )
          sum_stat = sum_stat + alloc_stat
@@ -231,11 +270,13 @@
          end if
 
          do idx = 1, nsubr
-            ! daily crop output of most state variables 
-            call fopenk (luocrop(idx), trim(rootp) // trim(subr_text(idx)) // 'crop.out', 'unknown')
-            call fopenk (luoshoot(idx), trim(rootp) // trim(subr_text(idx)) // 'shoot.out', 'unknown')
-            ! echo crop input data - AR
-            call fopenk (luoinpt(idx), trim(rootp) // trim(subr_text(idx)) // 'inpt.out', 'unknown')
+            if (am0cfl(idx) .gt. 0) then
+               ! daily crop output of most state variables 
+               call fopenk (luocrop(idx), trim(rootp) // trim(subr_text(idx)) // 'crop.out', 'unknown')
+               call fopenk (luoshoot(idx), trim(rootp) // trim(subr_text(idx)) // 'shoot.out', 'unknown')
+               ! echo crop input data - AR
+               call fopenk (luoinpt(idx), trim(rootp) // trim(subr_text(idx)) // 'inpt.out', 'unknown')
+            end if
          end do
       endif
 
@@ -245,7 +286,7 @@
         call cpout(idx)
       end do
 
-      if ((am0sfl .eq. 1)) then
+      if( maxval(am0sfl) .eq. 1 ) then
          ! soil detail output files
          sum_stat = 0
          allocate( luosoilsurf(nsubr), stat=alloc_stat )
@@ -256,22 +297,24 @@
             Write(*,*) 'ERROR: unable to allocate luosoilsurf, luosoillay arrays'
          end if
          do idx = 1, nsubr
-            ! soil surface
-            call fopenk(luosoilsurf(idx), trim(rootp) // trim(subr_text(idx)) // 'soilsurf.out', 'unknown')
-            ! soil layers
-            call fopenk(luosoillay(idx), trim(rootp) // trim(subr_text(idx)) // 'soillay.out', 'unknown')
+            if( am0sfl(idx) .eq. 1 ) then
+               ! soil surface
+               call fopenk(luosoilsurf(idx), trim(rootp) // trim(subr_text(idx)) // 'soilsurf.out', 'unknown')
+               ! soil layers
+               call fopenk(luosoillay(idx), trim(rootp) // trim(subr_text(idx)) // 'soillay.out', 'unknown')
+            end if
          end do
       endif
 
-      if (am0tfl .eq. 1) then
-         sum_stat = 0
+      if (maxval(am0tfl) .eq. 1) then
          allocate( luomanage(nsubr), stat=alloc_stat )
-         sum_stat = sum_stat + alloc_stat
-         if( sum_stat .gt. 0 ) then
+         if( alloc_stat .gt. 0 ) then
             Write(*,*) 'ERROR: unable to allocate luomanage array'
          end if
          do idx = 1, nsubr
-            call fopenk (luomanage(idx), trim(rootp) // trim(subr_text(idx)) // 'manage.out', 'unknown')
+            if (am0tfl(idx) .eq. 1) then
+               call fopenk (luomanage(idx), trim(rootp) // trim(subr_text(idx)) // 'manage.out', 'unknown')
+            end if
          end do
       end if
 
@@ -281,49 +324,59 @@
       endif
 
          ! create arrays for subregion debug output files
-      if (am0hdb .eq. 1) then
+      if (maxval(am0hdb) .eq. 1) then
          allocate( luohdb(nsubr), stat=alloc_stat )
          if( alloc_stat .gt. 0 ) then
             Write(*,*) 'ERROR: unable to allocate luohdb array'
          end if
          do idx = 1, nsubr
-            call fopenk (luohdb(idx), trim(rootp) // trim(subr_text(idx)) // 'hdbug.out', 'unknown')
+            if (am0hdb(idx) .eq. 1) then
+               call fopenk (luohdb(idx), trim(rootp) // trim(subr_text(idx)) // 'hdbug.out', 'unknown')
+            end if
          end do
       end if
-      if (am0sdb .eq. 1) then
+      if (maxval(am0sdb) .eq. 1) then
          allocate( luosdb(nsubr), stat=alloc_stat )
          if( alloc_stat .gt. 0 ) then
             Write(*,*) 'ERROR: unable to allocate luosdb array'
          end if
          do idx = 1, nsubr
-            call fopenk (luosdb(idx), trim(rootp) // trim(subr_text(idx)) // 'sdbug.out', 'unknown')
+            if (am0sdb(idx) .eq. 1) then
+               call fopenk (luosdb(idx), trim(rootp) // trim(subr_text(idx)) // 'sdbug.out', 'unknown')
+            end if
          end do
       end if
-      if (am0tdb .eq. 1) then
+      if (maxval(am0tdb) .eq. 1) then
          allocate( luotdb(nsubr), stat=alloc_stat )
          if( alloc_stat .gt. 0 ) then
             Write(*,*) 'ERROR: unable to allocate luotdb array'
          end if
          do idx = 1, nsubr
-            call fopenk (luotdb(idx), trim(rootp) // trim(subr_text(idx)) // 'tdbug.out', 'unknown')
+            if (am0tdb(idx) .eq. 1) then
+               call fopenk (luotdb(idx), trim(rootp) // trim(subr_text(idx)) // 'tdbug.out', 'unknown')
+            end if
          end do
       end if
-      if (am0cdb .eq. 1) then
+      if (maxval(am0cdb) .eq. 1) then
          allocate( luocdb(nsubr), stat=alloc_stat )
          if( alloc_stat .gt. 0 ) then
             Write(*,*) 'ERROR: unable to allocate luocdb array'
          end if
          do idx = 1, nsubr
-            call fopenk (luocdb(idx), trim(rootp) // trim(subr_text(idx)) // 'cdbug.out', 'unknown')
+            if (am0cdb(idx) .eq. 1) then
+               call fopenk (luocdb(idx), trim(rootp) // trim(subr_text(idx)) // 'cdbug.out', 'unknown')
+            end if
          end do
       end if
-      if (am0ddb .eq. 1) then
+      if (maxval(am0ddb) .eq. 1) then
          allocate( luoddb(nsubr), stat=alloc_stat )
          if( alloc_stat .gt. 0 ) then
             Write(*,*) 'ERROR: unable to allocate luoddb array'
          end if
          do idx = 1, nsubr
-            call fopenk (luoddb(idx), trim(rootp) // trim(subr_text(idx)) // 'ddbug.out', 'unknown')
+            if (am0ddb(idx) .eq. 1) then
+               call fopenk (luoddb(idx), trim(rootp) // trim(subr_text(idx)) // 'ddbug.out', 'unknown')
+            end if
          end do
       end if
 

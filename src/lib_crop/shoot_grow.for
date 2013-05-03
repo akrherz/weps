@@ -26,6 +26,7 @@
       use datetime_mod, only: get_simdate_doy, get_simdate_year
       use file_io_mod, only: luoshoot
       use p1unconv_mod, only: mgtokg, mmtom
+      use crop_data_struct_defs, only: am0cfl
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer, intent(in) :: isr   ! subregion number
@@ -103,7 +104,7 @@
 !     bcdayap - number of days of growth completed since crop planted
 
 !     + + + COMMON BLOCKS + + +
-      include 'm1flag.inc'
+!      include 'm1flag.inc'
       include 'command.inc'
 
 !     + + + LOCAL VARIABLES + + +
@@ -402,7 +403,7 @@
 
 !     the following write statements are for 'shoot.out'
 !     am0cfl is flag to print crop submodel output
-      if (am0cfl .ge. 1) then
+      if (am0cfl(isr) .ge. 1) then
           write(luoshoot(isr), 1000) daysim,doy, yr, bcdayap, shoot_hui,&
      &        s_root_sum, f_root_sum, tot_mass_req, end_shoot_mass,     &
      &        end_root_mass, d_root_mass, d_shoot_mass, d_s_root_mass,  &

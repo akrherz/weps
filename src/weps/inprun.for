@@ -18,6 +18,11 @@
       use erosion_data_struct_defs, only: subday, ntstep, am0efl
       use barriers_mod, only: create_barrier, barrier
       use grid_mod, only: amasim, amxsim, sim_area
+      use hydro_data_struct_defs, only: am0hfl, am0hdb
+      use soil_data_struct_defs, only: am0sfl, am0sdb
+      use manage_data_struct_defs, only: am0tfl, am0tdb
+      use crop_data_struct_defs, only: am0cfl, am0cdb
+      use decomp_data_struct_defs, only: am0dfl, am0ddb
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer, intent(out) :: n_rot_cycles
@@ -27,7 +32,6 @@
       include 'm1subr.inc'
       include 'm1sim.inc'
       include 'm1flag.inc'
-      include 'm1dbug.inc'
       include 's1layr.inc'
       include 's1surf.inc'
       include 's1phys.inc'
@@ -49,18 +53,17 @@
       integer :: nsubr    ! Number of subregions
       integer :: nbr      ! number of barriers
       integer :: poly_np  ! number of points in polygon or polyline
-      integer       i, isr, iar, ios, ibr, ipol
+      integer       isr, iar, ios, ibr, ipol
       character     line*256
       real          sclsim, sclbar
       real          cligen_version
       logical       fexist
       real          wepsrun_version
       integer       lui1
-      integer    :: alloc_stat
+      integer    :: sum_stat, alloc_stat
       character*80     awwisn   ! made local since not used anywhere else
 
 !     + + + Local Variable Definitions + + +
-!     i   - local index counter
 !     isr - subregion index counter
 !     iar - accounting region index counter
 !     ios - input output status flag
@@ -83,7 +86,6 @@
 !     lui1 - unit number for input of weps.run file
 
       integer linnum, typidx
-!      data linnum /0/, typidx /0/
 
       wepsrun_version = -1.0
       linnum = 1
@@ -106,18 +108,22 @@
           stop
       end if
 
-!     read simulation run file
+      ! read simulation run file
   100 linnum = linnum + 1
 
-      if( typidx .eq. 42 ) go to 200
+      if( typidx .eq. 41 ) go to 200
 
       read (lui1,'(a)',err=80) line
-!
-! skip comment lines
+
+      ! skip comment lines
       if (line(1:1) .eq. '#') go to 100
-!
-!!use case statement to appropriately assign values
+
+
+      ! use case statement to appropriately assign values
       typidx = typidx + 1
+
+      write(*,*) 'INPRUN: typidx: ', typidx, 'line: ', trim(line)
+
       select case (typidx)
       case (1)
         usrnam = line(1:80)
@@ -288,33 +294,19 @@
             call fopenk (luiwsd, subfil, 'old')
           endif
         endif
+
       case (15)
-!     read the flags to select the various general report forms
-        read (line,*,err=80) (gnrpt(i), i=1,6)
-!     read code to select period for output
-!     yearly and simulation summaries are always given
+        ! read erosion submodel detail flag
+        read (line,*,err=80) am0efl
+
       case (16)
-        read (line,*,err=80) erosrpt
-!
-!     read flags to print submodel output
-      case (17)
-        read (line,*,err=80) am0hfl,am0sfl,am0tfl,am0cfl,am0dfl,am0efl
-
-      case (18)
-        ! debug flag line. Add zero integer to end to make sure six values
-        ! are available to read. Previously interface only set 5 flags.
-        ! Now should set six.
-        line = line(1:len_trim(line)) // ' 0'
-        read (line,*,err=80) am0hdb,am0sdb,am0tdb,am0cdb,am0ddb,am0edb
-
-      case (19)
         ! simulation region angle from north (+/- 45 degrees)
         read (line,*,err=80) amasim
 
-      case (20)
+      case (17)
         ! simulation region diagonal coordinates (lower left)
         read (line,*,err=80) amxsim(1)%x, amxsim(1)%y
-      case (21)
+      case (18)
         ! simulation region diagonal coordinates (upper right)
         read (line,*,err=80) amxsim(2)%x, amxsim(2)%y
         ! compute the simulation area
@@ -322,11 +314,11 @@
      &           * (amxsim(2)%y - amxsim(1)%y)
         write(6,*) "Simulation area (m^2)", sim_area
 
-      case (22)
+      case (19)
  !       These values are scaling factors for interface, not used in WEPS
         read (line,*,err=80) sclsim, sclbar
 
-      case (23)
+      case (20)
         read (line,*,err=80) nacctr    ! must be at least 1
         ! set counter iar for reading in next lines
         iar = 1
@@ -336,7 +328,7 @@
            Write(*,*) 'ERROR: memory alloc., accounting region polygons'
         end if
 
-      case (24)
+      case (21)
         ! read accounting region polygon point count
         read (line,*,err=80) poly_np
         ! create polygon point storage
@@ -344,7 +336,7 @@
         ! set counter for reading each point pair
         ipol = 1
 
-      case (25)
+      case (22)
         ! read point pair
         read (line,*,err=80) acct_poly(iar)%points(ipol)%x,             &
      &                       acct_poly(iar)%points(ipol)%y
@@ -361,7 +353,7 @@
            end if
         end if
 
-      case (26)
+      case (23)
         ! read Subregion count
         read (line,*,err=80) nsubr
         ! set up isr for reading in next lines for each subregion
@@ -371,8 +363,52 @@
         if( alloc_stat .gt. 0 ) then
            Write(*,*) 'ERROR: memory alloc., subregion polygons'
         end if
+        ! create arrays for submodel output flags
+        sum_stat = 0
+        allocate(am0hfl(nsubr), stat=alloc_stat)
+        sum_stat = sum_stat + alloc_stat
+        allocate(am0sfl(nsubr), stat=alloc_stat)
+        sum_stat = sum_stat + alloc_stat
+        allocate(am0tfl(nsubr), stat=alloc_stat)
+        sum_stat = sum_stat + alloc_stat
+        allocate(am0cfl(nsubr), stat=alloc_stat)
+        sum_stat = sum_stat + alloc_stat
+        allocate(am0dfl(nsubr), stat=alloc_stat)
+        sum_stat = sum_stat + alloc_stat
+        if( alloc_stat .gt. 0 ) then
+           Write(*,*) 'ERROR: memory alloc., submodel output flags'
+        end if
 
-      case (27)
+        ! create arrays for submodel debug flags
+        sum_stat = 0
+        allocate(am0hdb(nsubr), stat=alloc_stat)
+        sum_stat = sum_stat + alloc_stat
+        allocate(am0sdb(nsubr), stat=alloc_stat)
+        sum_stat = sum_stat + alloc_stat
+        allocate(am0tdb(nsubr), stat=alloc_stat)
+        sum_stat = sum_stat + alloc_stat
+        allocate(am0cdb(nsubr), stat=alloc_stat)
+        sum_stat = sum_stat + alloc_stat
+        allocate(am0ddb(nsubr), stat=alloc_stat)
+        sum_stat = sum_stat + alloc_stat
+        if( alloc_stat .gt. 0 ) then
+           Write(*,*) 'ERROR: memory alloc., debug output flags'
+        end if
+
+!     read flags to print submodel output
+      case (24)
+        read (line,*,err=80) am0hfl(isr),am0sfl(isr),am0tfl(isr),       &
+     &                       am0cfl(isr),am0dfl(isr)
+
+      case (25)
+        ! debug flag line. Add zero integer to end to make sure six values
+        ! are available to read. Previously interface only set 5 flags.
+        ! Now should set six.
+        line = line(1:len_trim(line)) // ' 0'
+        read (line,*,err=80) am0hdb(isr),am0sdb(isr),am0tdb(isr),       &
+     &                       am0cdb(isr),am0ddb(isr)
+
+      case (26)
         ! read subregion polygon point count
         read (line,*,err=80) poly_np
         ! create polygon point storage
@@ -380,7 +416,7 @@
         ! set counter for reading each point pair
         ipol = 1
 
-      case (28)
+      case (27)
         ! read point pair
         read (line,*,err=80) subr_poly(isr)%points(ipol)%x,             &
      &                       subr_poly(isr)%points(ipol)%y
@@ -391,7 +427,7 @@
             typidx = typidx - 1
         end if
 
-      case (29)
+      case (28)
         !        The new "versioned" IFC files contain a slope value
         !        which will be used if this value is set negative, 
         !        ie. not entered. It is now the only way to set a 
@@ -399,19 +435,19 @@
         !        IFC files.   
         read (line,*,err=80) amrslp(isr)        ! weps.run file has slope gradient (m/m)
 
-      case (30)
+      case (29)
         read (line,*,err=80) SoilRockFragments(isr)   
         write(6,*) 'SoilRockFragments = ', SoilRockFragments(isr)
 
-      case (31)
+      case (30)
 !     read in initial field conditions file name
         sinfil(isr) = rootp(1:len_trim(rootp)) // line           
 
-      case (32)
+      case (31)
 !     read in management file name
         tinfil(isr) = rootp(1:len_trim(rootp)) // line
 
-      case (33)
+      case (32)
         read (line,*,err=80) WaterErosion(isr)
         write(*,*) "WaterErosion",WaterErosion(isr)
 
@@ -419,10 +455,10 @@
         ! index to next subregion or continue on
         isr = isr + 1
         if (isr .le. nsubr) then
-          typidx = typidx - 7
+          typidx = typidx - 9
         end if
 
-      case (34)
+      case (33)
 
 !  These barriers as entered are consdered to be thin, having no real
 !  area effect such as erodible material source or deposition area.
@@ -452,7 +488,7 @@
            end if
         end if
 
-      case (35)
+      case (34)
         ! number of points in barrier polyline
         read (line,*,err=80) poly_np
         ! crate storage for point and barrier data
@@ -460,12 +496,12 @@
         ! set counter for reading each point pair
         ipol = 1
 
-      case (36)
+      case (35)
         ! read point pair
         read (line,*,err=80) barrier(ibr)%points(ipol)%x,               &
      &                       barrier(ibr)%points(ipol)%y
 
-      case (37)
+      case (36)
         ! barrier height
         read (line,*,err=80) barrier(ibr)%param(ipol)%amzbr
         if( barrier(ibr)%param(ipol)%amzbr .le. 0.0 ) then
@@ -473,10 +509,10 @@
           write(*,FMT='(2(i0))') 'Barrier #: ', ibr, 'Point #: ', ipol
           call exit(37)
         end if
-      case (38)
+      case (37)
         ! barrier width
         read (line,*,err=80) barrier(ibr)%param(ipol)%amxbrw
-      case (39)
+      case (38)
         ! barrier porosity
         read (line,*,err=80) barrier(ibr)%param(ipol)%ampbr
         ! read next group of point and barrier data
@@ -485,7 +521,7 @@
             ! read another group of point and barrier data
             typidx = typidx - 4
         end if
-      case (40)
+      case (39)
         ! barrier type character string
         read (line,*,err=80) barrier(ibr)%amzbt
         ! increment for next barrier
@@ -495,10 +531,10 @@
             typidx=typidx-6
         end if
 
-      case (41)
+      case (40)
         ! this does nothing but skip the line for shape name
 
-      case (42)
+      case (41)
         ! this does nothing but skip the line for shape radius
       end select
       goto 100
@@ -508,9 +544,9 @@
       call exit(1)
   200 close (lui1)
      
-!
+
 ! Format statements
-!
+
  2220 format (/,' error, latitude is not between -90. and 90. degrees',/&
      &,' - please check run file')
  2230 format (/,' error, longitude is not between -180. and 180. degrees&

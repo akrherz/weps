@@ -17,11 +17,11 @@
       logical          am0dif
       logical          am0sif
       logical          am0oif
-      integer          am0hfl
-      integer          am0sfl
-      integer          am0tfl
-      integer          am0cfl
-      integer          am0dfl
+!      integer          am0hfl
+!      integer          am0sfl
+!      integer          am0tfl
+!      integer          am0cfl
+!      integer          am0dfl
 !      integer          am0efl
       logical          am0gdf
       logical          am0til
@@ -46,9 +46,10 @@
 
       common / m1flag /                                                 &
 !     &                  am0ifl, am0eif, am0cgf, am0cif, am0dif, am0hfl, &
-     &                  am0ifl, am0cgf, am0cif, am0dif, am0hfl,         &
+     &                  am0ifl, am0cgf, am0cif, am0dif,                 &
      &                  am0gdf, am0til, am0defoliatefl, am0kilfl,       &
-     &                  am0cropupfl, am0sfl, am0tfl, am0cfl, am0dfl,    &
+!     &                  am0cropupfl, am0sfl, am0tfl, am0cfl, am0dfl,    &
+     &                  am0cropupfl,                                    &
 !     &                  am0efl, am0oif, am0sif,                         &
      &                  am0oif, am0sif,                                 &
      &                  init_loop, calib_loop, report_loop, calib_done, &

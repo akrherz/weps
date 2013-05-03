@@ -9,6 +9,7 @@
       use weps_interface_defs
       use biomaterial, only: biototal
       use timer_mod, only: timer, TIMSOIL, TIMSTART, TIMSTOP
+      use soil_data_struct_defs, only: am0sdb
 
 ! Arguments
       integer daysim
@@ -19,7 +20,6 @@
       include 'p1werm.inc'
       include 'm1subr.inc'
       include 'm1flag.inc'
-      include 'm1dbug.inc'
       include 's1agg.inc'
       include 's1layr.inc'
       include 's1dbc.inc'
@@ -34,7 +34,7 @@
 
       call timer(TIMSOIL,TIMSTART)      
 !
-            if (am0sdb .eq. 1) call sdbug(isr, nslay(isr), biotot)
+            if (am0sdb(isr) .eq. 1) call sdbug(isr, nslay(isr), biotot)
             call soil(isr,daysim,ahlocirr(isr),ahzirr(isr), ahzsmt(isr),&
      &                 ahtsmx(1,isr), ahtsmn(1,isr),                    &
      &                 ahrwc(1,isr), ahrwcdmx(1,isr), ahrwca(1,isr),    &
@@ -56,7 +56,7 @@
      &                 asfcce(1,isr), asfcec(1,isr),                    &
      &                 ahzinf(isr), ahzwid(isr), awzdpt, awtdav         &
      &                )
-            if (am0sdb .eq. 1) call sdbug(isr, nslay(isr), biotot)
+            if (am0sdb(isr) .eq. 1) call sdbug(isr, nslay(isr), biotot)
 
       ! recalculate  depth to bottom of soil layer
       call depthini( nslay(isr), aszlyt(1,isr), aszlyd(1,isr) )

@@ -15,6 +15,7 @@
       use datetime_mod, only: get_simdate_doy, get_simdate_year
       use biomaterial, only: biomatter, biototal, decomp_factors
       use file_io_mod, only: luocrp1, luobio1
+      use decomp_data_struct_defs, only: am0dfl
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer isr
@@ -45,7 +46,7 @@
         doy = get_simdate_doy()
       end if
 
-      if ((am0dfl .eq. 1).or.(am0dfl.eq.3)) then
+      if ((am0dfl(isr) .eq. 1).or.(am0dfl(isr).eq.3)) then
 
         ! day, month, year
         ! flat crop cover, standing crop cover, total crop cover
@@ -129,7 +130,7 @@
         endif
       endif
 
-      if ((am0dfl .eq. 2).or.(am0dfl.eq.3)) then
+      if ((am0dfl(isr) .eq. 2).or.(am0dfl(isr).eq.3)) then
 
           ! day, month, year
           ! flat residue cover, standing residue cover, total residue cover

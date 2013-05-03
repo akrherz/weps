@@ -19,8 +19,6 @@
       include 'wpath.inc'
       include 'm1subr.inc'
       include 'm1sim.inc'
-      include 'm1flag.inc'
-      include 'm1dbug.inc'
       include 's1layr.inc'
       include 's1surf.inc'
       include 's1phys.inc'

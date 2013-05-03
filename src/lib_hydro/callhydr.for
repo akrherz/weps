@@ -12,6 +12,7 @@
       use biomaterial, only: biototal
       use timer_mod, only: timer, TIMHYDR, TIMSTART, TIMSTOP
       use erosion_data_struct_defs, only: awudav
+      use hydro_data_struct_defs, only: am0hdb
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer daysim
@@ -29,7 +30,6 @@
       include 'm1sim.inc'
       include 'm1subr.inc'
       include 'm1flag.inc'
-      include 'm1dbug.inc'
       include 's1layr.inc'
       include 's1dbc.inc'
       include 's1dbh.inc'
@@ -45,7 +45,7 @@
 
       call timer(TIMHYDR,TIMSTART)      
 
-      if (am0hdb .eq. 1) call hdbug(isr, nslay(isr), restot)
+      if (am0hdb(isr) .eq. 1) call hdbug(isr, nslay(isr), restot)
 
       call hydro( isr, nslay(isr), amrslp(isr), biotot%zht_ave,         &
      &            acrlai(isr), acrsai(isr), aczht(isr), acdayap(isr),   &
@@ -84,7 +84,7 @@
 ! removed from call: ah0cng(isr), ah0cnp(isr), 
 !                 initswc(isr), initsnow(isr), initday(isr)
 
-      if (am0hdb .eq. 1) call hdbug(isr, nslay(isr), restot)
+      if (am0hdb(isr) .eq. 1) call hdbug(isr, nslay(isr), restot)
       call timer(TIMHYDR,TIMSTOP)      
 
       end

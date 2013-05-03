@@ -32,6 +32,7 @@
       use file_io_mod, only: luotempsoil
       use datetime_mod, only: get_simdate
       use p1unconv_mod, only: mmtom, pi, secperday
+      use hydro_data_struct_defs, only: am0hfl
 
       include 'm1flag.inc'
 
@@ -147,8 +148,9 @@
 
 !     + + + END SPECIFICATIONS + + +
 
-      if ((am0ifl .eqv. .true.).and.((am0hfl .eq. 4)                    &
-     &  .or.(am0hfl .eq. 5).or.(am0hfl .eq. 6).or.(am0hfl .eq. 7))) then
+      if( (am0ifl .eqv. .true.) .and. ((am0hfl(isr) .eq. 4)             &
+     &  .or. (am0hfl(isr) .eq. 5) .or. (am0hfl(isr) .eq. 6)             &
+     &  .or. (am0hfl(isr) .eq. 7)) ) then
          write(luotempsoil(isr),2009) layrsn
          write(luotempsoil(isr),2010)
       end if
@@ -353,8 +355,8 @@
 
       end do
 
-      if ((am0hfl .eq. 4) .or. (am0hfl .eq. 5) .or. (am0hfl .eq. 6)     &
-     &   .or. (am0hfl .eq. 7)) then
+      if( (am0hfl(isr) .eq. 4) .or. (am0hfl(isr) .eq. 5)                &
+     &   .or. (am0hfl(isr) .eq. 6) .or. (am0hfl(isr) .eq. 7)) then
          call get_simdate (day,mo,yr)
          write(luotempsoil(isr),2040) day, mo, yr,                      &
      &        (bhtsmn(lay), bhtsmx(lay), lay=1,layrsn)

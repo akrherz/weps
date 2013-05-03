@@ -12,9 +12,9 @@
 !       dbelow.out
 
       use file_io_mod, only: luod_above, luod_below
+      use decomp_data_struct_defs, only: am0dfl
 
       integer :: isr
-      include 'm1flag.inc'
 
 ! + + + FORMATS + + +
  2030 format( 29x,'Standing',9x,'Flat',9x,'Surface Cover    Silhouett ' &
@@ -28,7 +28,7 @@
 !    + + + END SPECIFICATIONS + + +
 
 !     write headers for above ground residues file if requested
-      if ((am0dfl .eq. 1) .or. (am0dfl .eq. 3)) then
+      if ((am0dfl(isr) .eq. 1) .or. (am0dfl(isr) .eq. 3)) then
          write (luod_above(isr),*)                                      &
      &         'Above Ground Residue Decomposition Output File'
          write (luod_above(isr),*) 'Standing and Surface Residues'
@@ -40,7 +40,7 @@
       end if
 
 !     write headers for below ground residues file if requested
-      if ((am0dfl .eq. 2) .or. (am0dfl .eq. 3)) then
+      if ((am0dfl(isr) .eq. 2) .or. (am0dfl(isr) .eq. 3)) then
          write (luod_below(isr),*)                                      &
      &         'Below Ground Residue Decomposition Output File'
          write (luod_below(isr),*)                                      &

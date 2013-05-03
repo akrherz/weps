@@ -36,6 +36,7 @@
       use datetime_mod, only: get_simdate_doy, get_simdate_year
       use file_io_mod, only: luocrop
       use p1unconv_mod, only: hatom2, mmtom, pi
+      use crop_data_struct_defs, only: am0cfl
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer, intent(in) :: isr   ! subregion number
@@ -153,7 +154,6 @@
 
 !     + + + COMMON BLOCKS + + +
       include 'p1werm.inc'
-      include 'm1flag.inc'
       include 'precision.inc'
       include 'command.inc'
 
@@ -728,7 +728,7 @@
 
 !     the following write statements are for 'crop.out'
 !     am0cfl is flag to print crop submodel output
-      if (am0cfl .ge. 1) then
+      if (am0cfl(isr) .ge. 1) then
           ! temporary sum for output
           temp_store = 0.0
           temp_fiber = 0.0

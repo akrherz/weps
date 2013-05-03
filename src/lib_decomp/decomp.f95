@@ -6,6 +6,7 @@
 
       use weps_interface_defs
       use biomaterial, only: biomatter, decomp_factors
+      use decomp_data_struct_defs, only: am0dfl, am0ddb
 
 !     +++ PURPOSE + + +
 
@@ -28,8 +29,6 @@
 
       include 'p1werm.inc'
       include 'w1clig.inc'
-      include 'm1flag.inc'
-      include 'm1dbug.inc'
 
 !   These hydrology common blocks provide soil temp, moisture and irrigation
 
@@ -93,7 +92,7 @@
       ! set the number of soil layers from previously allocated structure
       nslay = size(decompfac%iwcg)
 
-      if (am0ddb .eq. 1) call ddbug(isr, nslay, residue)
+      if (am0ddb(isr) .eq. 1) call ddbug(isr, nslay, residue)
 
       if (dbgflg) write(*,*) 'decomp 1'
 
@@ -308,8 +307,8 @@
       end do
 
       if (dbgflg) write(*,*) 'decomp 10'
-      if (am0ddb .eq. 1) call ddbug(isr, nslay, residue)
-      if ((am0dfl .eq. 1).or.(am0dfl .eq. 2).or.(am0dfl .eq.3)) call decout(isr, residue)
+      if (am0ddb(isr) .eq. 1) call ddbug(isr, nslay, residue)
+      if ((am0dfl(isr) .eq. 1).or.(am0dfl(isr) .eq. 2).or.(am0dfl(isr) .eq.3)) call decout(isr, residue)
 
       return
       end

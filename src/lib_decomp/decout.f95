@@ -13,11 +13,11 @@
       use datetime_mod, only: get_simdate
       use file_io_mod, only: luod_above, luod_below
       use biomaterial, only: biomatter
+      use decomp_data_struct_defs, only: am0dfl
 
 !  +  + +  COMMON  BLOCKS + + +
 
       include 'p1werm.inc'
-      include 'm1flag.inc'
       include 's1layr.inc'
 
 !     + + + ARGUMENT DECLARATIONS + + +
@@ -103,7 +103,7 @@
 !      if(daysim.eq.outday(1)) i=1
 !      if(daysim.eq.outday(i)) then
 !     output above ground data on a daily basis
-      if ((am0dfl .eq. 1) .or. (am0dfl .eq. 3)) then
+      if ((am0dfl(isr) .eq. 1) .or. (am0dfl(isr) .eq. 3)) then
          write (luod_above(isr),2001) isr, cd, cm, cy,                    &
      &   residue(1)%geometry%dstm, residue(1)%decomp%cumdds, residue(1)%deriv%mst,           &
      &   residue(1)%decomp%cumddf, residue(1)%deriv%mf, residue(1)%deriv%fscv,            &
@@ -115,7 +115,7 @@
       end if
 
 !     output below ground residues
-      if ((am0dfl .eq. 2) .or. (am0dfl .eq. 3)) then
+      if ((am0dfl(isr) .eq. 2) .or. (am0dfl(isr) .eq. 3)) then
          write(luod_below(isr),2005) cd, cm, cy, isr
          do 100 isz = 1, nslay(isr)
          write (luod_below(isr),2010)                                        &

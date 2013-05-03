@@ -20,13 +20,14 @@
       use biomaterial, only: biomatter, biototal
       use mandate_mod, only: opercrop_date
       use p1unconv_mod, only: mmtom
+      use manage_data_struct_defs, only: am0tfl, am0tdb
+      use crop_data_struct_defs, only: am0cfl
 
 !     + + + PARAMETERS AND COMMON BLOCKS + + +
       include 'command.inc'
       include 'p1werm.inc'
       include 'm1flag.inc'
       include 'm1sim.inc'
-      include 'm1dbug.inc'
       include 's1layr.inc'
       include 's1agg.inc'
       include 's1sgeo.inc'
@@ -310,7 +311,7 @@
       read(line, 1001, err=901) prdumy, prcode, prname
  1001 format(a1,1x,i2,1x,a)
 
-      if (am0tfl .eq. 1) write (luomanage(sr),2015) prcode,prname
+      if (am0tfl(sr) .eq. 1) write (luomanage(sr),2015) prcode,prname
 
 !     process calls follow
       select case (prcode)
@@ -321,7 +322,7 @@
 !     pre-process stuff
         kappa = 1.0 ! *** NOTE that kappa is NOT being read from file
 
-        if (am0tdb .eq. 1) then
+        if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before crust breakdown process//'
           call tdbug(sr, nslay(sr), prcode, residue)
@@ -332,7 +333,7 @@
         call crust(kappa,fracarea,asfcr(sr),asflos(sr),asmlos(sr))
 
 !     post-process stuff
-        if (am0tdb .eq. 1) then
+        if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After crust breakdown process//'
           call tdbug(sr, nslay(sr), prcode, residue)
         end if
@@ -343,7 +344,7 @@
 
 !     pre-process stuff
 
-        if (am0tdb .eq. 1) then
+        if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before random roughness process//'
           call tdbug(sr, nslay(sr), prcode, residue)
@@ -367,7 +368,7 @@
      &             aszlyd(1,sr))
 
 !     post-process stuff
-        if (am0tdb .eq. 1) then
+        if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After random roughness process//'
           call tdbug(sr, nslay(sr), prcode, residue)
         end if
@@ -376,7 +377,7 @@
       case (3)
 !-----START oriented roughness ridge only process (process code 03)
 !     pre-process stuff
-        if (am0tdb .eq. 1) then
+        if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before oriented roughness1 process//'
           call tdbug(sr, nslay(sr), prcode, residue)
@@ -403,7 +404,7 @@
           asxdks(sr) = 0.0
         end if
 
-        if (am0tdb .eq. 1) then
+        if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After oriented roughness process//'
           call tdbug(sr, nslay(sr), prcode, residue)
         end if
@@ -412,7 +413,7 @@
       case (4)
 !-----START oriented roughness process dike only (process code 04)
 !     pre-process stuff
-        if (am0tdb .eq. 1) then
+        if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before oriented roughness2 process//'
           call tdbug(sr, nslay(sr), prcode, residue)
@@ -430,7 +431,7 @@
         call orient2(asxdkh(sr),asxdks(sr),dikeht,dikespac)
 
 !     post-process stuff
-        if (am0tdb .eq. 1) then
+        if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After oriented roughness process//'
           call tdbug(sr, nslay(sr), prcode, residue)
         end if
@@ -439,7 +440,7 @@
       case (5)
 !-----START oriented roughness process (process code 05)
 !     pre-process stuff
-        if (am0tdb .eq. 1) then
+        if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before oriented roughness process//'
           call tdbug(sr, nslay(sr), prcode, residue)
@@ -459,7 +460,7 @@
      &              tdepth,rdgflag)
 
 !     post-process stuff
-        if (am0tdb .eq. 1) then
+        if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After oriented roughness process//'
           call tdbug(sr, nslay(sr), prcode, residue)
         end if
@@ -468,7 +469,7 @@
       case (11)
 !-----START crushing process (process code 11)
 !    pre-process stuff
-        if (am0tdb .eq. 1) then
+        if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before crushing process//'
           call tdbug(sr, nslay(sr), prcode, residue)
@@ -514,7 +515,7 @@
         end if
 !        write (*,*) 'dia,sd',aslagm(1,sr),as0ags(1,sr)
 !
-        if (am0tdb .eq. 1) then
+        if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After crushing process//'
           call tdbug(sr, nslay(sr), prcode, residue)
         end if
@@ -523,7 +524,7 @@
       case (12)
 !-----START loosening process (process code 12)
 !       pre-process stuff
-        if (am0tdb .eq. 1) then
+        if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before loosening process//'
           call tdbug(sr, nslay(sr), prcode, residue)
@@ -565,7 +566,7 @@
      &       ah0cb(1,sr), aheaep(1,sr), ahrsk(1,sr) )
         end if
 
-        if (am0tdb .eq. 1) then
+        if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After loosening process//'
           call tdbug(sr, nslay(sr), prcode, residue)
         end if
@@ -574,7 +575,7 @@
       case (13)
 !-----START mixing process (process code 13)
 !     pre-process stuff
-        if (am0tdb .eq. 1) then
+        if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before mixing process//'
           write (luotdb(sr),*) 'Tillage layer depth is', tlayer
@@ -645,7 +646,7 @@
 
 !        write (*,*) 'dia,sd',aslagm(1,sr),as0ags(1,sr)
 
-        if (am0tdb .eq. 1) then
+        if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After mixing process//'
           call tdbug(sr, nslay(sr), prcode, residue)
         end if
@@ -655,7 +656,7 @@
       case (14)
 !-----START inversion process (process code 14)
 !     pre-process stuff
-        if (am0tdb .eq. 1) then
+        if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before inversion process//'
           call tdbug(sr, nslay(sr), prcode, residue)
@@ -689,7 +690,7 @@
         call m2asd(massf, nslay(sr),                                    &
      &    aslagn(1,sr), aslagx(1,sr), aslagm(1,sr), as0ags(1,sr))
 
-        if (am0tdb .eq. 1) then
+        if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After inversion process//'
           call tdbug(sr, nslay(sr), prcode, residue)
         end if
@@ -708,7 +709,7 @@
       case (24)
 !-----START flatten process variable toughness (process code 24)
 !     pre-process stuff
-        if (am0tdb .eq. 1) then
+        if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before flatten variable toughness proc.//'
           call tdbug(sr, nslay(sr), prcode, residue)
@@ -729,7 +730,7 @@
         ! crop pool state has been changed, force dependent variable update  
         am0cropupfl = 1
 
-        if (am0tdb .eq. 1) then
+        if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After flatten variable toughness proc.//'
           call tdbug(sr, nslay(sr), prcode, residue)
         end if
@@ -738,7 +739,7 @@
       case (25)
 !-----START mass bury process variable toughness (process code 25)
 !     pre-process stuff
-        if (am0tdb .eq. 1) then
+        if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before mass bury variable toughness pr.//'
           call tdbug(sr, nslay(sr), prcode, residue)
@@ -770,7 +771,7 @@
      &       residue, bioflg)
 
 !     post-process stuff
-        if (am0tdb .eq. 1) then
+        if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After mass bury variable toughness pr.//'
           call tdbug(sr, nslay(sr), prcode, residue)
         end if
@@ -779,7 +780,7 @@
       case (26)
 !-----START re-surface process variable toughness (process code 26)
 !     pre-process stuff
-        if (am0tdb .eq. 1) then
+        if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before re-surface vari. toughness proc.//'
           call tdbug(sr, nslay(sr), prcode, residue)
@@ -797,7 +798,7 @@
         call liftvt(mfvt, fracarea, tlayer, residue, resurf_roots, bioflg)
 
 !     post-process stuff
-        if (am0tdb .eq. 1) then
+        if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After re-surface vari. toughness proc.//'
           call tdbug(sr, nslay(sr), prcode, residue)
         end if
@@ -814,7 +815,7 @@
 !     pools where they can now begin to decay.
 
 !     pre-process stuff
-        if (am0tdb .eq. 1) then
+        if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before defoliate process//'
           call tdbug(sr, nslay(sr), prcode, residue)
@@ -853,7 +854,7 @@
         end if
 
 !     post-process stuff
-        if (am0tdb .eq. 1) then
+        if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After defoliate process//'
           call tdbug(sr, nslay(sr), prcode, residue)
         end if
@@ -869,7 +870,7 @@
 !     pools where they can now begin to decay.
 
 !     pre-process stuff
-        if (am0tdb .eq. 1) then
+        if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before kill process//'
           call tdbug(sr, nslay(sr), prcode, residue)
@@ -929,7 +930,7 @@
         end if
 
 !     post-process stuff
-        if (am0tdb .eq. 1) then
+        if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After kill process//'
           call tdbug(sr, nslay(sr), prcode, residue)
         end if
@@ -938,7 +939,7 @@
       case (32)
 !-----START cutting to height process (process code 32)
 !     pre-process stuff
-        if (am0tdb .eq. 1) then
+        if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before cutting to height process//'
           call tdbug(sr, nslay(sr), prcode, residue)
@@ -961,7 +962,7 @@
      &       mass_rem, mass_left)
 
 !     post-process stuff
-        if (am0tdb .eq. 1) then
+        if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After cutting to height process//'
           call tdbug(sr, nslay(sr), prcode, residue)
         end if
@@ -977,7 +978,7 @@
      &           mandate)
             call report_calib_harvest(sr,bmrotation,mass_rem,mass_left)
             call report_hydrobal( sr, bmrotation )
-            call crop_endseason( sr, ac0nam(sr), am0cfl,                &
+            call crop_endseason( sr, ac0nam(sr), am0cfl(sr),                &
      &        nslay(sr), ac0idc(sr), acdayam(sr),                       &
      &        acthum(sr), acxstmrep(sr),                                &
      &        prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
@@ -994,7 +995,7 @@
       case (33)
 !-----START cutting by fraction process (process code 33)
 !     pre-process stuff
-        if (am0tdb .eq. 1) then
+        if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before cutting by fraction process//'
           call tdbug(sr, nslay(sr), prcode, residue)
@@ -1015,7 +1016,7 @@
      &       atzht(sr), atgrainf(sr), residue,                          &
      &       mass_rem, mass_left)
 !     post-process stuff
-        if (am0tdb .eq. 1) then
+        if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After cutting by fraction process//'
           call tdbug(sr, nslay(sr), prcode, residue)
         end if
@@ -1031,7 +1032,7 @@
      &           mandate)
             call report_calib_harvest(sr,bmrotation,mass_rem,mass_left)
             call report_hydrobal( sr, bmrotation )
-            call crop_endseason( sr, ac0nam(sr), am0cfl,                &
+            call crop_endseason( sr, ac0nam(sr), am0cfl(sr),                &
      &        nslay(sr), ac0idc(sr), acdayam(sr),                       &
      &        acthum(sr), acxstmrep(sr),                                &
      &        prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
@@ -1048,7 +1049,7 @@
       case (34)
 !-----START modify standing fall rate process variable toughness (process code 34)
 !     pre-process stuff
-        if (am0tdb .eq. 1) then
+        if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before modify standing fall rate proc.//'
           call tdbug(sr, nslay(sr), prcode, residue)
@@ -1073,7 +1074,7 @@
      &                    residue )
 
 !     post-process stuff
-        if (am0tdb .eq. 1) then
+        if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After modify standing fall rate proc.//'
           call tdbug(sr, nslay(sr), prcode, residue)
         end if
@@ -1082,7 +1083,7 @@
       case (37)
 !-----START thinning to population process (process code 37)
 !     pre-process stuff
-        if (am0tdb .eq. 1) then
+        if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before thinning to population process//'
           call tdbug(sr, nslay(sr), prcode, residue)
@@ -1104,7 +1105,7 @@
      &       mass_rem, mass_left)
 
 !     post-process stuff
-        if (am0tdb .eq. 1) then
+        if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After thinning to population process//'
           call tdbug(sr, nslay(sr), prcode, residue)
         end if
@@ -1120,7 +1121,7 @@
       &          mandate)
             call report_calib_harvest(sr,bmrotation,mass_rem,mass_left)
             call report_hydrobal( sr, bmrotation )
-            call crop_endseason( sr, ac0nam(sr), am0cfl,                &
+            call crop_endseason( sr, ac0nam(sr), am0cfl(sr),                &
      &        nslay(sr), ac0idc(sr), acdayam(sr),                       &
      &        acthum(sr), acxstmrep(sr),                                &
      &        prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
@@ -1137,7 +1138,7 @@
       case (38)
 !-----START thinning by fraction process (process code 38)
 !     pre-process stuff
-        if (am0tdb .eq. 1) then
+        if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before thinning by fraction process//'
           call tdbug(sr, nslay(sr), prcode, residue)
@@ -1158,7 +1159,7 @@
      &       atdstm(sr), atgrainf(sr), residue,                         &
      &       mass_rem, mass_left)
 !     post-process stuff
-        if (am0tdb .eq. 1) then
+        if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After thinning by fraction process//'
           call tdbug(sr, nslay(sr), prcode, residue)
         end if
@@ -1174,7 +1175,7 @@
      &           mandate)
             call report_calib_harvest(sr,bmrotation,mass_rem,mass_left)
             call report_hydrobal( sr, bmrotation )
-            call crop_endseason( sr, ac0nam(sr), am0cfl,                &
+            call crop_endseason( sr, ac0nam(sr), am0cfl(sr),                &
      &        nslay(sr), ac0idc(sr), acdayam(sr),                       &
      &        acthum(sr), acxstmrep(sr),                                &
      &        prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
@@ -1191,7 +1192,7 @@
       case (40)
 !-----START crop to biomass transfer process (process code 40)
 !     pre-process stuff
-        if (am0tdb .eq. 1) then
+        if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before biomass transfer process//'
           call tdbug(sr, nslay(sr), prcode, residue)
@@ -1224,7 +1225,7 @@
       am0kilfl = 0
 
 !     post-process stuff
-        if (am0tdb .eq. 1) then
+        if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After biomass transfer process//'
           call tdbug(sr, nslay(sr), prcode, residue)
         end if
@@ -1233,7 +1234,7 @@
       case (42)
 !-----START flagged cutting to height process (process code 42)
 !     pre-process stuff
-        if (am0tdb .eq. 1) then
+        if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before flagged cutting to height proc.//'
           call tdbug(sr, nslay(sr), prcode, residue)
@@ -1257,7 +1258,7 @@
      &       mass_rem, mass_left)
 
 !     post-process stuff
-        if (am0tdb .eq. 1) then
+        if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After flagged cutting to height proc.//'
           call tdbug(sr, nslay(sr), prcode, residue)
         end if
@@ -1275,7 +1276,7 @@
             call report_harvest( sr, bmrotation, mass_rem, mass_left,   &
      &                           harv_unit_flg, mandate )
             call report_hydrobal( sr, bmrotation )
-            call crop_endseason( sr, ac0nam(sr), am0cfl,                &
+            call crop_endseason( sr, ac0nam(sr), am0cfl(sr),                &
      &        nslay(sr), ac0idc(sr), acdayam(sr),                       &
      &        acthum(sr), acxstmrep(sr),                                &
      &        prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
@@ -1293,7 +1294,7 @@
       case (43)
 !-----START flagged cutting by fraction process (process code 43)
 !     pre-process stuff
-        if (am0tdb .eq. 1) then
+        if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before flagged cutting by fraction pr.//'
           call tdbug(sr, nslay(sr), prcode, residue)
@@ -1315,7 +1316,7 @@
      &       atzht(sr), atgrainf(sr), residue,                          &
      &       mass_rem, mass_left)
 !     post-process stuff
-        if (am0tdb .eq. 1) then
+        if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After flagged cutting by fraction pr.//'
           call tdbug(sr, nslay(sr), prcode, residue)
         end if
@@ -1333,7 +1334,7 @@
             call report_harvest( sr, bmrotation, mass_rem, mass_left,   &
      &                           harv_unit_flg, mandate )
             call report_hydrobal( sr, bmrotation )
-            call crop_endseason( sr, ac0nam(sr), am0cfl,                &
+            call crop_endseason( sr, ac0nam(sr), am0cfl(sr),                &
      &        nslay(sr), ac0idc(sr), acdayam(sr),                       &
      &        acthum(sr), acxstmrep(sr),                                &
      &        prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
@@ -1351,7 +1352,7 @@
       case (47)
 !-----START flagged thinning to population process (process code 47)
 !     pre-process stuff
-        if (am0tdb .eq. 1) then
+        if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write(luotdb(sr),*)'//Before flagged thinning to population pr.//'
           call tdbug(sr, nslay(sr), prcode, residue)
@@ -1374,7 +1375,7 @@
      &       mass_rem, mass_left)
 
 !     post-process stuff
-        if (am0tdb .eq. 1) then
+        if (am0tdb(sr) .eq. 1) then
           write(luotdb(sr),*) '//After flagged thinning to population pr.//'
           call tdbug(sr, nslay(sr), prcode, residue)
         end if
@@ -1392,7 +1393,7 @@
             call report_harvest( sr, bmrotation, mass_rem, mass_left,   &
      &                           harv_unit_flg, mandate )
             call report_hydrobal( sr, bmrotation )
-            call crop_endseason( sr, ac0nam(sr), am0cfl,                &
+            call crop_endseason( sr, ac0nam(sr), am0cfl(sr),                &
      &        nslay(sr), ac0idc(sr), acdayam(sr),                       &
      &        acthum(sr), acxstmrep(sr),                                &
      &        prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
@@ -1410,7 +1411,7 @@
       case (48)
 !-----START flagged thinning by fraction process (process code 48)
 !     pre-process stuff
-        if (am0tdb .eq. 1) then
+        if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before flagged thinning by fraction pr.//'
           call tdbug(sr, nslay(sr), prcode, residue)
@@ -1432,7 +1433,7 @@
      &       atdstm(sr), atgrainf(sr), residue,                         &
      &       mass_rem, mass_left)
 !     post-process stuff
-        if (am0tdb .eq. 1) then
+        if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After flagged thinning by fraction pr.//'
           call tdbug(sr, nslay(sr), prcode, residue)
         end if
@@ -1450,7 +1451,7 @@
             call report_harvest( sr, bmrotation, mass_rem, mass_left,   &
      &                           harv_unit_flg, mandate )
             call report_hydrobal( sr, bmrotation )
-            call crop_endseason( sr, ac0nam(sr), am0cfl,                &
+            call crop_endseason( sr, ac0nam(sr), am0cfl(sr),                &
      &        nslay(sr), ac0idc(sr), acdayam(sr),                       &
      &        acthum(sr), acxstmrep(sr),                                &
      &        prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
@@ -1470,7 +1471,7 @@
         !New residue is assigned to residue pool 1.
         !Existing residue is set to 0.
         ! pre-process stuff
-        if (am0tdb .eq. 1) then
+        if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before residue initialization process//'
           call tdbug(sr, nslay(sr), prcode, residue)
@@ -1545,7 +1546,7 @@
             residue(idx)%geometry%hyfg = 0
         end do
 !     post-process stuff
-        if (am0tdb .eq. 1) then
+        if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After residue initialization process//'
           call tdbug(sr, nslay(sr), prcode, residue)
         end if
@@ -1554,7 +1555,7 @@
       case (51)
 !-----START planting process (process code 51)
 !     pre-process stuff
-        if (am0tdb .eq. 1) then
+        if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before planting process//'
           call tdbug(sr, nslay(sr), prcode, residue)
@@ -1741,7 +1742,7 @@
           call stir_crop(sr, cropname, 1)
         endif
 !       post-process stuff
-        if (am0tdb .eq. 1) then
+        if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After planting process//'
           call tdbug(sr, nslay(sr), prcode, residue)
         end if
@@ -1752,7 +1753,7 @@
       case (61)
 !-----START biomass remove process (process code 61)
 !     pre-process stuff
-        if (am0tdb .eq. 1) then
+        if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before biomass remove process//'
           call tdbug(sr, nslay(sr), prcode, residue)
@@ -1784,7 +1785,7 @@
      &    nslay(sr), mass_rem, mass_left)
 
 !     post-process stuff
-        if (am0tdb .eq. 1) then
+        if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After biomass remove process//'
           call tdbug(sr, nslay(sr), prcode, residue)
         end if
@@ -1800,7 +1801,7 @@
      &           mandate)
             call report_calib_harvest(sr,bmrotation,mass_rem,mass_left)
             call report_hydrobal( sr, bmrotation )
-            call crop_endseason( sr, ac0nam(sr), am0cfl,                &
+            call crop_endseason( sr, ac0nam(sr), am0cfl(sr),                &
      &        nslay(sr), ac0idc(sr), acdayam(sr),                       &
      &        acthum(sr), acxstmrep(sr),                                &
      &        prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
@@ -1817,7 +1818,7 @@
       case (62)
 !-----START biomass remove pool process (process code 62)
         ! pre-process stuff
-        if (am0tdb .eq. 1) then
+        if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before biomass remove pool process//'
           call tdbug(sr, nslay(sr), prcode, residue)
@@ -1847,7 +1848,7 @@
      &    nslay(sr), mass_rem, mass_left)
 
         ! post-process stuff
-        if (am0tdb .eq. 1) then
+        if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After biomass remove pool process//'
           call tdbug(sr, nslay(sr), prcode, residue)
         end if
@@ -1867,7 +1868,7 @@
             call report_harvest( sr, bmrotation, mass_rem, mass_left,   &
      &                           harv_unit_flg, mandate )
             call report_hydrobal( sr, bmrotation )
-            call crop_endseason( sr, ac0nam(sr), am0cfl,                &
+            call crop_endseason( sr, ac0nam(sr), am0cfl(sr),                &
      &        nslay(sr), ac0idc(sr), acdayam(sr),                       &
      &        acthum(sr), acxstmrep(sr),                                &
      &        prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
@@ -1893,7 +1894,7 @@
         ! crop is growing.
 
 !     pre-process stuff
-        if (am0tdb .eq. 1) then
+        if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before add residue process//'
           call tdbug(sr, nslay(sr), prcode, residue)
@@ -1981,7 +1982,7 @@
         end if
 
 !     post-process stuff
-        if (am0tdb .eq. 1) then
+        if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After add residue process//'
           call tdbug(sr, nslay(sr), prcode, residue)
         end if
@@ -2004,7 +2005,7 @@
         ! crop is growing.
 
 !     pre-process stuff
-        if (am0tdb .eq. 1) then
+        if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before add manure process//'
           call tdbug(sr, nslay(sr), prcode, residue)
@@ -2109,7 +2110,7 @@
         end if
  
 !     post-process stuff
-        if (am0tdb .eq. 1) then
+        if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After add manure process//'
           call tdbug(sr, nslay(sr), prcode, residue)
         end if
@@ -2118,7 +2119,7 @@
       case (71)
 !-----START irrigate process (process code 71) (OBSOLETE)
 !     pre-process stuff
-        if (am0tdb .eq. 1) then
+        if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before irrigation process//'
           call tdbug(sr, nslay(sr), prcode, residue)
@@ -2142,7 +2143,7 @@
         ! in process 72, if this is used in conjunction with it
         call ratedura(ahzirr(sr), ahratirr(sr), ahdurirr(sr))
 !     post-process stuff
-        if (am0tdb .eq. 1) then
+        if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After irrigate process//'
           call tdbug(sr, nslay(sr), prcode, residue)
         end if
@@ -2151,7 +2152,7 @@
       case (72)
 !-----START irrigation monitoring process (process code 72)
 !     pre-process stuff
-        if (am0tdb .eq. 1) then
+        if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before irrigation monitoring process//'
           call tdbug(sr, nslay(sr), prcode, residue)
@@ -2168,7 +2169,7 @@
         ! use inputs to set the irrigation rate, if 
         call ratedura(ahzdmaxirr(sr), ahratirr(sr), ahdurirr(sr))
 !     post-process stuff
-        if (am0tdb .eq. 1) then
+        if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After irrigation monitoring process//'
           call tdbug(sr, nslay(sr), prcode, residue)
         end if
@@ -2177,7 +2178,7 @@
       case (73)
 !-----START single event irrigation process (process code 73)
 !     pre-process stuff
-        if (am0tdb .eq. 1) then
+        if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before single event irrigation process//'
           call tdbug(sr, nslay(sr), prcode, residue)
@@ -2192,12 +2193,12 @@
         ahzirr(sr) = ahzirr(sr) + irrig
         ! use inputs to set the irrigation rate, if 
         call ratedura(ahzirr(sr), ahratirr(sr), ahdurirr(sr))
-        if (am0tdb .eq. 1) then
+        if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After single event irrigation process//'
           !call tdbug(sr, nslay(sr), prcode, residue)
         end if
 !     post-process stuff
-        if (am0tdb .eq. 1) then
+        if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After single event irrigation process//'
           call tdbug(sr, nslay(sr), prcode, residue)
         end if
@@ -2206,7 +2207,7 @@
       case (74)
 !-----START terminate irrigation monitoring terminate process (process code 74)
 !     pre-process stuff
-        if (am0tdb .eq. 1) then
+        if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before terminate irrigation monitoring//'
           call tdbug(sr, nslay(sr), prcode, residue)
@@ -2214,7 +2215,7 @@
 !     do process
         am0monirr(sr) = 0
 !     post-process stuff
-        if (am0tdb .eq. 1) then
+        if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After terminate irrigation monitoring//'
           call tdbug(sr, nslay(sr), prcode, residue)
         end if

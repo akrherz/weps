@@ -53,6 +53,7 @@
       use grid_mod, only: amxsim
       use Points_Mod, only: slen
       use wind_mod, only: sbzdisp, sbzo, biodrag
+      use hydro_data_struct_defs, only: am0hfl
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer, intent(in) :: isr   ! subregion number
@@ -374,8 +375,9 @@
 
 !     + + + END SPECIFICATIONS + + +
 !     write headers and inital values to hydro.out
-      if ((am0ifl .eqv. .true.) .and.((am0hfl .eq. 1).or.(am0hfl .eq. 3)&
-     &   .or. (am0hfl .eq. 5) .or. (am0hfl .eq. 7))) then
+      if(  (am0ifl .eqv. .true.)                                        &
+     &   .and.((am0hfl(isr) .eq. 1) .or. (am0hfl(isr) .eq. 3)           &
+     &   .or.  (am0hfl(isr) .eq. 5) .or. (am0hfl(isr) .eq. 7))) then
 
 !     Echo print of input soil data
 
@@ -718,8 +720,8 @@
 !     End WEPP addition      
 
 !     Print the daily soil water balance results to hydro.out
-      if ((am0hfl .eq. 1).or.(am0hfl .eq. 3).or.(am0hfl .eq. 5).or.     &
-     &   (am0hfl .eq.7)) then
+      if(    (am0hfl(isr) .eq. 1) .or. (am0hfl(isr) .eq. 3)             &
+     &   .or.(am0hfl(isr) .eq. 5) .or. (am0hfl(isr) .eq. 7)) then
          ! insert double blank line to break years into blocks for graphing
          if( idoy .eq. 1 ) then
              write(luohydro(isr),*)
