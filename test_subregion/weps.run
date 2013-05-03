@@ -47,7 +47,7 @@ none
 #   RFD-SubmodelOutput
 7 1 1 1 3 15
 #   RFD-DebugOutput
-1 1 1 1 1 1
+0 0 0 0 0 0
 #
 # --SIMULATION REGION INFORMATION
 #   RFD-RegionAngle(degrees clockwise from North)

@@ -37,7 +37,7 @@ module wind_mod
       real, intent(out) :: wzorg  ! aerodynamic roughness of ridge
       real, intent(out) :: wzorr  ! aerodynamic roughness of random roughness
       real, intent(out) :: wzzov  ! aerodynamic roughness length of canopy (mm)
-      real, intent(out) :: awzzo  ! aerodynamic roughness at anemom. site (mm)
+      real, intent(inout) :: awzzo  ! aerodynamic roughness at anemom. site (mm)
 
 !     +++ LOCAL VARIABLES +++
       real :: hl    ! ratio of ridge height to parallel ridge spacing
@@ -160,7 +160,7 @@ module wind_mod
       real, intent(in) :: brcd      ! biomass drag coefficient (or "effective" biomass silhouette area index)
       real, intent(in) :: bbzht     ! composite average residue height (m)
       real, intent(in) :: bczht     ! crop height (m)
-      real, intent(out) :: awzdisp  ! zero plane displacement at weather location (mm)
+      real, intent(inout) :: awzdisp  ! zero plane displacement at weather location (mm)
       real, intent(out) :: wzdisp   ! zero plane displacement at location (mm)
 
 !     +++ LOCAL VARIABLES +++

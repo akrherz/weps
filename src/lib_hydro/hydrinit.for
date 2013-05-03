@@ -117,6 +117,7 @@
       wp_snowmeltEvents = 0
       wp_totalSnowrunoff = 0.0
       wp_prev_crust_frac = -1.0
+      wp_rkecum = 0.0
       ! End WEPP addition      
 
       ahztranspdepth(isr) = 0.0

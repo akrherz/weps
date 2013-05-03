@@ -61,6 +61,7 @@
 
          if (am0cdb.eq.1) call cdbug(sr, nslay(sr), restot)
 
+         write(*,*) 'CALLCROP: acxrow(sr): ', acxrow(sr)
          call cropgrow(sr, nslay(sr),                                   &
      &   aszlyt(1,sr), aszlyd(1,sr), asdblk(1,sr),                      &
      &   asfcce(1,sr), asfom(1,sr), asfcec(1,sr), asfsmb(1,sr),         &
@@ -138,6 +139,7 @@
      &      nslay(sr), residue)
       end if
 
+         write(*,*) 'CALLCROP: acxrow(sr): ', acxrow(sr)
       ! update all derived globals for crop global variables
       call cropupdate(                                                  &
      &      acmstandstem(sr), acmstandleaf(sr), acmstandstore(sr),      &

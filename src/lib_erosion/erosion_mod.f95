@@ -34,7 +34,7 @@ module erosion_mod
       integer :: SURF_UPD_FLG    ! erosion surface updating (0 - disabled, 1 - enabled)
       type(subregionsurfacestate), dimension(:) :: subrsurf  ! subregion surface conditions (erosion specific set)
       type(threshold), dimension(:), intent(out) :: noerod                 ! report values to show which factors prevented erosion
-      type(cellsurfacestate), dimension(0:,0:), intent(out) :: cellstate     ! initialized grid cell state values
+      type(cellsurfacestate), dimension(0:,0:), intent(inout) :: cellstate     ! initialized grid cell state values
 
 !     +++ PARAMETER +++
       real SNODEP                !Minimum snow depth to prevent erosion
@@ -52,7 +52,8 @@ module erosion_mod
       integer :: n        ! number of ??
       integer :: hidx     ! hour index (for referencing surface water content)
       real :: wuref      ! reference wind speed (m/s) 
-      real :: rusust     ! ratio of friction vel. to threshold friction vel.
+      real :: rusust_max     ! ratio of friction vel. to threshold friction vel. simulation region maximum
+      real :: rusust_sub     ! ratio of friction vel. to threshold friction vel. subregion maximum
       real :: rut        ! ratio of rusust for this timestep
 !      real :: rusust_preros ! ratio of friction vel. to threshold friction vel. by timestep (max all subregions) before erosion starts
       real :: wzorg      ! aerodynamic roughness of ridge (mm)
@@ -111,10 +112,13 @@ module erosion_mod
       end do
 
       ! set ratio: defined as the ratio wus/wust
-      rusust = 0
+      rusust_max = 0.0
 
-! for subhourly, surface water content values should be interpolated. see hidx calculation
+      ! for subhourly, surface water content values should be interpolated. see hidx calculation
       do icsr = 1, size(subrsurf)
+       ! initialize the subregion ratio
+       rusust_sub = 0.0
+
        ! If snow depth > 20 mm in all subregions, then no erosion
        if (subrsurf(icsr)%ahzsnd .le. SNODEP) then
         ! Have insufficient snow depth
@@ -184,9 +188,9 @@ module erosion_mod
           ! We have erosion if (wus/wust .gt. 1.0) - for flat fields only
           !  rusust_preros(i) = max( rusust_preros(i), wus/wust )
           !  rusust = max( rusust, rusust_preros(i) )
-          if( wus/wust .gt. rusust ) then
+          if( wus/wust .gt. rusust_sub ) then
              ! set new maximum
-             rusust = wus/wust
+             rusust_sub = wus/wust
              ! set reporting values for the new maximum (this is as close to erosion as we will get)
              noerod(icsr)%wus_anemom = wus_anemom
              noerod(icsr)%wus_random = wus_random
@@ -232,6 +236,10 @@ module erosion_mod
         noerod(icsr)%wzzo = 0
         noerod(icsr)%sfcv = 0
        endif
+
+       ! set global maximum
+       rusust_max = max( rusust_sub, rusust_max )
+
       end do
 
       ! Some placeholder code for hills
@@ -246,7 +254,7 @@ module erosion_mod
       !  endif
       
       ! Check wind ratio
-      if (rusust .le. wr) then
+      if (rusust_max .le. wr) then
           ! exit out of erosion submodel
           call timer(TIMEROS,TIMSTOP)
           return
@@ -312,7 +320,7 @@ module erosion_mod
 
           !rut = rusust_preros(i)  This change sabotaged code logic
           
-          rut = rusust*subday(i)%awu/wuref
+          rut = rusust_max*subday(i)%awu/wuref
           !if (wustfl < 1) then
           ! no erosion aka surface updating has occurred yet
           !if( rusust_preros(i) .gt. wr ) then
@@ -414,7 +422,7 @@ module erosion_mod
 
                ! prepare to update rusust and wus.
                ! note: when rusust= <0.1, sbaglos does not calculate.
-               rusust = 0.2
+               rusust_max = 0.2
 
                ! stop general timer and start sbwind timer
                call timer(TIMEROS,TIMSTOP)
@@ -423,7 +431,7 @@ module erosion_mod
                ! updates the fric. vel and threshold fric. vel on grid
                ! and calc. max. for  rusust = wus/wust
                ! this subroutine calls sbzo and sbwus
-               call sbwind( wustfl, subday(i)%awu, ntstep, i, rusust, subrsurf, cellstate )
+               call sbwind( wustfl, subday(i)%awu, ntstep, i, rusust_max, subrsurf, cellstate )
                wuref = subday(i)%awu
                wr = 1
 
@@ -431,7 +439,7 @@ module erosion_mod
                call timer(TIMSBWIND,TIMSTOP)
                call timer(TIMEROS,TIMSTART)
 
-               if (rusust .gt. wr) then
+               if (rusust_max .gt. wr) then
                   ! erosion will occur this time step
                   ! wustfl = 1
                   if (btest(am0efl,3)) then
@@ -458,7 +466,7 @@ module erosion_mod
                else
                   ! print out initial state, even if we never call sberode()
                   if (btest(am0efl,3).and.(j .eq. 1).and.(i .eq. 1)) then
-                     call sbwind( wustfl, subday(i)%awu, ntstep, i, rusust, subrsurf, cellstate )
+                     call sbwind( wustfl, subday(i)%awu, ntstep, i, rusust_max, subrsurf, cellstate )
                      wuref = subday(i)%awu
                      call sb1out (j, n, hrs, subday(i)%awu, subday(i)%awdir, luo_sgrd, subrsurf(1), cellstate)
                   endif

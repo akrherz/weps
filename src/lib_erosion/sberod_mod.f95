@@ -199,7 +199,7 @@ module sberod_mod
 
 !     + + + ARGUEMENT DECLARATIONS + + +
       type(subregionsurfacestate), dimension(:), intent(inout) :: subrsurf  ! subregion surface conditions (erosion specific set)
-      type(cellsurfacestate), dimension(0:,0:), intent(out) :: cellstate     ! initialized grid cell state values
+      type(cellsurfacestate), dimension(0:,0:), intent(inout) :: cellstate     ! initialized grid cell state values
 
 !     + + + LOCAL VARIABLES + + +
       integer :: i, j  ! grid cell x,y coordinates
@@ -235,6 +235,7 @@ module sberod_mod
 
           ! determine subregion
           icsr = cellstate(i,j)%csr
+
           ! input variables to grid cells
           cellstate(i,j)%sf1 = subrsurf(icsr)%sfd1
           cellstate(i,j)%sf10 = subrsurf(icsr)%sfd10
@@ -280,7 +281,7 @@ module sberod_mod
 !     friction velocity
 
       use erosion_data_struct_defs, only: subregionsurfacestate, cellsurfacestate, anemht, awzzo, wzoflg
-      use grid_mod, only: kbr, imax, jmax
+      use grid_mod, only: imax, jmax
       use barriers_mod, only: barrier
       use wind_mod, only: biodrag, sbzo, sbwus
       use process_mod, only: sbwust, sbaglos
@@ -324,12 +325,12 @@ module sberod_mod
 
           ! correct friction velocity for hills
           ! if (nhill .ne. 0 ) then
-          !   cellstate(i,j)%wus = cellstate(i,j)%wus * w0hill(i,j,kbr)
+          !   cellstate(i,j)%wus = cellstate(i,j)%wus * w0hill(i,j)
           ! endif
 
           ! correct friction velocity for barriers
           if ( allocated(barrier) ) then
-            cellstate(i,j)%wus = cellstate(i,j)%wus * cellstate(i,j)%w0br(1)
+            cellstate(i,j)%wus = cellstate(i,j)%wus * cellstate(i,j)%w0br
           endif
 
           if (wustfl .eq. 1) then

@@ -7,7 +7,6 @@ module grid_mod
     use Points_Mod, only: point
     implicit none
 
-    integer :: kbr         ! wind quadrant key relative to simulation region for barrier effect (from 1 to 8 )
     integer :: i1, i2, i3  ! do loop parameters defining grid update sequence, i1..i3 defines second update directions
     integer :: i4, i5, i6  ! do loop parameters defining grid update sequence, i4..i6 defines first update direction
 
@@ -76,7 +75,7 @@ module grid_mod
       lx = amxsim(2)%x - amxsim(1)%x
       ly = amxsim(2)%y - amxsim(1)%y
 
-      write(*,*) 'SBGRID: ly, ly: ', lx, ly
+      !write(*,*) 'SBGRID: lx, ly: ', lx, ly
 
 !     increase grid points on large field
 !      if((lx .gt. 200) .or. (ly  .gt. 200)) then

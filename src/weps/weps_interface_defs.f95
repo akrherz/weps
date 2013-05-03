@@ -1077,7 +1077,7 @@
       type(biototal), intent(in) :: croptot
       type(biototal), intent(in) :: biotot
       type(threshold), intent(in) :: noerod
-      type(cellsurfacestate), dimension(0:,0:), intent(out) :: cellstate     ! initialized grid cell state values
+      type(cellsurfacestate), dimension(0:,0:), intent(in) :: cellstate     ! initialized grid cell state values
       end subroutine plotdata
 !--------------------------------
       subroutine save_soil(isr)
@@ -1908,7 +1908,7 @@
     INTEGER, INTENT (IN) :: cm  ! current month
     TYPE (pd_var_type), DIMENSION(Min_monthly_vars:), intent(inout) :: monthly_update
     TYPE (pd_var_type), DIMENSION(Min_monthly_vars:,:), intent(inout) :: mrot_update
-    type(cellsurfacestate), dimension(0:,0:), intent(out) :: cellstate     ! initialized grid cell state values
+    type(cellsurfacestate), dimension(0:,0:), intent(in) :: cellstate     ! initialized grid cell state values
     end subroutine  update_monthly_update_vars
 !------------------------
 SUBROUTINE update_monthly_report_vars(cur_month, cur_year, nrot_years, monthly_update, mrot_update, monthly_report)
@@ -1932,7 +1932,7 @@ SUBROUTINE update_period_update_vars(sbr, period_update, restot, croptot, biotot
     type(biototal), intent(in) :: restot  ! contains:
     type(biototal), intent(in) :: croptot  ! contains:
     type(biototal), intent(in) :: biotot  ! contains:
-    type(cellsurfacestate), dimension(0:,0:), intent(out) :: cellstate  ! egt, egtcs, egtss, egt10
+    type(cellsurfacestate), dimension(0:,0:), intent(in) :: cellstate  ! egt, egtcs, egtss, egt10
     end subroutine  update_period_update_vars
 !-------------------------
 SUBROUTINE update_period_report_vars(pd, npd, cur_yr, nrot_years, period_update, period_report)
@@ -1953,7 +1953,7 @@ SUBROUTINE update_yrly_update_vars(isr, yrly_update, yrot_update, yr_update, cel
     TYPE (pd_var_type), DIMENSION(Min_yrly_vars:), intent(inout) :: yrly_update
     TYPE (pd_var_type), DIMENSION(Min_yrly_vars:), intent(inout) :: yrot_update
     TYPE (pd_var_type), DIMENSION(Min_yrly_vars:), intent(inout) :: yr_update
-    type(cellsurfacestate), dimension(0:,0:), intent(out) :: cellstate  ! egt, egtcs, egtss, egt10
+    type(cellsurfacestate), dimension(0:,0:), intent(in) :: cellstate  ! egt, egtcs, egtss, egt10
     end subroutine update_yrly_update_vars
 !-------------------------            
     SUBROUTINE update_yrly_report_vars(cur_year, nrot_years, yrly_update, yrot_update, yr_update, yrly_report, yr_report)

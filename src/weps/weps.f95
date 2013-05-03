@@ -786,6 +786,9 @@
 
                   ! write(*,*) "Start erosion"
                   call erosion( 5.0, SURF_UPD_FLG, subrsurf, noerod, cellstate )
+               else
+                  ! set plot.out indicator flags (initialization complete so cellstate unaltered)
+                  call erodinit( noerod, cellstate )
                end if
             end if
 

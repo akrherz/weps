@@ -149,7 +149,7 @@ contains
           end do
 
           ! assign minimum value to grid cell
-          cellstate(i,j)%w0br(1) = w0br_min
+          cellstate(i,j)%w0br = w0br_min
 
         end do
       end do

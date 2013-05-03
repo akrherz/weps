@@ -508,9 +508,9 @@
           ! estimate initial values of: rsd(residue:t/ha);ap(labile P conc.:g/t);
           ! wno3 (no3 conc.:g/t). dg1=previous value of dg.
           ! call sdst (rsd,dg,dg1,i)
-          call sdst (ap,dg,dg1,i)
-          call sdst (wno3,dg,dg1,i)
-          trsd=trsd+rsd(i)
+          !call sdst (ap,dg,dg1,i)
+          !call sdst (wno3,dg,dg1,i)
+          !trsd=trsd+rsd(i)
           dg1=dg
           ! calculate ratio (rtn) of active(wmn) to total(wn) N pools associated
           ! with humus. yc=years of cultivation.
@@ -532,10 +532,10 @@
 
           ! calculate amounts of N & P (kg/ha) from fresh organic matter(rsd),
           ! assuming that N content of residue is 0.8%; fon & fop are in kg/ha.
-          fon(i)=rsd(i)*8.
-          fop(i)=rsd(i)*1.1
-          tfon=tfon+fon(i)
-          tfop=tfop+fop(i)
+          !fon(i)=rsd(i)*8.
+          !fop(i)=rsd(i)*1.1
+          !tfon=tfon+fon(i)
+          !tfop=tfop+fop(i)
 
           ! initial organic(humus) N & P concentrations (g/t) in the soil
           if (wn(i).eq.0.) wn(i)=1000.*bsfom(i)

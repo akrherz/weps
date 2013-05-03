@@ -473,6 +473,7 @@ module sae_in_out_mod
       type(cellsurfacestate), dimension(0:,0:), intent(in) :: cellstate     ! initialized grid cell state values
 
 !     ++++ LOCAL VARIABLES +++
+      character(len=21) :: rundatetime
       integer i, j
       real tt, lx, ly
       real topt,topss, top10, bott, botss, bot10, ritt, ritss, rit10
@@ -584,7 +585,8 @@ module sae_in_out_mod
       end if
 
       ! Print date of Run
-      write(o_unit,"(1x,'Date of run: ',a21)") get_systime_string()
+      rundatetime = get_systime_string() ! with Lahey f95, had to assign to variable first
+      write(o_unit,"(1x,'Date of run: ',a21)") rundatetime
       write(o_unit,*)
 
       write(o_unit,fmt="(1x,a)") "<field dimensions>"
@@ -774,7 +776,7 @@ module sae_in_out_mod
 
       use datetime_mod, only: get_systime_string, caldat
       use erosion_data_struct_defs, only: subregionsurfacestate, cellsurfacestate, awzypt, anemht, wzoflg, ntstep
-      use grid_mod, only: awa, kbr, imax, jmax, amasim, amxsim
+      use grid_mod, only: awa, imax, jmax, amasim, amxsim
 
 !     + + + ARGUEMENT DECLARATIONS + + +
       real ws, wdir, hr
@@ -786,6 +788,7 @@ module sae_in_out_mod
 !     o_unit= Unit number for output file
 
 !     + + + LOCAL VARIABLES + + +
+      character(len=21) :: rundatetime
       !integer m, n, k
       integer initflag, ipd, npd
       save    initflag, ipd, npd
@@ -811,14 +814,13 @@ module sae_in_out_mod
         write (o_unit,*)
 
         ! Print date of Run
-        write(o_unit,"(1x,'Date of run: ',a21)") get_systime_string()
+        rundatetime = get_systime_string() ! with Lahey f95, had to assign to variable first
+        write(o_unit,"(1x,'Date of run: ',a21)") rundatetime
         write(o_unit,*)
 
         write (unit=o_unit,fmt="(a,f5.2,a2,a,i1)") ' anemht = ', anemht, 'm', '    wzoflg = ', wzoflg
         write (unit=o_unit,fmt="(a,f6.2,a4)") ' wind direction = ', wdir, 'deg'
         write (unit=o_unit,fmt="(a,f6.2,a4)") ' wind direction relative to field orientation = ', awa, 'deg'
-      write (o_unit,*)
-        write (unit=o_unit,fmt="(a,i1)") ' wind quadrant = ', kbr
         write (o_unit,*)
         write (o_unit,*) 'orientation and dimensions of sim region'
         write (o_unit,*) 'amasim(deg)  amxsim - (x1,y1) (x2,y2)'
@@ -1243,6 +1245,7 @@ module sae_in_out_mod
       logical, intent(inout) :: first_emit   ! indicates entry of emit from erosion for the first time this day
 
 !     +++ LOCAL VARIABLES +++
+      character(len=21) :: rundatetime
       integer        initflg
       save           initflg
 
@@ -1280,7 +1283,8 @@ module sae_in_out_mod
           write (ounit,*)
 
           ! Print date of Run
-          write(ounit,"(1x,'Date of run: ',a21)") get_systime_string()
+          rundatetime = get_systime_string() ! with Lahey f95, had to assign to variable first
+          write(ounit,"(1x,'Date of run: ',a21)") rundatetime
           write (ounit,*)
 
           write (ounit,100)
