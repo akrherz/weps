@@ -45,6 +45,7 @@
           acmbgstemz(idx,isr) = 0.0
       end do
 
+      acxrow(isr) = 0.0
       aczht(isr) = 0.0
       acdstm(isr) = 0.0
       aczrtd(isr) = 0.0

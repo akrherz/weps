@@ -15,7 +15,7 @@ module decomp_data_struct_defs
                                                      ! 0 = no output
                                                      ! 1 = output
 
-contains
+!  contains
 
 
 end module decomp_data_struct_defs

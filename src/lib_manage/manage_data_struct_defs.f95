@@ -12,7 +12,7 @@ module manage_data_struct_defs
                                                      ! 0 = no output
                                                      ! 1 = output
 
-contains
+!  contains
 
 
 end module manage_data_struct_defs
