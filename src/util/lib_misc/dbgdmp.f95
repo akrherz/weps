@@ -3,7 +3,7 @@
 !$Revision$
 !$HeadURL$
 
-      subroutine dbgdmp(day, sr, residue, biotot)
+      subroutine dbgdmp(day, sr, residue, croptot, biotot)
 ! ****************************************************************** wjr
 !     The dumps variables that have gone out of range
 
@@ -17,6 +17,7 @@
       integer, intent(in) :: day
       integer, intent(in) :: sr
       type(biomatter), dimension(:), intent(in) :: residue
+      type(biototal), intent(in) :: croptot
       type(biototal), intent(in) :: biotot
 
 !     + + + GLOBAL COMMON BLOCKS + + +
@@ -37,8 +38,6 @@
       include 'c1gen.inc'
       include 'c1db1.inc'
       include 'c1db2.inc'
-      include 'c1db3.inc'
-      include 'c1glob.inc'
       include 'w1clig.inc'
       include 'w1pavg.inc'
       include 'h1hydro.inc'
@@ -626,37 +625,6 @@
      &  write(*,*) 'day ',day,' residue(',idx,')%geometry%dstm ', residue(idx)%geometry%dstm
    end do
 
-! c1db3
-!
-      if (dmpflg) write(*,*) 'c1db3'
-!      
-      if (ac0bn1(sr).lt.0.0.or.ac0bn1(sr).gt.tstmax)                    &
-     &  write(*,*) 'day ',day,' ac0bn1 ', ac0bn1(sr)
-!
-      if (ac0bn2(sr).lt.0.0.or.ac0bn2(sr).gt.tstmax)                    &
-     &  write(*,*) 'day ',day,' ac0bn2 ', ac0bn2(sr)
-!
-      if (ac0bn3(sr).lt.0.0.or.ac0bn3(sr).gt.tstmax)                    &
-     &  write(*,*) 'day ',day,' ac0bn3 ', ac0bn3(sr)
-!
-      if (ac0bp1(sr).lt.0.0.or.ac0bp1(sr).gt.tstmax)                    &
-     &  write(*,*) 'day ',day,' ac0bp1 ', ac0bp1(sr)
-!
-      if (ac0bp2(sr).lt.0.0.or.ac0bp2(sr).gt.tstmax)                    &
-     &  write(*,*) 'day ',day,' ac0bp2 ', ac0bp2(sr)
-!
-      if (ac0bp3(sr).lt.0.0.or.ac0bp3(sr).gt.tstmax)                    &
-     &  write(*,*) 'day ',day,' ac0bp3 ', ac0bp3(sr)
-!
-      if (acfny(sr).lt.0.0.or.acfny(sr).gt.1.0)                         &
-     &  write(*,*) 'day ',day,' acfny ', acfny(sr)
-!
-      if (acfpy(sr).lt.0.0.or.acfpy(sr).gt.1.0)                         &
-     &  write(*,*) 'day ',day,' acfpy ', acfpy(sr)
-!
-      if (acfwy(sr).lt.0.0.or.acfwy(sr).gt.1.0)                         &
-     &  write(*,*) 'day ',day,' acfwy ', acfwy(sr)
-!
 ! c1gen
 !
       if (dmpflg) write(*,*) 'c1gen'
@@ -669,136 +637,105 @@
 !
       if (acxrow(sr).lt.0.0.or.acxrow(sr).gt.1.0)                       &
      &  write(*,*) 'day ',day,' acxrow ', acxrow(sr)
+
+      if (croptot%rsaitot.lt.0.0.or.croptot%rsaitot.gt.tstmax) &
+          write(*,*) 'day ',day,' croptot%rsaitot ', croptot%rsaitot
 !
-! c1geom
-!
-      if (dmpflg) write(*,*) 'c1geom'
-!      
-      if (acrsai(sr).lt.0.0.or.acrsai(sr).gt.tstmax)                    &
-     &  write(*,*) 'day ',day,' acrsai ', acrsai(sr)
-!
-      if (acrlai(sr).lt.0.0.or.acrlai(sr).gt.tstmax)                    &
-     &  write(*,*) 'day ',day,' acrlai ', acrlai(sr)
+      if (croptot%rlaitot.lt.0.0.or.croptot%rlaitot.gt.tstmax) &
+          write(*,*) 'day ',day,' croptot%rlaitot ', croptot%rlaitot
 !
       do 191 idx=1,mncz
-      if (acrsaz(idx,sr).lt.0.0.or.acrsaz(idx,sr).gt.tstmax)            &
-     &  write(*,*) 'day ',day,' acrsaz(',idx,') ', acrsaz(idx,sr)
+      if (croptot%rsaz(idx).lt.0.0.or.croptot%rsaz(idx).gt.tstmax) &
+         write(*,*) 'day ',day,' croptot%rsaz(',idx,') ', croptot%rsaz(idx)
 !
-      if (acrlaz(idx,sr).lt.0.0.or.acrlaz(idx,sr).gt.tstmax)            &
-     &  write(*,*) 'day ',day,' acrlaz(',idx,') ', acrlaz(idx,sr)
+      if (croptot%rlaz(idx).lt.0.0.or.croptot%rlaz(idx).gt.tstmax) &
+         write(*,*) 'day ',day,' croptot%rlaz(',idx,') ', croptot%rlaz(idx)
 191   continue
 !
-      if (acffcv(sr).lt.0.0.or.acffcv(sr).gt.tstmax)                    &
-     &  write(*,*) 'day ',day,' acffcv ', acffcv(sr)
+      if (croptot%ffcvtot.lt.0.0.or.croptot%ffcvtot.gt.tstmax) &
+         write(*,*) 'day ',day,' croptot%ffcvtot ', croptot%ffcvtot
 !
-      if (acfscv(sr).lt.0.0.or.acfscv(sr).gt.tstmax)                    &
-     &  write(*,*) 'day ',day,' acfscv ', acfscv(sr)
+      if (croptot%fscvtot.lt.0.0.or.croptot%fscvtot.gt.tstmax) &
+         write(*,*) 'day ',day,' croptot%fscvtot ', croptot%fscvtot
 !
-      if (acftcv(sr).lt.0.0.or.acftcv(sr).gt.tstmax)                    &
-     &  write(*,*) 'day ',day,' acftcv ', acftcv(sr)
+      if (croptot%ftcvtot.lt.0.0.or.croptot%ftcvtot.gt.tstmax) &
+         write(*,*) 'day ',day,' croptot%ftcvtot ', croptot%ftcvtot
 !
 ! c1glob
 !
       if (dmpflg) write(*,*) 'c1glob'
 !      
-      if (aczht(sr).lt.0.0.or.aczht(sr).gt.3.0)                         &
-     &  write(*,*) 'day ',day,' aczht ', aczht(sr)
+      if (croptot%zht_ave.lt.0.0.or.croptot%zht_ave.gt.3.0) &
+         write(*,*) 'day ',day,' croptot%zht_ave ', croptot%zht_ave
+
+      if (croptot%mtot.lt.0.0.or.croptot%mtot.gt.tstmax) &
+         write(*,*) 'day ',day,' croptot%mtot ', croptot%mtot
 !
-      if (aczrtd(sr).lt.0.0.or.aczrtd(sr).gt.3.0)                       &
-     &  write(*,*) 'day ',day,' aczrtd ', aczrtd(sr)
+      if (croptot%msttot.lt.0.0.or.croptot%msttot.gt.tstmax) &
+         write(*,*) 'day ',day,' croptot%msttot ', croptot%msttot
 !
-      if (acm(sr).lt.0.0.or.acm(sr).gt.tstmax)                          &
-     &  write(*,*) 'day ',day,' acm ', acm(sr)
-!
-      if (acmst(sr).lt.0.0.or.acmst(sr).gt.tstmax)                      &
-     &  write(*,*) 'day ',day,' acmst ', acmst(sr)
-!
-      if (acmrt(sr).lt.0.0.or.acmrt(sr).gt.tstmax)                      &
-     &  write(*,*) 'day ',day,' acmrt ', acmrt(sr)
+      if (croptot%mrttot.lt.0.0.or.croptot%mrttot.gt.tstmax) &
+         write(*,*) 'day ',day,' croptot%mrttot ', croptot%mrttot
 !
       do 2000 idx = 1, nslay(sr)
-        if (acmrtz(idx, sr).lt.0.0.or.acmrtz(idx, sr).gt.tstmax)        &
-     &    write(*,*) 'day ',day,' acmrtz ', acmrtz(idx,sr)
+        if (croptot%mrtz(idx).lt.0.0.or.croptot%mrtz(idx).gt.tstmax) &
+           write(*,*) 'day ',day,' croptot%mrtz ', croptot%mrtz(idx)
 2000  continue
 !
-      if (acrsai(sr).lt.0.0.or.acrsai(sr).gt.tstmax)                    &
-     &  write(*,*) 'day ',day,' acrsai ', acrsai(sr)
+      if (croptot%rsaitot.lt.0.0.or.croptot%rsaitot.gt.tstmax) &
+         write(*,*) 'day ',day,' croptot%rsaitot ', croptot%rsaitot
 !
-      if (acrlai(sr).lt.0.0.or.acrlai(sr).gt.tstmax)                    &
-     &  write(*,*) 'day ',day,' acrlai ', acrlai(sr)
+      if (croptot%rlaitot.lt.0.0.or.croptot%rlaitot.gt.tstmax) &
+         write(*,*) 'day ',day,' croptot%rlaitot ', croptot%rlaitot
 !
       do 2100 idx = 1, mncz 
-        if (acrsaz(idx, sr).lt.0.0.or.acrsaz(idx, sr).gt.tstmax)        &
-     &    write(*,*) 'day ',day,' acrsaz ', acrsaz(idx,sr)
-        if (acrlaz(idx, sr).lt.0.0.or.acrlaz(idx, sr).gt.tstmax)        &
-     &    write(*,*) 'day ',day,' acrlaz ', acrlaz(idx,sr)
+        if (croptot%rsaz(idx).lt.0.0.or.croptot%rsaz(idx).gt.tstmax) &
+           write(*,*) 'day ',day,' croptot%rsaz ', croptot%rsaz(idx)
+        if (croptot%rlaz(idx).lt.0.0.or.croptot%rlaz(idx).gt.tstmax) &
+           write(*,*) 'day ',day,' croptot%rlaz ', croptot%rlaz(idx)
 2100  continue
 !
-      if (acffcv(sr).lt.0.0.or.acffcv(sr).gt. 1.0)                      &
-     &  write(*,*) 'day ',day,' acffcv ', acffcv(sr)
+      if (croptot%ffcvtot.lt.0.0.or.croptot%ffcvtot.gt. 1.0) &
+         write(*,*) 'day ',day,' croptot%ffcvtot ', croptot%ffcvtot
 !
-      if (acfscv(sr).lt.0.0.or.acfscv(sr).gt. 1.0)                      &
-     &  write(*,*) 'day ',day,' acfscv ', acfscv(sr)
+      if (croptot%fscvtot.lt.0.0.or.croptot%fscvtot.gt. 1.0) &
+         write(*,*) 'day ',day,' croptot%fscvtot ', croptot%fscvtot
 !
-      if (acftcv(sr).lt.0.0.or.acftcv(sr).gt. 1.0)                      &
-     &  write(*,*) 'day ',day,' acffcv ', acftcv(sr)
+      if (croptot%ftcvtot.lt.0.0.or.croptot%ftcvtot.gt. 1.0) &
+         write(*,*) 'day ',day,' croptot%ftcvtot ', croptot%ftcvtot
 !
-      if (acdstm(sr).lt.0.0.or.acdstm(sr).gt.tstmax)                    &
-     &  write(*,*) 'day ',day,' acdstm ', acdstm(sr)
+      if (croptot%dstmtot.lt.0.0.or.croptot%dstmtot.gt.tstmax) &
+         write(*,*) 'day ',day,' croptot%dstmtot ', croptot%dstmtot
 
 ! cldb2
-!
+
       if (dmpflg) write(*,*) 'c1db2'
-!      
+      
       if (actopt(sr).lt.0.0.or.actopt(sr).gt.40.0)                      &
      &  write(*,*) 'day ',day,' actopt ', actopt(sr)
-!
+
       if (actmin(sr).lt.0.0.or.actmin(sr).gt.20.0)                      &
      &  write(*,*) 'day ',day,' actmin ', actmin(sr)
-!
-      if (acfdla(sr).lt.0.0.or.acfdla(sr).gt.1.0)                       &
-     &  write(*,*) 'day ',day,' acfdla ', acfdla(sr)
-!
-      if (acrdla(sr).lt.0.0.or.acrdla(sr).gt.tstmax)                    &
-     &  write(*,*) 'day ',day,' acrdla ', acrdla(sr)
-!
-      if (ac0caf(sr).lt.0.0.or.ac0caf(sr).gt.tstmax)                    &
-     &  write(*,*) 'day ',day,' ac0caf ', ac0caf(sr)
-!
-      if (ac0psf(sr).lt.0.0.or.ac0psf(sr).gt.tstmax)                    &
-     &  write(*,*) 'day ',day,' ac0psf ', ac0psf(sr)
-!
+
       do 200 idx=1,2
-      if (ac0pt1(idx, sr).lt.0.0.or.ac0pt1(idx, sr).gt.tstmax)          &
-     &  write(*,*) 'day ',day,' ac0pt1(',idx,') ', ac0pt1(idx, sr)
-!
-      if (ac0pt2(idx, sr).lt.0.0.or.ac0pt2(idx, sr).gt.tstmax)          &
-     &  write(*,*) 'day ',day,' ac0pt2(',idx,') ', ac0pt2(idx, sr)
-!
+
       if (ac0fd1(idx, sr).lt.0.0.or.ac0fd1(idx, sr).gt.tstmax)          &
      &  write(*,*) 'day ',day,' ac0fd1(',idx,') ', ac0fd1(idx, sr)
-!
+
       if (ac0fd2(idx, sr).lt.0.0.or.ac0fd2(idx, sr).gt.1.0)             &
      &  write(*,*) 'day ',day,' ac0fd2(',idx,') ', ac0fd2(idx, sr)
   200 continue     
-!
+
       if (ac0ck(sr).lt.0.0.or.ac0ck(sr).gt.1.0)                         &
      &  write(*,*) 'day ',day,' ac0ck ', ac0ck(sr)
-!
-! c1mass
-!
-! ***      do 210 idx=1,mnsz
-! ***      if (acmbgr(idx, sr).lt.tstmin.or.acmbgr(idx, sr).gt.tstmax)
-! ***     &  write(*,*) 'day ',day,' acmbgr ', acmbgr(idx, sr)
-! ***  210 continue     
-!
+
 ! c1db1
-!
+
       if (dmpflg) write(*,*) 'c1db1'
-!      
+      
       if (acrcn(sr).lt.0.0.or.acrcn(sr).gt.tstmax)                      &
      &  write(*,*) 'day ',day,' acrcn ', acrcn(sr)
-!
+
       if (actdtm(sr).lt.0.0.or.actdtm(sr).gt.tstmax)                    &
      &  write(*,*) 'day ',day,' actdtm ', actdtm(sr)
 !

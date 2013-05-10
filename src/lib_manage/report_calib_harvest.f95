@@ -3,13 +3,15 @@
 !$Revision$
 !$HeadURL$
 
-      subroutine report_calib_harvest(sr,bmrotation,mass_rem, mass_left)
+      subroutine report_calib_harvest(sr,bmrotation,mass_rem, mass_left, crop)
 
       use file_io_mod, only: luoharvest_calib, luoharvest_calib_parm
+      use biomaterial, only: biomatter
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer sr, bmrotation
       real mass_rem, mass_left
+      type(biomatter), intent(in) :: crop    ! structure containing full crop description
 
 !     + + + ARGUMENT DEFINITIONS + + +
 !     sr    - subregion number
@@ -26,7 +28,6 @@
       include 'p1werm.inc'
       include 'm1flag.inc'
       include 'main/main.inc'
-      include 'c1info.inc'
       include 'c1gen.inc'
       include 'c1db1.inc'
       include 'c1report.inc'
@@ -88,12 +89,10 @@
       !Print out the "planting" and "harvest" dates and "crop name"
       write(unit=luoharvest_calib(sr),fmt=1015,advance='NO')            &
      &      aplant_day(sr), aplant_month(sr), aplant_rotyr(sr),         &
-     &      lopday, lopmon, lopyr,                                      &
-     &      ac0nam(sr)(1:len_trim(ac0nam(sr)))
+     &      lopday, lopmon, lopyr, trim(crop%bname)
       write(unit=luoharvest_calib_parm(sr),fmt=1015,advance='NO')       &
      &      aplant_day(sr), aplant_month(sr), aplant_rotyr(sr),         &
-     &      lopday, lopmon, lopyr,                                      &
-     &      ac0nam(sr)(1:len_trim(ac0nam(sr)))
+     &      lopday, lopmon, lopyr, trim(crop%bname)
 
       tot_mass = mass_rem + mass_left
       if (tot_mass .le. 0.0) then

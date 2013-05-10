@@ -25,9 +25,7 @@
       include 'p1werm.inc'
       include 'c1db1.inc'
       include 'c1db2.inc'
-      include 'c1db3.inc'
       include 'c1info.inc'
-      include 'c1glob.inc'
       include 'c1gen.inc'
       include 'm1flag.inc'
       include 's1layr.inc'
@@ -65,7 +63,7 @@
 
          call cropgrow(sr, nslay(sr), aszlyd(1,sr),                     &
      &   ac0ck(sr), acgrf(sr), acehu0(sr), aczmxc(sr),                  &
-     &   ac0nam(sr),ac0idc(sr), acxrow(sr),                             &
+     &   crop%bname,ac0idc(sr), acxrow(sr),                             &
      &   actdtm(sr), aczmrt(sr), actmin(sr), actopt(sr),                &
      &   ac0fd1(1,sr), ac0fd2(1,sr), ac0fd1(2,sr), ac0fd2(2,sr),        &
      &   ac0bceff(sr),                                                  &
@@ -83,17 +81,17 @@
      &   ac0growdepth(sr), acfleafstem(sr), ac0shoot(sr),               &
      &   ac0diammax(sr), ac0ssa(sr), ac0ssb(sr),                        &
      &   acfleaf2stor(sr), acfstem2stor(sr), acfstor2stor(sr),          &
-     &   acyld_coef(sr), acresid_int(sr), acxstm(sr),                   &
-     &   acmstandstem(sr), acmstandleaf(sr), acmstandstore(sr),         &
-     &   acmflatstem(sr), acmflatleaf(sr), acmflatstore(sr),            &
-     &   acmshoot(sr), acmtotshoot(sr), acmbgstemz(1,sr),               &
-     &   acmrootstorez(1,sr), acmrootfiberz(1,sr),                      &
-     &   aczht(sr), aczshoot(sr), acdstm(sr), aczrtd(sr),               &
-     &   acdayap(sr), acdayam(sr), acthucum(sr), actrthucum(sr),        &
-     &   acgrainf(sr), aczgrowpt(sr), acfliveleaf(sr),                  &
-     &   acleafareatrend(sr), acstemmasstrend(sr), actwarmdays(sr),     &
-     &   actchillucum(sr), acthardnx(sr), acthu_shoot_beg(sr),          &
-     &   acthu_shoot_end(sr), acxstmrep(sr),                            &
+     &   acyld_coef(sr), acresid_int(sr), crop%database%xstm, &
+     &   crop%mass%standstem, crop%mass%standleaf, crop%mass%standstore, &
+     &   crop%mass%flatstem, crop%mass%flatleaf, crop%mass%flatstore, &
+     &   crop%growth%mshoot, crop%growth%mtotshoot, crop%mass%stemz, &
+     &   crop%mass%rootstorez, crop%mass%rootfiberz, &
+     &   crop%geometry%zht, crop%geometry%zshoot, crop%geometry%dstm, crop%geometry%zrtd, &
+     &   crop%growth%dayap, crop%growth%dayam, crop%growth%thucum, crop%growth%trthucum, &
+     &   crop%geometry%grainf, crop%growth%zgrowpt, crop%growth%fliveleaf, &
+     &   crop%growth%leafareatrend, crop%growth%stemmasstrend, crop%growth%twarmdays, &
+     &   crop%growth%tchillucum, crop%growth%thardnx, crop%growth%thu_shoot_beg, &
+     &   crop%growth%thu_shoot_end, crop%geometry%xstmrep, &
      &   prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr),      &
      &   prevflatstem(sr), prevflatleaf(sr), prevflatstore(sr),         &
      &   prevmshoot(sr), prevbgstemz(1,sr),                             &
@@ -101,7 +99,7 @@
      &   prevht(sr), prevzshoot(sr), prevstm(sr), prevrtd(sr),          &
      &   prevdayap(sr), prevhucum(sr), prevrthucum(sr),                 &
      &   prevgrainf(sr), prevchillucum(sr), prevliveleaf(sr),           &
-     &   prevdayspring(sr), daysim, acdayspring(sr), aczloc_regrow(sr), &
+     &   prevdayspring(sr), daysim, crop%growth%dayspring, aczloc_regrow(sr), &
      &   agmstandstem(sr), agmstandleaf(sr), agmstandstore(sr),         &
      &   agmflatstem(sr), agmflatleaf(sr), agmflatstore(sr),            &
      &   agmbgstemz(1,sr),                                              &
@@ -130,28 +128,28 @@
      &      agmbgstemz(1,sr), agmbgleafz(1,sr), agmbgstorez(1,sr),      &
      &      agmbgrootstorez(1,sr), agmbgrootfiberz(1,sr),               &
      &      agzht(sr), agdstm(sr), agxstmrep(sr), aggrainf(sr),         &
-     &      ac0nam(sr), acxstm(sr), acrbc(sr), ac0sla(sr), ac0ck(sr),   &
-     &      acdkrate(1,sr), accovfact(sr), acddsthrsh(sr), achyfg(sr),  &
-     &      acresevapa(sr), acresevapb(sr),                             &
+     &      crop%bname, crop%database%xstm, acrbc(sr), ac0sla(sr), ac0ck(sr), &
+     &      crop%database%dkrate, crop%database%covfact, crop%database%ddsthrsh, achyfg(sr), &
+     &      crop%database%resevapa, crop%database%resevapb, &
      &      nslay(sr), residue)
       end if
 
       ! update all derived globals for crop global variables
       call cropupdate(                                                  &
-     &      acmstandstem(sr), acmstandleaf(sr), acmstandstore(sr),      &
-     &      acmflatstem(sr), acmflatleaf(sr), acmflatstore(sr),         &
-     &      acmbgstemz(1,sr),                                           &
-     &      acmrootstorez(1,sr),acmrootfiberz(1,sr),                    &
-     &      aczht(sr), acdstm(sr), aczrtd(sr),                          &
-     &      acmbgstem(sr),                                              &
-     &      acmrootstore(sr), acmrootfiber(sr), acxstmrep(sr),          &
-     &      acm(sr), acmst(sr), acmf(sr), acmrt(sr), acmrtz(1,sr),      &
-     &      acrcd(sr), aszrgh(sr), aszlyd(1,sr),                        &
-     &      acrsai(sr), acrlai(sr), acrsaz(1,sr), acrlaz(1,sr),         &
-     &      acffcv(sr), acfscv(sr), acftcv(sr), acfcancov(sr),          &
-     &      ac0rg(sr), acxrow(sr),                                      &
+     &      crop%mass%standstem, crop%mass%standleaf, crop%mass%standstore, &
+     &      crop%mass%flatstem, crop%mass%flatleaf, crop%mass%flatstore, &
+     &      crop%mass%stemz, &
+     &      crop%mass%rootstorez,crop%mass%rootfiberz, &
+     &      crop%geometry%zht, crop%geometry%dstm, crop%geometry%zrtd, &
+     &      crop%deriv%mbgstem, &
+     &      crop%deriv%mbgrootstore, crop%deriv%mbgrootfiber, crop%geometry%xstmrep, &
+     &      crop%deriv%m, crop%deriv%mst, crop%deriv%mf, crop%deriv%mrt, crop%deriv%mrtz, &
+     &      crop%deriv%rcd, aszrgh(sr), aszlyd(1,sr), &
+     &      crop%deriv%rsai, crop%deriv%rlai, crop%deriv%rsaz, crop%deriv%rlaz, &
+     &      crop%deriv%ffcv, crop%deriv%fscv, crop%deriv%ftcv, crop%deriv%fcancov, &
+     &      ac0rg(sr), acxrow(sr), &
      &      nslay(sr), ac0ssa(sr), ac0ssb(sr), ac0sla(sr),              &
-     &      accovfact(sr), ac0ck(sr), acxstm(sr), acdpop(sr),           &
+     &      crop%database%covfact, ac0ck(sr), crop%database%xstm, acdpop(sr), &
      &      ahztranspdepth(sr), ahzfurcut(sr),                          &
      &      ahztransprtmin(sr), ahztransprtmax(sr), croptot  )
 

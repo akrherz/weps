@@ -3,7 +3,7 @@
 !$Revision$
 !$HeadURL$
 
-      subroutine tdbug(sr, slay, output, residue)
+      subroutine tdbug(sr, slay, output, crop, residue)
 
 !     + + + PURPOSE + + +
 !    This program prints out many of the global variables before
@@ -19,6 +19,7 @@
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer sr, slay, output
+      type(biomatter), intent(in) :: crop
       type(biomatter), dimension(:), intent(in) :: residue
 
 !     + + + ARGUMENT DEFINITIONS + + +
@@ -35,8 +36,6 @@
       include 's1dbh.inc'
       include 's1dbc.inc'
       include 's1sgeo.inc'
-      include 'c1gen.inc'
-      include 'c1glob.inc'
       include 'h1hydro.inc'
       include 'h1scs.inc'
       include 'h1db1.inc'
@@ -249,7 +248,7 @@
  2169     format(4x,'acmyld  aczht  aczrtd')
  2269     format(4x,'residue()%deriv%fscv  residue()%deriv%ffcv ')
           write(luotdb(sr),2169)
-          write(luotdb(sr),2164) acmstandstore(sr), aczht(sr), aczrtd(sr)
+          write(luotdb(sr),2164) crop%mass%standstore, crop%geometry%zht, crop%geometry%zrtd
           write(luotdb(sr),2269)
           do idx = 1, mnbpls
             write(luotdb(sr),2073) residue(idx)%deriv%fscv, residue(idx)%deriv%ffcv

@@ -46,12 +46,12 @@
       real             bcmflatrootstore !added state
       real             bcmflatrootfiber !added state
 
-      real             bcmbgstemz(mnsz) !added state
-      real             bcmbgleafz(mnsz) !added state
-      real             bcmbgstorez(mnsz) !added state
+      real             bcmbgstemz(nslay) !added state
+      real             bcmbgleafz(nslay) !added state
+      real             bcmbgstorez(nslay) !added state
 
-      real             bcmbgrootstorez(mnsz) !added state
-      real             bcmbgrootfiberz(mnsz) !added state
+      real             bcmbgrootstorez(nslay) !added state
+      real             bcmbgrootfiberz(nslay) !added state
 
       real             bczht  !changed from tczht state
       real             bcdstm !changed from tcdstm state
@@ -65,7 +65,7 @@
       real       bc0sla
       real       bc0ck
 
-      real       bcdkrate(mndk)
+      real       bcdkrate(1:5)
       real       bccovfact
       real       bcddsthrsh
       integer    bchyfg
@@ -99,6 +99,7 @@
 !     idx        - crop mass by height index
 
 !     + + + END SPECIFICATIONS + + +
+
 
 ! transfer standing residue height and diameter, and grain fraction
       do ip = mnbpls,2,-1

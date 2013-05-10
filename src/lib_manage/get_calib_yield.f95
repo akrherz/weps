@@ -3,7 +3,7 @@
 !$Revision$
 !$HeadURL$
 
-SUBROUTINE get_calib_yield(sr,rotation_no,mass_removed, mass_left)
+SUBROUTINE get_calib_yield(sr,rotation_no,mass_removed, mass_left, crop)
 
     use weps_interface_defs
     USE generic_list , ONLY : Link_Ptr_Type, Link_Type, List_Type
@@ -13,6 +13,7 @@ SUBROUTINE get_calib_yield(sr,rotation_no,mass_removed, mass_left)
     USE generic_list , ONLY : LI_Get_Len
 
     USE calib_crop_m
+    use biomaterial, only: biomatter
 
     IMPLICIT NONE
 
@@ -22,6 +23,7 @@ SUBROUTINE get_calib_yield(sr,rotation_no,mass_removed, mass_left)
     INTEGER :: rotation_no
     REAL    :: mass_removed
     REAL    :: mass_left
+    type(biomatter), intent(inout) :: crop    ! structure containing full crop description
 
 !   + + + ARGUMENT DEFINITIONS + + +
 !   sr           - subregion number
@@ -34,7 +36,6 @@ SUBROUTINE get_calib_yield(sr,rotation_no,mass_removed, mass_left)
     include 'm1flag.inc'
     include 'm1subr.inc'
     include 'main/main.inc'
-    include 'c1info.inc'
     include 'c1gen.inc'
     include 'c1db1.inc'
     include 'command.inc'
@@ -220,9 +221,9 @@ SUBROUTINE get_calib_yield(sr,rotation_no,mass_removed, mass_left)
     CLink = LI_Get_Head(Calib_Crop_List)
     DO WHILE (LI_Associated(CLink))
        Calib_Crop = TRANSFER(CLink, Calib_Crop)
-       IF (Calib_Crop%CP%CData%calib_crop_info%crop_name == ac0nam(sr)(1:len_trim(ac0nam(sr))) .and.    &
-           Calib_Crop%CP%CData%calib_crop_info%harv_day == lopday .and.                                 &
-           Calib_Crop%CP%CData%calib_crop_info%harv_month == lopmon .and.                               &
+       IF (Calib_Crop%CP%CData%calib_crop_info%crop_name == trim(crop%bname) .and. &
+           Calib_Crop%CP%CData%calib_crop_info%harv_day == lopday .and.            &
+           Calib_Crop%CP%CData%calib_crop_info%harv_month == lopmon .and.          &
            Calib_Crop%CP%CData%calib_crop_info%harv_rotyear == lopyr ) THEN
                Calib_Yield%YP%YData%calib_yield_info%crop_ptr => Calib_Crop%CP%CData%calib_crop_info 
        END IF

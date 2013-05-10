@@ -3,7 +3,7 @@
 !$Revision$
 !$HeadURL$
 
-      subroutine  hdbug(isr, slay, restot, h1et)
+      subroutine  hdbug(isr, slay, crop, restot, h1et)
 
 !     + + + PURPOSE + + +
 !    This program prints out many of the global variables before
@@ -20,13 +20,14 @@
       use weps_interface_defs
       use datetime_mod, only: get_simdate
       use file_io_mod, only: luohdb
-      use biomaterial, only: biototal
+      use biomaterial, only: biototal, biomatter
       use erosion_data_struct_defs, only: awadir, awhrmx, awudmx, awudmn
       use hydro_data_struct_defs, only: hydro_derived_et
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer isr                   
       integer slay                   
+      type(biomatter), intent(in) :: crop
       type(biototal), intent(in) :: restot
       type(hydro_derived_et), intent(in) :: h1et
 
@@ -45,8 +46,6 @@
       include 's1dbh.inc'
       include 's1dbc.inc'
       include 's1sgeo.inc'
-      include 'c1gen.inc'
-      include 'c1glob.inc'
       include 'w1clig.inc'
       include 'h1hydro.inc'
       include 'h1scs.inc'
@@ -101,8 +100,8 @@
      &        ' awtdpt  awadir  awhrmx   awrrh ')
  2038 format (f7.2,9f8.2)
 ! 2045 format ('Subregion Number',i3)
- 2050 format ('amrslp(',i2,') acftcv(',i2,') acrlai(',i2,')',           &
-     &        ' aczrtd(',i2,') restot%mftot(',i2,') ahfwsf(',i2,')',    &
+ 2050 format ('amrslp(',i2,') crop%deriv%ftcv(',i2,') crop%deriv%rlai(',i2,')',           &
+     &        ' crop%geometry%zrtd(',i2,') restot%mftot(',i2,') ahfwsf(',i2,')',    &
      &        ' ahzper(',i2,')')
  2051 format (2f10.2,2f10.5,2x,f10.2,f10.2,f12.2)
  2052 format ('ahzrun(',i2,') ahzirr(',i2,') ahzsno(',i2,')',           &
@@ -125,26 +124,26 @@
 !          write weather cligen and windgen variables
 
       if ((cd .eq. tday) .and. (cm .eq. tmo) .and. (cy .eq. tyr) .and.  &
-     &   (isr .eq. tisr)) then
+         (isr .eq. tisr)) then
          write(luohdb(isr),2030) cd,cm,cy,isr
       else
          write(luohdb(isr),2031) cd,cm,cy,isr
       end if
       write(luohdb(isr),2032)
       write(luohdb(isr),2038) awzdpt, awtdmx, awtdmn, aweirr, awudmx,   &
-     &               awudmn, awtdpt, awadir, awhrmx, awrrh
+                    awudmn, awtdpt, awadir, awhrmx, awrrh
 
 !      write(luohdb(isr),2045) isr
 
       write(luohdb(isr),2050) isr, isr, isr, isr, isr, isr, isr
-      write(luohdb(isr),2051) amrslp(isr), acftcv(isr), acrlai(isr),    &
-     &               aczrtd(isr), restot%mftot, ahfwsf(isr), ahzper(isr)
+      write(luohdb(isr),2051) amrslp(isr), crop%deriv%ftcv, crop%deriv%rlai, &
+                    crop%geometry%zrtd, restot%mftot, ahfwsf(isr), ahzper(isr)
       write(luohdb(isr),2052) isr, isr, isr, isr
-      write(luohdb(isr),2053) ahzrun(isr), ahzirr(isr), ahzsno(isr),    &
-     &               ahzsmt(isr), h1et%zeta, h1et%zetp, h1et%zpta
+      write(luohdb(isr),2053) ahzrun(isr), ahzirr(isr), ahzsno(isr), &
+                    ahzsmt(isr), h1et%zeta, h1et%zetp, h1et%zpta
       write(luohdb(isr),2054) isr, isr, isr, isr
-      write(luohdb(isr),2055) h1et%zea, h1et%zep, h1et%zptp, ah0cng(isr),        &
-     &               ah0cnp(isr), as0rrk(isr), aslrr(isr)
+      write(luohdb(isr),2055) h1et%zea, h1et%zep, h1et%zptp, ah0cng(isr), &
+                    ah0cnp(isr), as0rrk(isr), aslrr(isr)
       write(luohdb(isr),2056)
 
       do 200 l = 1,slay

@@ -38,8 +38,6 @@
       include 'c1gen.inc'
       include 'c1db1.inc'
       include 'c1db2.inc'
-      include 'c1db3.inc'
-      include 'c1glob.inc'
       include 'c1info.inc'
       include 'h1hydro.inc'
       include 'h1db1.inc'
@@ -268,10 +266,8 @@
 !     + + + DATA INITIALIZATIONS + + +
       noparam1 = 0.0
       noparam2 = 0.0
-      do idx = 1,mnsz
-          dummy1 = 0.0
-          dummy2 = 0.0
-      end do
+      dummy1 = 0.0  ! array, assigns all values
+      dummy2 = 0.0  ! array, assigns all values
 
 !     + + + OUTPUT FORMATS + + +
 2015     format (' Process code ',i2,1x,'Process ',1x,a20 )
@@ -280,25 +276,25 @@
 
       ! set local flag to indicate whether a crop is growing or not
       ! this is used to eliminate spurious harvest reports from residue removal
-      if( poolmass(                                                     &
-     &           acmstandstem(sr), acmstandleaf(sr), acmstandstore(sr), &
-     &           acmflatstem(sr), acmflatleaf(sr), acmflatstore(sr),    &
-     &           noparam1, noparam2,                                    &
-     &           acmbgstemz(1,sr), dummy1, dummy2,                      &
-     &           acmrootstorez(1,sr), acmrootfiberz(1,sr) )             &
-     &    .gt. 0.0) then
+      if( poolmass( nslay(sr), &
+                 crop%mass%standstem, crop%mass%standleaf, crop%mass%standstore, &
+                 crop%mass%flatstem, crop%mass%flatleaf, crop%mass%flatstore, &
+                 noparam1, noparam2, &
+                 crop%mass%stemz, dummy1, dummy2, &
+                 crop%mass%rootstorez, crop%mass%rootfiberz ) &
+          .gt. 0.0) then
           crop_present = 1
       else
           crop_present = 0
       end if
 
-      if( poolmass(                                                     &
-     &           atmstandstem(sr), atmstandleaf(sr), atmstandstore(sr), &
-     &           atmflatstem(sr), atmflatleaf(sr), atmflatstore(sr),    &
-     &           atmflatrootstore(sr), atmflatrootfiber(sr),            &
-     &           atmbgstemz(1,sr), atmbgleafz(1,sr), atmbgstorez(1,sr), &
-     &           atmbgrootstorez(1,sr), atmbgrootfiberz(1,sr) )         &
-     &    .gt. 0.0 ) then
+      if( poolmass( nslay(sr), &
+                 atmstandstem(sr), atmstandleaf(sr), atmstandstore(sr), &
+                 atmflatstem(sr), atmflatleaf(sr), atmflatstore(sr),    &
+                 atmflatrootstore(sr), atmflatrootfiber(sr),            &
+                 atmbgstemz(1,sr), atmbgleafz(1,sr), atmbgstorez(1,sr), &
+                 atmbgrootstorez(1,sr), atmbgrootfiberz(1,sr) )         &
+          .gt. 0.0 ) then
           temp_present = 1
       else
           temp_present = 0
@@ -325,7 +321,7 @@
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before crust breakdown process//'
-          call tdbug(sr, nslay(sr), prcode, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue)
         end if
 
         am0til = .true.  !set flag for surface modification
@@ -335,7 +331,7 @@
 !     post-process stuff
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After crust breakdown process//'
-          call tdbug(sr, nslay(sr), prcode, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue)
         end if
 !-----END crust breakdown process (process code 01)
 
@@ -347,7 +343,7 @@
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before random roughness process//'
-          call tdbug(sr, nslay(sr), prcode, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue)
         end if
 
 !     read the random roughness for the implement. tillage intensity
@@ -370,7 +366,7 @@
 !     post-process stuff
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After random roughness process//'
-          call tdbug(sr, nslay(sr), prcode, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue)
         end if
 !-----END random roughness process (process code 02)
 
@@ -380,7 +376,7 @@
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before oriented roughness1 process//'
-          call tdbug(sr, nslay(sr), prcode, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue)
         end if
 
 !     read the oriented roughness (ridge) parameters for the implement
@@ -406,7 +402,7 @@
 
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After oriented roughness process//'
-          call tdbug(sr, nslay(sr), prcode, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue)
         end if
 !-----END oriented roughness process (process code 03)
 
@@ -416,7 +412,7 @@
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before oriented roughness2 process//'
-          call tdbug(sr, nslay(sr), prcode, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue)
         end if
 
 !     read the oriented roughness (dike) parameters for the implement
@@ -433,7 +429,7 @@
 !     post-process stuff
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After oriented roughness process//'
-          call tdbug(sr, nslay(sr), prcode, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue)
         end if
 !-----END oriented roughness dike only process (process code 04)
 
@@ -443,7 +439,7 @@
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before oriented roughness process//'
-          call tdbug(sr, nslay(sr), prcode, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue)
         end if
 
 !     read the oriented roughness parameters for the implement
@@ -462,7 +458,7 @@
 !     post-process stuff
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After oriented roughness process//'
-          call tdbug(sr, nslay(sr), prcode, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue)
         end if
 !-----END oriented roughness process (process code 05)
 
@@ -472,7 +468,7 @@
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before crushing process//'
-          call tdbug(sr, nslay(sr), prcode, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue)
         end if
 !        write (*,*) '//Before crushing process//'
         if( aslagm(5,sr).gt.aslagx(5,sr) ) then
@@ -517,7 +513,7 @@
 !
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After crushing process//'
-          call tdbug(sr, nslay(sr), prcode, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue)
         end if
 !-----END crushing process (process code 11)
 
@@ -527,7 +523,7 @@
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before loosening process//'
-          call tdbug(sr, nslay(sr), prcode, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue)
         end if
         if( aslagm(5,sr).gt.aslagx(5,sr) ) then
             write (*,*) 'before loose:',aslagm(5,sr),aslagx(5,sr)
@@ -568,7 +564,7 @@
 
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After loosening process//'
-          call tdbug(sr, nslay(sr), prcode, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue)
         end if
 !-----END loosening process (process code 12)
 
@@ -579,7 +575,7 @@
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before mixing process//'
           write (luotdb(sr),*) 'Tillage layer depth is', tlayer
-          call tdbug(sr, nslay(sr), prcode, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue)
         end if
 !        write (*,*) '//Before mixing process//'
         if( aslagm(5,sr).gt.aslagx(5,sr) ) then
@@ -648,7 +644,7 @@
 
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After mixing process//'
-          call tdbug(sr, nslay(sr), prcode, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue)
         end if
 
 !-----END mixing process (process code 13)
@@ -659,7 +655,7 @@
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before inversion process//'
-          call tdbug(sr, nslay(sr), prcode, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue)
         end if
 !        write (*,*) '//Before inversion process//'
 !        write (*,*) 'dia,sd',aslagm(1,sr),as0ags(1,sr)
@@ -692,7 +688,7 @@
 
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After inversion process//'
-          call tdbug(sr, nslay(sr), prcode, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue)
         end if
 !-----END inversion process (process code 14)
 !
@@ -712,7 +708,7 @@
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before flatten variable toughness proc.//'
-          call tdbug(sr, nslay(sr), prcode, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue)
         end if
 
         mcur(sr) = mcur(sr) + 1
@@ -722,9 +718,9 @@
 
 !     do process
         call flatvt(afvt, fracarea, acrbc(sr), &
-     &       acmstandstem(sr), acmstandleaf(sr), acmstandstore(sr),     &
+     &       crop%mass%standstem, crop%mass%standleaf, crop%mass%standstore,     &
      &       atmflatstem(sr), atmflatleaf(sr), atmflatstore(sr),        &
-     &       acdstm(sr), residue, bioflg)
+     &       crop%geometry%dstm, residue, bioflg)
 
 !     post-process stuff
         ! crop pool state has been changed, force dependent variable update  
@@ -732,7 +728,7 @@
 
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After flatten variable toughness proc.//'
-          call tdbug(sr, nslay(sr), prcode, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue)
         end if
 !-----END flatten process variable toughness (process code 24)
 !
@@ -742,7 +738,7 @@
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before mass bury variable toughness pr.//'
-          call tdbug(sr, nslay(sr), prcode, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue)
         end if
 
         mcur(sr) = mcur(sr) + 1
@@ -773,7 +769,7 @@
 !     post-process stuff
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After mass bury variable toughness pr.//'
-          call tdbug(sr, nslay(sr), prcode, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue)
         end if
 !-----END mass bury process variable toughness (process code 25)
 !
@@ -783,7 +779,7 @@
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before re-surface vari. toughness proc.//'
-          call tdbug(sr, nslay(sr), prcode, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue)
         end if
 
         mcur(sr) = mcur(sr) + 1
@@ -800,7 +796,7 @@
 !     post-process stuff
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After re-surface vari. toughness proc.//'
-          call tdbug(sr, nslay(sr), prcode, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue)
         end if
 !-----END re-surface process variable toughness (process code 26)
 
@@ -818,7 +814,7 @@
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before defoliate process//'
-          call tdbug(sr, nslay(sr), prcode, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue)
         end if
 
 !       Some operations will not kill certain types of crops,
@@ -842,8 +838,8 @@
           ! crop growth flag on and not on initialization cycle
           if( am0defoliatefl .eq. 1 ) then
              ! defoliate by dropping all crop leaf mass into crop flat pool
-             acmflatleaf(sr) = acmflatleaf(sr) + acmstandleaf(sr)
-             acmstandleaf(sr) = 0.0
+             crop%mass%flatleaf = crop%mass%flatleaf + crop%mass%standleaf
+             crop%mass%standleaf = 0.0
           end if
           ! crop pool state has been changed, force dependent variable update  
           am0cropupfl = 1
@@ -856,7 +852,7 @@
 !     post-process stuff
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After defoliate process//'
-          call tdbug(sr, nslay(sr), prcode, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue)
         end if
 !-----END defoliate process (process code 30)
 
@@ -873,7 +869,7 @@
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before kill process//'
-          call tdbug(sr, nslay(sr), prcode, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue)
         end if
 
 !       Some operations will not kill certain types of crops,
@@ -904,12 +900,12 @@
 !            Stop the crop growth (ie. stop calling crop submodel) and
 !            transfer crop state to temporary crop pool
              call kill_crop( crop%growth%am0cgf, nslay(sr),                         &
-     &           acmstandstem(sr), acmstandleaf(sr), acmstandstore(sr), &
-     &           acmflatstem(sr), acmflatleaf(sr), acmflatstore(sr),    &
-     &           acmrootstorez(1,sr), acmrootfiberz(1,sr),              &
-     &           acmbgstemz(1,sr),                                      &
-     &           aczht(sr), acdstm(sr), acxstmrep(sr), aczrtd(sr),      &
-     &           acgrainf(sr),                                          &
+     &           crop%mass%standstem, crop%mass%standleaf, crop%mass%standstore, &
+     &           crop%mass%flatstem, crop%mass%flatleaf, crop%mass%flatstore,    &
+     &           crop%mass%rootstorez, crop%mass%rootfiberz,              &
+     &           crop%mass%stemz,                                      &
+     &           crop%geometry%zht, crop%geometry%dstm, crop%geometry%xstmrep, crop%geometry%zrtd,      &
+     &           crop%geometry%grainf,                                          &
      &           atmstandstem(sr), atmstandleaf(sr), atmstandstore(sr), &
      &           atmflatstem(sr), atmflatleaf(sr), atmflatstore(sr),    &
      &           atmbgrootstorez(1,sr), atmbgrootfiberz(1,sr),          &
@@ -918,8 +914,8 @@
      &           atgrainf(sr) )
           else if( am0kilfl .eq. 3 ) then
              ! defoliate by dropping all crop leaf mass into crop flat pool
-             acmflatleaf(sr) = acmflatleaf(sr) + acmstandleaf(sr)
-             acmstandleaf(sr) = 0.0
+             crop%mass%flatleaf = crop%mass%flatleaf + crop%mass%standleaf
+             crop%mass%standleaf = 0.0
           end if
           ! crop pool state has been changed, force dependent variable update  
           am0cropupfl = 1
@@ -932,7 +928,7 @@
 !     post-process stuff
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After kill process//'
-          call tdbug(sr, nslay(sr), prcode, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue)
         end if
 !-----END killing process (process code 31)
 
@@ -942,7 +938,7 @@
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before cutting to height process//'
-          call tdbug(sr, nslay(sr), prcode, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue)
         end if
 
         ! set process parameters
@@ -953,9 +949,9 @@
 
 !     do process
         call cut(cutflg, cutht, pyieldf, pstalkf, rstandf,              &
-     &       acmstandstem(sr), acmstandleaf(sr), acmstandstore(sr),     &
-     &       acmflatstem(sr), acmflatleaf(sr), acmflatstore(sr),        &
-     &       aczht(sr), acgrainf(sr), achyfg(sr),                       &
+     &       crop%mass%standstem, crop%mass%standleaf, crop%mass%standstore,     &
+     &       crop%mass%flatstem, crop%mass%flatleaf, crop%mass%flatstore,        &
+     &       crop%geometry%zht, crop%geometry%grainf, achyfg(sr),                       &
      &       atmstandstem(sr), atmstandleaf(sr), atmstandstore(sr),     &
      &       atmflatstem(sr), atmflatleaf(sr), atmflatstore(sr),        &
      &       atzht(sr), atgrainf(sr), residue,                          &
@@ -964,7 +960,7 @@
 !     post-process stuff
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After cutting to height process//'
-          call tdbug(sr, nslay(sr), prcode, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue)
         end if
         ! crop pool state has been changed, force dependent variable update  
         am0cropupfl = 1
@@ -972,15 +968,15 @@
 !       no harvest report if nothing removed or no crop present
         if( (pyieldf+pstalkf+rstandf.gt.0.0)                            &
      &      .and. ((crop_present.gt.0) .or. (temp_present.gt.0)) ) then
-            call get_calib_crops(sr)
-            call get_calib_yield(sr, bmrotation, mass_rem, mass_left)
+            call get_calib_crops(sr, crop)
+            call get_calib_yield(sr, bmrotation, mass_rem, mass_left, crop)
             call report_harvest( sr, bmrotation, mass_rem, mass_left, 0,&
-     &           mandate)
-            call report_calib_harvest(sr,bmrotation,mass_rem,mass_left)
+     &           mandate, crop)
+            call report_calib_harvest( sr, bmrotation, mass_rem, mass_left, crop )
             call report_hydrobal( sr, bmrotation )
-            call crop_endseason( sr, ac0nam(sr), am0cfl(sr),                &
-     &        nslay(sr), ac0idc(sr), acdayam(sr),                       &
-     &        acthum(sr), acxstmrep(sr),                                &
+            call crop_endseason( sr, crop%bname, am0cfl(sr),                &
+     &        nslay(sr), ac0idc(sr), crop%growth%dayam,                       &
+     &        acthum(sr), crop%geometry%xstmrep,                                &
      &        prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
      &        prevflatstem(sr), prevflatleaf(sr), prevflatstore(sr),    &
      &        prevbgstemz(1,sr),                                        &
@@ -998,7 +994,7 @@
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before cutting by fraction process//'
-          call tdbug(sr, nslay(sr), prcode, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue)
         end if
 
         mcur(sr) = mcur(sr) + 1
@@ -1008,9 +1004,9 @@
 !     do process
         cutflg = 2
         call cut(cutflg, cutht, pyieldf, pstalkf, rstandf,              &
-     &       acmstandstem(sr), acmstandleaf(sr), acmstandstore(sr),     &
-     &       acmflatstem(sr), acmflatleaf(sr), acmflatstore(sr),        &
-     &       aczht(sr), acgrainf(sr), achyfg(sr),                       &
+     &       crop%mass%standstem, crop%mass%standleaf, crop%mass%standstore,     &
+     &       crop%mass%flatstem, crop%mass%flatleaf, crop%mass%flatstore,        &
+     &       crop%geometry%zht, crop%geometry%grainf, achyfg(sr),                       &
      &       atmstandstem(sr), atmstandleaf(sr), atmstandstore(sr),     &
      &       atmflatstem(sr), atmflatleaf(sr), atmflatstore(sr),        &
      &       atzht(sr), atgrainf(sr), residue,                          &
@@ -1018,7 +1014,7 @@
 !     post-process stuff
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After cutting by fraction process//'
-          call tdbug(sr, nslay(sr), prcode, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue)
         end if
         ! crop pool state has been changed, force dependent variable update  
         am0cropupfl = 1
@@ -1026,15 +1022,15 @@
 !       no harvest report if nothing removed or no crop present
         if( (pyieldf+pstalkf+rstandf.gt.0.0)                            &
      &      .and. ((crop_present.gt.0) .or. (temp_present.gt.0)) ) then
-            call get_calib_crops(sr)
-            call get_calib_yield(sr, bmrotation, mass_rem, mass_left)
+            call get_calib_crops(sr, crop)
+            call get_calib_yield(sr, bmrotation, mass_rem, mass_left, crop)
             call report_harvest( sr, bmrotation, mass_rem, mass_left, 0,&
-     &           mandate)
-            call report_calib_harvest(sr,bmrotation,mass_rem,mass_left)
+     &           mandate, crop)
+            call report_calib_harvest( sr, bmrotation, mass_rem, mass_left, crop )
             call report_hydrobal( sr, bmrotation )
-            call crop_endseason( sr, ac0nam(sr), am0cfl(sr),                &
-     &        nslay(sr), ac0idc(sr), acdayam(sr),                       &
-     &        acthum(sr), acxstmrep(sr),                                &
+            call crop_endseason( sr, crop%bname, am0cfl(sr),                &
+     &        nslay(sr), ac0idc(sr), crop%growth%dayam,                       &
+     &        acthum(sr), crop%geometry%xstmrep,                                &
      &        prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
      &        prevflatstem(sr), prevflatleaf(sr), prevflatstore(sr),    &
      &        prevbgstemz(1,sr),                                        &
@@ -1052,7 +1048,7 @@
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before modify standing fall rate proc.//'
-          call tdbug(sr, nslay(sr), prcode, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue)
         end if
 
         mcur(sr) = mcur(sr) + 1
@@ -1070,13 +1066,13 @@
 !     do process
         call fall_mod_vt( rate_mult_vt, thresh_mult_vt,                 &
      &                    sel_pool, fracarea,                           &
-     &                    acrbc(sr), acdkrate(1,sr), acddsthrsh(sr),    &
+     &                    acrbc(sr), crop%database%dkrate, crop%database%ddsthrsh, &
      &                    residue )
 
 !     post-process stuff
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After modify standing fall rate proc.//'
-          call tdbug(sr, nslay(sr), prcode, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue)
         end if
 !-----END modify standing fall rate process variable toughness (process code 34)
 
@@ -1086,7 +1082,7 @@
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before thinning to population process//'
-          call tdbug(sr, nslay(sr), prcode, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue)
         end if
 
         mcur(sr) = mcur(sr) + 1
@@ -1096,9 +1092,9 @@
 !     do process
         thinflg = 1
         call thin(thinflg, thinval, pyieldf, pstalkf, rstandf,          &
-     &       acmstandstem(sr), acmstandleaf(sr), acmstandstore(sr),     &
-     &       acmflatstem(sr), acmflatleaf(sr), acmflatstore(sr),        &
-     &       acdstm(sr), acgrainf(sr), achyfg(sr),                      &
+     &       crop%mass%standstem, crop%mass%standleaf, crop%mass%standstore,     &
+     &       crop%mass%flatstem, crop%mass%flatleaf, crop%mass%flatstore,        &
+     &       crop%geometry%dstm, crop%geometry%grainf, achyfg(sr),                      &
      &       atmstandstem(sr), atmstandleaf(sr), atmstandstore(sr),     &
      &       atmflatstem(sr), atmflatleaf(sr), atmflatstore(sr),        &
      &       atdstm(sr), atgrainf(sr), residue,                         &
@@ -1107,7 +1103,7 @@
 !     post-process stuff
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After thinning to population process//'
-          call tdbug(sr, nslay(sr), prcode, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue)
         end if
         ! crop pool state has been changed, force dependent variable update  
         am0cropupfl = 1
@@ -1115,15 +1111,15 @@
 !       no harvest report if nothing removed or no crop present
         if( (pyieldf+pstalkf+rstandf.gt.0.0)                            &
      &      .and. ((crop_present.gt.0) .or. (temp_present.gt.0)) ) then
-            call get_calib_crops(sr)
-            call get_calib_yield(sr, bmrotation, mass_rem, mass_left)
+            call get_calib_crops(sr, crop)
+            call get_calib_yield(sr, bmrotation, mass_rem, mass_left, crop)
             call report_harvest( sr, bmrotation, mass_rem, mass_left, 0,&
-      &          mandate)
-            call report_calib_harvest(sr,bmrotation,mass_rem,mass_left)
+      &          mandate, crop)
+            call report_calib_harvest( sr, bmrotation, mass_rem, mass_left, crop )
             call report_hydrobal( sr, bmrotation )
-            call crop_endseason( sr, ac0nam(sr), am0cfl(sr),                &
-     &        nslay(sr), ac0idc(sr), acdayam(sr),                       &
-     &        acthum(sr), acxstmrep(sr),                                &
+            call crop_endseason( sr, crop%bname, am0cfl(sr),                &
+     &        nslay(sr), ac0idc(sr), crop%growth%dayam,                       &
+     &        acthum(sr), crop%geometry%xstmrep,                                &
      &        prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
      &        prevflatstem(sr), prevflatleaf(sr), prevflatstore(sr),    &
      &        prevbgstemz(1,sr),                                        &
@@ -1141,7 +1137,7 @@
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before thinning by fraction process//'
-          call tdbug(sr, nslay(sr), prcode, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue)
         end if
 
         mcur(sr) = mcur(sr) + 1
@@ -1151,9 +1147,9 @@
 !     do process
         thinflg = 0
         call thin(thinflg, thinval, pyieldf, pstalkf, rstandf,          &
-     &       acmstandstem(sr), acmstandleaf(sr), acmstandstore(sr),     &
-     &       acmflatstem(sr), acmflatleaf(sr), acmflatstore(sr),        &
-     &       acdstm(sr), acgrainf(sr), achyfg(sr),                      &
+     &       crop%mass%standstem, crop%mass%standleaf, crop%mass%standstore,     &
+     &       crop%mass%flatstem, crop%mass%flatleaf, crop%mass%flatstore,        &
+     &       crop%geometry%dstm, crop%geometry%grainf, achyfg(sr),                      &
      &       atmstandstem(sr), atmstandleaf(sr), atmstandstore(sr),     &
      &       atmflatstem(sr), atmflatleaf(sr), atmflatstore(sr),        &
      &       atdstm(sr), atgrainf(sr), residue,                         &
@@ -1161,7 +1157,7 @@
 !     post-process stuff
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After thinning by fraction process//'
-          call tdbug(sr, nslay(sr), prcode, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue)
         end if
         ! crop pool state has been changed, force dependent variable update  
         am0cropupfl = 1
@@ -1169,15 +1165,15 @@
 !       no harvest report if nothing removed or no crop present
         if( (pyieldf+pstalkf+rstandf.gt.0.0)                            &
      &      .and. ((crop_present.gt.0) .or. (temp_present.gt.0)) ) then
-            call get_calib_crops(sr)
-            call get_calib_yield(sr, bmrotation, mass_rem, mass_left)
+            call get_calib_crops(sr, crop)
+            call get_calib_yield(sr, bmrotation, mass_rem, mass_left, crop)
             call report_harvest( sr, bmrotation, mass_rem, mass_left, 0,&
-     &           mandate)
-            call report_calib_harvest(sr,bmrotation,mass_rem,mass_left)
+     &           mandate, crop)
+            call report_calib_harvest( sr, bmrotation, mass_rem, mass_left, crop )
             call report_hydrobal( sr, bmrotation )
-            call crop_endseason( sr, ac0nam(sr), am0cfl(sr),                &
-     &        nslay(sr), ac0idc(sr), acdayam(sr),                       &
-     &        acthum(sr), acxstmrep(sr),                                &
+            call crop_endseason( sr, crop%bname, am0cfl(sr),                &
+     &        nslay(sr), ac0idc(sr), crop%growth%dayam,                       &
+     &        acthum(sr), crop%geometry%xstmrep,                                &
      &        prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
      &        prevflatstem(sr), prevflatleaf(sr), prevflatstore(sr),    &
      &        prevbgstemz(1,sr),                                        &
@@ -1195,7 +1191,7 @@
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before biomass transfer process//'
-          call tdbug(sr, nslay(sr), prcode, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue)
         end if
 
 !     do process
@@ -1213,9 +1209,9 @@
      &      atmbgstemz(1,sr), atmbgleafz(1,sr), atmbgstorez(1,sr),      &
      &      atmbgrootstorez(1,sr), atmbgrootfiberz(1,sr),               &
      &      atzht(sr), atdstm(sr),atxstmrep(sr),atgrainf(sr),           &
-     &      ac0nam(sr), acxstm(sr), acrbc(sr), ac0sla(sr), ac0ck(sr),   &
-     &      acdkrate(1,sr), accovfact(sr), acddsthrsh(sr), achyfg(sr),  &
-     &      acresevapa(sr), acresevapb(sr),                             &
+     &      crop%bname, crop%database%xstm, acrbc(sr), ac0sla(sr), ac0ck(sr),   &
+     &      crop%database%dkrate, crop%database%covfact, crop%database%ddsthrsh, achyfg(sr),  &
+     &      crop%database%resevapa, crop%database%resevapb, &
      &      nslay(sr), residue )
       end if
 
@@ -1227,7 +1223,7 @@
 !     post-process stuff
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After biomass transfer process//'
-          call tdbug(sr, nslay(sr), prcode, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue)
         end if
 !-----END crop to biomass transfer process (process code 40)
 
@@ -1237,7 +1233,7 @@
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before flagged cutting to height proc.//'
-          call tdbug(sr, nslay(sr), prcode, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue)
         end if
 
         ! set process parameters
@@ -1249,9 +1245,9 @@
 
 !     do process
         call cut(cutflg, cutht, pyieldf, pstalkf, rstandf,              &
-     &       acmstandstem(sr), acmstandleaf(sr), acmstandstore(sr),     &
-     &       acmflatstem(sr), acmflatleaf(sr), acmflatstore(sr),        &
-     &       aczht(sr), acgrainf(sr), achyfg(sr),                       &
+     &       crop%mass%standstem, crop%mass%standleaf, crop%mass%standstore,     &
+     &       crop%mass%flatstem, crop%mass%flatleaf, crop%mass%flatstore,        &
+     &       crop%geometry%zht, crop%geometry%grainf, achyfg(sr),                       &
      &       atmstandstem(sr), atmstandleaf(sr), atmstandstore(sr),     &
      &       atmflatstem(sr), atmflatleaf(sr), atmflatstore(sr),        &
      &       atzht(sr), atgrainf(sr), residue,                          &
@@ -1260,7 +1256,7 @@
 !     post-process stuff
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After flagged cutting to height proc.//'
-          call tdbug(sr, nslay(sr), prcode, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue)
         end if
         ! crop pool state has been changed, force dependent variable update  
         am0cropupfl = 1
@@ -1268,17 +1264,17 @@
         if( (pyieldf+pstalkf+rstandf.gt.0.0)                            &
      &      .and. ((crop_present.gt.0) .or. (temp_present.gt.0)) ) then
           if( harv_calib_flg .gt. 0 ) then
-            call get_calib_crops(sr)
-            call get_calib_yield(sr, bmrotation, mass_rem, mass_left)
-            call report_calib_harvest(sr,bmrotation,mass_rem,mass_left)
+            call get_calib_crops(sr, crop)
+            call get_calib_yield(sr, bmrotation, mass_rem, mass_left, crop)
+            call report_calib_harvest( sr, bmrotation, mass_rem, mass_left, crop )
           end if
           if( harv_report_flg .gt. 0 ) then
             call report_harvest( sr, bmrotation, mass_rem, mass_left,   &
-     &                           harv_unit_flg, mandate )
+     &                           harv_unit_flg, mandate, crop )
             call report_hydrobal( sr, bmrotation )
-            call crop_endseason( sr, ac0nam(sr), am0cfl(sr),                &
-     &        nslay(sr), ac0idc(sr), acdayam(sr),                       &
-     &        acthum(sr), acxstmrep(sr),                                &
+            call crop_endseason( sr, crop%bname, am0cfl(sr),                &
+     &        nslay(sr), ac0idc(sr), crop%growth%dayam,                       &
+     &        acthum(sr), crop%geometry%xstmrep,                                &
      &        prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
      &        prevflatstem(sr), prevflatleaf(sr), prevflatstore(sr),    &
      &        prevbgstemz(1,sr),                                        &
@@ -1297,7 +1293,7 @@
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before flagged cutting by fraction pr.//'
-          call tdbug(sr, nslay(sr), prcode, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue)
         end if
 
         mcur(sr) = mcur(sr) + 1
@@ -1308,9 +1304,9 @@
 !     do process
         cutflg = 2
         call cut(cutflg, cutht, pyieldf, pstalkf, rstandf,              &
-     &       acmstandstem(sr), acmstandleaf(sr), acmstandstore(sr),     &
-     &       acmflatstem(sr), acmflatleaf(sr), acmflatstore(sr),        &
-     &       aczht(sr), acgrainf(sr), achyfg(sr),                       &
+     &       crop%mass%standstem, crop%mass%standleaf, crop%mass%standstore,     &
+     &       crop%mass%flatstem, crop%mass%flatleaf, crop%mass%flatstore,        &
+     &       crop%geometry%zht, crop%geometry%grainf, achyfg(sr),                       &
      &       atmstandstem(sr), atmstandleaf(sr), atmstandstore(sr),     &
      &       atmflatstem(sr), atmflatleaf(sr), atmflatstore(sr),        &
      &       atzht(sr), atgrainf(sr), residue,                          &
@@ -1318,7 +1314,7 @@
 !     post-process stuff
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After flagged cutting by fraction pr.//'
-          call tdbug(sr, nslay(sr), prcode, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue)
         end if
         ! crop pool state has been changed, force dependent variable update  
         am0cropupfl = 1
@@ -1326,17 +1322,17 @@
         if( (pyieldf+pstalkf+rstandf.gt.0.0)                            &
      &      .and. ((crop_present.gt.0) .or. (temp_present.gt.0)) ) then
           if( harv_calib_flg .gt. 0 ) then
-            call get_calib_crops(sr)
-            call get_calib_yield(sr, bmrotation, mass_rem, mass_left)
-            call report_calib_harvest(sr,bmrotation,mass_rem,mass_left)
+            call get_calib_crops(sr, crop)
+            call get_calib_yield(sr, bmrotation, mass_rem, mass_left, crop)
+            call report_calib_harvest( sr, bmrotation, mass_rem, mass_left, crop )
           end if
           if( harv_report_flg .gt. 0 ) then
             call report_harvest( sr, bmrotation, mass_rem, mass_left,   &
-     &                           harv_unit_flg, mandate )
+     &                           harv_unit_flg, mandate, crop )
             call report_hydrobal( sr, bmrotation )
-            call crop_endseason( sr, ac0nam(sr), am0cfl(sr),                &
-     &        nslay(sr), ac0idc(sr), acdayam(sr),                       &
-     &        acthum(sr), acxstmrep(sr),                                &
+            call crop_endseason( sr, crop%bname, am0cfl(sr),                &
+     &        nslay(sr), ac0idc(sr), crop%growth%dayam,                       &
+     &        acthum(sr), crop%geometry%xstmrep,                                &
      &        prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
      &        prevflatstem(sr), prevflatleaf(sr), prevflatstore(sr),    &
      &        prevbgstemz(1,sr),                                        &
@@ -1355,7 +1351,7 @@
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write(luotdb(sr),*)'//Before flagged thinning to population pr.//'
-          call tdbug(sr, nslay(sr), prcode, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue)
         end if
 
         mcur(sr) = mcur(sr) + 1
@@ -1366,9 +1362,9 @@
 !     do process
         thinflg = 1
         call thin(thinflg, thinval, pyieldf, pstalkf, rstandf,          &
-     &       acmstandstem(sr), acmstandleaf(sr), acmstandstore(sr),     &
-     &       acmflatstem(sr), acmflatleaf(sr), acmflatstore(sr),        &
-     &       acdstm(sr), acgrainf(sr), achyfg(sr),                      &
+     &       crop%mass%standstem, crop%mass%standleaf, crop%mass%standstore,     &
+     &       crop%mass%flatstem, crop%mass%flatleaf, crop%mass%flatstore,        &
+     &       crop%geometry%dstm, crop%geometry%grainf, achyfg(sr),                      &
      &       atmstandstem(sr), atmstandleaf(sr), atmstandstore(sr),     &
      &       atmflatstem(sr), atmflatleaf(sr), atmflatstore(sr),        &
      &       atdstm(sr), atgrainf(sr), residue,                         &
@@ -1377,7 +1373,7 @@
 !     post-process stuff
         if (am0tdb(sr) .eq. 1) then
           write(luotdb(sr),*) '//After flagged thinning to population pr.//'
-          call tdbug(sr, nslay(sr), prcode, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue)
         end if
         ! crop pool state has been changed, force dependent variable update  
         am0cropupfl = 1
@@ -1385,17 +1381,17 @@
         if( (pyieldf+pstalkf+rstandf.gt.0.0)                            &
      &      .and. ((crop_present.gt.0) .or. (temp_present.gt.0)) ) then
           if( harv_calib_flg .gt. 0 ) then
-            call get_calib_crops(sr)
-            call get_calib_yield(sr, bmrotation, mass_rem, mass_left)
-            call report_calib_harvest(sr,bmrotation,mass_rem,mass_left)
+            call get_calib_crops(sr, crop)
+            call get_calib_yield(sr, bmrotation, mass_rem, mass_left, crop)
+            call report_calib_harvest( sr, bmrotation, mass_rem, mass_left, crop )
           end if
           if( harv_report_flg .gt. 0 ) then
             call report_harvest( sr, bmrotation, mass_rem, mass_left,   &
-     &                           harv_unit_flg, mandate )
+     &                           harv_unit_flg, mandate, crop )
             call report_hydrobal( sr, bmrotation )
-            call crop_endseason( sr, ac0nam(sr), am0cfl(sr),                &
-     &        nslay(sr), ac0idc(sr), acdayam(sr),                       &
-     &        acthum(sr), acxstmrep(sr),                                &
+            call crop_endseason( sr, crop%bname, am0cfl(sr),                &
+     &        nslay(sr), ac0idc(sr), crop%growth%dayam,                       &
+     &        acthum(sr), crop%geometry%xstmrep,                                &
      &        prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
      &        prevflatstem(sr), prevflatleaf(sr), prevflatstore(sr),    &
      &        prevbgstemz(1,sr),                                        &
@@ -1414,7 +1410,7 @@
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before flagged thinning by fraction pr.//'
-          call tdbug(sr, nslay(sr), prcode, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue)
         end if
 
         mcur(sr) = mcur(sr) + 1
@@ -1425,9 +1421,9 @@
 !     do process
         thinflg = 0
         call thin(thinflg, thinval, pyieldf, pstalkf, rstandf,          &
-     &       acmstandstem(sr), acmstandleaf(sr), acmstandstore(sr),     &
-     &       acmflatstem(sr), acmflatleaf(sr), acmflatstore(sr),        &
-     &       acdstm(sr), acgrainf(sr), achyfg(sr),                      &
+     &       crop%mass%standstem, crop%mass%standleaf, crop%mass%standstore,     &
+     &       crop%mass%flatstem, crop%mass%flatleaf, crop%mass%flatstore,        &
+     &       crop%geometry%dstm, crop%geometry%grainf, achyfg(sr),                      &
      &       atmstandstem(sr), atmstandleaf(sr), atmstandstore(sr),     &
      &       atmflatstem(sr), atmflatleaf(sr), atmflatstore(sr),        &
      &       atdstm(sr), atgrainf(sr), residue,                         &
@@ -1435,7 +1431,7 @@
 !     post-process stuff
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After flagged thinning by fraction pr.//'
-          call tdbug(sr, nslay(sr), prcode, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue)
         end if
         ! crop pool state has been changed, force dependent variable update  
         am0cropupfl = 1
@@ -1443,17 +1439,17 @@
         if( (pyieldf+pstalkf+rstandf.gt.0.0)                            &
      &      .and. ((crop_present.gt.0) .or. (temp_present.gt.0)) ) then
           if( harv_calib_flg .gt. 0 ) then
-            call get_calib_crops(sr)
-            call get_calib_yield(sr, bmrotation, mass_rem, mass_left)
-            call report_calib_harvest(sr,bmrotation,mass_rem,mass_left)
+            call get_calib_crops(sr, crop)
+            call get_calib_yield(sr, bmrotation, mass_rem, mass_left, crop)
+            call report_calib_harvest( sr, bmrotation, mass_rem, mass_left, crop )
           end if
           if( harv_report_flg .gt. 0 ) then
             call report_harvest( sr, bmrotation, mass_rem, mass_left,   &
-     &                           harv_unit_flg, mandate )
+     &                           harv_unit_flg, mandate, crop )
             call report_hydrobal( sr, bmrotation )
-            call crop_endseason( sr, ac0nam(sr), am0cfl(sr),                &
-     &        nslay(sr), ac0idc(sr), acdayam(sr),                       &
-     &        acthum(sr), acxstmrep(sr),                                &
+            call crop_endseason( sr, crop%bname, am0cfl(sr),                &
+     &        nslay(sr), ac0idc(sr), crop%growth%dayam,                       &
+     &        acthum(sr), crop%geometry%xstmrep,                                &
      &        prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
      &        prevflatstem(sr), prevflatleaf(sr), prevflatstore(sr),    &
      &        prevbgstemz(1,sr),                                        &
@@ -1474,7 +1470,7 @@
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before residue initialization process//'
-          call tdbug(sr, nslay(sr), prcode, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue)
         end if
 
         ! do process
@@ -1548,7 +1544,7 @@
 !     post-process stuff
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After residue initialization process//'
-          call tdbug(sr, nslay(sr), prcode, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue)
         end if
 !-----END residue initialization process (process code 50)
 !
@@ -1558,21 +1554,21 @@
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before planting process//'
-          call tdbug(sr, nslay(sr), prcode, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue)
         end if
 !     kill and transfer only if existing crop and new crop
-      if( crop%growth%am0cgf.and.(acdstm(sr).gt.0.0) ) then
+      if( crop%growth%am0cgf.and.(crop%geometry%dstm.gt.0.0) ) then
 !         In a growth model growing only a single crop, any existing crop must
 !         be killed and transferred to residue or all the residue will be lost
 !         when the new crop is initialized
 !        (remove when multiple species capable)
-          call kill_crop( crop%growth%am0cgf, nslay(sr),                            &
-     &           acmstandstem(sr), acmstandleaf(sr), acmstandstore(sr), &
-     &           acmflatstem(sr), acmflatleaf(sr), acmflatstore(sr),    &
-     &           acmrootstorez(1,sr), acmrootfiberz(1,sr),              &
-     &           acmbgstemz(1,sr),                                      &
-     &           aczht(sr), acdstm(sr), acxstmrep(sr), aczrtd(sr),      &
-     &           acgrainf(sr),                                          &
+          call kill_crop( crop%growth%am0cgf, nslay(sr), &
+     &           crop%mass%standstem, crop%mass%standleaf, crop%mass%standstore, &
+     &           crop%mass%flatstem, crop%mass%flatleaf, crop%mass%flatstore, &
+     &           crop%mass%rootstorez, crop%mass%rootfiberz, &
+     &           crop%mass%stemz, &
+     &           crop%geometry%zht, crop%geometry%dstm, crop%geometry%xstmrep, crop%geometry%zrtd, &
+     &           crop%geometry%grainf, &
      &           atmstandstem(sr), atmstandleaf(sr), atmstandstore(sr), &
      &           atmflatstem(sr), atmflatleaf(sr), atmflatstore(sr),    &
      &           atmbgrootstorez(1,sr), atmbgrootfiberz(1,sr),          &
@@ -1586,9 +1582,9 @@
      &      atmbgstemz(1,sr), atmbgleafz(1,sr), atmbgstorez(1,sr),      &
      &      atmbgrootstorez(1,sr), atmbgrootfiberz(1,sr),               &
      &      atzht(sr), atdstm(sr),atxstmrep(sr),atgrainf(sr),           &
-     &      ac0nam(sr), acxstm(sr), acrbc(sr), ac0sla(sr), ac0ck(sr),   &
-     &      acdkrate(1,sr), accovfact(sr), acddsthrsh(sr), achyfg(sr),  &
-     &      acresevapa(sr), acresevapb(sr),                             &
+     &      crop%bname, crop%database%xstm, acrbc(sr), ac0sla(sr), ac0ck(sr),   &
+     &      crop%database%dkrate, crop%database%covfact, crop%database%ddsthrsh, achyfg(sr),  &
+     &      crop%database%resevapa, crop%database%resevapb, &
      &      nslay(sr), residue )
       endif
       ! crop pool state has been changed, force dependent variable update  
@@ -1652,14 +1648,14 @@
 
         mcur(sr) = mcur(sr) + 1
         line = mtbl(mcur(sr))
-        read(line(2:len_trim(line)), *, err=901)                        &
-     &    acdkrate(1,sr),acdkrate(2,sr),acdkrate(3,sr),acdkrate(4,sr),  &
-     &    acdkrate(5,sr), acxstm(sr), acddsthrsh(sr), accovfact(sr)
+        read(line(2:len_trim(line)), *, err=901) &
+          crop%database%dkrate(1),crop%database%dkrate(2),crop%database%dkrate(3),crop%database%dkrate(4), &
+          crop%database%dkrate(5), crop%database%xstm, crop%database%ddsthrsh, crop%database%covfact
 
         mcur(sr) = mcur(sr) + 1
         line = mtbl(mcur(sr))
         read(line(2:len_trim(line)), *, err=901)                        &
-     &    acresevapa(sr), acresevapb(sr),acyld_coef(sr),acresid_int(sr),&
+     &    crop%database%resevapa, crop%database%resevapb, acyld_coef(sr), acresid_int(sr),&
      &    aczloc_regrow(sr), noparam3, noparam2, noparam1
 
         ! reading of process parameters complete
@@ -1738,15 +1734,15 @@
 !         set crop growth flag on - jt
           crop%growth%am0cgf = .true.
 !         give crop the proper name
-          ac0nam(sr) = cropname
+          crop%bname = cropname
           call stir_crop(sr, cropname, 1)
         endif
 !       post-process stuff
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After planting process//'
-          call tdbug(sr, nslay(sr), prcode, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue)
         end if
-        call set_calib(sr)
+        call set_calib(sr, crop)
         call report_hydrobal( sr, bmrotation )
 !-----END planting process (process code 51)
 
@@ -1756,7 +1752,7 @@
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before biomass remove process//'
-          call tdbug(sr, nslay(sr), prcode, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue)
         end if
 
         mcur(sr) = mcur(sr) + 1
@@ -1771,11 +1767,11 @@
         ! do process
         call remove( sel_position, sel_pool, bioflg,                    &
      &    stemf, leaff, storef, rootstoref, rootfiberf,                 &
-     &    acmstandstem(sr), acmstandleaf(sr), acmstandstore(sr),        &
-     &    acmflatstem(sr), acmflatleaf(sr), acmflatstore(sr),           &
-     &    acmrootstorez(1,sr), acmrootfiberz(1,sr),                     &
-     &    acmbgstemz(1,sr),                                             &
-     &    aczht(sr), acdstm(sr), acgrainf(sr), achyfg(sr),              &
+     &    crop%mass%standstem, crop%mass%standleaf, crop%mass%standstore,        &
+     &    crop%mass%flatstem, crop%mass%flatleaf, crop%mass%flatstore,           &
+     &    crop%mass%rootstorez, crop%mass%rootfiberz,                     &
+     &    crop%mass%stemz,                                             &
+     &    crop%geometry%zht, crop%geometry%dstm, crop%geometry%grainf, achyfg(sr),              &
      &    atmstandstem(sr), atmstandleaf(sr), atmstandstore(sr),        &
      &    atmflatstem(sr), atmflatleaf(sr), atmflatstore(sr),           &
      &    atmflatrootstore(sr), atmflatrootfiber(sr),                   &
@@ -1787,7 +1783,7 @@
 !     post-process stuff
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After biomass remove process//'
-          call tdbug(sr, nslay(sr), prcode, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue)
         end if
         ! crop pool state has been changed, force dependent variable update  
         am0cropupfl = 1
@@ -1795,15 +1791,15 @@
 !       no harvest report if nothing removed or no crop present
         if( (storef + leaff + stemf + rootstoref + rootfiberf .gt. 0.0) &
      &      .and. ((crop_present.gt.0) .or. (temp_present.gt.0)) ) then
-            call get_calib_crops(sr)
-            call get_calib_yield(sr, bmrotation, mass_rem, mass_left)
+            call get_calib_crops(sr, crop)
+            call get_calib_yield(sr, bmrotation, mass_rem, mass_left, crop)
             call report_harvest( sr, bmrotation, mass_rem, mass_left, 0,&
-     &           mandate)
-            call report_calib_harvest(sr,bmrotation,mass_rem,mass_left)
+     &           mandate, crop)
+            call report_calib_harvest( sr, bmrotation, mass_rem, mass_left, crop )
             call report_hydrobal( sr, bmrotation )
-            call crop_endseason( sr, ac0nam(sr), am0cfl(sr),                &
-     &        nslay(sr), ac0idc(sr), acdayam(sr),                       &
-     &        acthum(sr), acxstmrep(sr),                                &
+            call crop_endseason( sr, crop%bname, am0cfl(sr),                &
+     &        nslay(sr), ac0idc(sr), crop%growth%dayam,                       &
+     &        acthum(sr), crop%geometry%xstmrep,                                &
      &        prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
      &        prevflatstem(sr), prevflatleaf(sr), prevflatstore(sr),    &
      &        prevbgstemz(1,sr),                                        &
@@ -1821,7 +1817,7 @@
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before biomass remove pool process//'
-          call tdbug(sr, nslay(sr), prcode, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue)
         end if
 
         mcur(sr) = mcur(sr) + 1
@@ -1834,11 +1830,11 @@
         ! do process
         call remove( sel_position, sel_pool, bioflg,                    &
      &    stemf, leaff, storef, rootstoref, rootfiberf,                 &
-     &    acmstandstem(sr), acmstandleaf(sr), acmstandstore(sr),        &
-     &    acmflatstem(sr), acmflatleaf(sr), acmflatstore(sr),           &
-     &    acmrootstorez(1,sr), acmrootfiberz(1,sr),                     &
-     &    acmbgstemz(1,sr),                                             &
-     &    aczht(sr), acdstm(sr), acgrainf(sr), achyfg(sr),              &
+     &    crop%mass%standstem, crop%mass%standleaf, crop%mass%standstore,        &
+     &    crop%mass%flatstem, crop%mass%flatleaf, crop%mass%flatstore,           &
+     &    crop%mass%rootstorez, crop%mass%rootfiberz,                     &
+     &    crop%mass%stemz,                                             &
+     &    crop%geometry%zht, crop%geometry%dstm, crop%geometry%grainf, achyfg(sr),              &
      &    atmstandstem(sr), atmstandleaf(sr), atmstandstore(sr),        &
      &    atmflatstem(sr), atmflatleaf(sr), atmflatstore(sr),           &
      &    atmflatrootstore(sr), atmflatrootfiber(sr),                   &
@@ -1850,7 +1846,7 @@
         ! post-process stuff
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After biomass remove pool process//'
-          call tdbug(sr, nslay(sr), prcode, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue)
         end if
         ! crop pool state has been changed, force dependent variable update  
         am0cropupfl = 1
@@ -1859,18 +1855,18 @@
      &      .and. ((crop_present.gt.0) .or. (temp_present.gt.0)) ) then
           ! removed mass is used in calibration
           if( harv_calib_flg .gt. 0 ) then
-            call get_calib_crops(sr)
-            call get_calib_yield(sr, bmrotation, mass_rem, mass_left)
-            call report_calib_harvest(sr,bmrotation,mass_rem,mass_left)
+            call get_calib_crops(sr, crop)
+            call get_calib_yield(sr, bmrotation, mass_rem, mass_left, crop)
+            call report_calib_harvest( sr, bmrotation, mass_rem, mass_left, crop )
           end if
           ! removed mass appears in crop report
           if( harv_report_flg .gt. 0 ) then
             call report_harvest( sr, bmrotation, mass_rem, mass_left,   &
-     &                           harv_unit_flg, mandate )
+     &                           harv_unit_flg, mandate, crop )
             call report_hydrobal( sr, bmrotation )
-            call crop_endseason( sr, ac0nam(sr), am0cfl(sr),                &
-     &        nslay(sr), ac0idc(sr), acdayam(sr),                       &
-     &        acthum(sr), acxstmrep(sr),                                &
+            call crop_endseason( sr, crop%bname, am0cfl(sr),                &
+     &        nslay(sr), ac0idc(sr), crop%growth%dayam,                       &
+     &        acthum(sr), crop%geometry%xstmrep,                                &
      &        prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
      &        prevflatstem(sr), prevflatleaf(sr), prevflatstore(sr),    &
      &        prevbgstemz(1,sr),                                        &
@@ -1897,7 +1893,7 @@
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before add residue process//'
-          call tdbug(sr, nslay(sr), prcode, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue)
         end if
 
         mcur(sr) = mcur(sr) + 1
@@ -1960,7 +1956,7 @@
         t0ck = 0.0
 
         ! check for amount of added biomass
-        if( poolmass(                                                   &
+        if( poolmass( nslay(sr),                                        &
      &           atmstandstem(sr), atmstandleaf(sr), atmstandstore(sr), &
      &           atmflatstem(sr), atmflatleaf(sr), atmflatstore(sr),    &
      &           atmflatrootstore(sr), atmflatrootfiber(sr),            &
@@ -1984,7 +1980,7 @@
 !     post-process stuff
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After add residue process//'
-          call tdbug(sr, nslay(sr), prcode, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue)
         end if
 !-----END add residue process (process code 65)
 
@@ -2008,7 +2004,7 @@
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before add manure process//'
-          call tdbug(sr, nslay(sr), prcode, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue)
         end if
 
         ! get additional line of data
@@ -2088,7 +2084,7 @@
         t0sla = 0.0
         t0ck = 0.0
 
-        if( poolmass(                                                   &
+        if( poolmass( nslay(sr),                                        &
      &           atmstandstem(sr), atmstandleaf(sr), atmstandstore(sr), &
      &           atmflatstem(sr), atmflatleaf(sr), atmflatstore(sr),    &
      &           atmflatrootstore(sr), atmflatrootfiber(sr),            &
@@ -2112,7 +2108,7 @@
 !     post-process stuff
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After add manure process//'
-          call tdbug(sr, nslay(sr), prcode, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue)
         end if
 !-----END add manure process (process code 66)
 
@@ -2122,7 +2118,7 @@
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before irrigation process//'
-          call tdbug(sr, nslay(sr), prcode, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue)
         end if
 
         mcur(sr) = mcur(sr) + 1
@@ -2145,7 +2141,7 @@
 !     post-process stuff
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After irrigate process//'
-          call tdbug(sr, nslay(sr), prcode, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue)
         end if
 !-----END irrigate process (process code 71)
 
@@ -2155,7 +2151,7 @@
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before irrigation monitoring process//'
-          call tdbug(sr, nslay(sr), prcode, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue)
         end if
 
         mcur(sr) = mcur(sr) + 1
@@ -2171,7 +2167,7 @@
 !     post-process stuff
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After irrigation monitoring process//'
-          call tdbug(sr, nslay(sr), prcode, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue)
         end if
 !-----END irrigation monitoring process (process code 72)
 
@@ -2181,7 +2177,7 @@
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before single event irrigation process//'
-          call tdbug(sr, nslay(sr), prcode, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue)
         end if
 
         mcur(sr) = mcur(sr) + 1
@@ -2195,12 +2191,12 @@
         call ratedura(ahzirr(sr), ahratirr(sr), ahdurirr(sr))
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After single event irrigation process//'
-          !call tdbug(sr, nslay(sr), prcode, residue)
+          !call tdbug(sr, nslay(sr), prcode, crop, residue)
         end if
 !     post-process stuff
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After single event irrigation process//'
-          call tdbug(sr, nslay(sr), prcode, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue)
         end if
 !-----END irrigation monitoring process (process code 73)
 
@@ -2210,14 +2206,14 @@
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before terminate irrigation monitoring//'
-          call tdbug(sr, nslay(sr), prcode, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue)
         end if
 !     do process
         am0monirr(sr) = 0
 !     post-process stuff
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After terminate irrigation monitoring//'
-          call tdbug(sr, nslay(sr), prcode, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue)
         end if
 !-----END terminate irrigation monitoring process (process code 74)
 

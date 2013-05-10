@@ -125,6 +125,7 @@
         if(opskip.eq.0) call dogroup(sr)
       case ('P')
         if(opskip.eq.0) then
+
            call doproc(sr, mcount(sr), crop, residue, biotot, mandate)
         endif
       case ('D')

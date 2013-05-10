@@ -3,7 +3,7 @@
 !$Revision$
 !$HeadURL$
 
-      subroutine getfromweps(isr,canhgt,cancov,sand,silt,clay,orgmat,   &
+      subroutine getfromweps(isr,sand,silt,clay,orgmat,                 &
      & thetdr,rrc,dg,st,thdp,frdp,thetfc,por,rh,                        &
      & frctrl, frcsol, precip)
      
@@ -25,7 +25,6 @@
 
       include 'p1werm.inc'
 	include 's1dbh.inc'
-	include 'c1glob.inc'
       include 's1dbc.inc'
       include 's1sgeo.inc'
       include 's1phys.inc'
@@ -38,7 +37,6 @@
 	   
 
       integer, intent(in):: isr
-      real, intent(out):: canhgt,cancov
       real, intent(out):: sand(mxnsl), silt(mxnsl), clay(mxnsl)
       real, intent(out):: orgmat(mxnsl)
       real, intent(out):: thetdr(mxnsl), rrc
@@ -49,8 +47,6 @@
 	
 !     + + + argument declarations + + +     
 !     isr - This variable holds the subregion index.
-!     canhgt - canopy height (m)
-!     cancov - canopy cover fraction (crop)
 !     sand() - sand fraction by layer
 !     silt() - silt fraction by layer
 !     clay() - clay fraction by layer
@@ -73,12 +69,6 @@
 	real oca, bottom
       integer i,isFroze
       
-!     canopy height in meters
-      canhgt = aczht(isr)
-      
-!     canopy cover fraction (crop)       
-	cancov = acfcancov(isr)
- 
 !     random roughness in WEPS is mm, WEPP is m	
       rrc = aslrr(isr) / 1000.0
 

@@ -3,7 +3,7 @@
 !$Revision$
 !$HeadURL$
 
-      subroutine  sdbug(isr,slay, biotot)
+      subroutine  sdbug(isr,slay, croptot, biotot)
 
 !     + + + PURPOSE + + +
 !    This program prints out many of the global variables before
@@ -35,8 +35,6 @@
       include 's1dbc.inc'
       include 's1sgeo.inc'
       include 's1psd.inc'
-      include 'c1gen.inc'
-      include 'c1glob.inc'
       include 'w1clig.inc'
       include 'h1hydro.inc'
       include 'h1scs.inc'
@@ -49,7 +47,7 @@
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer isr, slay
-      type(biototal), intent(in) :: biotot
+      type(biototal), intent(in) :: croptot, biotot
 
 !     + + + LOCAL VARIABLES + + +
       integer cd, cm, cy, l
@@ -91,16 +89,17 @@
  2032 format (' awzdpt  awtdmx  awtdmn  aweirr  awudmx  awudmn ',       &
      &        ' awtdpt  awadir  awhrmx  amzele ')
  2038 format (f7.2,9f8.2)
- 2050 format ('amrslp(',i2,') acftcv(',i2,') acrlai(',i2,')',           &
-     &        ' aczrtd(',i2,') biotot%mftot(',i2,') ahfwsf(',i2,')',    &
-     &        ' ahzper(',i2,')')
+ 2050 format ('amrslp(',i2,') croptot%ftcvtot(',i2,') croptot%rlaitot(',&
+     &  i2,')',                                                         &
+     &      ' croptot%zrtd(',i2,') biotot%mftot(',i2,') ahfwsf(',i2,')',&
+     &      ' ahzper(',i2,')')
  2051 format (2f10.2,2f10.5,2x,f10.2,f10.2,f12.2)
  2052 format ('ahzrun(',i2,') ahzirr(',i2,') ahzsno(',i2,')',           &
      &        ' ahzsmt(',i2,') asxrgs(',i2,') aszrgh(',i2,')',          &
      &        ' aslrr(',i2,')')
  2053 format (5f10.2,2f12.2)
  2054 format (' asfcr(',i2,')  asecr(',i2,') asmlos(',i2,')',           &
-     &        ' asflos(',i2,')  ac0rg(',i2,') as0rrk(',i2,')',          &
+     &        ' asflos(',i2,')  croptot%c0rg(',i2,') as0rrk(',i2,')',   &
      &        ' aszcr(',i2,')')
  2055 format (2f10.2,2f10.3,i10,2f12.2)
  2056 format('layer aszlyt  ahrsk ahrwc ahrwcs ahrwca',                 &
@@ -125,14 +124,15 @@
 
       write(luosdb(isr),2050) isr,isr,isr,isr,isr,isr,isr
 
-      write(luosdb(isr),2051) amrslp(isr),acftcv(isr),acrlai(isr),      &
-     &               aczrtd(isr), biotot%mftot, ahfwsf(isr), ahzper(isr)
+      write(luosdb(isr),2051) amrslp(isr), croptot%ftcvtot,             &
+     &              croptot%rlaitot,                                    &
+     &              croptot%zrtd, biotot%mftot, ahfwsf(isr), ahzper(isr)
       write(luosdb(isr),2052) isr,isr,isr,isr,isr,isr,isr
       write(luosdb(isr),2053) ahzrun(isr),ahzirr(isr),ahzsno(isr),      &
      &               ahzsmt(isr), asxrgs(isr),aszrgh(isr),aslrr(isr)
       write(luosdb(isr),2054) isr,isr,isr,isr,isr,isr,isr
       write(luosdb(isr),2055) asfcr(isr), asecr(isr), asmlos(isr),      &
-     &               asflos(isr), ac0rg(isr),as0rrk(isr),aszcr(isr)
+     &               asflos(isr), croptot%c0rg,as0rrk(isr),aszcr(isr)
       write(luosdb(isr),2056)
 
       do 200 l = 1,slay

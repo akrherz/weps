@@ -220,8 +220,6 @@ module sweep_io_mod
         line = getline(i_unit)
         read (line,*)  subrsurf(sr)%adzht_ave
 
-      ! c1glob.inc
-
         ! Crop height
         line = getline(i_unit)
         read (line,*)  subrsurf(sr)%aczht

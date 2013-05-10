@@ -3,12 +3,12 @@
 !$Revision$
 !$HeadURL$
 
-      subroutine plotdata(sr, restot, croptot, biotot, noerod, cellstate)
+      subroutine plotdata(sr, crop, restot, croptot, biotot, noerod, cellstate)
 
       use weps_interface_defs
       use datetime_mod, only: get_simdate, get_simdate_doy
       use file_io_mod, only: luoplt
-      use biomaterial, only: biototal
+      use biomaterial, only: biomatter, biototal
       use erosion_data_struct_defs, only: threshold
       use erosion_data_struct_defs, only: cellsurfacestate
       use erosion_data_struct_defs, only: awadir, awudmx
@@ -22,6 +22,7 @@
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer, intent(in) :: sr
+      type(biomatter), intent(inout) :: crop
       type(biototal), intent(in) :: restot
       type(biototal), intent(in) :: croptot
       type(biototal), intent(in) :: biotot
@@ -33,7 +34,6 @@
 
       include 'p1werm.inc'
       include 'm1flag.inc'
-      include 'c1glob.inc'
       include 'h1db1.inc'
       include 's1layr.inc'
       include 's1phys.inc'
@@ -46,7 +46,6 @@
       include 'manage/oper.inc'
       include 'main/main.inc'
       include 'main/plot.inc'
-      include 'c1info.inc'
 
       integer day, month, year, doy
 
@@ -141,7 +140,7 @@
         if ((lopday .eq. day) .and. (lopmon .eq. month) .and.           &
      &      (lopyr .eq. amnryr(sr))) then
            operat = opname
-           crname = ac0nam(sr)
+           crname = crop%bname
         else
            operat = '                                               '
            crname = '                                               '
@@ -166,7 +165,7 @@
      &                    croptot%msttot, croptot%ftcancov
 
         write (luoplt(sr), 2081, ADVANCE="NO")                              &
-     &   croptot%zht_ave, acxstmrep(sr), croptot%rcdtot, croptot%ftcvtot
+     &   croptot%zht_ave, croptot%xstmrep, croptot%rcdtot, croptot%ftcvtot
 
         write (luoplt(sr), 2082, ADVANCE="NO")                              &
      &       restot%zht_ave, restot%rsaitot, restot%rlaitot,            &

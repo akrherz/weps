@@ -55,12 +55,18 @@ module biomaterial
      real :: stemmasstrend  ! direction in which stem mass is trending.
                             ! Saves trend even if stem mass is static for long periods.
 
-     real :: twarmdays      ! number of consecutive days that the temperature has been above the minimum growth temperature
+     integer :: twarmdays      ! number of consecutive days that the temperature has been above the minimum growth temperature
      real :: tchillucum     ! accumulated chilling units (days)
      real :: thardnx        ! hardening index for winter annuals (range from 0 t0 2)
 
      real :: thu_shoot_beg  ! heat unit total for beginning of shoot grow from root storage period
      real :: thu_shoot_end  ! heat unit total for end of shoot grow from root storage period
+     real :: mshoot         ! crop shoot mass grown from root storage (kg/m^2)
+                            ! this is a "breakout" mass and does not represent a unique pool
+                            ! since this mass is destributed into below ground stem and
+                            ! standing stem as each increment of the shoot is added
+     real :: mtotshoot      ! total mass of shoot growing from root storage biomass (kg/m^2)
+                            ! in the period from beginning to completion of emegence heat units
 
      integer :: dayap       ! number of days of growth completed since crop planted
      integer :: dayam       ! number of days since crop matured
@@ -147,7 +153,11 @@ module biomaterial
      real :: dstmtot      ! total number of stems  per unit area (#/m^2)
      real :: zht_ave      ! Weighted ave height across pools (m)
      real :: zmht         ! Tallest biomass height across pools (m)
+     real :: xstmrep      ! a representative diameter so that dstm*xstmrep*zht=rsai
+     real :: zrtd         ! root depth (m)
 
+     real :: mstandstore  ! Total reproductive mass (standing) (kg/m^2)
+     real :: mflatstore   ! Total reproductive mass (flat) (kg/m^2)
      real :: mtot         ! Total mass across pools (standing + flat + roots + buried) (kg/m^2)
      real :: mtotto4      ! Total mass across pools (standing + flat + roots + buried to a 4 inch depth) (kg/m^2)
      real :: msttot       ! Standing mass across pools (standstem + standleaf + standstore) (kg/m^2)

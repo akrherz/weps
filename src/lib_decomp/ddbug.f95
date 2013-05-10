@@ -37,8 +37,6 @@
       include 's1dbh.inc'
       include 's1dbc.inc'
       include 's1sgeo.inc'
-      include 'c1gen.inc'
-      include 'c1glob.inc'
       include 'w1clig.inc'
       include 'h1hydro.inc'
       include 'h1scs.inc'

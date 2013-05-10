@@ -4,7 +4,7 @@
 !$HeadURL$
 
 ! Must be called before calibration reports
-SUBROUTINE get_calib_crops(sr)
+SUBROUTINE get_calib_crops(sr, crop)
 
     USE generic_list , ONLY : Link_Ptr_Type, Link_Type, List_Type
     USE generic_list , ONLY : LI_Init_List, LI_Add_To_Head
@@ -13,12 +13,14 @@ SUBROUTINE get_calib_crops(sr)
     USE generic_list , ONLY : LI_Get_Len
 
     USE calib_crop_m
+    use biomaterial, only: biomatter
 
     IMPLICIT NONE
 
 
 !   + + + ARGUMENT DECLARATIONS + + +
     INTEGER :: sr
+    type(biomatter), intent(in) :: crop    ! structure containing full crop description
 
 !   + + + ARGUMENT DEFINITIONS + + +
 !   sr    - subregion number
@@ -27,7 +29,6 @@ SUBROUTINE get_calib_crops(sr)
     include 'p1werm.inc'
     include 'm1flag.inc'
     include 'main/main.inc'
-    include 'c1info.inc'
     include 'c1gen.inc'
     include 'c1db1.inc'
     include 'command.inc'
@@ -52,9 +53,9 @@ SUBROUTINE get_calib_crops(sr)
     CLink = LI_Get_Head(Calib_Crop_List)
     DO WHILE (LI_Associated(CLink))
        Calib_Crop = TRANSFER(CLink, Calib_Crop)
-       IF (Calib_Crop%CP%CData%calib_crop_info%crop_name == ac0nam(sr)(1:len_trim(ac0nam(sr))) .and.    &
-           Calib_Crop%CP%CData%calib_crop_info%harv_day == lopday .and.                                 &
-           Calib_Crop%CP%CData%calib_crop_info%harv_month == lopmon .and.                               &
+       IF (Calib_Crop%CP%CData%calib_crop_info%crop_name == trim(crop%bname) .and. &
+           Calib_Crop%CP%CData%calib_crop_info%harv_day == lopday .and.  &
+           Calib_Crop%CP%CData%calib_crop_info%harv_month == lopmon .and. &
            Calib_Crop%CP%CData%calib_crop_info%harv_rotyear == lopyr ) THEN
 
              ! Print out complete list of crops to be calibrated
@@ -78,7 +79,7 @@ SUBROUTINE get_calib_crops(sr)
     ALLOCATE (Calib_Crop%CP); ALLOCATE (Calib_Crop%CP%CData)
     Calib_Crop%CP%CData%Index = calib_crop_cnt
     Calib_Crop%CP%CData%calib_crop_info%idx = calib_crop_cnt
-    Calib_Crop%CP%CData%calib_crop_info%crop_name = ac0nam(sr)(1:len_trim(ac0nam(sr)))
+    Calib_Crop%CP%CData%calib_crop_info%crop_name = trim(crop%bname)
     Calib_Crop%CP%CData%calib_crop_info%plant_day = aplant_day(sr)
     Calib_Crop%CP%CData%calib_crop_info%plant_month = aplant_month(sr)
     Calib_Crop%CP%CData%calib_crop_info%plant_rotyear = aplant_rotyr(sr)

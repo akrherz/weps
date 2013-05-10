@@ -2,7 +2,7 @@
 !$Date$
 !$Revision$
 !$HeadURL$
-      subroutine decomp(isr, residue, decompfac)
+      subroutine decomp(isr, crop, residue, decompfac)
 
       use weps_interface_defs
       use biomaterial, only: biomatter, decomp_factors
@@ -36,14 +36,9 @@
       include 'h1db1.inc'
       include 'h1hydro.inc'
 
-! Werm $INCLUDE:file for decomp variables
-      include 'c1db1.inc'
-
-      ! crop pools (flat leaf included for decomp)
-      include 'c1glob.inc'
-
 !     + + +   ARGUMENT DECLARATIONS + + +
       integer, intent(in) :: isr                               ! current subregion
+      type(biomatter), intent(inout) :: crop  ! structure containing biomatter state and parameters
       type(biomatter), dimension(:), intent(inout) :: residue  ! structure containing biomatter state and parameters
       type(decomp_factors), intent(inout) :: decompfac
 
@@ -230,9 +225,9 @@
 !      Mass(t) = mass(t-1) * (1 - k * dday)
 
       ! crop flat leaves are dead and assumed to start decomposing
-      if( acmflatleaf(isr) .gt. 0.0 ) then
-          dec_fac = max(0.0, 1.0 - leaf_fac*acdkrate(2,isr)*decompfac%iddf)
-          acmflatleaf(isr) = acmflatleaf(isr) * dec_fac
+      if( crop%mass%flatleaf .gt. 0.0 ) then
+          dec_fac = max(0.0, 1.0 - leaf_fac*crop%database%dkrate(2)*decompfac%iddf)
+          crop%mass%flatleaf = crop%mass%flatleaf * dec_fac
       end if
 
       do iage = 1,mnbpls

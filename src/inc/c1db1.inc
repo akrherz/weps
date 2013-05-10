@@ -45,10 +45,10 @@
       integer          acrbc(mnsub)
 
 !  These are the names used by decomp (with an "ac" prepended)
-      real             acdkrate(mndk,mnsub)
-      real             acxstm(mnsub)
-      real             acddsthrsh(mnsub)
-      real             accovfact(mnsub)
+!      real             acdkrate(mndk,mnsub)
+!      real             acxstm(mnsub)
+!      real             acddsthrsh(mnsub)
+!      real             accovfact(mnsub)
 ! ------
 
       real    acdmaxshoot(mnsub)
@@ -64,8 +64,8 @@
       real    acfstem2stor(mnsub)
       real    acfstor2stor(mnsub)
 
-      real    acresevapa(mnsub)
-      real    acresevapb(mnsub)
+!      real    acresevapa(mnsub)
+!      real    acresevapb(mnsub)
 
       real    acyld_coef(mnsub)
       real    acresid_int(mnsub)
@@ -81,13 +81,13 @@
      &                 ac0clf, ac0dlf, ac0arp, ac0brp, ac0crp, ac0drp,  &
      &                 ac0aht, ac0bht, ac0ssa, ac0ssb, ac0sla, ac0hue,  &
      &                 acrbc,                                           &
-     &                 acdkrate, acxstm, acddsthrsh, accovfact,         &
+!     &                 acdkrate, acxstm, acddsthrsh, accovfact,         &
      &                 acdmaxshoot,                                     &
      &                 ac0transf, ac0storeinit, acfshoot,               &
      &                 ac0growdepth, acfleafstem, ac0shoot,             &
      &                 ac0diammax,                                      &
      &                 acfleaf2stor, acfstem2stor, acfstor2stor,        &
-     &                 acresevapa, acresevapb,                          &
+!     &                 acresevapa, acresevapb,                          &
      &                 acyld_coef, acresid_int, aczloc_regrow
 
       save :: /c1db1/

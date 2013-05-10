@@ -34,7 +34,6 @@
 	  real kiadj,kradj,shcrtadj
 	  real ainf(mxslp),binf(mxslp),cinf(mxslp)
 	  real ainftc(mxslp), binftc(mxslp), cinftc(mxslp)
-	  real canhgt,cancov
 	  real sand(mxnsl), silt(mxnsl), clay(mxnsl), orgmat(mxnsl)
 	  real thetdr(mxnsl), tens, rh, qshear
 	  real rrc,qostar, dg(mxnsl), st(mxnsl), thdp, frdp, phi
@@ -67,8 +66,6 @@
 !     kiadj - adjusted ki after factor applied, computed by soil_adj
 !     kradj - adjusted kr after factor applied, computed by soil_adj
 !     shcrtadj - adjusted shcrit after factor applied, computed by soil_adj
-!     canhgt - canopy height(m), computed by getfromweps
-!     cancov - canopy cover. computed by getfromweps
 !     thetdr - 15-bar soil water content (wilting point), computed by getfromweps
 !     sand - sand content, computed by getfromweps
 !     silt - silt content, computed by getfromweps
@@ -141,13 +138,13 @@
 !     them now.
 !
 
-      call getfromweps(isr,canhgt,cancov,sand,silt,clay,orgmat,         &
+      call getfromweps(isr,sand,silt,clay,orgmat,                       &
      &  thetdr,rrc,dg,st,thdp,frdp, thetfc, por, rh,                    &
      &  frctrl, frcsol,prcp)
 
       call soil_adj(wp_ki,wp_kr,wp_shcrit,kiadj,kradj,shcrtadj,rrc,     &
-     &   canhgt,                                                        &
-     &   cancov, wp_inrcov, croptot%mrttotto15, restot%mrttot,wp_bconsd,&
+     &   croptot%zht_ave, croptot%ftcancov,                             &
+     &   wp_inrcov, croptot%mrttotto15, restot%mrttot,wp_bconsd,        &
      &   wp_daydis,rh, wp_rspace,                                       &
      &   wp_avgslp,restot%mbgtot,wp_krcrat,wp_tccrat,wp_kicrat,dg,      &
      &   thetdr,st, thdp,frdp,                                          &

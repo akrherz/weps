@@ -2,7 +2,7 @@
 !$Date$
 !$Revision$
 !$HeadURL$
-      subroutine callsoil(daysim, isr, biotot)
+      subroutine callsoil(daysim, isr, croptot, biotot)
 ! ***************************************************************** wjr
 ! Wrapper to call soil
 
@@ -14,7 +14,7 @@
 ! Arguments
       integer daysim
       integer isr                   
-      type(biototal), intent(in) :: biotot
+      type(biototal), intent(in) :: croptot, biotot
 
 ! Includes
       include 'p1werm.inc'
@@ -33,8 +33,10 @@
       include 'w1clig.inc'
 
       call timer(TIMSOIL,TIMSTART)      
-!
-            if (am0sdb(isr) .eq. 1) call sdbug(isr, nslay(isr), biotot)
+
+            if (am0sdb(isr) .eq. 1) then
+               call sdbug(isr, nslay(isr), croptot, biotot)
+            end if
             call soil(isr,daysim,ahlocirr(isr),ahzirr(isr), ahzsmt(isr),&
      &                 ahtsmx(1,isr), ahtsmn(1,isr),                    &
      &                 ahrwc(1,isr), ahrwcdmx(1,isr), ahrwca(1,isr),    &
@@ -56,7 +58,9 @@
      &                 asfcce(1,isr), asfcec(1,isr),                    &
      &                 ahzinf(isr), ahzwid(isr), awzdpt, awtdav         &
      &                )
-            if (am0sdb(isr) .eq. 1) call sdbug(isr, nslay(isr), biotot)
+            if (am0sdb(isr) .eq. 1) then
+               call sdbug(isr, nslay(isr), croptot, biotot)
+            end if
 
       ! recalculate  depth to bottom of soil layer
       call depthini( nslay(isr), aszlyt(1,isr), aszlyd(1,isr) )

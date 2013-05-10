@@ -244,13 +244,13 @@ module sae_in_out_mod
 
       write(luo_saeinp,2146)
  2146 format('#',/, &
-      '#       aczht(s), R, (c1glob.inc) Crop height (m)')
+      '#       aczht(s), R, Crop height (m)')
       write(luo_saeinp,*) subrsurf(sr)%aczht
 
       write(luo_saeinp,2147)
  2147 format('#',/, &
-      '#       acrsai(s), R, (c1glob.inc) Crop stem area index (m^2/m^2)',/, &
-      '#       acrlai(s), R, (c1glob.inc) Crop leaf area index (m^2/m^2)')
+      '#       acrsai(s), R, Crop stem area index (m^2/m^2)',/, &
+      '#       acrlai(s), R, Crop leaf area index (m^2/m^2)')
       write(luo_saeinp,*) subrsurf(sr)%acrsai, subrsurf(sr)%acrlai
 
       write(luo_saeinp,2148)

@@ -86,11 +86,10 @@
       real, intent(in) :: spg, dia
       end function falvel
 !---------------------------
-      subroutine getfromweps(isr,canhgt,cancov,sand,silt,clay,orgmat,   &
-     & thetdr,rrc,dg,st,thdp,frdp,thetfc,por,rh,                        &
-     & frctrl, frcsol, precip)
+      subroutine getfromweps(isr,sand,silt,clay,orgmat, &
+       thetdr,rrc,dg,st,thdp,frdp,thetfc,por,rh, &
+       frctrl, frcsol, precip)
       integer, intent(in):: isr
-      real, intent(out):: canhgt,cancov
       real, intent(out):: sand(*), silt(*), clay(*)
       real, intent(out):: orgmat(*)
       real, intent(out):: thetdr(*), rrc

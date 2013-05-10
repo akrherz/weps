@@ -74,7 +74,6 @@
       include 's1phys.inc'
       include 'c1info.inc'
       include 'c1gen.inc'
-      include 'c1glob.inc'
       include 'c1db1.inc'
       include 'h1hydro.inc'
       include 'command.inc'   !declarations for commandline args
@@ -87,7 +86,6 @@
     
 !     + + + LOCAL VARIABLES + + +
       character(len=21) :: rundatetime
-      logical first
 
       integer, dimension(:), allocatable :: nperiods       ! number of reporting periods being accumulated
       integer, dimension(:), allocatable :: pd             ! index counter into reporting periods
@@ -97,7 +95,6 @@
      &        end_init_jday, end_init_d, end_init_m, end_init_y,        &
      &        ndiy,                                                     &
      &        isr, ipl,                                                 &
-     &        o_unit,                                                   &
      &        simyrs,                                                   &
      &        yrsim, run_rot_cycles
       integer lcaljday, keep(mnsub)
@@ -213,7 +210,6 @@
 !    18 = 'dabove.out'  - decomp above ground output file
 !    19 = 'dbelow.out'  - decomp below ground output file
 !    20 = 'erod.out'    - erosion output file
-       o_unit = 20
 !    21 = 'eegt'        - period loss or deposition from grid point file
 !    22 = 'eegtss       - period suspension loss from grid point file
 !    23 = 'eegt10'      - period PM-10 loss from grid point file
@@ -230,7 +226,6 @@
 
       data yrsim /0/
       data lcaljday /0/
-      data first /.true./
 
 !     + + + END SPECIFICATIONS + + +
 
@@ -472,9 +467,9 @@
 
       do isr = 1, nsubr
           ! this prints header to plot.out file
-          call plotdata( isr, restot(isr), croptot(isr), biotot(isr), noerod(isr), cellstate )  ! print to plot data file
+          call plotdata( isr, crop(isr), restot(isr), croptot(isr), biotot(isr), noerod(isr), cellstate )  ! print to plot data file
           ! this prints header to decomp.out file
-          call bpools( isr, residue(1:size(residue,1),isr), restot(isr), croptot(isr), biotot(isr), decompfac(isr) )
+          call bpools( isr, residue(1:size(residue,1),isr), restot(isr), biotot(isr), decompfac(isr) )
       end do
 
 !     Initializations unique to particular submodels
@@ -486,7 +481,7 @@
          call cropinit(isr, crop(isr))
          ! initialize all dependent variables
          call updres(isr, residue(1:size(residue,1), isr), restot(isr))
-         call sumbio(isr, residue(1:size(residue,1), isr), restot(isr), croptot(isr), biotot(isr))
+         call sumbio(isr, crop(isr), residue(1:size(residue,1), isr), restot(isr), croptot(isr), biotot(isr))
          call sci_stir_init(isr)
 
         ! Initialize the water holding capacity variable
@@ -547,9 +542,9 @@
           ! set initialization flag to .false. after first day
           if (am0ifl) am0ifl = .false.
 
-          call plotdata( isr, restot(isr), croptot(isr), biotot(isr), noerod(isr), cellstate )  ! print to plot data file
+          call plotdata( isr, crop(isr), restot(isr), croptot(isr), biotot(isr), noerod(isr), cellstate )  ! print to plot data file
           ! write decomposition biomass pool amounts to files
-          call bpools(isr, residue(1:size(residue,1),isr), restot(isr), croptot(isr), biotot(isr), decompfac(isr))
+          call bpools(isr, residue(1:size(residue,1),isr), restot(isr), biotot(isr), decompfac(isr))
 !        write(*,*) 'weps:yrsim cd,cm,cy am0jd,daysim',                 &
 !     &              yrsim," ",cd,cm,cy," ",am0jd,daysim
 
@@ -628,10 +623,10 @@
             call submodels(isr, crop(isr), residue(1:size(residue,1),isr), restot(isr), croptot(isr),&
      &                     biotot(isr), decompfac(isr), mandatbs(isr)%mandate, h1et(isr))
 
-            call plotdata( isr, restot(isr), croptot(isr), biotot(isr), noerod(isr), cellstate )  ! print to plot data file
+            call plotdata( isr, crop(isr), restot(isr), croptot(isr), biotot(isr), noerod(isr), cellstate )  ! print to plot data file
 
             ! write decomposition biomass pool amounts to files
-            call bpools(isr, residue(1:size(residue,1),isr), restot(isr), croptot(isr), biotot(isr), decompfac(isr))
+            call bpools(isr, residue(1:size(residue,1),isr), restot(isr), biotot(isr), decompfac(isr))
 
             ! set initialization flag to .false. after first day
             if (am0ifl) am0ifl = .false.
@@ -748,8 +743,8 @@
                call flush(6)
             end if
 
-!           if (am0jd.eq.ijday+1) call dbgdmp(daysim, isr, residue(isr), biotot(isr))
-!           if (am0jd.eq.ljday) call dbgdmp(daysim, isr, residue(isr), biotot(isr))
+!           if (am0jd.eq.ijday+1) call dbgdmp(daysim, isr, residue(isr), croptot(isr), biotot(isr))
+!           if (am0jd.eq.ljday) call dbgdmp(daysim, isr, residue(isr), croptot(isr), biotot(isr))
 
             do isr=1,nsubr   ! do multiple subregion     
                call submodels(isr, crop(isr), residue(1:size(residue,1),isr), restot(isr), croptot(isr), &
@@ -800,9 +795,9 @@
                end if
 
                call sci_cum( isr, restot(isr), cellstate )   ! Keep running total for soil conditioning index (SCI)
-               call plotdata( isr, restot(isr), croptot(isr), biotot(isr), noerod(isr), cellstate )  ! print to plot data file
+               call plotdata( isr, crop(isr), restot(isr), croptot(isr), biotot(isr), noerod(isr), cellstate )  ! print to plot data file
                ! write decomposition biomass pool amounts to files
-               call bpools(isr, residue(1:size(residue,1),isr), restot(isr), croptot(isr), biotot(isr), decompfac(isr))
+               call bpools(isr, residue(1:size(residue,1),isr), restot(isr), biotot(isr), decompfac(isr))
 
 !           write(*,*) 'weps:yrsim cd,cm,cy am0jd,daysim',              &
 !    &              yrsim," ",cd,cm,cy," ",am0jd,daysim

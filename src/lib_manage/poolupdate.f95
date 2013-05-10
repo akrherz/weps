@@ -177,7 +177,9 @@
           bdmbgto15(idy) = valbydepth(bnslay, bszlyd, residue(idy)%deriv%mbgz, 2, 0.0, weppdepth)
       end do
 
-      ! sum above ground (stem + leaf + store) by and across pools
+      ! sum mass across pools
+      restot%mstandstore = 0.0
+      restot%mflatstore = 0.0
       restot%mtot = 0.0
       restot%mtotto4 = 0.0
       restot%mftot = 0.0
@@ -191,9 +193,11 @@
       do idy = 1, size(residue)
           residue(idy)%deriv%mst = residue(idy)%mass%standstem + residue(idy)%mass%standleaf + residue(idy)%mass%standstore
           residue(idy)%deriv%mf = residue(idy)%mass%flatstem + residue(idy)%mass%flatleaf + residue(idy)%mass%flatstore &
-     &                               + residue(idy)%mass%flatrootstore + residue(idy)%mass%flatrootfiber
+                                + residue(idy)%mass%flatrootstore + residue(idy)%mass%flatrootfiber
           residue(idy)%deriv%m = residue(idy)%deriv%mst + residue(idy)%deriv%mf + residue(idy)%deriv%mrt + residue(idy)%deriv%mbg
           bdmto4(idy) = residue(idy)%deriv%mst + residue(idy)%deriv%mf + bdmrtto4(idy) + bdmbgto4(idy)
+          restot%mstandstore = restot%mstandstore + residue(idy)%mass%standstore
+          restot%mflatstore = restot%mflatstore + residue(idy)%mass%flatstore
           restot%mtot = restot%mtot + residue(idy)%deriv%m
           restot%mtotto4 = restot%mtotto4 + bdmto4(idy)
           restot%mftot = restot%mftot + residue(idy)%deriv%mf
@@ -204,6 +208,16 @@
           restot%mrttot = restot%mrttot + residue(idy)%deriv%mrt
           restot%mrttotto4 = restot%mrttotto4 + bdmrtto4(idy)
           restot%mrttotto15 = restot%mrttotto15 + bdmrtto15(idy)
+      end do
+
+      ! sum layer mass across pools
+      do idx = 1, size(restot%mrtz)
+          restot%mrtz(idx) = 0.0
+          restot%mbgz(idx) = 0.0
+          do idy = 1, size(residue)
+              restot%mrtz(idx) = restot%mrtz(idx) + residue(idy)%deriv%mrtz(idx)
+              restot%mbgz(idx) = restot%mbgz(idx) + residue(idy)%deriv%mbgz(idx)
+          end do
       end do
 
       restot%dstmtot = 0.0
@@ -271,6 +285,35 @@
 
       ! effective silhouette
       restot%rcdtot = biodrag(restot%rlaitot, restot%rsaitot, 0.0, 0.0, 0, 0.0, 0.0, 0.0)
+
+      ! sum area indexs by layer across pools
+      restot%rsaz(idx) = 0.0
+      restot%rlaz(idx) = 0.0
+      do idx = 1, mncz
+         do idy = 1, size(residue)
+              restot%rsaz(idx) = restot%rsaz(idx) + residue(idy)%deriv%rsaz(idx)
+              restot%rlaz(idx) = restot%rlaz(idx) + residue(idy)%deriv%rlaz(idx)
+         end do
+      end do
+
+      ! use sai weighting for average height and representative stem diameter
+      restot%zht_ave = 0.0
+      restot%xstmrep = 0.0
+      restot%zmht = 0.0
+      do idy = 1, size(residue)
+         if( restot%rsaitot .gt. 0.0 ) then
+            restot%zht_ave = restot%zht_ave + residue(idy)%geometry%zht * residue(idy)%deriv%rsai / restot%rsaitot
+            restot%xstmrep = restot%xstmrep + residue(idy)%geometry%xstmrep * residue(idy)%deriv%rsai / restot%rsaitot
+         end if
+         restot%zmht = max( restot%zmht, residue(idy)%geometry%zht )
+      end do
+
+      ! use stem number weighting for average root depth (could use buried root mass also)
+      ! need to add transfer of root depth from crop to residue before enabling
+      !restot%zrtd = 0.0
+      !do idy = 1, size(residue)
+      !   restot%zrtd = restot%zrtd + residue(idy)%geometry%zrtd * residue(idy)%geometry%dstm / restot%dstmtot
+      !end do
 
       return
       end

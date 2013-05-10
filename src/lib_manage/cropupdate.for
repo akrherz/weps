@@ -201,6 +201,10 @@
       croptot%dstmtot = bcdstm      ! total number of stems  per unit area (#/m^2)
       croptot%zht_ave = bczht      ! Weighted ave height across pools (m)
       croptot%zmht = bczht         ! Tallest biomass height across pools (m)
+      croptot%xstmrep = bcxstmrep  ! Weighted ave representative stem diameter across pools (m)
+      croptot%zrtd = bczrtd        ! root depth (m)
+      croptot%mstandstore = bcmstandstore
+      croptot%mflatstore = bcmflatstore
       croptot%mtot = bcm         ! Total mass across pools (standing + flat + roots + buried) (kg/m^2)
       croptot%mtotto4 = bcmst + bcmf + croptot%mrttotto4      ! Total mass across pools (standing + flat + roots + buried to a 4 inch depth) (kg/m^2)
       croptot%msttot = bcmst       ! Standing mass across pools (standstem + standleaf + standstore) (kg/m^2)

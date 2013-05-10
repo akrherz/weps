@@ -3,7 +3,7 @@
 !$Revision$
 !$HeadURL$
 
-SUBROUTINE set_calib(sr)
+SUBROUTINE set_calib(sr, crop)
 
     USE generic_list , ONLY : Link_Ptr_Type, Link_Type, List_Type
     USE generic_list , ONLY : LI_Init_List, LI_Add_To_Head
@@ -12,12 +12,14 @@ SUBROUTINE set_calib(sr)
     USE generic_list , ONLY : LI_Get_Len
 
     USE calib_crop_m
+    use biomaterial, only: biomatter
 
     IMPLICIT NONE
 
 
 !   + + + ARGUMENT DECLARATIONS + + +
     INTEGER :: sr
+    type(biomatter), intent(in) :: crop    ! structure containing full crop description
 
 !   + + + ARGUMENT DEFINITIONS + + +
 !   sr    - subregion number
@@ -26,14 +28,12 @@ SUBROUTINE set_calib(sr)
     include 'p1werm.inc'
     include 'm1flag.inc'
     include 'main/main.inc'
-    include 'c1info.inc'
     include 'c1gen.inc'
     include 'c1db1.inc'
 
 !   + + + LOCAL DECLARATIONS + + +
 
     INTEGER :: c_no = 0
-    LOGICAL, save :: firstime = .TRUE.   ! Initialize linked list only once
 
     IF (.not. got_all_calib_crops) RETURN   ! Don't do anything if all crops not identified
 
@@ -44,9 +44,9 @@ SUBROUTINE set_calib(sr)
     CLink = LI_Get_Head(Calib_Crop_List)
     DO WHILE (LI_Associated(CLink))
        Calib_Crop = TRANSFER(CLink, Calib_Crop)
-       IF (Calib_Crop%CP%CData%calib_crop_info%crop_name == ac0nam(sr)(1:len_trim(ac0nam(sr))) .and.     &
-           Calib_Crop%CP%CData%calib_crop_info%plant_day == lopday .and.                                 &
-           Calib_Crop%CP%CData%calib_crop_info%plant_month == lopmon .and.                               &
+       IF (Calib_Crop%CP%CData%calib_crop_info%crop_name == trim(crop%bname) .and. &
+           Calib_Crop%CP%CData%calib_crop_info%plant_day == lopday .and. &
+           Calib_Crop%CP%CData%calib_crop_info%plant_month == lopmon .and. &
            Calib_Crop%CP%CData%calib_crop_info%plant_rotyear == lopyr ) THEN
 
              c_no = Calib_Crop%CP%CData%calib_crop_info%idx

@@ -29,6 +29,8 @@ SUBROUTINE update_period_update_vars(isr, period_update, restot, croptot, biotot
                                 ! acrcd(isr)      crop effective silhouette
                                 ! acmf(isr)       crop flat mass
                                 ! acmst(isr)      crop standing mass
+                                ! acmstandstore(isr)      crop standing repr mass
+                                ! acmflatstore(isr)      crop flat repr mass
     type(biototal), intent(in) :: biotot  ! contains:
                                 ! abftcv(isr)     all flat cover
                                 ! abrcd           all effective silhouette
@@ -37,10 +39,6 @@ SUBROUTINE update_period_update_vars(isr, period_update, restot, croptot, biotot
     type(cellsurfacestate), dimension(0:,0:), intent(in) :: cellstate  ! egt, egtcs, egtss, egt10
 
     include "p1werm.inc"        ! needed by other include files
-
-    include "c1glob.inc"        ! contains
-                                ! acmstandstore(isr)      crop standing repr mass
-                                ! acmflatstore(isr)      crop flat repr mass
 
     include "s1sgeo.inc"        ! aslrr(isr) Allmaras RR values
                                 ! aszrgh(isr) Ridge height
@@ -165,7 +163,7 @@ SUBROUTINE update_period_update_vars(isr, period_update, restot, croptot, biotot
    !Note that we are also subtracting the "store" portion
    !which contains the reproductive (seed and fruit) components
     ! Remove live standing and flat crop reproductive mass from reported value
-    period_update(Crop_stand_mass)%val = croptot%msttot + croptot%mftot - acmstandstore(isr) - acmflatstore(isr)
+    period_update(Crop_stand_mass)%val = croptot%msttot + croptot%mftot - croptot%mstandstore - croptot%mflatstore
     period_update(Crop_stand_mass)%cnt = period_update(Crop_stand_mass)%cnt + 1
 
     period_update(Crop_root_mass)%val = croptot%mrttot
@@ -213,11 +211,11 @@ SUBROUTINE update_period_update_vars(isr, period_update, restot, croptot, biotot
   if( isr .gt. 0 ) then
 
   ! Remove live flat crop reproductive mass from reported value
-    period_update(All_flat_mass)%val = biotot%mftot - acmflatstore(isr)
+    period_update(All_flat_mass)%val = biotot%mftot - croptot%mflatstore
     period_update(All_flat_mass)%cnt = period_update(All_flat_mass)%cnt + 1
 
     ! Remove live standing crop reproductive mass from reported value
-    period_update(All_stand_mass)%val = biotot%msttot - acmstandstore(isr)
+    period_update(All_stand_mass)%val = biotot%msttot - croptot%mstandstore
     period_update(All_stand_mass)%cnt = period_update(All_stand_mass)%cnt + 1
 
     period_update(All_buried_mass)%val = croptot%mrttot + restot%mrttot + restot%mbgtot

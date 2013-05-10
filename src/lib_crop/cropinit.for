@@ -6,7 +6,7 @@
       subroutine cropinit(isr, crop)
 
       use weps_interface_defs
-      use biomaterial, only: biomatter, biototal
+      use biomaterial, only: biomatter
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer isr
@@ -19,7 +19,6 @@
       include 'c1report.inc'
       include 'c1db1.inc'
       include 'c1db2.inc'
-      include 'c1glob.inc'
       include 's1layr.inc'
       include 's1sgeo.inc'
       include 'manage/tcrop.inc'
@@ -32,67 +31,67 @@
       crop%growth%am0cgf = .false.
       crop%growth%am0cif = .false.
 
-      acmstandstem(isr) = 0.0
-      acmstandleaf(isr) = 0.0
-      acmstandstore(isr) = 0.0
-      acmflatstem(isr) = 0.0
-      acmflatleaf(isr) = 0.0
-      acmflatstore(isr) = 0.0
+      crop%mass%standstem = 0.0
+      crop%mass%standleaf = 0.0
+      crop%mass%standstore = 0.0
+      crop%mass%flatstem = 0.0
+      crop%mass%flatleaf = 0.0
+      crop%mass%flatstore = 0.0
 
-      do idx = 1, mnsz
-          acmrootstorez(idx,isr) = 0.0
-          acmrootfiberz(idx,isr) = 0.0
-          acmbgstemz(idx,isr) = 0.0
+      do idx = 1, size(crop%mass%rootstorez)
+          crop%mass%rootstorez(idx) = 0.0
+          crop%mass%rootfiberz(idx) = 0.0
+          crop%mass%stemz(idx) = 0.0
       end do
 
       acxrow(isr) = 0.0
-      aczht(isr) = 0.0
-      acdstm(isr) = 0.0
-      aczrtd(isr) = 0.0
-      acdayap(isr) = 0
-      acthucum(isr) = 0.0
-      actrthucum(isr) = 0.0
-      acgrainf(isr) = 0.0
-      acmrootstore(isr) = 0.0
-      acmrootfiber(isr) = 0.0
-      acxstmrep(isr) = 0.0
-      acfliveleaf(isr) = 0.0
+      crop%geometry%zht = 0.0
+      crop%geometry%dstm = 0.0
+      crop%geometry%zrtd = 0.0
+      crop%growth%dayap = 0
+      crop%growth%thucum = 0.0
+      crop%growth%trthucum = 0.0
+      crop%geometry%grainf = 0.0
+      crop%deriv%mbgrootstore = 0.0
+      crop%deriv%mbgrootfiber = 0.0
+      crop%geometry%xstmrep = 0.0
+      crop%growth%fliveleaf = 0.0
 
-      acm(isr) = 0.0
-      acmst(isr) = 0.0
-      acmf(isr) = 0.0
-      acmrt(isr) = 0.0
+      crop%deriv%m = 0.0
+      crop%deriv%mst = 0.0
+      crop%deriv%mf = 0.0
+      crop%deriv%mrt = 0.0
 
-      do idx = 1, mnsz
-          acmrtz(idx,isr) = 0.0
+      do idx = 1, size(crop%deriv%mrtz)
+          crop%deriv%mrtz(idx) = 0.0
       end do
 
-      acrsai(isr) = 0.0
-      acrlai(isr) = 0.0
+      crop%deriv%rsai = 0.0
+      crop%deriv%rlai = 0.0
 
-      do idx = 1, mncz
-          acrsaz(idx,isr) = 0.0
-          acrlaz(idx,isr) = 0.0
+      do idx = 1, size(crop%deriv%rsaz)
+          crop%deriv%rsaz(idx) = 0.0
+          crop%deriv%rlaz(idx) = 0.0
       end do
 
-      acffcv(isr) = 0.0
-      acfscv(isr) = 0.0
-      acftcv(isr) = 0.0
+      crop%deriv%ffcv = 0.0
+      crop%deriv%fscv = 0.0
+      crop%deriv%ftcv = 0.0
 
-      acxstm(isr) = 0.0
+      crop%database%xstm = 0.0
       acrbc(isr) = 1
-      accovfact(isr) = 0.0
+      crop%database%covfact = 0.0
       ac0ck(isr) = 0.0
 
       ! initialize some derived globals for crop global variables
-      acfcancov(isr) = 0.0
-      acrcd(isr) = 0.0
+      crop%deriv%fcancov = 0.0
+      crop%deriv%rcd = 0.0
 
 !     crop harvest reporting day counters
       cprevrotation(isr) = 1
 
 !     initialize crop yield reporting parameters in case harvest call before planting
-      ac0nam(isr) = ''
+      crop%bname = ''
       acynmu(isr) = ''
       acycon(isr) = 1.0
       acywct(isr) = 0.0
@@ -108,10 +107,10 @@
       achyfg(isr) = 0
 
       ! initialize decomp parameters since they are used before a crop is growing
-      do idx = 1, mndk
-          acdkrate(idx,isr) = 0.0
+      do idx = 1, size(crop%database%dkrate)
+          crop%database%dkrate(idx) = 0.0
       end do
-      acddsthrsh(isr) = 0.0
+      crop%database%ddsthrsh = 0.0
 
       ! temporary crop 
       atmstandstem(isr) = 0.0

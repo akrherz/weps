@@ -2,18 +2,16 @@
 !$Date$
 !$Revision$
 !$HeadURL$
-      real function poolmass(                                           &
+      real function poolmass( nslay,                                    &
      &           mstandstem, mstandleaf, mstandstore,                   &
      &           mflatstem, mflatleaf, mflatstore,                      &
      &           mflatrootstore, mflatrootfiber,                        &
      &           mbgstemz, mbgleafz, mbgstorez,                         &
      &           mbgrootstorez, mbgrootfiberz )
 
-!     + + + PARAMETERS AND COMMON BLOCKS + + +
-      include 'p1werm.inc'
-
 !     + + + VARIABLE DECLARATIONS + + +
 
+      integer nslay          ! number of soil layers
       ! state variables
       real mstandstem
       real mstandleaf
@@ -26,12 +24,12 @@
       real mflatrootstore
       real mflatrootfiber
 
-      real mbgstemz(mnsz)
-      real mbgleafz(mnsz)
-      real mbgstorez(mnsz)
+      real mbgstemz(nslay)
+      real mbgleafz(nslay)
+      real mbgstorez(nslay)
 
-      real mbgrootstorez(mnsz)
-      real mbgrootfiberz(mnsz)
+      real :: mbgrootstorez(nslay)
+      real :: mbgrootfiberz(nslay)
 
 !     + + + PURPOSE + + +
       ! sums the total biomass contained in a pool from some of the
@@ -71,7 +69,7 @@
      &     + mflatrootstore + mflatrootfiber
 
       ! add in below ground biomass pools
-      do idx = 1, mnsz
+      do idx = 1, nslay
           mass = mass + mbgstemz(idx) + mbgleafz(idx) + mbgstorez(idx)  &
      &         + mbgrootstorez(idx) + mbgrootfiberz(idx)
       end do

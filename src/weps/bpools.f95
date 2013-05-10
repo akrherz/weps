@@ -10,7 +10,7 @@
 ! crop and individual biomass pools (not all pools have the same variables)
 
 
-      subroutine bpools( isr, residue, restot, croptot, biotot, decompfac )
+      subroutine bpools( isr, residue, restot, biotot, decompfac )
 
       use datetime_mod, only: get_simdate_doy, get_simdate_year
       use biomaterial, only: biomatter, biototal, decomp_factors
@@ -21,14 +21,11 @@
       integer isr
       type(biomatter), dimension(:), intent(in) :: residue
       type(biototal), intent(in) :: restot
-      type(biototal), intent(in) :: croptot
       type(biototal), intent(in) :: biotot
       type(decomp_factors), intent(in) :: decompfac
 
       include 'p1werm.inc'
       include 'm1flag.inc'
-      include 'c1glob.inc'
-      include 'c1db1.inc'
       include 'main/main.inc'   ! daysim
 
 ! statements below added by Simon
@@ -103,12 +100,6 @@
 ! tf=temperature factor, wf=water factor, dd=decomposition day
    
 2222     format (' ',i6,' ',i3,' ',i4,' ', 3f7.1, f7.3, f7.2, 4f7.3, 17(1x,f8.4), 21f7.4, 4(1x,f7.2), 4(1x,f7.3), f8.4)  !added by Simon
-
-!     &    acffcv(isr), acfscv(isr), acftcv(isr),
-!     &    accovfact(isr), acrsai(isr), acrlai(isr),
-!     &    acm(isr), 0.0, acmst(isr),
-!     &    acmrt(isr), 0.0, acmyld(isr),
-!     &    acdstm(isr), aczht(isr), aczrtd(isr), acxstmrep(isr)
 
           ! day, month, year
           ! flat residue cover, standing residue cover, total residue cover

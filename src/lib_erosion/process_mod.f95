@@ -28,7 +28,7 @@ module process_mod
       real, intent(inout) :: szcr         ! soil crust thickness
       real, intent(inout) :: sfcr         ! soil fraction  area crusted
       real, intent(inout) :: sflos        ! soil fraction area of loose soil (only on crust)
-      real, intent(out) :: smlos        ! soil mass of loose soil (only on crust)
+      real, intent(inout) :: smlos        ! soil mass of loose soil (only on crust)
       real, intent(inout) :: szrgh        ! soil ridge height (mm)
       real, intent(in) :: sxrgs        ! plant stem row spacing (mm)
       real, intent(in) :: sxprg        ! soil ridge spacing parallel wind direction (mm)
@@ -613,7 +613,7 @@ module process_mod
       real, intent(inout) :: szcr         ! soil crust thickness
       real, intent(inout) :: sfcr         ! soil fraction  area crusted
       real, intent(inout) :: sflos        ! soil fraction area of loose soil (only on crust)
-      real, intent(out) :: smlos        ! soil mass of loose soil (only on crust)
+      real, intent(inout) :: smlos        ! soil mass of loose soil (only on crust)
       real, intent(inout) :: dmlos        ! change in loose mass on aggregated sfc. (kg/m^2) (from the beginning of the erosion event)
       real, intent(inout) :: sf10         ! soil fraction less than 0.010 mm (PM10)
       real, intent(inout) :: sf84         ! soil fraction less than 0.84 mm

@@ -4,18 +4,20 @@
 !$HeadURL$
 
       subroutine report_harvest( sr, bmrotation, mass_rem, mass_left,   &
-     &                           harv_unit_flg, mandate )
+     &                           harv_unit_flg, mandate, crop )
 
       use weps_interface_defs
       use mandate_mod, only: opercrop_date
       use file_io_mod, only: luoharvest_si, luoharvest_en
       use p1unconv_mod, only: KG_per_M2_to_LBS_per_ACRE
+      use biomaterial, only: biomatter
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer sr, bmrotation
       real mass_rem, mass_left
       integer harv_unit_flg
       type(opercrop_date), dimension(:), intent(inout) :: mandate
+      type(biomatter), intent(inout) :: crop    ! structure containing full crop description
 
 !     + + + ARGUMENT DEFINITIONS + + +
 !     sr    - subregion number
@@ -30,7 +32,6 @@
       include 'p1werm.inc'
       include 'm1flag.inc'
       include 'main/main.inc'
-      include 'c1info.inc'
       include 'c1gen.inc'
       include 'c1report.inc'
       include 'manage/oper.inc'
@@ -53,7 +54,7 @@
 
         if( init_loop ) then  !initilizing cycle
           ! attach a crop name and id as harvest operation in stir report
-          call stir_crop(sr, ac0nam(sr), 2)
+          call stir_crop(sr, crop%bname, 2)
         end if
 
       else  !done when initializing and calibrating cycle(s) are completed
@@ -73,7 +74,7 @@
 
         write(unit=luoharvest_si(sr),fmt=1000,advance='NO')             &
      &      lopday, lopmon, lopyr,                                      &
-     &      ac0nam(sr)(1:len_trim(ac0nam(sr))),                         &
+     &      trim(crop%bname),                                           &
      &      mass_rem, 'kg/m^2',                                         &
      &      mass_left, 'kg/m^2',                                        &
      &      harvest_index, "Harvest Index",                             &
@@ -86,7 +87,7 @@
           ! and from kg/m^2 to acynmu units
           write(unit=luoharvest_en(sr),fmt=1000,advance='NO')           &
      &      lopday, lopmon, lopyr,                                      &
-     &      ac0nam(sr)(1:len_trim(ac0nam(sr))),                         &
+     &      trim(crop%bname),                                           &
      &      mass_rem*KG_per_M2_to_LBS_per_ACRE, 'lb/ac',                &
      &      mass_left*KG_per_M2_to_LBS_per_ACRE, 'lb/ac',               &
      &      harvest_index, "Harvest Index",                             &
@@ -98,7 +99,7 @@
           ! and from kg/m^2 to lbs/ac units
           write(unit=luoharvest_en(sr),fmt=1000,advance='NO')           &
      &      lopday, lopmon, lopyr,                                      &
-     &      ac0nam(sr)(1:len_trim(ac0nam(sr))),                         &
+     &      trim(crop%bname),                                           &
      &      mass_rem*KG_per_M2_to_LBS_per_ACRE, 'lb/ac',                &
      &      mass_left*KG_per_M2_to_LBS_per_ACRE, 'lb/ac',               &
      &      harvest_index, "Harvest Index",                             &
@@ -125,7 +126,7 @@
      &           (mandate(i)%y == lopyr)) THEN
 
                    IF (trim(mandate(i)%opname) == trim(opname))  THEN
-                       mandate(i)%cropname = trim(adjustl(ac0nam(sr)))
+                       mandate(i)%cropname = trim(adjustl(crop%bname))
                        match = .true.
                    END IF
               END IF
@@ -136,7 +137,7 @@
          END IF
 
         ! attach a crop name to the harvest operation in stir report
-        call stir_crop(sr, ac0nam(sr), 2)
+        call stir_crop(sr, crop%bname, 2)
 
         ! updated every call to get newline in right place
         cprevrotation(sr) = bmrotation

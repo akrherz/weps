@@ -10,11 +10,12 @@
 
 !     + + + VARIABLE DECLARATIONS + + +
 
-      character*(80)  ac0nam(mnsub)
+!      character*(80)  ac0nam(mnsub)
       integer         ac0idc(mnsub)
 
       common / c1info /                                                 &
-     &                  ac0nam, ac0idc
+!     &                  ac0nam, ac0idc
+     &                   ac0idc
 
       save :: /c1info/
 

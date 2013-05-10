@@ -3,13 +3,13 @@
 !$Revision$
 !$HeadURL$
 
-      subroutine callhydr(daysim, isr, restot, biotot, h1et)
+      subroutine callhydr(daysim, isr, crop, restot, biotot, h1et)
 
 ! ***************************************************************** wjr
 ! Wrapper to call hydro
 
       use weps_interface_defs
-      use biomaterial, only: biototal
+      use biomaterial, only: biototal, biomatter
       use timer_mod, only: timer, TIMHYDR, TIMSTART, TIMSTOP
       use erosion_data_struct_defs, only: awudav
       use hydro_data_struct_defs, only: am0hdb, hydro_derived_et
@@ -17,6 +17,7 @@
 !     + + + ARGUMENT DECLARATIONS + + +
       integer daysim
       integer isr                   
+      type(biomatter), intent(in) :: crop
       type(biototal), intent(in) :: restot
       type(biototal), intent(in) :: biotot
       type(hydro_derived_et), intent(inout) :: h1et
@@ -26,7 +27,6 @@
 
 ! Includes
       include 'p1werm.inc'
-      include 'c1glob.inc'
       include 'c1gen.inc'
       include 'm1sim.inc'
       include 'm1subr.inc'
@@ -46,12 +46,14 @@
 
       call timer(TIMHYDR,TIMSTART)      
 
-      if (am0hdb(isr) .eq. 1) call hdbug(isr, nslay(isr), restot, h1et)
+      if (am0hdb(isr) .eq. 1) then
+         call hdbug(isr, nslay(isr), crop, restot, h1et)
+      end if
 
       call hydro( isr, nslay(isr), amrslp(isr), biotot%zht_ave,         &
-     &            acrlai(isr), acrsai(isr), aczht(isr), acdayap(isr),   &
-     &       acxrow(isr), ac0rg(isr), biotot%ftcancov, acfliveleaf(isr),&
-     &         biotot%mftot, biotot%evapredu, aczrtd(isr), ahfwsf(isr), &
+     &            crop%deriv%rlai, crop%deriv%rsai, crop%geometry%zht, crop%growth%dayap,   &
+     &       acxrow(isr), ac0rg(isr), biotot%ftcancov, crop%growth%fliveleaf,&
+     &         biotot%mftot, biotot%evapredu, crop%geometry%zrtd, ahfwsf(isr), &
      &            aszlyd(1, isr), asdblk(1, isr), asdblk0(1,isr),       &
      &            asdpart(1, isr), asdwblk(1, isr), ahrwc(1, isr),      &
      &            ahrwcdmx(1, isr), ahrwcs(1, isr), ahrwcf(1, isr),     &
@@ -85,7 +87,9 @@
 ! removed from call: ah0cng(isr), ah0cnp(isr), 
 !                 initswc(isr), initsnow(isr), initday(isr)
 
-      if (am0hdb(isr) .eq. 1) call hdbug(isr, nslay(isr), restot, h1et)
+      if (am0hdb(isr) .eq. 1) then
+         call hdbug(isr, nslay(isr), crop, restot, h1et)
+      end if
       call timer(TIMHYDR,TIMSTOP)      
 
       end

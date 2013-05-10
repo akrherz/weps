@@ -35,12 +35,12 @@
         call updres(isr, residue, restot)                 !update decomp residue pools
 
 !        write(*,*) "Start callhydr"
-        call callhydr(daysim, isr, restot, biotot, h1et)      !call HYDROLOGY submodel
+        call callhydr(daysim, isr, crop, restot, biotot, h1et)      !call HYDROLOGY submodel
         ! do not change order. Hydro may set irrigation amounts that
         ! will affect soil.
 
 !        write(*,*) "Start callsoil"
-        call callsoil(daysim, isr, biotot)       !SOIL submodel
+        call callsoil(daysim, isr, croptot, biotot)       !SOIL submodel
 
 !        write(*,*) "Start callcrop"     !CROP submodel
         ! Crop growth flag indicates growing crop
@@ -53,13 +53,13 @@
         end if
 
 !        write(*,*) "Start decomp"
-        call decomp(isr, residue, decompfac)         !DECOMPosition submodel
+        call decomp(isr, crop, residue, decompfac)         !DECOMPosition submodel
 
 !        write(*,*) "Start updres"
         call updres(isr, residue, restot)
 
 !        write(*,*) "Start sumbio"
-        call sumbio(isr, residue, restot, croptot, biotot) ! sum live and dead biomass
+        call sumbio(isr, crop, residue, restot, croptot, biotot) ! sum live and dead biomass
 
       return
       end

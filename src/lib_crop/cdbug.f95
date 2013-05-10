@@ -42,8 +42,6 @@
       include 's1sgeo.inc'
       include 'c1db1.inc'
       include 'c1db2.inc'
-      include 'c1glob.inc'
-      include 'c1info.inc'
       include 'w1clig.inc'
       include 'h1hydro.inc'
       include 'h1db1.inc'
@@ -130,11 +128,11 @@
 !      write(luocdb(isr),2045) isr
 
       write(luocdb(isr),2050) isr, isr, isr, isr, isr, isr, isr
-      write(luocdb(isr),2051) amrslp(isr), acftcv(isr), acrlai(isr),    &
-     &               aczrtd(isr), restot%mftot, ahfwsf(isr), ac0nam(isr)
+      write(luocdb(isr),2051) amrslp(isr), crop%deriv%ftcv, crop%deriv%rlai,    &
+     &               crop%geometry%zrtd, restot%mftot, ahfwsf(isr), crop%bname
       write(luocdb(isr),2052) isr, isr, isr, isr
       write(luocdb(isr),2053)                                           &
-     &               actdtm(isr), acthucum(isr), acmst(isr), acmrt(isr),&
+     &               actdtm(isr), crop%growth%thucum, crop%deriv%mst, crop%deriv%mrt,&
      &               h1et%zeta, h1et%zetp, h1et%zpta
       write(luocdb(isr),2054) isr, isr, isr, isr
       write(luocdb(isr),2055) h1et%zea, h1et%zep, h1et%zptp, actmin(isr),        &
