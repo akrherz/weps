@@ -45,7 +45,7 @@
 
       use weps_interface_defs
       use datetime_mod, only: get_simdate, get_simdate_doy
-      use file_io_mod, only: luohydro, luohlayers
+      use file_io_mod, only: luohydro, luohlayers, luosurfwat, luoweather
       use biomaterial, only: biototal
       use p1unconv_mod, only: mtomm
       use timer_mod, only: timer, TIMHYDR, TIMDARC, TIMSTART, TIMSTOP
@@ -225,7 +225,7 @@
 
 !     + + + LOCAL VARIABLES + + +
       integer day, mo, yr
-      integer l
+      integer l, idx
       integer idoy
 !      integer theta_check
       real rise, daylength
@@ -254,6 +254,7 @@
 !     + + + LOCAL DEFINITIONS + + +
 !     idoy      - Day of year
 !     l         - Loop index of soil layers
+!     idx       - loop index
 !     rise      - time of sunrise adjusted to local time (hours)
 !     daylength - length of day (hours)
 !     rn        - net radiation from function radnet (Mj/m^2/day)
@@ -355,6 +356,10 @@
      &tar availwat satrat bhtsav unsatcond matricpot relhum bulkden aire&
      &ntry expon_b k_sat numlay = ',i3)
 
+ 3010 format('# hr daysim idoy yr bhrwc0 bhrwc0/bhrwcw(1)')
+
+ 3020 format('# daysim idoy yr rn bwtdmx bwtdmn bwtdpt fld_wind rise')
+
 !     + + + DATA INITIALIZATIONS + + +
 !     Calculate hour of sunrise
       call get_simdate(day, mo, yr)
@@ -401,7 +406,15 @@
 !     &        bszlyt, bszlyd, bsdblk,                                   &
 !     &        theta, thetas, thetaf, thetaw, thetar,                    &
 !     &        bhrsk, bheaep, bh0cb, bsfcla, bsfom, bhtsav )
+      end if
 
+      if( (am0ifl .eqv. .true.) .and.((am0hfl(isr) .eq. 2).or.(am0hfl(isr) .eq. 6) &
+     &   .or. (am0hfl(isr) .eq. 3) .or. (am0hfl(isr) .eq. 7)) ) then
+
+         write(luosurfwat(isr),3010)
+
+         ! print out daily weather as used in hydro
+         write(luoweather(isr),3020)
       end if
 
 !          write(*,*) 'hydro:total 500mm',
@@ -738,12 +751,24 @@
      &       bhfwsf, bhrwc0(12)/bhrwcw(1), bwtdav, vaptrans, evaplimit, &
      &       standevapredu, bbevapredu, totalevapredu
 
-      ! print out hydro values by layer (profile view)
+         ! print out hydro values by layer (profile view)
          call printlayval( isr, daysim, layrsn,                         &
      &        bszlyt, bszlyd, bsdblk,                                   &
      &        theta, thetas, thetaf, thetaw, thetar,                    &
      &        bhrsk, bheaep, bh0cb, bsfcla, bsfom, bhtsav )
+      end if
 
+      if ((am0hfl(isr) .eq. 2).or.(am0hfl(isr) .eq. 6) &
+     &   .or. (am0hfl(isr) .eq. 3) .or. (am0hfl(isr) .eq. 7)) then
+         ! print out hourly surface water content values
+         do idx = 1, 24
+            write(luosurfwat(isr),*) idx, daysim, idoy, yr, bhrwc0(idx),     &
+     &                          bhrwc0(idx)/bhrwcw(1)
+         end do
+
+         ! print out daily weather as used in hydro
+         write(luoweather(isr),*) daysim, idoy, yr, rn, bwtdmx, bwtdmn,      &
+     &                       bwtdpt, fld_wind, rise
       end if
 
       return
