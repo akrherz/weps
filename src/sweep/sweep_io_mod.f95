@@ -9,15 +9,15 @@ module sweep_io_mod
    implicit none
    private
 
-   integer :: debugflg
-   integer :: xplot
-   character*12 :: xcharin(30)
-   real :: xin(30)
+   integer :: debugflg   ! flag to output debug data (0 = none, 1 = input, 2 = more, etc.)
+   integer :: xplot      ! flag to put plot data in arrays (value>0 = no. indep input variable, 0= none)
+   character*12 :: xcharin(30)   ! indep. variable name(s) used in plot
+   real :: xin(30)               ! indep. variable value(s) used in plot
 
    integer xchl          ! length of xplot (independent variable) character strings
    parameter (xchl = 12)
 
-   integer :: mrcl        ! length of line to be read in with getline
+   integer :: mrcl       ! length of line to be read in with getline
    parameter (mrcl = 512)
 
    public :: erodin
@@ -45,16 +45,22 @@ module sweep_io_mod
       use sae_in_out_mod, only: saeinp
 
       ! +++ ARGUMENT DECLARATIONS +++
-      integer i_unit, o_unit, cmdebugflag
-      logical hagen_plot_flag
+      integer :: i_unit
+      integer :: o_unit
+      integer :: cmdebugflag
+      logical :: hagen_plot_flag
       type(subregionsurfacestate), dimension(:), allocatable :: subrsurf
 
       ! +++ LOCAL VARIABLES +++
-      integer i,j
-      integer sr,ibr,a,l,h
-      integer wflg
-      real :: f(ntstep), wu(ntstep)
-      real wfcalm, wuc, w0k, step
+      integer i,j            ! do loop indices
+      integer sr,ibr,a,l,h   ! do loop indices
+      integer wflg           ! flag to determine format of wind speed data (0 = Weibull, 1 = real)
+      real :: f(ntstep)      ! cumulative frequency of wind at speeds < subday(i)%awu
+      real :: wu(ntstep)
+      real :: wfcalm         ! wind fraction intercept (+calm, - no calm in period)
+      real :: wuc            ! Weibull wind speed distribution scale factor (m/s)
+      real :: w0k            ! Weibull wind speed distribution shape factor
+      real :: step           ! tmp real variable for ntstep
       integer :: poly_np     ! number of points to be read in for polygon or polyline
       integer :: ipol        ! index counter for reading in polygon or polyline points
       integer :: alloc_stat  ! indicates status of memory allocation attempt
@@ -63,21 +69,6 @@ module sweep_io_mod
       integer :: nacctr      ! number of accounting regions (read from input file)
       integer :: nbr         ! number of barriers (read from input file)
       character*(mrcl) line
-
-      ! + + + LOCAL VARIABLE DEFINITIONS + + +
-      ! i, j, k = do-loop indices
-      ! x,y,sr,b,a,l,h = do-loop indices
-      ! wflg = flag to determine format of wind speed data (0 = Weibull, 1 = real)
-      ! debugflg = flag to output debug data (0 = none, 1 = input, 2 = more, etc.)
-      ! xplot    = flag to put plot data in arrays
-      !           (value>0 = no. indep input variable, 0= none)
-      ! f(mntime) = cumulative frequency of wind at speeds < subday(i)%awu
-      ! wfcalm    = wind fraction intercept (+calm, - no calm in period)
-      ! wuc       = Weibull wind speed distribution scale factor (m/s)
-      ! w0k       = Weibull wind speed distribution shape factor
-      ! step      = tmp real variable for ntstep
-      ! xcharin(i)= indep. variable name(s) used in plot
-      ! xin(i)    = indep. variable value(s) used in plot
 
       ! +++ FUNCTIONS CALLED +++
       ! getline
@@ -91,6 +82,15 @@ module sweep_io_mod
       ! (currently only input file level debug supported)
 
       line = getline(i_unit)
+      if (line (1:8).eq.'Version: ') then
+          ! get next input line of versioned file
+          line = getline(i_unit)
+      else
+          ! unversioned file, read old file format
+          call erodin_legacy (line, i_unit, o_unit, cmdebugflag, hagen_plot_flag, subrsurf)
+          return
+      end if
+
       if (cmdebugflag .lt. 0) then  !commandline option not set - use input file setting
           read (line,*) debugflg
        else
@@ -508,6 +508,512 @@ module sweep_io_mod
       endif !(o_unit .ne. 6)
 
    end subroutine erodin
+
+   subroutine erodin_legacy (line, i_unit, o_unit, cmdebugflag, hagen_plot_flag, subrsurf)
+
+      ! +++ PURPOSE +++
+      ! Utility to read initial conditions and variables from
+      ! input file (stdin or erod.in) for the standalone erosion submodel
+
+      ! If "o_unit" == stdout (6) then input not echo'd
+
+      ! + + + Modules Used + + +
+      use Polygons_Mod, only: create_polygon
+      use subregions_mod, only: subr_poly, acct_poly
+      use erosion_data_struct_defs, only: subregionsurfacestate, create_subregionsurfacestate, &
+                                          awzypt, awdair, anemht, awzzo, wzoflg, &
+                                          ntstep, awadir, awudmx, subday, am0eif
+      use p1erode_def, only: SLRR_MIN, SLRR_MAX, WZZO_MIN, WZZO_MAX
+      use barriers_mod, only: create_barrier, barrier
+      use grid_mod, only: amasim, amxsim
+      use sae_in_out_mod, only: saeinp
+
+      ! +++ ARGUMENT DECLARATIONS +++
+      character*(mrcl), intent(inout) :: line
+      integer :: i_unit
+      integer :: o_unit
+      integer :: cmdebugflag
+      logical :: hagen_plot_flag
+      type(subregionsurfacestate), dimension(:), allocatable :: subrsurf
+
+      ! +++ LOCAL VARIABLES +++
+      integer i,j            ! do loop indices
+      integer sr,ibr,a,l,h   ! do loop indices
+      real :: pt_x1, pt_y1, pt_x2, pt_y2 ! the x,y coordinates for two points
+      integer wflg           ! flag to determine format of wind speed data (0 = Weibull, 1 = real)
+      real :: f(ntstep)      ! cumulative frequency of wind at speeds < subday(i)%awu
+      real :: wu(ntstep)
+      real :: wfcalm         ! wind fraction intercept (+calm, - no calm in period)
+      real :: wuc            ! Weibull wind speed distribution scale factor (m/s)
+      real :: w0k            ! Weibull wind speed distribution shape factor
+      real :: step           ! tmp real variable for ntstep
+      integer :: poly_np     ! number of points to be read in for polygon or polyline
+      integer :: ipol        ! index counter for reading in polygon or polyline points
+      integer :: alloc_stat  ! indicates status of memory allocation attempt
+      integer :: sum_stat    ! accumulates for multiple allocations, one error statement.
+      integer :: nsubr       ! number of subregions (read from input file)
+      integer :: nacctr      ! number of accounting regions (read from input file)
+      integer :: nbr         ! number of barriers (read from input file)
+
+      ! +++ FUNCTIONS CALLED +++
+      ! getline
+
+      ! +++ END SPECIFICATIONS +++
+
+      ! +++ INITIALIZATION +++
+
+      debugflg = 0 !needs to be initialized when using full debugging compiles
+      ! Read the debug flag to specify level of debug support
+      ! (currently only input file level debug supported)
+
+      if (cmdebugflag .lt. 0) then  !commandline option not set - use input file setting
+          read (line,*) debugflg
+       else
+          debugflg = cmdebugflag  !use commandline setting
+      endif
+
+      ! EROSION initialization flag (logical)
+      line = getline(i_unit)
+      read (line,*) am0eif
+
+      ! EROSION "print" flag (integer)
+      line = getline(i_unit)
+      ! value no longer used
+
+      ! +++ SIMULATION REGION +++
+
+      ! Simulation region diagonal corners (x1,y1) and (x2,y2)
+      line = getline(i_unit)
+      read (line,*) amxsim(1)%x, amxsim(1)%y, amxsim(2)%x, amxsim(2)%y
+
+      ! Simulation region orientation angle
+      line = getline(i_unit)
+      read (line,*) amasim
+
+      ! +++ ACCOUNTING REGIONS +++
+
+      ! Number of accounting regions
+      line = getline(i_unit)
+      read (line,*) nacctr
+
+      ! create accounting region polygon array
+      allocate(acct_poly(nacctr), stat=alloc_stat)
+      if( alloc_stat .gt. 0 ) then
+         Write(*,*) 'ERROR: memory allocation, acct_poly'
+      end if
+
+      do a = 1, nacctr
+        ! Accounting Region diagonal corners (x1,y1) and (x2,y2)
+        line = getline(i_unit)
+        read (line,*) pt_x1, pt_y1, pt_x2, pt_y2
+
+        ! create accounting region polygon from the diagonal corners
+        poly_np = 4
+        ! create polygon point storage
+        acct_poly(a) = create_polygon(poly_np)
+        ! set polygon points
+        ipol = 1
+        acct_poly(a)%points(ipol)%x = pt_x1
+        acct_poly(a)%points(ipol)%y = pt_y1
+        ipol = 2
+        acct_poly(a)%points(ipol)%x = pt_x2
+        acct_poly(a)%points(ipol)%y = pt_y1
+        ipol = 3
+        acct_poly(a)%points(ipol)%x = pt_x2
+        acct_poly(a)%points(ipol)%y = pt_y2
+        ipol = 4
+        acct_poly(a)%points(ipol)%x = pt_x1
+        acct_poly(a)%points(ipol)%y = pt_y2
+      end do
+
+      ! +++ BARRIERS +++
+
+      ! Number of barriers
+      line = getline(i_unit)
+      read (line,*) nbr
+
+      ! NOTE: Barrier data must not be in the input file if "nbr = 0"
+      if( nbr .gt. 0 ) then
+        ! allocate structure for barriers
+        allocate(barrier(nbr), stat = alloc_stat)
+        if( alloc_stat .gt. 0 ) then
+           Write(*,*) 'ERROR: memory alloc., barriers'
+        end if
+      end if
+
+      do ibr = 1, nbr
+!       Barrier linear endpoints (x1,y1) and (x2,y2)
+        line = getline(i_unit)
+        read (line,*) pt_x1, pt_y1, pt_x2, pt_y2
+
+        ! number of points in barrier polyline
+        poly_np = 2
+        ! create storage for point and barrier data
+        barrier(ibr) = create_barrier(poly_np)
+        ! set points
+        ipol = 1
+        barrier(ibr)%points(ipol)%x = pt_x1
+        barrier(ibr)%points(ipol)%y = pt_y1
+        ipol = 2
+        barrier(ibr)%points(ipol)%x = pt_x2
+        barrier(ibr)%points(ipol)%y = pt_y2
+
+        ! barrier height, width, porosity
+        line = getline(i_unit)
+        ipol = 1
+        read (line,*) barrier(ibr)%param(ipol)%amzbr, barrier(ibr)%param(ipol)%amxbrw, barrier(ibr)%param(ipol)%ampbr
+        ipol = 2
+        read (line,*) barrier(ibr)%param(ipol)%amzbr, barrier(ibr)%param(ipol)%amxbrw, barrier(ibr)%param(ipol)%ampbr
+        if( barrier(ibr)%param(ipol)%amzbr .le. 0.0 ) then
+           write(*,*) 'ERROR: Barrier height must be > 0'
+           write(*,FMT='(2(i0))') 'Barrier #: ', ibr, 'Point #: ', ipol
+           call exit(37)
+        end if
+      end do
+
+      ! +++ SUBREGION REGIONS +++
+
+      ! m1subr.inc
+
+      ! Number of subregions
+      line = getline(i_unit)
+      read (line,*) nsubr
+
+      ! create data array to hold input and derived values for each subregion
+      sum_stat = 0
+      allocate(subrsurf(nsubr), stat=alloc_stat)
+      sum_stat = sum_stat + alloc_stat
+      ! create subregion polygon array
+      allocate(subr_poly(nsubr), stat=alloc_stat)
+      sum_stat = sum_stat + alloc_stat
+      if( sum_stat .gt. 0 ) then
+         Write(*,*) 'ERROR: memory allocation, subrsurf, subr_poly'
+      end if
+
+      ! Dimensions, Biomass, Soil, and Hydrology (by subregion)
+      do 100  sr=1, nsubr
+!       Subregion diagonal corners (x1,y1) and (x2,y2)
+        line = getline(i_unit)
+        read (line,*) pt_x1, pt_y1, pt_x2, pt_y2
+
+        ! create subregion polygon from the diagonal corners
+        poly_np = 4
+        ! create polygon point storage
+        subr_poly(sr) = create_polygon(poly_np)
+        ! set polygon points
+        ipol = 1
+        subr_poly(sr)%points(ipol)%x = pt_x1
+        subr_poly(sr)%points(ipol)%y = pt_y1
+        ipol = 2
+        subr_poly(sr)%points(ipol)%x = pt_x2
+        subr_poly(sr)%points(ipol)%y = pt_y1
+        ipol = 3
+        subr_poly(sr)%points(ipol)%x = pt_x2
+        subr_poly(sr)%points(ipol)%y = pt_y2
+        ipol = 4
+        subr_poly(sr)%points(ipol)%x = pt_x1
+        subr_poly(sr)%points(ipol)%y = pt_y2
+
+      ! +++ BIOMASS +++
+
+      ! b1geom.inc
+
+        ! Biomass height
+        !  line = getline(i_unit)
+        !  read (line,*)  abzht(sr)
+        !! read (getline(i_unit),*) abzht(sr)
+        ! Now reads in average "residue height" instead of "biomass height'
+        ! LEW - 1/26/06
+        line = getline(i_unit)
+        read (line,*)  subrsurf(sr)%adzht_ave
+
+        ! Crop height
+        line = getline(i_unit)
+        read (line,*)  subrsurf(sr)%aczht
+
+        ! Crop stem area index and leaf area index
+        line = getline(i_unit)
+        read (line,*) subrsurf(sr)%acrsai, subrsurf(sr)%acrlai
+
+        ! Residue stem area index and leaf area index
+        line = getline(i_unit)
+        read (line,*) subrsurf(sr)%adrsaitot, subrsurf(sr)%adrlaitot
+
+        ! use crop and residue values to find the total value
+        ! sum the stem area index and leaf area index values
+        subrsurf(sr)%abrsai = subrsurf(sr)%acrsai + subrsurf(sr)%adrsaitot
+        subrsurf(sr)%abrlai = subrsurf(sr)%acrlai + subrsurf(sr)%adrlaitot
+
+        ! Compute the weighted average "biomass height" (residues and crop)
+        ! which is used internally by the erosion code - LEW 1/26/06
+        if (subrsurf(sr)%abrsai .le. 0.0) then
+            subrsurf(sr)%abzht = 0.0
+        else
+            subrsurf(sr)%abzht = ( subrsurf(sr)%adzht_ave*subrsurf(sr)%adrsaitot                   &
+                               + subrsurf(sr)%aczht*subrsurf(sr)%acrsai ) / subrsurf(sr)%abrsai
+        endif
+      ! c1gen.inc
+
+        ! addition to code for biodrag
+        ! crop row spacing and seed location
+        line = getline(i_unit)
+        read (line,*) subrsurf(sr)%acxrow, subrsurf(sr)%ac0rg
+
+        ! These aren't used in EROSION yet
+        ! Biomass stem area index by height
+        ! read (getline(i_unit),*) (abrsaz(h,sr), h=1,mncz)
+        ! Biomass leaf area index by height
+        ! read (getline(i_unit),*) (abrlaz(h,sr), h=1,mncz)
+
+        ! Biomass flat fraction cover, standing cover, and fraction total cover
+        ! read (getline(i_unit),*) abffcv(sr), abfscv(sr), abftcv(sr)
+        ! Only flat fraction cover used yet
+        line = getline(i_unit)
+        read (line,*) subrsurf(sr)%abffcv
+
+      ! +++ SOIL +++
+
+        ! s1layr.inc, s1phys.inc & s1agg.inc
+
+        ! Number of soil layers (in this subregion)
+        line = getline(i_unit)
+        read (line,*) subrsurf(sr)%nslay
+
+        ! allocate arrays for soil layer and surface wetness values
+        call create_subregionsurfacestate(subrsurf(sr)%nslay, 24, subrsurf(sr))
+
+        ! Soil layer thickness
+        line = getline(i_unit)
+        read (line,*) (subrsurf(sr)%bsl(l)%aszlyt,l=1,subrsurf(sr)%nslay)
+
+        ! Soil layer bulk density
+        line = getline(i_unit)
+        read (line,*) (subrsurf(sr)%bsl(l)%asdblk, l=1,subrsurf(sr)%nslay)
+
+        ! Sand, silt, and clay fractions
+        line = getline(i_unit)
+        read (line,*) (subrsurf(sr)%bsl(l)%asfsan, l=1,subrsurf(sr)%nslay)
+
+        ! read very fine sand content edit 6-9-01 LH
+        line = getline(i_unit)
+        read (line,*) (subrsurf(sr)%bsl(l)%asfvfs, l=1,subrsurf(sr)%nslay)
+
+        line = getline(i_unit)
+        read (line,*) (subrsurf(sr)%bsl(l)%asfsil, l=1,subrsurf(sr)%nslay)
+
+        line = getline(i_unit)
+        read (line,*) (subrsurf(sr)%bsl(l)%asfcla, l=1,subrsurf(sr)%nslay)
+
+        ! Volume of rock fraction
+        line = getline(i_unit)
+        read (line,*) (subrsurf(sr)%bsl(l)%asvroc, l=1,subrsurf(sr)%nslay)
+
+        ! s1agg.inc
+        ! Soil layer aggregate density
+        line = getline(i_unit)
+        read (line,*) (subrsurf(sr)%bsl(l)%asdagd, l=1,subrsurf(sr)%nslay)
+
+        ! Soil layer aggregate stability
+        line = getline(i_unit)
+        read (line,*) (subrsurf(sr)%bsl(l)%aseags, l=1,subrsurf(sr)%nslay)
+
+! Check these variables with ASD inc files and Hagen's EROSION inc files - LEW
+        ! Soil layer ASD parms (gmd, min, max, gsd)
+        line = getline(i_unit)
+        read (line,*) (subrsurf(sr)%bsl(l)%aslagm, l=1,subrsurf(sr)%nslay)
+
+        line = getline(i_unit)
+        read (line,*) (subrsurf(sr)%bsl(l)%aslagn, l=1,subrsurf(sr)%nslay)
+
+        line = getline(i_unit)
+        read (line,*) (subrsurf(sr)%bsl(l)%aslagx, l=1,subrsurf(sr)%nslay)
+
+        line = getline(i_unit)
+        read (line,*) (subrsurf(sr)%bsl(l)%as0ags, l=1,subrsurf(sr)%nslay)
+
+        ! s1surf.inc & s1sgeo.inc
+
+        ! Crust parms (fraction, thickness)
+        line = getline(i_unit)
+        read (line,*) subrsurf(sr)%asfcr, subrsurf(sr)%aszcr, &
+        ! Crust parms (fraction cover of loose material, mass loose material)
+             subrsurf(sr)%asflos, subrsurf(sr)%asmlos, &
+        ! Crust parms (crust density and stability)
+             subrsurf(sr)%asdcr, subrsurf(sr)%asecr
+
+        ! Random Roughness
+        line = getline(i_unit)
+        read (line,*) subrsurf(sr)%aslrr
+
+        !Lower and upper limits of grid cell RR allowed by erosion submodel
+        if (subrsurf(sr)%aslrr < SLRR_MIN) then
+           write(0,*) 'slrr: ', subrsurf(sr)%aslrr,' < ', SLRR_MIN
+        end if
+        if (subrsurf(sr)%aslrr > SLRR_MAX) then
+           write(0,*) 'slrr: ', subrsurf(sr)%aslrr,' < ', SLRR_MIN
+        end if
+
+        !Lower and upper limits of grid cell aerodynamic roughness allowed
+        !by erosion submodel (currently determined by equation used here)
+        if (subrsurf(sr)%aslrr < (WZZO_MIN/0.3)) then
+           write(0,*) 'slrr: ', subrsurf(sr)%aslrr
+           write(0,*) 'wzzo < WZZO_MIN: ', subrsurf(sr)%aslrr*0.3,' < ', WZZO_MIN
+        else if(subrsurf(sr)%aslrr > (WZZO_MAX/0.3)) then
+           write(0,*) 'slrr: ', subrsurf(sr)%aslrr
+           write(0,*) 'wzzo > WZZO_MAX: ', subrsurf(sr)%aslrr*0.3,' > ', WZZO_MAX
+        end if
+
+        ! Oriented Roughness (ridge ht, spacing, width, orientation)
+        line = getline(i_unit)
+        read (line,*) subrsurf(sr)%aszrgh, subrsurf(sr)%asxrgs, subrsurf(sr)%asxrgw, subrsurf(sr)%asargo
+
+        ! Oriented Roughness ( spacing)
+        line = getline(i_unit)
+        read (line,*) subrsurf(sr)%asxdks
+
+      ! +++ HYDROLOGY +++
+
+        ! h1db1.inc
+
+        ! Snow depth
+        line = getline(i_unit)
+        read (line,*) subrsurf(sr)%ahzsnd
+
+        ! Soil layer wilting point
+        line = getline(i_unit)
+        read (line,*) (subrsurf(sr)%bsl(l)%ahrwcw, l=1,subrsurf(sr)%nslay)
+
+        ! Soil layer water content
+        line = getline(i_unit)
+        read (line,*) (subrsurf(sr)%bsl(l)%ahrwca, l=1,subrsurf(sr)%nslay)
+
+        ! Soil surface hourly water content
+        line = getline(i_unit)
+        read (line,*) (subrsurf(sr)%ahrwc0(h), h=1,12)
+
+        line = getline(i_unit)
+        read (line,*) (subrsurf(sr)%ahrwc0(h), h=13,24)
+
+  100 continue
+
+      ! +++ WEATHER +++
+
+      write(*,*) 'ERODIN: ready to read weather'
+
+      ! Average annual precipitation
+      awzypt = 300.0
+
+! We need to check on the units for air density - variable definition says (kg/m^3)
+! Also, we need to see why it currently isn't being used - LJH said it was
+      ! Air density
+      line = getline(i_unit)
+      read (line,*) awdair
+
+      ! Wind Direction
+      line = getline(i_unit)
+      read (line,*) awadir
+
+      ! Number of "steps" during 24 hours (96 = 15 minute intervals)
+      line = getline(i_unit)
+
+      write(*,*) 'ERODIN: line for ntstep', trim(line)
+
+      read (line,*) ntstep
+
+      ! allocate wind direction and speed array
+      allocate(subday(ntstep), stat=alloc_stat)
+      if( alloc_stat .gt. 0 ) then
+         Write(*,*) 'ERROR: memory allocation, erodin wind direction and speed'
+      end if
+
+      ! anemometer height, zo at anemom, and location (station or field)
+      ! note if flag=1, at field, awwzo will be changed to field value
+      line = getline(i_unit)
+      read (line,*) anemht, awzzo, wzoflg
+
+      ! Weibull wind flag (0 - read Weibull parms, 1 - read wind speeds)
+      line = getline(i_unit)
+      read (line,*) wflg
+
+      ! wind data inputs as the Weibull paramters
+      ! (wfcalm, wuc, w0k) is indicated by code ntstep = 99
+      if (wflg .eq. 0) then
+
+        ! Weibull parms (fraction calm, c, k)
+        line = getline(i_unit)
+        read (line,*) wfcalm, wuc, w0k
+
+        ! calculate daily max wind speed (99% speed)
+        ! awudmx = wuc*(-log((1.0-0.99)/(1-wfcalm)))**(1.0/w0k)
+
+        ! calculate period wind speeds
+        step = ntstep
+        do 198 i= 1, ntstep
+          ! find center of each step and add empirical last term from file ntstep.mcd
+            f(i) = (1.0/(2.0*step)) + ((i-1)/step) +0.3/(step*w0k)
+          ! to prevent out-of-range
+          if (f(i) .lt. wfcalm) then
+            f(i) = wfcalm
+          endif
+          subday(i)%awu = wuc*(-log((1.0-f(i))/(1.0-wfcalm)))**(1.0/w0k)
+  198   end do
+        ! Use greatest interval wind speed rather than 99% speed above
+        awudmx = subday(ntstep)%awu
+
+        ! change weibull wind speed dist. to a symmetric shape similar
+        ! to the daily distribution from wind gen
+
+        ! insure that ntstep is an even no.
+        ntstep = (ntstep/2)*2
+
+        ! store wind speed in temp array
+        do 110 i = 1, ntstep
+          wu(i) = subday(i)%awu
+  110   end do
+!
+        ! generate the symmetric distribution
+        i = -1
+        do 115 j = 1, ntstep/2
+           i = i+2
+           subday(j)%awu = wu(i)
+  115   continue
+        i = ntstep+2
+        do 125 j = (ntstep/2+1),ntstep
+           i = i-2
+           subday(j)%awu = wu(i)
+  125   continue
+
+      else     ! when (wflg .eq. 1) input wind period data directly
+        do 191 j = 1, ntstep/6
+          line = getline(i_unit)
+          read (line,*) (subday(i)%awu,i=(j-1)*6+1,(j-1)*6+6)
+191     end do
+        ! If not divisible evenly by 6, then get the remaining values
+        if (mod(ntstep,6) .ne. 0) then
+          line = getline(i_unit)
+          read (line,*) (subday(i)%awu,i=(j-1)*6+1,(j-1)*6+mod(ntstep,6))
+        endif
+
+      ! Determine the maximum wind speed during the day
+        awudmx = 0.0
+        do 193 i = 1, ntstep
+           if( awudmx .lt. subday(i)%awu ) then
+              awudmx = subday(i)%awu
+           endif
+  193   end do
+
+      endif
+
+      if( hagen_plot_flag ) then 
+         call plotin(subrsurf)
+      end if
+
+      ! + + + OUTPUT SECTION + + +
+      if (o_unit .ne. 6) then  !Only echo input if stdout not specified
+          call saeinp( o_unit, subrsurf )
+      endif !(o_unit .ne. 6)
+
+   end subroutine erodin_legacy
 
    subroutine erodout (hagen_plot_flag)
 

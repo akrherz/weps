@@ -12,7 +12,7 @@
       program sweep
 
       use sweep_io_mod
-      use datetime_mod, only: update_system_time, get_systime_string
+      use datetime_mod, only: update_system_time, get_systime_string, julday
       use file_io_mod, only: fopenk, luo_erod, luo_egrd, luo_emit, luo_sgrd
       use erosion_mod, only: erosion, erodinit
       use erosion_data_struct_defs, only: subregionsurfacestate, threshold, cellsurfacestate, erod_interval, ntstep, awzypt, &
@@ -117,6 +117,9 @@
 
       mksaeinp%simday = 0 ! 0 means saeinp will not be used to create file.
 
+      ! set a calendar day. Erosion output report this day so set to match previous verions of SWEEP
+      mksaeout%jday = julday( 1, 1, 1 )
+
       min_erosion_awu = 5.0  !default minimum erosive wind speed
 
       xgdpt = 0         !default grid spacing values if not specified
@@ -137,6 +140,7 @@
 !     (stdin = 5, stdout = 6)
       i_unit = 5         !If -i option is specified, use unit number 50
       o_unit = 6         !stdout
+      o_einp_unit = -1   ! fails test for opened file in debug mode
 
       o_einp_ext = ".einp"   !filename extension for echo'd input data file
       o_egrd_ext = ".egrd"   !filename extension for grid erosion summary output
@@ -392,7 +396,11 @@
         call exit(131)
       endif
 
-      inquire(unit=o_einp_unit, opened=opnd)
+      if( o_einp_unit .gt. 0 ) then
+         inquire(unit=o_einp_unit, opened=opnd)
+      else
+         opnd = .false.
+      end if
       if (opnd .eqv. .true.) then
          !write(0,*) 'calling erodin with output unit no: ', o_einp_unit
          call erodin(i_unit, o_einp_unit, force_debug_flag, hagen_plot_flag, subrsurf) !Echo input to a file
@@ -458,7 +466,7 @@
       if (o_unit .ne. 6) then
         close(o_unit)
       endif
-      close(o_einp_unit)
+      !close(o_einp_unit)
       close(o_erod_unit)
       !close(o_egrd_unit)
       !close(o_sgrd_unit)

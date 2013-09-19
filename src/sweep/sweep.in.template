@@ -20,6 +20,12 @@
 #
 #     where Var_type is: I = integer L = logical R = real
 #
+# +++ VERSION HEADER +++
+#     included to allow running old erosion file formats with the multiple subregion enabled version
+#     this must be the first non-comment line in the file
+#
+Version:   100 multiple subregions
+#
 #
 # +++ DEBUG FLAG +++
 #

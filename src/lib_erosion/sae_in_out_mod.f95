@@ -58,6 +58,7 @@ module sae_in_out_mod
         call fopenk (luo_saeinp, trim(mksaeinp%fullpath) // makenamnum('saeros', mksaeinp%simday, mksaeinp%maxday, '.in'),'unknown')
         call caldat (mksaeinp%jday,day,mon,yr)
         write(*,'(4(a,i0))') 'Made SWEEP input file D/M/Y: ', day,'/', mon,'/', yr,' simulation day: ', mksaeinp%simday
+        write(luo_saeinp,*) 'Version:   100 multiple subregions'
         write(luo_saeinp,2101) day, mon, yr
  2101   format('# WEPS erosion day mon yr',2(1x,i2),2x,i4)
       else
@@ -795,7 +796,7 @@ module sae_in_out_mod
       integer yr, mo, da
       real    hhrr, tims
       save    yr, mo, da, hhrr, tims
-      integer i,j
+      integer i,j, kbr
 
 !     + + + END SPECIFICATIONS + + +
 
@@ -822,6 +823,29 @@ module sae_in_out_mod
         write (unit=o_unit,fmt="(a,f6.2,a4)") ' wind direction = ', wdir, 'deg'
         write (unit=o_unit,fmt="(a,f6.2,a4)") ' wind direction relative to field orientation = ', awa, 'deg'
         write (o_unit,*)
+
+        ! this section inserted for compatibility with previous output version
+        if (wdir .ge. 337.5 .or. wdir .lt. 22.5) then
+          kbr = 1
+        elseif (wdir .lt. 67.5) then
+          kbr = 2
+        elseif (wdir.lt. 112.5) then
+          kbr = 3
+        elseif (wdir .lt. 157.5) then
+          kbr = 4
+        elseif (wdir .lt. 202.5) then
+          kbr = 5
+        elseif (wdir.lt. 247.5) then
+          kbr = 6
+        elseif (wdir .lt. 292.5) then
+          kbr = 7
+        else
+          kbr = 8
+        endif
+        write (unit=o_unit,fmt="(a,i1)") ' wind quadrant = ', kbr
+        write (o_unit,*)
+        ! end inserted section
+
         write (o_unit,*) 'orientation and dimensions of sim region'
         write (o_unit,*) 'amasim(deg)  amxsim - (x1,y1) (x2,y2)'
         write(o_unit,fmt="(1x,5f8.2)") amasim, amxsim(1)%x, amxsim(1)%y, amxsim(2)%x, amxsim(2)%y
