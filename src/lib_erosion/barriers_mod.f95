@@ -86,6 +86,7 @@ contains
 
 !     + + + LOCAL VARIABLES + + +
       integer i, j, n   ! do-loop indices
+      integer :: nbr    ! number of barriers
       type(point) ::  pnt_grid  ! point form of grid coordinate
       type(location_intersect) ::  loc_intersect  ! point where upwind direction meets barrier, index in polyline and fraction distance between indexes
       real :: dist   ! distance from grid cell centroid to barrier
@@ -97,6 +98,13 @@ contains
 
 !     + + + END SPECIFICATIONS + + +
 
+      ! cannot use size if array not allocated
+      if( allocated(barrier) ) then
+        nbr = size(barrier)
+      else
+        nbr = 0
+      end if
+
       ! update interior nodes
       do i = 1, imax-1
         do j = 1, jmax-1
@@ -106,7 +114,7 @@ contains
 
           ! barrier sweep
           w0br_min = 1.0   ! maximum value for parameter
-          do n = 1, size(barrier)
+          do n = 1, nbr
             ! find number of points in barrier for interpolations
             npt = size(barrier(n)%param)
 

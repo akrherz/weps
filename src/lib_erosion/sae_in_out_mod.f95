@@ -44,7 +44,7 @@ module sae_in_out_mod
 
 !     +++ LOCAL VARIABLES +++
       integer k,l, sr, ip
-      integer b
+      integer b, nbr
       integer day, mon, yr
       
 
@@ -165,7 +165,13 @@ module sae_in_out_mod
       '# +++ BARRIERS +++',/, &
       '#',/, &
       '#     nbr, I, Number of barriers (0-5) ')
-      write(luo_saeinp,*) size(barrier)
+      ! cannot use size if array not allocated
+      if( allocated(barrier) ) then
+        nbr = size(barrier)
+      else
+        nbr = 0
+      end if
+      write(luo_saeinp,*) nbr
       write(luo_saeinp,2122)
  2122 format ('#',/, &
       '#     NOTE: Remaining BARRIER inputs are repeated for each barrier specified',/, &
@@ -181,7 +187,7 @@ module sae_in_out_mod
       '# Example: 1.2 2.0 0.50 ',/, &
       '#')
 
-      do b = 1, size(barrier)
+      do b = 1, nbr
          write(luo_saeinp,2125)
  2125    format('# ',/, &
          '# barrier(b)%np, I, number of points in barrier polyline')
