@@ -566,7 +566,7 @@ module sae_in_out_mod
       aegtss = aegtss/tt
       aegt10 = aegt10/tt
 
-!    calculate comparision of boundary and interior losses
+!    calculate comparison of boundary and interior losses
       lx = amxsim(2)%x - amxsim(1)%x
       ly = amxsim(2)%y - amxsim(1)%y
       tot = aegt*lx*ly
@@ -690,7 +690,7 @@ module sae_in_out_mod
       write (o_unit,23) ritt+ritss, ritt, ritss, rit10
       write (o_unit,24) lftt+lftss, lftt, lftss, lft10
       write (o_unit,*)
-      write (o_unit,*) '   Comparision of interior & boundary loss'
+      write (o_unit,*) '   Comparison of interior & boundary loss'
       write (o_unit,*) '      interior       boundary    int/bnd ratio'
       if( totbnd.gt.1.0e-9 ) then
           write (o_unit,16) tot, totbnd, tot/totbnd
