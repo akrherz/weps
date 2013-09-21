@@ -156,25 +156,28 @@ contains
         ! (3) Discover the position of the intersection point on the x-axis.
         dist = pline_tr(idx)%x + (pline_tr(idx-1)%x - pline_tr(idx)%x) * pline_tr(idx)%y / (pline_tr(idx)%y - pline_tr(idx-1)%y)
 
-        if( abs(dist) .lt. min_dist ) then
-          ! This intersection is closer, so make this the intersection point
-          ! (4) rotate and translate back to the original coordinate system.
-          min_dist = abs(dist)
-          loc_intersect%pnt%x = dist
-          loc_intersect%pnt%y = 0.0
-          loc_intersect%pnt = rotate( -rot_ang,  loc_intersect%pnt )
-          loc_intersect%pnt = translate( inv_pnt, loc_intersect%pnt )
-          loc_intersect%low_index = idx - 1
+        if( dist .ge. 0.0 ) then
+          ! crosses positive x-axis
+          if( dist .lt. min_dist ) then
+            ! This intersection is closer, so make this the intersection point
+            ! (4) rotate and translate back to the original coordinate system.
+            min_dist = abs(dist)
+            loc_intersect%pnt%x = dist
+            loc_intersect%pnt%y = 0.0
+            loc_intersect%pnt = rotate( -rot_ang,  loc_intersect%pnt )
+            loc_intersect%pnt = translate( inv_pnt, loc_intersect%pnt )
+            loc_intersect%low_index = idx - 1
 
-          if( abs( pline_tr(idx)%x - pline_tr(idx-1)%x ) .ge. abs( pline_tr(idx)%y - pline_tr(idx-1)%y ) ) then
-             ! denominator with x is larger, use it.
-             loc_intersect%dist_frac = (dist - pline_tr(idx-1)%x) / (pline_tr(idx)%x - pline_tr(idx-1)%x)
-          else
-             ! denominator with y is larger, use it.
-             loc_intersect%dist_frac = (0.0 - pline_tr(idx-1)%y) / (pline_tr(idx)%y - pline_tr(idx-1)%y)
+            if( abs( pline_tr(idx)%x - pline_tr(idx-1)%x ) .ge. abs( pline_tr(idx)%y - pline_tr(idx-1)%y ) ) then
+               ! denominator with x is larger, use it.
+               loc_intersect%dist_frac = (dist - pline_tr(idx-1)%x) / (pline_tr(idx)%x - pline_tr(idx-1)%x)
+            else
+               ! denominator with y is larger, use it.
+               loc_intersect%dist_frac = (0.0 - pline_tr(idx-1)%y) / (pline_tr(idx)%y - pline_tr(idx-1)%y)
+            end if
           end if
+          did_intersect = .true.
         end if
-        did_intersect = .true.
       end if
     end do
 
