@@ -497,8 +497,8 @@ module process_mod
 
       real :: sargc    ! soil angle of ridge shelter weibull 'c' (deg.)
       real :: sarrc    ! soil angle of random roughness weibull 'c'(deg.)
-      real :: sfrg12   ! sheltered soil fraction for ridge
-      real :: sfrr12   ! sheltered soil fraction for random roughness
+      double precision :: sfrg12   ! sheltered soil fraction for ridge
+      double precision :: sfrr12   ! sheltered soil fraction for random roughness
 
       sarrc = 2.3 * sqrt (slrr)
       sfrr12 = exp(-(12.0/sarrc)**0.77)
