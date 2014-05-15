@@ -23,7 +23,7 @@
 !     + + + KEYWORDS + + +
 !     matric potential parameters
 
-      use weps_interface_defs
+      use weps_interface_defs, only: volwat_matpot_bc
       use p1unconv_mod, only: fractopercent, hrtosec, mmtom
 
 !     + + + ARGUMENT DECLARATIONS + + +

@@ -6,7 +6,7 @@
 ! ***************************************************************** wjr
 ! Wrapper to call soil
 
-      use weps_interface_defs
+      use weps_interface_defs, ignore_me=>callsoil
       use biomaterial, only: biototal
       use timer_mod, only: timer, TIMSOIL, TIMSTART, TIMSTOP
       use soil_data_struct_defs, only: am0sdb

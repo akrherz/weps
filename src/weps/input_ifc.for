@@ -12,7 +12,7 @@
 !     based upon "inpsub.for" routine
           
 !     + + + MODULES + + +
-      use weps_interface_defs
+      use weps_interface_defs, ignore_me=>input_ifc
       use sci_soil_texture_mod, only : update_sci_soil_multiplier
       use stir_soil_texture_mod, only : update_stir_soil_multiplier
       use file_io_mod, only: fopenk      

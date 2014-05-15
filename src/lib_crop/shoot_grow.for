@@ -22,7 +22,7 @@
 !     + + + KEYWORDS + + +
 !     shoot growth
 
-      use weps_interface_defs
+      use weps_interface_defs, ignore_me=>shoot_grow
       use datetime_mod, only: get_simdate_doy, get_simdate_year
       use file_io_mod, only: luoshoot
       use p1unconv_mod, only: mgtokg, mmtom

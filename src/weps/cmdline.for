@@ -17,7 +17,7 @@
 !     WEPS, cligen, windgen
 
 !     + + + GLOBAL COMMON BLOCKS + + +
-      use weps_interface_defs
+      use weps_interface_defs, ignore_me=>cmdline
       use datetime_mod, only: julday
       use file_io_mod, only: fopenk, luolog
 

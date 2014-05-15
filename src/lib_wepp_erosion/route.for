@@ -8,7 +8,7 @@
      &    fall,frcflw,nslpts,xinput,xu,xl,load,enrato,tcf1,fidel,sand,  &
      &    silt,clay,orgmat,eata,tauc,theta,phi,slplen)
      
-      use wepp_interface_defs
+      use wepp_interface_defs, ignore_me=>route
 !
 !     + + + purpose + + +
 !     calculates detachment (when shear stress exceeds critical shear

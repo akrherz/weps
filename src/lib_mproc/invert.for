@@ -30,7 +30,7 @@
 !     + + + KEYWORDS + + +
 !     inversion, tillage 
 
-      use weps_interface_defs
+      use weps_interface_defs, ignore_me=>invert
       use biomaterial, only: biomatter
 
       include 'p1werm.inc'

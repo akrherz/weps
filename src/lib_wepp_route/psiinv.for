@@ -6,7 +6,7 @@
       SUBROUTINE PSIINV(TIME, X, TSTAR, T, S, SI, OSINT, NS, A2,        & 
      &                  II, M, PSI, DPSI, OPSII, A, MRND)
      
-      use wepp_interface_defs
+      use wepp_interface_defs, ignore_me=>PSIINV
       
       implicit none
 

@@ -21,7 +21,7 @@
      &      bhztranspdepth, bhzfurcut,                                  &
      &      bhztransprtmin, bhztransprtmax, croptot )
 
-      use weps_interface_defs
+      use weps_interface_defs, ignore_me=>cropupdate
       use biomaterial, only: biomatter, biototal
       use p1unconv_mod, only: pi
       use wind_mod, only: biodrag

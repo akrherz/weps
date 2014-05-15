@@ -7,7 +7,7 @@
       SUBROUTINE PRINT_BUG(DT, NS,RECUM, T, S, SI, SLEN,ALPHA, M,       &
      &    DUREXR, A1, A2, TSTAR)  
      
-      use wepp_interface_defs                                 
+      use wepp_interface_defs, ignore_me=>PRINT_BUG                                 
 
  
       implicit none

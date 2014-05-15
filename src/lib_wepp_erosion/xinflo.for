@@ -7,7 +7,7 @@
      &    qostar,ainf,binf,cinf,ainftc,binftc,cinftc,qshear,rspace,     &
      &    nslpts)
      
-      use wepp_interface_defs
+      use wepp_interface_defs, ignore_me=>xinflo
       
       implicit none
 !

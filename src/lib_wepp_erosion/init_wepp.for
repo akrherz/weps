@@ -6,7 +6,7 @@
 !
       SUBROUTINE init_wepp(isr, afterWarmup)
       
-      use wepp_interface_defs
+      use wepp_interface_defs, ignore_me=>init_wepp
       use grid_mod, only: amxsim, sim_area
       use Points_Mod, only: slen
 

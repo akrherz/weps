@@ -7,7 +7,7 @@
       SUBROUTINE HDEPTH(T2, X, A1, A2, TSTAR, T, S, SI, NS, II, M,      & 
      &                 HDPTHO, A, MRND)
      
-      use wepp_interface_defs
+      use wepp_interface_defs, ignore_me=>HDEPTH
       
       implicit none
 

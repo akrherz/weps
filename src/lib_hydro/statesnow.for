@@ -10,7 +10,7 @@
 !     Using inputs of present snow state, new added mass, energy, and
 !     snow depth, determines the new snow state and any water drainage.
 
-      use weps_interface_defs
+      use weps_interface_defs, only: drainsnow
 
 !     + + + LOCAL COMMON BLOCKS + + +
       include 'hydro/snowprop.inc'

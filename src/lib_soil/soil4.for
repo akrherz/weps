@@ -37,7 +37,7 @@
 
 !     + + + GLOBAL COMMON BLOCKS + + +
 
-      use weps_interface_defs
+      use weps_interface_defs, ignore_me=>soil
       use datetime_mod, only: get_simdate_doy, get_simdate_year
       use file_io_mod, only: luosoilsurf, luosoillay
       use soil_data_struct_defs, only: am0sfl

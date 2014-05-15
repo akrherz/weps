@@ -28,7 +28,8 @@
 
 !     + + + COMMON BLOCKS + + +
 
-      use weps_interface_defs
+      use weps_interface_defs, only: heatcond, heatcap, snowcond
+      use weps_interface_defs, only: drainsnow
       use file_io_mod, only: luotempsoil
       use datetime_mod, only: get_simdate
       use p1unconv_mod, only: mmtom, pi, secperday

@@ -7,7 +7,7 @@
       SUBROUTINE HDRIVEFLOW(NS,NF,RECUM,SLEN,SLOPE,DUREXR,DT,TF,RE,     &     
      & SC,PEAKRO,DURRUN)
      
-      use wepp_interface_defs
+      use wepp_interface_defs, ignore_me=>HDRIVEFLOW
       
       implicit none
 

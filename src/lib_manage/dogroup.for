@@ -12,7 +12,7 @@
 !     + + + KEYWORDS + + +
 !     tillage, operation, management
 
-      use weps_interface_defs
+      use weps_interface_defs, ignore_me=>dogroup
       use manage_data_struct_defs, only: lastoper
 
 !     + + + PARAMETERS AND COMMON BLOCKS + + +

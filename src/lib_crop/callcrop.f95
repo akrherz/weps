@@ -6,7 +6,7 @@
 ! ***************************************************************** wjr
 ! Wrapper to call crop
 
-      use weps_interface_defs
+      use weps_interface_defs, ignore_me=>callcrop
       use biomaterial, only: biomatter, biototal
       use timer_mod, only: timer, TIMCROP, TIMSTART, TIMSTOP
       use crop_data_struct_defs, only: am0cdb

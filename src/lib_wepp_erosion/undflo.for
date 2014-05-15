@@ -5,8 +5,6 @@
 
       subroutine undflo(factor,expon)
       
-      use wepp_interface_defs
-      
       implicit none
 !
 !     subroutine undflo protects against numeric underflows 

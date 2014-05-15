@@ -17,7 +17,7 @@
 
       subroutine purk(nsl, st, fc, ul, hk, ssc, sep)
 
-      use weps_interface_defs
+      use weps_interface_defs, only: perc
 !      use perc_sub
 
       implicit none

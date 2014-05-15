@@ -6,7 +6,7 @@
       SUBROUTINE PSIS(TIME, UU, TSTAR, T, S, SI, OSINT, NS, A2, II,     &
      &                M, PSI, DPSI)
      
-      use wepp_interface_defs
+      use wepp_interface_defs, ignore_me=>PSIS
       
       implicit none
 

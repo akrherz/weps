@@ -5,7 +5,7 @@
 
       subroutine root(a,b,c,x1,x2)
       
-      use wepp_interface_defs
+      use wepp_interface_defs, ignore_me=>root
       
       implicit none
 !

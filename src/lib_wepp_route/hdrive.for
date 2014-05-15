@@ -8,7 +8,7 @@
      &                  RECUM, T, S, SI, SLEN, ALPHA, M, DUREXR, A1,A2, &
      &                  TSTAR, PEAKRO, DURRUN)
      
-      use wepp_interface_defs
+      use wepp_interface_defs, ignore_me=>HDRIVE
 
 !     + + + PURPOSE + + +
 !

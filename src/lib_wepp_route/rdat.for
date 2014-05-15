@@ -6,7 +6,7 @@
       SUBROUTINE RDAT(NF, SI, SC, S, T, NS, ALPHA, M, A1, A2,           &
      &                ACV, HCV, SCV, TSTAR, SLEN, SLOPE)
      
-      use wepp_interface_defs
+      use wepp_interface_defs, ignore_me=>RDAT
       
       implicit none
 

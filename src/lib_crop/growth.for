@@ -32,7 +32,7 @@
 !     + + + KEYWORDS + + +
 !     biomass
 
-      use weps_interface_defs
+      use weps_interface_defs, ignore_me=>growth
       use datetime_mod, only: get_simdate_doy, get_simdate_year
       use file_io_mod, only: luocrop
       use p1unconv_mod, only: hatom2, mmtom, pi

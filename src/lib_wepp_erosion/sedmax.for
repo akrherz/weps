@@ -6,7 +6,7 @@
       subroutine sedmax(jnum,amax,amin,ptmax,ptmin,dstot,stdist,ibegin, &
      &    iend,jflag,lseg)
      
-      use wepp_interface_defs
+      use wepp_interface_defs, ignore_me=>sedmax
       
       implicit none
 !

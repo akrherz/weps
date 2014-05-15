@@ -6,7 +6,7 @@
       subroutine sedsta(jnum,dloss,dsstd,vmax,pmax,vmin,pmin,ibegin,    &
      &    iend,jflag,lseg,dstot,stdist,delxx)
      
-      use wepp_interface_defs
+      use wepp_interface_defs, ignore_me=>sedsta
       
       implicit none
 !

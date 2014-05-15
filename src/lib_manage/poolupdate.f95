@@ -10,7 +10,7 @@
       ! or the state variables. The derived variables are commonly used
       ! where residue totals are required.
 
-      use weps_interface_defs
+      use weps_interface_defs, ignore_me=>poolupdate
       use biomaterial, only: biomatter, biototal
       use p1unconv_mod, only: pi
       use wind_mod, only: biodrag
@@ -286,10 +286,10 @@
       ! effective silhouette
       restot%rcdtot = biodrag(restot%rlaitot, restot%rsaitot, 0.0, 0.0, 0, 0.0, 0.0, 0.0)
 
-      ! sum area indexs by layer across pools
-      restot%rsaz(idx) = 0.0
-      restot%rlaz(idx) = 0.0
+      ! sum area indexes by layer across pools
       do idx = 1, mncz
+         restot%rsaz(idx) = 0.0
+         restot%rlaz(idx) = 0.0
          do idy = 1, size(residue)
               restot%rsaz(idx) = restot%rsaz(idx) + residue(idy)%deriv%rsaz(idx)
               restot%rlaz(idx) = restot%rlaz(idx) + residue(idy)%deriv%rlaz(idx)

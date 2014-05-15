@@ -6,7 +6,7 @@
       subroutine report_harvest( sr, bmrotation, mass_rem, mass_left,   &
      &                           harv_unit_flg, mandate, crop )
 
-      use weps_interface_defs
+      use weps_interface_defs, ignore_me=>report_harvest
       use mandate_mod, only: opercrop_date
       use file_io_mod, only: luoharvest_si, luoharvest_en
       use p1unconv_mod, only: KG_per_M2_to_LBS_per_ACRE

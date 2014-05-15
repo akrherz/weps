@@ -5,7 +5,7 @@
 
       subroutine trcoeff(trcoef,shrsol,sand,dia,spg,tcf1,npart,frac)
       
-      use wepp_interface_defs
+      use wepp_interface_defs, only: yalin
       
       implicit none
 !

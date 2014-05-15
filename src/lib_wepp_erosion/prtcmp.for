@@ -7,7 +7,7 @@
       subroutine prtcmp(npart,spg,dia,frac,frcly,frslt,frsnd,frorg,     &
      & sand1,silt1,clay1,orgmat1)
      
-      use wepp_interface_defs
+      use wepp_interface_defs, ignore_me=>prtcmp
       
       implicit none
 !

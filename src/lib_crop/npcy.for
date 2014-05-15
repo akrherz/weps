@@ -15,7 +15,7 @@
 !     + + + KEWORDS + + +
 !     nutrient cycling
 
-      use weps_interface_defs
+      use weps_interface_defs, only: nmnim
 
 !     + + + COMMON BLOCKS + + +
 

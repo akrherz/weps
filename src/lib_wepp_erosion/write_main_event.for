@@ -13,7 +13,7 @@
      &     stdist,dslost,years,annualavg)
      
      
-      use wepp_interface_defs
+      use wepp_interface_defs, ignore_me=>write_main_event
       
       integer, intent(in) :: sumfile,cd,cm,cy,ndetach,ndepos,npart
       real, intent(in) :: precp,runoff,avedet,maxdet,ptdet,avedep

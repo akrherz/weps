@@ -30,7 +30,10 @@
 !     + + + KEYWORDS + + +
 !     initialization, hydrology
 
-      use weps_interface_defs
+      use weps_interface_defs, only: psd, extra, waterk, calctht0
+      use weps_interface_defs, only: volwatadsorb, volwat_matpot_bc
+      use weps_interface_defs, only: param_prop_bc, param_blkden_adj
+
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer layrsn

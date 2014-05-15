@@ -31,7 +31,7 @@
 !     + + + KEYWORDS + + +
 !     mixing 
 
-      use weps_interface_defs
+      use weps_interface_defs, ignore_me=>mix
       use biomaterial, only: biomatter
 
       include 'p1werm.inc'

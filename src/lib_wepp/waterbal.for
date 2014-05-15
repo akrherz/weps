@@ -18,7 +18,7 @@
 !     + + + PURPOSE + + +
 !     Implements soil water balance using routines from WEPP
 
-      use weps_interface_defs
+      use weps_interface_defs, ignore_me=>waterbal
       use file_io_mod, only: luowepphdrive
       use wepp_param_mod, only: wepp_param
 

@@ -5,7 +5,7 @@
 
       SUBROUTINE PHI_SUB(TIME, TSTAR, SI, NS, II, M, A2, S, T, OPHI)
       
-      use wepp_interface_defs
+      use wepp_interface_defs, ignore_me=>PHI_SUB
       
       implicit none
 

@@ -4,7 +4,7 @@
 !$HeadURL$
       subroutine decomp(isr, crop, residue, decompfac)
 
-      use weps_interface_defs
+      use weps_interface_defs, ignore_me=>decomp
       use biomaterial, only: biomatter, decomp_factors
       use decomp_data_struct_defs, only: am0dfl, am0ddb
 

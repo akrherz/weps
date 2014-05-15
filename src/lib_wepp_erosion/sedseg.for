@@ -11,7 +11,7 @@
      &    depmin, pdpmin,ndetach,ndepos)  
      
           
-      use wepp_interface_defs
+      use wepp_interface_defs, ignore_me=>sedseg
      
       implicit none
 !

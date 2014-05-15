@@ -15,7 +15,7 @@
      &  bsdsblk, bsdwblk,                                               &
      &  bhzinf, bhzwid, trigger)
 
-      use weps_interface_defs
+      use weps_interface_defs, ignore_me=>updlay
 
 !     + + + GLOBAL COMMON BLOCKS + + +
       include 'p1werm.inc'

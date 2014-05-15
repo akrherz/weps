@@ -6,7 +6,7 @@
 !
       subroutine updres(isr, residue, restot)
 
-      use weps_interface_defs
+      use weps_interface_defs, only: poolupdate
       use biomaterial, only: biomatter, biototal
 
 !     + + +   ARGUMENT DECLARATIONS + + +

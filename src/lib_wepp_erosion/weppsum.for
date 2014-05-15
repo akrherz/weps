@@ -5,7 +5,7 @@
 
       subroutine weppsum(isr, years, wp)
       
-      use wepp_interface_defs
+      use wepp_interface_defs, ignore_me=>weppsum
       use file_io_mod, only: luoweppplot, luoweppsum
       use wepp_param_mod, only: wepp_param
 

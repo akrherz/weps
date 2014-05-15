@@ -15,7 +15,7 @@
 !     + + + KEYWORDS + + +
 !     tillage, process, management
 
-      use weps_interface_defs
+      use weps_interface_defs, ignore_me=>doproc
       use file_io_mod, only: luomanage, luotdb
       use biomaterial, only: biomatter, biototal
       use mandate_mod, only: opercrop_date

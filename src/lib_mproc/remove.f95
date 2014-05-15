@@ -54,7 +54,7 @@
 !     + + + KEYWORDS + + +
 !     remove, biomass manipulation
 
-      use weps_interface_defs
+      use weps_interface_defs, ignore_me=>remove
       use biomaterial, only: biomatter
 
 !     + + + COMMON BLOCKS + + +

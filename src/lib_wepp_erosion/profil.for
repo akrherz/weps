@@ -6,7 +6,7 @@
       subroutine profil(a,b,avgslp,nslpts,slplen,xinput,slpinp,xu,xl,   &  
      & y,x,totlen)
      
-      use wepp_interface_defs
+      use wepp_interface_defs, ignore_me=>profil
       
       implicit none
 !

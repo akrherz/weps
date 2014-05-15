@@ -5,7 +5,7 @@
 
       subroutine depeqs(xu,cdep,a,b,phi,theta,x,depeq,ktrato,qostar)
       
-      use wepp_interface_defs
+      use wepp_interface_defs, ignore_me=>depeqs
       
       implicit none
 !

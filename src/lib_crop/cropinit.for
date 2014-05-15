@@ -5,7 +5,7 @@
 
       subroutine cropinit(isr, crop)
 
-      use weps_interface_defs
+      use weps_interface_defs, ignore_me=>cropinit
       use biomaterial, only: biomatter
 
 !     + + + ARGUMENT DECLARATIONS + + +

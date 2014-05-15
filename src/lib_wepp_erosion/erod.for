@@ -6,7 +6,7 @@
       subroutine erod(xb,xe,a,b,c,atc,btc,ctc,eata,tauc,theta,phi,ilast,&
      &    dl,ldlast,xdbeg,ndep,xinput,ktrato,load,tc,detach,qostar)
      
-      use wepp_interface_defs
+      use wepp_interface_defs, ignore_me=>erod
       
       implicit none
 !

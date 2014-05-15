@@ -15,7 +15,7 @@
 !     the matric potential from the clay isotherms and is also returned for
 !     potentials in the wetter range.
 
-      use weps_interface_defs
+      use weps_interface_defs, only: soilrelhum, matricpot_from_rh
 
 !*** Argument declarations ***
       real  theta, thetar, thetas, airentry, lambda

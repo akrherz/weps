@@ -20,7 +20,7 @@
 !     wind, erosion, hydrology, tillage, soil, crop, ddbug.forosition
 !     management
 
-      use weps_interface_defs
+      use weps_interface_defs, ignore_me=>ddbug
       use datetime_mod, only: get_simdate
       use file_io_mod, only: luoddb
       use biomaterial, only: biomatter

@@ -50,7 +50,7 @@
 !     + + + PURPOSE + + +
 !     This is the main program for implementing the crop growth calculations.
 
-      use weps_interface_defs
+      use weps_interface_defs, ignore_me=>cropgrow
       use datetime_mod, only: get_simdate_doy
       use file_io_mod, only: luocrop, luoshoot
       use p1unconv_mod, only: mgtokg

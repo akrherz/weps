@@ -5,7 +5,7 @@
 
       SUBROUTINE RANDM(X, A, MRND, RNUMB)
       
-      use wepp_interface_defs
+      use wepp_interface_defs, ignore_me=>RANDM
       
       implicit none
 !

@@ -21,7 +21,7 @@
 !     + + + KEYWORDS + + +
 !     transpiration
 
-      use weps_interface_defs
+      use weps_interface_defs, only: availwc, acplwu, unsatcond_bc
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer layrsn, actflg

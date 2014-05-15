@@ -15,7 +15,7 @@
 !     Edit History
 !     06-Feb-99   wjr   created
 
-      use weps_interface_defs
+      use weps_interface_defs, ignore_me=>inpsub
       use file_io_mod, only: fopenk
       include 'p1werm.inc'
       include 'wpath.inc'

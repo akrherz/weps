@@ -6,7 +6,7 @@
       subroutine enrprt(jun,npart,frac,frcflw,dia,spg,frsnd,            &
      &    frslt,frcly,frorg,enrato)
      
-      use wepp_interface_defs
+      use wepp_interface_defs, ignore_me=>enrprt
       
       implicit none
 !

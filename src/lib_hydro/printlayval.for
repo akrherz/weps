@@ -14,7 +14,8 @@
 !     + + + KEYWORDS + + +
 !     output hydro
 
-      use weps_interface_defs
+      use weps_interface_defs, only: availwc, unsatcond_bc
+      use weps_interface_defs, only: volwatadsorb, volwat_matpot_bc
       use file_io_mod, only: luohlayers
       use datetime_mod, only: get_simdate_doy, get_simdate_year
 
@@ -68,9 +69,6 @@
 !     matricpot - soil matric potential (m) (for output)
 !     layercenter - depth to the center of a soil layer (mm) (for output)
 !     sat_rat - saturation ratio (for output)
-
-!     + + + SUBROUTINES CALLED + + +
-!     slsoda - livermore solver for ordinary differential equations
 
 !     + + + FUNCTION DECLARATIONS + + +
 !      real    availwc

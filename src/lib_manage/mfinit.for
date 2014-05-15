@@ -24,7 +24,7 @@
 !
 !     + + + PARAMETERS AND COMMON BLOCKS + + +
 
-      use weps_interface_defs
+      use weps_interface_defs, ignore_me=>mfinit
       use file_io_mod, only: fopenk
       use manage_data_struct_defs, only: lastoper
       include 'p1werm.inc'

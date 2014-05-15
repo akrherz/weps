@@ -16,7 +16,7 @@
 !     + + + KEY WORDS + + +
 !     wind, erosion, hydrology, tillage, soil, crop, decomposition
 
-      use weps_interface_defs
+      use weps_interface_defs, ignore_me=>sdbug
       use datetime_mod, only: get_simdate
       use file_io_mod, only: luosdb
       use biomaterial, only: biototal

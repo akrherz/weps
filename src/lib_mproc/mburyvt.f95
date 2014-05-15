@@ -22,7 +22,7 @@
 !     + + + KEYWORDS + + +
 !     bury, lift, biomass manipulation
 
-      use weps_interface_defs
+      use weps_interface_defs, ignore_me=>mburyvt
       use biomaterial, only: biomatter
 
       include 'p1werm.inc'

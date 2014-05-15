@@ -17,7 +17,7 @@
 !     + + + KEYWORDS + + +
 !     matric potential parameters
 
-      use weps_interface_defs
+      use weps_interface_defs, only: volwatadsorb
 
       include 'hydro/clayomprop.inc'
 

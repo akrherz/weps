@@ -19,7 +19,7 @@
 !     + + + KEYWORDS + + +
 !     tillage, management
 
-      use weps_interface_defs
+      use weps_interface_defs, ignore_me=>manage
       use datetime_mod, only: difdat, get_simdate
       use file_io_mod, only: luomanage
       use biomaterial, only: biomatter, biototal

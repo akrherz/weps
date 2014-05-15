@@ -5,7 +5,7 @@
 
       SUBROUTINE BGNRND(X0, X, A, MRND)
       
-      use wepp_interface_defs
+      use wepp_interface_defs, ignore_me=>BGNRND
       
       implicit none
 

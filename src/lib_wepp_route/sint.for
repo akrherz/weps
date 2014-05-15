@@ -5,7 +5,7 @@
 
       SUBROUTINE SINT(TIME, T, TSTAR, II, S, SI, NS, OSINT)
       
-      use wepp_interface_defs
+      use wepp_interface_defs, ignore_me=>SINT
       
 	  implicit none
 

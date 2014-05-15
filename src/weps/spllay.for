@@ -10,7 +10,7 @@
 !
 !     Edit History
 !     07-Feb-01   wjr   created
-      use weps_interface_defs
+      use weps_interface_defs, ignore_me=>spllay
 
 !     + + + ARGUMENTS + + +
       integer       isr

@@ -5,7 +5,7 @@
 
       subroutine sheart(q,sslope,rspace,wdhtop,frcsol,frctrl,shearq)
       
-      use wepp_interface_defs
+      use wepp_interface_defs, ignore_me=>sheart
       
       implicit none
 !

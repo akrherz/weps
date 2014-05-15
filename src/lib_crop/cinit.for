@@ -29,7 +29,7 @@
 !     + + + KEYWORDS + + +
 !     Initialization
 
-      use weps_interface_defs
+      use weps_interface_defs, ignore_me=>cinit
       use datetime_mod, only: get_simdate_doy
       use file_io_mod, only: luoinpt
       use p1unconv_mod, only: mgtokg, mmtom

@@ -6,7 +6,7 @@
       subroutine print(slplen,avgslp,runoff,peakro,effdrn,efflen,       &
      &    effint,effdrr)
      
-      use wepp_interface_defs
+      use wepp_interface_defs, ignore_me=>print
 !
 !     + + + purpose + + +
 !     open the standalone output file.

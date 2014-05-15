@@ -11,7 +11,7 @@
 !       Edit History
 !       10-Mar-99       wjr     created
 
-      use weps_interface_defs
+      use weps_interface_defs, ignore_me=>openfils
       use file_io_mod
       use biomaterial, only: biomatter
       use erosion_data_struct_defs, only: am0efl

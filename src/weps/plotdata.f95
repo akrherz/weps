@@ -5,7 +5,6 @@
 
       subroutine plotdata(sr, crop, restot, croptot, biotot, noerod, cellstate)
 
-      use weps_interface_defs
       use datetime_mod, only: get_simdate, get_simdate_doy
       use file_io_mod, only: luoplt
       use biomaterial, only: biomatter, biototal

@@ -5,7 +5,7 @@
 
       subroutine xcrit(a,b,c,tauc,xb,xe,xc1,xc2,mshear)
       
-      use wepp_interface_defs
+      use wepp_interface_defs, ignore_me=>xcrit
       
       implicit none
 !

@@ -8,7 +8,7 @@
      & avgslp,smrm,krcrat,tccrat,kicrat,dg,thetdr,st,thdp,frdp,ifrost,  &
      & thetfc,por,tens,cycle)
 
-       use wepp_interface_defs
+       use wepp_interface_defs, ignore_me=>soil_adj
        implicit none
 !
 !      soil_adj()

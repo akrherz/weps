@@ -6,7 +6,7 @@
       subroutine submodels (isr, crop, residue, restot, croptot,        &
      &                      biotot, decompfac, mandate, h1et, wp)
 
-      use weps_interface_defs
+      use weps_interface_defs, ignore_me=>submodels
       use biomaterial, only: biomatter, biototal, decomp_factors
       use mandate_mod, only: opercrop_date
       use hydro_data_struct_defs, only: hydro_derived_et

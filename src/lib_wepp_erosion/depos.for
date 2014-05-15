@@ -6,7 +6,7 @@
       subroutine depos(xb,xe,cdep,a,b,c,phi,theta,ilast,dl,ldlast,      &
      &    xinput,ktrato,detach,load,tc,qostar)
      
-      use wepp_interface_defs
+      use wepp_interface_defs, ignore_me=>depos
       
       implicit none
 !

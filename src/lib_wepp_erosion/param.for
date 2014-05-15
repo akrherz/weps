@@ -11,7 +11,7 @@
      &    anflst, bnflst, cnflst, atclst, btclst, ctclst,slpprv, wdhtop,&
      &    rwflag)
      
-      use wepp_interface_defs
+      use wepp_interface_defs, ignore_me=>param
       
       implicit none
 !

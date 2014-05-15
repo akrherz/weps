@@ -35,7 +35,7 @@
 !     + + + KEYWORDS + + +
 !     cut, transfer, biomass manipulation
 
-      use weps_interface_defs
+      use weps_interface_defs, ignore_me=>cut
       use biomaterial, only: biomatter
       use p1unconv_mod, only: mmtom
 

@@ -13,7 +13,7 @@
 !     wind, erosion, tillage, soil, crop, decomposition
 !     management
 
-      use weps_interface_defs
+      use weps_interface_defs, ignore_me=>tdbug
       use file_io_mod, only: luotdb
       use biomaterial, only: biomatter
 

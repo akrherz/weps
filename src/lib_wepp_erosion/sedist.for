@@ -6,7 +6,7 @@
       subroutine sedist(dslost,dstot,stdist,delxx,slplen,avgslp,        &
      &    y,ysdist)
      
-      use wepp_interface_defs
+      use wepp_interface_defs, ignore_me=>sedist
       
       implicit none
 !

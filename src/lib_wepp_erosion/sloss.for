@@ -7,7 +7,7 @@
      &    slplen,irdgdx,qsout,dslost,dsmon,dsyear,dsavg,avsole,qout,    &
      &    frcflw,npart,enrato)
      
-      use wepp_interface_defs
+      use wepp_interface_defs, ignore_me=>sloss
       
       implicit none
 

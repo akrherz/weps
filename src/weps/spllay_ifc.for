@@ -12,7 +12,7 @@
 !     07-Feb-01   wjr   created
 !     10-Oct-04   lew   modified to work with "versioned" IFC files only
 
-      use weps_interface_defs
+      use weps_interface_defs, ignore_me=>spllay_ifc
 
       include 'p1werm.inc'
       include 'wpath.inc'

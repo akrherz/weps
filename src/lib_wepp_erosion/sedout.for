@@ -8,7 +8,7 @@
      &    dia,spg,slplen,fwidth,avgslp,                                 &
      &    y,totlen,years)
      
-      use wepp_interface_defs
+      use wepp_interface_defs, ignore_me=>sedout
       
       implicit none
 !
