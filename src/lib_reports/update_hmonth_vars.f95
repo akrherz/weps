@@ -9,6 +9,7 @@ SUBROUTINE update_hmonth_update_vars(isr, cd, cm, hmonth_update, hmrot_update, h
     USE pd_var_tables
     use erosion_data_struct_defs, only: subday, awudmx, awdair, ntstep
     use hydro_data_struct_defs, only: hydro_derived_et
+    use climate_input_mod, only: cli_today
 
     IMPLICIT NONE
 
@@ -19,7 +20,6 @@ SUBROUTINE update_hmonth_update_vars(isr, cd, cm, hmonth_update, hmrot_update, h
     TYPE (pd_var_type), DIMENSION(Min_hmonth_vars:,:), intent(inout) :: hmrot_update
     type(hydro_derived_et), intent(in) :: h1et
 
-    include "w1clig.inc"        ! precip
     include "p1werm.inc"        ! mntime (maximum # of time steps/day)
 
     INTEGER :: i                ! local loop variables
@@ -37,7 +37,7 @@ SUBROUTINE update_hmonth_update_vars(isr, cd, cm, hmonth_update, hmrot_update, h
     END IF
 
     !variables summed for period
-    hmonth_update(Precipi)%val = hmonth_update(Precipi)%val + awzdpt
+    hmonth_update(Precipi)%val = hmonth_update(Precipi)%val + cli_today%zdpt
     hmonth_update(Precipi)%cnt = hmonth_update(Precipi)%cnt + 1
 
     !variables running averaged for period

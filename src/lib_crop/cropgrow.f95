@@ -13,7 +13,6 @@
      &                 bc0dlf, bc0arp, bc0brp, bc0crp,                  &
      &                 bc0drp, bc0aht, bc0bht,                          &
      &                 bc0sla, bc0hue, bctverndel,                      &
-     &                 bweirr, bwtdmx, bwtdmn,                          &
      &                 bhtsmx, bhtsmn,                                  &
      &                 bhfwsf,                                          &
      &                 bm0cif,                                          &
@@ -55,6 +54,7 @@
       use file_io_mod, only: luocrop, luoshoot
       use p1unconv_mod, only: mgtokg
       use crop_data_struct_defs, only: am0cfl
+      use climate_input_mod, only: cli_today
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer, intent(in) :: isr   ! subregion number
@@ -70,7 +70,6 @@
       real bc0alf, bc0blf, bc0clf, bc0dlf, bc0arp, bc0brp
       real bc0crp, bc0drp, bc0aht, bc0bht
       real bc0sla, bc0hue, bctverndel
-      real bweirr, bwtdmx, bwtdmn
       real bhtsmx(*), bhtsmn(*)
       real bhfwsf
       integer bchyfg
@@ -149,8 +148,6 @@
 !         2     o Use given biomass adjustment factor
 !     acbaf  - biomass adjustment factor
 !     acyraf - yield to biomass ratio adjustment factor
-!     bwtdmx - daily maximum air temperature (deg.C)
-!     bwtdmn - daily minimum air temperature (deg.C)
 !     bhtsmx - daily maximum soil temperature by layer (deg.C)
 !     bhtsmn - daily minimum soil temperature by layer (deg.C)
 !     bcthum - potential heat units for crop maturity (deg. C)
@@ -386,7 +383,7 @@
       endif
 
       ! check for consecutive "warm" days based on daily average temperature
-      if( 0.5*(bwtdmx+bwtdmn).gt.bctmin ) then
+      if( 0.5*(cli_today%tdmx+cli_today%tdmn).gt.bctmin ) then
           ! this is a warm day
           bctwarmdays = bctwarmdays + 1
       else
@@ -395,7 +392,7 @@
       end if
 
       ! accumulate chill units
-      call chillu(bctchillucum, bwtdmx, bwtdmn)
+      call chillu(bctchillucum, cli_today%tdmx, cli_today%tdmn)
 
       ! zero out temp pool variables used in testing for residue from regrowth in callcrop
       bgmstandstem = 0.0
@@ -569,13 +566,12 @@
                   hu_delay =  max(dev_floor,min(vern_delay,photo_delay))
               end if
               ! do not accumulate heat units if daily minimum is below freezing
-!              if( bwtdmn .gt. 0.0 ) then
+!              if( cli_today%tdmn .gt. 0.0 ) then
                   ! accumulate heat units using set heat unit delay
-                  bcthucum = bcthucum +huc1(bwtdmx,bwtdmn,bctopt,bctmin)&
-     &                     * hu_delay
+                  bcthucum = bcthucum + huc1(cli_today%tdmx,cli_today%tdmn,bctopt,bctmin) * hu_delay
 !              end if
               ! root depth growth heat units
-              bctrthucum = bctrthucum +huc1(bwtdmx,bwtdmn,bctopt,bctmin)
+              bctrthucum = bctrthucum +huc1(cli_today%tdmx,cli_today%tdmn,bctopt,bctmin)
               ! do not cap this for annuals, to allow it to continue
               ! root mass partition is reduced to lower levels after the
               ! first full year. Out of range is capped in the function
@@ -641,7 +637,7 @@
      &                 bc0brp, bc0crp, bc0drp,                          &
      &                 bc0aht, bc0bht, bc0ssa, bc0ssb,                  &
      &                 bc0sla, bcxstm, bhtsmn,                          &
-     &                 bwtdmx, bwtdmn, bweirr, bhfwsf,                  &
+     &                 cli_today%tdmx, cli_today%tdmn, cli_today%eirr, bhfwsf, &
      &                 hui, huiy, huirt, huirty, hu_delay, bcthardnx,   &
      &                 bcbaf, bchyfg,                                   &
      &                 bcfleaf2stor, bcfstem2stor, bcfstor2stor,        &

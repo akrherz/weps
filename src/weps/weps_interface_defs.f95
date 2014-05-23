@@ -163,7 +163,6 @@
      &                 bc0dlf, bc0arp, bc0brp, bc0crp,                  &
      &                 bc0drp, bc0aht, bc0bht,                          &
      &                 bc0sla, bc0hue, bctverndel,                      &
-     &                 bweirr, bwtdmx, bwtdmn,                          &
      &                 bhtsmx, bhtsmn,                                  &
      &                 bhfwsf,                                          &
      &                 bm0cif,                                          &
@@ -209,7 +208,6 @@
       real bc0alf, bc0blf, bc0clf, bc0dlf, bc0arp, bc0brp
       real bc0crp, bc0drp, bc0aht, bc0bht
       real bc0sla, bc0hue, bctverndel
-      real bweirr, bwtdmx, bwtdmn
       real bhtsmx(*), bhtsmn(*)
       real bhfwsf
       integer bchyfg
@@ -556,7 +554,7 @@
       end subroutine jac      
 !-----------------------
       subroutine  et(rn, g_soil, vel_wind, bmzele, bwtdmx, bwtdmn,      &
-     &            bwtdav, bwtdpt, bwrrh, bhzetp, loc_za, loc_zo, loc_zd)
+     &            bwtdav, bwtdpt, bhzetp, loc_za, loc_zo, loc_zd)
 
       real rn
       real g_soil
@@ -566,7 +564,6 @@
       real bwtdmx
       real bwtdav
       real bwtdpt
-      real bwrrh
       real bhzetp
       real loc_za, loc_zo, loc_zd   
       end subroutine et
@@ -679,15 +676,11 @@
      &                   bhlocirr, bhminirr, bm0monirr,                 &
      &                   bhmadirr, bhndayirr, bhmintirr,                &
      &                   bhzoutflow, bhzrun, bhzinf,                    &
-!     &                   bhzsno, bhtsno, bhfsnfrz, bhzsnd,              &
      &                   bhzsno, bhtsno, bhfsnfrz, &
      &                   bhzsmt, bhfice, bhrsk,                         &
      &                   bhtsmx, bhtsmn, bhrwc0,                        &
      &                   daysim, bsfald, bsfalw, bszlyt,                &
-     &                   bwzdpt, bwdurpt, bwpeaktpt, bwpeakipt,         &
-     &                   bwtdmxprev, bwtdmn, bwtdmx, bwtdmnnext,        &
-     &                   bwtdav, bwtyav, bwrrh,                         &
-     &                   bwtdpt, bweirr, bwudav, bhzwid,                &
+     &                   bwudav, bhzwid, &
      &                   bhzeasurf,                                     &
      &                   cumprecip, cumrunoff, cumevap,                 &
      &                   cumtrans, cumdrain,                            &
@@ -727,10 +720,7 @@
       real bhtsmx(*), bhtsmn(*), bhrwc0(*)
       integer daysim
       real bsfald, bsfalw, bszlyt(*)
-      real bwzdpt, bwdurpt, bwpeaktpt, bwpeakipt
-      real bwtdmxprev, bwtdmx, bwtdmn, bwtdmnnext
-      real bwtdav, bwtyav, bwrrh
-      real bwtdpt, bweirr, bwudav, bhzwid
+      real bwudav, bhzwid
       real bhzeasurf
       real cumprecip, cumrunoff, cumevap
       real cumtrans, cumdrain
@@ -2117,7 +2107,7 @@ SUBROUTINE update_period_report_vars(pd, npd, cur_yr, nrot_years, period_update,
      &                 bseagm, bseagmn, bseagmx,                        &
      &                 bsk4d, bslmin, bslmax,                           &
      &                 bbffcv, bbfscv,                                  &
-     &                 bsfcce, bsfcec, bhzinf, bhzwid, bwzdpt, bwtdav)
+     &                 bsfcce, bsfcec, bhzinf, bhzwid)
       integer, intent(in) :: isr   ! subregion number
       integer daysim
       real bhlocirr, bhzirr, bhzsmt
@@ -2139,7 +2129,7 @@ SUBROUTINE update_period_report_vars(pd, npd, cur_yr, nrot_years, period_update,
       real bsk4d(*), bslmin(*), bslmax(*)
       real bbffcv, bbfscv
       real bsfcce(1:*), bsfcec(1:*)
-      real bhzinf, bhzwid, bwzdpt, bwtdav
+      real bhzinf, bhzwid
       end subroutine soil
 !------------------------
       subroutine soilinit(isr)                                

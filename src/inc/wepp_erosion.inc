@@ -59,13 +59,13 @@
 !                    cumulative kinetic energy since last tillage (J/m2)
 !
       real wp_krcrat, wp_tccrat, wp_kicrat, wp_frorg(mxpart)
-	  real wp_frcly(mxpart), wp_frslt(mxpart), wp_frsnd(mxpart)
-	  integer wp_cycle, wp_froday
-	  real wp_ki,wp_kr,wp_shcrit
-	  real wp_dia(mxpart), wp_spg(mxpart), wp_frac(mxpart)
-	  real wp_fall(mxpart), wp_rspace, wp_bconsd
-	  real  wp_frcff1(mxpart), wp_frcff2(mxpart)
-	  real wp_enrff1,wp_enrff2
+      real wp_frcly(mxpart), wp_frslt(mxpart), wp_frsnd(mxpart)
+      integer wp_cycle, wp_froday
+      real wp_ki,wp_kr,wp_shcrit
+      real wp_dia(mxpart), wp_spg(mxpart), wp_frac(mxpart)
+      real wp_fall(mxpart), wp_rspace, wp_bconsd
+      real  wp_frcff1(mxpart), wp_frcff2(mxpart)
+      real wp_enrff1,wp_enrff2
 !       real wp_rkecum, wp_prev_crust_frac
 
 !--------------------------------------------------------------------------
@@ -122,10 +122,10 @@
 !      real wp_totalRunoff,wp_totalPrecip,wp_totalSnowrunoff
 !      integer wp_runoffEvents,wp_precipEvents
       integer wp_detailout
-!	  integer wp_snowmeltEvents
-	  
+!      integer wp_snowmeltEvents
+      
 !-------------------------------------------------------------------
-!	  Winter Hydrology related
+!      Winter Hydrology related
 !
 !     These are used in adjusting the hydraulic conductivity for additions
 !     that are in the WEPP portion. 
@@ -202,13 +202,3 @@
 !     & wp_snowmeltEvents,                                               &
 !     & wp_saxwp,wp_saxfc,wp_saxenp,wp_saxpor,wp_saxA,wp_saxB,wp_saxks
 
-
-
-
-
-
-
-	   
-      
-
-   

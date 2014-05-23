@@ -52,6 +52,8 @@ module climate_input_mod
     integer :: wwrnflg            ! flag to show or turn off date mismatch warnings
     integer :: n_header           ! number of lines in the cligen file header
 
+    real :: cli_tyav              ! Average yearly air temperature (deg C) from CLIGEN header monthly average temperaure
+
     type(cligen_monavg) :: cli_mav
 
     type(cligen_state) :: cli_prev
@@ -135,7 +137,6 @@ contains
         integer :: ccy    ! requested year
 
 !      include 'p1werm.inc'
-        include 'w1clig.inc'
         include 'm1sim.inc'  ! amzele
 !      include 'w1pavg.inc'
 !      include 'm1flag.inc'
@@ -341,18 +342,6 @@ contains
         ! set air density for today
         awdair = 348.56 * (1.013-0.1183*(amzele/1000.) + 0.0048 * (amzele/1000.)**2.) / (cli_today%tdav + 273.1)
 
-       ! copy values into the common blocks include files (eliminate with modules)
-       awzdpt = cli_today%zdpt
-       awdurpt = cli_today%durpt
-       awpeaktpt = cli_today%peaktpt
-       awpeakipt = cli_today%peakipt
-       awtdmxprev = cli_prev%tdmx
-       awtdmn = cli_today%tdmn
-       awtdmx = cli_today%tdmx
-       awtdmnnext = cli_next%tdmn
-       awtdpt = cli_today%tdpt
-       aweirr = cli_today%eirr
-       awtdav = cli_today%tdav
 
     end subroutine getcli
 
@@ -360,9 +349,7 @@ contains
         use file_io_mod, only: luicli
         use erosion_data_struct_defs, only: awzypt
 !      include 'p1werm.inc'
-      include 'w1clig.inc'
 !      include 'm1flag.inc'
-!      include 'main/w1cli.inc'
 !      include 'main/w1win.inc'
 
         integer idx
@@ -402,12 +389,12 @@ contains
             ! write(6,*)  (awtmnav(idx), idx = 1,12)
 
             ! find yearly average temperature
-            awtyav = 0.0
+            cli_tyav = 0.0
             do idx = 1, 12
                 ! average temperature is mean of maximum and minimum
-                awtyav = awtyav + (cli_mav%tmn(idx) + cli_mav%tmx(idx)) / 2.0
+                cli_tyav = cli_tyav + (cli_mav%tmn(idx) + cli_mav%tmx(idx)) / 2.0
             end do
-            awtyav = awtyav/12.0
+            cli_tyav = cli_tyav/12.0
 
             ! read three lines to get to precipitation values
             do idx = 1, 3
@@ -425,12 +412,6 @@ contains
                 awzypt = awzypt + cli_mav%zpt(idx)
             end do
 
-            ! copy average values into the common blocks include files (eliminate with modules)
-            do idx = 1, 12
-                awtmxav(idx) = cli_mav%tmx(idx)
-                awtmnav(idx) = cli_mav%tmn(idx)
-            end do
-
         else
  
             ! Old obsolete cligen file format (Canadians are still using it)
@@ -439,7 +420,7 @@ contains
             !do idx = 1, 3       ! Skip the first 3 lines
             !    read(luicli,'(a128)') header
             !end do
-            !read(luicli,*) junk1, junk2, awtyav        ! skip lat/lon and get yearly ave temp
+            !read(luicli,*) junk1, junk2, cli_tyav        ! skip lat/lon and get yearly ave temp
             !read(luicli,*) (awtmav(idx), idx = 1,12)   ! read 12 monthly ave temps
         endif
 

@@ -22,6 +22,7 @@
       use biomaterial, only: biomatter, biototal
       use erosion_data_struct_defs, only: awadir, awhrmx, awudmx, awudmn
       use hydro_data_struct_defs, only: hydro_derived_et
+      use climate_input_mod, only: cli_today
 
 !     + + +   ARGUMENT DECLARATIONS + + +
       integer, intent(in) :: isr    ! subregion index
@@ -42,7 +43,6 @@
       include 's1sgeo.inc'
       include 'c1db1.inc'
       include 'c1db2.inc'
-      include 'w1clig.inc'
       include 'h1hydro.inc'
       include 'h1db1.inc'
       include 'h1temp.inc'
@@ -90,7 +90,7 @@
  2031 format ('**',1x,2(i2,'/'),i4,'    Before call to CROP         Subr&
      &egion No. ',i3)
  2032 format (' awzdpt  awtdmx  awtdmn  aweirr  awudmx  awudmn ',       &
-     &        ' awtdpt  awadir  awhrmx   awrrh ')
+     &        ' awtdpt  awadir  awhrmx')
  2038 format (f7.2,9f8.2)
 ! 2045 format ('Subregion Number',i3)
  2050 format ('amrslp(',i2,') acftcv(',i2,') acrlai(',i2,')',           &
@@ -122,8 +122,8 @@
          write(luocdb(isr),2031) cd,cm,cy,isr
       end if
       write(luocdb(isr),2032)
-      write(luocdb(isr),2038) awzdpt, awtdmx, awtdmn, aweirr, awudmx,   &
-     &                        awudmn, awtdpt, awadir, awhrmx, awrrh
+      write(luocdb(isr),2038) cli_today%zdpt, cli_today%tdmx, cli_today%tdmn, cli_today%eirr, awudmx, &
+     &                        awudmn, cli_today%tdpt, awadir, awhrmx
 
 !      write(luocdb(isr),2045) isr
 

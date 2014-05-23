@@ -26,7 +26,7 @@ contains
       use manage_data_struct_defs, only: am0tfl, am0tdb
       use crop_data_struct_defs, only: am0cfl, am0cdb
       use decomp_data_struct_defs, only: am0dfl, am0ddb
-      use climate_input_mod, only: cli_gen_fmt_flag, wind_gen_fmt_flag
+      use climate_input_mod, only: cli_gen_fmt_flag, wind_gen_fmt_flag, cligen_sname
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer, intent(out) :: n_rot_cycles
@@ -47,7 +47,6 @@ contains
       include 'h1hydro.inc'
       include 'h1scs.inc'
       include 'h1db1.inc'
-      include 'w1clig.inc'
 
 !     + + + LOCAL COMMON BLOCKS + + +
       include 'main/main.inc'
@@ -172,7 +171,7 @@ contains
       case (6)
         read (line,*,err=80) amzele
       case (7)
-        read (line,*,err=80) awclsn
+        read (line,*,err=80) cligen_sname
       case (8)
         read (line,*,err=80) awwisn
       case (9)

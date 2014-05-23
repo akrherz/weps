@@ -20,11 +20,12 @@
 !--------------------------------------------------------------------------------------     
 
       use p1unconv_mod, only: mmtom
+      use climate_input_mod, only: cli_today
 
       implicit none
 
       include 'p1werm.inc'
-	include 's1dbh.inc'
+      include 's1dbh.inc'
       include 's1dbc.inc'
       include 's1sgeo.inc'
       include 's1phys.inc'
@@ -33,8 +34,6 @@
       include 'm1flag.inc'
       include 'h1temp.inc'
       include 'wepp_erosion.inc'
-      include 'w1clig.inc'
-	   
 
       integer, intent(in):: isr
       real, intent(out):: sand(mxnsl), silt(mxnsl), clay(mxnsl)
@@ -44,7 +43,7 @@
       real, intent(out):: thetfc(mxnsl), por(mxnsl), rh
       real, intent(out):: frctrl, frcsol
       real, intent(out):: precip
-	
+      
 !     + + + argument declarations + + +     
 !     isr - This variable holds the subregion index.
 !     sand() - sand fraction by layer
@@ -66,35 +65,35 @@
 !
 
       real bd(mxnsl), cec(mxnsl), cecc, solcon(mxnsl), coca(mxnsl)
-	real oca, bottom
+      real oca, bottom
       integer i,isFroze
       
-!     random roughness in WEPS is mm, WEPP is m	
+!     random roughness in WEPS is mm, WEPP is m      
       rrc = aslrr(isr) / 1000.0
 
 !     ridge height in WEPS is mm, WEPP is m
       rh = aszrgh(isr) / 1000.0
-	 
-!     soil grain friction factor - TODO	 
+       
+!     soil grain friction factor - TODO       
       frcsol = 1.11
       
 !     daily precipitation (mm)      
-      precip =  awzdpt
+      precip =  cli_today%zdpt
 
 !     total rill friction factor - TODO
       frctrl = 1
 
 !     True if surface has tillage has occurred
       if (am0til .eqv. .true.) then
-	   wp_daydis = 0
+         wp_daydis = 0
       else
         wp_daydis = wp_daydis + 1
       end if
 
-	frdp = 0.0
-	thdp = 0.0
-	bottom = 0.0
-	isFroze = 0
+      frdp = 0.0
+      thdp = 0.0
+      bottom = 0.0
+      isFroze = 0
 
 !     Don't really need to get the sand,silt,clay,orgmat, cec, these would
 !     be constant during the simulation. 
@@ -105,31 +104,31 @@
 !       Soil layer sand content (Mg/Mg)
         sand(i) = asfsan(i,isr)
 !       Soil layer silt content (Mg/Mg)        
-		silt(i) = asfsil(i,isr)
-!       Soil layer clay content (Mg/Mg)		
-		clay(i) = asfcla(i,isr)
-!       Soil layer organic matter content (Mg/Mg)		
-		orgmat(i) = asfom(i,isr)
-!		asfcec - Soil layer cation exchange capacity (cmol/kg) (meq/100g)
-		cec(i) = asfcec(i,isr)
+        silt(i) = asfsil(i,isr)
+!       Soil layer clay content (Mg/Mg)            
+        clay(i) = asfcla(i,isr)
+!       Soil layer organic matter content (Mg/Mg)
+        orgmat(i) = asfom(i,isr)
+!       asfcec - Soil layer cation exchange capacity (cmol/kg) (meq/100g)
+        cec(i) = asfcec(i,isr)
 
 !       Soil layer bulk density for each subregion (Mg/m^3)
         bd(i) = 1000.0 * asdblk(i,isr)
 
 !       Soil layer thicknesses for each subregion (mm)        
-	  dg(i) = aszlyt(i,isr) * mmtom
+        dg(i) = aszlyt(i,isr) * mmtom
 
-!       theta() - soil layer water content (m^3/m^3)	  
+!       theta() - soil layer water content (m^3/m^3)
 !       thetaw() - wilting point (15 bar) volumetric water content 
 !       dg() - Soil layer thicknesses for each subregion (mm)  
-		st(i) = (theta(i) - thetaw(i)) * dg(i)
-		thetfc(i) = thetaf(i)
+        st(i) = (theta(i) - thetaw(i)) * dg(i)
+        thetfc(i) = thetaf(i)
 
-		bottom = bottom + dg(i)
+        bottom = bottom + dg(i)
 
         cecc = cec(i) - orgmat(i) * (142.+170.* dg(i))
 
-		if (clay(i).le.0.0) then
+        if (clay(i).le.0.0) then
           solcon(i) = 0.0
         else
           solcon(i) = cecc / (100.*clay(i))
@@ -143,10 +142,9 @@
      &      orgmat(i)*((sand(i)/2.)**2))
 
         coca(i) = (1-oca/100.0)
-		por(i) = (2650.-bd(i)) / 2650.
-		por(i) = por(i) * coca(i)
+        por(i) = (2650.-bd(i)) / 2650.
+        por(i) = por(i) * coca(i)
 
-!
 !       simplified: if more than 50% of the water in a layer is 
 !       frozen consider the soil frozen to that depth. When the
 !       soil thaws move the thaw depth down until a frozen layer
@@ -154,28 +152,28 @@
 
 !       ahfice - fraction of soil water in layer which is frozen  
         if (ahfice(i,isr).ge.0.5) then
-		    frdp = bottom
-			isFroze = 1
-		end if
+          frdp = bottom
+          isFroze = 1
+        end if
 
         if ((isFroze.eq.0).and.(ahfice(i,isr).lt.0.5)) then
-		    thdp = bottom
-		end if
+          thdp = bottom
+        end if
 
-		
-	  end do
+      
+      end do
 
-	  if ((isFroze.eq.1).and.(thdp.gt.0.0001)) then
-	      wp_cycle = wp_cycle + 1
-	  end if
+      if ((isFroze.eq.1).and.(thdp.gt.0.0001)) then
+        wp_cycle = wp_cycle + 1
+      end if
 
-	  if (isFroze.eq.0) then
-	     wp_froday = wp_froday + 1
-         end if
+      if (isFroze.eq.0) then
+        wp_froday = wp_froday + 1
+      end if
 
-	  if (wp_froday.gt.50) then
-	     wp_cycle = 0
-	  end if
+      if (wp_froday.gt.50) then
+        wp_cycle = 0
+      end if
 
       return
       end

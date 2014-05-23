@@ -10,6 +10,7 @@ SUBROUTINE update_monthly_update_vars(isr, cm, monthly_update, mrot_update, cell
     use erosion_data_struct_defs, only: cellsurfacestate, awdair, awudmx, subday, ntstep 
     use grid_mod, only: imax, jmax, sim_area
     use hydro_data_struct_defs, only: hydro_derived_et
+    use climate_input_mod, only: cli_today
 
     IMPLICIT NONE
 
@@ -20,7 +21,6 @@ SUBROUTINE update_monthly_update_vars(isr, cm, monthly_update, mrot_update, cell
     type(cellsurfacestate), dimension(0:,0:), intent(in) :: cellstate     ! initialized grid cell state values
     type(hydro_derived_et), intent(in) :: h1et
 
-    include "w1clig.inc"        ! precip
     include "p1werm.inc"        ! mntime (maximum # of time steps/day)
 
     INTEGER :: i,j              ! local loop variables
@@ -60,9 +60,9 @@ SUBROUTINE update_monthly_update_vars(isr, cm, monthly_update, mrot_update, cell
     gdpt_area = sim_area/( (imax-1) * (jmax-1) )   ! Area of single grid cell
 
     !variables summed for period
-    monthly_update(Precipi)%val = monthly_update(Precipi)%val + awzdpt
+    monthly_update(Precipi)%val = monthly_update(Precipi)%val + cli_today%zdpt
     monthly_update(Precipi)%cnt = monthly_update(Precipi)%cnt + 1
-    mrot_update(Precipi,cm)%val = mrot_update(Precipi,cm)%val + awzdpt
+    mrot_update(Precipi,cm)%val = mrot_update(Precipi,cm)%val + cli_today%zdpt
     mrot_update(Precipi,cm)%cnt = mrot_update(Precipi,cm)%cnt + 1
 
 ! ------------------------------------------------------------------------------------------------------------------

@@ -35,7 +35,6 @@
       include 's1sgeo.inc'    ! Contains required variables for biodrag()
       include 'h1hydro.inc'
       include 'h1temp.inc'
-      include 'w1clig.inc'
       include 'crop/prevstate.inc'
       include 'crop/gcrop.inc'
 
@@ -71,7 +70,6 @@
      &   ac0dlf(sr), ac0arp(sr), ac0brp(sr), ac0crp(sr),                &
      &   ac0drp(sr), ac0aht(sr), ac0bht(sr),                            &
      &   crop%database%sla, ac0hue(sr),  actverndel(sr),                       &
-     &   aweirr, awtdmx, awtdmn,                                        &
      &   ahtsmx(1,sr), ahtsmn(1,sr),                                    &
      &   ahfwsf(sr),                                                    &
      &   crop%growth%am0cif,                                            &

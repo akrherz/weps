@@ -7,6 +7,7 @@
       use weps_interface_defs, ignore_me=>decomp
       use biomaterial, only: biomatter, decomp_factors
       use decomp_data_struct_defs, only: am0dfl, am0ddb
+      use climate_input_mod, only: cli_today
 
 !     +++ PURPOSE + + +
 
@@ -28,7 +29,6 @@
 !       + + +  PARAMTERS AND COMMON BLOCKS +++
 
       include 'p1werm.inc'
-      include 'w1clig.inc'
 
 !   These hydrology common blocks provide soil temp, moisture and irrigation
 
@@ -106,7 +106,7 @@
 ! sum rain, irr, snow melt
 
       if (dbgflg) write(*,*) 'decomp 2'
-      decompfac%aqua = awzdpt + ahzirr(isr) + ahzsmt(isr)
+      decompfac%aqua = cli_today%zdpt + ahzirr(isr) + ahzsmt(isr)
 
 ! Test for water input day.
 
@@ -177,8 +177,8 @@
 ! phone call with Simon van Donk, July 2002)
 
       ! replaced itca with itcs (standing) and itcf (flat) so different methods could be used. (like under snow or w/ thick mulch)
-      decompfac%itcs =  (tc(awtdmn) + tc(awtdmx))/2
-      decompfac%itcf =  (tc(awtdmn) + tc(awtdmx))/2
+      decompfac%itcs =  (tc(cli_today%tdmn) + tc(cli_today%tdmx))/2
+      decompfac%itcf =  (tc(cli_today%tdmn) + tc(cli_today%tdmx))/2
 
 ! Below ground biomass tc calculated for each soil layer
 !!use average of max and min for calculation

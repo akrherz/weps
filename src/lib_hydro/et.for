@@ -4,7 +4,7 @@
 !$HeadURL$
 
       subroutine  et(rn, g_soil, vel_wind, bmzele, bwtdmx, bwtdmn,      &
-     &            bwtdav, bwtdpt, bwrrh, bhzetp, loc_za, loc_zo, loc_zd)
+     &            bwtdav, bwtdpt, bhzetp, loc_za, loc_zo, loc_zd)
 
 !     + + + PURPOSE + + +
 !     This subroutine calculates daily potential evapotranspiration
@@ -24,7 +24,6 @@
       real bwtdmx
       real bwtdav
       real bwtdpt
-      real bwrrh
       real bhzetp
       real loc_za, loc_zo, loc_zd
 
@@ -36,7 +35,6 @@
 !     bwtdmx - daily maximum temperature (C)
 !     bwtdmn - daily minimum temperature (C)
 !     bwtdpt - daily average dew point temperature (C)
-!     bwrrh  - relative humidity ratio
 !     bhzetp - potential evaporation depth (mm)
 !        the following must be in consistent units (length)
 !     loc_za - height of meteorological measurement 
@@ -177,12 +175,11 @@
       term3 = svpg + 1.0                                 !h-12(c)
       bhzetp = (term1+term2)/term3                       !h-12
       if ( bhzetp  .le. 0.0 )  bhzetp = 0.0
-      bwrrh = vpa / vps
 
 ! DEBUGGING statements
 !      etpr = term1 / term3
 !      etpw = term2 / term3
-!      write(*,*) 'et:',rn,tmaxadj,tminadj,tdavadj,tdewadj,bwrrh,        &
+!      write(*,*) 'et:',rn,tmaxadj,tminadj,tdavadj,tdewadj,             &
 !     &           vel_wind, loc_zd,zo_v,etpr,etpw
 !
 ! END DEBUGGING

@@ -19,7 +19,7 @@
      &                 bseagm, bseagmn, bseagmx,                        &
      &                 bsk4d, bslmin, bslmax,                           &
      &                 bbffcv, bbfscv,                                  &
-     &                 bsfcce, bsfcec, bhzinf, bhzwid, bwzdpt, bwtdav)
+     &                 bsfcce, bsfcec, bhzinf, bhzwid)
 
 
 !     + + + PURPOSE + + +
@@ -41,6 +41,7 @@
       use datetime_mod, only: get_simdate_doy, get_simdate_year
       use file_io_mod, only: luosoilsurf, luosoillay
       use soil_data_struct_defs, only: am0sfl
+      use climate_input_mod, only: cli_today
 
       include 'p1werm.inc'
       include 'wpath.inc'
@@ -71,7 +72,7 @@
       real bsk4d(mnsz), bslmin(mnsz), bslmax(mnsz)
       real bbffcv, bbfscv
       real bsfcce(1:mnsz), bsfcec(1:mnsz)
-      real bhzinf, bhzwid, bwzdpt, bwtdav
+      real bhzinf, bhzwid
 
 !     + + + ARGUMENT DEFINITIONS + + +
 !   daysim    - an index for the day of simulation.
@@ -128,8 +129,6 @@
 !   bsfcec    - soil cation exchange capacity (cmol/kg)
 !   bhzinf    - daily water infiltration depth (mm of water)
 !   bhzwid    - water infiltration depth (mm of soil)
-!   bwzdpt    - rainfall depth (mm)
-!   bwtdav    - Average daily air temperature (deg C)
 
 !     + + + LOCAL VARIABLES + + +
 ! Retain the values of these variables for the next day
@@ -194,7 +193,7 @@
      &                 rain, snow, sprink,                              &
      &                 bhzirr, bszrho,                                  &
      &                 bhlocirr, bhzsmt, bszrro,                        &
-     &                 bsdsblk, bwzdpt, bwtdav, trigger)
+     &                 bsdsblk, cli_today%zdpt, cli_today%tdav, trigger)
 !
 !  UPDATE SURFACE
 !     do surface processes if (rain+sprinkler+snowmelt>0)

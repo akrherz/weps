@@ -34,6 +34,7 @@
       use file_io_mod, only: luoinpt
       use p1unconv_mod, only: mgtokg, mmtom
       use crop_data_struct_defs, only: am0cfl
+      use climate_input_mod, only: cli_mav
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer, intent(in) :: isr   ! subregion number
@@ -115,7 +116,6 @@
       include 'm1sim.inc'
       include 'c1gen.inc'
       include 'm1subr.inc'
-      include 'w1clig.inc'
       include 'c1info.inc'
 
 !     + + + FUNCTION DECLARATIONS + + +
@@ -176,8 +176,8 @@
 !     For the southern hemisphere, monthly average temperatures should start
 !     in July.1?
       do i=1,12
-          mx_air_temp(i+1) = awtmxav(i)
-          mn_air_temp(i+1) = awtmnav(i)
+          mx_air_temp(i+1) = cli_mav%tmx(i)
+          mn_air_temp(i+1) = cli_mav%tmn(i)
       end do
       mx_air_temp(1) = mx_air_temp(13)
       mx_air_temp(14) = mx_air_temp(2)

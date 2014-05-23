@@ -16,6 +16,7 @@
       use biomaterial, only: biomatter, biototal, decomp_factors
       use file_io_mod, only: luocrp1, luobio1
       use decomp_data_struct_defs, only: am0dfl
+      use climate_input_mod, only: cli_today
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer isr
@@ -29,8 +30,6 @@
       include 'main/main.inc'   ! daysim
 
 ! statements below added by Simon
-
-      include 'w1clig.inc'
 
 !     + + + LOCAL VARIABLES + + +
       integer doy, cy, idx
@@ -80,7 +79,7 @@
           end if
 
           write(luocrp1(isr),2222) daysim, doy, cy,                     & !simulation day, day of year, year
-     &    awtdmn, awtdmx, awtdav, decompfac%itcs,                       & !tmin, tmax, tavg, tf  
+     &    cli_today%tdmn, cli_today%tdmx, cli_today%tdav, decompfac%itcs,                       & !tmin, tmax, tavg, tf  
      &    decompfac%aqua, decompfac%iwcs, decompfac%iwcf, decompfac%idds, decompfac%iddf,   & !precip, wf standing, wf flat, dd standing, dd flat
      &    residue(1)%deriv%mst, residue(2)%deriv%mst, residue(3)%deriv%mst, restot%msttot,              & !mass, standing
      &    residue(1)%deriv%mf, residue(2)%deriv%mf, residue(3)%deriv%mf, restot%mftot,                  & !mass, flat

@@ -44,7 +44,6 @@
       include 'h1db1.inc'
       include 'h1scs.inc'
       include 'h1balance.inc'
-      include 'w1clig.inc'
 
       call timer(TIMHYDR,TIMSTART)      
 
@@ -76,10 +75,7 @@
      &            ahtsmx(1, isr), ahtsmn(1, isr),                       &
      &            ahrwc0(1, isr), daysim,                               &
      &            asfald(isr), asfalw(isr), aszlyt(1,isr),              &
-     &            awzdpt, awdurpt, awpeaktpt, awpeakipt,                &
-     &            awtdmxprev, awtdmn, awtdmx, awtdmnnext,               &
-     &            awtdav, awtyav, awrrh,                                &
-     &            awtdpt, aweirr, awudav, ahzwid(isr),                  &
+     &            awudav, ahzwid(isr),                  &
      &            ahzeasurf(isr),                                       &
      &            cumprecip(isr), cumrunoff(isr), cumevap(isr),         &
      &            cumtrans(isr), cumdrain(isr),                         &

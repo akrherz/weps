@@ -18,6 +18,7 @@
       use manage_data_struct_defs, only: am0tfl, lastoper
       use crop_data_struct_defs, only: am0cfl
       use decomp_data_struct_defs, only: am0dfl
+      use climate_input_mod, only: cli_today
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer, intent(in) :: sr
@@ -39,7 +40,6 @@
       include 's1sgeo.inc'
       include 's1agg.inc'
       include 's1surf.inc'
-      include 'w1clig.inc'
       include 'h1hydro.inc'
       include 'm1subr.inc'
       include 'main/main.inc'
@@ -150,11 +150,11 @@
             write (luoplt(sr),*)
         end if
 
-        write (luoplt(sr), 2080, ADVANCE="NO")                              &
+        write (luoplt(sr), 2080, ADVANCE="NO")  &
      &                    daysim, doy,                                  &
      &                    day, month, year,                             &
      &                    total, suspen, pmten,                         &
-     &                    awudmx, awadir, awzdpt, ahrwc0(12, sr),       &
+     &                    awudmx, awadir, cli_today%zdpt, ahrwc0(12, sr), &
      &                    aszrgh(sr), asargo(sr), aslrr(sr),            &
      &                    aslagm(1,sr), aseags(1,sr), asfcr(sr),        &
      &                    asmlos(sr), asflos(sr), asdblk(1,sr),         &

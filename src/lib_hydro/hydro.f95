@@ -21,15 +21,11 @@
      &                   bhlocirr, bhminirr, bm0monirr,                 &
      &                   bhmadirr, bhndayirr, bhmintirr,                &
      &                   bhzoutflow, bhzrun, bhzinf,                    &
-!     &                   bhzsno, bhtsno, bhfsnfrz, bhzsnd,              &
-     &                   bhzsno, bhtsno, bhfsnfrz,              &
+     &                   bhzsno, bhtsno, bhfsnfrz,                      &
      &                   bhzsmt, bhfice, bhrsk,                         &
      &                   bhtsmx, bhtsmn, bhrwc0,                        &
      &                   daysim, bsfald, bsfalw, bszlyt,                &
-     &                   bwzdpt, bwdurpt, bwpeaktpt, bwpeakipt,         &
-     &                   bwtdmxprev, bwtdmn, bwtdmx, bwtdmnnext,        &
-     &                   bwtdav, bwtyav, bwrrh,                         &
-     &                   bwtdpt, bweirr, bwudav, bhzwid,                &
+     &                   bwudav, bhzwid, &
      &                   bhzeasurf,                                     &
      &                   cumprecip, cumrunoff, cumevap,                 &
      &                   cumtrans, cumdrain,                            &
@@ -59,6 +55,7 @@
       use wind_mod, only: sbzdisp, sbzo, biodrag
       use hydro_data_struct_defs, only: am0hfl, hydro_derived_et
       use wepp_param_mod, only: wepp_param
+      use climate_input_mod, only: cli_tyav, cli_next, cli_today, cli_prev
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer, intent(in) :: isr   ! subregion number
@@ -87,16 +84,12 @@
       real bhmadirr
       integer bhndayirr, bhmintirr
       real bhzoutflow, bhzrun, bhzinf
-!      real bhzsno, bhtsno, bhfsnfrz, bhzsnd
       real bhzsno, bhtsno, bhfsnfrz
       real bhzsmt, bhfice(*), bhrsk(*)
       real bhtsmx(*), bhtsmn(*), bhrwc0(*)
       integer daysim
       real bsfald, bsfalw, bszlyt(*)
-      real bwzdpt, bwdurpt, bwpeaktpt, bwpeakipt
-      real bwtdmxprev, bwtdmx, bwtdmn, bwtdmnnext
-      real bwtdav, bwtyav, bwrrh
-      real bwtdpt, bweirr, bwudav, bhzwid
+      real bwudav, bhzwid
       real bhzeasurf
       real cumprecip, cumrunoff, cumevap
       real cumtrans, cumdrain
@@ -187,19 +180,6 @@
 !     bsfald   - dry soil albedo
 !     bsfalw   - wet soil albedo
 !     bszlyt   - Soil layer thickness (mm)
-!     bwzdpt   - Daily precipitation (mm)
-!     bwdurpt  - Duration of Daily precipitation (hours)
-!     bwpeaktpt - Normalized time to peak of Daily precipitation (time to peak/duration)
-!     bwpeakipt - Normalized intensity of peak Daily precipitation (peak intensity/average intensity)
-!     bwtdmxprev - previous day maximum daily air temperature (deg C)
-!     bwtdmn   - Minimum daily air temperature (deg C)
-!     bwtdmx   - Maximum daily air temperature (deg C)
-!     bwtdmnnext - Following day minimum daily air temperature (deg C)
-!     bwtdav   - Average daily air temperature (deg C)
-!     bwtyav   - Average yearly air temperature (deg C)
-!     bwrrh    - Average daily relative humidity ratio
-!     bwtdpt   - Daily dewpoint temperature (C)
-!     bweirr   - Daily global total solar radiation (MJ/m^2)
 !     bwudav   - Daily average wind speed at 10 meters (m/s)
 !     bhzwid   - Water infiltration depth (mm)
 !     bhzeasurf - accumulated surface evaporation since last complete rewetting (mm)
@@ -357,8 +337,8 @@
 !     &      ,t122,'theta'/,
 !     *  /, t16,34('-'),'mm',33('-')/1x, 100('-'))
  2080 format('# daysim doy yr  h1et%zetp  h1et%zep h1et%zptp  h1et%zea h1et%zpta bhzper&
-     & bhzirr bwzdpt  dprec bhzrun bhzinf   lswc   swc  h1et%zsnd bhzsno  c&
-     &heck cropdp rootwc rootwcap bhfwsf surfdry bwtdav vaptrans evaplim&
+     & bhzirr cli_today%zdpt  dprec bhzrun bhzinf   lswc   swc  h1et%zsnd bhzsno  c&
+     &heck cropdp rootwc rootwcap bhfwsf surfdry tdav vaptrans evaplim&
      &it st_evapr fl_evapr to_evapr')
  2090 format(1x,i5,1x,i3,1x,i4,11(1x,f6.2),2(1x,f8.2),2(1x,f6.2),       &
      &       1x,f7.3,11(1x,f6.2))
@@ -368,7 +348,7 @@
 
  3010 format('# hr daysim idoy yr bhrwc0 bhrwc0/bhrwcw(1)')
 
- 3020 format('# daysim idoy yr rn bwtdmx bwtdmn bwtdpt fld_wind rise')
+ 3020 format('# daysim idoy yr rn cli_today%tdmx cli_today%tdmn cli_today%tdpt fld_wind rise')
 
 !     + + + DATA INITIALIZATIONS + + +
 !     Calculate hour of sunrise
@@ -489,13 +469,13 @@
 
       ! run daily precipitation and irrigation through the snow filter
       ! returned value reflects how much was left behind
-      call addsnow(dprecip, dirrig, bwzdpt, bhzirr, bhlocirr,           &
-     &             bwtdmn, bwtdmx, bwtdpt, bmzele,                      &
+      call addsnow(dprecip, dirrig, cli_today%zdpt, bhzirr, bhlocirr,           &
+     &             cli_today%tdmn, cli_today%tdmx, cli_today%tdpt, bmzele,                      &
      &             bhzsno, bhtsno, bhfsnfrz, h1et%zsnd)
 
       ! Convert global to net radiation
-      rn = radnet(bcrlai,bweirr, bhzsno, h1et%zsnd, bwtdmx, bwtdmn, amalat,&
-     &                 bsfalw, bsfald, idoy, bwtdpt )
+      rn = radnet(bcrlai,cli_today%eirr, bhzsno, h1et%zsnd, cli_today%tdmx, cli_today%tdmn, amalat,&
+     &                 bsfalw, bsfald, idoy, cli_today%tdpt )
 
       ! partition radiation between canopy and surface
       ! added exponential to keep above zero for very low lai
@@ -519,7 +499,7 @@
       ! and determine snow melt (if any) or soil heat flux
       call heat( isr, layrsn, bszlyd, bszlyt, theta, thetas,            &
      &           bsfsan, bsfsil, bsfcla, bsfom, bsdblk,                 &
-     &           bwtdmn, bwtdmx, bwtyav, rad_surf, bdmres,              &
+     &           cli_today%tdmn, cli_today%tdmx, cli_tyav, rad_surf, bdmres,              &
      &           bhtsmn, bhtsmx, bhtsav, bhfice,                        &
      &           bhzsno, bhtsno, bhfsnfrz, h1et%zsnd,                      &
      &           bhzsmt, g_soil )
@@ -527,11 +507,11 @@
       ! add snowmelt to precipitation water for infiltration
       if (bhzsmt .gt. 0.0) then
           dprecip = dprecip + bhzsmt
-          durprecip = max(bwdurpt,6.0)!we have no entry for snowmelt duration yet
+          durprecip = max(cli_today%durpt,6.0)!we have no entry for snowmelt duration yet
           tptprecip = 0.5
       else
-          durprecip = bwdurpt
-          tptprecip = bwpeaktpt
+          durprecip = cli_today%durpt
+          tptprecip = cli_today%peaktpt
       endif
 
       ! replenish accumulated surface evaporation reservoir with applied suface water
@@ -556,11 +536,11 @@
 ! ***      endif
 
       ! calculate dryness ratio
-      if (bwzdpt .eq. 0.0) then
+      if (cli_today%zdpt .eq. 0.0) then
          h1et%drat = 10.0
        else
-         vlh = d1 - (d2*bwtdav)                               !h-24
-         h1et%drat = rn / (vlh * bwzdpt)
+         vlh = d1 - (d2*cli_today%tdav)                               !h-24
+         h1et%drat = rn / (vlh * cli_today%zdpt)
       end if
 
       ! biodrag used for roughness length and below for surface evaporation reduction
@@ -584,8 +564,8 @@
 
 !     Calculate potential evapotranspiration using subroutine et
       g_soil = 0.0 ! test
-      call et(rn, g_soil, fld_wind, bmzele, bwtdmx, bwtdmn, bwtdav,     &
-     &        bwtdpt, bwrrh, h1et%zetp, loc_met_height, loc_zov, loc_zd)
+      call et(rn, g_soil, fld_wind, bmzele, cli_today%tdmx, cli_today%tdmn, cli_today%tdav,     &
+     &        cli_today%tdpt, h1et%zetp, loc_met_height, loc_zov, loc_zd)
 
       if (  h1et%zetp  .le.  0.0  ) then
          h1et%zep = 0.0
@@ -643,7 +623,7 @@
          call darcy( isr, daysim, numeq, bszlyt,bszlyd,bsdblk,          &
      &       theta, thetadmx, thetas, thetaf, thetaw, thetar,           &
      &       bhrsk, bheaep, bh0cb, bsfcla, bsfom, bhtsav,               &
-     &       bwtdmxprev, bwtdmn, bwtdmx, bwtdmnnext, bwtdpt,            &
+     &       cli_prev%tdmx, cli_today%tdmn, cli_today%tdmx, cli_next%tdmn, cli_today%tdpt, &
      &       rise, daylength, h1et%zep, dprecip, durprecip, tptprecip,       &
      &       dirrig, bhdurirr, bhlocirr, bhzoutflow,                    &
      &       bbdstm, bbffcv, bslrro, bslrr, bmzele, bhrwc0,             &
@@ -659,7 +639,7 @@
 
 !      if( isr .eq. 1 .and. daysim .eq. 7979 ) then
 !        write(*,*) isr, daysim
-!        write(*,*) dprecip, durprecip, tptprecip, bwpeakipt,        &
+!        write(*,*) dprecip, durprecip, tptprecip, cli_today%peakipt,        &
 !     &                   dirrig, bhdurirr, bhlocirr, bhzoutflow,        &
 !     &                   bhzsno, bslrr, bmrslp, bsfcr
 !        write(*,*) 'bsfsan', (bsfsan(l), l=1,layrsn)
@@ -681,7 +661,7 @@
 
          call waterbal(layrsn, thetas, thetes, thetaf, thetaw,          &
      &                   bszlyt, bszlyd, bhrsk,                         &
-     &                   dprecip, durprecip, tptprecip, bwpeakipt,        &
+     &                   dprecip, durprecip, tptprecip, cli_today%peakipt,        &
      &                   dirrig, bhdurirr, bhlocirr, bhzoutflow,        &
      &                   bhzsno, bslrr, bmrslp, bsfsan, bsfcla,         &
      &                   bsfcr, bsvroc, bsdblk, bsfcec,                 &
@@ -693,7 +673,7 @@
 
 !      if( isr .eq. 1 .and. daysim .eq. 7979 ) then
 !        write(*,*) isr, daysim
-!        write(*,*) dprecip, durprecip, tptprecip, bwpeakipt,        &
+!        write(*,*) dprecip, durprecip, tptprecip, cli_today%peakipt,        &
 !     &                   dirrig, bhdurirr, bhlocirr, bhzoutflow,        &
 !     &                   bhzsno, bslrr, bmrslp, bsfcr
 !        write(*,*) 'bsfsan', (bsfsan(l), l=1,layrsn)
@@ -756,14 +736,14 @@
 
       ! Adjust energy balance for changes in water content
 !      call heat( layrsn, bszlyd, theta, bsfcla, bsdblk,                 &
-!     &           bwtdmn, bwtdmx, bhtsmx, bhtsmn, bszlyt)
+!     &           cli_today%tdmn, cli_today%tdmx, bhtsmx, bhtsmn, bszlyt)
 
       ! update accumulated surface evaporation variable
       bhzeasurf = bhzeasurf + h1et%zea
 
 !     update cumulative variables
       swc = dot_product(theta(1:layrsn),bszlyt(1:layrsn))
-      cumprecip = cumprecip + bhzirr + bwzdpt
+      cumprecip = cumprecip + bhzirr + cli_today%zdpt
       cumrunoff = cumrunoff + bhzrun
       cumevap = cumevap + h1et%zea
       cumtrans = cumtrans + h1et%zpta
@@ -773,10 +753,10 @@
       presday = daysim
       
 !     Added for WEPP bookeeping      
-      wp%totalPrecip = wp%totalPrecip + bwzdpt
+      wp%totalPrecip = wp%totalPrecip + cli_today%zdpt
       wp%totalRunoff = wp%totalRunoff + bhzrun
       
-      if (bwzdpt.gt.0) then
+      if (cli_today%zdpt.gt.0) then
          wp%precipEvents = wp%precipEvents + 1
       endif
       
@@ -797,15 +777,15 @@
              write(luohydro(isr),*)
              write(luohydro(isr),*)
          end if
-         accheck = lswc - swc + lsno - bhzsno + bhzirr + bwzdpt         &
+         accheck = lswc - swc + lsno - bhzsno + bhzirr + cli_today%zdpt         &
      &           - h1et%zea - h1et%zpta - bhzper - bhzrun
 ! 2090 format(1x,i5,1x,i3,1x,i4,11(1x,f6.2),2(1x,f8.2),2(1x,f6.2),1x,f7.3,11(1x,f6.2))
          write(luohydro(isr),2090) daysim,idoy,yr,h1et%zetp, h1et%zep, h1et%zptp,&
-     &       h1et%zea, h1et%zpta, bhzper, bhzirr, bwzdpt, dprecip, bhzrun,    &
+     &       h1et%zea, h1et%zpta, bhzper, bhzirr, cli_today%zdpt, dprecip, bhzrun,    &
      &       bhzinf, lswc, swc, h1et%zsnd, bhzsno, accheck, cropdp,        &
      &      plant_wat_t(0.0,cropdp*mtomm,theta(1),thetaw,bszlyd,layrsn),&
      &       plant_wat_t(0.0,cropdp*mtomm,thetaf,thetaw,bszlyd,layrsn), &
-     &       bhfwsf, bhrwc0(12)/bhrwcw(1), bwtdav, vaptrans, evaplimit, &
+     &       bhfwsf, bhrwc0(12)/bhrwcw(1), cli_today%tdav, vaptrans, evaplimit, &
      &       standevapredu, bbevapredu, totalevapredu
 
          ! print out hydro values by layer (profile view)
@@ -824,8 +804,8 @@
          end do
 
          ! print out daily weather as used in hydro
-         write(luoweather(isr),*) daysim, idoy, yr, rn, bwtdmx, bwtdmn,      &
-     &                       bwtdpt, fld_wind, rise
+         write(luoweather(isr),*) daysim, idoy, yr, rn, cli_today%tdmx, cli_today%tdmn,      &
+     &                       cli_today%tdpt, fld_wind, rise
       end if
 
       return

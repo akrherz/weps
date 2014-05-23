@@ -21,7 +21,6 @@
       include 'hydro/htheta.inc'
 
       include 'main/main.inc'
-      include 'w1clig.inc'
       include 'h1scs.inc'
 
       include 's1dbh.inc'
@@ -88,8 +87,6 @@
       ahndayirr(isr) = 0
       ahmintirr(isr) = 0
 
-      ! first call to hdbug, finds this uninitialized, It is set in hydro/et
-      awrrh = 0.0
       ahzrun(isr) = 0.0
       ahzsmt(isr) = 0.0
       ah0cng(isr) = 0.0

@@ -30,7 +30,6 @@
       include 'h1hydro.inc'
       include 'h1temp.inc'
       include 'h1db1.inc'
-      include 'w1clig.inc'
 
       call timer(TIMSOIL,TIMSTART)      
 
@@ -56,8 +55,7 @@
      &                 ask4d(1,isr), aslmin(1,isr), aslmax(1,isr),      &
      &                 biotot%ffcvtot, biotot%fscvtot,                  &
      &                 asfcce(1,isr), asfcec(1,isr),                    &
-     &                 ahzinf(isr), ahzwid(isr), awzdpt, awtdav         &
-     &                )
+     &                 ahzinf(isr), ahzwid(isr))
             if (am0sdb(isr) .eq. 1) then
                call sdbug(isr, nslay(isr), croptot, biotot)
             end if

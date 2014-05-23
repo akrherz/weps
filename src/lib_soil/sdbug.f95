@@ -21,6 +21,7 @@
       use file_io_mod, only: luosdb
       use biomaterial, only: biototal
       use erosion_data_struct_defs, only: awadir, awhrmx, awudmx, awudmn
+      use climate_input_mod, only: cli_today
 
 !     + + + GLOBAL COMMON BLOCKS + + +
       include 'p1werm.inc'
@@ -35,7 +36,6 @@
       include 's1dbc.inc'
       include 's1sgeo.inc'
       include 's1psd.inc'
-      include 'w1clig.inc'
       include 'h1hydro.inc'
       include 'h1scs.inc'
       include 'h1db1.inc'
@@ -86,8 +86,8 @@
      &    Subregion No. ',i3)
  2031 format ('**',1x,2(i2,'/'),i4,' daysim=',i4,'   Before call to SOIL&
      &    Subregion No. ',i3)
- 2032 format (' awzdpt  awtdmx  awtdmn  aweirr  awudmx  awudmn ',       &
-     &        ' awtdpt  awadir  awhrmx  amzele ')
+ 2032 format (' cli_today%zdpt  cli_today%tdmx  cli_today%tdmn  cli_today%eirr  awudmx  awudmn ', &
+     &        ' cli_today%tdpt  awadir  awhrmx  amzele ')
  2038 format (f7.2,9f8.2)
  2050 format ('amrslp(',i2,') croptot%ftcvtot(',i2,') croptot%rlaitot(',&
      &  i2,')',                                                         &
@@ -119,8 +119,8 @@
          write(luosdb(isr),2031) cd,cm,cy,daysim,isr
       end if
       write(luosdb(isr),2032)
-      write(luosdb(isr),2038) awzdpt,awtdmx,awtdmn,aweirr,awudmx,awudmn,&
-     &               awtdpt,awadir,awhrmx,amzele
+      write(luosdb(isr),2038) cli_today%zdpt,cli_today%tdmx,cli_today%tdmn,cli_today%eirr,awudmx,awudmn,&
+     &               cli_today%tdpt,awadir,awhrmx,amzele
 
       write(luosdb(isr),2050) isr,isr,isr,isr,isr,isr,isr
 

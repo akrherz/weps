@@ -12,6 +12,7 @@
 
       use biomaterial, only: biomatter, biototal
       use erosion_data_struct_defs, only: awdair, awadir, awhrmx, awudmx, awudmn, awudav, subday, ntstep
+      use climate_input_mod, only: cli_today, cli_mav, cli_tyav
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer, intent(in) :: day
@@ -39,7 +40,6 @@
       include 'c1gen.inc'
       include 'c1db1.inc'
       include 'c1db2.inc'
-      include 'w1clig.inc'
       include 'w1pavg.inc'
       include 'h1hydro.inc'
       include 'h1scs.inc'
@@ -248,42 +248,32 @@
       if (dmpflg) write(*,*) 'w1clig'
 !      
 ! wjr,  test values based on definition
-      if (awrrh.lt.0.0.or.awrrh.gt.100.0)                               &
-     &  write(*,*) 'day ',day,' awrrh ', awrrh
+      if (cli_today%tdav.lt.-20.0.or.cli_today%tdav.gt.50.0)     &
+     &  write(*,*) 'day ',day,' cli_today%tdav ', cli_today%tdav
 !
 ! wjr,  test values based on definition
-      if (awtdav.lt.-20.0.or.awtdav.gt.50.0)                            &
-     &  write(*,*) 'day ',day,' awtdav ', awtdav
+      if (cli_tyav.lt.0.0.or.cli_tyav.gt.30.0)      &
+     &  write(*,*) 'day ',day,' cli_tyav ', cli_tyav
 !
 ! wjr,  test values based on definition
-      if (awtyav.lt.0.0.or.awtyav.gt.30.0)                              &
-     &  write(*,*) 'day ',day,' awtyav ', awtyav
-!
-      do 30 idx=1,12
-! wjr,  test values based on definition
-      if (awtmav(idx).lt.-10.0.or.awtmav(idx).gt.40.0)                  &
-     &  write(*,*) 'day ',day,' awtmav(',idx,') ', awtmav(idx)
-  30  continue
+      if (cli_today%tdmx.lt.0.0.or.cli_today%tdmx.gt.50.0)      &
+     &  write(*,*) 'day ',day,' cli_today%tdmx ', cli_today%tdmx
 !
 ! wjr,  test values based on definition
-      if (awtdmx.lt.0.0.or.awtdmx.gt.50.0)                              &
-     &  write(*,*) 'day ',day,' awtdmx ', awtdmx
+      if (cli_today%tdmn.lt.-20.0.or.cli_today%tdmn.gt.40.0)    &
+     &  write(*,*) 'day ',day,' cli_today%tdmn ', cli_today%tdmn
 !
 ! wjr,  test values based on definition
-      if (awtdmn.lt.-20.0.or.awtdmn.gt.40.0)                            &
-     &  write(*,*) 'day ',day,' awtdmn ', awtdmn
+      if (cli_today%tdpt.lt.0.0.or.cli_today%tdpt.gt.40.0)      &
+     &  write(*,*) 'day ',day,' cli_today%tdpt ', cli_today%tdpt
 !
 ! wjr,  test values based on definition
-      if (awtdpt.lt.0.0.or.awtdpt.gt.40.0)                              &
-     &  write(*,*) 'day ',day,' awtdpt ', awtdpt
+      if (cli_today%zdpt.lt.0.0.or.cli_today%zdpt.gt.1000.0)    &
+     &  write(*,*) 'day ',day,' cli_today%zdpt ', cli_today%zdpt
 !
 ! wjr,  test values based on definition
-      if (awzdpt.lt.0.0.or.awzdpt.gt.1000.0)                            &
-     &  write(*,*) 'day ',day,' awzdpt ', awzdpt
-!
-! wjr,  test values based on definition
-      if (aweirr.lt.0.0.or.aweirr.gt.tstmax)                            &
-     &  write(*,*) 'day ',day,' aweirr ', aweirr
+      if (cli_today%eirr.lt.0.0.or.cli_today%eirr.gt.tstmax)    &
+     &  write(*,*) 'day ',day,' cli_today%eirr ', cli_today%eirr
 !
 ! s1psd
 !

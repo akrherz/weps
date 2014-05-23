@@ -22,6 +22,7 @@
       use biomaterial, only: biototal, biomatter
       use erosion_data_struct_defs, only: awadir, awhrmx, awudmx, awudmn
       use hydro_data_struct_defs, only: hydro_derived_et
+      use climate_input_mod, only: cli_today
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer isr                   
@@ -45,7 +46,6 @@
       include 's1dbh.inc'
       include 's1dbc.inc'
       include 's1sgeo.inc'
-      include 'w1clig.inc'
       include 'h1hydro.inc'
       include 'h1scs.inc'
       include 'h1db1.inc'
@@ -95,8 +95,8 @@
      &bregion No. ',i3)
  2031 format ('**',1x,2(i2,'/'),i4,'    Before call to HYDRO          Su&
      &bregion No. ',i3)
- 2032 format (' awzdpt  awtdmx  awtdmn  aweirr  awudmx  awudmn ',       &
-     &        ' awtdpt  awadir  awhrmx   awrrh ')
+ 2032 format (' cli_today%zdpt  cli_today%tdmx  cli_today%tdmn  cli_today%eirr  awudmx  awudmn ',       &
+     &        ' cli_today%tdpt  awadir  awhrmx ')
  2038 format (f7.2,9f8.2)
 ! 2045 format ('Subregion Number',i3)
  2050 format ('amrslp(',i2,') crop%deriv%ftcv(',i2,') crop%deriv%rlai(',i2,')',           &
@@ -129,8 +129,8 @@
          write(luohdb(isr),2031) cd,cm,cy,isr
       end if
       write(luohdb(isr),2032)
-      write(luohdb(isr),2038) awzdpt, awtdmx, awtdmn, aweirr, awudmx,   &
-                    awudmn, awtdpt, awadir, awhrmx, awrrh
+      write(luohdb(isr),2038) cli_today%zdpt, cli_today%tdmx, cli_today%tdmn, cli_today%eirr, awudmx,   &
+                    awudmn, cli_today%tdpt, awadir, awhrmx
 
 !      write(luohdb(isr),2045) isr
 

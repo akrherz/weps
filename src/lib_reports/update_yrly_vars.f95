@@ -10,6 +10,7 @@ SUBROUTINE update_yrly_update_vars(isr, yrly_update, yrot_update, yr_update, cel
     use erosion_data_struct_defs, only: cellsurfacestate, awdair, awudmx, subday, ntstep 
     use grid_mod, only: imax, jmax, sim_area
     use hydro_data_struct_defs, only: hydro_derived_et
+    use climate_input_mod, only: cli_today
 
     IMPLICIT NONE
 
@@ -20,7 +21,6 @@ SUBROUTINE update_yrly_update_vars(isr, yrly_update, yrot_update, yr_update, cel
     type(cellsurfacestate), dimension(0:,0:), intent(in) :: cellstate  ! egt, egtcs, egtss, egt10
     type(hydro_derived_et), intent(in) :: h1et
 
-    include "w1clig.inc"        ! precip
     include "p1werm.inc"        ! mntime (maximum # of time steps/day)
 
     INTEGER :: i,j              ! local loop variables
@@ -60,12 +60,12 @@ SUBROUTINE update_yrly_update_vars(isr, yrly_update, yrot_update, yr_update, cel
     gdpt_area = sim_area/( (imax-1) * (jmax-1) )   !Area of single grid cell
 
     !variables summed for period
-    yrly_update(Precipi)%val = yrly_update(Precipi)%val + awzdpt
+    yrly_update(Precipi)%val = yrly_update(Precipi)%val + cli_today%zdpt
     yrly_update(Precipi)%cnt = yrly_update(Precipi)%cnt + 1
-    yrot_update(Precipi)%val = yrot_update(Precipi)%val + awzdpt
+    yrot_update(Precipi)%val = yrot_update(Precipi)%val + cli_today%zdpt
     yrot_update(Precipi)%cnt = yrot_update(Precipi)%cnt + 1
     ! For a year by year report of yearly (and rotation year) averaged variables
-    yr_update(Precipi)%val = yr_update(Precipi)%val + awzdpt
+    yr_update(Precipi)%val = yr_update(Precipi)%val + cli_today%zdpt
     yr_update(Precipi)%cnt = yr_update(Precipi)%cnt + 1
 
 ! ------------------------------------------------------------------------------------------------------------------
