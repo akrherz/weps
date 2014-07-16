@@ -41,7 +41,7 @@ module sweep_io_mod
                                           ntstep, awadir, awudmx, subday, am0eif
       use p1erode_def, only: SLRR_MIN, SLRR_MAX, WZZO_MIN, WZZO_MAX
       use barriers_mod, only: create_barrier, barrier
-      use grid_mod, only: amasim, amxsim
+      use grid_mod, only: amasim, amxsim, xgdpt, ygdpt
       use sae_in_out_mod, only: saeinp
 
       ! +++ ARGUMENT DECLARATIONS +++
@@ -110,6 +110,10 @@ module sweep_io_mod
       ! Simulation region orientation angle
       line = getline(i_unit)
       read (line,*) amasim
+
+      ! Number of grid points in X and Y directions
+      line = getline(i_unit)
+      read (line,*) xgdpt, ygdpt
 
       ! +++ ACCOUNTING REGIONS +++
 

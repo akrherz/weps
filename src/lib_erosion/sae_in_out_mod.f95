@@ -33,7 +33,7 @@ module sae_in_out_mod
 !     + + + Modules Used + + +
       use datetime_mod, only: caldat
       use file_io_mod, only: fopenk, makenamnum
-      use grid_mod, only: amxsim, amasim
+      use grid_mod, only: amxsim, amasim, xgdpt, ygdpt
       use subregions_mod
       use barriers_mod, only: barrier
       use erosion_data_struct_defs, only: subregionsurfacestate, awzypt, awdair, anemht, awzzo, wzoflg, awadir, subday, ntstep
@@ -132,6 +132,16 @@ module sae_in_out_mod
       '#',/, &
       '#     amasim, R, Simulation Region orientation angle (degrees from North)')
       write(luo_saeinp,*) amasim
+
+      write(luo_saeinp,2107)
+ 2107 format( &
+      '#',/, &
+      '# +++ NUMBER OF GRID POINTS +++',/, &
+      '#',/, &
+      '#     xgdpt, ygdpt, I, Number of grid points in simulation region x and y directions',/, &
+      '#                      A value of 0 for both values uses the default internal grid.',/, &
+      '#                      A value of 0 for only one generates and error.')
+      write(luo_saeinp,*) xgdpt, ygdpt
 
       write(luo_saeinp,2110)
  2110 format('#',/, &

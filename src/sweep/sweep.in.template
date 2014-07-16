@@ -63,6 +63,12 @@ Version:   100 multiple subregions
 #     clockwise is positive with 0=north
  0.0
 #
+# +++ NUMBER OF GRID POINTS +++
+#
+#     xgdpt, ygdpt, I, Number of grid points in simulation region x and y directions
+#                      A value of 0 for both values uses the default internal grid.
+#                      A value of 0 for only one generates and error.
+ 0 0
 #
 # +++ ACCOUNTING REGIONS +++
 #

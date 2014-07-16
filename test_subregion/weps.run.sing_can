@@ -53,6 +53,8 @@ none
 0.0  0.0
 #    RFD-XLength(meters)  RFD-YLength(meters)
 183 183
+#   RFD-XGrid(integer) RFD-YGrid(integer)  Grid resolution
+0 0
 #   RFD-Scales(place holder line - needed for older versions of WEPS)
 5.5 5.5
 #

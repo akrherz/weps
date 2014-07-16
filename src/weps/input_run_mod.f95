@@ -20,7 +20,7 @@ contains
       use file_io_mod, only: fopenk, luicli, luiwin, luiwsd, luolog
       use erosion_data_struct_defs, only: subday, ntstep, am0efl
       use barriers_mod, only: create_barrier, barrier
-      use grid_mod, only: amasim, amxsim, sim_area
+      use grid_mod, only: amasim, amxsim, sim_area, xgdpt, ygdpt
       use hydro_data_struct_defs, only: am0hfl, am0hdb
       use soil_data_struct_defs, only: am0sfl, am0sdb
       use manage_data_struct_defs, only: am0tfl, am0tdb
@@ -404,8 +404,8 @@ contains
             ! deprecated line
             ! read (line,*,err=80) erosrpt
          else
-            ! These values are scaling factors for interface, not used in WEPS
-            read (line,*,err=80) sclsim, sclbar
+            ! the simulation grid resolution in x and y directions
+            read (line,*,err=80) xgdpt, ygdpt
          end if
 
       case (20)
@@ -414,14 +414,8 @@ contains
             ! files no longer opened here
             ! if (am0tfl .eq. 1) call fopenk(15, rootp(1:len_trim(rootp)) // 'manage.out', 'unknown')
          else
-            read (line,*,err=80) nacctr    ! must be at least 1
-            ! set counter iar for reading in next lines
-            iar = 1
-            ! create array of accounting region polygons
-            allocate(acct_poly(nacctr), stat = alloc_stat)
-            if( alloc_stat .gt. 0 ) then
-               Write(*,*) 'ERROR: memory alloc., accounting region polygons'
-            end if
+            ! These values are scaling factors for interface, not used in WEPS
+            read (line,*,err=80) sclsim, sclbar
          end if
 
       case (21)
@@ -433,6 +427,20 @@ contains
             ! line = line(1:len_trim(line)) // ' 0'
             read (line,*,err=80) am0hdb(isr),am0sdb(isr),am0tdb(isr), am0cdb(isr),am0ddb(isr)
          else
+            read (line,*,err=80) nacctr    ! must be at least 1
+            ! set counter iar for reading in next lines
+            iar = 1
+            ! create array of accounting region polygons
+            allocate(acct_poly(nacctr), stat = alloc_stat)
+            if( alloc_stat .gt. 0 ) then
+               Write(*,*) 'ERROR: memory alloc., accounting region polygons'
+            end if
+         end if
+
+      case (22)
+         if( old_run_file ) then
+            read (line,*,err=80) amasim
+         else
             ! read accounting region polygon point count
             read (line,*,err=80) poly_np
             ! create polygon point storage
@@ -441,9 +449,9 @@ contains
             ipol = 1
          end if
 
-      case (22)
+      case (23)
          if( old_run_file ) then
-            read (line,*,err=80) amasim
+            read (line,*,err=80) amxsim(1)%x, amxsim(1)%y
          else
             ! read point pair
             read (line,*,err=80) acct_poly(iar)%points(ipol)%x, acct_poly(iar)%points(ipol)%y
@@ -463,9 +471,13 @@ contains
             end if
          end if
 
-      case (23)
+!     read flags to print submodel output
+      case (24)
          if( old_run_file ) then
-            read (line,*,err=80) amxsim(1)%x, amxsim(1)%y
+            read (line,*,err=80) amxsim(2)%x, amxsim(2)%y
+            ! compute the simulation area
+            sim_area = (amxsim(2)%x - amxsim(1)%x) * (amxsim(2)%y - amxsim(1)%y)
+            write(6,*) "Simulation area (m^2)", sim_area
          else
             ! read Subregion count
             read (line,*,err=80) nsubr
@@ -509,24 +521,13 @@ contains
             end if
          end if
 
-!     read flags to print submodel output
-      case (24)
-         if( old_run_file ) then
-            read (line,*,err=80) amxsim(2)%x, amxsim(2)%y
-            ! compute the simulation area
-            sim_area = (amxsim(2)%x - amxsim(1)%x) * (amxsim(2)%y - amxsim(1)%y)
-            write(6,*) "Simulation area (m^2)", sim_area
-         else
-            read (line,*,err=80) am0hfl(isr),am0sfl(isr),am0tfl(isr), am0cfl(isr),am0dfl(isr)
-         end if
-
       case (25)
          if( old_run_file ) then
             ! These values are scaling factors for interface, not used in WEPS
             read (line,*,err=80) sclsim, sclbar
          else
+            read (line,*,err=80) am0hfl(isr),am0sfl(isr),am0tfl(isr), am0cfl(isr),am0dfl(isr)
             ! debug flag line.
-            read (line,*,err=80) am0hdb(isr),am0sdb(isr),am0tdb(isr), am0cdb(isr),am0ddb(isr)
          end if
 
       case (26)
@@ -540,12 +541,7 @@ contains
                Write(*,*) 'ERROR: memory alloc., accounting region polygons'
             end if
          else
-            ! read subregion polygon point count
-            read (line,*,err=80) poly_np
-            ! create polygon point storage
-            subr_poly(isr) = create_polygon(poly_np)
-            ! set counter for reading each point pair
-            ipol = 1
+            read (line,*,err=80) am0hdb(isr),am0sdb(isr),am0tdb(isr), am0cdb(isr),am0ddb(isr)
          end if
 
       case (27)
@@ -558,17 +554,12 @@ contains
             ipol = 1
             read (line,*,err=80) acct_poly(iar)%points(ipol)%x, acct_poly(iar)%points(ipol)%y
          else
-            ! read point pair
-            read (line,*,err=80) subr_poly(isr)%points(ipol)%x, subr_poly(isr)%points(ipol)%y
-            ! read next point pair
-            ipol = ipol + 1
-            if( ipol .le. poly_np ) then
-                ! read another point pair
-                typidx = typidx - 1
-            else
-                ! polygon complete
-                call set_area_polygon(subr_poly(isr))
-            end if
+            ! read subregion polygon point count
+            read (line,*,err=80) poly_np
+            ! create polygon point storage
+            subr_poly(isr) = create_polygon(poly_np)
+            ! set counter for reading each point pair
+            ipol = 1
          end if
 
       case (28)
@@ -591,12 +582,17 @@ contains
             if (iar.lt.nacctr) typidx = typidx - 2
             iar = iar + 1
          else
-            !        The new "versioned" IFC files contain a slope value
-            !        which will be used if this value is set negative, 
-            !        ie. not entered. It is now the only way to set a 
-            !        non default slope when using the older "non-versioned"
-            !        IFC files.   
-            read (line,*,err=80) amrslp(isr)        ! weps.run file has slope gradient (m/m)
+            ! read point pair
+            read (line,*,err=80) subr_poly(isr)%points(ipol)%x, subr_poly(isr)%points(ipol)%y
+            ! read next point pair
+            ipol = ipol + 1
+            if( ipol .le. poly_np ) then
+                ! read another point pair
+                typidx = typidx - 1
+            else
+                ! polygon complete
+                call set_area_polygon(subr_poly(isr))
+            end if
          end if
 
       case (29)
@@ -609,8 +605,12 @@ contains
             ! create polygon container for the single subregion
             subr_poly(isr) = create_polygon(poly_np)
          else
-            read (line,*,err=80) SoilRockFragments(isr)
-            write(6,*) 'SoilRockFragments = ', SoilRockFragments(isr)
+            !        The new "versioned" IFC files contain a slope value
+            !        which will be used if this value is set negative, 
+            !        ie. not entered. It is now the only way to set a 
+            !        non default slope when using the older "non-versioned"
+            !        IFC files.   
+            read (line,*,err=80) amrslp(isr)        ! weps.run file has slope gradient (m/m)
          end if
 
       case (30)
@@ -619,8 +619,8 @@ contains
             ipol = 1
             read (line,*,err=80) subr_poly(isr)%points(ipol)%x, subr_poly(isr)%points(ipol)%y
          else
-            ! read in initial field conditions file name
-            sinfil(isr) = rootp(1:len_trim(rootp)) // line
+            read (line,*,err=80) SoilRockFragments(isr)
+            write(6,*) 'SoilRockFragments = ', SoilRockFragments(isr)
          end if
 
       case (31)
@@ -640,8 +640,8 @@ contains
             subr_poly(isr)%points(ipol)%x = subr_poly(isr)%points(1)%x
             subr_poly(isr)%points(ipol)%y = subr_poly(isr)%points(1)%y
          else
-            ! read in management file name
-            tinfil(isr) = rootp(1:len_trim(rootp)) // line
+            ! read in initial field conditions file name
+            sinfil(isr) = rootp(1:len_trim(rootp)) // line
          end if
 
       case (32)
@@ -656,15 +656,8 @@ contains
             ! isr = isr + 1
             ! if (isr.le.nsubr) typidx=typidx-3
          else
-            read (line,*,err=80) WaterErosion(isr)
-            write(*,*) "WaterErosion",WaterErosion(isr)
-
-            ! this is last item in subregion group
-            ! index to next subregion or continue on
-            isr = isr + 1
-            if (isr .le. nsubr) then
-               typidx = typidx - 9
-            end if
+            ! read in management file name
+            tinfil(isr) = rootp(1:len_trim(rootp)) // line
          end if
 
       case (33)
@@ -679,6 +672,29 @@ contains
                if( alloc_stat .gt. 0 ) then
                   write(*,*) 'ERROR: memory alloc., barriers'
                end if
+            end if
+         else
+            read (line,*,err=80) WaterErosion(isr)
+            write(*,*) "WaterErosion",WaterErosion(isr)
+
+            ! this is last item in subregion group
+            ! index to next subregion or continue on
+            isr = isr + 1
+            if (isr .le. nsubr) then
+               typidx = typidx - 9
+            end if
+         end if
+
+      case (34)
+         if( old_run_file ) then
+            if( nbr .ge. 1 ) then
+               ! number of points in barrier polyline
+               poly_np = 2
+               ! create storage for point and barrier data
+               barrier(ibr) = create_barrier(poly_np)
+               ! read first point pair
+               ipol = 1
+               read (line,*,err=80) barrier(ibr)%points(ipol)%x, barrier(ibr)%points(ipol)%y
             end if
          else
             !  These barriers as entered are consdered to be thin, having no real
@@ -710,15 +726,11 @@ contains
             end if
          end if
 
-      case (34)
+      case (35)
          if( old_run_file ) then
             if( nbr .ge. 1 ) then
-               ! number of points in barrier polyline
-               poly_np = 2
-               ! create storage for point and barrier data
-               barrier(ibr) = create_barrier(poly_np)
-               ! read first point pair
-               ipol = 1
+               ! read second point pair
+               ipol = 2
                read (line,*,err=80) barrier(ibr)%points(ipol)%x, barrier(ibr)%points(ipol)%y
             end if
          else
@@ -730,31 +742,14 @@ contains
             ipol = 1
          end if
 
-      case (35)
-         if( old_run_file ) then
-            if( nbr .ge. 1 ) then
-               ! read second point pair
-               ipol = 2
-               read (line,*,err=80) barrier(ibr)%points(ipol)%x, barrier(ibr)%points(ipol)%y
-            end if
-         else
-            ! read point pair
-            read (line,*,err=80) barrier(ibr)%points(ipol)%x, barrier(ibr)%points(ipol)%y
-         end if
-
       case (36)
          if( old_run_file ) then
             if( nbr .ge. 1 ) then
                read (line,*,err=80) barrier(ibr)%amzbt
             end if
          else
-            ! barrier height
-            read (line,*,err=80) barrier(ibr)%param(ipol)%amzbr
-            if( barrier(ibr)%param(ipol)%amzbr .le. 0.0 ) then
-               write(*,*) 'ERROR: Barrier height must be > 0'
-               write(*,FMT='(2(i0))') 'Barrier #: ', ibr, 'Point #: ', ipol
-               call exit(37)
-            end if
+            ! read point pair
+            read (line,*,err=80) barrier(ibr)%points(ipol)%x, barrier(ibr)%points(ipol)%y
          end if
 
       case (37)
@@ -773,8 +768,13 @@ contains
                barrier(ibr)%param(ipol)%amzbr = barrier(ibr)%param(1)%amzbr
             end if
          else
-            ! barrier width
-            read (line,*,err=80) barrier(ibr)%param(ipol)%amxbrw
+            ! barrier height
+            read (line,*,err=80) barrier(ibr)%param(ipol)%amzbr
+            if( barrier(ibr)%param(ipol)%amzbr .le. 0.0 ) then
+               write(*,*) 'ERROR: Barrier height must be > 0'
+               write(*,FMT='(2(i0))') 'Barrier #: ', ibr, 'Point #: ', ipol
+               call exit(37)
+            end if
          end if
 
       case (38)
@@ -788,14 +788,8 @@ contains
                barrier(ibr)%param(ipol)%amxbrw = barrier(ibr)%param(1)%amxbrw
             end if
          else
-            ! barrier porosity
-            read (line,*,err=80) barrier(ibr)%param(ipol)%ampbr
-            ! read next group of point and barrier data
-            ipol = ipol + 1
-            if( ipol .le. poly_np ) then
-                ! read another group of point and barrier data
-                typidx = typidx - 4
-            end if
+            ! barrier width
+            read (line,*,err=80) barrier(ibr)%param(ipol)%amxbrw
          end if
 
       case (39)
@@ -808,45 +802,67 @@ contains
                ipol = 2
                barrier(ibr)%param(ipol)%ampbr = barrier(ibr)%param(1)%ampbr
             end if
+            ibr = ibr + 1
+            if (ibr.le.nbr) then
+               ! read in next barrier
+               typidx=typidx-6
+            end if
          else
-            ! barrier type character string
-            read (line,*,err=80) barrier(ibr)%amzbt
-            ! increment for next barrier
-         end if
-         ibr = ibr + 1
-         if (ibr.le.nbr) then
-             ! read in next barrier
-             typidx=typidx-6
+            ! barrier porosity
+            read (line,*,err=80) barrier(ibr)%param(ipol)%ampbr
+            ! read next group of point and barrier data
+            ipol = ipol + 1
+            if( ipol .le. poly_np ) then
+                ! read another group of point and barrier data
+                typidx = typidx - 4
+            end if
          end if
 
       case (40)
-         ! this does nothing but skip the line for shape name
+         if( old_run_file ) then
+           ! this does nothing but skip the line for shape name
+         else
+           ! barrier type character string
+            read (line,*,err=80) barrier(ibr)%amzbt
+            ! increment for next barrier
+            ibr = ibr + 1
+            if (ibr.le.nbr) then
+               ! read in next barrier
+               typidx=typidx-6
+            end if
+         end if
 
       case (41)
-         ! this does nothing but skip the line for shape radius
          if( old_run_file ) then
-            ! set subregion counter for next line
-            isr = 1
+            ! this does nothing but skip the line for shape radius
+         else
+             ! this does nothing but skip the line for shape name
          end if
 
       case (42)
-        read (line,*,err=80) WaterErosion(isr)
-        isr = isr + 1
-        if (isr.le.nsubr) typidx=typidx-1
-        !!!! I don't think this works as intended - LEW
-        ! will only work if isr .le. 2 not .gt. 2
-        ! set subregion counter for next line
-        isr = 1
+         if( old_run_file ) then
+            read (line,*,err=80) WaterErosion(isr)
+            isr = isr + 1
+            if (isr.le.nsubr) typidx=typidx-1
+            !!!! I don't think this works as intended - LEW
+            ! will only work if isr .le. 2 not .gt. 2
+            ! set subregion counter for next line
+            isr = 1
+         else
+            ! this does nothing but skip the line for shape radius
+         end if
 
       case (43)
-        read (line,*,err=80) SoilRockFragments(isr)
-        write(6,*) 'SoilRockFragments = ', SoilRockFragments(isr)
-        isr = isr + 1
-        if (isr.le.nsubr) typidx=typidx-1
-        !!!! I don't think this works as intended - LEW
-        ! will only work if isr .le. 2 not .gt. 2
-        ! set subregion counter for next line
-        isr = 1
+         if( old_run_file ) then
+            read (line,*,err=80) SoilRockFragments(isr)
+            write(6,*) 'SoilRockFragments = ', SoilRockFragments(isr)
+            isr = isr + 1
+            if (isr.le.nsubr) typidx=typidx-1
+            !!!! I don't think this works as intended - LEW
+            ! will only work if isr .le. 2 not .gt. 2
+            ! set subregion counter for next line
+            isr = 1
+         end if
 
       end select
       goto 100
