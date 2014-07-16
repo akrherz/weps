@@ -569,7 +569,7 @@ module erosion_mod
            noerod(sr)%flat_cov = 0
            noerod(sr)%surf_wet = 0
            noerod(sr)%ag_den = 0
-           noerod(sr)%wust = 0
+           noerod(sr)%wust = 1
 
            noerod(sr)%sfd84 = 0
            noerod(sr)%asvroc = 0
