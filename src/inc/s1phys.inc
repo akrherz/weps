@@ -14,6 +14,7 @@
 
       real             asdblk(0:mnsz, mnsub)
       real             asdsblk(mnsz, mnsub)
+      real             asdprocblk(mnsz, mnsub)
       real             asdwblk(mnsz, mnsub)
       real             asdblk0(mnsz, mnsub)
       real             asdpart(mnsz, mnsub)
@@ -21,7 +22,7 @@
       real             bedrock_depth(mnsub)
 
       common / s1phys /                                                 &
-     &    asdblk, asdsblk, asdwblk, asdblk0, asdpart,                   &
+     &    asdblk, asdsblk, asdprocblk, asdwblk, asdblk0, asdpart,        &
      &    restrict_depth, bedrock_depth 
 
       save :: /s1phys/
@@ -31,6 +32,8 @@
 !     asdblk  - Soil layer bulk density for each subregion (Mg/m^3)
 
 !     asdsblk - Soil layer settled bulk density (Mg/m^3)
+
+!     asdprocblk - Soil layer proctor bulk density (Mg/m^3)
 
 !     asdwblk - Soil layer bulk density at 1/3 bar for each
 !               subregion (Mg/m^3)

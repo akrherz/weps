@@ -4,7 +4,7 @@
 !$HeadURL$
 
       subroutine proptext( nlay, clayf, sandf, organf,                  &
-     &                 settled_bulkden, partden )
+     &       settled_bulkden, proctor_bulkden, partden )
 
 !     + + + PURPOSE + + +
 !     
@@ -14,10 +14,13 @@
 !     + + + KEYWORDS + + +
 !     texture properties 
 
+      use soilden_mod
+
 !     + + + ARGUMENT DECLARATIONS + + +
       integer nlay
-      real sandf(*),clayf(*),organf(*)
-      real settled_bulkden(*), partden(*)
+      real sandf(*), clayf(*), organf(*)
+      real settled_bulkden(*)
+      real proctor_bulkden(*), partden(*)
 
 !     + + + ARGUMENT DEFINITIONS + + +
 !     nlay     - number of soil layers to be updated
@@ -25,13 +28,8 @@
 !     sandf    - fraction of soil mineral portion which is sand
 !     organf   - fraction of total soil mass which is organic matter
 !     settled_bulkden - settled bulk density (Mg/m^3)
+!     proctor_bulkden - proctor bulk density (Mg/m^3)
 !     partden  - particle density (Mg/m^3)
-
-!     + + + LOCAL COMMON BLOCKS + + +
-      include 'hydro/partden.inc'
-
-!     + + + FUNCTION DECLARATIONS + + +
-      real   setbds
 
 !     + + + LOCAL VARIABLES + + +
       integer lay
@@ -41,22 +39,18 @@
 !     + + + END SPECIFICATIONS + + + 
 
       do lay=1,nlay
-!         settled bulk density
+          ! settled bulk density
           settled_bulkden(lay) = setbds( clayf(lay), sandf(lay),        &
      &                                   organf(lay))
 
-!         calculate an average soil particle density
-!         Particle density of organic matter
-!         1.37 in Baver, Soil Physics, 1972 p.44 (humus)
-!         1.1  in Marshall and Holmes, Soil Physics, 1979, p.277 (soil organic matter)
-!         Old incorrect formula
-!          partden(lay) = organf(lay)*den_organic
-!     &                 + (1.0-organf(lay))*den_quartz
-!         New correct formula
-          partden(lay) = 1.0 / (organf(lay)/den_organic                 &
-     &                 + (1.0-organf(lay))/den_quartz)
+          ! calculate an average soil particle density
+          partden(lay) = setpartden( organf(lay) )
 
-!         make sure particle density is significantly greater than settled bulk density
+          ! reference bulk density
+          proctor_bulkden(lay) = setbdproc( clayf(lay), sandf(lay),     &
+     &                                      organf(lay), partden(lay))
+
+          ! make sure particle density is significantly greater than settled bulk density
           if( partden(lay).lt.(1.2*settled_bulkden(lay)) ) then
               partden(lay) = 1.2*settled_bulkden(lay)
           endif

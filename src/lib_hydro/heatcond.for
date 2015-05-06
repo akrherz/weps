@@ -13,6 +13,8 @@
 !     + + + KEYWORDS + + +
 !     soil heat capacity
 
+      use soilden_mod, only: den_ice, den_quartz, den_organic
+
 !     + + + ARGUMENT DECLARATIONS + + +
       real bsdblk, theta, thetas, bhtsav, bhfice
       real bsfsan, bsfsil, bsfcla, bsfom
@@ -30,7 +32,6 @@
 
 !     + + + LOCAL COMMON BLOCKS + + +
       include 'hydro/heatcond.inc'
-      include 'hydro/partden.inc'
 
 !     + + + LOCAL VARIABLES + + +
       real fac_a, fac_b, fac_c, fac_d, fac_e

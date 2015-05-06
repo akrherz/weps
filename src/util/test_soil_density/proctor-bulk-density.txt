@@ -1,0 +1,1372 @@
+Development of reference bulk density routine (Files referenced are appended at end for reference)
+
+Proctor density data is not available for high organic matter soils. High OM soils data is published (Thomas Keller, Inge Håkansson. 2010. Estimation of reference bulk density from soil particle size distribution and soil organic matter content. Geoderma 154:398–406.) but is for a reference bulk density (pressed for 7 days at high water content under 200 kPa pressure)
+
+Standard soil analysis practice is to not measure sand, silt and clay for OM content above 35% due to the questionable accuracy of the values depending on the measurement technique. Therefore the fitted equation (reported by Keller and Håkansson) does not work for >35% OM where no mineral portion was reported. As a first attempt, the points with OM >30% were placed in the file 'omdata.txt', a point for 100% OM added (average BD from the 4 highest OM data points) and fit to the equation using gnuplot:
+
+Note: Data points are in %. Values in WEPS are in fraction. Values converted to fraction in equations and fitted and tested accordingly.
+
+---BEGIN fit-om.plt---
+# first guess values
+a=0.36
+b=100.0
+c=0.25
+# equation for BD as a function of high OM content
+f(x) = a+1/(b*(x-c)*(x-c)+1)
+fit f(x) 'omdata.txt' using ($2/100):1 via a,b,c
+# result of the fit
+a = 0.35262
+b = 211.036
+c = 0.236408
+plot f(x), 'omdata.txt' using ($2/100):1 with points
+pause -1
+q1=1.308
+q2=1.19
+q3=1.03
+q4=1.8
+q5=0.8
+q6=6.2
+q7=5.9
+# comparison of equations with data, plotted against OM content fraction
+plot 'refdata.txt' using ($5/100):(q1+q2*$2/100+q3*$4/100-q4*$2/100*$2/100-q5*$4/100*$4/100-q6*$3/100*$5/100-q7*$4/100*$5/100) \
+   , 'refdata.txt' using ($5/100):1 \
+   , f(x) with lines \
+   , 'omdata.txt' using ($2/100):1 with points
+pause -1
+# composite equation values compared against data values, one to one line plotted
+plot x \
+   , 'refdata.txt' using 1:($5<30 ? (q1+q2*$2/100+q3*$4/100-q4*$2/100*$2/100-q5*$4/100*$4/100-q6*$3/100*$5/100-q7*$4/100*$5/100) : a+1/(b*($5/100-c)*($5/100-c)+1)) \
+   , 'omdata.txt' using 1:(a+1/(b*($2/100-c)*($2/100-c)+1))
+pause -1
+---END fit-om.plt---
+
+Based on the above fit, the composite equation was implemented in util/lib_misc/soilden_mod.f95 function setbdref, and the 'testdata.txt' file was generated for the 12 soil texture classes. Using this composite function breaks down for intermediate organic matter content values. The function fit my the authors does poorly for OM values between 15% and 30% as illustrated with this data set with varied texture and OM content. The file testdata.txt was created by programmingthe composite function above in fortran, and creating a range of OM content for each of the 12 standard texture classes. The plot illustrates the difficulty created by this method, esp. for the Sand texture.
+
+---BEGIN test-om.plt---
+pflg = 2
+set xlabel 'OM'
+set ylabel 'Reference Bulk Density (Mg/m^3)'
+set title 'Sand'
+plot 'testdata.txt' index 0 using 5:4:1 with labels
+pause pflg
+set title 'Loamy Sand'
+plot 'testdata.txt' index 1 using 5:4:1 with labels
+pause pflg
+set title 'Sandy Loam'
+plot 'testdata.txt' index 2 using 5:4:1 with labels
+pause pflg
+set title 'Loam'
+plot 'testdata.txt' index 3 using 5:4:1 with labels
+pause pflg
+set title 'Silt Loam'
+plot 'testdata.txt' index 4 using 5:4:1 with labels
+pause pflg
+set title 'Sandy Clay Loam'
+plot 'testdata.txt' index 5 using 5:4:1 with labels
+pause pflg
+set title 'Clay Loam'
+plot 'testdata.txt' index 6 using 5:4:1 with labels
+pause pflg
+set title 'Silty Clay Loam'
+plot 'testdata.txt' index 7 using 5:4:1 with labels
+pause pflg
+set title 'Sandy Clay'
+plot 'testdata.txt' index 8 using 5:4:1 with labels
+pause pflg
+set title 'Silty Clay'
+plot 'testdata.txt' index 9 using 5:4:1 with labels
+pause pflg
+set title 'Clay'
+plot 'testdata.txt' index 10 using 5:4:1 with labels
+pause pflg
+---END test-om.plt---
+
+Based on the plots above, it was decided to use the settled bulk density of Rawls (as implemented in WEPS) as a normalizing value. The reference bulk density can be modeled based on the difference (diff), the ratio (ratio) or the ratio of the difference (drat). test_soil_density is programmed with each of these functions and 'refdata.txt' processed resulting in odat_diff.txt, odat_ratio.txt and odat_drat.txt, including the settled bulk density for each high organic matter point using representative Sand, Silt, Clay values for all twelve soil texture classes.
+
+For all three models, the normalized values show a strong trend in relation to sand content. The normalized values of low organic matter data points are fit to a second order fourier function with respect to sand content. The high organic content points are averaged in order to get a value for 100% organic matter content.
+
+---BEGIN Averaging Script---
+ test_soil_density odat diff
+ cat odat_diff.txt | dm "if INLINE > 1 then INPUT else SKIP" | dm "if x8 > 0.35 then INPUT else SKIP" | colex 4 | stats mean
+ test_soil_density odat ratio
+ cat odat_ratio.txt | dm "if INLINE > 1 then INPUT else SKIP" | dm "if x8 > 0.35 then INPUT else SKIP" | colex 4 | stats mean
+ test_soil_density odat drat
+ cat odat_drat.txt | dm "if INLINE > 1 then INPUT else SKIP" | dm "if x8 > 0.35 then INPUT else SKIP" | colex 4 | stats mean
+---END Averaging Script---
+
+diff_mean = 0.0666647
+ratio_mean = 1.19378
+rdat_mean = 0.193782
+
+---BEGIN odat_diff.plt---
+set yrange [0:]
+set xrange [0:1]
+pflg = -1
+set ylabel 'Reference-Settled BD (Mg/m^3)'
+set xlabel 'OM'
+plot 'odat_diff.txt' using 8:4 with points title 'All OM'
+pause pflg
+set xlabel 'Sand'
+plot 'odat_diff.txt' using 7:4 with points title 'All OM'
+pause pflg
+set xlabel 'Sand'
+plot 'odat_diff.txt' using ($8<0.35?($7):NaN):4 with points title 'OM<35%'
+pause pflg
+set xlabel 'Silt'
+plot 'odat_diff.txt' using 6:4 with points title 'All OM'
+pause pflg
+set xlabel 'Silt'
+plot 'odat_diff.txt' using ($8<0.35?($6):NaN):4 with points title 'OM<35%'
+pause pflg
+set xlabel 'Clay'
+plot 'odat_diff.txt' using 5:4 with points title 'All OM'
+pause pflg
+set xlabel 'Clay'
+plot 'odat_diff.txt' using ($8<0.35?($5):NaN):4 with points title 'OM<35%'
+pause pflg
+exit
+a = -1
+b = -1
+c = 1
+d = -5
+e = 1
+f = 1
+f(x) = a*(x+d)*(x+d) + b*(x+d) + c + e*exp(f*x)
+#fit f(x) 'odat_diff.txt' using 7:4 via a,b,c,d,e,f
+# final sum of squares of residuals : 0.77258
+a = 0.254494       #  +/- 0.8115       (318.9%)
+b = 0.910623       #  +/- 1.433e+10    (1.574e+12%)
+c = 0.41558        #  +/- 2.562e+10    (6.164e+12%)
+d = -4.0794        #  +/- 2.816e+10    (6.904e+11%)
+e = -0.937184      #  +/- 0.6643       (70.88%)
+f = -4.70351       #  +/- 2.426        (51.58%)
+plot f(x), 'odat_diff.txt' using 7:4 with points
+pause pflg
+a = -1
+b = -1
+c = 1
+d = -5
+e = 1
+f = 1
+f(x) = a*(x+d)*(x+d) + b*(x+d) + c + e*sin(f*x)
+#fit f(x) 'odat_diff.txt' using 7:4 via a,b,c,d,e,f
+# final sum of squares of residuals : 0.758665
+a = -6.82882       #  +/- 1.207        (17.67%)
+b = -4.96788       #  +/- 6.764e+10    (1.362e+12%)
+c = 2.32028        #  +/- 2.457e+10    (1.059e+12%)
+d = -1.04948       #  +/- 4.953e+09    (4.719e+11%)
+e = -3.02462       #  +/- 0.8598       (28.43%)
+f = 2.15669        #  +/- 0.3891       (18.04%)
+plot f(x), 'odat_diff.txt' using 7:4 with points
+pause pflg
+a = -1
+b = -1
+c = 1
+d = -5
+e = 1
+f = 1
+g = 1
+h = 1
+f(x) = a*(x+d)*(x+d) + b*(x+d) + c + e*sin(f*x) + g*cos(h*x)
+#fit f(x) 'odat_diff.txt' using 7:4 via a,b,c,d,e,f,g,h
+#final sum of squares of residuals : 0.747182
+a = 0.100419       #  +/- 11.4         (1.135e+04%)
+b = 0.499643       #  +/- 6.176e+09    (1.236e+12%)
+c = -0.201248      #  +/- 1.535e+10    (7.628e+12%)
+d = -4.77603       #  +/- 3.075e+10    (6.439e+11%)
+e = 1.11687        #  +/- 11.76        (1053%)
+f = 2.61841        #  +/- 13.24        (505.5%)
+g = 0.323616       #  +/- 1.315        (406.4%)
+h = 4.99596        #  +/- 7.6          (152.1%)
+plot f(x), 'odat_diff.txt' using 7:4 with points
+pause pflg
+a = 1
+b = 1
+c = 1
+d = 1
+f(x) = a*cos(x) + b*sin(x) + c*cos(2*x) + d*sin(2*x)
+#fit f(x) 'odat_diff.txt' using 7:4 via a,b,c,d
+# final sum of squares of residuals : 0.773553
+a = -2.57058       #  +/- 0.2528       (9.835%)
+b = 4.09442        #  +/- 0.5145       (12.56%)
+c = 2.61977        #  +/- 0.2402       (9.168%)
+d = -0.940779      #  +/- 0.1928       (20.5%)
+plot f(x), 'odat_diff.txt' using 7:4 with points
+pause pflg
+exit
+---END odat_diff.plt---
+
+---BEGIN odat_ratio.plt---
+set yrange [1:]
+set xrange [0:1]
+pflg = -1
+set ylabel 'Reference/Settled BD (Mg/m^3)'
+set xlabel 'OM'
+plot 'odat_ratio.txt' using 8:4 with points title 'All OM'
+pause pflg
+set xlabel 'Sand'
+plot 'odat_ratio.txt' using 7:4 with points title 'All OM'
+pause pflg
+set xlabel 'Sand'
+plot 'odat_ratio.txt' using ($8<0.35?($7):NaN):4 with points title 'OM<35%'
+pause pflg
+set xlabel 'Silt'
+plot 'odat_ratio.txt' using 6:4 with points title 'All OM'
+pause pflg
+set xlabel 'Silt'
+plot 'odat_ratio.txt' using ($8<0.35?($6):NaN):4 with points title 'OM<35%'
+pause pflg
+set xlabel 'Clay'
+plot 'odat_ratio.txt' using 5:4 with points title 'All OM'
+pause pflg
+set xlabel 'Clay'
+plot 'odat_ratio.txt' using ($8<0.35?($5):NaN):4 with points title 'OM<35%'
+pause pflg
+exit
+pflg = 5
+set xlabel 'Sand'
+a = -1
+b = -1
+c = 1
+d = -5
+e = 1
+f = 1
+f(x) = a*(x+d)*(x+d) + b*(x+d) + c + e*exp(f*x)
+#fit f(x) 'odat_ratio.txt' using ($8<0.35?($7):(1/0)):4 via a,b,c,d,e,f
+#final sum of squares of residuals : 1.05669
+a               = -0.592157      #  +/- 57.22        (9663%)
+b               = -2.93319       #  +/- 1.684e+10    (5.74e+11%)
+c               = 0.853777       #  +/- 4.167e+10    (4.88e+12%)
+d               = -4.2057        #  +/- 1.422e+10    (3.381e+11%)
+e               = -1.53158       #  +/- 426.4        (2.784e+04%)
+f               = 0.800238       #  +/- 66.57        (8318%)
+plot f(x), 'odat_ratio.txt' using ($8<0.35?($7):NaN):4 with points
+pause pflg
+a = -1
+b = -1
+c = 1
+d = -5
+e = 1
+f = 1
+f(x) = a*(x+d)*(x+d) + b*(x+d) + c + e*sin(f*x)
+#fit f(x) 'odat_ratio.txt' using ($8<0.35?($7):(1/0)):4 via a,b,c,d,e,f
+#final sum of squares of residuals : 1.00515
+a               = -3.64523       #  +/- 2.171        (59.55%)
+b               = -4.69548       #  +/- 5.472e+10    (1.165e+12%)
+c               = 1.42433        #  +/- 3.52e+10     (2.472e+12%)
+d               = -1.34869       #  +/- 7.505e+09    (5.565e+11%)
+e               = -1.80162       #  +/- 5.343        (296.6%)
+f               = 1.96521        #  +/- 2.72         (138.4%)
+plot f(x), 'odat_ratio.txt' using ($8<0.35?($7):NaN):4 with points
+pause pflg
+a = -1
+b = -1
+c = 1
+d = -5
+e = 1
+f = 1
+g = 1
+h = 1
+f(x) = a*(x+d)*(x+d) + b*(x+d) + c + e*sin(f*x) + g*cos(h*x)
+#fit f(x) 'odat_ratio.txt' using ($8<0.35?($7):(1/0)):4 via a,b,c,d,e,f,g,h
+#final sum of squares of residuals : 1.00686
+a               = -0.199255      #  +/- 2585         (1.298e+06%)
+b               = -0.894163      #  +/- 9.435e+09    (1.055e+12%)
+c               = 0.954062       #  +/- 2.115e+10    (2.216e+12%)
+d               = -4.99055       #  +/- 2.368e+10    (4.744e+11%)
+e               = 0.631356       #  +/- 9.669e+05    (1.532e+08%)
+f               = 0.588887       #  +/- 2.999e+05    (5.092e+07%)
+g               = 0.676088       #  +/- 1317         (1.947e+05%)
+h               = 2.70479        #  +/- 1222         (4.518e+04%)
+plot f(x), 'odat_ratio.txt' using ($8<0.35?($7):NaN):4 with points
+pause pflg
+a = 1
+b = 1
+c = 1
+d = 1
+f(x) = a*cos(x) + b*sin(x) + c*cos(2*x) + d*sin(2*x)
+#fit f(x) 'odat_ratio.txt' using ($8<0.35?($7):(1/0)):4 via a,b,c,d
+#final sum of squares of residuals : 1.00632
+a               = -0.516472      #  +/- 0.5369       (104%)
+b               = 3.46117        #  +/- 1.25         (36.11%)
+c               = 1.64331        #  +/- 0.5152       (31.35%)
+d               = -0.965802      #  +/- 0.5011       (51.89%)
+plot f(x), 'odat_ratio.txt' using ($8<0.35?($7):NaN):4 with points
+pause pflg
+exit
+---END odat_ratio.plt---
+
+---BEGIN odat_drat.plt---
+set yrange [0:]
+set xrange [0:1]
+pflg = -1
+set ylabel 'Reference/Settled BD (Mg/m^3)'
+set xlabel 'OM'
+plot 'odat_drat.txt' using 8:4 with points title 'All OM'
+pause pflg
+set xlabel 'Sand'
+plot 'odat_drat.txt' using 7:4 with points title 'All OM'
+pause pflg
+set xlabel 'Sand'
+plot 'odat_drat.txt' using ($8<0.35?($7):NaN):4 with points title 'OM<35%'
+pause pflg
+set xlabel 'Silt'
+plot 'odat_drat.txt' using 6:4 with points title 'All OM'
+pause pflg
+set xlabel 'Silt'
+plot 'odat_drat.txt' using ($8<0.35?($6):NaN):4 with points title 'OM<35%'
+pause pflg
+set xlabel 'Clay'
+plot 'odat_drat.txt' using 5:4 with points title 'All OM'
+pause pflg
+set xlabel 'Clay'
+plot 'odat_drat.txt' using ($8<0.35?($5):NaN):4 with points title 'OM<35%'
+pause pflg
+exit
+pflg = 5
+set xlabel 'Sand'
+a = -1
+b = -1
+c = 1
+d = -5
+e = 1
+f = 1
+f(x) = a*(x+d)*(x+d) + b*(x+d) + c + e*exp(f*x)
+#fit f(x) 'odat_drat.txt' using ($8<0.35?($7):(1/0)):4 via a,b,c,d,e,f
+#final sum of squares of residuals : 1.05783
+a               = -0.523935      #  +/- 53.14        (1.014e+04%)
+b               = -2.54544       #  +/- 1.231e+10    (4.835e+11%)
+c               = 0.846633       #  +/- 2.987e+10    (3.528e+12%)
+d               = -4.45513       #  +/- 1.175e+10    (2.636e+11%)
+e               = -1.60272       #  +/- 377.2        (2.354e+04%)
+f               = 0.817038       #  +/- 57.28        (7011%)
+plot f(x), 'odat_drat.txt' using ($8<0.35?($7):NaN):4 with points
+pause pflg
+a = -1
+b = -1
+c = 1
+d = -5
+e = 1
+f = 1
+f(x) = a*(x+d)*(x+d) + b*(x+d) + c + e*sin(f*x)
+#fit f(x) 'odat_drat.txt' using ($8<0.35?($7):(1/0)):4 via a,b,c,d,e,f
+#final sum of squares of residuals : 1.00529
+a               = -3.58578       #  +/- 2.148        (59.9%)
+b               = -4.29519       #  +/- 6.029e+10    (1.404e+12%)
+c               = 0.969094       #  +/- 3.606e+10    (3.722e+12%)
+d               = -1.36937       #  +/- 8.406e+09    (6.139e+11%)
+e               = -2.1641        #  +/- 8.512        (393.3%)
+f               = 1.81974        #  +/- 3.139        (172.5%)
+plot f(x), 'odat_drat.txt' using ($8<0.35?($7):NaN):4 with points
+pause pflg
+a = -1
+b = -1
+c = 1
+d = -5
+e = 1
+f = 1
+g = 1
+h = 1
+f(x) = a*(x+d)*(x+d) + b*(x+d) + c + e*sin(f*x) + g*cos(h*x)
+#fit f(x) 'odat_drat.txt' using ($8<0.35?($7):(1/0)):4 via a,b,c,d,e,f,g,h
+#final sum of squares of residuals : 1.00684
+a               = -0.238457      #  +/- 2168         (9.091e+05%)
+b               = -0.911753      #  +/- 1.394e+10    (1.529e+12%)
+c               = 0.715569       #  +/- 2.661e+10    (3.719e+12%)
+d               = -4.89641       #  +/- 2.922e+10    (5.968e+11%)
+e               = 0.136044       #  +/- 1.329e+07    (9.766e+09%)
+f               = 0.335704       #  +/- 1.091e+07    (3.251e+09%)
+g               = 0.666854       #  +/- 1108         (1.661e+05%)
+h               = 2.70843        #  +/- 1050         (3.877e+04%)
+plot f(x), 'odat_drat.txt' using ($8<0.35?($7):NaN):4 with points
+pause pflg
+a = 1
+b = 1
+c = 1
+d = 1
+f(x) = a*cos(x) + b*sin(x) + c*cos(2*x) + d*sin(2*x)
+#fit f(x) 'odat_drat.txt' using ($8<0.35?($7):(1/0)):4 via a,b,c,d
+#final sum of squares of residuals : 1.00689
+a               = -1.75229       #  +/- 0.5371       (30.65%)
+b               = 2.92099        #  +/- 1.25         (42.8%)
+c               = 1.88065        #  +/- 0.5153       (27.4%)
+d               = -0.709907      #  +/- 0.5013       (70.61%)
+plot f(x), 'odat_drat.txt' using ($8<0.35?($7):NaN):4 with points
+pause pflg
+exit
+---END odat_drat.plt---
+
+The values produced by each of the models for the data set are placed in the files value_diff.txt, value_ratio.txt and value_rdat.txt and the goodness of each model is evaluated using paired points analysis. 
+
+---BEGIN Paired Analysis Script---
+test_soil_density value diff
+cat value_diff.txt | dm "if INLINE > 1 then INPUT else SKIP" | colex 3 4 | pair -s
+test_soil_density value ratio
+cat value_ratio.txt | dm "if INLINE > 1 then INPUT else SKIP" | colex 3 4 | pair -s
+test_soil_density value drat
+cat value_drat.txt | dm "if INLINE > 1 then INPUT else SKIP" | colex 3 4 | pair -s
+---END Paired Analysis Script---
+
+Comparing the means and standard deviation of the difference of the two columns, the difference ratio method has the smallest mean and standard deviation, best t value and highest p for the difference between the modeled columns and the data column.
+
+value_diff.txt Analysis for 231 points:
+                         Column 1         Column 2       Difference
+Minimums                   0.3670           0.3577          -0.1624
+Maximums                   1.8170           1.8623           0.2483
+Sums                     281.1990         275.3430           5.8560
+SumSquares               398.1717         377.3710           1.4992
+Means                      1.2173           1.1920           0.0254
+SDs                        0.4928           0.4624           0.0766
+t(230)                    37.5407          39.1804           5.0278
+p                          0.0000           0.0000           0.0000
+
+     Correlation        r-squared           t(229)                p
+          0.9892           0.9784         101.8900           0.0000
+       Intercept            Slope
+          0.0623           0.9280
+
+value_ratio.txt Analysis for 231 points:
+                         Column 1         Column 2       Difference
+Minimums                   0.3670           0.3321          -0.2314
+Maximums                   1.8170           1.9538           0.2180
+Sums                     281.1990         281.7599          -0.5609
+SumSquares               398.1717         399.8484           1.2621
+Means                      1.2173           1.2197          -0.0024
+SDs                        0.4928           0.4942           0.0740
+t(230)                    37.5407          37.5117          -0.4985
+p                          0.0000           0.0000           0.6186
+
+     Correlation        r-squared           t(229)                p
+          0.9888           0.9776         100.0366           0.0000
+       Intercept            Slope
+          0.0128           0.9915
+
+value_drat.txt Analysis for 231 points:
+                         Column 1         Column 2       Difference
+Minimums                   0.3670           0.3263          -0.2312
+Maximums                   1.8170           1.9542           0.2223
+Sums                     281.1990         281.2526          -0.0536
+SumSquares               398.1717         398.6575           1.2752
+Means                      1.2173           1.2175          -0.0002
+SDs                        0.4928           0.4944           0.0745
+t(230)                    37.5407          37.4290          -0.0474
+p                          0.0000           0.0000           0.9623
+
+     Correlation        r-squared           t(229)                p
+          0.9886           0.9774          99.4863           0.0000
+       Intercept            Slope
+          0.0103           0.9918
+
+This reference bulk density relationship with Proctor density data from the WEPP and SERDP data sets may be adequate. For comparison, the Proctor density model from Wagner et al. 1994 was programmed and fit to the reference data set, the data set from the paper (WEPP data set) and the data set from the SERDP project (SERDP data set).
+
+Wagner, L.E., Ambe, N.M., Ding, D. Estimating a Proctor Density Curve from Intrinsic Soil Properties. Trans of the ASAE; 1994; 37((4)): 1121-1125.
+
+The Optimal Water Content function developed in the paper (Om content < 3.13%) shows instability for OM contents above 5%.
+This functional relationship was developed using the WEPP data set. Since the SERDP data set is independent, the goodness of fit with the regression is compared against the goodness of fit original data set.
+
+---BEGIN show-owc-procden.plt---
+# NOTE: data file values are percent, not fraction
+set term wxt size 900,500
+set key bottom
+owc_a0 = 21.09
+owc_a1 = -0.2892
+owc_a2 = 0.007075
+owc_a3 = -0.001375
+owc_a4 = 0.4234
+owc(clay, sand, om) = owc_a0 + owc_a1*clay + owc_a2*clay*clay + owc_a3*sand*sand + owc_a4*om*om
+den_organic = 1.23
+den_quartz = 2.65
+pden(om) = 1.0 / ((om/100.0)/den_organic + (1.0-(om/100.0))/den_quartz)
+procden(clay,sand,om) = pden(om) / (1.0 + pden(om)*owc(clay,sand,om)/80.0)
+set term wxt 1
+set xlabel 'fit OWC (%)'
+set ylabel 'data OWC (%)'
+plot x, 'proctor-wepp.txt' using (owc($3,$4,$5)):6 with points, 'proctor-serdp.txt' using (owc($2,$4,$5)):6 with points
+set term wxt 2
+set xlabel 'Fit Proctor BD (Mg/m^3)'
+set ylabel 'Data BD (Mg/m^3)'
+plot x, 'proctor-wepp.txt' using (procden($3,$4,$5)):7 with points, 'proctor-serdp.txt' using (procden($2,$4,$5)):7 with points
+
+set table "temp.out"
+plot 'proctor-wepp.txt' using (owc($3,$4,$5)):6 with points
+unset table
+!cat temp.out | dm "if INLINE > 4 then INPUT else SKIP" | colex 1 2 | pair -s
+set table "temp.out"
+plot 'proctor-serdp.txt' using (owc($2,$4,$5)):6 with points
+unset table
+!cat temp.out | dm "if INLINE > 4 then INPUT else SKIP" | colex 1 2 | pair -s
+set table "temp.out"
+plot 'proctor-wepp.txt' using (procden($3,$4,$5)):7 with points
+unset table
+!cat temp.out | dm "if INLINE > 4 then INPUT else SKIP" | colex 1 2 | pair -s
+set table "temp.out"
+plot 'proctor-serdp.txt' using (procden($2,$4,$5)):7 with points
+unset table
+!cat temp.out | dm "if INLINE > 4 then INPUT else SKIP" | colex 1 2 | pair -s
+!rm temp.out
+---END show-owc-procden.plt---
+
+Fit comparison for OWC for WEPP data
+Analysis for 39 points:
+                         Column 1         Column 2       Difference
+Minimums                   8.5306           8.0000          -3.5307
+Maximums                  27.2244          26.0000           3.1422
+Sums                     662.0644         662.0000           0.0644
+SumSquares             11948.0020       12050.0000         104.2232
+Means                     16.9760          16.9744           0.0017
+SDs                        4.3188           4.6254           1.6561
+t(38)                     24.5471          22.9181           0.0062
+p                          0.0000           0.0000           0.9951
+
+     Correlation        r-squared            t(37)                p
+          0.9337           0.8718          15.8623           0.0000
+       Intercept            Slope
+         -0.0012           1.0000
+
+Fit comparison for OWC for SERDP data
+Analysis for 36 points:
+                         Column 1         Column 2       Difference
+Minimums                   9.1566           7.7693          -4.5782
+Maximums                  28.7757          26.0364           8.3252
+Sums                     653.7300         581.4578          72.2722
+SumSquares             13173.1731       10553.5720         333.1002
+Means                     18.1592          16.1516           2.0076
+SDs                        6.0991           5.7622           2.3177
+t(35)                     17.8640          16.8182           5.1971
+p                          0.0000           0.0000           0.0000
+
+     Correlation        r-squared            t(34)                p
+          0.9252           0.8560          14.2154           0.0000
+       Intercept            Slope
+          0.2791           0.8741
+
+Fit comparison for PROCDEN for WEPP data
+Analysis for 39 points:
+                         Column 1         Column 2       Difference
+Minimums                   1.3674           1.4600          -0.1190
+Maximums                   2.0615           1.9900           0.2915
+Sums                      66.1775          65.6900           0.4875
+SumSquares               113.3163         111.3523           0.2988
+Means                      1.6969           1.6844           0.0125
+SDs                        0.1640           0.1364           0.0878
+t(38)                     64.6067          77.1300           0.8895
+p                          0.0000           0.0000           0.3793
+
+     Correlation        r-squared            t(37)                p
+          0.8449           0.7139           9.6077           0.0000
+       Intercept            Slope
+          0.4923           0.7025
+
+Fit comparison for PROCDEN for SERDP data
+Analysis for 36 points:
+                         Column 1         Column 2       Difference
+Minimums                   1.3179           1.4364          -0.2648
+Maximums                   2.0276           1.9559           0.2663
+Sums                      59.6409          61.1836          -1.5427
+SumSquares               100.5201         104.7928           0.5864
+Means                      1.6567           1.6995          -0.0429
+SDs                        0.2213           0.1520           0.1219
+t(35)                     44.9256          67.0930          -2.1088
+p                          0.0000           0.0000           0.0422
+
+     Correlation        r-squared            t(34)                p
+          0.8503           0.7231           9.4216           0.0000
+       Intercept            Slope
+          0.7319           0.5841
+
+The fit of optimum water content to the WEPP data set is better than the ability of the fit to model the SERDP data set. The mean of the residuals changes from 0.0017 for WEPP to 2.0076 for SERDP and the standard deviation increases from 1.6561 for WEPP to 2.3177 for SERDP. Similarly, using the WEPP fit OWC relationship to model the proctor density, the mean of the residual changes from 0.0125 for WEPP to -0.0429 for SERDP and the standard deviation increases from 0.0878 for WEPP to 0.1219 for SERDP. Plotting the two data sets together for the independent variables show that
+
+---BEGIN show-wepp-serdp.plt---
+set xrange [0:]
+set term wxt size 900,500
+set key bottom
+set term wxt 1
+set xlabel 'clay (%)'
+set ylabel 'data OWC (%)'
+plot 'proctor-wepp.txt' using 3:6 with points, 'proctor-serdp.txt' using 2:6 with points
+set term wxt 2
+set xlabel 'sand (%)'
+plot 'proctor-wepp.txt' using 4:6 with points, 'proctor-serdp.txt' using 4:6 with points
+set term wxt 3
+set xlabel 'OM (%)'
+plot 'proctor-wepp.txt' using 5:6 with points, 'proctor-serdp.txt' using 5:6 with points
+---END show-wepp-serdp.plt---
+
+Optimum water content increases with increasing OM and clay, and decreases with increasing sand. Fitting to a simple linear model:
+
+---BEGIN fit-wepp-serdp-owc.plt---
+# create composite data set
+!cat proctor-wepp.txt | colex 1 3 4 5 6 7 > proctor-wepp-serdp.txt
+!cat proctor-serdp.txt | colex 1 2 4 5 6 7 >> proctor-wepp-serdp.txt
+owc_a = 16
+owc_b = 1
+owc_c = -1
+owc_d = 1
+owc(clay,sand,om) = owc_a + owc_b*clay + owc_c*sand + owc_d*om
+fit [clay=0:100] [sand=0:100] [om=0:100] owc(clay,sand,om) 'proctor-wepp-serdp.txt' using 2:3:4:5:(1) via owc_a,owc_b,owc_c,owc_d
+# result of fit
+owc_a           = 16.0932        #  +/- 1.32         (8.201%)
+owc_b           = 0.129032       #  +/- 0.02986      (23.14%)
+owc_c           = -0.0883454     #  +/- 0.0147       (16.64%)
+owc_d           = 1.06305        #  +/- 0.2585       (24.32%)
+# plot the residuals
+set xrange [0:]
+set term wxt size 900,500
+set key bottom
+set term wxt 1
+set xlabel 'clay (%)'
+set ylabel 'residual OWC (%)'
+plot 'proctor-wepp-serdp.txt' using 2:($5-owc($2,$3,$4)) with points
+set term wxt 2
+set xlabel 'sand (%)'
+plot 'proctor-wepp-serdp.txt' using 3:($5-owc($2,$3,$4)) with points
+set term wxt 3
+set xlabel 'OM (%)'
+plot 'proctor-wepp-serdp.txt' using 4:($5-owc($2,$3,$4)) with points
+# find goodness of fit
+set table "temp.out"
+plot 'proctor-wepp-serdp.txt' using (owc($2,$3,$4)):5 with points
+unset table
+!cat temp.out | dm "if INLINE > 4 then INPUT else SKIP" | colex 1 2 | pair -s
+!rm temp.out
+---END fit-wepp-serdp-owc.plt---
+
+Analysis for 75 points:
+                         Column 1         Column 2       Difference
+Minimums                   8.6060           7.7693          -5.5421
+Maximums                  24.4677          26.0364           3.3199
+Sums                    1243.4614        1243.4578           0.0036
+SumSquares             22289.4528       22603.5720         314.2432
+Means                     16.5795          16.5794           0.0000
+SDs                        4.7555           5.1828           2.0607
+t(74)                     30.1929          27.7036           0.0002
+p                          0.0000           0.0000           1.0000
+
+     Correlation        r-squared            t(73)                p
+          0.9176           0.8419          19.7170           0.0000
+       Intercept            Slope
+         -0.0000           1.0000
+
+The standard deviation for this composite set is greater than the original WEPP data set fit, but less than using that fit for the SERDP data set. Using this OWC relationship to predict the Proctor Density results in:
+
+---BEGIN new-owc-procden.plt---
+# NOTE: data file values are percent, not fraction
+set term wxt size 900,500
+set key bottom
+owc_a           = 16.0932        #  +/- 1.32         (8.201%)
+owc_b           = 0.129032       #  +/- 0.02986      (23.14%)
+owc_c           = -0.0883454     #  +/- 0.0147       (16.64%)
+owc_d           = 1.06305        #  +/- 0.2585       (24.32%)
+owc(clay,sand,om) = owc_a + owc_b*clay + owc_c*sand + owc_d*om
+den_organic = 1.23
+den_quartz = 2.65
+pden(om) = 1.0 / ((om/100.0)/den_organic + (1.0-(om/100.0))/den_quartz)
+procden(clay,sand,om) = pden(om) / (1.0 + pden(om)*owc(clay,sand,om)/80.0)
+set xlabel 'Fit Proctor BD (Mg/m^3)'
+set ylabel 'Data BD (Mg/m^3)'
+plot x, 'proctor-wepp-serdp.txt' using (procden($2,$3,$4)):6 with points
+
+set table "temp.out"
+plot 'proctor-wepp-serdp.txt' using (procden($2,$3,$4)):6 with points
+unset table
+!cat temp.out | dm "if INLINE > 4 then INPUT else SKIP" | colex 1 2 | pair -s
+!rm temp.out
+---END new-owc-procden.plt---
+
+Analysis for 75 points:
+                         Column 1         Column 2       Difference
+Minimums                   1.4273           1.4364          -0.2137
+Maximums                   2.0563           1.9900           0.3303
+Sums                     128.1673         126.8736           1.2937
+SumSquares               221.5860         216.1451           0.9044
+Means                      1.7089           1.6916           0.0172
+SDs                        0.1860           0.1433           0.1092
+t(74)                     79.5483         102.2339           1.3682
+p                          0.0000           0.0000           0.1754
+
+     Correlation        r-squared            t(73)                p
+          0.8107           0.6572          11.8313           0.0000
+       Intercept            Slope
+          0.6245           0.6244
+
+The result is a standard deviation that is also greater than the original WEPP data set fit, but less than using that fit for the SERDP data set. Using this relationship with high organic matter soils
+
+running 'test_soil_density wepp' creates 'proc-wepp-ref.txt'
+running 'test_soil_density serdp' creates 'proc-serdp-ref.txt'
+running 'test_soil_density pref' creates 'proc-pref-ref.txt'
+
+---BEGIN ref-new-owc-procden.plt---
+# NOTE: data file values are fraction, not percent
+set term wxt size 1800,1000
+set key bottom
+owc_a           = 16.0932
+owc_b           = 0.129032*100
+owc_c           = -0.0883454*100
+owc_d           = 1.06305*100
+owc(clay,sand,om) = owc_a + owc_b*clay + owc_c*sand + owc_d*om
+den_organic = 1.23
+den_quartz = 2.65
+pden(om) = 1.0 / ((om)/den_organic + (1.0-(om))/den_quartz)
+procden(clay,sand,om) = pden(om) / (1.0 + pden(om)*owc(clay,sand,om)/80.0)
+set term wxt 1
+set xlabel 'Fit Proctor BD (Mg/m^3)'
+set ylabel 'Data BD (Mg/m^3)'
+plot x, 'proc-wepp-ref.txt' using (procden($8,$10,$11)):3 with points, 'proc-serdp-ref.txt' using (procden($8,$10,$11)):3 with points, 'proc-pref-ref.txt' using (procden($8,$10,$11)):3 with points
+set term wxt 2
+set xlabel 'OM'
+set ylabel 'OWC (%)'
+plot 'proc-wepp-ref.txt' using 11:(owc($8,$10,$11)) with points, 'proc-serdp-ref.txt' using 11:(owc($8,$10,$11)) with points, 'proc-pref-ref.txt' using 11:(owc($8,$10,$11)) with points 
+---END ref-new-owc-procden.plt---
+
+The proctor density relationship does not fit well for the uniaxial compression data at high organic matter content. Lacking real proctor density data values in that range, it will be adjusted later as needed.
+
+---BEGIN proc_all.plt---
+set key bottom
+set xrange [0:]
+pflg = -1
+set term wxt size 1800,1000
+set ylabel 'Data BD (Mg/m^3)'
+set term wxt 1
+set xlabel 'OM'
+plot 'proc-wepp-ref.txt' using 11:3 with points, 'proc-serdp-ref.txt' using 11:3 with points, 'proc-pref-ref.txt' using 11:3 with points
+set term wxt 2
+set xlabel 'Sand'
+plot 'proc-wepp-ref.txt' using 10:3 with points, 'proc-serdp-ref.txt' using 10:3 with points, 'proc-pref-ref.txt' using 10:3 with points
+set term wxt 3
+set xlabel 'Silt'
+plot 'proc-wepp-ref.txt' using 9:3 with points, 'proc-serdp-ref.txt' using 9:3 with points, 'proc-pref-ref.txt' using 9:3 with points
+set term wxt 4
+set xlabel 'Clay'
+plot 'proc-wepp-ref.txt' using 8:3 with points, 'proc-serdp-ref.txt' using 8:3 with points, 'proc-pref-ref.txt' using 8:3 with points
+set term wxt 5
+set xlabel 'PartDen (Mg/m^3)'
+plot 'proc-wepp-ref.txt' using 7:3 with points, 'proc-serdp-ref.txt' using 7:3 with points, 'proc-pref-ref.txt' using 7:3 with points
+set ylabel 'Data BD (Mg/m^3)'
+set term wxt 6
+set xlabel 'Settled BD (Mg/m^3)'
+plot 'proc-wepp-ref.txt' using 4:3 with points, 'proc-serdp-ref.txt' using 4:3 with points, 'proc-pref-ref.txt' using 4:3 with points, x
+set term wxt 7
+set xlabel 'Reference BD (Mg/m^3)'
+plot 'proc-wepp-ref.txt' using 5:3 with points, 'proc-serdp-ref.txt' using 5:3 with points, 'proc-pref-ref.txt' using 5:3 with points, x
+set term wxt 8
+set xlabel 'Proctor BD (Mg/m^3)'
+plot 'proc-wepp-ref.txt' using 6:3 with points, 'proc-serdp-ref.txt' using 6:3 with points, 'proc-pref-ref.txt' using 6:3 with points, x
+set term wxt 9
+set ylabel 'Reference BD (Mg/m^3)'
+set xlabel 'Proctor BD (Mg/m^3)'
+plot 'proc-wepp-ref.txt' using 6:5 with points, 'proc-serdp-ref.txt' using 6:3 with points, 'proc-pref-ref.txt' using 6:3 with points, x
+pause pflg
+---END proc_all.plt---
+
+The script below contains some interesting methods for gnuplot, but the results were ultimately not used.
+---BEGIN fit-procden.plt---
+# NOTE: data file values are fraction, not percent
+set key bottom
+min(x,y) = (x<y) ? x : y
+owc_a0 = 21.09
+owc_a1 = -0.2892*100
+owc_a2 = 0.007075*10000
+owc_a3 = -0.001375*10000
+owc_a4 = 0.4234*10000
+g(clay, sand, om) = owc_a0 + owc_a1*clay + owc_a2*clay*clay + owc_a3*sand*sand + owc_a4*om*om
+a = 50
+b = 1
+c = 1
+d = 1
+f(om) = a + b / (1.0 + exp(-(om-c)/d))
+owc(clay, sand, om) = min( f(om), g(clay, sand, om) )
+den_organic = 1.23
+den_quartz = 2.65
+pden(organf) = 1.0 / (organf/den_organic + (1.0-organf)/den_quartz)
+procden(clay,sand,om) = pden(om) / (1.0 + pden(om)*owc(clay,sand,om)/80.0)
+fit [clay=0:1] [sand=0:1] [om=0.081:1] procden(clay,sand,om) 'proc-pref-ref.txt' using 8:10:11:3:(1) via a,b,c,d
+# result of fit
+a               = 169.377         # +/- 6.361        (3.755%)
+b               = -151.011        # +/- 10.93        (7.237%)
+c               = 0.36509         # +/- 0.009527     (2.61%)
+d               = -0.101741       # +/- 0.01926      (18.93%)
+set term wxt 1
+set xlabel 'Fit Proctor BD (Mg/m^3)'
+set ylabel 'Data BD (Mg/m^3)'
+plot x, 'proc-wepp-ref.txt' using (procden($8,$10,$11)):3 with points, 'proc-serdp-ref.txt' using (procden($8,$10,$11)):3 with points, 'proc-pref-ref.txt' using (procden($8,$10,$11)):3 with points
+set term wxt 2
+set xlabel 'OM'
+set ylabel 'OWC (%)'
+plot 'proc-wepp-ref.txt' using 11:(owc($8,$10,$11)) with points, 'proc-serdp-ref.txt' using 11:(owc($8,$10,$11)) with points, 'proc-pref-ref.txt' using 11:(owc($8,$10,$11)) with points 
+---END fit-procden.plt---
+
+refdata.txt  - data from Keller and Håkansson
+---BEGIN refdata.txt---
+dat_nam ref_den	clay	Silt	Sand	OM	
+Wa	1.485	14.5	69.1	16.3	3.4	
+Wa	1.362	10.3	72.1	17.6	2.9	
+Wa	1.404	10.1	70.4	19.4	2.6	
+Wa	1.427	10.1	71.5	18.5	2.6	
+Wa	1.427	9.4	70.1	20.5	2.6	
+Wa	1.398	8.9	74.0	17.1	2.4	
+Wa	1.423	8.9	69.8	21.3	2.4	
+Wa	1.389	7.9	63.4	28.7	3.3	
+I	1.518	48.6	29.1	22.3	4.5	
+I	1.550	47.3	29.6	23.1	4.0	
+I	1.569	41.0	32.5	26.5	4.2	
+I	1.591	38.8	40.9	20.3	3.2	
+I	1.579	38.0	29.0	33.1	4.0	
+I	1.563	36.2	27.4	36.4	4.1	
+I	1.690	35.2	26.5	38.3	2.9	
+I	1.712	35.1	29.9	35.0	2.1	
+I	1.760	33.9	30.0	36.1	1.9	
+I	1.590	32.9	39.9	27.2	5.3	
+I	1.754	32.8	32.3	34.8	2.6	
+I	1.785	22.2	42.0	35.8	2.6
+
+I	0.367	68.6	
+I	0.387	63.6	
+I	0.373	55.2	
+I	0.377	74.6	
+
+N	1.339	46.9	43.4	9.6	6.1	
+N	1.437	45.6	41.4	13.0	4.8	
+N	1.471	42.0	43.9	14.1	5.0	
+N	1.641	36.1	27.0	36.9	4.0	
+N	1.551	34.4	30.1	35.5	4.3	
+N	1.673	33.7	39.0	27.3	2.1	
+N	1.697	32.4	39.9	27.7	3.3	
+N	1.713	32.1	33.6	34.3	1.4	
+N	1.455	31.7	38.1	30.2	5.9	
+N	1.524	27.5	27.8	44.7	4.7	
+N	1.501	20.5	29.3	50.2	5.5	
+N	1.687	19.1	18.0	62.8	3.3	
+N	1.693	15.6	16.4	68.0	1.7	
+N	1.614	11.1	17.6	71.3	2.6	
+Z	1.427	24.4	52.9	22.7	8.3	
+Z	1.524	24.2	50.6	25.2	5.5	
+Z	1.456	23.8	50.0	26.2	7.6	
+Z	1.550	23.0	54.6	22.4	5.8	
+Z	1.543	22.1	55.1	22.8	5.6	
+Z	1.471	21.2	50.5	28.3	6.0	
+Z	1.543	23.0	52.5	24.6	5.8	
+H	1.514	22.0	29.9	48.1	2.2	
+H	1.449	18.9	38.3	42.8	3.1	
+R	1.500	59.3	35.3	5.3	3.3	
+R	1.509	53.3	36.0	10.7	1.5	
+R	1.402	44.3	51.5	4.2	1.1	
+R	1.629	39.1	42.9	18.0	2.2	
+R	1.406	37.2	58.8	4.0	3.0	
+R	1.545	37.0	49.5	13.5	2.5	
+R	1.692	30.2	37.5	32.3	1.6	
+R	1.554	28.0	43.9	28.0	3.6	
+R	1.420	22.4	31.5	46.1	8.2	
+R	1.451	22.2	33.1	44.7	5.6	
+R	1.590	21.3	29.1	49.6	4.1	
+R	1.541	21.3	51.4	27.3	2.3	
+R	1.488	20.0	34.0	46.0	6.5	
+R	1.345	15.4	41.1	43.6	7.0	
+M	1.236	54.7	36.5	8.9	4.1	
+M	1.432	54.4	35.2	10.5	5.6	
+M	1.482	51.2	40.3	8.5	2.8	
+M	1.465	42.0	41.1	16.9	3.4	
+M	1.461	38.2	30.0	31.7	4.5	
+M	1.523	34.3	46.2	19.5	0.0	
+M	1.696	27.1	33.0	39.9	2.9	
+M	1.747	26.6	33.8	39.5	2.8	
+M	1.656	26.6	36.1	37.3	3.3	
+M	1.691	26.5	36.0	37.5	2.6	
+M	1.429	26.3	39.3	34.4	6.0	
+M	1.750	25.8	29.2	45.1	2.4	
+M	1.817	25.2	34.9	39.9	0.0	
+M	1.753	25.2	38.6	36.2	2.4	
+M	1.710	24.3	33.4	42.4	2.5	
+M	1.675	23.6	33.2	43.1	3.1	
+M	1.576	23.2	33.3	43.5	4.2	
+M	1.642	23.2	38.3	38.5	3.4	
+M	1.669	23.2	32.1	44.7	3.4	
+M	1.693	23.1	31.5	45.5	3.1	
+M	1.436	19.2	19.1	61.6	8.1	
+M	1.669	12.6	20.1	67.3	3.4	
+M	1.641	12.3	18.6	69.1	1.6	
+M	1.605	12.2	10.1	77.7	1.9	
+M	1.591	11.8	12.5	75.7	1.5	
+M	1.514	9.5	12.2	78.3	4.5	
+M	1.556	6.4	6.6	86.9	1.0	
+C	1.429	63.4	31.3	5.3	3.4	
+C	1.394	59.9	32.4	7.7	2.1	
+C	1.359	59.5	33.3	7.2	3.3	
+C	1.312	57.4	37.2	5.4	5.0	
+C	1.311	57.4	34.6	8.0	5.0	
+C	1.369	52.8	41.4	5.8	4.9	
+C	1.519	52.5	30.8	16.8	3.4	
+C	1.366	52.0	40.0	8.0	4.3	
+C	1.403	49.2	42.8	8.0	5.0	
+C	1.411	48.4	27.6	24.0	5.5	
+C	1.539	50.1	36.4	13.5	1.7	
+C	1.407	44.8	49.9	5.2	2.6	
+C	1.559	44.3	31.1	24.6	2.8	
+C	1.588	40.5	37.2	22.3	0.0	
+C	1.574	40.1	41.9	18.0	2.0	
+C	1.614	37.3	41.5	21.2	2.2	
+C	1.712	32.3	31.5	36.2	1.8	
+C	1.500	30.7	40.6	28.7	3.8	
+C	1.420	22.3	42.6	35.1	5.0
+
+C	0.590	36.3	
+
+S	1.379	28.6	54.4	17.0	3.4	
+S	1.436	25.7	53.1	21.2	3.5	
+S	1.433	22.7	40.0	37.3	4.5	
+S	1.472	21.0	39.0	40.1	4.5	
+AC	1.385	22.3	58.6	19.0	3.4	
+AC	1.340	18.7	70.4	10.9	4.7	
+AC	1.347	17.9	70.6	11.5	4.8	
+AC	1.218	10.4	75.7	13.9	4.8	
+AC	1.380	9.8	72.5	17.7	3.8	
+AC	1.410	9.8	74.2	16.0	3.0	
+AC	1.202	8.5	66.9	24.6	7.1	
+AC	1.423	7.3	13.7	79.0	2.0	
+AC	1.308	6.2	64.6	29.2	3.8	
+AC	1.294	5.0	61.1	33.9	4.0	
+AC	1.344	4.7	67.9	27.4	2.9	
+AC	1.268	4.5	62.4	33.1	4.5	
+Y	1.278	28.4	67.5	4.1	5.6	
+U	1.407	3.6	39.5	56.8	2.2	
+O	1.433	38.8	44.4	16.8	4.5	
+P	1.167	51.4	38.4	10.2	12.2	
+P	1.263	49.9	44.9	5.2	8.3	
+P	1.201	42.9	49.2	7.9	10.7	
+P	1.458	39.8	49.3	10.9	5.0	
+P	1.402	37.2	48.2	14.5	5.0	
+P	1.266	36.8	53.8	9.4	7.2	
+P	1.472	35.7	54.6	9.7	3.1	
+P	1.470	33.6	26.1	40.3	5.2	
+P	1.485	31.3	27.0	41.7	5.3	
+P	1.436	31.2	44.4	24.4	5.3	
+P	1.480	29.7	47.9	22.4	4.1	
+P	1.379	28.4	31.4	40.1	7.4	
+P	1.418	27.9	50.1	22.0	5.3	
+P	1.429	27.2	53.4	19.5	5.2	
+P	1.458	27.0	49.4	23.6	5.0	
+P	1.448	25.6	40.5	33.9	5.3	
+P	1.639	23.4	48.7	27.9	2.0	
+P	1.461	21.8	45.7	32.5	6.6	
+P	1.584	21.5	41.3	37.1	4.5	
+P	1.563	20.0	39.9	40.2	4.7	
+P	1.501	12.9	25.5	61.6	4.6	
+P	1.461	10.6	17.2	72.2	6.2	
+T	1.203	56.5	31.1	12.4	11.3	
+T	1.416	33.7	50.6	15.7	4.5	
+T	1.521	30.2	55.5	14.3	3.5	
+T	1.581	17.1	60.1	22.8	2.1	
+E	1.356	69.7	24.3	6.0	4.0	
+E	1.300	65.0	26.4	8.6	4.7	
+E	1.380	58.5	23.4	18.1	4.0	
+E	1.419	55.3	24.7	20.0	4.1	
+E	1.483	52.0	32.8	15.2	3.2	
+E	1.603	43.8	38.0	18.2	1.8	
+E	1.504	42.0	42.4	15.7	4.5	
+E	1.601	38.9	42.4	18.6	2.0	
+E	1.514	37.1	37.5	25.4	5.5	
+E	1.531	34.3	34.4	31.3	3.5	
+E	1.498	29.6	59.9	10.5	3.9	
+E	1.735	27.6	48.1	24.3	1.8	
+E	1.613	27.4	24.1	48.5	3.1	
+E	1.681	24.3	21.6	54.1	2.3	
+E	1.647	24.3	51.7	24.0	2.4	
+E	1.654	14.1	50.2	35.7	2.0	
+E	1.646	13.1	18.2	68.7	2.6	
+E	1.599	11.8	18.7	69.5	2.8	
+SFb	0.803	83.3	14.6	2.1	31.2	
+SFb	1.598	21.0	22.2	56.9	4.1	
+SFb	1.156	77.3	17.8	4.9	10.0	
+PLc	1.621	7.3	71.0	21.7	1.5	
+PLc	1.788	16.9	34.6	48.5	1.2	
+---END refdata.txt---
+
+omdata.txt   - high Organic matter data from Keller and Håkansson
+---BEGIN omdata.txt---
+#ref_den	OM	
+0.803	31.2	
+0.590	36.3	
+0.373	55.2	
+0.387	63.6	
+0.367	68.6	
+0.377	74.6	
+0.376	100.0	
+---END omdata.txt---
+
+testdata.txt - data file created to show results of using equation from Keller and Håkansson with special function for high organic matter soils.
+---BEGIN testdata.txt---
+ #Texture Settled_Bulk_Den Normal_Bulk_den Reference_Bulk_Den OM_frac
+ S         1.55499995       1.52629995       1.60805988       0.00000000    
+ S         1.19882989       1.16629994       1.32130980       5.00000007E-02
+ S        0.975413084      0.806300044       1.03455973      0.100000001    
+ S        0.822188139      0.446299940      0.747809887      0.150000006    
+ S        0.710567057       8.63000378E-02  0.461059809      0.200000003    
+ S        0.625630915     -0.273699969      0.174309850      0.250000000    
+ S        0.558832049     -0.633700132      0.892163754      0.300000012    
+ S        0.504921377     -0.993700027      0.621218622      0.349999994    
+ S        0.460497081      -1.35369992      0.503045321      0.400000006    
+ S        0.423257798      -1.71369982      0.446712971      0.449999988    
+ S        0.391590804      -2.07369995      0.416464984      0.500000000    
+ S        0.364332408      -2.43370008      0.398590088      0.550000012    
+ S        0.340621918      -2.79370022      0.387223542      0.600000024    
+ S        0.319809020      -3.15369987      0.379574567      0.649999976    
+ S        0.301393092      -3.51370001      0.374192506      0.699999988    
+ S        0.284982622      -3.87369967      0.370267153      0.750000000    
+ S        0.270266920      -4.23369980      0.367318839      0.800000012    
+ S        0.256996334      -4.59369993      0.365049452      0.850000024    
+ S        0.244968012      -4.95369959      0.363266170      0.899999976    
+ S        0.234015256      -5.31369972      0.361839801      0.949999988    
+ S        0.224000022      -5.67369986      0.360681325       1.00000000    
+
+
+ #Texture Settled_Bulk_Den Normal_Bulk_den Reference_Bulk_Den OM_frac
+ LS        1.55199993       1.50969994       1.66677999       0.00000000    
+ LS        1.19713509       1.14969993       1.38472998       5.00000007E-02
+ LS       0.974349797      0.789700031       1.10268009      0.100000001    
+ LS       0.821474433      0.429699928      0.820629954      0.150000006    
+ LS       0.710065365       6.97000399E-02  0.538580000      0.200000003    
+ LS       0.625266254     -0.290299982      0.256530046      0.250000000    
+ LS       0.558560431     -0.650300145      0.892163754      0.300000012    
+ LS       0.504715502      -1.01030004      0.621218622      0.349999994    
+ LS       0.460338980      -1.37029994      0.503045321      0.400000006    
+ LS       0.423135370      -1.73029983      0.446712971      0.449999988    
+ LS       0.391495526      -2.09029984      0.416464984      0.500000000    
+ LS       0.364258170      -2.45029998      0.398590088      0.550000012    
+ LS       0.340564251      -2.81030011      0.387223542      0.600000024    
+ LS       0.319764555      -3.17029977      0.379574567      0.649999976    
+ LS       0.301359236      -3.53029990      0.374192506      0.699999988    
+ LS       0.284957379      -3.89029932      0.370267153      0.750000000    
+ LS       0.270248771      -4.25029945      0.367318839      0.800000012    
+ LS       0.256984025      -4.61029959      0.365049452      0.850000024    
+ LS       0.244960532      -4.97029924      0.363266170      0.899999976    
+ LS       0.234011859      -5.33029938      0.361839801      0.949999988    
+ LS       0.224000022      -5.69029951      0.360681325       1.00000000    
+
+
+ #Texture Settled_Bulk_Den Normal_Bulk_den Reference_Bulk_Den OM_frac
+ SL        1.55700004       1.47669995       1.74861991       0.00000000    
+ SL        1.19995880       1.11669993       1.48246992       5.00000007E-02
+ SL       0.976121008      0.756700039       1.21631992      0.100000001    
+ SL       0.822663069      0.396699935      0.950169921      0.150000006    
+ SL       0.710900903       3.67000364E-02  0.684019864      0.200000003    
+ SL       0.625873506     -0.323299974      0.417869925      0.250000000    
+ SL       0.559012651     -0.683300078      0.892163754      0.300000012    
+ SL       0.505058289      -1.04330003      0.621218622      0.349999994    
+ SL       0.460602194      -1.40329993      0.503045321      0.400000006    
+ SL       0.423339218      -1.76329982      0.446712971      0.449999988    
+ SL       0.391654164      -2.12329984      0.416464984      0.500000000    
+ SL       0.364381790      -2.48329997      0.398590088      0.550000012    
+ SL       0.340660274      -2.84330010      0.387223542      0.600000024    
+ SL       0.319838613      -3.20329976      0.379574567      0.649999976    
+ SL       0.301415622      -3.56329989      0.374192506      0.699999988    
+ SL       0.284999400      -3.92329931      0.370267153      0.750000000    
+ SL       0.270278990      -4.28329945      0.367318839      0.800000012    
+ SL       0.257004529      -4.64329958      0.365049452      0.850000024    
+ SL       0.244972959      -5.00329924      0.363266170      0.899999976    
+ SL       0.234017521      -5.36329937      0.361839801      0.949999988    
+ SL       0.224000022      -5.72329950      0.360681325       1.00000000    
+
+
+ #Texture Settled_Bulk_Den Normal_Bulk_den Reference_Bulk_Den OM_frac
+ L         1.43200016       1.43400002       1.75169992       0.00000000    
+ L         1.12787640       1.07400000       1.50364995       5.00000007E-02
+ L        0.930301726      0.713999987       1.25559998      0.100000001    
+ L        0.791628897      0.353999913       1.00755000      0.150000006    
+ L        0.688934743      -5.99996373E-03  0.759499967      0.200000003    
+ L        0.609825134     -0.365999997      0.511449993      0.250000000    
+ L        0.547012269     -0.726000130      0.892163754      0.300000012    
+ L        0.495930791      -1.08599997      0.621218622      0.349999994    
+ L        0.453574687      -1.44599986      0.503045321      0.400000006    
+ L        0.417884320      -1.80599976      0.446712971      0.449999988    
+ L        0.387401015      -2.16599989      0.416464984      0.500000000    
+ L        0.361062616      -2.52600002      0.398590088      0.550000012    
+ L        0.338077575      -2.88600016      0.387223542      0.600000024    
+ L        0.317843854      -3.24599981      0.379574567      0.649999976    
+ L        0.299895316      -3.60599995      0.374192506      0.699999988    
+ L        0.283865482      -3.96599936      0.370267153      0.750000000    
+ L        0.269462377      -4.32599926      0.367318839      0.800000012    
+ L        0.256450266      -4.68599939      0.365049452      0.850000024    
+ L        0.244636983      -5.04599905      0.363266170      0.899999976    
+ L        0.233864099      -5.40599918      0.361839801      0.949999988    
+ L        0.224000022      -5.76599932      0.360681325       1.00000000    
+
+
+ #Texture Settled_Bulk_Den Normal_Bulk_den Reference_Bulk_Den OM_frac
+ SiL       1.21520007       1.41250002       1.61330009       0.00000000    
+ SiL      0.995046139       1.05250001       1.34675014       5.00000007E-02
+ SiL      0.842426360      0.692499995       1.08020020      0.100000001    
+ SiL      0.730398178      0.332499921      0.813650012      0.150000006    
+ SiL      0.644668460      -2.74999626E-02  0.547100067      0.200000003    
+ SiL      0.576949596     -0.387499988      0.280550092      0.250000000    
+ SiL      0.522105277     -0.747500122      0.892163754      0.300000012    
+ SiL      0.476782799      -1.10749996      0.621218622      0.349999994    
+ SiL      0.438700348      -1.46749985      0.503045321      0.400000006    
+ SiL      0.406251550      -1.82749975      0.446712971      0.449999988    
+ SiL      0.378272384      -2.18749976      0.416464984      0.500000000    
+ SiL      0.353898823      -2.54749990      0.398590088      0.550000012    
+ SiL      0.332476079      -2.90750003      0.387223542      0.600000024    
+ SiL      0.313498884      -3.26749969      0.379574567      0.649999976    
+ SiL      0.296571106      -3.62749982      0.374192506      0.699999988    
+ SiL      0.281377733      -3.98749948      0.370267153      0.750000000    
+ SiL      0.267665207      -4.34749985      0.367318839      0.800000012    
+ SiL      0.255227089      -4.70749998      0.365049452      0.850000024    
+ SiL      0.243893623      -5.06749964      0.363266170      0.899999976    
+ SiL      0.233523920      -5.42749977      0.361839801      0.949999988    
+ SiL      0.224000022      -5.78749990      0.360681325       1.00000000    
+
+
+ #Texture Settled_Bulk_Den Normal_Bulk_den Reference_Bulk_Den OM_frac
+ SCL       1.62569988       1.45029998       1.82869995       0.00000000    
+ SCL       1.23827052       1.09029996       1.61154997       5.00000007E-02
+ SCL      0.999963760      0.730300009       1.39440000      0.100000001    
+ SCL      0.838578224      0.370299935       1.17724991      0.150000006    
+ SCL      0.722046196       1.03000402E-02  0.960099876      0.200000003    
+ SCL      0.633950114     -0.349699974      0.742949903      0.250000000    
+ SCL      0.565013409     -0.709700108      0.892163754      0.300000012    
+ SCL      0.509598851      -1.06970000      0.621218622      0.349999994    
+ SCL      0.464083195      -1.42969990      0.503045321      0.400000006    
+ SCL      0.426031500      -1.78969979      0.446712971      0.449999988    
+ SCL      0.393746912      -2.14969969      0.416464984      0.500000000    
+ SCL      0.366010636      -2.50969982      0.398590088      0.550000012    
+ SCL      0.341924846      -2.86969995      0.387223542      0.600000024    
+ SCL      0.320813328      -3.22969961      0.379574567      0.649999976    
+ SCL      0.302157193      -3.58969975      0.374192506      0.699999988    
+ SCL      0.285551578      -3.94969940      0.370267153      0.750000000    
+ SCL      0.270676106      -4.30969954      0.367318839      0.800000012    
+ SCL      0.257273704      -4.66969967      0.365049452      0.850000024    
+ SCL      0.245135948      -5.02969933      0.363266170      0.899999976    
+ SCL      0.234091863      -5.38969946      0.361839801      0.949999988    
+ SCL      0.224000022      -5.74969959      0.360681325       1.00000000    
+
+
+ #Texture Settled_Bulk_Den Normal_Bulk_den Reference_Bulk_Den OM_frac
+ CL        1.44389999       1.40330005       1.75746000       0.00000000    
+ CL        1.13487470       1.04329991       1.55471003       5.00000007E-02
+ CL       0.934806228      0.683299959       1.35196006      0.100000001    
+ CL       0.794706404      0.323299944       1.14921010      0.150000006    
+ CL       0.691127002      -3.66999544E-02  0.946460009      0.200000003    
+ CL       0.611434579     -0.396699965      0.743710160      0.250000000    
+ CL       0.548220396     -0.756700158      0.892163754      0.300000012    
+ CL       0.496852547      -1.11669993      0.621218622      0.349999994    
+ CL       0.454286188      -1.47669983      0.503045321      0.400000006    
+ CL       0.418437809      -1.83669972      0.446712971      0.449999988    
+ CL       0.387833357      -2.19669986      0.416464984      0.500000000    
+ CL       0.361400545      -2.55669999      0.398590088      0.550000012    
+ CL       0.338340908      -2.91670012      0.387223542      0.600000024    
+ CL       0.318047494      -3.27669978      0.379574567      0.649999976    
+ CL       0.300050676      -3.63669991      0.374192506      0.699999988    
+ CL       0.283981472      -3.99669957      0.370267153      0.750000000    
+ CL       0.269545972      -4.35669994      0.367318839      0.800000012    
+ CL       0.256507069      -4.71670008      0.365049452      0.850000024    
+ CL       0.244671434      -5.07669973      0.363266170      0.899999976    
+ CL       0.233879849      -5.43669987      0.361839801      0.949999988    
+ CL       0.224000022      -5.79670000      0.360681325       1.00000000    
+
+
+ #Texture Settled_Bulk_Den Normal_Bulk_den Reference_Bulk_Den OM_frac
+ SiCL      1.39080000       1.37250006       1.60829997       0.00000000    
+ SiCL      1.10341859       1.01249993       1.40225005       5.00000007E-02
+ SiCL     0.914462805      0.652499974       1.19620001      0.100000001    
+ SiCL     0.780760825      0.292499930      0.990149975      0.150000006    
+ SiCL     0.681168377      -6.74999580E-02  0.784099996      0.200000003    
+ SiCL     0.604109406     -0.427499980      0.578050077      0.250000000    
+ SiCL     0.542713404     -0.787500143      0.892163754      0.300000012    
+ SiCL     0.492645621      -1.14749992      0.621218622      0.349999994    
+ SiCL     0.451035440      -1.50749981      0.503045321      0.400000006    
+ SiCL     0.415906876      -1.86749971      0.446712971      0.449999988    
+ SiCL     0.385854840      -2.22749996      0.416464984      0.500000000    
+ SiCL     0.359853089      -2.58750010      0.398590088      0.550000012    
+ SiCL     0.337134421      -2.94750023      0.387223542      0.600000024    
+ SiCL     0.317114085      -3.30749989      0.379574567      0.649999976    
+ SiCL     0.299338192      -3.66750002      0.374192506      0.699999988    
+ SiCL     0.283449382      -4.02749968      0.370267153      0.750000000    
+ SiCL     0.269162297      -4.38749981      0.367318839      0.800000012    
+ SiCL     0.256246358      -4.74749994      0.365049452      0.850000024    
+ SiCL     0.244513243      -5.10749960      0.363266170      0.899999976    
+ SiCL     0.233807549      -5.46749973      0.361839801      0.949999988    
+ SiCL     0.224000022      -5.82749987      0.360681325       1.00000000    
+
+
+ #Texture Settled_Bulk_Den Normal_Bulk_den Reference_Bulk_Den OM_frac
+ SC        1.61899996       1.42219996       1.81718016       0.00000000    
+ SC        1.23457360       1.06219995       1.63913012       5.00000007E-02
+ SC       0.997678101      0.702199996       1.46108007      0.100000001    
+ SC       0.837059438      0.342199951       1.28303003      0.150000006    
+ SC       0.720986068      -1.77999660E-02   1.10497999      0.200000003    
+ SC       0.633183777     -0.377799958      0.926930070      0.250000000    
+ SC       0.564445138     -0.737800121      0.892163754      0.300000012    
+ SC       0.509169519      -1.09780002      0.621218622      0.349999994    
+ SC       0.463754475      -1.45779991      0.503045321      0.400000006    
+ SC       0.425777495      -1.81779981      0.446712971      0.449999988    
+ SC       0.393549681      -2.17779994      0.416464984      0.500000000    
+ SC       0.365857273      -2.53780007      0.398590088      0.550000012    
+ SC       0.341805845      -2.89780021      0.387223542      0.600000024    
+ SC       0.320721656      -3.25779986      0.379574567      0.649999976    
+ SC       0.302087486      -3.61780000      0.374192506      0.699999988    
+ SC       0.285499722      -3.97779965      0.370267153      0.750000000    
+ SC       0.270638824      -4.33779955      0.367318839      0.800000012    
+ SC       0.257248461      -4.69779968      0.365049452      0.850000024    
+ SC       0.245120645      -5.05779934      0.363266170      0.899999976    
+ SC       0.234084889      -5.41779947      0.361839801      0.949999988    
+ SC       0.224000022      -5.77779961      0.360681325       1.00000000    
+
+
+ #Texture Settled_Bulk_Den Normal_Bulk_den Reference_Bulk_Den OM_frac
+ SiC       1.42400002       1.35129988       1.54718006       0.00000000    
+ SiC       1.12315500      0.991299987       1.37773001       5.00000007E-02
+ SiC      0.927255809      0.631300032       1.20827997      0.100000001    
+ SiC      0.789544582      0.271299928       1.03883004      0.150000006    
+ SiC      0.687448263      -8.86999518E-02  0.869380057      0.200000003    
+ SiC      0.608732879     -0.448699981      0.699930012      0.250000000    
+ SiC      0.546191812     -0.808700085      0.892163754      0.300000012    
+ SiC      0.495304406      -1.16870010      0.621218622      0.349999994    
+ SiC      0.453090876      -1.52869999      0.503045321      0.400000006    
+ SiC      0.417507857      -1.88869989      0.446712971      0.449999988    
+ SiC      0.387106836      -2.24869990      0.416464984      0.500000000    
+ SiC      0.360832602      -2.60870004      0.398590088      0.550000012    
+ SiC      0.337898314      -2.96870017      0.387223542      0.600000024    
+ SiC      0.317705184      -3.32869983      0.379574567      0.649999976    
+ SiC      0.299789518      -3.68869996      0.374192506      0.699999988    
+ SiC      0.283786476      -4.04869938      0.370267153      0.750000000    
+ SiC      0.269405395      -4.40869951      0.367318839      0.800000012    
+ SiC      0.256411552      -4.76869965      0.365049452      0.850000024    
+ SiC      0.244613498      -5.12869930      0.363266170      0.899999976    
+ SiC      0.233853385      -5.48869944      0.361839801      0.949999988    
+ SiC      0.224000022      -5.84869957      0.360681325       1.00000000    
+
+
+ #Texture Settled_Bulk_Den Normal_Bulk_den Reference_Bulk_Den OM_frac
+ C         1.36100006       1.34070003       1.48048007       0.00000000    
+ C         1.08550477      0.980699956       1.37468004       5.00000007E-02
+ C        0.902765810      0.620700002       1.26888013      0.100000001    
+ C        0.772687912      0.260699958       1.16308010      0.150000006    
+ C        0.675374389      -9.92999524E-02   1.05728006      0.200000003    
+ C        0.599830866     -0.459299952      0.951480091      0.250000000    
+ C        0.539486825     -0.819300115      0.892163754      0.300000012    
+ C        0.490174502      -1.17929995      0.621218622      0.349999994    
+ C        0.449121982      -1.53929985      0.503045321      0.400000006    
+ C        0.414414495      -1.89929974      0.446712971      0.449999988    
+ C        0.384686440      -2.25929999      0.416464984      0.500000000    
+ C        0.358938038      -2.61930013      0.398590088      0.550000012    
+ C        0.336420238      -2.97930026      0.387223542      0.600000024    
+ C        0.316560954      -3.33929992      0.379574567      0.649999976    
+ C        0.298915595      -3.69930005      0.374192506      0.699999988    
+ C        0.283133507      -4.05929947      0.370267153      0.750000000    
+ C        0.268934369      -4.41929960      0.367318839      0.800000012    
+ C        0.256091386      -4.77929974      0.365049452      0.850000024    
+ C        0.244419158      -5.13929939      0.363266170      0.899999976    
+ C        0.233764514      -5.49929953      0.361839801      0.949999988    
+ C        0.224000022      -5.85929966      0.360681325       1.00000000    
+---END testdata.txt---
+
+proctor-wepp.txt - from Wagner et al. 1994
+---BEGIN proctor-wepp.txt---
+#Soil_Series	-	Clay	Sand	OM	OWC	MDD	coef	coef
+#Name	NSSLID	(%)	(%)	(%)	(%)g/g	(Mg/m3)	K1	Kb
+Mexico	89p1135s	22.1	4.6	1.55	19.5	1.58	0.0156	-0.0240
+Tifton	89p1136s	4.7	86.5	0.43	8.0	1.91	0.0100	-0.0270
+Bonifay	89p1137s	3.7	91.9	0.25	10.0	1.77	0.0023	-0.0165
+Cecil	89p1139s	33.6	51.8	0.66	17.5	1.73	0.0393	-0.0249
+Opequon	89p1141s	32.9	12.1	1.50	21.0	1.55	0.0201	-0.0163
+Fredrick	89p1142s	16.8	22.0	1.23	18.5	1.59	0.0196	-0.0140
+Manor	89p1143s	24.6	44.2	0.97	19.5	1.65	0.0216	-0.0140
+Caribou	89p1144s	14.2	46.0	1.84	20.0	1.60	0.0142	-0.0280
+Collamer	89p1145s	17.0	4.8	1.06	18.0	1.65	0.0194	-0.0228
+Miamian	89p1146s	30.5	30.4	2.01	19.0	1.65	0.0065	-0.0220
+Miami	89p1148s	15.9	4.4	0.79	18.0	1.68	0.0108	-0.0261
+Grenada	89p1149s	20.4	3.5	0.99	17.5	1.65	0.0093	-0.0282
+Acadamy	89p962s	13.6	63.0	0.34	13.0	1.93	0.0381	-0.0308
+Los_Banos	89p964s	49.4	15.7	1.45	23.5	1.53	0.0046	-0.0147
+Whitney	89p966s	6.7	75.0	0.27	10.0	1.99	0.0175	-0.0401
+Sverdrup	89p970s	22.6	46.9	1.54	15.5	1.67	0.0145	-0.0093
+Amarillo	89p972s	7.5	86.5	0.14	9.0	1.92	0.0190	-0.0240
+Barnes	89p974s	25.3	42.4	2.52	20.5	1.59	0.0155	-0.0218
+Williams	89p976s	26.9	41.8	1.61	15.0	1.79	0.0166	-0.0240
+Pierre	89p978s	48.7	11.5	1.35	26.0	1.47	0.0129	-0.0171
+Palouse	89p980s	22.1	8.3	1.35	18.0	1.65	0.0116	-0.0207
+Woodward	89p984s	12.0	48.5	0.75	12.5	1.79	0.0140	-0.0289
+Zahl	89p986s	29.8	46.4	1.70	17.0	1.67	0.0204	-0.0166
+Sharpsburg	89p990s	41.0	2.4	1.70	23.5	1.48	0.0040	-0.0127
+Portneuf	89p994s	9.7	16.1	0.77	20.5	1.53	0.0072	-0.0280
+Keith	89p996s	17.8	47.3	0.94	18.5	1.63	0.0144	-0.0447
+Inavale	91z349s	5.0	85.1	0.42	10.0	1.92	0.0162	-0.0401
+Harney	91z350s	30.5	12.3	1.00	18.5	1.64	0.0237	-0.0219
+Fargo	91z351s	47.4	12.1	3.13	26.0	1.46	0.0057	-0.0147
+Smolan	91z352s	32.3	9.1	1.35	19.0	1.65	0.0117	-0.0221
+Richfield	91z353s	26.2	28.9	0.97	18.0	1.68	0.0176	-0.0280
+Lincoln	91z354s	15.8	58.1	1.04	12.5	1.82	0.0237	-0.0240
+Dalhart	91z355s	7.5	75.1	0.68	9.0	1.83	0.0301	-0.0312
+Reading	91z356s	25.1	7.2	1.50	18.5	1.63	0.0087	-0.0223
+New_Cambria	91z357s	42.4	12.7	1.91	22.0	1.57	0.0120	-0.0223
+Santanta	91z358s	8.5	71.5	0.77	11.0	1.90	0.0176	-0.0401
+Carr	91z359s	3.6	74.7	0.47	16.0	1.63	0.0074	-0.0325
+Wymore	91z360s	25.2	10.5	1.31	17.0	1.67	0.0122	-0.0210
+Hanie	91z361s	5.9	61.4	0.64	15.5	1.64	0.0141	-0.0243
+---BEGIN proctor-wepp.txt---
+
+proctor-serdp.txt - from Wagner et al. 1994
+---BEGIN proctor-SERDP.txt---
+#Sample-ID	Clay	Silt	Sand	OM	OWC	PD (g/cm3)
+FR-SL-R3-WH-PO-05	18.62686778	71.75965353	9.613478692	3.404360605	20.11338844	1.56274184
+FR-SL-R2-WH-PO-05	20.98327876	69.79967466	9.217046581	3.849268234	19.63813553	1.697922485
+FR-SL-R1-TR-PO-05	12.92465037	76.01859816	11.05675147	3.984674904	22.03985834	1.55242871
+FR-SL-R2-TR-PO-05	22.14278258	67.35176648	10.50545094	3.636486324	19.2904005	1.713382669
+FR-SL-R1-WH-PO-05	25.47354521	65.25427134	9.27218345	4.120081574	21.38949605	1.534399862
+FR-SL-R3-TR-PO-05	14.06435799	74.13623198	11.79941003	4.990553023	20.45053004	1.560581219
+FR-SCL-R1-WH-PO-05	27.64629737	66.55232603	5.801376598	4.004018714	26.03644236	1.475909681
+FR-SCL-R1-TR-PO-05	28.13549339	62.38346868	9.481037924	3.365672985	22.89623628	1.575276597
+FR-SCL-R2-TR-PO-05	30.82098293	61.2378406	7.941176471	3.887955854	23.51197216	1.630267221
+FR-SCL-R3-TR-PO-05	17.15781284	74.3417096	8.500477555	4.855146353	22.93827367	1.483344311
+FR-SCL-R2-WH-PO-05	31.53102317	60.04479448	8.424182359	4.564989203	22.22120093	1.436441982
+FR-SCL-R3-WH-PO-05	32.87030437	59.99382075	7.135874878	3.887955854	23.52755564	1.478180526
+FB-1	2.474101275	11.77596112	85.74993761	0.904728445	7.769315014	1.809983549
+FB-2	4.138304349	10.54334359	85.31835206	0.791580557	8.930836425	1.890452977
+FB-3	3.828647365	10.38936211	85.78199052	1.221542531	8.953377399	1.866578099
+FB-4	1.872292857	6.837465067	91.29024208	0.316359428	8.431488191	1.761330138
+FB-5	2.572194121	8.644393438	88.78341244	1.085765066	8.842268466	1.779985598
+FB-6	1.711608728	9.055316079	89.23307519	0.836839712	8.511624485	1.794777459
+Y-1	3.556197911	42.54769819	53.8961039	1.69676366	16.13333648	1.656218882
+Y-2	4.104508264	48.71344685	47.18204489	2.239873522	17.49970668	1.630526876
+Y-3	5.601967677	46.34608427	48.05194805	1.493097462	16.89095274	1.663668865
+Y-4	5.148246534	44.45175347	50.4	2.217243945	16.0434848	1.693399254
+Y-5	5.080669806	41.02711463	53.89221557	1.990948169	17.94439506	1.599544887
+Y-6	6.200861996	39.649138	54.15	2.760353807	17.56967804	1.642219248
+WS-1-CI-5	20.79013735	57.17088214	22.03898051	2.9	19.84116879	1.632309257
+WS-2-CI-5	19.87640236	44.27359764	35.85	2.3	19.61012473	1.644122608
+WS-3-CI-5	18.21068644	38.98931356	42.8	2.2	16.38196065	1.690257536
+WS-4-CI-5	25.68832575	35.80018574	38.51148851	1.1	16.36673026	1.734720037
+WS-5-CI-5	19.91163429	29.08936471	50.999001	1.3	19.85413649	1.632602876
+WS-6-CI-5	26.74627926	32.98425966	40.26946108	1	18.14613609	1.702832621
+WS-7-CI-5	8.604297395	23.39570261	68	1	9.025867225	1.93447718
+WS-8-CI-5	9.078936478	19.60672069	71.31434283	0.9	8.83704392	1.948801828
+WS-9-CI-5	8.686061989	23.96393801	67.35	0.6	8.581776334	1.955855893
+WS-10-CI-5	6.397861503	16.57916147	77.02297702	0.7	8.444046221	1.942351566
+WS-11-CI-5	7.111618178	16.88838182	76	0.8	8.994483817	1.940915367
+WS-12-CI-5	6.238977719	15.42852103	78.33250125	0.8	9.800388524	1.934803049
+---BEGIN proctor-SERDP.txt---
+
+---BEGIN show_all_data.plt---
+set xrange [0:1]
+set term pdf size 29.7cm,21cm
+set output 'all_data.pdf'
+set ylabel 'Bulk Density (Mg/m^3)'
+set key top
+set xlabel 'Organic Matter (fraction)'
+plot 'proc-wepp-ref.txt' using 11:3 with points title 'Wagner, 1994 (Proctor)', 'proc-serdp-ref.txt' using 11:3 with points title 'GA, KS, NM, WA (Proctor)', 'proc-pref-ref.txt' using 11:3 with points title 'Keller and Håkansson, 2010 (Uni-axial)'
+set key bottom
+set xlabel 'Sand (fraction)'
+plot 'proc-wepp-ref.txt' using 10:3 with points title 'Wagner, 1994 (Proctor)', 'proc-serdp-ref.txt' using 10:3 with points title 'GA, KS, NM, WA (Proctor)', 'proc-pref-ref.txt' using ($11<0.35?($10):NaN):3 with points title 'Keller and Håkansson, 2010 (Uni-axial)'
+set xlabel 'Silt (fraction)'
+plot 'proc-wepp-ref.txt' using 9:3 with points title 'Wagner, 1994 (Proctor)', 'proc-serdp-ref.txt' using 9:3 with points title 'GA, KS, NM, WA (Proctor)', 'proc-pref-ref.txt' using ($11<0.35?($9):NaN):3 with points title 'Keller and Håkansson, 2010 (Uni-axial)'
+set xlabel 'Clay (fraction)'
+plot 'proc-wepp-ref.txt' using 8:3 with points title 'Wagner, 1994 (Proctor)', 'proc-serdp-ref.txt' using 8:3 with points title 'GA, KS, NM, WA (Proctor)', 'proc-pref-ref.txt' using ($11<0.35?($8):NaN):3 with points title 'Keller and Håkansson, 2010 (Uni-axial)'
+---END show_all_data.plt---
+
+Physical characteristics of organic soils (http://www.fao.org/docrep/003/y1899e/y1899e04.htm)
+
+Fibric Histosols are loosely packed in their natural state, with a bulk density (_) that is typically between 0.05 and 0.15 Mg/m3. Surface tiers of ombrogenous forest peat contain (still) more mineral `ash' than the subsurface layers and are slightly denser (_ -values of the order of 0.15 to 0.25 Mg/m3). Reclaimed (drained and cropped) peat formations acquire a higher bulk density (say, 0.4 Mg/m3) after a few years of consolidation and decomposition of peat.
+
+The specific gravity (_s) of organic soil material with a low content of mineral constituents (less than, say, 3 percent by weight) is nearly always close to 1.4 Mg/m3. It follows that the total pore fraction (= 1-_ /_s) of most ombrogenous Fibric Histosols exceeds 0.9 m3/m3; skeletal subsurface tiers consist for only 5 to 10 volume percent of solid matter (sic!).
+
+Fibric peat has many wide pores. Its saturated hydraulic conductivity is typically greater than 1.6 m/d and may well exceed 30 m/d. Well-decomposed sapric peat has finer pores and is less permeable. Virgin woody peat is nearly always very permeable to water; compacted (reclaimed/drained) peat has a much lower Total Pore Fraction than virgin peat. Compacted, stratified peat may be virtually impermeable, irrespective of its fiber content.
+
+

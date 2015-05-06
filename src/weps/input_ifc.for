@@ -92,9 +92,10 @@
       ! Wet Albedo (calculate from dry albedo)
       asfalw(isr) = asfald(isr)/((1.33**2.)*(1-asfald(isr))+asfald(isr))
 
-      ! Settled Bulk Density and Particle Density (texture based calculation)
-      call proptext( nslay(isr), asfcla(1,isr), asfsan(1,isr),          &
-     &               asfom(1,isr), asdsblk(1,isr), asdpart(1,isr) )
+      ! Settled Bulk Density, Reference Bulk Density, and Particle Density (texture based calculation)
+      call proptext( nslay(isr), asfcla(1,isr),                         &
+     &               asfsan(1,isr), asfom(1,isr),                       &
+     &               asdsblk(1,isr), asdprocblk(1,isr), asdpart(1,isr) )
 
       do lay=1,nslay(isr)
       ! make sure settled bd is greater than or equal to wet bulk density

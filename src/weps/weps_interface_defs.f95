@@ -835,12 +835,14 @@
       real sandf, clayf, sat, fc, pwp
       end subroutine propsaxt
 !-------------------------------
-      subroutine proptext( nlay, clayf, sandf, organf,                  &
-     &                 settled_bulkden, partden )
+      subroutine proptext( nlay, clayf, sandf, organf, &
+     &                 settled_bulkden, proctor_bulkden, partden )
 
       integer nlay
-      real sandf(*),clayf(*),organf(*)
-      real settled_bulkden(*), partden(*)      
+      real sandf(*), clayf(*), organf(*)
+      real settled_bulkden(*)
+      real proctor_bulkden(*)
+      real partden(*)      
       end subroutine proptext
 !--------------------------------
       subroutine   psd (sandm, siltm, claym, pgmd, pgsd)
@@ -2630,10 +2632,6 @@ SUBROUTINE update_period_report_vars(pd, npd, cur_yr, nrot_years, period_update,
       integer nlay_old, nlay_new
       real bszlyd(*), valuearr(*), laydepth_new(*) 
       end subroutine move_ave_val     
-!-------------------------------------
-      real function setbds (clay, sand, om)
-      real clay, sand, om  
-      end function setbds    
 !-------------------------------------
       real function valbydepth(layrsn, bszlyd, lay_val, ai_flag, depthtop, depthbot)
       integer layrsn
