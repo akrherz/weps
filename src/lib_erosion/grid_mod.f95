@@ -188,8 +188,8 @@ module grid_mod
           if( cellstate(i,j)%csr .eq. 0 ) then
               ! this grid cell not assigned to a subregion
               write(*,*) 'ERROR: no subregion for grid cell ',i,':',j
-              write(*,*) 'Subregion coverage is not complete'
-              stop
+              !write(*,*) 'Subregion coverage is not complete'
+              !stop
           end if
           ! do same assignment check for accounting regions
           do sr = 1, size(acct_poly)

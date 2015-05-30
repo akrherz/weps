@@ -1383,7 +1383,7 @@ module sae_in_out_mod
           aegt2_5p = 0.0
       endif   
 
-      write(0,*) 'Subsequent ntstep is: ', ntstep, tims, tims/3600
+      !write(0,*) 'Subsequent ntstep is: ', ntstep, tims, tims/3600
 
       call caldat( mksaeout%jday, da, mo, yr) ! Set day, month and year
 

@@ -46,9 +46,9 @@
  1001 format(a1,1x,i2,1x,a)
       if( (lastoper(sr)%code.eq.0).and.(mcount(sr).gt.0) ) then
           lastoper(sr)%skip = 1
-          print*, 'SR',sr,' Skip operation', lastoper(sr)%code,' ',lastoper(sr)%name
+          print*, 'SR',sr,' Skip operation', lastoper(sr)%code,' ', trim(lastoper(sr)%name)
       else
-          print*, 'SR',sr,' Do operation', lastoper(sr)%code,' ',lastoper(sr)%name
+          print*, 'SR',sr,' Do operation', lastoper(sr)%code,' ', trim(lastoper(sr)%name)
       end if
 
 

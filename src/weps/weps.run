@@ -199,10 +199,12 @@ Canola, fall; Fallow_ Wheat, winter; Fallow; mulch till, Z50.man
 #   RFD-WaterErosionLoss
 0.0000
 #
+# End Subregion Section
+#
 #   RFD-BarrierNo
 1
 #   RFD-BarrierS coordinates (meters) | height (meters) | width (meters) | porosity
-#   Note: subregion mod included skipping reading barriers is there are 0. No placeholder necessary.
+#   Note: subregion mod included skipping reading barriers if there are 0. No placeholder necessary.
 # number of coordinates
 2
 # first coordinate pair and data

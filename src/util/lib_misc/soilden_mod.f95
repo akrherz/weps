@@ -102,7 +102,6 @@ module soilden_mod
       ! 1994; 37((4)): 1121-1125. Additional data from the SERDP project is used to
       ! update the OWC function to a different form
 
-
       ! + + + ARGUMENTS + + +
       real, intent(in) :: clay       ! fraction of soil clay content (mineral fraction)
       real, intent(in) :: sand       ! fraction of soil sand content (mineral fraction)
@@ -121,6 +120,48 @@ module soilden_mod
       return
 
     end function setbdproc
+
+    function setbdproc_wc ( clay, sand, om, pden, swc ) result( bd_wc )
+
+      ! + + + PURPOSE + + +
+      ! The following function estimates the proctor soil bulk density from
+      ! intrinsic properties. see Wagner, L.E., Ambe, N.M., Ding, D. Estimating
+      ! a Proctor Density Curve from Intrinsic Soil Properties. Trans of the ASAE;
+      ! 1994; 37((4)): 1121-1125. Additional data from the SERDP project is used to
+      ! update the OWC function to a different form
+
+      ! + + + ARGUMENTS + + +
+      real, intent(in) :: clay       ! fraction of soil clay content (mineral fraction)
+      real, intent(in) :: sand       ! fraction of soil sand content (mineral fraction)
+      real, intent(in) :: om         ! fraction of soil organic matter
+      real, intent(in) :: pden       ! average particle density
+      real, intent(in) :: swc        ! soil water content (g/g)
+      real :: bd_wc     ! proctor bulk density adjusted for water content
+
+      ! + + + LOCAL VARIABLES + + +
+      real :: owc          ! optimal soil water content for compaction %(g/g)
+      real :: bdproc       ! proctor bulk density (standard method)
+      real :: pswc         ! percent soil water content %(g/g)
+      real, parameter :: k_low = 0.0154    ! slope of density reduction when swc less than owc
+      real, parameter :: k_high = -0.0241  ! slope of density reduction when swc greater than owc
+
+      ! find optimal water content
+      owc = optimalwat( clay, sand, om )
+
+      bdproc = pden / (1.0 + pden*owc/80.0)
+
+      pswc = 100.0 * swc
+      if( pswc .lt. owc ) then
+        bd_wc = k_low * (pswc - owc) + bdproc
+      else
+        bd_wc = k_high * (pswc - owc) + bdproc
+      end if
+
+      bd_wc = max( bd_wc, setbds(clay, sand, om) )
+
+      return
+
+    end function setbdproc_wc
 
     function setbds ( clay, sand, om ) result ( bds )
 

@@ -41,7 +41,7 @@
       parameter (mncz = 5)
       parameter (mnspt = 2)
       parameter (mnsrpt = 2)
-      parameter (mnsub = 4)
+      parameter (mnsub = 14)
       parameter (mnsz = 100)
       parameter (mntime = 1440)
       parameter (mnbpls = 5)   ! present decomp output maxes at 30 (see openfils.for, file.inc, FAF)

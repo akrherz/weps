@@ -72,10 +72,17 @@ contains
     np = size(ppol%points)
     start_np = 1
     count_np = count_closure( ppol%points )
-    do while( (count_np .gt. 0) .and. (start_np .lt. np) )
+
+    !write(*,*) 'np, start_np, initial count_np: ', np, start_np, count_np
+
+    do while( (count_np .gt. 0) .and. (count_np .lt. np) .and. (start_np .lt. np) )
+          ! multi area polygon found
           area = area + area_point_array( ppol%points(start_np:start_np+count_np-1) )
           start_np = start_np + count_np
           count_np = count_closure( ppol%points(start_np:) )
+
+          !write(*,*) 'np , start_np, in loop count_np: ', np, start_np, count_np
+
           if( (count_np .eq. 0) .and. (start_np .lt. np) ) then
              ! a second polygon did not close back to first one
              ! check for self closure with later point
@@ -83,6 +90,9 @@ contains
           else
              ! a second polygon never closed
              write(*,*) 'ERROR: mult section polygon does not close'
+             write(*,*) 'np, start_np, count_np: ', np, start_np, count_np
+             write(*,*) 'First Point: ', ppol%points(1)
+             write(*,*) 'Last Point: ', ppol%points(np)
              stop 
           end if
     end do
@@ -92,7 +102,7 @@ contains
        ! create close polygon array and find area
        allocate( points(np+1), stat=alloc_stat )
        if( alloc_stat .gt. 0) then
-          write(*,*) 'ERROR: unable to allocate array in set_are_polygon'
+          write(*,*) 'ERROR: unable to allocate array in set_area_polygon'
        else
           do idx = 1, np
              points(idx) = ppol%points(idx)
@@ -101,13 +111,15 @@ contains
           ppol%area = area_point_array( points )
           deallocate( points, stat=alloc_stat )
           if( alloc_stat .gt. 0) then
-             write(*,*) 'ERROR: unable to deallocate array in set_are_polygon'
+             write(*,*) 'ERROR: unable to deallocate array in set_area_polygon'
           end if
        end if
     else
        ! last point closed polygon so report area
        ppol%area = area
     end if
+
+    ! write(*,*) 'Polygon area: ', ppol%area
     
   end subroutine set_area_polygon
 
@@ -140,6 +152,9 @@ contains
 
     np = 0
     do idx = 2, size(points)
+
+       !write(*,*) 'count_closure, idx, points(idx), points(1):', idx, points(idx), points(1)
+
        if( points(idx) .eq. points(1) ) then
           np = idx
        end if

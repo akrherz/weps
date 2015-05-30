@@ -160,14 +160,13 @@ module erosion_data_struct_defs
      real :: awudav           ! Average daily wind speed (m/s)
      type(subdailyvalues), dimension(:), allocatable :: subday
      logical :: am0eif        ! flag to run initialization of EROSION, If .true. then run initialization subroutines.
-     integer :: am0efl        ! flag to print EROSION output
-                              ! 0 - then print no output
-                              ! 1 - then print detailed output,
-                              ! 3 - print heading and reset to val of 98  (WEPS)
-                              ! 98 - print hourly emissions for erosion day (WEPS)
-                              ! 4 - print heading and reset to val of 99  (tsterode)
-                              ! 99 - print period emissions for erosion day (tsterode)
-                              ! 6 - then call sb1out to print debug data to "tst.out"
+     integer :: am0efl        ! flag to print EROSION output, based on bit settings
+                              ! 0 - no submodel output
+                              ! 1 - bit 0 set to 1, Erosion summary - total, salt/creep, susp, pm10
+                              ! 2 - bit 1 set to 1, Daily Erosion grid file
+                              ! 4 - bit 2 set to 1, Output file, emissions for each time step
+                              ! 8 - bit 3 set to 1, Duplicate Erosion summary for the *.sgrd file for "sweep" interface display
+                              ! 15 - all bits set, full output enabled
  ! end type simulationregionvalues
 
 contains

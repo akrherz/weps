@@ -124,7 +124,7 @@
 !     real    intens, rrimpl
       real    kappa
       real    thinval
-      real    tibcp
+    real :: start_depth ! depth in soil at which tillage loosening/compaction begins (mm)
       real    pyieldf, pstalkf, rstandf
       integer harv_report_flg, harv_calib_flg, harv_unit_flg
       integer mature_warn_flg
@@ -218,7 +218,7 @@
 !     rdght1   - tmp variable - ridge height (mm)
 !     rdgwt    - ridge top width (mm)
 !     rrimpl   - assigned nominal RR value for the tillage operation (mm)
-!     tibcp    - tillage intensity factor used for below tillage compaction
+!     start_depth - depth in soil at which tillage loosening/compaction begins (mm)
 !     mu       - loosening coefficient (0 <= mu <= 1)
 !     rho      - mixing coefficient (0 <= rho <= 1)
 !     irrig    - irrigation quantity for a day (mm)
@@ -703,14 +703,14 @@
 !-----END inversion process (process code 14)
 !
       case (21)
-!-----START below layer compaction (process code 21)
+!-----START Change Bulk Density (process code 21)
 !     pre-process stuff
 !     do process
 !     post-process stuff
         mcur(sr) = mcur(sr) + 1
         line = mtbl(mcur(sr))
-        read(line(2:len_trim(line)),* , err=901) tibcp
-!-----END below layer compaction (process code 21)
+        read(line(2:len_trim(line)),* , err=901) start_depth
+!-----END Change Bulk Density (process code 21)
 !
       case (24)
 !-----START flatten process variable toughness (process code 24)

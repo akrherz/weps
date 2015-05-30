@@ -223,7 +223,7 @@
   
         end do
 
-      ! Check if override of rock fragments are specified (only single subregion for now)
+      ! Check if override of rock fragments are specified
       write(6,*) 'SoilRockFragments(',isr,') = ', SoilRockFragments(isr)
       if (SoilRockFragments(isr) .ge. 0.0) then
         do lay = 1, nslay(isr)
