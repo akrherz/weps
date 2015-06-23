@@ -208,12 +208,27 @@ program test_compaction
       proc_wc_0_5 = setbdproc_wc( bsfcla(idx), bsfsan(idx), bsfom(idx), bsdpart(idx), bhrwc_0_5(idx))
       proc_wc_5_10 = setbdproc_wc( bsfcla(idx), bsfsan(idx), bsfom(idx), bsdpart(idx), bhrwc_5_10(idx))
       proc_wc_10_15 = setbdproc_wc( bsfcla(idx), bsfsan(idx), bsfom(idx), bsdpart(idx), bhrwc_10_15(idx))
-      BD_norm_0_5 = (bsdbd_0_5(idx) - bsdsblk(idx)) / (proc_wc_0_5 - bsdsblk(idx))
-      BD_norm_5_10 = (bsdbd_5_10(idx) - bsdsblk(idx)) / (proc_wc_5_10 - bsdsblk(idx))
-      BD_norm_10_15 = (bsdbd_10_15(idx) - bsdsblk(idx)) / (proc_wc_10_15 - bsdsblk(idx))
+
+      if( bsdbd_0_5(idx) .lt. bsdsblk(idx) ) then
+        BD_norm_0_5 = (bsdbd_0_5(idx) - bsdsblk(idx)) / ((1.0/3.0)*bsdsblk(idx))
+      else
+        BD_norm_0_5 = (bsdbd_0_5(idx) - bsdsblk(idx)) / (proc_wc_0_5 - bsdsblk(idx))
+      end if
+
+      if( bsdbd_5_10(idx) .lt. bsdsblk(idx) ) then
+        BD_norm_5_10 = (bsdbd_5_10(idx) - bsdsblk(idx)) / ((1.0/3.0)*bsdsblk(idx))
+      else
+        BD_norm_5_10 = (bsdbd_5_10(idx) - bsdsblk(idx)) / (proc_wc_5_10 - bsdsblk(idx))
+      end if      
+
+      if( bsdbd_10_15(idx) .lt. bsdsblk(idx) ) then
+        BD_norm_10_15 = (bsdbd_10_15(idx) - bsdsblk(idx)) / ((1.0/3.0)*bsdsblk(idx))
+      else
+        BD_norm_10_15 = (bsdbd_10_15(idx) - bsdsblk(idx)) / (proc_wc_10_15 - bsdsblk(idx))
+      end if
+
       write(luo1,*) soilcode(idx), trackcode(idx), plotnumber(idx), rep_number(idx), passnumber(idx), &
                     loc_code(idx), BD_norm_0_5, BD_norm_5_10, BD_norm_10_15
-
     end do
     close(luo1)
   end if
