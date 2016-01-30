@@ -102,10 +102,25 @@
 
       call fopenk(luimandate, fname(1:len_trim(fname)), 'old')
    10 read(luimandate, '(a)', end=20) line
-      if (line(1:1).eq.'#') goto 10
-      if (line(1:1).eq.'T') goto 10    ! Skip new "multi-line" string variables like comment lines
-      if (line(1:1).eq.'N') goto 10    ! Skip new "multi-line" management file notes like comment lines
-      mtbl(linidx) = line    !Actually add the line to the management table      
+      select case (line(1:1))
+      case ('V')  ! first line begins with word "Version: "
+        goto 15
+      case ('O')
+        goto 15
+      case ('G')
+        goto 15
+      case ('P')
+        goto 15
+      case ('D')
+        goto 15
+      case ('*')
+        goto 15
+      case ('+')
+        goto 15
+      case default
+        goto 10
+      end select
+   15 mtbl(linidx) = line    !Actually add the line to the management table      
       linidx = linidx + 1
 ! ***      write (*,*) ' man fil: ',linidx, line
       if (linidx.le.mxtbln) goto 10
