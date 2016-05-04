@@ -3,7 +3,7 @@
 !$Revision$
 !$HeadURL$
 
-      subroutine crop_endseason ( isr, bc0nam, bm0cfl,                  &
+      subroutine crop_endseason ( isr, bmrotation, bc0nam, bm0cfl,      &
      &                 bnslay, bc0idc, bcdayam,                         &
      &                 bcthum, bcxstmrep,                               &
      &                 bprevstandstem, bprevstandleaf, bprevstandstore, &
@@ -26,6 +26,7 @@
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer, intent(in) :: isr   ! subregion number
+      integer, intent(in) :: bmrotation ! rotation count updated in manage.for
       character*(80) bc0nam
       integer bm0cfl, bnslay, bc0idc, bcdayam
       real bcthum, bcxstmrep
@@ -73,6 +74,9 @@
 !                1  - Warnings generated for any crop unless supressed by crop type
 
 !     + + + GLOBAL COMMON BLOCKS + + +
+      include 'p1werm.inc'
+      include 'c1report.inc'
+      include 'm1flag.inc'
 
 !     + + + LOCAL VARIABLES + + +
       integer lay, dd, mm, yy
@@ -86,10 +90,24 @@
 !     root_fiber_sum - sum of root fiber 
 
 !     + + + OUTPUT FORMATS + + +
- 2013 format(1x,i4,13(1x,f7.3),1x,f7.5,1x,i4,3(1x,f6.1),1x,f5.3,1x,i4,  &
-     &       1x,i6,1x,a40)
+ 2010 format(1x,i2,'/',i2,'/',i4,'|',a40,'|',13(f7.3,'|'),f7.5,'|',i4,  &
+     &       '|',3(f6.1,'|'),f5.3,'|',i4,'|',i6,'|')
+ 2020 format(a)
 
 !     + + + END OF SPECIFICATIONS + + +
+
+      if( init_loop .or. calib_loop ) then  !initilizing or calibrating cycle
+
+        ! set to the beginning of simulation
+        ! to eliminate newline at beginning of file
+        cprevseasonrotation(isr) = 1
+
+      else  !done when initializing and calibrating cycle(s) are completed
+
+        if( bmrotation .gt. cprevseasonrotation(isr) ) then
+          ! write newline
+          write(unit=luoseason(isr),fmt=2020) ''
+        end if
 
 !     day of year
       call get_simdate(dd, mm, yy)
@@ -114,13 +132,13 @@
             root_fiber_sum = root_fiber_sum + bprevrootfiberz(lay)
         end do
 
-        write(luoseason(isr),2013) yy,                                  &
+        write(UNIT=luoseason(isr),FMT=2010,advance='NO')dd,mm,yy,bc0nam,&
      &    bprevstandstem, bprevstandleaf, bprevstandstore,              &
      &    bprevflatstem, bprevflatleaf, bprevflatstore,                 &
      &    bg_stem_sum, root_store_sum, root_fiber_sum,                  &
      &    bprevht, bprevstm, bprevrtd, bprevgrainf,                     &
      &    bcxstmrep, bprevdayap, bprevchillucum, bprevhucum, bcthum,    &
-     &    hui, bcdayam, bprevdayspring, bc0nam
+     &    hui, bcdayam, bprevdayspring
       end if
 
       ! for annual crops, ALWAYS write out warning message
@@ -135,6 +153,11 @@
      &       dd, mm, yy,                                                &
      &       ' only reached ', hui*100.0, '% of maturity',              &
      &       ' (Check crop selection, planting, harvest dates)'
+      end if
+
+        ! updated every call to get newline in right place
+        cprevseasonrotation(isr) = bmrotation
+
       end if
 
       return

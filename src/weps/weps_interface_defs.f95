@@ -122,7 +122,7 @@
       integer, intent(in) :: isr   ! subregion number
       end subroutine cpout
 !-------------------------------
-      subroutine crop_endseason ( isr, bc0nam, bm0cfl,                  &
+      subroutine crop_endseason ( isr, bmrotation, bc0nam, bm0cfl,      &
      &                 bnslay, bc0idc, bcdayam,                         &
      &                 bcthum, bcxstmrep,                               &
      &                 bprevstandstem, bprevstandleaf, bprevstandstore, &
@@ -134,6 +134,7 @@
      &                 bprevgrainf, bprevchillucum, bprevliveleaf,      &
      &                 bprevdayspring, mature_warn_flg )
       integer, intent(in) :: isr   ! subregion number
+      integer, intent(in) :: bmrotation ! rotation count updated in manage.for
       character*(80) bc0nam
       integer bm0cfl, bnslay, bc0idc, bcdayam
       real bcthum, bcxstmrep

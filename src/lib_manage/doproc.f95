@@ -969,6 +969,18 @@
      &           atmbgstemz(1,sr),                                      &
      &           atzht(sr), atdstm(sr), atxstmrep(sr), atzrtd(sr),      &
      &           atgrainf(sr) )
+            call report_hydrobal( sr, bmrotation )
+            call crop_endseason( sr, bmrotation, crop%bname, am0cfl(sr), &
+     &        nslay(sr), ac0idc(sr), crop%growth%dayam, &
+     &        acthum(sr), crop%geometry%xstmrep, &
+     &        prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
+     &        prevflatstem(sr), prevflatleaf(sr), prevflatstore(sr),    &
+     &        prevbgstemz(1,sr),                                        &
+     &        prevrootstorez(1,sr), prevrootfiberz(1,sr),               &
+     &        prevht(sr), prevstm(sr), prevrtd(sr),                     &
+     &        prevdayap(sr), prevhucum(sr), prevrthucum(sr),            &
+     &        prevgrainf(sr), prevchillucum(sr), prevliveleaf(sr),      &
+     &        prevdayspring(sr), mature_warn_flg )
           else if( am0kilfl .eq. 3 ) then
              ! defoliate by dropping all crop leaf mass into crop flat pool
              crop%mass%flatleaf = crop%mass%flatleaf + crop%mass%standleaf
@@ -1030,10 +1042,12 @@
             call report_harvest( sr, bmrotation, mass_rem, mass_left, 0,&
      &           mandate, crop)
             call report_calib_harvest( sr, bmrotation, mass_rem, mass_left, crop )
-            call report_hydrobal( sr, bmrotation )
-            call crop_endseason( sr, crop%bname, am0cfl(sr),                &
-     &        nslay(sr), ac0idc(sr), crop%growth%dayam,                       &
-     &        acthum(sr), crop%geometry%xstmrep,                                &
+            if( am0kilfl.eq.0 ) then
+              ! not reported by the kill process in this
+              call report_hydrobal( sr, bmrotation )
+              call crop_endseason( sr, bmrotation, crop%bname, am0cfl(sr), &
+     &        nslay(sr), ac0idc(sr), crop%growth%dayam, &
+     &        acthum(sr), crop%geometry%xstmrep, &
      &        prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
      &        prevflatstem(sr), prevflatleaf(sr), prevflatstore(sr),    &
      &        prevbgstemz(1,sr),                                        &
@@ -1042,6 +1056,7 @@
      &        prevdayap(sr), prevhucum(sr), prevrthucum(sr),            &
      &        prevgrainf(sr), prevchillucum(sr), prevliveleaf(sr),      &
      &        prevdayspring(sr), mature_warn_flg )
+            end if
         endif
 !-----END cutting to height process (process code 32)
 
@@ -1084,10 +1099,12 @@
             call report_harvest( sr, bmrotation, mass_rem, mass_left, 0,&
      &           mandate, crop)
             call report_calib_harvest( sr, bmrotation, mass_rem, mass_left, crop )
-            call report_hydrobal( sr, bmrotation )
-            call crop_endseason( sr, crop%bname, am0cfl(sr),                &
-     &        nslay(sr), ac0idc(sr), crop%growth%dayam,                       &
-     &        acthum(sr), crop%geometry%xstmrep,                                &
+            if( am0kilfl.eq.0 ) then
+              ! not reported by the kill process in this
+              call report_hydrobal( sr, bmrotation )
+              call crop_endseason( sr, bmrotation, crop%bname, am0cfl(sr), &
+     &        nslay(sr), ac0idc(sr), crop%growth%dayam, &
+     &        acthum(sr), crop%geometry%xstmrep, &
      &        prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
      &        prevflatstem(sr), prevflatleaf(sr), prevflatstore(sr),    &
      &        prevbgstemz(1,sr),                                        &
@@ -1096,6 +1113,7 @@
      &        prevdayap(sr), prevhucum(sr), prevrthucum(sr),            &
      &        prevgrainf(sr), prevchillucum(sr), prevliveleaf(sr),      &
      &        prevdayspring(sr), mature_warn_flg )
+            end if
         end if
 !-----END cutting by fraction process (process code 33)
 
@@ -1173,8 +1191,10 @@
             call report_harvest( sr, bmrotation, mass_rem, mass_left, 0,&
       &          mandate, crop)
             call report_calib_harvest( sr, bmrotation, mass_rem, mass_left, crop )
-            call report_hydrobal( sr, bmrotation )
-            call crop_endseason( sr, crop%bname, am0cfl(sr), &
+            if( am0kilfl.eq.0 ) then
+              ! not reported by the kill process in this
+              call report_hydrobal( sr, bmrotation )
+              call crop_endseason( sr, bmrotation, crop%bname, am0cfl(sr), &
      &        nslay(sr), ac0idc(sr), crop%growth%dayam, &
      &        acthum(sr), crop%geometry%xstmrep, &
      &        prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
@@ -1185,6 +1205,7 @@
      &        prevdayap(sr), prevhucum(sr), prevrthucum(sr),            &
      &        prevgrainf(sr), prevchillucum(sr), prevliveleaf(sr),      &
      &        prevdayspring(sr), mature_warn_flg )
+            end if
         end if
 !-----END thinning to population process (process code 37)
 
@@ -1227,10 +1248,12 @@
             call report_harvest( sr, bmrotation, mass_rem, mass_left, 0,&
      &           mandate, crop)
             call report_calib_harvest( sr, bmrotation, mass_rem, mass_left, crop )
-            call report_hydrobal( sr, bmrotation )
-            call crop_endseason( sr, crop%bname, am0cfl(sr),                &
-     &        nslay(sr), ac0idc(sr), crop%growth%dayam,                       &
-     &        acthum(sr), crop%geometry%xstmrep,                                &
+            if( am0kilfl.eq.0 ) then
+              ! not reported by the kill process in this
+              call report_hydrobal( sr, bmrotation )
+              call crop_endseason( sr, bmrotation, crop%bname, am0cfl(sr), &
+     &        nslay(sr), ac0idc(sr), crop%growth%dayam, &
+     &        acthum(sr), crop%geometry%xstmrep, &
      &        prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
      &        prevflatstem(sr), prevflatleaf(sr), prevflatstore(sr),    &
      &        prevbgstemz(1,sr),                                        &
@@ -1239,6 +1262,7 @@
      &        prevdayap(sr), prevhucum(sr), prevrthucum(sr),            &
      &        prevgrainf(sr), prevchillucum(sr), prevliveleaf(sr),      &
      &        prevdayspring(sr), mature_warn_flg )
+            end if
         end if
 !-----END thinning by fraction process (process code 38)
 
@@ -1328,8 +1352,10 @@
           if( harv_report_flg .gt. 0 ) then
             call report_harvest( sr, bmrotation, mass_rem, mass_left,   &
      &                           harv_unit_flg, mandate, crop )
-            call report_hydrobal( sr, bmrotation )
-            call crop_endseason( sr, crop%bname, am0cfl(sr), &
+            if( am0kilfl.eq.0 ) then
+              ! not reported by the kill process in this
+              call report_hydrobal( sr, bmrotation )
+              call crop_endseason( sr, bmrotation, crop%bname, am0cfl(sr), &
      &        nslay(sr), ac0idc(sr), crop%growth%dayam, &
      &        acthum(sr), crop%geometry%xstmrep, &
      &        prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
@@ -1340,6 +1366,7 @@
      &        prevdayap(sr), prevhucum(sr), prevrthucum(sr),            &
      &        prevgrainf(sr), prevchillucum(sr), prevliveleaf(sr),      &
      &        prevdayspring(sr), mature_warn_flg )
+            end if
           end if
         endif
 !-----END flagged cutting to height process (process code 42)
@@ -1386,8 +1413,10 @@
           if( harv_report_flg .gt. 0 ) then
             call report_harvest( sr, bmrotation, mass_rem, mass_left,   &
      &                           harv_unit_flg, mandate, crop )
-            call report_hydrobal( sr, bmrotation )
-            call crop_endseason( sr, crop%bname, am0cfl(sr), &
+            if( am0kilfl.eq.0 ) then
+              ! not reported by the kill process in this
+              call report_hydrobal( sr, bmrotation )
+              call crop_endseason( sr, bmrotation, crop%bname, am0cfl(sr), &
      &        nslay(sr), ac0idc(sr), crop%growth%dayam, &
      &        acthum(sr), crop%geometry%xstmrep, &
      &        prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
@@ -1398,6 +1427,7 @@
      &        prevdayap(sr), prevhucum(sr), prevrthucum(sr),            &
      &        prevgrainf(sr), prevchillucum(sr), prevliveleaf(sr),      &
      &        prevdayspring(sr), mature_warn_flg )
+            end if
           end if
         end if
 !-----END flagged cutting by fraction process (process code 43)
@@ -1445,8 +1475,10 @@
           if( harv_report_flg .gt. 0 ) then
             call report_harvest( sr, bmrotation, mass_rem, mass_left,   &
      &                           harv_unit_flg, mandate, crop )
-            call report_hydrobal( sr, bmrotation )
-            call crop_endseason( sr, crop%bname, am0cfl(sr), &
+            if( am0kilfl.eq.0 ) then
+              ! not reported by the kill process in this
+              call report_hydrobal( sr, bmrotation )
+              call crop_endseason( sr, bmrotation, crop%bname, am0cfl(sr), &
      &        nslay(sr), ac0idc(sr), crop%growth%dayam, &
      &        acthum(sr), crop%geometry%xstmrep, &
      &        prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
@@ -1457,6 +1489,7 @@
      &        prevdayap(sr), prevhucum(sr), prevrthucum(sr),            &
      &        prevgrainf(sr), prevchillucum(sr), prevliveleaf(sr),      &
      &        prevdayspring(sr), mature_warn_flg )
+            end if
           end if
         end if
 !-----END flagged thinning to population process (process code 47)
@@ -1503,8 +1536,10 @@
           if( harv_report_flg .gt. 0 ) then
             call report_harvest( sr, bmrotation, mass_rem, mass_left, &
      &                           harv_unit_flg, mandate, crop )
-            call report_hydrobal( sr, bmrotation )
-            call crop_endseason( sr, crop%bname, am0cfl(sr), &
+            if( am0kilfl.eq.0 ) then
+              ! not reported by the kill process in this
+              call report_hydrobal( sr, bmrotation )
+              call crop_endseason( sr, bmrotation, crop%bname, am0cfl(sr), &
      &        nslay(sr), ac0idc(sr), crop%growth%dayam, &
      &        acthum(sr), crop%geometry%xstmrep, &
      &        prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
@@ -1515,6 +1550,7 @@
      &        prevdayap(sr), prevhucum(sr), prevrthucum(sr),            &
      &        prevgrainf(sr), prevchillucum(sr), prevliveleaf(sr),      &
      &        prevdayspring(sr), mature_warn_flg )
+            end if
           end if
         end if
 !-----END flagged thinning by fraction process (process code 48)
@@ -1800,7 +1836,10 @@
           call tdbug(sr, nslay(sr), prcode, crop, residue)
         end if
         call set_calib(sr, crop)
-        call report_hydrobal( sr, bmrotation )
+        if( am0kilfl.eq.0 ) then
+          ! not reported by the kill process in this
+          call report_hydrobal( sr, bmrotation )
+        end if
 !-----END planting process (process code 51)
 
       case (61)
@@ -1853,8 +1892,10 @@
             call report_harvest( sr, bmrotation, mass_rem, mass_left, 0,&
      &           mandate, crop)
             call report_calib_harvest( sr, bmrotation, mass_rem, mass_left, crop )
-            call report_hydrobal( sr, bmrotation )
-            call crop_endseason( sr, crop%bname, am0cfl(sr), &
+            if( am0kilfl.eq.0 ) then
+              ! not reported by the kill process in this
+              call report_hydrobal( sr, bmrotation )
+              call crop_endseason( sr, bmrotation, crop%bname, am0cfl(sr), &
      &        nslay(sr), ac0idc(sr), crop%growth%dayam, &
      &        acthum(sr), crop%geometry%xstmrep, &
      &        prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
@@ -1865,6 +1906,7 @@
      &        prevdayap(sr), prevhucum(sr), prevrthucum(sr),            &
      &        prevgrainf(sr), prevchillucum(sr), prevliveleaf(sr),      &
      &        prevdayspring(sr), mature_warn_flg )
+            end if
         end if
 !-----END biomass remove process (process code 61)
 
@@ -1920,10 +1962,12 @@
           if( harv_report_flg .gt. 0 ) then
             call report_harvest( sr, bmrotation, mass_rem, mass_left,   &
      &                           harv_unit_flg, mandate, crop )
-            call report_hydrobal( sr, bmrotation )
-            call crop_endseason( sr, crop%bname, am0cfl(sr),                &
-     &        nslay(sr), ac0idc(sr), crop%growth%dayam,                       &
-     &        acthum(sr), crop%geometry%xstmrep,                                &
+            if( am0kilfl.eq.0 ) then
+              ! not reported by the kill process in this
+              call report_hydrobal( sr, bmrotation )
+              call crop_endseason( sr, bmrotation, crop%bname, am0cfl(sr), &
+     &        nslay(sr), ac0idc(sr), crop%growth%dayam, &
+     &        acthum(sr), crop%geometry%xstmrep, &
      &        prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
      &        prevflatstem(sr), prevflatleaf(sr), prevflatstore(sr),    &
      &        prevbgstemz(1,sr),                                        &
@@ -1932,6 +1976,7 @@
      &        prevdayap(sr), prevhucum(sr), prevrthucum(sr),            &
      &        prevgrainf(sr), prevchillucum(sr), prevliveleaf(sr),      &
      &        prevdayspring(sr), mature_warn_flg )
+            end if
           end if
         end if
 !-----END biomass remove pool process (process code 62)
