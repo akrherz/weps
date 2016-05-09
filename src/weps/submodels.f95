@@ -15,6 +15,11 @@
       include 'p1werm.inc'
       include 'm1flag.inc'      !am0cropupfl
       include 'main/main.inc'   !daysim, iy
+      include 's1sgeo.inc'      !aszrgh
+      include 's1layr.inc'      !aszlyd, nslay
+      include 'c1gen.inc'       !ac0rg, acxrow
+      include 'c1db1.inc'       !ac0ssa, ac0ssb, acdpop
+      include 'h1hydro.inc'     !ahztranspdepth, ahzfurcut, ahztransprtmin, ahztransprtmax
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer isr
@@ -32,6 +37,20 @@
 !        write(*,*) "Start manage"      !MANAGEment (tillage) submodel
         call manage(isr, iy, crop, residue, biotot, mandate, h1et)
 
+        if( am0cropupfl.gt.0 ) then
+            ! update all derived globals for crop global variables
+            call cropupdate( &
+     &      aszrgh(isr), aszlyd(1,isr), &
+     &      ac0rg(isr), acxrow(isr), &
+     &      nslay(isr), ac0ssa(isr), ac0ssb(isr), &
+     &      acdpop(isr), &
+     &      ahztranspdepth(isr), ahzfurcut(isr), &
+     &      ahztransprtmin(isr), ahztransprtmax(isr), crop, croptot  )
+
+            ! dependent variables have been updated
+            am0cropupfl = 0
+        end if
+
 !        write(*,*) "Start updres"
         call updres(isr, residue, restot)                 !update decomp residue pools
 
@@ -45,11 +64,7 @@
 
 !        write(*,*) "Start callcrop"     !CROP submodel
         ! Crop growth flag indicates growing crop
-        ! Harvest flag indicates that harvest occured today. Crop is called
-        ! to generate end of growth period report from values retained in
-        ! the previous day crop data registers even though growth flag is
-        ! turned off.
-        if( crop%growth%am0cgf .or. (am0cropupfl.gt.0) ) then
+        if( crop%growth%am0cgf ) then
             call callcrop(daysim, isr, crop, residue, restot, croptot, h1et)
         end if
 

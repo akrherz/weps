@@ -141,9 +141,6 @@
      &      ahztranspdepth(sr), ahzfurcut(sr),                          &
      &      ahztransprtmin(sr), ahztransprtmax(sr), crop, croptot  )
 
-      ! dependent variables have been updated
-      am0cropupfl = 0
-
       call timer(TIMCROP,TIMSTOP)
 
       end
