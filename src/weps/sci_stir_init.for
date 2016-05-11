@@ -47,6 +47,7 @@
       ! initialize counters and arrays for planting and harvest operation tracking
       stircum(isr)%phopcnt = 0
       stircum(isr)%phopidx = 0
+      stircum(isr)%phoplastidx = -1
       do idx = 1, size(stircum(isr)%phop)
           stircum(isr)%phop(idx)%stir_opname = ''
           stircum(isr)%phop(idx)%stir_cropname = ''
@@ -60,10 +61,11 @@
 
       if (stircum(isr)%header_not_printed) then
           ! write header to stir_energy.out file
-          write(luostir(isr), '(4A)') '#dd/mm/yyyy | operation name',   &
+          write(luostir(isr), '(5A)') '#dd/mm/yyyy | operation name',   &
      &       ' | crop name (optional) | fuel | stir',                   &
      &       ' | energy (L diesel/ha)',                                 &
-     &       ' | crop sequence number | 1 if last harvest of crop'
+     &       ' | crop sequence number',                                 &
+     &       ' | 1 if last harvest/termination of crop'
           ! write number of years in management rotation
           write(luostir(isr),'(i4,(A))') mperod(isr),                     &
      &              '  Number of years in WEPS management rotation file'

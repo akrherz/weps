@@ -102,6 +102,11 @@
         ! to eliminate newline at beginning of file
         cprevseasonrotation(isr) = 1
 
+        if( init_loop ) then  !initilizing cycle
+          ! attach a crop name and id as harvest/termination operation in stir report
+          call stir_crop(isr, bc0nam, 2)
+        end if
+
       else  !done when initializing and calibrating cycle(s) are completed
 
         if( bmrotation .gt. cprevseasonrotation(isr) ) then
@@ -154,6 +159,9 @@
      &       ' only reached ', hui*100.0, '% of maturity',              &
      &       ' (Check crop selection, planting, harvest dates)'
       end if
+
+        ! attach a crop name and id as harvest/termination operation in stir report
+        call stir_crop(isr, bc0nam, 2)
 
         ! updated every call to get newline in right place
         cprevseasonrotation(isr) = bmrotation

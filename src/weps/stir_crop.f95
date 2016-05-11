@@ -14,10 +14,10 @@
 !     + + + ARGUMENT DEFINITIONS + + +
 !     isr - subregion index
 !     bc0nam - the crop name for this operation
-!     plant_harv - planting or harvest flag
+!     plant_harv - planting or harvest/termination flag
 !                  0 - unrelated operation
 !                  1 - planting operation
-!                  2 - harvest operation
+!                  2 - harvest or termination operation
 
 !     + + + INCLUDE + + +
       include 'p1werm.inc'
@@ -46,10 +46,10 @@
    !   end do
    ! debug end
 
-      ! start accounting for crops and harvests
+      ! start accounting for crops and harvests/terminations
       ! this relies on an initialization cycle and one regular cycle
       if( plant_harv .gt. 0 ) then
-         ! this is either a planting or harvest operation.
+         ! this is either a planting or harvest/termination operation.
          if( stircum(isr)%phopidx+1 .gt. size(stircum(isr)%phop) ) then
             ! maximum array size exceeded
             write(*,*) 'ERROR: too many planting and harvest Ops'
@@ -59,53 +59,81 @@
          ! use temporary index to make shorter lines
          idx = stircum(isr)%phopidx
          stircum(isr)%phop(idx)%phop_type = plant_harv
+         if( idx .eq. stircum(isr)%phoplastidx ) then
+            ! stir_crop called multiple times in same operation
+            ! reset crop number so it will be redone
+            stircum(isr)%phop(idx)%crop_num = 0
+         end if
+
          if( plant_harv .eq. 1 ) then
             ! planting operation
             if( stircum(isr)%phop(idx)%crop_num .eq. 0 ) then
                ! crop number not yet assigned
-               do jdx = idx, 1, -1
-                  ! index back in op list
-                  if( stircum(isr)%phop(jdx)%phop_type .eq. 2 ) then
-                     ! found harvest, this begins a new crop
-                     stircum(isr)%phop(idx)%crop_num = stircum(isr)%phop(jdx)%crop_num + 1
-                     ! only want the last one
-                     exit
-                  else if( jdx .le. 1 ) then
-                     ! no harvest found so first planting of file
-                     stircum(isr)%phop(idx)%crop_num = 1
-                  end if
-               end do
+               if( idx .gt. 1 ) then
+                  do jdx = idx-1, 1, -1
+                     ! index back in op list
+                     if( stircum(isr)%phop(jdx)%phop_type .eq. 2 ) then
+                        ! found harvest/termination, this begins a new crop
+                        stircum(isr)%phop(idx)%crop_num = stircum(isr)%phop(jdx)%crop_num + 1
+                        ! only want the last one
+                        exit
+                     else if( stircum(isr)%phop(jdx)%phop_type .eq. 1 ) then
+                        ! found planting without harvest/termination, this begins a new crop
+                        stircum(isr)%phop(idx)%crop_num = stircum(isr)%phop(jdx)%crop_num + 1
+                        ! only want the last one
+                        exit
+                     else if( jdx .le. 1 ) then
+                        ! no harvest/termination found so first planting of file
+                        stircum(isr)%phop(idx)%crop_num = 1
+                     end if
+                  end do
+               else
+                  ! planting is first operation of file
+                  stircum(isr)%phop(idx)%crop_num = 1
+               end if
             end if
          else if( plant_harv .eq. 2 ) then
-            ! harvest operation
+            ! harvest/termination operation
             if( stircum(isr)%phop(idx)%crop_num .eq. 0 ) then
                ! crop number not yet assigned
-               do jdx = idx, 1, -1
-                  ! index back in op list
-                  if( stircum(isr)%phop(jdx)%phop_type .eq. 1 ) then
-                     ! found planting, use to set crop number
-                     stircum(isr)%phop(idx)%crop_num = stircum(isr)%phop(jdx)%crop_num
-                     ! that is all
-                     exit
-                  else if( jdx .le. 1 ) then
-                     ! at start of file, no planting found, so continue at end
-                     do kdx = stircum(isr)%phopcnt, idx+1, -1
-                        if( stircum(isr)%phop(kdx)%phop_type .eq. 1 ) then
-                           ! found planting, use to set crop number
-                           stircum(isr)%phop(idx)%crop_num = stircum(isr)%phop(kdx)%crop_num
-                           ! that is all
-                           exit
-                        end if
-                     end do
-                  end if
-               end do
+               if( idx .gt. 1 ) then
+                  do jdx = idx-1, 1, -1
+                     ! index back in op list
+                     if( stircum(isr)%phop(jdx)%phop_type .eq. 1 ) then
+                        ! found planting, use to set crop number
+                        stircum(isr)%phop(idx)%crop_num = stircum(isr)%phop(jdx)%crop_num
+                        ! that is all
+                        exit
+                     else if( jdx .le. 1 ) then
+                        ! at start of file, no planting found, so continue at end
+                        do kdx = stircum(isr)%phopcnt, idx+1, -1
+                           if( stircum(isr)%phop(kdx)%phop_type .eq. 1 ) then
+                              ! found planting, use to set crop number
+                              stircum(isr)%phop(idx)%crop_num = stircum(isr)%phop(kdx)%crop_num
+                              ! that is all
+                              exit
+                           end if
+                        end do
+                     end if
+                  end do
+               else
+                  ! at start of file, so search from end
+                  do kdx = stircum(isr)%phopcnt, idx+1, -1
+                     if( stircum(isr)%phop(kdx)%phop_type .eq. 1 ) then
+                        ! found planting, use to set crop number
+                        stircum(isr)%phop(idx)%crop_num = stircum(isr)%phop(kdx)%crop_num
+                        ! that is all
+                        exit
+                     end if
+                  end do
+               end if
             end if
             if( report_loop .and. stircum(isr)%man_eof ) then ! man_eof indicates at least one pass completed
-               ! All harvest ops should be present, check for last harvest
+               ! All harvest/termination ops should be present, check for last harvest
                do jdx = idx, stircum(isr)%phopcnt
-                  ! index forward looking for harvest or planting op
+                  ! index forward looking for harvest/termination or planting op
                   if( stircum(isr)%phop(jdx)%phop_type .eq. 1 ) then
-                     ! found planting, this is last harvest
+                     ! found planting, this is last harvest/termination
                      stircum(isr)%phop(idx)%last_harv = 1
                      ! no more checking needed
                      exit
@@ -113,24 +141,26 @@
                      ! at end of file, restart at beginning
                      do kdx = 1, idx-1
                         if( stircum(isr)%phop(kdx)%phop_type .eq. 1 ) then
-                           ! found planting, this is last harvest
+                           ! found planting, this is last harvest/termination
                            stircum(isr)%phop(idx)%last_harv = 1
                            ! no more checking needed
                            exit
                         else if( stircum(isr)%phop(kdx)%phop_type .eq. 2 ) then
-                           ! found harvest, this is not last harvest
+                           ! found harvest/termination, this is not last harvest/termination
                            ! no more checking needed
                            exit
                         end if
                      end do
                   else if( (stircum(isr)%phop(jdx)%phop_type .eq. 2) .and. (jdx .ne. idx) ) then
-                     ! found harvest, this is not last harvest
+                     ! found harvest/termination, this is not last harvest/termination
                      ! no more checking needed
                      exit
                   end if
                end do
             end if
          end if
+         ! always reset
+         stircum(isr)%phoplastidx = idx
       end if
 
       if( report_loop .neqv. .true. ) return

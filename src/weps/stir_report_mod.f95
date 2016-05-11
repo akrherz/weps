@@ -29,6 +29,7 @@ module stir_report_mod
       real    stir_op_energy ! operation energy value from operation input
       integer phopcnt        ! actual number of (p)lanting and (h)arvest (op)erations tabulated
       integer phopidx        ! operation index, location in the array
+      integer phoplastidx    ! operation index of previous call to stir_crop
       type(stir_operation_vars), dimension(:), allocatable :: phop ! individual values for each planting or harvest operation
    end type stir_accumulators
 
@@ -120,7 +121,7 @@ module stir_report_mod
 
 !     + + + LOCAL DEFINITIONS + + +
 !     stir_op_avg - average over all burial processes of stir value
-!     idx         - index used to serach for crop_num
+!     idx         - index used to search for crop_num
 
       ! only do if flag is set, before done flag set
       if( (soil_cond .eq. 0) .or. stircum(isr)%done_flg ) return

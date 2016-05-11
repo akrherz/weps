@@ -51,11 +51,6 @@
         ! to eliminate newline at beginning of file
         cprevrotation(sr) = 1
 
-        if( init_loop ) then  !initilizing cycle
-          ! attach a crop name and id as harvest operation in stir report
-          call stir_crop(sr, crop%bname, 2)
-        end if
-
       else  !done when initializing and calibrating cycle(s) are completed
 
         if( bmrotation .gt. cprevrotation(sr) ) then
@@ -134,9 +129,6 @@
               END IF
            END DO
          END IF
-
-        ! attach a crop name to the harvest operation in stir report
-        call stir_crop(sr, crop%bname, 2)
 
         ! updated every call to get newline in right place
         cprevrotation(sr) = bmrotation
