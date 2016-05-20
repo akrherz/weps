@@ -34,7 +34,7 @@
       YY = 0.10
       IF (FFPAST.NE.0.0) YY = FFPAST
 
-   10 NU1 = TIME * KS - (YY-SM*ALOG(1.0+YY/SM))
+   10 NU1 = TIME * KS - (YY-SM*LOG(1.0+YY/SM))
 
       DE1 = YY / (SM+YY)
       TEST = NU1 / DE1
