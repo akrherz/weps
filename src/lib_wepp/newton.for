@@ -29,8 +29,7 @@
 !     + + + LOCAL INCLUDES + + +
       include "hydro/weppconverge.inc"
 
-      REAL YY
-      DOUBLE PRECISION NU1, DE1, TEST, XX
+      DOUBLE PRECISION NU1, DE1, TEST, YY
 
       YY = 0.10
       IF (FFPAST.NE.0.0) YY = FFPAST
@@ -39,10 +38,9 @@
 
       DE1 = YY / (SM+YY)
       TEST = NU1 / DE1
-      XX = YY + TEST
+      YY = YY + TEST
 
       IF (ABS(TEST).GT. bal_prec) THEN
-         YY = XX
          GO TO 10
       END IF
 
