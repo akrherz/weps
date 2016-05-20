@@ -63,6 +63,9 @@ module hydro_data_struct_defs
        h1et(0)%drat = 0.0
        h1et(0)%zsnd = 0.0
        h1et(0)%snow_protect = 0.0
+       h1et(0)%zirr = 0.0
+       h1et(0)%zper = 0.0
+       h1et(0)%zrun = 0.0
 
        do isr = 1, nsubr
           h1et(0)%zea  = h1et(0)%zea  + h1et(isr)%zea  * subr_poly(isr)%area / tot_area
@@ -83,7 +86,9 @@ module hydro_data_struct_defs
              h1et(isr)%snow_protect = 0.0
           end if
           h1et(0)%snow_protect = h1et(0)%snow_protect + h1et(isr)%snow_protect * subr_poly(isr)%area / tot_area
-
+          h1et(0)%zirr = h1et(0)%zirr + h1et(isr)%zirr * subr_poly(isr)%area / tot_area
+          h1et(0)%zper = h1et(0)%zper + h1et(isr)%zper * subr_poly(isr)%area / tot_area
+          h1et(0)%zrun = h1et(0)%zrun + h1et(isr)%zrun * subr_poly(isr)%area / tot_area
        end do
 
     end subroutine sim_area_ave_h1et

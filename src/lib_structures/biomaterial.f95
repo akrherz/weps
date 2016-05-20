@@ -424,6 +424,7 @@ contains
      integer :: dealloc_stat  ! allocation status return
      integer :: sum_stat    ! accumulates allocation status results so only one write/exit statement needed
 
+     sum_stat = 0
      ! allocate below and above ground arrays
      deallocate(decompfac%iddg, stat=dealloc_stat)
      sum_stat = sum_stat + dealloc_stat

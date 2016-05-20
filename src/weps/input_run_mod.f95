@@ -310,7 +310,13 @@ contains
                if(fexist) then
                   write(*,2270) subfil
                   call fopenk (luiwsd, subfil, 'old')
+               else
+                  ! assign value so close knows not to close
+                  luiwsd = -1
                endif
+            else
+               ! assign value so close knows not to close
+               luiwsd = -1
             end if
 
          case (15)
@@ -474,6 +480,8 @@ contains
             ipol = 5
             subr_poly(isr)%points(ipol)%x = subr_poly(isr)%points(1)%x
             subr_poly(isr)%points(ipol)%y = subr_poly(isr)%points(1)%y
+            ! polygon complete
+            call set_area_polygon(subr_poly(isr))
 
          case (32)
             ! The new "versioned" IFC files contain a slope value
@@ -773,7 +781,13 @@ contains
                if(fexist) then
                   write(*,2270) subfil
                   call fopenk (luiwsd, subfil, 'old')
+               else
+                  ! assign value so close knows not to close
+                  luiwsd = -1
                endif
+            else
+               ! assign value so close knows not to close
+               luiwsd = -1
             end if
 
          case (15)

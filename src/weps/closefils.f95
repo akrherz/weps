@@ -30,7 +30,9 @@
       ! files opened in inprun.for
       close(luicli)
       close(luiwin)
-      close(luiwsd)
+      if( luiwsd .gt. 0 ) then
+         close(luiwsd)
+      end if
       do idx = 1, nsubr
          if (am0hdb(idx) .eq. 1) close(luohdb(idx))
          if (am0sdb(idx) .eq. 1) close(luosdb(idx))

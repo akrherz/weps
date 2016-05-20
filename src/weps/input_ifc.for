@@ -76,8 +76,6 @@
                    
       close (lui1)    
      
- 901  write(*,9001) trim(sinfil(isr)), linnum, trim(line)
-
 !! removed code reading IFC file data - moved to inp_ifc.for
 !! which now handles both version 1.0 and version 1.1 IFC file formats
 
@@ -239,7 +237,7 @@
 
       return
 
-! 901  write(*,9001) trim(sinfil(isr)), linnum, trim(line)
+ 901  write(*,9001) trim(sinfil(isr)), linnum, trim(line)
 9001  format(' Error in IFC file ',a,' on line #',i4,' ',a)
       call exit(1)
 
