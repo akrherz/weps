@@ -36,6 +36,7 @@
       include 'h1hydro.inc'
       include 'h1temp.inc'
       include 'crop/prevstate.inc'
+      include 'crop/prevderiv.inc'
       include 'crop/gcrop.inc'
 
 ! Local Variables
@@ -143,6 +144,9 @@
      &      acdpop(sr), &
      &      ahztranspdepth(sr), ahzfurcut(sr),                          &
      &      ahztransprtmin(sr), ahztransprtmax(sr), crop, croptot  )
+
+      ! set prevday derived variable for later reference in end_season
+      prevcancov(sr) = crop%deriv%fcancov
 
       call timer(TIMCROP,TIMSTOP)
 

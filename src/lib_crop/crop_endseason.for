@@ -13,7 +13,7 @@
      &                 bprevht, bprevstm, bprevrtd,                     &
      &                 bprevdayap, bprevhucum, bprevrthucum,            &
      &                 bprevgrainf, bprevchillucum, bprevliveleaf,      &
-     &                 bprevdayspring, mature_warn_flg )
+     &                 bprevcancov, bprevdayspring, mature_warn_flg )
 
 !     + + + PURPOSE + + +
 !     Prints out crop status variables that are of interest at the end of the season
@@ -21,7 +21,7 @@
 !     + + + KEYWORDS + + +
 !     crop model status
 
-      use datetime_mod, only: get_simdate
+      use datetime_mod, only: get_simdate, julday, caldat
       use file_io_mod, only: luoseason
 
 !     + + + ARGUMENT DECLARATIONS + + +
@@ -38,6 +38,7 @@
       integer bprevdayap
       real bprevhucum, bprevrthucum
       real bprevgrainf, bprevchillucum, bprevliveleaf
+      real bprevcancov
       integer bprevdayspring, mature_warn_flg
 
 !     + + + ARGUMENT DEFINITIONS + + +
@@ -68,6 +69,7 @@
 !     bcgrainf - internally computed reproductive grain fraction
 !     bctchillucum - accumulated chilling units (days)
 !     bcfliveleaf - fraction of standing plant leaf which is living (transpiring)
+!     bcfcancov - crop canopy cover (fraction)
 !     bprevdayspring - day of year in which a winter annual releases stored growth
 !     mature_warn_flg - flag to indicate use of crop maturity warning
 !                0  - no crop maturity warning given for any crop
@@ -80,18 +82,23 @@
 
 !     + + + LOCAL VARIABLES + + +
       integer lay, dd, mm, yy
+      integer pjday, pday, pmon, pyr
       real hui
       real bg_stem_sum, root_store_sum, root_fiber_sum
 
 !     + + + LOCAL VARIABLE DEFINITIONS + + +
+!     lay - index used to loop through layers
 !     dd,mm,yy - the current day, month, and year
+!     pjday - planting julian day
+!     pday,pmon,pyr - the planting day, month, and year
 !     bg_stem_sum - sum of below ground stem
 !     root_store_sum - sum of root storage
 !     root_fiber_sum - sum of root fiber 
 
 !     + + + OUTPUT FORMATS + + +
- 2010 format(1x,i2,'/',i2,'/',i4,'|',a40,'|',10(f7.3,'|'),f7.2,'|',     &
-     &   2(f7.3,'|'),f7.5,'|',i4,'|',3(f6.1,'|'),f5.3,'|',i4,'|',i6,'|')
+ 2010 format(1x,i2,'/',i2,'/',i4,'|',1x,i2,'/',i2,'/',i4,'|',a40,'|',   &
+     &       10(f7.3,'|'),f7.2,'|',2(f7.3,'|'),f7.5,'|',f7.3,'|',i4,'|',&
+     &       3(f6.1,'|'),f5.3,'|',i4,'|',i6,'|')
  2020 format(a)
 
 !     + + + END OF SPECIFICATIONS + + +
@@ -117,6 +124,10 @@
 !     day of year
       call get_simdate(dd, mm, yy)
 
+      ! find planting date
+      pjday = julday(dd, mm, yy) - bprevdayap - bcdayam
+      call caldat( pjday, pday, pmon, pyr )
+
       ! end of season print statements when crop submodel output flag set
       ! added initialization flag to prevent printing if crop not yet initialized
 
@@ -137,13 +148,14 @@
             root_fiber_sum = root_fiber_sum + bprevrootfiberz(lay)
         end do
 
-        write(UNIT=luoseason(isr),FMT=2010,advance='NO')dd,mm,yy,bc0nam,&
+        write(UNIT=luoseason(isr),FMT=2010,advance='NO')                &
+     &    pday, pmon, pyr, dd, mm, yy, bc0nam,                          &
      &    bprevstandstem, bprevstandleaf, bprevstandstore,              &
      &    bprevflatstem, bprevflatleaf, bprevflatstore,                 &
      &    bg_stem_sum, root_store_sum, root_fiber_sum,                  &
      &    bprevht, bprevstm, bprevrtd, bprevgrainf,                     &
-     &    bcxstmrep, bprevdayap, bprevchillucum, bprevhucum, bcthum,    &
-     &    hui, bcdayam, bprevdayspring
+     &    bcxstmrep, bprevcancov, bprevdayap, bprevchillucum,           &
+     &    bprevhucum, bcthum, hui, bcdayam, bprevdayspring
       end if
 
       ! for annual crops, ALWAYS write out warning message

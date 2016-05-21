@@ -122,33 +122,6 @@
       integer, intent(in) :: isr   ! subregion number
       end subroutine cpout
 !-------------------------------
-      subroutine crop_endseason ( isr, bmrotation, bc0nam, bm0cfl,      &
-     &                 bnslay, bc0idc, bcdayam,                         &
-     &                 bcthum, bcxstmrep,                               &
-     &                 bprevstandstem, bprevstandleaf, bprevstandstore, &
-     &                 bprevflatstem, bprevflatleaf, bprevflatstore,    &
-     &                 bprevbgstemz,                                    &
-     &                 bprevrootstorez, bprevrootfiberz,                &
-     &                 bprevht, bprevstm, bprevrtd,                     &
-     &                 bprevdayap, bprevhucum, bprevrthucum,            &
-     &                 bprevgrainf, bprevchillucum, bprevliveleaf,      &
-     &                 bprevdayspring, mature_warn_flg )
-      integer, intent(in) :: isr   ! subregion number
-      integer, intent(in) :: bmrotation ! rotation count updated in manage.for
-      character*(80) bc0nam
-      integer bm0cfl, bnslay, bc0idc, bcdayam
-      real bcthum, bcxstmrep
-      real bprevstandstem, bprevstandleaf, bprevstandstore
-      real bprevflatstem, bprevflatleaf, bprevflatstore
-      real bprevbgstemz(*)
-      real bprevrootstorez(*), bprevrootfiberz(*)
-      real bprevht, bprevstm, bprevrtd
-      integer bprevdayap
-      real bprevhucum, bprevrthucum
-      real bprevgrainf, bprevchillucum, bprevliveleaf
-      integer bprevdayspring, mature_warn_flg
-      end subroutine crop_endseason
-!-----------------------------
       subroutine cprnl (hmx,bcthucum,day,mo,yr)
       integer   day, mo, yr
       real hmx, bcthucum  
@@ -408,6 +381,33 @@
 
       real bwtdmx, bwtdmn, bctopt, bctmin
       end function temps
+!-------------------------------------
+      subroutine crop_endseason ( sr, bmrotation, bc0nam, bm0cfl,       &
+     &                 bnslay, bc0idc, bcdayam,                         &
+     &                 bcthum, bcxstmrep,                               &
+     &                 bprevstandstem, bprevstandleaf, bprevstandstore, &
+     &                 bprevflatstem, bprevflatleaf, bprevflatstore,    &
+     &                 bprevbgstemz,                                    &
+     &                 bprevrootstorez, bprevrootfiberz,                &
+     &                 bprevht, bprevstm, bprevrtd,                     &
+     &                 bprevdayap, bprevhucum, bprevrthucum,            &
+     &                 bprevgrainf, bprevchillucum, bprevliveleaf,      &
+     &                 bprevcancov, bprevdayspring, mature_warn_flg )
+      integer sr, bmrotation
+      character*(80) bc0nam
+      integer bm0cfl, bnslay, bc0idc, bcdayam
+      real bcthum, bcxstmrep
+      real bprevstandstem, bprevstandleaf, bprevstandstore
+      real bprevflatstem, bprevflatleaf, bprevflatstore
+      real bprevbgstemz(*)
+      real bprevrootstorez(*), bprevrootfiberz(*)
+      real bprevht, bprevstm, bprevrtd
+      integer bprevdayap
+      real bprevhucum, bprevrthucum
+      real bprevgrainf, bprevchillucum, bprevliveleaf
+      real bprevcancov
+      integer bprevdayspring, mature_warn_flg
+      end subroutine crop_endseason
 !--------------------------------------  
 
 !-------------- DECOMP Routines ------------------------------

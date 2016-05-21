@@ -51,6 +51,7 @@
       include 'manage/tcrop.inc'
 !      include 'main/main.inc'
       include 'crop/prevstate.inc'
+      include 'crop/prevderiv.inc'
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer sr, bmrotation
@@ -985,7 +986,7 @@
      &         prevht(sr), prevstm(sr), prevrtd(sr),                     &
      &         prevdayap(sr), prevhucum(sr), prevrthucum(sr),            &
      &         prevgrainf(sr), prevchillucum(sr), prevliveleaf(sr),      &
-     &         prevdayspring(sr), mature_warn_flg )
+     &         prevcancov(sr), prevdayspring(sr), mature_warn_flg )
                ! set to stop additional report in this operation
                rpt_season_flg = .false.
              end if
@@ -1063,7 +1064,7 @@
      &        prevht(sr), prevstm(sr), prevrtd(sr),                     &
      &        prevdayap(sr), prevhucum(sr), prevrthucum(sr),            &
      &        prevgrainf(sr), prevchillucum(sr), prevliveleaf(sr),      &
-     &        prevdayspring(sr), mature_warn_flg )
+     &        prevcancov(sr), prevdayspring(sr), mature_warn_flg )
               ! set to stop additional report in this operation
               rpt_season_flg = .false.
             end if
@@ -1122,7 +1123,7 @@
      &        prevht(sr), prevstm(sr), prevrtd(sr),                     &
      &        prevdayap(sr), prevhucum(sr), prevrthucum(sr),            &
      &        prevgrainf(sr), prevchillucum(sr), prevliveleaf(sr),      &
-     &        prevdayspring(sr), mature_warn_flg )
+     &        prevcancov(sr), prevdayspring(sr), mature_warn_flg )
               ! set to stop additional report in this operation
               rpt_season_flg = .false.
             end if
@@ -1216,7 +1217,7 @@
      &        prevht(sr), prevstm(sr), prevrtd(sr),                     &
      &        prevdayap(sr), prevhucum(sr), prevrthucum(sr),            &
      &        prevgrainf(sr), prevchillucum(sr), prevliveleaf(sr),      &
-     &        prevdayspring(sr), mature_warn_flg )
+     &        prevcancov(sr), prevdayspring(sr), mature_warn_flg )
               ! set to stop additional report in this operation
               rpt_season_flg = .false.
             end if
@@ -1275,7 +1276,7 @@
      &        prevht(sr), prevstm(sr), prevrtd(sr),                     &
      &        prevdayap(sr), prevhucum(sr), prevrthucum(sr),            &
      &        prevgrainf(sr), prevchillucum(sr), prevliveleaf(sr),      &
-     &        prevdayspring(sr), mature_warn_flg )
+     &        prevcancov(sr), prevdayspring(sr), mature_warn_flg )
               ! set to stop additional report in this operation
               rpt_season_flg = .false.
             end if
@@ -1381,7 +1382,7 @@
      &        prevht(sr), prevstm(sr), prevrtd(sr),                     &
      &        prevdayap(sr), prevhucum(sr), prevrthucum(sr),            &
      &        prevgrainf(sr), prevchillucum(sr), prevliveleaf(sr),      &
-     &        prevdayspring(sr), mature_warn_flg )
+     &        prevcancov(sr), prevdayspring(sr), mature_warn_flg )
               ! set to stop additional report in this operation
               rpt_season_flg = .false.
             end if
@@ -1444,7 +1445,7 @@
      &        prevht(sr), prevstm(sr), prevrtd(sr),                     &
      &        prevdayap(sr), prevhucum(sr), prevrthucum(sr),            &
      &        prevgrainf(sr), prevchillucum(sr), prevliveleaf(sr),      &
-     &        prevdayspring(sr), mature_warn_flg )
+     &        prevcancov(sr), prevdayspring(sr), mature_warn_flg )
               ! set to stop additional report in this operation
               rpt_season_flg = .false.
             end if
@@ -1508,7 +1509,7 @@
      &        prevht(sr), prevstm(sr), prevrtd(sr),                     &
      &        prevdayap(sr), prevhucum(sr), prevrthucum(sr),            &
      &        prevgrainf(sr), prevchillucum(sr), prevliveleaf(sr),      &
-     &        prevdayspring(sr), mature_warn_flg )
+     &        prevcancov(sr), prevdayspring(sr), mature_warn_flg )
               ! set to stop additional report in this operation
               rpt_season_flg = .false.
             end if
@@ -1571,7 +1572,7 @@
      &        prevht(sr), prevstm(sr), prevrtd(sr),                     &
      &        prevdayap(sr), prevhucum(sr), prevrthucum(sr),            &
      &        prevgrainf(sr), prevchillucum(sr), prevliveleaf(sr),      &
-     &        prevdayspring(sr), mature_warn_flg )
+     &        prevcancov(sr), prevdayspring(sr), mature_warn_flg )
               ! set to stop additional report in this operation
               rpt_season_flg = .false.
             end if
@@ -1715,7 +1716,7 @@
      &        prevht(sr), prevstm(sr), prevrtd(sr),                     &
      &        prevdayap(sr), prevhucum(sr), prevrthucum(sr),            &
      &        prevgrainf(sr), prevchillucum(sr), prevliveleaf(sr),      &
-     &        prevdayspring(sr), mature_warn_flg )
+     &        prevcancov(sr), prevdayspring(sr), mature_warn_flg )
           ! set to guarantee corresponding report hydrolbal at end of planting
           rpt_season_flg = .true.
       endif
@@ -1944,7 +1945,7 @@
      &        prevht(sr), prevstm(sr), prevrtd(sr),                     &
      &        prevdayap(sr), prevhucum(sr), prevrthucum(sr),            &
      &        prevgrainf(sr), prevchillucum(sr), prevliveleaf(sr),      &
-     &        prevdayspring(sr), mature_warn_flg )
+     &        prevcancov(sr), prevdayspring(sr), mature_warn_flg )
               ! set to stop additional report in this operation
               rpt_season_flg = .false.
             end if
@@ -2016,7 +2017,7 @@
      &        prevht(sr), prevstm(sr), prevrtd(sr),                     &
      &        prevdayap(sr), prevhucum(sr), prevrthucum(sr),            &
      &        prevgrainf(sr), prevchillucum(sr), prevliveleaf(sr),      &
-     &        prevdayspring(sr), mature_warn_flg )
+     &        prevcancov(sr), prevdayspring(sr), mature_warn_flg )
               ! set to stop additional report in this operation
               rpt_season_flg = .false.
             end if
