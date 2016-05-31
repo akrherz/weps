@@ -541,7 +541,7 @@ SUBROUTINE update_yrly_report_vars(cur_year, nrot_years, yrly_update, yrot_updat
 
        !variables averaged for reporting period
        DO i = Min_cli_vars, Max_cli_vars
-          IF (i == Precipi) THEN  ! These have only been "summed"
+          IF (i == Precipi .OR. i==Irrigation) THEN  ! These have only been "summed"
              CALL run_ave (yrly_report(i,0), yrot_update(i)%val, nrot_years)
           ELSE  !These have already been "running averaged"
              CALL run_ave (yrly_report(i,0), yrot_update(i)%val, 1)
