@@ -55,7 +55,6 @@ subroutine erodsubr_update( sr, restot, croptot, biotot, h1et, subrsurf )
     subrsurf%ac0rg = croptot%c0rg
 
     subrsurf%abffcv = biotot%ffcvtot
-    subrsurf%abzht = biotot%zht_ave
 
     do idx = 1, nslay(sr)
 
@@ -95,6 +94,23 @@ subroutine erodsubr_update( sr, restot, croptot, biotot, h1et, subrsurf )
     do idx = 1, 24
         subrsurf%ahrwc0(idx) = ahrwc0(idx,sr)
     end do
+
+    ! derived
+    subrsurf%abrsai = biotot%rsaitot
+    subrsurf%abrlai = biotot%rlaitot
+    subrsurf%abzht = biotot%zht_ave
+!     real :: sxprg      ! sxprg  - ridge spacing parallel the wind direction(mm)
+!     real :: acanag     ! acanag - coefficient of abrasion for aggregates (1/m)
+!     real :: acancr     ! acancr - coefficient of abrasion for crust (1/m)
+!     real :: asf10an    ! asf10an - soil fraction pm10 in abraded suspension
+!     real :: asf10en    ! asf10en - soil fraction pm10 in emitted suspension
+!     real :: asf10bk    ! asf10bk - soil fraction pm10 in saltation breakage suspension
+!     real :: sfd1       ! soil fraction less than 0.01 mm diameter
+!     real :: sfd10      ! soil fraction less than 0.1 mm diameter
+!     real :: sfd84      ! soil fraction less than 0.84 mm diameter
+!     real :: sfd200     ! soil fraction less than 2.0 mm diameter
+!     real :: sf10ic     ! initial condition (modified) of soil fraction less than 0.1 mm diameter
+!     real :: sf84ic     ! initial condition (modified) of soil fraction less than 0.84 mm diameter
 
     return
     end
