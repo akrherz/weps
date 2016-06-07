@@ -183,20 +183,6 @@
      &                     ah0cb(1,isr), aheaep(1,isr) )
       end if
 
-
-!!     used with output for soil file screening
-! 1000     format(a50,1x,i2,f7.0,20f7.4)
-!          stop
-
-!         write out the soil water capacity plant available by depth
-          write(*,*) 'inpsub:total 500mm',                              &
-     &    plant_wat_g( 0.0, 500.0, ahrwcf(1,isr), ahrwcw(1,isr),        &
-     &                 asdblk(1,isr), aszlyt(1,isr), nslay(isr) ),      &
-     &    plant_wat_g( 500.0, 1000.0, ahrwcf(1,isr), ahrwcw(1,isr),     &
-     &                 asdblk(1,isr), aszlyt(1,isr), nslay(isr) ),      &
-     &    plant_wat_g( 1000.0, 1500.0, ahrwcf(1,isr), ahrwcw(1,isr),    &
-     &                 asdblk(1,isr), aszlyt(1,isr), nslay(isr) )
-
 !       some soil characteristic values for crop nutirent effects 
 !       were originally planned and then dropped and are not included in 
 !       layer splitting. A Debug full debug compile complains
@@ -222,11 +208,9 @@
         end do
 
       ! Check if override of rock fragments are specified
-      write(6,*) 'SoilRockFragments(',isr,') = ', SoilRockFragments(isr)
       if (SoilRockFragments(isr) .ge. 0.0) then
         do lay = 1, nslay(isr)
           asvroc(lay,isr) = SoilRockFragments(isr)
-          write (*,*) 'asvroc(',lay,',',isr,')', asvroc(lay,isr)
         end do
       end if
       

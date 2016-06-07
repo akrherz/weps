@@ -288,7 +288,6 @@
 
 !     open input files and read run files
       call input(run_rot_cycles)
-      write(*,*) "Made it here after input"
 
       ! set total number of subregions from size of allocated subr_poly array
       nsubr = size(subr_poly)
@@ -376,8 +375,6 @@
          call save_soil(isr)  
       end do
 
-      write(*,*) "Made it here after save_soil"
-
 9898  continue    !Start of initialization section (calibration)
 
       ! moved from input.for so that IFC file can be re-read and re-initialized
@@ -387,10 +384,7 @@
          call restore_soil(isr)  !Assuming only one subregion for now
       end do
 
-      write(*,*) "Made it here after restore_soil"
-
 !     temporarily initialize old random roughness
-     
       do isr =1, nsubr ! added subregion loop JG
           aslrrc(isr) = 10.
           as0rrk(isr) = 0.9

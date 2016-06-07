@@ -586,7 +586,6 @@ contains
 
          case (43)
             read (line,*,err=80) SoilRockFragments(isr)
-            write(6,*) 'SoilRockFragments = ', SoilRockFragments(isr)
             isr = isr + 1
             if (isr.le.nsubr) typidx=typidx-1
             !!!! I don't think this works as intended - LEW
@@ -937,7 +936,6 @@ contains
    
          case (30)
             read (line,*,err=80) SoilRockFragments(isr)
-            write(6,*) 'SoilRockFragments = ', SoilRockFragments(isr)
 
          case (31)
             ! read in initial field conditions file name
