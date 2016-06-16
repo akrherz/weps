@@ -28,7 +28,8 @@
      &                 bcmshoot, bcmtotshoot, bcmbgstemz,               &
      &                 bcmrootstorez, bcmrootfiberz,                    &
      &                 bczht, bczshoot, bcdstm, bczrtd,                 &
-     &                 bcdayap, bcdayam, bcthucum, bctrthucum,          &
+     &                 bcdayap, bcdayam, bcleapdays,                    &
+     &                 bcthucum, bctrthucum,                            &
      &                 bcgrainf, bczgrowpt, bcfliveleaf,                &
      &                 bcleafareatrend, bcstemmasstrend, bctwarmdays,   &
      &                 bctchillucum, bcthardnx, bcthu_shoot_beg,        &
@@ -50,7 +51,7 @@
 !     This is the main program for implementing the crop growth calculations.
 
       use weps_interface_defs, ignore_me=>cropgrow
-      use datetime_mod, only: get_simdate_doy
+      use datetime_mod, only: get_simdate_doy, get_simdate
       use file_io_mod, only: luocrop, luoshoot
       use p1unconv_mod, only: mgtokg
       use crop_data_struct_defs, only: am0cfl
@@ -84,7 +85,7 @@
       real bcmshoot, bcmtotshoot, bcmbgstemz(*)
       real bcmrootstorez(*), bcmrootfiberz(*)
       real bczht, bczshoot, bcdstm, bczrtd
-      integer bcdayap, bcdayam
+      integer bcdayap, bcdayam, bcleapdays
       real bcthucum, bctrthucum
       real bcgrainf, bczgrowpt, bcfliveleaf
       real bcleafareatrend, bcstemmasstrend
@@ -191,6 +192,7 @@
 !     bczrtd  - Crop root depth (m)
 !     bcdayap - number of days of growth completed since crop planted
 !     bcdayam - number of days since crop matured
+!     bcleapdays - number of leap days that occur while crop is "in place"
 !     bprevdayap - number of days of growth completed since crop planted
 !     bcthucum - crop accumulated heat units
 !     bctrthucum - accumulated root growth heat units (degree-days)
@@ -235,7 +237,7 @@
 
 !     + + + LOCAL VARIABLES + + +
       integer :: jd     ! simulation day of year
-      integer lay
+      integer lay, dd, mm, yy
       real root_store_rel, pot_stems, pot_leaf_mass
       real vern_delay, photo_delay, hu_delay, trend
       integer regrowth_flg
@@ -304,6 +306,8 @@
 
 !     + + + END OF SPECIFICATIONS + + +
 
+      ! get simulation month and day
+      call get_simdate(dd, mm, yy)
 !     day of year
       jd = get_simdate_doy()
 
@@ -319,7 +323,8 @@
      &              bcmshoot, bcmtotshoot, bcmbgstemz,                  &
      &              bcmrootstorez, bcmrootfiberz,                       &
      &              bczht, bczshoot, bcdstm, bczrtd,                    &
-     &              bcdayap, bcdayam, bcthucum, bctrthucum,             &
+     &              bcdayap, bcdayam, bcleapdays,                       &
+     &              bcthucum, bctrthucum,                               &
      &              bcgrainf, bczgrowpt, bcfliveleaf,                   &
      &              bcleafareatrend, bcstemmasstrend, bctwarmdays,      &
      &              bctchillucum, bcthardnx, bcthu_shoot_beg,           &
@@ -706,6 +711,11 @@
           ! accumulate days after maturity
           bcdayam = bcdayam + 1
 
+      end if
+
+      ! keep track of leap days in growth period
+      if( (mm .eq. 2) .and. (dd .eq. 29 ) ) then
+          bcleapdays = bcleapdays + 1
       end if
 
       return

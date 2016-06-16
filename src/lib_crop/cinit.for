@@ -16,7 +16,8 @@
      &           bcmshoot, bcmtotshoot, bcmbgstemz,                     &
      &           bcmrootstorez, bcmrootfiberz,                          &
      &           bczht, bczshoot, bcdstm, bczrtd,                       & 
-     &           bcdayap, bcdayam, bcthucum, bctrthucum,                &
+     &           bcdayap, bcdayam, bcleapdays,                          &
+     &           bcthucum, bctrthucum,                                  &
      &           bcgrainf, bczgrowpt, bcfliveleaf,                      &
      &           bcleafareatrend, bcstemmasstrend, bctwarmdays,         &
      &           bctchillucum, bcthardnx, bcthu_shoot_beg,              &
@@ -48,7 +49,7 @@
       real bcmshoot, bcmtotshoot, bcmbgstemz(*)
       real bcmrootstorez(*), bcmrootfiberz(*)
       real bczht, bczshoot, bcdstm, bczrtd
-      integer bcdayap, bcdayam
+      integer bcdayap, bcdayam, bcleapdays
       real bcthucum, bctrthucum
       real bcgrainf, bczgrowpt, bcfliveleaf
       real bcleafareatrend, bcstemmasstrend
@@ -92,6 +93,7 @@
 !     bczrtd  - Crop root depth (m)
 !     bcdayap - number of days of growth completed since crop planted
 !     bcdayam - number of days since crop matured
+!     bcleapdays - number of leap days that occur while crop is "in place"
 !     bcthucum - crop accumulated heat units
 !     bctrthucum - accumulated root growth heat units (degree-days)
 !     bcgrainf - internally computed reproductive grain fraction
@@ -229,6 +231,7 @@
 
       bcdayap = 0
       bcdayam = 0
+      bcleapdays = 0
       bcthucum = 0.0
       bctrthucum = 0.0
       bcgrainf = 0.0

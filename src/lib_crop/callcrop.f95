@@ -54,7 +54,7 @@
       ! check for a valid growing crop
       if(      (ac0shoot(sr) .le. 0.0) &
           .or. (acdpop(sr) .le. 0.0) &
-          .or. (ac0idc(sr) .eq. 0) ) then
+          .or. (ac0idc(sr) .le. 0) ) then
           ! this is not a valid growing crop
           crop%growth%am0cgf = .false.
       end if
@@ -89,7 +89,8 @@
      &   crop%growth%mshoot, crop%growth%mtotshoot, crop%mass%stemz, &
      &   crop%mass%rootstorez, crop%mass%rootfiberz, &
      &   crop%geometry%zht, crop%geometry%zshoot, crop%geometry%dstm, crop%geometry%zrtd, &
-     &   crop%growth%dayap, crop%growth%dayam, crop%growth%thucum, crop%growth%trthucum, &
+     &   crop%growth%dayap, crop%growth%dayam, crop%growth%leapdays, &
+     &   crop%growth%thucum, crop%growth%trthucum, &
      &   crop%geometry%grainf, crop%growth%zgrowpt, crop%growth%fliveleaf, &
      &   crop%growth%leafareatrend, crop%growth%stemmasstrend, crop%growth%twarmdays, &
      &   crop%growth%tchillucum, crop%growth%thardnx, crop%growth%thu_shoot_beg, &
