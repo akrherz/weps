@@ -1048,12 +1048,15 @@
 !       no harvest report if nothing removed or no crop present
         if( (pyieldf+pstalkf+rstandf.gt.0.0)                            &
      &      .and. ((crop_present.gt.0) .or. (temp_present.gt.0)) ) then
+          if( harv_calib_not_selected ) then
             call get_calib_crops(sr, crop)
             call get_calib_yield(sr, bmrotation, mass_rem, mass_left, crop)
-            call report_harvest( sr, bmrotation, mass_rem, mass_left, 0,&
-     &           mandate, crop)
             call report_calib_harvest( sr, bmrotation, mass_rem, mass_left, crop )
-            if( rpt_season_flg ) then
+            harv_calib_not_selected = .false.
+          end if
+          call report_harvest( sr, bmrotation, mass_rem, mass_left, 0,  &
+     &           mandate, crop)
+          if( rpt_season_flg ) then
               ! not reported by the kill process in this
               call report_hydrobal( sr, bmrotation )
               call crop_endseason( sr, bmrotation, crop%bname, am0cfl(sr), &
@@ -1070,7 +1073,7 @@
      &        prevcancov(sr), prevdayspring(sr), mature_warn_flg )
               ! set to stop additional report in this operation
               rpt_season_flg = .false.
-            end if
+          end if
         endif
 !-----END cutting to height process (process code 32)
 
@@ -1108,12 +1111,15 @@
 !       no harvest report if nothing removed or no crop present
         if( (pyieldf+pstalkf+rstandf.gt.0.0)                            &
      &      .and. ((crop_present.gt.0) .or. (temp_present.gt.0)) ) then
+          if( harv_calib_not_selected ) then
             call get_calib_crops(sr, crop)
             call get_calib_yield(sr, bmrotation, mass_rem, mass_left, crop)
-            call report_harvest( sr, bmrotation, mass_rem, mass_left, 0,&
-     &           mandate, crop)
             call report_calib_harvest( sr, bmrotation, mass_rem, mass_left, crop )
-            if( rpt_season_flg ) then
+            harv_calib_not_selected = .false.
+          end if
+          call report_harvest( sr, bmrotation, mass_rem, mass_left, 0,  &
+     &           mandate, crop)
+          if( rpt_season_flg ) then
               ! not reported by the kill process in this
               call report_hydrobal( sr, bmrotation )
               call crop_endseason( sr, bmrotation, crop%bname, am0cfl(sr), &
@@ -1130,7 +1136,7 @@
      &        prevcancov(sr), prevdayspring(sr), mature_warn_flg )
               ! set to stop additional report in this operation
               rpt_season_flg = .false.
-            end if
+          end if
         end if
 !-----END cutting by fraction process (process code 33)
 
@@ -1203,12 +1209,15 @@
 !       no harvest report if nothing removed or no crop present
         if( (pyieldf+pstalkf+rstandf.gt.0.0)                            &
      &      .and. ((crop_present.gt.0) .or. (temp_present.gt.0)) ) then
+          if( harv_calib_not_selected ) then
             call get_calib_crops(sr, crop)
             call get_calib_yield(sr, bmrotation, mass_rem, mass_left, crop)
-            call report_harvest( sr, bmrotation, mass_rem, mass_left, 0,&
-      &          mandate, crop)
             call report_calib_harvest( sr, bmrotation, mass_rem, mass_left, crop )
-            if( rpt_season_flg ) then
+            harv_calib_not_selected = .false.
+          end if
+          call report_harvest( sr, bmrotation, mass_rem, mass_left, 0,  &
+      &          mandate, crop)
+          if( rpt_season_flg ) then
               ! not reported by the kill process in this
               call report_hydrobal( sr, bmrotation )
               call crop_endseason( sr, bmrotation, crop%bname, am0cfl(sr), &
@@ -1225,7 +1234,7 @@
      &        prevcancov(sr), prevdayspring(sr), mature_warn_flg )
               ! set to stop additional report in this operation
               rpt_season_flg = .false.
-            end if
+          end if
         end if
 !-----END thinning to population process (process code 37)
 
@@ -1367,10 +1376,12 @@
 !       no harvest report if nothing removed or no crop present
         if( (pyieldf+pstalkf+rstandf.gt.0.0)                            &
      &      .and. ((crop_present.gt.0) .or. (temp_present.gt.0)) ) then
-          if( harv_calib_flg .gt. 0 ) then
+          if(      (harv_calib_flg .gt. 0)                              &
+     &       .and. (harv_calib_not_selected) ) then
             call get_calib_crops(sr, crop)
             call get_calib_yield(sr, bmrotation, mass_rem, mass_left, crop)
             call report_calib_harvest( sr, bmrotation, mass_rem, mass_left, crop )
+            harv_calib_not_selected = .false.
           end if
           if( harv_report_flg .gt. 0 ) then
             call report_harvest( sr, bmrotation, mass_rem, mass_left,   &
@@ -1431,10 +1442,13 @@
 !       no harvest report if nothing removed or no crop present
         if( (pyieldf+pstalkf+rstandf.gt.0.0)                            &
      &      .and. ((crop_present.gt.0) .or. (temp_present.gt.0)) ) then
+          if(      (harv_calib_flg .gt. 0)                              &
+     &       .and. (harv_calib_not_selected) ) then
           if( harv_calib_flg .gt. 0 ) then
             call get_calib_crops(sr, crop)
             call get_calib_yield(sr, bmrotation, mass_rem, mass_left, crop)
             call report_calib_harvest( sr, bmrotation, mass_rem, mass_left, crop )
+            harv_calib_not_selected = .false.
           end if
           if( harv_report_flg .gt. 0 ) then
             call report_harvest( sr, bmrotation, mass_rem, mass_left,   &
@@ -1496,10 +1510,13 @@
 !       no harvest report if nothing removed or no crop present
         if( (pyieldf+pstalkf+rstandf.gt.0.0)                            &
      &      .and. ((crop_present.gt.0) .or. (temp_present.gt.0)) ) then
+          if(      (harv_calib_flg .gt. 0)                              &
+     &       .and. (harv_calib_not_selected) ) then
           if( harv_calib_flg .gt. 0 ) then
             call get_calib_crops(sr, crop)
             call get_calib_yield(sr, bmrotation, mass_rem, mass_left, crop)
             call report_calib_harvest( sr, bmrotation, mass_rem, mass_left, crop )
+            harv_calib_not_selected = .false.
           end if
           if( harv_report_flg .gt. 0 ) then
             call report_harvest( sr, bmrotation, mass_rem, mass_left,   &
@@ -1560,10 +1577,12 @@
 !       no harvest report if nothing removed or no crop present
         if( (pyieldf+pstalkf+rstandf.gt.0.0)                            &
      &      .and. ((crop_present.gt.0) .or. (temp_present.gt.0)) ) then
-          if( harv_calib_flg .gt. 0 ) then
+          if(      (harv_calib_flg .gt. 0)                              &
+     &       .and. (harv_calib_not_selected) ) then
             call get_calib_crops(sr, crop)
             call get_calib_yield(sr, bmrotation, mass_rem, mass_left, crop)
             call report_calib_harvest( sr, bmrotation, mass_rem, mass_left, crop )
+            harv_calib_not_selected = .false.
           end if
           if( harv_report_flg .gt. 0 ) then
             call report_harvest( sr, bmrotation, mass_rem, mass_left, &
@@ -1840,6 +1859,9 @@
         aplant_month(sr) = lastoper(sr)%mon
         aplant_rotyr(sr) = lastoper(sr)%yr
 
+        ! initialize flag to prevent multiple calibration harvests for single crop
+        harv_calib_not_selected = .true.
+
         ! initialize transpiration depth parameters
         ahzfurcut(sr) = 0.0
         ahztransprtmin(sr) = 0.0
@@ -1938,12 +1960,15 @@
 !       no harvest report if nothing removed or no crop present
         if( (storef + leaff + stemf + rootstoref + rootfiberf .gt. 0.0) &
      &      .and. ((crop_present.gt.0) .or. (temp_present.gt.0)) ) then
+          if( harv_calib_not_selected ) then
             call get_calib_crops(sr, crop)
             call get_calib_yield(sr, bmrotation, mass_rem, mass_left, crop)
+            call report_calib_harvest( sr, bmrotation, mass_rem, mass_left, crop )
+            harv_calib_not_selected = .false.
+          end if
             call report_harvest( sr, bmrotation, mass_rem, mass_left, 0,&
      &           mandate, crop)
-            call report_calib_harvest( sr, bmrotation, mass_rem, mass_left, crop )
-            if( rpt_season_flg ) then
+          if( rpt_season_flg ) then
               ! not reported by the kill process in this
               call report_hydrobal( sr, bmrotation )
               call crop_endseason( sr, bmrotation, crop%bname, am0cfl(sr), &
@@ -1960,7 +1985,7 @@
      &        prevcancov(sr), prevdayspring(sr), mature_warn_flg )
               ! set to stop additional report in this operation
               rpt_season_flg = .false.
-            end if
+          end if
         end if
 !-----END biomass remove process (process code 61)
 
@@ -2007,10 +2032,12 @@
         if( (storef + leaff + stemf + rootstoref + rootfiberf .gt. 0.0) &
      &      .and. ((crop_present.gt.0) .or. (temp_present.gt.0)) ) then
           ! removed mass is used in calibration
-          if( harv_calib_flg .gt. 0 ) then
+          if(      (harv_calib_flg .gt. 0)                              &
+     &       .and. (harv_calib_not_selected) ) then
             call get_calib_crops(sr, crop)
             call get_calib_yield(sr, bmrotation, mass_rem, mass_left, crop)
             call report_calib_harvest( sr, bmrotation, mass_rem, mass_left, crop )
+            harv_calib_not_selected = .false.
           end if
           ! removed mass appears in crop report
           if( harv_report_flg .gt. 0 ) then

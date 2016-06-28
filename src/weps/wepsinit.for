@@ -48,6 +48,8 @@
       calib_loop = .false.       ! m1flag.inc
       report_loop = .false.      ! m1flag.inc
 
+      ! init flag calibration of crops with multiple harvests.
+      harv_calib_not_selected = .true.
 
       ! main/input.for
       clifil = "cli_gen.cli"     ! main/main.inc

@@ -39,9 +39,12 @@
       real             nstack(20)
       character*20     cstack(40)
 
+      logical          harv_calib_not_selected(mnsub)
+
       common / man1 / mstart, mperod, istack, nstack
       common / man2 / manlin, mline, cstack
       common / man3 / mcurnt,  mlpos, mrecnum, mrcl, meor
+      common / man4 / harv_calib_not_selected
 
       save :: /man1/, /man2/, /man3/, /man4/
 
@@ -178,3 +181,7 @@
 !              fixed          -          -
 !              typical        -          -
 !              ------------   ---------  ---------
+
+!     harv_calib_not_selected - flag indicating that a harvest operation
+!                               has not been selected for calibration for that crop.
+
