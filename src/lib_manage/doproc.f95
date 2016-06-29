@@ -1386,7 +1386,8 @@
           if( harv_report_flg .gt. 0 ) then
             call report_harvest( sr, bmrotation, mass_rem, mass_left,   &
      &                           harv_unit_flg, mandate, crop )
-            if( rpt_season_flg ) then
+          end if
+          if( rpt_season_flg ) then
               ! not reported by the kill process in this
               call report_hydrobal( sr, bmrotation )
               call crop_endseason( sr, bmrotation, crop%bname, am0cfl(sr), &
@@ -1403,7 +1404,6 @@
      &        prevcancov(sr), prevdayspring(sr), mature_warn_flg )
               ! set to stop additional report in this operation
               rpt_season_flg = .false.
-            end if
           end if
         endif
 !-----END flagged cutting to height process (process code 42)
@@ -1453,7 +1453,8 @@
           if( harv_report_flg .gt. 0 ) then
             call report_harvest( sr, bmrotation, mass_rem, mass_left,   &
      &                           harv_unit_flg, mandate, crop )
-            if( rpt_season_flg ) then
+          end if
+          if( rpt_season_flg ) then
               ! not reported by the kill process in this
               call report_hydrobal( sr, bmrotation )
               call crop_endseason( sr, bmrotation, crop%bname, am0cfl(sr), &
@@ -1470,7 +1471,6 @@
      &        prevcancov(sr), prevdayspring(sr), mature_warn_flg )
               ! set to stop additional report in this operation
               rpt_season_flg = .false.
-            end if
           end if
         end if
 !-----END flagged cutting by fraction process (process code 43)
@@ -1521,7 +1521,8 @@
           if( harv_report_flg .gt. 0 ) then
             call report_harvest( sr, bmrotation, mass_rem, mass_left,   &
      &                           harv_unit_flg, mandate, crop )
-            if( rpt_season_flg ) then
+          end if
+          if( rpt_season_flg ) then
               ! not reported by the kill process in this
               call report_hydrobal( sr, bmrotation )
               call crop_endseason( sr, bmrotation, crop%bname, am0cfl(sr), &
@@ -1538,7 +1539,6 @@
      &        prevcancov(sr), prevdayspring(sr), mature_warn_flg )
               ! set to stop additional report in this operation
               rpt_season_flg = .false.
-            end if
           end if
         end if
 !-----END flagged thinning to population process (process code 47)
@@ -1587,7 +1587,8 @@
           if( harv_report_flg .gt. 0 ) then
             call report_harvest( sr, bmrotation, mass_rem, mass_left, &
      &                           harv_unit_flg, mandate, crop )
-            if( rpt_season_flg ) then
+          end if
+          if( rpt_season_flg ) then
               ! not reported by the kill process in this
               call report_hydrobal( sr, bmrotation )
               call crop_endseason( sr, bmrotation, crop%bname, am0cfl(sr), &
@@ -1604,7 +1605,6 @@
      &        prevcancov(sr), prevdayspring(sr), mature_warn_flg )
               ! set to stop additional report in this operation
               rpt_season_flg = .false.
-            end if
           end if
         end if
 !-----END flagged thinning by fraction process (process code 48)
@@ -2043,10 +2043,11 @@
           if( harv_report_flg .gt. 0 ) then
             call report_harvest( sr, bmrotation, mass_rem, mass_left,   &
      &                           harv_unit_flg, mandate, crop )
-            if( rpt_season_flg ) then
-              ! not reported by the kill process in this
-              call report_hydrobal( sr, bmrotation )
-              call crop_endseason( sr, bmrotation, crop%bname, am0cfl(sr), &
+          end if
+          if( rpt_season_flg ) then
+            ! not reported by the kill process in this
+            call report_hydrobal( sr, bmrotation )
+            call crop_endseason( sr, bmrotation, crop%bname, am0cfl(sr), &
      &        nslay(sr), ac0idc(sr), crop%growth%dayam, &
      &        aplant_day(sr), aplant_month(sr), aplant_rotyr(sr),       &
      &        acthum(sr), crop%geometry%xstmrep, &
@@ -2059,8 +2060,7 @@
      &        prevgrainf(sr), prevchillucum(sr), prevliveleaf(sr),      &
      &        prevcancov(sr), prevdayspring(sr), mature_warn_flg )
               ! set to stop additional report in this operation
-              rpt_season_flg = .false.
-            end if
+            rpt_season_flg = .false.
           end if
         end if
 !-----END biomass remove pool process (process code 62)
