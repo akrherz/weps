@@ -3,7 +3,8 @@
 !$Revision$
 !$HeadURL$
 
-      subroutine crop_endseason ( isr, bmrotation, bc0nam, bm0cfl,      &
+      subroutine crop_endseason ( isr, bmrotation, bmperod,             &
+     &                 bc0nam, bm0cfl,                                  &
      &                 bnslay, bc0idc, bcdayam,                         &
      &                 bplant_day, bplant_month, bplant_rotyr,          &
      &                 bcthum, bcxstmrep,                               &
@@ -29,6 +30,7 @@
 !     + + + ARGUMENT DECLARATIONS + + +
       integer, intent(in) :: isr   ! subregion number
       integer, intent(in) :: bmrotation ! rotation count updated in manage.for
+      integer, intent(in) :: bmperod ! number of years for a management cycle
       character*(80) bc0nam
       integer bm0cfl, bnslay, bc0idc, bcdayam
       integer bplant_day, bplant_month, bplant_rotyr
@@ -87,11 +89,10 @@
       include 'm1flag.inc'
 
 !     + + + LOCAL VARIABLES + + +
-      integer lay, dd, mm, yy, jdx
-      integer today, tjday
-      integer pjday, pday, pmon, pyr
+      integer lay, dd, mm, yy
       real hui
       real bg_stem_sum, root_store_sum, root_fiber_sum
+      integer adj_plant_yr
 
 !     + + + LOCAL VARIABLE DEFINITIONS + + +
 !     lay - index used to loop through layers
@@ -100,6 +101,7 @@
 !     bg_stem_sum - sum of below ground stem
 !     root_store_sum - sum of root storage
 !     root_fiber_sum - sum of root fiber
+!     adj_plant_yr - planting year adjusted to be less than the operation year that triggered this report
 
 !     + + + OUTPUT FORMATS + + +
  2010 format(1x,i2,'/',i2,'/',i3,'|',1x,i2,'/',i2,'/',i2,'|',a40,'|',   &
@@ -150,8 +152,17 @@
             root_fiber_sum = root_fiber_sum + bprevrootfiberz(lay)
         end do
 
+        ! adjust planting year to be less than the operation year that triggered this report
+        if(     julday(bplant_day, bplant_month, bplant_rotyr)          &
+     &  .gt.julday(lastoper(isr)%day,lastoper(isr)%mon,lastoper(isr)%yr)&
+     &  ) then
+            adj_plant_yr = bplant_rotyr - bmperod
+        else
+            adj_plant_yr = bplant_rotyr
+        end if
+
         write(UNIT=luoseason(isr),FMT=2010,advance='NO')                &
-     &    bplant_day, bplant_month, bplant_rotyr,                       &
+     &    bplant_day, bplant_month, adj_plant_yr,                       &
      &   lastoper(isr)%day, lastoper(isr)%mon, lastoper(isr)%yr, bc0nam,&
      &    bprevstandstem, bprevstandleaf, bprevstandstore,              &
      &    bprevflatstem, bprevflatleaf, bprevflatstore,                 &

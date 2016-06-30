@@ -384,7 +384,8 @@
       real bwtdmx, bwtdmn, bctopt, bctmin
       end function temps
 !-------------------------------------
-      subroutine crop_endseason ( sr, bmrotation, bc0nam, bm0cfl,       &
+      subroutine crop_endseason ( isr, bmrotation, bmperod, &
+     &                 bc0nam, bm0cfl,       &
      &                 bnslay, bc0idc, bcdayam,                         &
      &                 bplant_day, bplant_month, bplant_rotyr,          &
      &                 bcthum, bcxstmrep,                               &
@@ -396,7 +397,9 @@
      &                 bprevdayap, bprevhucum, bprevrthucum,            &
      &                 bprevgrainf, bprevchillucum, bprevliveleaf,      &
      &                 bprevcancov, bprevdayspring, mature_warn_flg )
-      integer sr, bmrotation
+      integer, intent(in) :: isr   ! subregion number
+      integer, intent(in) :: bmrotation ! rotation count updated in manage.for
+      integer, intent(in) :: bmperod ! number of years for a management cycle
       character*(80) bc0nam
       integer bm0cfl, bnslay, bc0idc, bcdayam
       integer bplant_day, bplant_month, bplant_rotyr
