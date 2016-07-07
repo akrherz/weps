@@ -15,6 +15,7 @@ module p1unconv_mod
 !     These parameter values may be consulted from within any sections
 !     of the WERM code if this file has been included.
 
+      real             pi
       real             mtomm
       real             mmtom
       integer          hrday
@@ -31,10 +32,10 @@ module p1unconv_mod
       real             secperday
       integer          SEC_PER_DAY
       real             KG_per_M2_to_LBS_per_ACRE
-      real             pi
 
 !     + + + VARIABLE DECLARATIONS + + +
-      parameter (pi = 3.14159274)
+      parameter (pi = 3.1415926535897932384626d0)
+!      parameter (pi = acos(-1.0)) ! this does not work with Lahey compiler
       parameter (mtomm  = 1000.0)
       parameter (mmtom  = 0.001)
       parameter (hrday  = 24)

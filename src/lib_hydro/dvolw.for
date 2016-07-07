@@ -362,6 +362,8 @@
 
       ! returns the potential evaporation rate (m/s) at the time tday (s)
 
+      use p1unconv_mod, only: pi
+
       real, intent(in) :: tday        ! time of day from midnight (s)
       real, intent(in) :: sunrise     ! time of sunrise (s)
       real, intent(in) :: sunset      ! time of sunset (s)
@@ -370,9 +372,6 @@
       real, intent(in) :: evapdaypot  ! daily total evaporation (m)
 
       real evap_rate                  ! evaporation rate (m/s)
-
-      real pi
-      parameter( pi = 3.1415927 )
 
       evap_rate = evapdaypot * 0.1 / 86400.0
       if( (tday.gt.sunrise) .and. (tday.lt.sunset) ) then

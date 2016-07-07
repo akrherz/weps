@@ -9,6 +9,8 @@
 !     threshold temperature assuming a fully sinusoidal daily 
 !     temperature cycle with maximum and minimum 12 hours apart.
 
+      use p1unconv_mod, only: pi
+
 !     + + + ARGUMENT DECLARATIONS + + +
       real tmax, tmin, thres
 
@@ -18,16 +20,13 @@
 !     thres  - threshold temperature (such as minimum temperature for growth)
 
 !     + + + LOCAL VARIABLES + +
-      real tmean, range, theta, pi
+      real tmean, range, theta
 
 !     + + + LOCAL VARIABLE DEFINITIONS + + +
 !     tmean  - arithmetic average of tmax and tmin
 !     range  - daily range of maximum and minimum temperature
 !     theta  - point where threshold and air temperature are equal
 !              defines integration limits
-
-!     + + + PARAMETERS + + +
-      parameter (pi      = 3.1415927)
 
 !     + + + END INITIALIZATIONS + + +
 

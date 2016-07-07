@@ -11,6 +11,8 @@
 !     maximum and daily minimum, which are assumed to occur at 6pm and
 !     6am respectively.
 
+      use p1unconv_mod, only: pi
+
 !     + + + ARGUMENT DECLARATIONS + + +
       real  tsec, tmax, tmin
 
@@ -20,8 +22,7 @@
 !     tmin  - daily minimum temperature (C)
 
 !*** LOCAL DECLARATIONS ***
-      real pi, halfperiod
-      parameter( pi = 3.1415927 )
+      real halfperiod
       parameter( halfperiod = 43200 )
 
       airtempsin = 0.5*(tmax + tmin                                     &

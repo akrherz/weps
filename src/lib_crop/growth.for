@@ -754,7 +754,7 @@
      &                    temp_stmrep, regrowth_flg, bc0nam
       end if
 
- 2130 format(1x,i5,1x,i3,1x,i4,1x,i5,1x,f6.3,12(1x,f7.4),1x,f7.2,       &
+ 2130 format(1x,i6,1x,i3,1x,i4,1x,i5,1x,f6.3,12(1x,f7.4),1x,f7.2,       &
      & 3(1x,f7.4),8(1x,f6.3),1x,e12.3, 11(1x,f6.3),2(1x,f8.5),1x,i2,    &
      & 1x,a30)
 

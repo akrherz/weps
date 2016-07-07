@@ -194,11 +194,11 @@ subroutine fnu(n,x,fvec,ni,iv,nr,rv,iflag)
 end subroutine
 
 double precision function log_likelihood(nzero, ngtz, psi, mu, eta, t_sum, s_sum)
+
+    use p1unconv_mod, only: pi
+
     integer, intent(in) :: nzero, ngtz
     double precision, intent(in) :: psi, mu, eta, t_sum, s_sum
-
-    real pi
-    parameter (pi = 3.1415926535)
 
     log_likelihood = nzero * log(1 - exp(psi - mu - eta/2)) &
                    + ngtz * (psi - mu - eta/2) &

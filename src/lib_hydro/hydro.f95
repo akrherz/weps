@@ -338,7 +338,7 @@
      & h1et%zirr cli_today%zdpt  dprec h1et%zrun bhzinf   lswc   swc  h1et%zsnd bhzsno  c&
      &heck cropdp rootwc rootwcap bhfwsf surfdry tdav vaptrans evaplim&
      &it st_evapr fl_evapr to_evapr')
- 2090 format(1x,i5,1x,i3,1x,i4,11(1x,f6.2),2(1x,f8.2),2(1x,f6.2),       &
+ 2090 format(1x,i6,1x,i3,1x,i4,11(1x,f6.2),2(1x,f8.2),2(1x,f6.2),       &
      &       1x,f7.3,11(1x,f6.2))
  3000 format('# daysim doy yr layer depth theta thetas thetaf thetaw the&
      &tar availwat satrat bhtsav unsatcond matricpot relhum bulkden aire&
@@ -779,7 +779,8 @@
          end if
          accheck = lswc - swc + lsno - bhzsno + h1et%zirr + cli_today%zdpt         &
      &           - h1et%zea - h1et%zpta - h1et%zper - h1et%zrun
-! 2090 format(1x,i5,1x,i3,1x,i4,11(1x,f6.2),2(1x,f8.2),2(1x,f6.2),1x,f7.3,11(1x,f6.2))
+
+! 2090 format(1x,i6,1x,i3,1x,i4,11(1x,f6.2),2(1x,f8.2),2(1x,f6.2),1x,f7.3,11(1x,f6.2))
          write(luohydro(isr),2090) daysim,idoy,yr,h1et%zetp, h1et%zep, h1et%zptp,&
      &       h1et%zea, h1et%zpta, h1et%zper, h1et%zirr, cli_today%zdpt, dprecip, h1et%zrun,    &
      &       bhzinf, lswc, swc, h1et%zsnd, bhzsno, accheck, cropdp,        &

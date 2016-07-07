@@ -43,12 +43,6 @@
 !     bsfom(*)   - fraction of total soil which is organic (unitless)
 !     bhtsav(*)  - daily average soil temperature (C)
 
-!     + + + PARAMETERS + + +
-      real   pi
-      parameter( pi = 3.1415927 )
-
-!     + + + COMMON BLOCKS + + +
-
 !     + + + LOCAL COMMON BLOCKS + + +
       include 'hydro/vapprop.inc'
       include 'hydro/clayomprop.inc'
