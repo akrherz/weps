@@ -52,6 +52,7 @@
                goto 5 ! look for next operation date
             endif
             i = i + 1
+            mandate(i)%sr = sr
             read (line (3:12),'(i2,1x,i2,1x,i4)', err=902)              &
      &                 mandate(i)%d,mandate(i)%m,mandate(i)%y
             !print *, mandate(i)%d,mandate(i)%m,mandate(i)%y
@@ -97,7 +98,7 @@
          cnt_em = .FALSE.
          !print *, "cnt_em", cnt_em, cnt_man_dates
 
-         allocate (mandate(1:cnt_man_dates))
+         call create_mandate( cnt_man_dates, mandate )
 
          i = 0
 

@@ -10,7 +10,7 @@
     IMPLICIT NONE
 
     type :: opercrop_date
-       integer :: d, m, y 
+       integer :: sr, d, m, y 
        character(80) :: opname
        character(80) :: cropname
     end type opercrop_date
@@ -48,6 +48,115 @@
        end if
     end subroutine destroy_mandate
 
+    subroutine sync_harvcropnames( mandatbs )
+
+       use datetime_mod, only: difdat
+
+       type(mandate_array), dimension(:) :: mandatbs
+
+       integer :: alloc_stat
+       integer :: sum_stat
+
+       integer :: ld, lm, ly  ! day, month, year values
+       integer :: daydif      ! result from difdat
+
+       integer :: isr   ! subregion loop index
+       integer :: lsr   ! lower subregion index
+       integer :: usr   ! upper subregion index
+       integer :: osr   ! the composite 0 "subregion" index
+
+       logical, dimension(:), allocatable :: subdone ! logical .true. indicates that the last date has been checked
+       integer, dimension(:), allocatable :: ldx    ! lower index for each subregion date array
+       integer, dimension(:), allocatable :: udx    ! upper index for each subregion date array
+       integer, dimension(:), allocatable :: pdx    ! present index for each subregion date array
+
+       integer, dimension(:), allocatable :: cnt_cycles    ! number of cycles for each subregion date array to fill 0 array cycle
+       integer, dimension(:), allocatable :: idx_cycles    ! index indicating the present subregion date array cycle
+       integer, dimension(:), allocatable :: add_yr    ! number of years too add subregion date to make it match multiple cycles
+
+       ! note: this structure is passed with the (0) index array used to hold the result
+       osr = lbound(mandatbs,1)
+       lsr = osr + 1
+       usr = ubound(mandatbs,1)
+
+       sum_stat = 0
+       ! allocate indexes into each mandate array
+       allocate( subdone(osr:usr), stat = alloc_stat )
+       sum_stat = sum_stat + alloc_stat
+       allocate( ldx(osr:usr), stat = alloc_stat )
+       sum_stat = sum_stat + alloc_stat
+       allocate( udx(osr:usr), stat = alloc_stat )
+       sum_stat = sum_stat + alloc_stat
+       allocate( pdx(osr:usr), stat = alloc_stat )
+       sum_stat = sum_stat + alloc_stat
+       allocate( cnt_cycles(lsr:usr), stat = alloc_stat )
+       sum_stat = sum_stat + alloc_stat
+       allocate( idx_cycles(lsr:usr), stat = alloc_stat )
+       sum_stat = sum_stat + alloc_stat
+       allocate( add_yr(lsr:usr), stat = alloc_stat )
+       sum_stat = sum_stat + alloc_stat
+       if( sum_stat .gt. 0 ) then
+          write(*,*) 'ERROR: unable to allocate memory in allmandates'
+          stop 1
+       end if
+
+       do isr = osr, usr
+          ldx(isr) = lbound(mandatbs(isr)%mandate,1)
+          udx(isr) = ubound(mandatbs(isr)%mandate,1)
+          pdx(isr) = ldx(isr)
+          if( isr .ge. lsr ) then
+             cnt_cycles(isr) = mandatbs(osr)%mperod / mandatbs(isr)%mperod
+             idx_cycles(isr) = 1
+             add_yr(isr) = 0
+          end if
+          subdone(isr) = .false.
+       end do
+
+       do while( .not. subdone(osr))
+          ! use subregion index in master array to retrieve crop name from subregion array
+          isr = mandatbs(osr)%mandate(pdx(osr))%sr + 1
+          if( .not. subdone(isr) ) then
+             ! difference between present date and subregion date
+             daydif = difdat(mandatbs(osr)%mandate(pdx(osr))%d, mandatbs(osr)%mandate(pdx(osr))%m, &
+                                mandatbs(osr)%mandate(pdx(osr))%y, &
+                                mandatbs(isr)%mandate(pdx(isr))%d, mandatbs(isr)%mandate(pdx(isr))%m, &
+                                mandatbs(isr)%mandate(pdx(isr))%y + add_yr(isr))
+             if( daydif .eq. 0 ) then
+                ! The dates match, copy crop name from subregion to master region
+                mandatbs(osr)%mandate(pdx(osr)) = mandatbs(isr)%mandate(pdx(isr))
+                ! increment indexes
+                if( pdx(osr) .lt. udx(osr) ) then
+                   pdx(osr) = pdx(osr) + 1
+                   if( pdx(isr) .lt. udx(isr) ) then
+                      ! index is less than maximum
+                      ! bump index to next date
+                      pdx(isr) = pdx(isr) + 1
+                   else ! pdx(isr) .eq. udx(isr)
+                      if( idx_cycles(isr) .lt. cnt_cycles(isr) ) then
+                         pdx(isr) = ldx(isr)
+                         add_yr(isr) = add_yr(isr) + mandatbs(isr)%mperod
+                         idx_cycles(isr) = idx_cycles(isr) + 1
+                      else ! idx_cycles(isr) .eq. cnt_cycles(isr)
+                         subdone(isr) = .true.
+                      end if
+                   end if
+                else ! pdx(osr) .eq. udx(osr)
+                   subdone(osr) = .true.
+                end if
+             else
+                ! dates do not match, error in method
+                write(*,*)"Date Error in sync_harvcropnames: subregion, day, month, year are not equal"
+                write(*,*) osr, mandatbs(osr)%mandate(pdx(osr))%d, mandatbs(osr)%mandate(pdx(osr))%m, &
+                                mandatbs(osr)%mandate(pdx(osr))%y
+                write(*,*) isr, mandatbs(isr)%mandate(pdx(isr))%d, mandatbs(isr)%mandate(pdx(isr))%m, &
+                                mandatbs(isr)%mandate(pdx(isr))%y + add_yr(isr)
+
+                stop 1
+             end if
+          end if
+       end do
+    end subroutine sync_harvcropnames
+
     subroutine allmandates( mandatbs )
 
        use datetime_mod, only: difdat
@@ -63,7 +172,7 @@
        integer :: mindif      ! minimum result from difdat
        integer :: minsr       ! index of mindif subregion
 
-       integer :: isr    ! subregion loop index
+       integer :: isr   ! subregion loop index
        integer :: lsr   ! lower subregion index
        integer :: usr   ! upper subregion index
        integer :: osr   ! the composite 0 "subregion" index

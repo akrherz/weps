@@ -427,7 +427,7 @@
       end do
       ! initialize full mandate series for all subregions for full maxper length.
       mandatbs(0)%mperod = maxper
-      call allmandates(mandatbs)  ! examine dates for all subregions and put composite list into 0 array
+      call allmandates( mandatbs )  ! examine dates for all subregions and put composite list into 0 array
 
       do isr = 0, nsubr
           n_rot_cycles(isr) = run_rot_cycles * maxper / mandatbs(isr)%mperod
@@ -905,6 +905,10 @@
 ! End of "report" section
 ! Done with simulation here ..................
 
+      ! place crop names associated with harvests into whole region mangement file
+      call sync_harvcropnames( mandatbs )
+
+      ! write output reports
       do isr = 0, nsubr   ! 0 is whole region, and then all subregion     
           if (report_debug >= 1) then
               call print_report_vars(nperiods(0), mandatbs(isr)%mperod, rep_report(isr), mandatbs(isr)%mandate)
@@ -913,7 +917,8 @@
               call print_yr_report_vars(nperiods(0), mandatbs(0)%mperod, n_rot_cycles(0), rep_report(isr)%yr_report)
           end if
           call sci_report( isr, cellstate )
-          call print_ui1_output(luogui1(isr),nperiods(0), mandatbs(0)%mperod, n_rot_cycles(0), rep_report(isr), mandatbs(0)%mandate) !Use for new WEPS gui
+          call print_ui1_output(luogui1(isr), nperiods(isr), mandatbs(isr)%mperod, n_rot_cycles(isr), rep_report(isr), &
+                                mandatbs(isr)%mandate) !Use for new WEPS gui
           call print_mandate_output(luomandate(isr), mandatbs(isr)%mperod, mandatbs(isr)%mandate)
       end do
 
