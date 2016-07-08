@@ -24,18 +24,33 @@ module barriers_mod
 
   type barrier_seasonal
      character*80 :: amzbt  ! Barrier type
-     integer :: nper ! number of periods in barrier
+     integer :: ntm  ! number of time marks specified for barrier
      integer :: np   ! number of points in barrier_params and polyline point array
      type(point), dimension(:), allocatable :: points  ! the polyline points
-     type( barrier_params), dimension(:), allocatable :: param
+     integer, dimension(:), allocatable :: doy         ! day of year for time marks
+     type( barrier_params), dimension(:,:), allocatable :: param
   end type barrier_seasonal
 
+  interface create_barrier
+      module procedure create_barrier_fixed
+      module procedure create_barrier_seasonal
+  end interface create_barrier
+
+  interface destroy_barrier
+      module procedure destroy_barrier_fixed
+      module procedure destroy_barrier_seasonal
+  end interface destroy_barrier
+
+  public :: create_barrier
+  public :: destroy_barrier
+
   type(barrier_data), dimension(:), allocatable :: barrier
+  type(barrier_seasonal), dimension(:), allocatable :: barseas
 
 contains
  
-  ! allocates a barrier_data structure which can contain np points
-  function create_barrier(nump) result(barr)
+  ! allocates a barrier_data structure which can contain nump points
+  function create_barrier_fixed(nump) result(barr)
     integer, intent(in) :: nump  ! number of points in barrier_params and polyline created
     type(barrier_data) :: barr
 
@@ -55,10 +70,10 @@ contains
     else
       barr%np = nump
     end if 
-  end function create_barrier
+  end function create_barrier_fixed
  
   ! deallocates a barrier_data structure
-  subroutine destroy_barrier(barr)
+  subroutine destroy_barrier_fixed(barr)
     type(barrier_data), intent(inout) :: barr
 
     ! local variable
@@ -74,7 +89,121 @@ contains
       ! deallocation failed
       write(*,*) "ERROR: unable to deallocate memory for Polygon"
     end if
-  end subroutine destroy_barrier
+  end subroutine destroy_barrier_fixed
+
+  ! allocates a barrier_data structure which can contain nump points
+  function create_barrier_seasonal(nump,numtm) result(barr)
+    integer, intent(in) :: nump  ! number of points in barrier_params and polyline created
+    integer, intent(in) :: numtm ! number of time marks in barrier_params
+    type(barrier_seasonal) :: barr
+
+    ! local variable
+    integer :: sum_stat
+    integer :: alloc_stat
+
+    sum_stat = 0
+    allocate(barr%points(nump), stat=alloc_stat)
+    sum_stat = sum_stat + alloc_stat
+    allocate(barr%doy(numtm), stat=alloc_stat)
+    sum_stat = sum_stat + alloc_stat
+    allocate(barr%param(nump,numtm), stat=alloc_stat)
+    sum_stat = sum_stat + alloc_stat
+    if( sum_stat .gt. 0 ) then
+      ! allocation failed
+      write(*,*) "ERROR: unable to allocate memory for barrier"
+      barr%np = 0
+      barr%ntm = 0
+    else
+      barr%np = nump
+      barr%ntm = numtm
+    end if 
+  end function create_barrier_seasonal
+ 
+  ! deallocates a barrier_data structure
+  subroutine destroy_barrier_seasonal(barr)
+    type(barrier_seasonal), intent(inout) :: barr
+
+    ! local variable
+    integer :: sum_stat
+    integer :: dealloc_stat
+
+    sum_stat = 0
+    deallocate(barr%points, stat=dealloc_stat)
+    sum_stat = sum_stat + dealloc_stat
+    deallocate(barr%doy, stat=dealloc_stat)
+    sum_stat = sum_stat + dealloc_stat
+    deallocate(barr%param, stat=dealloc_stat)
+    sum_stat = sum_stat + dealloc_stat
+    if( sum_stat .gt. 0 ) then
+      ! deallocation failed
+      write(*,*) "ERROR: unable to deallocate memory for Polygon"
+    end if
+  end subroutine destroy_barrier_seasonal
+
+  ! Given the day of year, sets the present barrier characteristics for all barriers
+  subroutine set_barrier_season(doy)
+
+    use lin_interp_mod, only: lin_interp
+
+    ! argument declarations
+    integer, intent(in) :: doy  ! day of year for setting barrier season
+
+    ! local variables
+    integer :: bdx    ! barrier loop variable
+    integer :: tdx    ! time mark loop variable
+    integer :: pdx    ! point loop variable
+    integer :: low_tm ! low time mark index
+    integer :: hi_tm  ! high time mark index
+    real :: frac_tm   ! fraction of time into bracketed time interval
+
+    ! loop over all barriers
+    do bdx = 1, size(barrier)
+      ! check number of time marks in seasonal barrier
+      if( barseas(bdx)%ntm .gt. 1 ) then
+        ! this barrier contains seasons
+        ! find location in time mark array
+        if( (doy .lt. barseas(bdx)%doy(1)) .or. (doy .ge. barseas(bdx)%doy(barseas(bdx)%ntm)) ) then
+            low_tm = barseas(bdx)%ntm
+        else
+          do tdx = 1, barseas(bdx)%ntm-1
+            ! search for low time mark index
+            if( doy .ge. barseas(bdx)%doy(tdx) ) then
+              low_tm = tdx
+              exit
+            end if
+          end do
+        end if
+        ! set high time mark index and find interpolation fraction
+        if( low_tm .lt. barseas(bdx)%ntm ) then
+          ! no wrapping required for bracketing index
+          hi_tm = low_tm + 1
+          ! find fraction of distance in time between time marks
+          frac_tm = (doy - barseas(bdx)%doy(low_tm))/(barseas(bdx)%doy(hi_tm) - barseas(bdx)%doy(low_tm))
+        else
+          ! low_tm was at end of year, wrap to bracketing index
+          hi_tm = 1
+          ! find fraction of distance in time between time marks adjusted for wrapping
+          frac_tm = (doy - barseas(bdx)%doy(low_tm))/(barseas(bdx)%doy(hi_tm) + 365 - barseas(bdx)%doy(low_tm))
+        end if
+        ! interpolate barrier params in time, copying into fixed barrier structure
+        do pdx = 1, barseas(bdx)%np
+          barrier(bdx)%param(pdx)%amzbr = lin_interp(frac_tm, barseas(bdx)%param(pdx,low_tm)%amzbr, &
+                                                              barseas(bdx)%param(pdx,hi_tm)%amzbr)
+          barrier(bdx)%param(pdx)%amxbrw = lin_interp(frac_tm, barseas(bdx)%param(pdx,low_tm)%amxbrw, &
+                                                               barseas(bdx)%param(pdx,hi_tm)%amxbrw)
+          barrier(bdx)%param(pdx)%ampbr = lin_interp(frac_tm, barseas(bdx)%param(pdx,low_tm)%ampbr, &
+                                                              barseas(bdx)%param(pdx,hi_tm)%ampbr)
+        end do
+      else
+        ! this barrier does not have seasons, copy into fixed barrier structure
+        do pdx = 1, barseas(bdx)%np
+          barrier(bdx)%param(pdx)%amzbr = barseas(bdx)%param(pdx,1)%amzbr
+          barrier(bdx)%param(pdx)%amxbrw = barseas(bdx)%param(pdx,1)%amxbrw
+          barrier(bdx)%param(pdx)%ampbr = barseas(bdx)%param(pdx,1)%ampbr
+        end do
+      end if
+    end do
+  end subroutine set_barrier_season
 
   subroutine sbbr( cellstate )
 
@@ -133,10 +262,11 @@ contains
               if (dist .le. 35*zbr_interp) then
                 ! distance is close enough for effect
                 ! interpolate parameters along barrier segment
-                pbr_interp = lin_interp( loc_intersect%low_index, loc_intersect%dist_frac, barrier(n)%param(1:npt)%ampbr )
                 xbrw_interp = lin_interp( loc_intersect%low_index, loc_intersect%dist_frac, barrier(n)%param(1:npt)%amxbrw )
+                pbr_interp = lin_interp( loc_intersect%low_index, loc_intersect%dist_frac, barrier(n)%param(1:npt)%ampbr )
+
                 ! find shelter effect
-                w0br_min = min(w0br_min, fu( dist, zbr_interp, pbr_interp, xbrw_interp ) )
+                w0br_min = min(w0br_min, fu( dist, zbr_interp, xbrw_interp, pbr_interp ) )
               end if
             end if
 
@@ -151,11 +281,11 @@ contains
               if (dist .lt. 5*zbr_interp) then
                 ! distance is close enough for effect
                 ! interpolate parameters along barrier segment
-                pbr_interp = lin_interp( loc_intersect%low_index, loc_intersect%dist_frac, barrier(n)%param(1:npt)%ampbr )
                 xbrw_interp = lin_interp( loc_intersect%low_index, loc_intersect%dist_frac, barrier(n)%param(1:npt)%amxbrw )
+                pbr_interp = lin_interp( loc_intersect%low_index, loc_intersect%dist_frac, barrier(n)%param(1:npt)%ampbr )
 
                 ! find shelter effect (on upwind side of barrier use negative distance for correct function value)
-                w0br_min = min(w0br_min, fu( -dist, zbr_interp, pbr_interp, xbrw_interp ) )
+                w0br_min = min(w0br_min, fu( -dist, zbr_interp, xbrw_interp, pbr_interp ) )
               end if
             end if
           end do
@@ -168,11 +298,11 @@ contains
 
   end subroutine sbbr
 
-  function fu (xh, zbr, pbr, xbrw) result(fufv)
+  function fu (xh, zbr, xbrw, pbr) result(fufv)
       real, intent(in) :: xh     ! distance from barrier (range: -5*zbr to 50*zbr)
       real, intent(in) :: zbr    ! barrier height
-      real, intent(in) :: pbr    ! barrier optical porosity (through entire width) (range: 0 to 0.9)
       real, intent(in) :: xbrw   ! barrier width
+      real, intent(in) :: pbr    ! barrier optical porosity (through entire width) (range: 0 to 0.9)
 
       real :: fufv  ! fraction of upwind fric. velocity near the  barrier
 

@@ -201,33 +201,39 @@ Canola, fall; Fallow_ Wheat, winter; Fallow; mulch till, Z50.man
 #   RFD-WaterErosionLoss
 0.0000
 #
-# End Subregion Section
+# === END SUBREGION SECTION ===
+#
+# === BEGIN BARRIER SECTION ===
 #
 #   RFD-BarrierNo (number of barriers)
 1
 #   Note: subregion mod allows 0 barriers.
 #         If zero, then put no barrier entries here.
+# number of day of year time marks for seasons
+2
 # number of coordinates
 2
+# first day of year time mark
+120
+# second day of year time mark
+260
 #   RFD-BarrierS coordinates (meters) | height (meters) | width (meters) | porosity
 # first coordinate pair and data
 0 366 
-# first height (meters)
-2
-# first width (meters)
-2
-# first porosity
-0.7
+# first point, first time mark, height (meters), width (meters), porosity
+1.0 1.0 0.7 
+# first point, second time mark height (meters), width (meters), porosity
+2.0 2.0 0.5
 # second coordinate pair and data
 366 366
-# second height (meters)
-2
-# second width (meters)
-2
-# second porosity
-0.7
+# second point, first time mark height (meters), width (meters), porosity
+1.5 1.5 0.6
+# second point, second time mark height (meters), width (meters), porosity
+3.0 3.0 0.4
 #   RFD-BarrierT  type 
-Shrubs 1row leafoff
+Shrubs 1row leafoff to leafon
+#
+# === END BARRIER SECTION ===
 #
 # --CIRCULAR FIELD INFORMATION
 # Note: These fields are not used by the weps simulation.

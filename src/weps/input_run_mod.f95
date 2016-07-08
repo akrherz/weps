@@ -19,7 +19,7 @@ contains
       use subregions_mod, only: acct_poly, subr_poly
       use file_io_mod, only: fopenk, luicli, luiwin, luiwsd, luolog
       use erosion_data_struct_defs, only: subday, ntstep, am0efl
-      use barriers_mod, only: create_barrier, barrier
+      use barriers_mod, only: create_barrier, barrier, barseas
       use grid_mod, only: amasim, amxsim, sim_area, xgdpt, ygdpt
       use hydro_data_struct_defs, only: am0hfl, am0hdb
       use soil_data_struct_defs, only: am0sfl, am0sdb
@@ -55,8 +55,9 @@ contains
       integer :: nacctr   ! Number of accounting regions
       integer :: nsubr    ! Number of subregions
       integer :: nbr      ! number of barriers
+      integer :: ntm_seas ! number of time marks for seasonal barrier
       integer :: poly_np  ! number of points in polygon or polyline
-      integer       isr, iar, ios, ibr, ipol
+      integer       isr, iar, ios, ibr, ipol, iseas
       character     line*256
       real          sclsim, sclbar
       real          cligen_version
@@ -501,7 +502,11 @@ contains
             ! allocate structure for barriers (nbr .lt. 1 gives zero size array)
             allocate(barrier(nbr), stat = alloc_stat)
             if( alloc_stat .gt. 0 ) then
-               write(*,*) 'ERROR: memory alloc., barriers'
+               write(*,*) 'ERROR: memory alloc., barrier'
+            end if
+            allocate(barseas(nbr), stat = alloc_stat)
+            if( alloc_stat .gt. 0 ) then
+               write(*,*) 'ERROR: memory alloc., seasonal barrier'
             end if
             ! initialize counter for reading barrier parameters
             ibr = 1
@@ -510,58 +515,67 @@ contains
             if( nbr .ge. 1 ) then
                ! number of points in barrier polyline
                poly_np = 2
+               ! number of time marks in season
+               ntm_seas = 1
                ! create storage for point and barrier data
                barrier(ibr) = create_barrier(poly_np)
+               barseas(ibr) = create_barrier(poly_np,ntm_seas)
                ! read first point pair
                ipol = 1
-               read (line,*,err=80) barrier(ibr)%points(ipol)%x, barrier(ibr)%points(ipol)%y
+               read (line,*,err=80) barseas(ibr)%points(ipol)%x, barseas(ibr)%points(ipol)%y
+               !  also place in fixed barrier structure
+               barrier(ibr)%points(ipol) = barseas(ibr)%points(ipol)
             end if
 
          case (35)
             if( nbr .ge. 1 ) then
                ! read second point pair
                ipol = 2
-               read (line,*,err=80) barrier(ibr)%points(ipol)%x, barrier(ibr)%points(ipol)%y
+               read (line,*,err=80) barseas(ibr)%points(ipol)%x, barseas(ibr)%points(ipol)%y
+               !  also place in fixed barrier structure
+               barrier(ibr)%points(ipol) = barseas(ibr)%points(ipol)
             end if
 
          case (36)
             if( nbr .ge. 1 ) then
-               read (line,*,err=80) barrier(ibr)%amzbt
+               read (line,*,err=80) barseas(ibr)%amzbt
+               !  also place in fixed barrier structure
+               barrier(ibr)%amzbt = barseas(ibr)%amzbt
             end if
 
          case (37)
             if( nbr .ge. 1 ) then
                ! read first point value
                ipol = 1
-               read (line,*,err=80) barrier(ibr)%param(ipol)%amzbr
-               if( barrier(ibr)%param(ipol)%amzbr .le. 0.0 ) then
+               read (line,*,err=80) barseas(ibr)%param(ipol,1)%amzbr
+               if( barseas(ibr)%param(ipol,1)%amzbr .le. 0.0 ) then
                   write(*,*) 'ERROR: Barrier height must be > 0'
                   write(*,FMT='(2(i0))') 'Barrier #: ', ibr, 'Point #: ', ipol
                   call exit(37)
                end if
                ! set second point value to same
                ipol = 2
-               barrier(ibr)%param(ipol)%amzbr = barrier(ibr)%param(1)%amzbr
+               barseas(ibr)%param(ipol,1)%amzbr = barseas(ibr)%param(1,1)%amzbr
             end if
 
          case (38)
             if( nbr .ge. 1 ) then
                ! read first point value
                ipol = 1
-               read (line,*,err=80) barrier(ibr)%param(ipol)%amxbrw
+               read (line,*,err=80) barseas(ibr)%param(ipol,1)%amxbrw
                ! set second point value to same
                ipol = 2
-               barrier(ibr)%param(ipol)%amxbrw = barrier(ibr)%param(1)%amxbrw
+               barseas(ibr)%param(ipol,1)%amxbrw = barseas(ibr)%param(1,1)%amxbrw
             end if
 
          case (39)
             if( nbr .ge. 1 ) then
                ! read first point value
                ipol = 1
-               read (line,*,err=80) barrier(ibr)%param(ipol)%ampbr
+               read (line,*,err=80) barseas(ibr)%param(ipol,1)%ampbr
                ! set second point value to same
                ipol = 2
-               barrier(ibr)%param(ipol)%ampbr = barrier(ibr)%param(1)%ampbr
+               barseas(ibr)%param(ipol,1)%ampbr = barseas(ibr)%param(1,1)%ampbr
             end if
             ibr = ibr + 1
             if (ibr.le.nbr) then
@@ -957,7 +971,7 @@ contains
             end if
 
          case (34)
-            !  These barriers as entered are consdered to be thin, having no real
+            !  These barriers as entered are considered to be thin, having no real
             !  area effect such as erodible material source or deposition area.
             !  The polyline entered is the "effective location".
 
@@ -975,7 +989,11 @@ contains
             ! allocate structure for barriers (nbr .lt. 1 gives zero size array)
             allocate(barrier(nbr), stat = alloc_stat)
             if( alloc_stat .gt. 0 ) then
-               write(*,*) 'ERROR: memory alloc., barriers'
+               write(*,*) 'ERROR: memory alloc., barrier'
+            end if
+            allocate(barseas(nbr), stat = alloc_stat)
+            if( alloc_stat .gt. 0 ) then
+               write(*,*) 'ERROR: memory alloc., seasonal barrier'
             end if
             if( nbr .lt. 1 ) then
                ! skip reading barrier information
@@ -986,54 +1004,81 @@ contains
             end if
 
          case (35)
+            ! number of time marks in seasonal barrier
+            read (line,*,err=80) ntm_seas
+
+         case (36)
             ! number of points in barrier polyline
             read (line,*,err=80) poly_np
             ! create storage for point and barrier data
             barrier(ibr) = create_barrier(poly_np)
+            barseas(ibr) = create_barrier(poly_np,ntm_seas)
             ! set counter for reading each point pair
             ipol = 1
-
-         case (36)
-            ! read point pair
-            read (line,*,err=80) barrier(ibr)%points(ipol)%x, barrier(ibr)%points(ipol)%y
+            iseas = 1
 
          case (37)
+            ! read in day of year time mark for barrier seasons
+            read (line,*,err=80) barseas(ibr)%doy(iseas)
+            ! read next day of year time mark
+            iseas = iseas + 1
+            if( iseas .le. ntm_seas ) then
+                ! read another day of year time mark 
+                typidx = typidx - 1
+            else
+                ! done reading reset for seasonal data below
+                iseas = 1
+            end if
+
+         case (38)
+            ! read point pair
+            read (line,*,err=80) barseas(ibr)%points(ipol)%x, barseas(ibr)%points(ipol)%y
+            !  also place in fixed barrier structure
+            barrier(ibr)%points(ipol) = barseas(ibr)%points(ipol)
+
+         case (39)
             ! barrier height
-            read (line,*,err=80) barrier(ibr)%param(ipol)%amzbr
-            if( barrier(ibr)%param(ipol)%amzbr .le. 0.0 ) then
+            read (line,*,err=80) barseas(ibr)%param(ipol,iseas)%amzbr, &
+                                 barseas(ibr)%param(ipol,iseas)%amxbrw, &
+                                 barseas(ibr)%param(ipol,iseas)%ampbr
+            if( barseas(ibr)%param(ipol,iseas)%amzbr .le. 0.0 ) then
                write(*,*) 'ERROR: Barrier height must be > 0'
                write(*,FMT='(2(i0))') 'Barrier #: ', ibr, 'Point #: ', ipol
                call exit(37)
             end if
-
-         case (38)
-            ! barrier width
-            read (line,*,err=80) barrier(ibr)%param(ipol)%amxbrw
-
-         case (39)
-            ! barrier porosity
-            read (line,*,err=80) barrier(ibr)%param(ipol)%ampbr
-            ! read next group of point and barrier data
-            ipol = ipol + 1
-            if( ipol .le. poly_np ) then
-                ! read another group of point and barrier data
-                typidx = typidx - 4
+            ! read next season of barrier data
+            iseas = iseas + 1
+            if( iseas .le. ntm_seas ) then
+                ! read barrier data for another day of year time mark 
+                typidx = typidx - 1
+            else
+                ! done reading reset for next point seasonal barrier data
+                iseas = 1
+                ! read next group of point and barrier data
+                ipol = ipol + 1
+                if( ipol .le. poly_np ) then
+                    ! read another group of point and barrier data
+                    typidx = typidx - 2
+                end if
             end if
 
-         case (40)
+         case (42)
             ! barrier type character string
-            read (line,*,err=80) barrier(ibr)%amzbt
+            read (line,*,err=80) barseas(ibr)%amzbt
+            !  also place in fixed barrier structure
+            barrier(ibr)%amzbt = barseas(ibr)%amzbt
+
             ! increment for next barrier
             ibr = ibr + 1
             if (ibr.le.nbr) then
                ! read in next barrier
-               typidx=typidx-6
+               typidx = typidx - 6
             end if
 
-         case (41)
+         case (43)
             ! this does nothing but skip the line for shape name
 
-         case (42)
+         case (44)
             ! this does nothing but skip the line for shape radius
 
          end select

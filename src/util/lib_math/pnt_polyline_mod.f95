@@ -85,11 +85,11 @@ contains
     integer :: idx
     type(point), dimension(1:size(pline)) :: pline_tr  ! working array for polyline
     type(point) :: inv_pnt  ! point used to translate points back to original position
-    real :: rot_ang   ! angle to rotate the polyline
-    real :: dist      ! distance from pnt to intersection
-    real :: min_dist  ! minimum distance from pnt to intersection
-    real :: x_dist    ! temporary variable to hold segment x distance
-    real :: y_dist    ! temporary variable to hold segment y distance
+    double precision :: rot_ang   ! angle to rotate the polyline
+    double precision :: dist      ! distance from pnt to intersection
+    double precision :: min_dist  ! minimum distance from pnt to intersection
+    double precision :: x_dist    ! temporary variable to hold segment x distance
+    double precision :: y_dist    ! temporary variable to hold segment y distance
 
     ! return value if nothing matches
     did_intersect = .false.
@@ -204,7 +204,7 @@ contains
 
     ! local variables
     type(point) :: pnt2t, pnt3t, pnt4t
-    real :: dist_1_2, theCos, theSin, newX, pos_1_2 ;
+    double precision :: dist_1_2, theCos, theSin, newX, pos_1_2 ;
 
     ! either line segment is zero-length.
     if( ((pnt1%x .eq. pnt2%x) .and. (pnt1%y .eq. pnt2%y)) .or. ((pnt3%x .eq. pnt4%x) .and. (pnt3%y .eq. pnt4%y)) ) then

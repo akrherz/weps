@@ -43,7 +43,7 @@
       USE pd_var_tables
       use Polygons_Mod, only: destroy_polygon
       use subregions_mod, only: subr_poly, acct_poly
-      use barriers_mod, only: destroy_barrier, barrier
+      use barriers_mod, only: barrier, barseas, minht_barriers, destroy_barrier, set_barrier_season
       use file_io_mod, only: luo_egrd, luo_emit, luo_sgrd, luogui1, luomandate, makedir
       use biomaterial
       use debug_mod
@@ -52,7 +52,6 @@
       use erosion_mod, only: erosion, erodinit
       use erosion_data_struct_defs, only: create_subregionsurfacestate, subregionsurfacestate, threshold, cellsurfacestate, &
                                           erod_interval, awudmx, am0eif, am0efl
-      use barriers_mod, only: minht_barriers
       use wind_mod, only: anemometer_init
       use grid_mod, only: sbgrid, sbigrd, imax, jmax, ix, jy, xgdpt, ygdpt, amxsim
       use sae_in_out_mod, only: mksaeinp, mksaeout, in_weps
@@ -789,6 +788,9 @@
                      luo_sgrd = -1   ! setting this here signals erosion to create a separate file for each erosion day
                   end if
 
+                  ! set the barrier interpolation in time
+                  call set_barrier_season(get_simdate_doy())
+
                   ! write(*,*) "Start erosion"
                   call erosion( 5.0, SURF_UPD_FLG, subrsurf, noerod, cellstate )
                else
@@ -952,6 +954,15 @@
               call destroy_barrier(barrier(isr))
           end do
           deallocate(barrier)
+      end if
+
+      ! deallocate seasonal barrier storage arrays
+      if( allocated(barseas) ) then
+          do isr = 1, size(barseas)
+              ! clear internal storage for each seasonal barrier array
+              call destroy_barrier(barseas(isr))
+          end do
+          deallocate(barseas)
       end if
 
       ! deallocate subregion crop and residue pool arrays

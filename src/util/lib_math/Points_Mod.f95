@@ -103,12 +103,12 @@ contains
 
   function pt_rotate_1(angle, b) result(b_a0)
     ! rotates points angle degrees around the origin
-    real, intent(in) :: angle
+    double precision, intent(in) :: angle
     type(point), intent(in) :: b
     type(point) :: b_a0
 
-    real :: radangle  ! angle in radians
-    real :: cosangle, sinangle  ! conputed cosine and sine of angle
+    double precision :: radangle  ! angle in radians
+    double precision :: cosangle, sinangle  ! conputed cosine and sine of angle
 
     radangle = angle * degtorad
     cosangle = cos(radangle)
@@ -116,20 +116,20 @@ contains
 
     ! rotate point around origin 
     b_a0%x = b%x * cosangle - b%y * sinangle
-    b_a0%y = b%y * cosangle - b%x * sinangle
+    b_a0%y = b%x * sinangle + b%y * cosangle
 
   end function pt_rotate_1
 
   function pt_rotate_n(angle, b) result(b_a0)
     ! rotates points angle degrees (counterclock wise is positive) around the origin
 
-    real, intent(in) :: angle
+    double precision, intent(in) :: angle
     type(point), dimension(:), intent(in) :: b
     type(point), dimension(1:size(b)) :: b_a0
 
     integer :: idx    ! index for stepping through array
-    real :: radangle  ! angle in radians
-    real :: cosangle, sinangle  ! conputed cosine and sine of angle
+    double precision :: radangle  ! angle in radians
+    double precision :: cosangle, sinangle  ! conputed cosine and sine of angle
 
     radangle = angle * degtorad
     cosangle = cos(radangle)
@@ -138,7 +138,7 @@ contains
     do idx = 1, size(b)
       ! rotate point around origin 
       b_a0(idx)%x = b(idx)%x * cosangle - b(idx)%y * sinangle
-      b_a0(idx)%y = b(idx)%y * cosangle - b(idx)%x * sinangle
+      b_a0(idx)%y = b(idx)%x * sinangle + b(idx)%y * cosangle
     end do
   end function pt_rotate_n
 
