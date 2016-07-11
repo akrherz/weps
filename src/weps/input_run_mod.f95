@@ -1062,9 +1062,9 @@ contains
                 end if
             end if
 
-         case (42)
+         case (40)
             ! barrier type character string
-            read (line,*,err=80) barseas(ibr)%amzbt
+            barseas(ibr)%amzbt = line(1:80)
             !  also place in fixed barrier structure
             barrier(ibr)%amzbt = barseas(ibr)%amzbt
 
@@ -1075,10 +1075,10 @@ contains
                typidx = typidx - 6
             end if
 
-         case (43)
+         case (41)
             ! this does nothing but skip the line for shape name
 
-         case (44)
+         case (42)
             ! this does nothing but skip the line for shape radius
 
          end select
