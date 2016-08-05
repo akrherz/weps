@@ -55,6 +55,7 @@ contains
       integer :: nacctr   ! Number of accounting regions
       integer :: nsubr    ! Number of subregions
       integer :: nbr      ! number of barriers
+      integer :: seas_flg ! barrier season flag
       integer :: ntm_seas ! number of time marks for seasonal barrier
       integer :: poly_np  ! number of points in polygon or polyline
       integer       isr, iar, ios, ibr, ipol, iseas
@@ -611,7 +612,7 @@ contains
 
       else
          ! read subregion enabled simulation run file
-         if( typidx .eq. 40 ) go to 200
+         if( typidx .eq. 41 ) go to 200
 
          read (lui1,'(a)',err=80) line
 
@@ -997,27 +998,34 @@ contains
             end if
             if( nbr .lt. 1 ) then
                ! skip reading barrier information
-               typidx = typidx + 6
+               typidx = typidx + 7
             else
                ! set index for first barrier
                ibr = 1
             end if
 
          case (35)
+            ! barrier season flag
+            read (line,*,err=80) seas_flg
+
+         case (36)
             ! number of time marks in seasonal barrier
             read (line,*,err=80) ntm_seas
 
-         case (36)
+         case (37)
             ! number of points in barrier polyline
             read (line,*,err=80) poly_np
             ! create storage for point and barrier data
+            ! this also sets values for barr%np and barr%ntm
             barrier(ibr) = create_barrier(poly_np)
             barseas(ibr) = create_barrier(poly_np,ntm_seas)
+            ! set value for barr%seas_flg
+            barseas(ibr)%seas_flg = seas_flg
             ! set counter for reading each point pair
             ipol = 1
             iseas = 1
 
-         case (37)
+         case (38)
             ! read in day of year time mark for barrier seasons
             read (line,*,err=80) barseas(ibr)%doy(iseas)
             ! read next day of year time mark
@@ -1030,13 +1038,13 @@ contains
                 iseas = 1
             end if
 
-         case (38)
+         case (39)
             ! read point pair
             read (line,*,err=80) barseas(ibr)%points(ipol)%x, barseas(ibr)%points(ipol)%y
             !  also place in fixed barrier structure
             barrier(ibr)%points(ipol) = barseas(ibr)%points(ipol)
 
-         case (39)
+         case (40)
             ! barrier height
             read (line,*,err=80) barseas(ibr)%param(ipol,iseas)%amzbr, &
                                  barseas(ibr)%param(ipol,iseas)%amxbrw, &
@@ -1062,7 +1070,7 @@ contains
                 end if
             end if
 
-         case (40)
+         case (41)
             ! barrier type character string
             barseas(ibr)%amzbt = line(1:80)
             !  also place in fixed barrier structure
@@ -1072,7 +1080,7 @@ contains
             ibr = ibr + 1
             if (ibr.le.nbr) then
                ! read in next barrier
-               typidx = typidx - 6
+               typidx = typidx - 7
             end if
 
          end select

@@ -209,6 +209,12 @@ Canola, fall; Fallow_ Wheat, winter; Fallow; mulch till, Z50.man
 1
 #   Note: subregion mod allows 0 barriers.
 #         If zero, then put no barrier entries here.
+#
+#   RFD-BarrierSeasonFlg
+# 0 - time interpolation
+# 1 - fixed in time until next time mark
+# 2 - dynamic seasons based on climate inputs
+1
 # number of day of year time marks for seasons
 2
 # number of coordinates

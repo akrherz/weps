@@ -24,6 +24,10 @@ module barriers_mod
 
   type barrier_seasonal
      character*80 :: amzbt  ! Barrier type
+     integer :: seas_flg    ! multi level flag defining implementation of barrier seasons
+                            ! 0 - use seasonal data as given with time interpolation
+                            ! 1 - set barrier data on doy given. Value remains constant until the next doy given, ie. no time interpolation
+                            ! 2 - Manage the timing of season transitions internally with a climate based model
      integer :: ntm  ! number of time marks specified for barrier
      integer :: np   ! number of points in barrier_params and polyline point array
      type(point), dimension(:), allocatable :: points  ! the polyline points
@@ -161,9 +165,16 @@ contains
       ! check number of time marks in seasonal barrier
       if( barseas(bdx)%ntm .gt. 1 ) then
         ! this barrier contains seasons
+
+        if( barseas(bdx)%seas_flg .eq. 2 ) then
+          ! trigger recalculation of time marks
+          write(*,*) "Warning: Dynamic barrier season not implemented."
+          write(*,*) "Using interpolation between provided time marks."
+        end if
+
         ! find location in time mark array
         if( (doy .lt. barseas(bdx)%doy(1)) .or. (doy .ge. barseas(bdx)%doy(barseas(bdx)%ntm)) ) then
-            low_tm = barseas(bdx)%ntm
+          low_tm = barseas(bdx)%ntm
         else
           do tdx = 1, barseas(bdx)%ntm-1
             ! search for low time mark index
@@ -173,29 +184,41 @@ contains
             end if
           end do
         end if
-        ! set high time mark index and find interpolation fraction
-        if( low_tm .lt. barseas(bdx)%ntm ) then
-          ! no wrapping required for bracketing index
-          hi_tm = low_tm + 1
-          ! find fraction of distance in time between time marks
-          frac_tm = (real(doy) - barseas(bdx)%doy(low_tm))/(barseas(bdx)%doy(hi_tm) - barseas(bdx)%doy(low_tm))
-        else
-          ! low_tm was at end of year, wrap to bracketing index
-          hi_tm = 1
-          ! find fraction of distance in time between time marks adjusted for wrapping
-          frac_tm = (real(doy) + 365 - barseas(bdx)%doy(low_tm))/(barseas(bdx)%doy(hi_tm) + 365 - barseas(bdx)%doy(low_tm))
-        end if
-        ! interpolate barrier params in time, copying into fixed barrier structure
-        do pdx = 1, barseas(bdx)%np
-          barrier(bdx)%param(pdx)%amzbr = lin_interp(frac_tm, barseas(bdx)%param(pdx,low_tm)%amzbr, &
-                                                              barseas(bdx)%param(pdx,hi_tm)%amzbr)
-          barrier(bdx)%param(pdx)%amxbrw = lin_interp(frac_tm, barseas(bdx)%param(pdx,low_tm)%amxbrw, &
-                                                               barseas(bdx)%param(pdx,hi_tm)%amxbrw)
-          barrier(bdx)%param(pdx)%ampbr = lin_interp(frac_tm, barseas(bdx)%param(pdx,low_tm)%ampbr, &
-                                                              barseas(bdx)%param(pdx,hi_tm)%ampbr)
-        end do
-      else
-        ! this barrier does not have seasons, copy into fixed barrier structure
+
+        select case (barseas(bdx)%seas_flg)
+        case (0,2)  ! do interpolation between all time points
+          ! set high time mark index and find interpolation fraction
+          if( low_tm .lt. barseas(bdx)%ntm ) then
+            ! no wrapping required for bracketing index
+            hi_tm = low_tm + 1
+            ! find fraction of distance in time between time marks
+            frac_tm = (real(doy) - barseas(bdx)%doy(low_tm))/(barseas(bdx)%doy(hi_tm) - barseas(bdx)%doy(low_tm))
+          else
+            ! low_tm was at end of year, wrap to bracketing index
+            hi_tm = 1
+            ! find fraction of distance in time between time marks adjusted for wrapping
+            frac_tm = (real(doy) + 365 - barseas(bdx)%doy(low_tm))/(barseas(bdx)%doy(hi_tm) + 365 - barseas(bdx)%doy(low_tm))
+          end if
+          ! interpolate barrier params in time, copying into fixed barrier structure
+          do pdx = 1, barseas(bdx)%np
+            barrier(bdx)%param(pdx)%amzbr = lin_interp(frac_tm, barseas(bdx)%param(pdx,low_tm)%amzbr, &
+                                                                barseas(bdx)%param(pdx,hi_tm)%amzbr)
+            barrier(bdx)%param(pdx)%amxbrw = lin_interp(frac_tm, barseas(bdx)%param(pdx,low_tm)%amxbrw, &
+                                                                 barseas(bdx)%param(pdx,hi_tm)%amxbrw)
+            barrier(bdx)%param(pdx)%ampbr = lin_interp(frac_tm, barseas(bdx)%param(pdx,low_tm)%ampbr, &
+                                                                barseas(bdx)%param(pdx,hi_tm)%ampbr)
+          end do
+
+        case (1)  ! set barrier to value at previous time mark until next time mark
+          do pdx = 1, barseas(bdx)%np
+            barrier(bdx)%param(pdx)%amzbr = barseas(bdx)%param(pdx,low_tm)%amzbr
+            barrier(bdx)%param(pdx)%amxbrw = barseas(bdx)%param(pdx,low_tm)%amxbrw
+            barrier(bdx)%param(pdx)%ampbr = barseas(bdx)%param(pdx,low_tm)%ampbr
+          end do
+
+        end select
+
+      else  ! this barrier does not have seasons, copy into fixed barrier structure
         do pdx = 1, barseas(bdx)%np
           barrier(bdx)%param(pdx)%amzbr = barseas(bdx)%param(pdx,1)%amzbr
           barrier(bdx)%param(pdx)%amxbrw = barseas(bdx)%param(pdx,1)%amxbrw
