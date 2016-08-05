@@ -3,13 +3,14 @@
 !$Revision$
 !$HeadURL$
 
-      subroutine report_hydrobal( isr, bmrotation )
+      subroutine report_hydrobal( isr, bmrotation, bmperod )
 
+      use datetime_mod, only: get_simdate, julday, caldat
       use file_io_mod, only: luohydrobal
       use manage_data_struct_defs, only: lastoper
 
 !     + + + ARGUMENT DECLARATIONS + + +
-      integer isr, bmrotation
+      integer isr, bmrotation, bmperod
 
 !     + + + ARGUMENT DEFINITIONS + + +
 !     isr     - subregion number
@@ -21,6 +22,10 @@
       include 'h1balance.inc'
 
 !     + + + LOCAL VARIABLES + + +
+      integer presdy, presmon, presyr
+      integer initdy, initmon, inityr
+      integer presjday
+      integer initjday
       real fallow_eff
       real water_use_eff
       real water_use
@@ -44,11 +49,19 @@
         end if
 
         ! check initial day and present day for order
-        ! counting is restarted when initialization complete
-        do while ( initday(isr) .gt. presday(isr) )
-            ! initial day greater than present day, correct
-            initday(isr) = initday(isr) - 365
-        end do
+        ! daysim counting is restarted when initialization complete
+        if( initday(isr) .gt. presday(isr) ) then
+            ! initial day greater than present day, correct using date math
+            call get_simdate(presdy, presmon, presyr)
+            presjday = julday(presdy, presmon, presyr)
+            initjday = presjday + (initday(isr) - presday(isr))
+            call caldat(initjday, initdy, initmon, inityr)
+            do while( initjday .gt. presjday )
+                inityr = inityr - bmperod
+                initjday = julday(initdy,initmon,inityr)
+            end do
+            initday(isr) = presday(isr) - (presjday - initjday)
+        end if
 
         if ( cumprecip(isr) .gt. 0.0 ) then
             fallow_eff = ( presswc(isr) - initswc(isr)                  &

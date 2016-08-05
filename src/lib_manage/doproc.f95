@@ -974,7 +974,7 @@
      &           atzht(sr), atdstm(sr), atxstmrep(sr), atzrtd(sr),      &
      &           atgrainf(sr) )
              if( rpt_season_flg ) then
-               call report_hydrobal( sr, bmrotation )
+               call report_hydrobal( sr, bmrotation, mperod(sr) )
                ! This may be harvest or non-harvest termination, allow early harvest warnings
                mature_warn_flg = 1
                call crop_endseason( sr, bmrotation, mperod(sr), &
@@ -1055,11 +1055,11 @@
             call report_calib_harvest( sr, bmrotation, mass_rem, mass_left, crop )
             harv_calib_not_selected(sr) = .false.
           end if
-          call report_harvest( sr, bmrotation, mass_rem, mass_left, 0,  &
+          call report_harvest( sr, bmrotation, mass_rem, mass_left, 0,1,&
      &           mandate, crop)
           if( rpt_season_flg ) then
               ! not reported by the kill process in this
-              call report_hydrobal( sr, bmrotation )
+              call report_hydrobal( sr, bmrotation, mperod(sr) )
               call crop_endseason( sr, bmrotation, mperod(sr), &
      &        crop%bname, am0cfl(sr), &
      &        nslay(sr), ac0idc(sr), crop%growth%dayam, &
@@ -1119,11 +1119,11 @@
             call report_calib_harvest( sr, bmrotation, mass_rem, mass_left, crop )
             harv_calib_not_selected(sr) = .false.
           end if
-          call report_harvest( sr, bmrotation, mass_rem, mass_left, 0,  &
+          call report_harvest( sr, bmrotation, mass_rem, mass_left, 0,1,&
      &           mandate, crop)
           if( rpt_season_flg ) then
               ! not reported by the kill process in this
-              call report_hydrobal( sr, bmrotation )
+              call report_hydrobal( sr, bmrotation, mperod(sr) )
               call crop_endseason( sr, bmrotation, mperod(sr), &
      &        crop%bname, am0cfl(sr), &
      &        nslay(sr), ac0idc(sr), crop%growth%dayam, &
@@ -1218,11 +1218,11 @@
             call report_calib_harvest( sr, bmrotation, mass_rem, mass_left, crop )
             harv_calib_not_selected(sr) = .false.
           end if
-          call report_harvest( sr, bmrotation, mass_rem, mass_left, 0,  &
+          call report_harvest( sr, bmrotation, mass_rem, mass_left, 0,1,&
       &          mandate, crop)
           if( rpt_season_flg ) then
               ! not reported by the kill process in this
-              call report_hydrobal( sr, bmrotation )
+              call report_hydrobal( sr, bmrotation, mperod(sr) )
               call crop_endseason( sr, bmrotation, mperod(sr), &
      &        crop%bname, am0cfl(sr), &
      &        nslay(sr), ac0idc(sr), crop%growth%dayam, &
@@ -1279,11 +1279,11 @@
             call get_calib_crops(sr, crop)
             call get_calib_yield(sr, bmrotation, mass_rem, mass_left, crop)
             call report_harvest( sr, bmrotation, mass_rem, mass_left, 0,&
-     &           mandate, crop)
+     &           1, mandate, crop)
             call report_calib_harvest( sr, bmrotation, mass_rem, mass_left, crop )
             if( rpt_season_flg ) then
               ! not reported by the kill process in this
-              call report_hydrobal( sr, bmrotation )
+              call report_hydrobal( sr, bmrotation, mperod(sr) )
               call crop_endseason( sr, bmrotation, mperod(sr), &
      &        crop%bname, am0cfl(sr), &
      &        nslay(sr), ac0idc(sr), crop%growth%dayam, &
@@ -1388,13 +1388,12 @@
             call report_calib_harvest( sr, bmrotation, mass_rem, mass_left, crop )
             harv_calib_not_selected(sr) = .false.
           end if
-          if( harv_report_flg .gt. 0 ) then
-            call report_harvest( sr, bmrotation, mass_rem, mass_left,   &
-     &                           harv_unit_flg, mandate, crop )
-          end if
+          call report_harvest( sr, bmrotation, mass_rem, mass_left,     &
+     &                         harv_unit_flg, harv_report_flg,          &
+     &                         mandate, crop )
           if( rpt_season_flg ) then
               ! not reported by the kill process in this
-              call report_hydrobal( sr, bmrotation )
+              call report_hydrobal( sr, bmrotation, mperod(sr) )
               call crop_endseason( sr, bmrotation, mperod(sr), &
      &        crop%bname, am0cfl(sr), &
      &        nslay(sr), ac0idc(sr), crop%growth%dayam, &
@@ -1455,13 +1454,12 @@
             call report_calib_harvest( sr, bmrotation, mass_rem, mass_left, crop )
             harv_calib_not_selected(sr) = .false.
           end if
-          if( harv_report_flg .gt. 0 ) then
-            call report_harvest( sr, bmrotation, mass_rem, mass_left,   &
-     &                           harv_unit_flg, mandate, crop )
-          end if
+          call report_harvest( sr, bmrotation, mass_rem, mass_left,     &
+     &                         harv_unit_flg, harv_report_flg,          &
+     &                         mandate, crop )
           if( rpt_season_flg ) then
               ! not reported by the kill process in this
-              call report_hydrobal( sr, bmrotation )
+              call report_hydrobal( sr, bmrotation, mperod(sr) )
               call crop_endseason( sr, bmrotation, mperod(sr), &
      &        crop%bname, am0cfl(sr), &
      &        nslay(sr), ac0idc(sr), crop%growth%dayam, &
@@ -1523,13 +1521,12 @@
             call report_calib_harvest( sr, bmrotation, mass_rem, mass_left, crop )
             harv_calib_not_selected(sr) = .false.
           end if
-          if( harv_report_flg .gt. 0 ) then
-            call report_harvest( sr, bmrotation, mass_rem, mass_left,   &
-     &                           harv_unit_flg, mandate, crop )
-          end if
+          call report_harvest( sr, bmrotation, mass_rem, mass_left,     &
+     &                         harv_unit_flg, harv_report_flg,          &
+     &                         mandate, crop )
           if( rpt_season_flg ) then
               ! not reported by the kill process in this
-              call report_hydrobal( sr, bmrotation )
+              call report_hydrobal( sr, bmrotation, mperod(sr) )
               call crop_endseason( sr, bmrotation, mperod(sr), &
      &        crop%bname, am0cfl(sr), &
      &        nslay(sr), ac0idc(sr), crop%growth%dayam, &
@@ -1590,13 +1587,12 @@
             call report_calib_harvest( sr, bmrotation, mass_rem, mass_left, crop )
             harv_calib_not_selected(sr) = .false.
           end if
-          if( harv_report_flg .gt. 0 ) then
-            call report_harvest( sr, bmrotation, mass_rem, mass_left, &
-     &                           harv_unit_flg, mandate, crop )
-          end if
+          call report_harvest( sr, bmrotation, mass_rem, mass_left,     &
+     &                         harv_unit_flg, harv_report_flg,      &
+     &                         mandate, crop )
           if( rpt_season_flg ) then
               ! not reported by the kill process in this
-              call report_hydrobal( sr, bmrotation )
+              call report_hydrobal( sr, bmrotation, mperod(sr) )
               call crop_endseason( sr, bmrotation, mperod(sr), &
      &        crop%bname, am0cfl(sr), &
      &        nslay(sr), ac0idc(sr), crop%growth%dayam, &
@@ -1919,7 +1915,7 @@
         call set_calib(sr, crop)
         if( rpt_season_flg ) then
           ! not reported by the kill process in this
-          call report_hydrobal( sr, bmrotation )
+          call report_hydrobal( sr, bmrotation, mperod(sr) )
         end if
 !-----END planting process (process code 51)
 
@@ -1975,10 +1971,10 @@
             harv_calib_not_selected(sr) = .false.
           end if
             call report_harvest( sr, bmrotation, mass_rem, mass_left, 0,&
-     &           mandate, crop)
+     &           1, mandate, crop)
           if( rpt_season_flg ) then
               ! not reported by the kill process in this
-              call report_hydrobal( sr, bmrotation )
+              call report_hydrobal( sr, bmrotation, mperod(sr) )
               call crop_endseason( sr, bmrotation, mperod(sr), &
      &        crop%bname, am0cfl(sr), &
      &        nslay(sr), ac0idc(sr), crop%growth%dayam, &
@@ -2049,13 +2045,12 @@
             harv_calib_not_selected(sr) = .false.
           end if
           ! removed mass appears in crop report
-          if( harv_report_flg .gt. 0 ) then
-            call report_harvest( sr, bmrotation, mass_rem, mass_left,   &
-     &                           harv_unit_flg, mandate, crop )
-          end if
+          call report_harvest( sr, bmrotation, mass_rem, mass_left,     &
+     &                         harv_unit_flg, harv_report_flg,          &
+     &                         mandate, crop )
           if( rpt_season_flg ) then
             ! not reported by the kill process in this
-            call report_hydrobal( sr, bmrotation )
+            call report_hydrobal( sr, bmrotation, mperod(sr) )
             call crop_endseason( sr, bmrotation, mperod(sr), &
      &        crop%bname, am0cfl(sr), &
      &        nslay(sr), ac0idc(sr), crop%growth%dayam, &

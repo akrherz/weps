@@ -23,7 +23,7 @@
 !     + + + KEYWORDS + + +
 !     crop model status
 
-      use datetime_mod, only: get_simdate, julday, caldat
+      use datetime_mod, only: get_simdate, julday
       use file_io_mod, only: luoseason
       use manage_data_struct_defs, only: lastoper
 

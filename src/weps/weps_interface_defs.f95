@@ -881,9 +881,9 @@
       real bhzirr, bhratirr, bhdurirr              
       end subroutine ratedura
 !----------------------------------
-      subroutine report_hydrobal( isr, bmrotation )
+      subroutine report_hydrobal( isr, bmrotation, bmperod )
 
-      integer isr, bmrotation      
+      integer isr, bmrotation, bmperod
       end subroutine report_hydrobal
 !----------------------------------
       real function resevapredu(                                           &
@@ -1270,12 +1270,14 @@
       end subroutine report_calib_harvest
 !------------------------
       subroutine report_harvest( sr, bmrotation, mass_rem, mass_left,   &
-     &                           harv_unit_flg, mandate, crop )
+     &                           harv_unit_flg, harv_report_flg,        &
+     &                           mandate, crop )
       use mandate_mod, only: opercrop_date
       use biomaterial, only: biomatter
       integer sr, bmrotation
       real mass_rem, mass_left
       integer harv_unit_flg
+      integer harv_report_flg
       type(opercrop_date), dimension(:), intent(inout) :: mandate
       type(biomatter), intent(inout) :: crop    ! structure containing full crop description
       end subroutine  report_harvest

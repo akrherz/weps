@@ -4,7 +4,8 @@
 !$HeadURL$
 
       subroutine report_harvest( sr, bmrotation, mass_rem, mass_left,   &
-     &                           harv_unit_flg, mandate, crop )
+     &                           harv_unit_flg, harv_report_flg,        &
+     &                           mandate, crop )
 
       use weps_interface_defs, ignore_me=>report_harvest
       use mandate_mod, only: opercrop_date
@@ -17,6 +18,7 @@
       integer sr, bmrotation
       real mass_rem, mass_left
       integer harv_unit_flg
+      integer harv_report_flg
       type(opercrop_date), dimension(:), intent(inout) :: mandate
       type(biomatter), intent(inout) :: crop    ! structure containing full crop description
 
@@ -28,6 +30,9 @@
 !     harv_unit_flg - overide units given in crop record
 !                0  - use units given in crop record
 !                1  - use lb/ac or kg/m^2
+!     harv_report_flg - harvest reporting flag
+!                0 - do not report harvest
+!                1 - report harvest
 
 !     + + + PARAMETERS AND COMMON BLOCKS + + +
       include 'p1werm.inc'
@@ -40,7 +45,7 @@
       logical match
       integer i
 
- 1000 format(1x,i2,'/',i2,'/',i2,'|',a,'|',                             &
+ 1000 format(1x,i2,'/',i2,'/',i2,'|',i2,'|',a,'|',                      &
      &       f12.3,'|',a,'|',f12.3,'|',a,'|',                           &
      &       f6.3,'|',a,'|',f12.3,'|',a,'|',f5.1,'|',a,'|')
  1001 format(a)
@@ -68,7 +73,7 @@
 
         write(unit=luoharvest_si(sr),fmt=1000,advance='NO')             &
      &      lastoper(sr)%day, lastoper(sr)%mon, lastoper(sr)%yr,        &
-     &      trim(crop%bname),                                           &
+     &      harv_report_flg, trim(crop%bname),                          &
      &      mass_rem, 'kg/m^2',                                         &
      &      mass_left, 'kg/m^2',                                        &
      &      harvest_index, "Harvest Index",                             &
@@ -81,7 +86,7 @@
           ! and from kg/m^2 to acynmu units
           write(unit=luoharvest_en(sr),fmt=1000,advance='NO')           &
      &      lastoper(sr)%day, lastoper(sr)%mon, lastoper(sr)%yr,        &
-     &      trim(crop%bname),                                           &
+     &      harv_report_flg, trim(crop%bname),                          &
      &      mass_rem*KG_per_M2_to_LBS_per_ACRE, 'lb/ac',                &
      &      mass_left*KG_per_M2_to_LBS_per_ACRE, 'lb/ac',               &
      &      harvest_index, "Harvest Index",                             &
@@ -93,7 +98,7 @@
           ! and from kg/m^2 to lbs/ac units
           write(unit=luoharvest_en(sr),fmt=1000,advance='NO')           &
      &      lastoper(sr)%day, lastoper(sr)%mon, lastoper(sr)%yr,        &
-     &      trim(crop%bname),                                           &
+     &      harv_report_flg, trim(crop%bname),                          &
      &      mass_rem*KG_per_M2_to_LBS_per_ACRE, 'lb/ac',                &
      &      mass_left*KG_per_M2_to_LBS_per_ACRE, 'lb/ac',               &
      &      harvest_index, "Harvest Index",                             &
