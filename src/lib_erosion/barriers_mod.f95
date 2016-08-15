@@ -22,6 +22,25 @@ module barriers_mod
      type( barrier_params), dimension(:), allocatable :: param
   end type barrier_data
 
+  type barrier_climate       ! expects 2 dates (full leaf off / full leaf on) in that order
+                             ! this structure will be declared as a two element array
+                             ! element 1, trasition to leaf on params / element 2, transition to leaf off params
+     integer :: beg_flg ! multilevel flag defining the climate data type which will trigger beginning of leaf on/off
+                             ! 0 - number of days temperature is above/below  base growth temperature since given leaf off date
+                             ! 1 - accumulation of Growing/Cooling degree days (GDD) since given leaf off/on date
+                             ! 2 - accumulation of rainfall depth (above minimum depth) since given leaf off date
+                             !   / accumulation of days with rainfall below minimum depth (rainfall above minimum depth
+                             !     resets accumulation) since given leaf on date
+                             ! 3 - accumulation of humidity levels above/below base humidity since given leaf off/on date
+     real :: beg_thresh  ! accumulation threshold value for each of the methods above
+     real :: beg_base    ! base value above/below which accumulation occurs
+     integer :: end_flg ! multilevel flag defining the method for determining completion of leaf emergence/drop
+                             ! 0 - days to full leaf on/off are specified
+                             ! 1 - Growing/Cooling Degree Days (GDD/CDD) to full leaf on/off are specified
+     real :: end_thresh ! Accumulation threshold value where full leaf on/off occurs
+     real :: end_base   ! base value above/below which accumulation occurs
+  end type barrier_climate
+
   type barrier_seasonal
      character*80 :: amzbt  ! Barrier type
      integer :: seas_flg    ! multi level flag defining implementation of barrier seasons
@@ -32,7 +51,8 @@ module barriers_mod
      integer :: np   ! number of points in barrier_params and polyline point array
      type(point), dimension(:), allocatable :: points  ! the polyline points
      integer, dimension(:), allocatable :: doy         ! day of year for time marks
-     type( barrier_params), dimension(:,:), allocatable :: param
+     type(barrier_params), dimension(:,:), allocatable :: param
+     type(barrier_climate), dimension(:), allocatable :: clim
   end type barrier_seasonal
 
   interface create_barrier
@@ -96,9 +116,10 @@ contains
   end subroutine destroy_barrier_fixed
 
   ! allocates a barrier_data structure which can contain nump points
-  function create_barrier_seasonal(nump,numtm) result(barr)
+  function create_barrier_seasonal(nump,numtm,sflg) result(barr)
     integer, intent(in) :: nump  ! number of points in barrier_params and polyline created
     integer, intent(in) :: numtm ! number of time marks in barrier_params
+    integer, intent(in) :: sflg  ! flag which selects type of internal season transition
     type(barrier_seasonal) :: barr
 
     ! local variable
@@ -112,14 +133,24 @@ contains
     sum_stat = sum_stat + alloc_stat
     allocate(barr%param(nump,numtm), stat=alloc_stat)
     sum_stat = sum_stat + alloc_stat
+    if( sflg .eq. 2 ) then
+       allocate(barr%clim(2), stat=alloc_stat)
+       sum_stat = sum_stat + alloc_stat
+    else
+       allocate(barr%clim(0), stat=alloc_stat)
+       sum_stat = sum_stat + alloc_stat
+    end if
+
     if( sum_stat .gt. 0 ) then
       ! allocation failed
       write(*,*) "ERROR: unable to allocate memory for barrier"
       barr%np = 0
       barr%ntm = 0
+      barr%seas_flg = 0
     else
       barr%np = nump
       barr%ntm = numtm
+      barr%seas_flg = sflg
     end if 
   end function create_barrier_seasonal
  
@@ -137,6 +168,8 @@ contains
     deallocate(barr%doy, stat=dealloc_stat)
     sum_stat = sum_stat + dealloc_stat
     deallocate(barr%param, stat=dealloc_stat)
+    sum_stat = sum_stat + dealloc_stat
+    deallocate(barr%clim, stat=dealloc_stat)
     sum_stat = sum_stat + dealloc_stat
     if( sum_stat .gt. 0 ) then
       ! deallocation failed
@@ -360,14 +393,22 @@ contains
 
     real :: minht  ! minimum barrier height
 
-    integer :: i   ! do loop index
+    integer :: i, j, k   ! do loop indexes
 
-    ! default no barriers, so set height to zero
-    minht = 0.0
-    ! when barriers exist, find shortest barrier height
-    do i = 1, size(barrier)
-       minht = minval(barrier(i)%param(1:size(barrier(i)%param))%amzbr)
-    end do
+    if( size(barseas) .gt. 0 ) then
+       ! when barriers exist, find shortest barrier height
+       minht = 9999.9
+       do i = 1, size(barseas)
+          do j = 1, barseas(i)%np
+             do k = 1, barseas(i)%ntm
+                minht = min(minht, barseas(i)%param(j,k)%amzbr)
+             end do
+          end do
+       end do
+    else
+       ! default no barriers, so set height to zero
+       minht = 0.0
+    end if
 
   end function minht_barriers
 

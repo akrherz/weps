@@ -56,6 +56,7 @@ contains
       integer :: nsubr    ! Number of subregions
       integer :: nbr      ! number of barriers
       integer :: seas_flg ! barrier season flag
+      integer :: iexp     ! counter for extra parameters used with season flag .eq. 2
       integer :: ntm_seas ! number of time marks for seasonal barrier
       integer :: poly_np  ! number of points in polygon or polyline
       integer       isr, iar, ios, ibr, ipol, iseas
@@ -520,7 +521,7 @@ contains
                ntm_seas = 1
                ! create storage for point and barrier data
                barrier(ibr) = create_barrier(poly_np)
-               barseas(ibr) = create_barrier(poly_np,ntm_seas)
+               barseas(ibr) = create_barrier(poly_np,ntm_seas,0)
                ! read first point pair
                ipol = 1
                read (line,*,err=80) barseas(ibr)%points(ipol)%x, barseas(ibr)%points(ipol)%y
@@ -612,7 +613,7 @@ contains
 
       else
          ! read subregion enabled simulation run file
-         if( typidx .eq. 41 ) go to 200
+         if( typidx .eq. 47 ) go to 200
 
          read (lui1,'(a)',err=80) line
 
@@ -984,6 +985,12 @@ contains
             !  allocated, then the barrier level data populated. (hence the barrier type
             !  string now comes last)
 
+            !  Note: When seas_flg = 2 is specified, it is required that two points (no
+            !  more no less) in time be provided, the first date being when it can be
+            !  guaranteed that leaves are at a minimum, and the data values for porosity
+            !  correspond to that. The second date is when it can be quaranteed that
+            !  leaves are at a maximum and the data values for porosity correspond to that.
+
             ! read in barrier info
             read (line,*,err=80) nbr
             ! write(6,*) ' reading barriers ', nbr
@@ -998,7 +1005,7 @@ contains
             end if
             if( nbr .lt. 1 ) then
                ! skip reading barrier information
-               typidx = typidx + 7
+               typidx = typidx + 13
             else
                ! set index for first barrier
                ibr = 1
@@ -1018,14 +1025,55 @@ contains
             ! create storage for point and barrier data
             ! this also sets values for barr%np and barr%ntm
             barrier(ibr) = create_barrier(poly_np)
-            barseas(ibr) = create_barrier(poly_np,ntm_seas)
-            ! set value for barr%seas_flg
-            barseas(ibr)%seas_flg = seas_flg
+            barseas(ibr) = create_barrier(poly_np,ntm_seas,seas_flg)
             ! set counter for reading each point pair
             ipol = 1
             iseas = 1
 
+            if( (seas_flg .eq. 0) .or. (seas_flg .eq. 1) ) then
+               ! no extra parameters required, skip reading of extra parameters
+               typidx = typidx + 6
+            else if( seas_flg .eq. 2 ) then
+               ! initialize counter for extra parameters 1 = leaf on parameter set 2 = leaf off parameter set
+               iexp = 1
+            else
+               write(*,*) 'ERROR: Season flag value must be 0, 1 or 2'
+               write(*,FMT='(i0)') 'Input value was: ', seas_flg
+               call exit(35)
+            end if
+
          case (38)
+            ! barrier climate data type flag for beginning of leaf on/off
+            read (line,*,err=80) barseas(ibr)%clim(iexp)%beg_flg
+
+         case (39)
+            ! barrier begin leaf on/off climate accumulation threshold value
+            read (line,*,err=80) barseas(ibr)%clim(iexp)%beg_thresh
+
+         case (40)
+            ! barrier begin leaf on/off climate base value for accumulation
+            read (line,*,err=80) barseas(ibr)%clim(iexp)%beg_base
+
+         case (41)
+            ! barrier climate data type flag for completion of leaf on/off
+            read (line,*,err=80) barseas(ibr)%clim(iexp)%end_flg
+
+         case (42)
+            ! barrier completion of leaf on/off climate accumulation threshold value
+            read (line,*,err=80) barseas(ibr)%clim(iexp)%end_thresh
+
+         case (43)
+            ! barrier completion of leaf on/off climate base value for accumulation
+            read (line,*,err=80) barseas(ibr)%clim(iexp)%end_base
+
+            ! increment counter
+            iexp = iexp + 1
+            if( iexp .eq. 2 ) then
+               ! return to read leaf off parameters
+               typidx = typidx - 6
+            end if
+            
+         case (44)
             ! read in day of year time mark for barrier seasons
             read (line,*,err=80) barseas(ibr)%doy(iseas)
             ! read next day of year time mark
@@ -1038,13 +1086,13 @@ contains
                 iseas = 1
             end if
 
-         case (39)
+         case (45)
             ! read point pair
             read (line,*,err=80) barseas(ibr)%points(ipol)%x, barseas(ibr)%points(ipol)%y
             !  also place in fixed barrier structure
             barrier(ibr)%points(ipol) = barseas(ibr)%points(ipol)
 
-         case (40)
+         case (46)
             ! barrier height
             read (line,*,err=80) barseas(ibr)%param(ipol,iseas)%amzbr, &
                                  barseas(ibr)%param(ipol,iseas)%amxbrw, &
@@ -1052,7 +1100,7 @@ contains
             if( barseas(ibr)%param(ipol,iseas)%amzbr .le. 0.0 ) then
                write(*,*) 'ERROR: Barrier height must be > 0'
                write(*,FMT='(2(i0))') 'Barrier #: ', ibr, 'Point #: ', ipol
-               call exit(37)
+               call exit(40)
             end if
             ! read next season of barrier data
             iseas = iseas + 1
@@ -1070,7 +1118,7 @@ contains
                 end if
             end if
 
-         case (41)
+         case (47)
             ! barrier type character string
             barseas(ibr)%amzbt = line(1:80)
             !  also place in fixed barrier structure
@@ -1080,7 +1128,7 @@ contains
             ibr = ibr + 1
             if (ibr.le.nbr) then
                ! read in next barrier
-               typidx = typidx - 7
+               typidx = typidx - 13
             end if
 
          end select
