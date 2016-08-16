@@ -70,6 +70,7 @@ module barriers_mod
 
   type(barrier_data), dimension(:), allocatable :: barrier
   type(barrier_seasonal), dimension(:), allocatable :: barseas
+  logical :: output_done   ! flag to indicate that required barrier output is complete (1 day vs. 1 year vs. many years)
 
 contains
  
@@ -181,6 +182,8 @@ contains
   subroutine set_barrier_season(doy)
 
     use lin_interp_mod, only: lin_interp
+    use file_io_mod, only: luo_barr
+    use datetime_mod, only: get_simdate_year
 
     ! argument declarations
     integer, intent(in) :: doy  ! day of year for setting barrier season
@@ -192,18 +195,14 @@ contains
     integer :: low_tm ! low time mark index
     integer :: hi_tm  ! high time mark index
     real :: frac_tm   ! fraction of time into bracketed time interval
+    integer :: max_ntm  ! maximum time mark count for all barriers
+    integer :: max_seas ! maximum season flag value for all barriers
 
     ! loop over all barriers
     do bdx = 1, size(barrier)
       ! check number of time marks in seasonal barrier
       if( barseas(bdx)%ntm .gt. 1 ) then
         ! this barrier contains seasons
-
-        if( barseas(bdx)%seas_flg .eq. 2 ) then
-          ! trigger recalculation of time marks
-          write(*,*) "Warning: Dynamic barrier season not implemented."
-          write(*,*) "Using interpolation between provided time marks."
-        end if
 
         ! find location in time mark array
         if( (doy .lt. barseas(bdx)%doy(1)) .or. (doy .ge. barseas(bdx)%doy(barseas(bdx)%ntm)) ) then
@@ -259,6 +258,42 @@ contains
         end do
       end if
     end do
+
+    if( (doy .eq. 1) .and. (.not. output_done) ) then
+      ! write header to barrier daily output file
+      do bdx = 1, size(barrier)
+        write(UNIT=luo_barr,FMT='(a)',advance='NO') &
+          '#yr  doy Barrier_Description  npt '
+        do pdx = 1, barrier(bdx)%np
+          write(UNIT=luo_barr,FMT='(a)',advance='NO') &
+            ' height  width porosi '
+        end do
+      end do
+      write(UNIT=luo_barr,FMT='(a)') ''
+    end if
+
+    if( .not. output_done ) then
+      max_ntm = 0
+      max_seas = 0
+      do bdx = 1, size(barrier)
+        ! write data to barrier daily output file
+        write(UNIT=luo_barr,FMT='(i4," ",i3," ",a20," ",i3," ")',advance='NO') &
+          get_simdate_year(), doy, barrier(bdx)%amzbt, barrier(bdx)%np
+        do pdx = 1, barrier(bdx)%np
+          write(UNIT=luo_barr,FMT='(3(" ",f6.4)," ")',advance='NO') &
+            barrier(bdx)%param(pdx)%amzbr, barrier(bdx)%param(pdx)%amxbrw, barrier(bdx)%param(pdx)%ampbr
+        end do
+        max_ntm = max(max_ntm, barseas(bdx)%ntm)
+        max_seas = max(max_seas, barseas(bdx)%seas_flg)
+      end do
+      write(UNIT=luo_barr,FMT='(a)') ''
+      if( max_ntm .le. 1 ) then
+        output_done = .true.
+      else if( (doy .eq. 365) .and. (max_seas .lt. 2)) then
+        output_done = .true.
+      end if
+    end if
+
   end subroutine set_barrier_season
 
   subroutine sbbr( cellstate )

@@ -758,6 +758,9 @@
                               biotot(isr), decompfac(isr), mandatbs(isr)%mandate, h1et(isr), wp(isr))
             end do
 
+            ! set the barrier interpolation in time
+            call set_barrier_season(get_simdate_doy())
+
             if (run_erosion > 0) then   ! Are we simulating erosion in this RUN
                if (awudmx .gt. 8.0) then ! if wind is great enough, call erosion
                   ! transfer data values from submodel structures into erosion input structure
@@ -787,9 +790,6 @@
                   if (btest(am0efl,3)) then
                      luo_sgrd = -1   ! setting this here signals erosion to create a separate file for each erosion day
                   end if
-
-                  ! set the barrier interpolation in time
-                  call set_barrier_season(get_simdate_doy())
 
                   ! write(*,*) "Start erosion"
                   call erosion( 5.0, SURF_UPD_FLG, subrsurf, noerod, cellstate )

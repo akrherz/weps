@@ -15,6 +15,7 @@
       use file_io_mod
       use biomaterial, only: biomatter
       use erosion_data_struct_defs, only: am0efl
+      use barriers_mod, only: barseas, output_done
       use hydro_data_struct_defs, only: am0hfl, am0hdb
       use soil_data_struct_defs, only: am0sfl, am0sdb
       use manage_data_struct_defs, only: am0tfl, am0tdb
@@ -100,6 +101,14 @@
             call fopenk (luoharvest_calib_parm(idx), trim(rootp) // trim(subr_text(idx)) // 'luoharvest_calib_parm.out', 'unknown')
          end do
       endif
+
+      ! open barrier output file
+      if( size(barseas) .gt. 0 ) then
+          call fopenk (luo_barr, rootp(1:len_trim(rootp)) // 'barriers.out', 'unknown')
+          output_done = .false.
+      else
+          output_done = .true.
+      end if
 
 !     open erosion output files
       if (am0efl.gt.0) then

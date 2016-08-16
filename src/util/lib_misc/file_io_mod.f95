@@ -18,6 +18,7 @@ module file_io_mod
     integer :: luo_erod        ! For daily erosion summary
     integer :: luo_emit        ! For subdaily erosion summary
     integer :: luo_sgrd        ! For subdaily grid
+    integer :: luo_barr        ! for seasonal barrier daily output
 
     integer :: luoci           ! write "ci.out" for confidence interval
 

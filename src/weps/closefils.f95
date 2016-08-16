@@ -8,6 +8,7 @@
       use file_io_mod
       use biomaterial, only: biomatter
       use erosion_data_struct_defs, only: am0efl
+      use barriers_mod, only: barseas
       use hydro_data_struct_defs, only: am0hfl, am0hdb
       use soil_data_struct_defs, only: am0sfl, am0sdb
       use manage_data_struct_defs, only: am0tfl, am0tdb
@@ -66,6 +67,11 @@
             close(luoharvest_calib_parm(idx))
          end do
       endif
+
+      ! barrier output file
+      if( size(barseas) .gt. 0 ) then
+          close(luo_barr)
+      end if
 
 !     erosion output files
       if (am0efl.gt.0) then
