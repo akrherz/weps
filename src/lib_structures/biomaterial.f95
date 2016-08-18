@@ -56,7 +56,7 @@ module biomaterial
      real :: stemmasstrend  ! direction in which stem mass is trending.
                             ! Saves trend even if stem mass is static for long periods.
 
-     integer :: twarmdays      ! number of consecutive days that the temperature has been above the minimum growth temperature
+     real :: twarmdays      ! number of consecutive days that the temperature has been above the minimum growth temperature
      real :: tchillucum     ! accumulated chilling units (days)
      real :: thardnx        ! hardening index for winter annuals (range from 0 t0 2)
 

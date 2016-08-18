@@ -36,6 +36,7 @@
       use p1unconv_mod, only: mgtokg, mmtom
       use crop_data_struct_defs, only: am0cfl
       use climate_input_mod, only: cli_mav
+      use crop_climate_mod, only: huc1
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer, intent(in) :: isr   ! subregion number
@@ -52,8 +53,7 @@
       integer bcdayap, bcdayam
       real bcthucum, bctrthucum
       real bcgrainf, bczgrowpt, bcfliveleaf
-      real bcleafareatrend, bcstemmasstrend
-      integer bctwarmdays
+      real bcleafareatrend, bcstemmasstrend, bctwarmdays
       real bctchillucum, bcthardnx, bcthu_shoot_beg, bcthu_shoot_end
       real bcdpop
       integer bcdayspring
@@ -263,7 +263,7 @@
           end if
       end do
 
-      bctwarmdays = 0
+      bctwarmdays = 0.0
       bctchillucum = 0.0
       ! hardening index (can be used for freeze kill calculations)
       bcthardnx = 0.0

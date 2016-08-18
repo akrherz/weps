@@ -11,7 +11,7 @@
      &                 bc0arp, bc0brp, bc0crp, bc0drp,                  &
      &                 bc0aht, bc0bht, bc0ssa, bc0ssb,                  &
      &                 bc0sla, bcxstm, bhtsmn,                          &
-     &                 bwtdmx, bwtdmn, bweirr, bhfwsf,                  &
+     &                 bhfwsf,                                          &
      &                 hui, huiy, huirt, huirty, hu_delay, bcthardnx,   &
      &                 bcbaf, bchyfg,                                   &
      &                 bcfleaf2stor, bcfstem2stor, bcfstor2stor,        &
@@ -37,6 +37,8 @@
       use file_io_mod, only: luocrop
       use p1unconv_mod, only: hatom2, mmtom, pi
       use crop_data_struct_defs, only: am0cfl
+      use climate_input_mod, only: cli_today
+      use crop_climate_mod, only: temp_stress
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer, intent(in) :: isr   ! subregion number
@@ -51,7 +53,7 @@
       real bc0arp, bc0brp, bc0crp, bc0drp
       real bc0aht, bc0bht, bc0ssa, bc0ssb
       real bc0sla, bcxstm, bhtsmn(*)
-      real bwtdmx, bwtdmn, bweirr, bhfwsf
+      real bhfwsf
       real hui, huiy, huirt, huirty, hu_delay, bcthardnx
       real bcbaf
       integer bchyfg
@@ -99,9 +101,6 @@
 !     bc0sla - specific leaf area (cm^2/g)
 !     bcxstm - mature crop stem diameter (m)
 !     bhtsmn - daily minimum soil temperature (deg C)
-!     bwtdmx - daily maximum air temperature (deg C)
-!     bwtdmn - daily minimum air temperature (C)
-!     bweirr - Daily global radiation (MJ/m^2)
 !     bhfwsf - water stress factor (ratio)
 !     hui - heat unit index (ratio of acthucum to acthum)
 !     huiy - heat unit index (ratio of acthucum to acthum) on day (i-1)
@@ -272,9 +271,6 @@
 !     shoot_flg - used to control the behavior of the shootnum subroutine
 !             1 - returns the shoot number unconstrained by bcdmaxshoot
 
-!     + + + FUNCTIONS CALLED + + +
-!      real temps
-
 !     + + + SUBROUTINES CALLED + + +
 !     nuse       !disabled
 !     najn       !disabled
@@ -292,7 +288,6 @@
 
 !     reduce green leaf mass in freezing weather
       if (bhtsmn(1).lt.-2.0) then
-!          xw=abs(bwtdmn)
 !         use daily minimum soil temperature of first layer to account for snow cover effects
           xw = abs(bhtsmn(1))
           ! this was obviously to prevent excessive leaf loss
@@ -384,9 +379,9 @@
       trad_lai = clfarea * bcdpop
 
 !     Start biomass calculations
-!     bweirr is total shortwave radiation and a factor of .5 is assumed
+!     cli_today%eirr is total shortwave radiation and a factor of .5 is assumed
 !     to get to the photosynthetically active radiation
-      par=0.5*bweirr                    ! MJ/m^2                                    ! C-4
+      par=0.5*cli_today%eirr                    ! MJ/m^2                                    ! C-4
 
 !     calculate intercepted PAR, which is the good stuff less what hits the ground
       apar=par*(1.-exp(-bc0ck*eff_lai))                                             ! C-4
@@ -428,7 +423,7 @@
 !      call nuts (up1,up2,sp)
 
 !     calculate temperature stress
-      ts = temps (bwtdmx, bwtdmn, bctopt, bctmin)
+      ts = temp_stress(bctopt, bctmin)
 
       ! select application of stress functions based on command line flag
       if( growth_stress .eq. 0 ) then

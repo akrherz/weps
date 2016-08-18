@@ -65,11 +65,6 @@
       type(hydro_derived_et), intent(in) :: h1et
       end subroutine cdbug
 !----------------------
-      subroutine chillu(bctchillucum, day_max_temp, day_min_temp)
-      real, intent(inout) :: bctchillucum
-      real, intent(in) :: day_max_temp, day_min_temp            
-      end subroutine chillu
-!----------------------
       subroutine cinit(isr, bnslay, bszlyd,                             &
      &           bctopt, bctmin,                                        &
      &           bcthudf, bctdtm, bcthum, bc0hue, bcdmaxshoot,          &
@@ -99,8 +94,7 @@
       integer bcdayap, bcdayam
       real bcthucum, bctrthucum
       real bcgrainf, bczgrowpt, bcfliveleaf
-      real bcleafareatrend, bcstemmasstrend
-      integer bctwarmdays
+      real bcleafareatrend, bcstemmasstrend, bctwarmdays
       real bctchillucum, bcthardnx, bcthu_shoot_beg, bcthu_shoot_end
       real bcdpop
       integer bcdayspring
@@ -201,8 +195,7 @@
       integer bcdayap, bcdayam
       real bcthucum, bctrthucum
       real bcgrainf, bczgrowpt, bcfliveleaf
-      real bcleafareatrend, bcstemmasstrend
-      integer bctwarmdays
+      real bcleafareatrend, bcstemmasstrend, bctwarmdays
       real bctchillucum, bcthardnx, bcthu_shoot_beg, bcthu_shoot_end
       real bcxstmrep
       real bprevstandstem, bprevstandleaf, bprevstandstore
@@ -238,7 +231,7 @@
      &                 bc0arp, bc0brp, bc0crp, bc0drp,                  &
      &                 bc0aht, bc0bht, bc0ssa, bc0ssb,                  &
      &                 bc0sla, bcxstm, bhtsmn,                          &
-     &                 bwtdmx, bwtdmn, bweirr, bhfwsf,                  &
+     &                 bhfwsf,                                          &
      &                 hui, huiy, huirt, huirty, hu_delay, bcthardnx,   &
      &                 bcbaf, bchyfg,                                   &
      &                 bcfleaf2stor, bcfstem2stor, bcfstor2stor,        &
@@ -262,7 +255,7 @@
       real bc0arp, bc0brp, bc0crp, bc0drp
       real bc0aht, bc0bht, bc0ssa, bc0ssb
       real bc0sla, bcxstm, bhtsmn(*)
-      real bwtdmx, bwtdmn, bweirr, bhfwsf
+      real bhfwsf
       real hui, huiy, huirt, huirty, hu_delay, bcthardnx
       real bcbaf
       integer bchyfg
@@ -279,14 +272,6 @@
       real bc0shoot, bcdmaxshoot
       end subroutine growth
 !----------------------------------
-      real function heatunit( tmax, tmin, thres )
-      real tmax, tmin, thres                
-      end function heatunit
-!----------------------------------
-      real function huc1 (bwtdmx, bwtdmn, bctmax, bctmin)
-      real bwtdmx, bwtdmn, bctmax, bctmin      
-      end function huc1
-!---------------------------------- 
       subroutine nconc (po, p5,p1, a)
       real a, po, p5, p1
       end subroutine nconc
@@ -378,11 +363,6 @@
       real x, y, y2a(*), ya(*), xa(*)
       integer n  
       end subroutine splint
-!-------------------------------------
-      real function temps(bwtdmx, bwtdmn, bctopt, bctmin)
-
-      real bwtdmx, bwtdmn, bctopt, bctmin
-      end function temps
 !-------------------------------------
       subroutine crop_endseason ( isr, bmrotation, bmperod, &
      &                 bc0nam, bm0cfl,       &

@@ -55,7 +55,7 @@
       use file_io_mod, only: luocrop, luoshoot
       use p1unconv_mod, only: mgtokg
       use crop_data_struct_defs, only: am0cfl
-      use climate_input_mod, only: cli_today
+      use crop_climate_mod, only: huc1, freezeharden, chillunit_cum, warmday_cum
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer, intent(in) :: isr   ! subregion number
@@ -88,8 +88,7 @@
       integer bcdayap, bcdayam
       real bcthucum, bctrthucum
       real bcgrainf, bczgrowpt, bcfliveleaf
-      real bcleafareatrend, bcstemmasstrend
-      integer bctwarmdays
+      real bcleafareatrend, bcstemmasstrend, bctwarmdays
       real bctchillucum, bcthardnx, bcthu_shoot_beg, bcthu_shoot_end
       real bcxstmrep
       real bprevstandstem, bprevstandleaf, bprevstandstore
@@ -387,16 +386,10 @@
       endif
 
       ! check for consecutive "warm" days based on daily average temperature
-      if( 0.5*(cli_today%tdmx+cli_today%tdmn).gt.bctmin ) then
-          ! this is a warm day
-          bctwarmdays = bctwarmdays + 1
-      else
-          ! reduce warm day total, but do not zero, for proper fall regrow of perennials
-          bctwarmdays = bctwarmdays / 2
-      end if
+      call warmday_cum( bctwarmdays, bctmin )
 
       ! accumulate chill units
-      call chillu(bctchillucum, cli_today%tdmx, cli_today%tdmn)
+      call chillunit_cum(bctchillucum)
 
       ! zero out temp pool variables used in testing for residue from regrowth in callcrop
       bgmstandstem = 0.0
@@ -569,13 +562,10 @@
                   photo_delay = 1.0       ! delay disabled
                   hu_delay =  max(dev_floor,min(vern_delay,photo_delay))
               end if
-              ! do not accumulate heat units if daily minimum is below freezing
-!              if( cli_today%tdmn .gt. 0.0 ) then
-                  ! accumulate heat units using set heat unit delay
-                  bcthucum = bcthucum + huc1(cli_today%tdmx,cli_today%tdmn,bctopt,bctmin) * hu_delay
-!              end if
+              ! accumulate heat units using set heat unit delay
+              bcthucum = bcthucum + huc1(bctopt,bctmin) * hu_delay
               ! root depth growth heat units
-              bctrthucum = bctrthucum +huc1(cli_today%tdmx,cli_today%tdmn,bctopt,bctmin)
+              bctrthucum = bctrthucum +huc1(bctopt,bctmin)
               ! do not cap this for annuals, to allow it to continue
               ! root mass partition is reduced to lower levels after the
               ! first full year. Out of range is capped in the function
@@ -641,7 +631,7 @@
      &                 bc0brp, bc0crp, bc0drp,                          &
      &                 bc0aht, bc0bht, bc0ssa, bc0ssb,                  &
      &                 bc0sla, bcxstm, bhtsmn,                          &
-     &                 cli_today%tdmx, cli_today%tdmn, cli_today%eirr, bhfwsf, &
+     &                 bhfwsf,                                          &
      &                 hui, huiy, huirt, huirty, hu_delay, bcthardnx,   &
      &                 bcbaf, bchyfg,                                   &
      &                 bcfleaf2stor, bcfstem2stor, bcfstor2stor,        &
