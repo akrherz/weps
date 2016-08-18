@@ -1034,10 +1034,16 @@ contains
                ! no extra parameters required, skip reading of extra parameters
                typidx = typidx + 6
             else if( seas_flg .eq. 2 ) then
+               if( ntm_seas .ne. 2 ) then
+                 ! exactly 2 time marks required for seas_flg = 2
+                 write(*,*) 'ERROR: Barrier season flag value of 2 requires exactly 2 time marks'
+                 write(*,FMT='(i0)') 'Input value was: ', ntm_seas
+                 call exit(36)
+               end if
                ! initialize counter for extra parameters 1 = leaf on parameter set 2 = leaf off parameter set
                iexp = 1
             else
-               write(*,*) 'ERROR: Season flag value must be 0, 1 or 2'
+               write(*,*) 'ERROR: Barrier season flag value must be 0, 1 or 2'
                write(*,FMT='(i0)') 'Input value was: ', seas_flg
                call exit(35)
             end if
@@ -1076,6 +1082,13 @@ contains
          case (44)
             ! read in day of year time mark for barrier seasons
             read (line,*,err=80) barseas(ibr)%doy(iseas)
+            if( iseas .gt. 1 ) then
+               if( barseas(ibr)%doy(iseas) .eq. barseas(ibr)%doy(iseas-1) ) then
+                 write(*,*) 'ERROR: Barrier time marks must not be the same'
+                 write(*,FMT='(i0)') 'Input value was: ', barseas(ibr)%doy(iseas)
+                 call exit(44)
+               end if
+            end if
             ! read next day of year time mark
             iseas = iseas + 1
             if( iseas .le. ntm_seas ) then

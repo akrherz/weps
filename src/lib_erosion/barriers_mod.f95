@@ -34,11 +34,13 @@ module barriers_mod
                              ! 3 - accumulation of humidity levels above/below base humidity since given leaf off/on date
      real :: beg_thresh  ! accumulation threshold value for each of the methods above
      real :: beg_base    ! base value above/below which accumulation occurs
+     real :: beg_accum   ! total accumulation of beg_flg specified quantity since given day of year
      integer :: end_flg ! multilevel flag defining the method for determining completion of leaf emergence/drop
                              ! 0 - days to full leaf on/off are specified
                              ! 1 - Growing/Cooling Degree Days (GDD/CDD) to full leaf on/off are specified
      real :: end_thresh ! Accumulation threshold value where full leaf on/off occurs
      real :: end_base   ! base value above/below which accumulation occurs
+     real :: end_accum  ! total accumlation of end_flg specified quantity since beg_threshold exceeded
   end type barrier_climate
 
   type barrier_seasonal
@@ -183,7 +185,7 @@ contains
 
     use lin_interp_mod, only: lin_interp
     use file_io_mod, only: luo_barr
-    use datetime_mod, only: get_simdate_year
+    use datetime_mod, only: get_simdate_year, isleap
 
     ! argument declarations
     integer, intent(in) :: doy  ! day of year for setting barrier season
@@ -197,6 +199,8 @@ contains
     real :: frac_tm   ! fraction of time into bracketed time interval
     integer :: max_ntm  ! maximum time mark count for all barriers
     integer :: max_seas ! maximum season flag value for all barriers
+    integer :: doy_adj  ! adjustment to day of year based on begin/end of year location of actual doy
+    integer :: sgn_adj  ! adjustment to sign of calculation based on begin/end of year location of actual doy
 
     ! loop over all barriers
     do bdx = 1, size(barrier)
@@ -218,18 +222,32 @@ contains
         end if
 
         select case (barseas(bdx)%seas_flg)
-        case (0,2)  ! do interpolation between all time points
+        case (0)  ! do interpolation between all time points
           ! set high time mark index and find interpolation fraction
           if( low_tm .lt. barseas(bdx)%ntm ) then
             ! no wrapping required for bracketing index
             hi_tm = low_tm + 1
             ! find fraction of distance in time between time marks
-            frac_tm = (real(doy) - barseas(bdx)%doy(low_tm))/(barseas(bdx)%doy(hi_tm) - barseas(bdx)%doy(low_tm))
+            frac_tm = (real(doy) - barseas(bdx)%doy(low_tm)) &
+                    / (barseas(bdx)%doy(hi_tm) - barseas(bdx)%doy(low_tm))
           else
             ! low_tm was at end of year, wrap to bracketing index
             hi_tm = 1
+            ! adjust calculation of location in time
+            if( doy .ge. barseas(bdx)%doy(low_tm) ) then
+              doy_adj = 0
+              sgn_adj = -1
+            else
+              if( isleap(get_simdate_year()) ) then
+                doy_adj = 366
+              else
+                doy_adj = 365
+              end if
+              sgn_adj = 1
+            end if
             ! find fraction of distance in time between time marks adjusted for wrapping
-            frac_tm = (real(doy) + 365 - barseas(bdx)%doy(low_tm))/(barseas(bdx)%doy(hi_tm) + 365 - barseas(bdx)%doy(low_tm))
+            frac_tm = sgn_adj * (real(doy) + doy_adj - barseas(bdx)%doy(low_tm)) &
+                    / (barseas(bdx)%doy(hi_tm) + doy_adj - barseas(bdx)%doy(low_tm))
           end if
           ! interpolate barrier params in time, copying into fixed barrier structure
           do pdx = 1, barseas(bdx)%np
@@ -247,6 +265,33 @@ contains
             barrier(bdx)%param(pdx)%amxbrw = barseas(bdx)%param(pdx,low_tm)%amxbrw
             barrier(bdx)%param(pdx)%ampbr = barseas(bdx)%param(pdx,low_tm)%ampbr
           end do
+
+        case (2)  ! determine time based on climatic information and interpolate
+          ! first time mark is leaf off condition
+          ! second time mark is leaf on condition
+          if( barseas(bdx)%doy(1) .lt. barseas(bdx)%doy(2) ) then
+            ! leaf off day of year is less than leaf on day of year
+            if( (doy .ge. barseas(bdx)%doy(1)) .and. (doy .lt. barseas(bdx)%doy(2)) ) then
+              ! between leaf off and leaf on state
+              frac_tm = leaf_off_2_on( barseas(bdx)%clim(1) )
+            else
+              ! between leaf on and leaf off state
+              frac_tm = leaf_on_2_off( barseas(bdx)%clim(2) )
+            end if
+          else if( barseas(bdx)%doy(1) .gt. barseas(bdx)%doy(2) ) then
+            ! leaf off day of year is greater than leaf on day of year
+            if( (doy .ge. barseas(bdx)%doy(2)) .and. (doy .lt. barseas(bdx)%doy(1)) ) then
+              ! between leaf on and leaf off state
+              frac_tm = leaf_on_2_off( barseas(bdx)%clim(2) )
+            else
+              ! between leaf off and leaf on state
+              frac_tm = leaf_off_2_on( barseas(bdx)%clim(1) )
+            end if
+
+          else
+            ! the two values are the same. input error.
+          end if
+
 
         end select
 
@@ -295,6 +340,22 @@ contains
     end if
 
   end subroutine set_barrier_season
+
+  real function leaf_off_2_on( clim )
+     use climate_input_mod, only: cli_today
+     type(barrier_climate) :: clim
+
+     real heatunits
+
+  end function leaf_off_2_on
+
+  real function leaf_on_2_off( clim )
+     use climate_input_mod, only: cli_today
+     type(barrier_climate) :: clim
+
+     real heatunits
+
+  end function leaf_on_2_off
 
   subroutine sbbr( cellstate )
 
