@@ -543,21 +543,6 @@
       real*4 t, y(*), pd(*)
       end subroutine jac      
 !-----------------------
-      subroutine  et(rn, g_soil, vel_wind, bmzele, bwtdmx, bwtdmn,      &
-     &            bwtdav, bwtdpt, bhzetp, loc_za, loc_zo, loc_zd)
-
-      real rn
-      real g_soil
-      real vel_wind
-      real bmzele
-      real bwtdmn
-      real bwtdmx
-      real bwtdav
-      real bwtdpt
-      real bhzetp
-      real loc_za, loc_zo, loc_zd   
-      end subroutine et
-!-------------------------
       real function evapredu( bhzeasurf, evaplimit, vaptrans, bhzep )
 
       real bhzeasurf, evaplimit, vaptrans, bhzep         
@@ -804,10 +789,6 @@
       integer nlay
       real thetaf(nlay), thetaw(nlay), bszlyd(nlay)                   
       end function plant_wat_t
-!-------------------------------
-      real function preslaps( elevation )
-      real elevation      
-      end function preslaps
 !------------------------------
       subroutine printlayval( isr, daysim, layrsn,                      &
      &       bszlyt, bszlyd, bulkden,                                   &
@@ -875,11 +856,6 @@
       real coeff_b      
       end function resevapredu
 !-----------------------------------
-      real function satvappres( airtemp )
-
-      real airtemp      
-      end function satvappres
-!-----------------------------------
       real function   scsq (rain,cniip,cniig,canp,slp,theta1,thetf1)
 
       real rain
@@ -946,11 +922,6 @@
       real  theta, thetar, thetas, ksat, lambda      
       end function unsatcond_bc
 !-------------------------------
-      real function vaporden( airtemp, relhum )
-
-      real airtemp, relhum      
-      end function vaporden
-!--------------------------------
       real function volwat_matpot_bc(matricpot,thetar,thetas,           &
      &                                 airentry,lambda)
 
@@ -970,11 +941,6 @@
       real clay
       real silt      
       end function waterk
-!------------------------------
-      real function wetbulb( airtemp, dewtemp, elevation )
-
-      real airtemp, dewtemp, elevation
-      end function wetbulb
 !------------------------------      
 
 !---------------- MAIN Routines ------------------------------

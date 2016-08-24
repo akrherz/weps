@@ -13,8 +13,9 @@
 !     soil water redistribution, evaporation, deep percolation, runoff
 
       use weps_interface_defs, only: unsatcond_bc, internode_wt_bc
-      use weps_interface_defs, only: vaporden, diffusive, airtempsin
-      use weps_interface_defs, only: satvappres, matricpot_from_rh
+      use weps_interface_defs, only: diffusive, airtempsin
+      use weps_interface_defs, only: matricpot_from_rh
+      use air_water_mod, only: satvappres, vaporden
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer neqn(*)

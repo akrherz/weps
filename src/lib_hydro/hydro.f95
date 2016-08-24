@@ -40,7 +40,7 @@
 !     + + + KEY WORDS + + +
 !     hydrology
 
-      use weps_interface_defs, only: hinit, heat, store, et
+      use weps_interface_defs, only: hinit, heat, store
       use weps_interface_defs, only: darcy, transp
       use weps_interface_defs, only: dawn, daylen, radnet, availwc
       use weps_interface_defs, only: plant_wat_t, movewind, volwatadsorb
@@ -56,6 +56,7 @@
       use hydro_data_struct_defs, only: am0hfl, hydro_derived_et
       use wepp_param_mod, only: wepp_param
       use climate_input_mod, only: cli_tyav, cli_next, cli_today, cli_prev
+      use air_water_mod, only: et
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer, intent(in) :: isr   ! subregion number

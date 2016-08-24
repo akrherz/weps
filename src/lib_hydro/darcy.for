@@ -26,11 +26,12 @@
       use weps_interface_defs, only: depstore, fricfact, store, calctht0
       use weps_interface_defs, only: evapredu, availwc
       use weps_interface_defs, only: unsatcond_bc, intersect
-      use weps_interface_defs, only: diffusive, vaporden
+      use weps_interface_defs, only: diffusive
       use file_io_mod, only: luowater
       use datetime_mod, only: get_simdate_doy, get_simdate_year
       use p1unconv_mod, only: pi, hrtosec, mtomm, mmtom
       use hydro_data_struct_defs, only: am0hfl
+      use air_water_mod, only: vaporden
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer, intent(in) :: isr   ! subregion number
