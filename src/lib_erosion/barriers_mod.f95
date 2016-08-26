@@ -311,7 +311,7 @@ contains
       ! write header to barrier daily output file
       do bdx = 1, size(barrier)
         write(UNIT=luo_barr,FMT='(a)',advance='NO') &
-          '#yr  doy Barrier_Description  beg_accu beg_thre end_accu end_thre npt '
+          '#yr  doy Barrier_Description  tb beg_accu beg_thre te end_accu end_thre npt '
         do pdx = 1, barrier(bdx)%np
           write(UNIT=luo_barr,FMT='(a)',advance='NO') &
             ' height  width porosi '
@@ -327,9 +327,27 @@ contains
         ! write data to barrier daily output file
         write(UNIT=luo_barr,FMT='(i4," ",i3," ",a20," ")',advance='NO') &
              get_simdate_year(), doy, barrier(bdx)%amzbt
-        write(UNIT=luo_barr,FMT='(4(f8.4," "))',advance='NO') &
-             barseas(bdx)%clim(low_tm)%beg_accum, barseas(bdx)%clim(low_tm)%beg_thresh, &
+        if( barseas(bdx)%seas_flg .eq. 2 ) then
+          ! these values are populated
+          write(UNIT=luo_barr,FMT='(i2," ")',advance='NO') &
+             barseas(bdx)%clim(low_tm)%beg_flg
+          write(UNIT=luo_barr,FMT='(2(f8.4," "))',advance='NO') &
+             barseas(bdx)%clim(low_tm)%beg_accum, barseas(bdx)%clim(low_tm)%beg_thresh
+          write(UNIT=luo_barr,FMT='(i2," ")',advance='NO') &
+             barseas(bdx)%clim(low_tm)%end_flg
+          write(UNIT=luo_barr,FMT='(2(f8.4," "))',advance='NO') &
              barseas(bdx)%clim(low_tm)%end_accum, barseas(bdx)%clim(low_tm)%end_thresh
+        else
+          ! these values are NOT populated, use fixed values
+          write(UNIT=luo_barr,FMT='(i2," ")',advance='NO') &
+             -1
+          write(UNIT=luo_barr,FMT='(2(f8.4," "))',advance='NO') &
+             0.0, 0.0
+          write(UNIT=luo_barr,FMT='(i2," ")',advance='NO') &
+             -1
+          write(UNIT=luo_barr,FMT='(2(f8.4," "))',advance='NO') &
+             0.0, 0.0
+        end if
         write(UNIT=luo_barr,FMT='(i3," ")',advance='NO') &
              barrier(bdx)%np
         do pdx = 1, barrier(bdx)%np
@@ -349,6 +367,22 @@ contains
 
   end subroutine set_barrier_season
 
+  ! finds accumulation of climate factors which will determine when barrier state changes
+  ! Most commonly represents deciduous trees, but can be adapted to other plants
+  ! A useful resource for developing barrier parameters could be:
+  ! https://www.usanpn.org (National Phenology Network)
+  ! Options 2-3 see:
+  ! Caroline A. Polgar and Richard B. Primack. Leaf-out phenology of temperate woody plants:
+  ! from trees to ecosystems. New Phytologist (2011) 191: 926–941 doi: 10.1111/j.1469-8137.2011.03803.x
+  ! Options 4-7 may best apply to tropical / savannah ecosystems
+  ! see:
+  ! February EC, Higgins SI (2016) Rapid Leaf Deployment Strategies in a Deciduous Savanna.
+  ! PLoS ONE 11(6): e0157833. doi:10.1371/journal.
+  ! and:
+  ! Niles J. Hasselquist, Michael F. Allen,Louis S. Santiago. Water relations of evergreen
+  ! and drought-deciduous trees along a seasonally dry tropical forest chronosequence.
+  ! Oecologia (2010) 164:881–890 DOI 10.1007/s00442-010-1725-y pone.0157833
+  ! Additional research may be required to refine the procedures specified here.
   function state_transition( clim ) result(frac_tm)
     use crop_climate_mod, only: warmday_cum, heatunit, coldunit, coldday_cum
     use air_water_mod, only: precip_cum, no_precip_cum, high_humid_cum, low_humid_cum

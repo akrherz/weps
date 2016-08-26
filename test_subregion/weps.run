@@ -74,8 +74,8 @@ none
 #
 # first subregion
 #
-#   RFD-SubmodelOutput
-0 0 0 0 0
+#   RFD-SubmodelOutput (hydro, soil, man, crop, decomp)
+2 0 0 0 0
 #   RFD-DebugOutput
 0 0 0 0 0
 #
@@ -100,8 +100,8 @@ WA-Potatoes-WntrWheat-Beans,dry-Alfalfa,4yrs-CMZ49.man
 #
 # second subregion
 #
-#   RFD-SubmodelOutput
-0 0 0 0 0
+#   RFD-SubmodelOutput (hydro, soil, man, crop, decomp)
+7 1 1 1 3
 #   RFD-DebugOutput
 0 0 0 0 0
 #
@@ -126,7 +126,7 @@ Alfalfa, fall seed, 3yr-Potato-WWheat, circle irr CMZ49.man
 #
 # third Subregion
 #
-#   RFD-SubmodelOutput
+#   RFD-SubmodelOutput (hydro, soil, man, crop, decomp)
 0 0 0 0 0
 #   RFD-DebugOutput
 0 0 0 0 0
@@ -152,7 +152,7 @@ Wheat,winter,after fallow,conv.,CMZ50.man
 #
 # fourth Subregion
 #
-#   RFD-SubmodelOutput
+#   RFD-SubmodelOutput (hydro, soil, man, crop, decomp)
 0 0 0 0 0
 #   RFD-DebugOutput
 0 0 0 0 0
@@ -181,7 +181,7 @@ Canola, fall; Fallow_ Wheat, winter; Fallow; mulch till, Z50.man
 # === BEGIN BARRIER SECTION ===
 #
 #   RFD-BarrierNo (number of barriers)
-1
+4
 #   Note: subregion mod allows 0 barriers.
 #         If zero, then put no barrier entries here.
 #
@@ -197,38 +197,45 @@ Canola, fall; Fallow_ Wheat, winter; Fallow; mulch till, Z50.man
 #
 #   ---BEGIN--- Dynamic Seasons Input
 #
-#   RFD-BarrierCliBegOnFlg  (Example 1 = GDD)
-1
-#   RFD-BarrierCliBegOnThresh (Example 100 GDD)
-100
-#   RFD-BarrierCliBegOnBase (Example 5 degrees C)
-5
-#   RFD-BarrierCliEndOnFlg (Example 0 Specified Days)
+#   First Transition
+#
+#   RFD-BarrierCliBegTranFlg  (Example 0 = consecutive days above temperature)
 0
-#   RFD-BarrierCliEndOnThresh (Example 14 days)
+#   RFD-BarrierCliBegTranThresh (Example 10 days)
+10
+#   RFD-BarrierCliBegTranBase (Example 3 degrees C)
+3
+#   RFD-BarrierCliEndTranFlg (Example 0 Specified Days)
+0
+#   RFD-BarrierCliEndTranThresh (Example 14 days)
 14
-#   RFD-BarrierCliEndOnBase (example 0, ie. no value need for this selection, but placeholder must be in file)
+#   RFD-BarrierCliEndTranBase (example 0, ie. no value need for this selection, but placeholder must be in file)
 0
 #
-#   RFD-BarrierCliBegOffFlg  (Example 0 = days below specified temperature, set in Base below)
-0
-#   RFD-BarrierCliBegOffThresh (Example 5 days)
-5
-#   RFD-BarrierCliBegOffBase (Example 2 degrees C)
-2
-#   RFD-BarrierCliEndOffFlg (Example 1 Cooling Degree Days)
+#   Second Transition
+#
+#   RFD-BarrierCliBegTranFlg  (Example 1 = consecutive days below temperature)
 1
-#   RFD-BarrierCliEndOffThresh (Example 20 CDD)
-20
-#   RFD-BarrierCliEndOffBase (example 2 degrees C)
+#   RFD-BarrierCliBegTranThresh (Example 10 days)
+10
+#   RFD-BarrierCliBegTranBase (Example 1 degrees C)
+1
+#   RFD-BarrierCliEndTranFlg (Example 2 Cooling Degree Days)
 2
-#
+#   RFD-BarrierCliEndTranThresh (Example 20 CDD)
+20
+#   RFD-BarrierCliEndTranBase (example 1 degrees C)
+1
 #   ---END--- Dynamic Seasons Input
 #
-# first day of year time mark
-10
-# second day of year time mark
-150
+#   RFD-TimeMark(1)
+30
+#   RFD-TimeDesc(1)
+Shrubs 1row leafoff
+#   RFD-TimeMark(2)
+180
+#   RFD-TimeDesc(2)
+Shrubs 1row leafon
 #   RFD-BarrierS coordinates (meters) | height (meters) | width (meters) | porosity
 # first coordinate pair and data
 0 0 
@@ -243,7 +250,211 @@ Canola, fall; Fallow_ Wheat, winter; Fallow; mulch till, Z50.man
 # second point, second time mark height (meters), width (meters), porosity
 3.0 3.0 0.4
 #   RFD-BarrierT  type 
-Shrubs 1row Climate Leaf
+Shrubs 1row Climate Leaf on/off
+#
+#
+#   RFD-BarrierSeasonFlg
+# 0 - time interpolation
+# 1 - fixed in time until next time mark
+# 2 - dynamic seasons based on climate inputs
+2
+# number of day of year time marks for seasons
+2
+# number of coordinates
+2
+#
+#   ---BEGIN--- Dynamic Seasons Input
+#
+#   First Transition
+#
+#   RFD-BarrierCliBegTranFlg  (Example 2 = GDD)
+2
+#   RFD-BarrierCliBegTranThresh (Example 100 )
+100
+#   RFD-BarrierCliBegTranBase (Example 5 degrees C)
+5
+#   RFD-BarrierCliEndTranFlg (Example 0 Specified Days)
+0
+#   RFD-BarrierCliEndTranThresh (Example 14 days)
+14
+#   RFD-BarrierCliEndTranBase (example 0, ie. no value need for this selection, but placeholder must be in file)
+0
+#
+#   Second Transition
+#
+#   RFD-BarrierCliBegTranFlg  (Example 3 = Cooling Degree Days)
+3
+#   RFD-BarrierCliBegTranThresh (Example 20 days)
+20
+#   RFD-BarrierCliBegTranBase (Example 1 degrees C)
+1
+#   RFD-BarrierCliEndTranFlg (Example 2 Cooling Degree Days)
+2
+#   RFD-BarrierCliEndTranThresh (Example 20 CDD)
+20
+#   RFD-BarrierCliEndTranBase (example 1 degrees C)
+1
+#   ---END--- Dynamic Seasons Input
+#
+#   RFD-TimeMark(1)
+10
+#   RFD-TimeDesc(1)
+Shrubs 1row leafoff
+#   RFD-TimeMark(2)
+150
+#   RFD-TimeDesc(2)
+Shrubs 1row leafon
+#   RFD-BarrierS coordinates (meters) | height (meters) | width (meters) | porosity
+# first coordinate pair and data
+0 366 
+# first point, first time mark, height (meters), width (meters), porosity
+1.0 1.0 0.7 
+# first point, second time mark height (meters), width (meters), porosity
+2.0 2.0 0.5
+# second coordinate pair and data
+366 366
+# second point, first time mark height (meters), width (meters), porosity
+1.5 1.5 0.6
+# second point, second time mark height (meters), width (meters), porosity
+3.0 3.0 0.4
+#   RFD-BarrierT  type 
+Shrubs 1row Climate Leaf on/off
+#
+#
+#   RFD-BarrierSeasonFlg
+# 0 - time interpolation
+# 1 - fixed in time until next time mark
+# 2 - dynamic seasons based on climate inputs
+2
+# number of day of year time marks for seasons
+2
+# number of coordinates
+2
+#
+#   ---BEGIN--- Dynamic Seasons Input
+#
+#   First Transition
+#
+#   RFD-BarrierCliBegTranFlg  (Example 4 = rainfall depth accumulation)
+4
+#   RFD-BarrierCliBegTranThresh (Example 20 mm)
+20
+#   RFD-BarrierCliBegTranBase (Example 4 mm)
+4
+#   RFD-BarrierCliEndTranFlg (Example 0 Specified Days)
+0
+#   RFD-BarrierCliEndTranThresh (Example 14 days)
+14
+#   RFD-BarrierCliEndTranBase (example 0, ie. no value need for this selection, but placeholder must be in file)
+0
+#
+#   Second Transition
+#
+#   RFD-BarrierCliBegTranFlg  (Example 5 = days without rainfall)
+5
+#   RFD-BarrierCliBegTranThresh (Example 30 days)
+30
+#   RFD-BarrierCliBegTranBase (Example 3 mm)
+1
+#   RFD-BarrierCliEndTranFlg (Example 0 Days)
+2
+#   RFD-BarrierCliEndTranThresh (Example 60 days)
+60
+#   RFD-BarrierCliEndTranBase (example placeholder)
+0
+#   ---END--- Dynamic Seasons Input
+#
+#   RFD-TimeMark(1)
+10
+#   RFD-TimeDesc(1)
+Shrubs 1row leafoff
+#   RFD-TimeMark(2)
+150
+#   RFD-TimeDesc(2)
+Shrubs 1row leafon
+#   RFD-BarrierS coordinates (meters) | height (meters) | width (meters) | porosity
+# first coordinate pair and data
+366 366 
+# first point, first time mark, height (meters), width (meters), porosity
+1.0 1.0 0.7 
+# first point, second time mark height (meters), width (meters), porosity
+2.0 2.0 0.5
+# second coordinate pair and data
+366 0
+# second point, first time mark height (meters), width (meters), porosity
+1.5 1.5 0.6
+# second point, second time mark height (meters), width (meters), porosity
+3.0 3.0 0.4
+#   RFD-BarrierT  type 
+Shrubs 1row Climate Leaf on/off
+#
+#
+#   RFD-BarrierSeasonFlg
+# 0 - time interpolation
+# 1 - fixed in time until next time mark
+# 2 - dynamic seasons based on climate inputs
+2
+# number of day of year time marks for seasons
+2
+# number of coordinates
+2
+#
+#   ---BEGIN--- Dynamic Seasons Input
+#
+#   First Transition
+#
+#   RFD-BarrierCliBegTranFlg  (Example 7 = days below specified humidity)
+7
+#   RFD-BarrierCliBegTranThresh (Example 20 days)
+20
+#   RFD-BarrierCliBegTranBase (Example 0.6, 60%)
+0.6
+#   RFD-BarrierCliEndTranFlg (Example 0 Specified Days)
+0
+#   RFD-BarrierCliEndTranThresh (Example 20 days)
+14
+#   RFD-BarrierCliEndTranBase (example placeholder)
+0
+#
+#   Second Transition
+#
+#   RFD-BarrierCliBegTranFlg  (Example 6 = days with high humidity)
+6
+#   RFD-BarrierCliBegTranThresh (Example 20 days)
+20
+#   RFD-BarrierCliBegTranBase (Example 0.6, 60%)
+0.6
+#   RFD-BarrierCliEndTranFlg (Example 0 Days)
+0
+#   RFD-BarrierCliEndTranThresh (Example 10 days)
+10
+#   RFD-BarrierCliEndTranBase (example placholder)
+0
+#   ---END--- Dynamic Seasons Input
+#
+#   RFD-TimeMark(1)
+10
+#   RFD-TimeDesc(1)
+Shrubs 1row leafon
+#   RFD-TimeMark(2)
+180
+#   RFD-TimeDesc(2)
+Shrubs 1row leafoff
+#   RFD-BarrierS coordinates (meters) | height (meters) | width (meters) | porosity
+# first coordinate pair and data
+366 0 
+# first point, first time mark, height (meters), width (meters), porosity
+2.0 2.0 0.5
+# first point, second time mark height (meters), width (meters), porosity
+1.0 1.0 0.7
+# second coordinate pair and data
+0 0
+# second point, first time mark height (meters), width (meters), porosity
+3.0 3.0 0.4
+# second point, second time mark height (meters), width (meters), porosity
+1.5 1.5 0.6
+#   RFD-BarrierT  type 
+Shrubs 1row Climate Leaf on/off
 #
 # === END BARRIER SECTION ===
 #
