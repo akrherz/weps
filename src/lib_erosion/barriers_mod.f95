@@ -355,25 +355,28 @@ contains
     type(barrier_climate) :: clim
     real frac_tm
 
-    ! find current accumulation for when transition begins
-    select case (clim%beg_flg)
-    case (0)  ! number of consecutive days temperature is above base trigger temperature
-      call warmday_cum( clim%beg_accum, clim%beg_base )
-    case (1)  ! number of consecutive days temperature is below base trigger temperature
-      call coldday_cum( clim%beg_accum, clim%beg_base )
-    case (2)  ! accumulation of growing degree days (no optimum temperature specified)    
-      clim%beg_accum = clim%beg_accum + heatunit( clim%beg_base )
-    case (3)  ! accumulation of cold degree days
-      clim%beg_accum = clim%beg_accum + coldunit( clim%beg_base )
-    case (4)  ! accumulation of rainfall depth above minimum
-      clim%beg_accum = precip_cum( clim%beg_accum, clim%beg_base )
-    case (5)  ! accumulation of period with no rainfall above minimum value
-      clim%beg_accum = no_precip_cum( clim%beg_accum, clim%beg_base )
-    case (6)  ! number of consecutive days humidity is above base humidity    
-      clim%beg_accum = high_humid_cum( clim%beg_accum, clim%beg_base )
-    case (7)  ! number of consecutive days humidity is below base humidity    
-      clim%beg_accum = low_humid_cum( clim%beg_accum, clim%beg_base )
-    end select       
+    ! test if threshold had been crossed. Prevent returning to previous state 
+    if( clim%beg_accum .le. clim%beg_thresh ) then
+      ! find current accumulation for when transition begins
+      select case (clim%beg_flg)
+      case (0)  ! number of consecutive days temperature is above base trigger temperature
+        call warmday_cum( clim%beg_accum, clim%beg_base )
+      case (1)  ! number of consecutive days temperature is below base trigger temperature
+        call coldday_cum( clim%beg_accum, clim%beg_base )
+      case (2)  ! accumulation of growing degree days (no optimum temperature specified)    
+        clim%beg_accum = clim%beg_accum + heatunit( clim%beg_base )
+      case (3)  ! accumulation of cold degree days
+        clim%beg_accum = clim%beg_accum + coldunit( clim%beg_base )
+      case (4)  ! accumulation of rainfall depth above minimum
+        clim%beg_accum = precip_cum( clim%beg_accum, clim%beg_base )
+      case (5)  ! accumulation of period with no rainfall above minimum value
+        clim%beg_accum = no_precip_cum( clim%beg_accum, clim%beg_base )
+      case (6)  ! number of consecutive days humidity is above base humidity    
+        clim%beg_accum = high_humid_cum( clim%beg_accum, clim%beg_base )
+      case (7)  ! number of consecutive days humidity is below base humidity    
+        clim%beg_accum = low_humid_cum( clim%beg_accum, clim%beg_base )
+      end select
+    end if
 
     if( clim%beg_accum .le. clim%beg_thresh ) then
       ! no transition yet
@@ -381,15 +384,18 @@ contains
       clim%end_accum = 0.0
     else
       ! transition has begun
-      ! find current accumulation for when transition is complete
-      select case (clim%end_flg)
-      case (0)  ! days to complete transition are specified
-        clim%end_accum = clim%end_accum + 1
-      case (1)  ! Growing Degree Days (GDD) to complete transition are specified
-        clim%end_accum = clim%end_accum + heatunit( clim%end_base )
-      case (2)  ! Cold Degree Days (CDD) to complete transition are specified
-        clim%end_accum = clim%end_accum + coldunit( clim%end_base )
-      end select
+      ! test if threshold had been crossed. Prevent returning to previous state 
+      if( clim%end_accum .lt. clim%end_thresh ) then
+        ! find current accumulation for when transition is complete
+        select case (clim%end_flg)
+        case (0)  ! days to complete transition are specified
+          clim%end_accum = clim%end_accum + 1
+        case (1)  ! Growing Degree Days (GDD) to complete transition are specified
+          clim%end_accum = clim%end_accum + heatunit( clim%end_base )
+        case (2)  ! Cold Degree Days (CDD) to complete transition are specified
+          clim%end_accum = clim%end_accum + coldunit( clim%end_base )
+        end select
+      end if
 
       if( clim%end_accum .ge. clim%end_thresh ) then
         ! transition is complete
