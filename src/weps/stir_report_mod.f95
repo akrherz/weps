@@ -132,85 +132,85 @@ module stir_report_mod
           stircum(isr)%phopidx = 0
       end if
 
-      ! check for first time at end of managment file
       if( (.not. stircum(isr)%man_eof) .and. end_of_file ) then
+          ! first time at end of managment file
           stircum(isr)%man_eof = end_of_file
-      end if
-
-      ! only go through stir calculation once (see done flag above)
-      ! make sure to do on second time through and only in report loop
-      if( (.not. stircum(isr)%man_eof) .or. (.not. report_loop) ) return
-
-      ! in report loop, start accumulating
-      if( stircum(isr)%proc_cnt .gt. 0 ) then
-          stir_op_avg = stircum(isr)%stir_op_sum/stircum(isr)%proc_cnt
       else
-          stir_op_avg = 0.0
-      end if
+          ! only go through stir calculation once (see done flag above)
+          ! make sure to do on second time through and only in report loop
+          if( (.not. stircum(isr)%man_eof) .or. (.not. report_loop) ) return
 
-      if( ostir .ge. 0.0 ) then
-          scisum(isr)%stir = scisum(isr)%stir + ostir
-          ! set stir and energy value for each operation
-          stircum(isr)%phop(stircum(isr)%phopidx)%phop_stir = ostir
-      else
-          scisum(isr)%stir = scisum(isr)%stir + stir_op_avg
-          stircum(isr)%phop(stircum(isr)%phopidx)%phop_stir = stir_op_avg
-      end if
+          ! in report loop and at least once through file, start accumulating
+          if( stircum(isr)%proc_cnt .gt. 0 ) then
+              stir_op_avg = stircum(isr)%stir_op_sum/stircum(isr)%proc_cnt
+          else
+              stir_op_avg = 0.0
+          end if
 
-      stircum(isr)%phop(stircum(isr)%phopidx)%phop_energy = oenergyarea
-      if( oenergyarea .ge. 0.0 ) then
-          scisum(isr)%energy = scisum(isr)%energy + oenergyarea
-      end if
+          if( ostir .ge. 0.0 ) then
+              scisum(isr)%stir = scisum(isr)%stir + ostir
+              ! set stir and energy value for each operation
+              stircum(isr)%phop(stircum(isr)%phopidx)%phop_stir = ostir
+          else
+              scisum(isr)%stir = scisum(isr)%stir + stir_op_avg
+              stircum(isr)%phop(stircum(isr)%phopidx)%phop_stir = stir_op_avg
+          end if
 
-      ! reset values for next operation
-      stircum(isr)%stir_op_sum = 0
-      stircum(isr)%oper_cnt = 0
-      stircum(isr)%proc_cnt = 0
+          stircum(isr)%phop(stircum(isr)%phopidx)%phop_energy = oenergyarea
+          if( oenergyarea .ge. 0.0 ) then
+              scisum(isr)%energy = scisum(isr)%energy + oenergyarea
+          end if
 
-      ! check for second time at end of managment file
-      if( stircum(isr)%man_eof .and. end_of_file ) then
-         ! set so only one STIR report produced
-         stircum(isr)%done_flg = .true.
-         ! create and print STIR report (2nd time through complete, info complete)
-         do idx = 1, stircum(isr)%phopcnt
-          ! assign crop number to non planting or harvest operations
-           if( stircum(isr)%phop(idx)%phop_type .eq. 0 ) then
-             ! assign crop number from next planting or harvest operation
-             do jdx = idx, stircum(isr)%phopcnt
-                ! index ahead in file to end
-                if( stircum(isr)%phop(jdx)%phop_type .gt. 0 ) then
-                   ! planting or harvest operation, use assigned crop number
-                   stircum(isr)%phop(idx)%crop_num = stircum(isr)%phop(jdx)%crop_num
-                   ! we don't need any more
-                   exit
-                else if( jdx .eq. stircum(isr)%phopcnt ) then
-                   ! didn't find number, continue from start of file
-                   do kdx = 1, idx-1
-                      if( stircum(isr)%phop(kdx)%phop_type .gt. 0 ) then
-                         ! planting or harvest operation, use assigned crop number
-                         stircum(isr)%phop(idx)%crop_num = stircum(isr)%phop(kdx)%crop_num
-                         ! we don't need any more
-                         exit
-                      end if
-                   end do
-                end if
-             end do
-           end if
+          ! reset values for next operation
+          stircum(isr)%stir_op_sum = 0
+          stircum(isr)%oper_cnt = 0
+          stircum(isr)%proc_cnt = 0
+
+         ! check for second time at end of managment file
+         if( stircum(isr)%man_eof .and. end_of_file ) then
+            ! set so only one STIR report produced
+            stircum(isr)%done_flg = .true.
+            ! create and print STIR report (2nd time through complete, info complete)
+            do idx = 1, stircum(isr)%phopcnt
+              ! assign crop number to non planting or harvest operations
+              if( stircum(isr)%phop(idx)%phop_type .eq. 0 ) then
+                ! assign crop number from next planting or harvest operation
+                do jdx = idx, stircum(isr)%phopcnt
+                   ! index ahead in file to end
+                   if( stircum(isr)%phop(jdx)%phop_type .gt. 0 ) then
+                      ! planting or harvest operation, use assigned crop number
+                      stircum(isr)%phop(idx)%crop_num = stircum(isr)%phop(jdx)%crop_num
+                      ! we don't need any more
+                      exit
+                   else if( jdx .eq. stircum(isr)%phopcnt ) then
+                      ! didn't find number, continue from start of file
+                      do kdx = 1, idx-1
+                         if( stircum(isr)%phop(kdx)%phop_type .gt. 0 ) then
+                            ! planting or harvest operation, use assigned crop number
+                            stircum(isr)%phop(idx)%crop_num = stircum(isr)%phop(kdx)%crop_num
+                            ! we don't need any more
+                            exit
+                         end if
+                      end do
+                   end if
+                end do
+              end if
+             
+              !multiple the energy by the soil multiplier
+              local_op_energy = stircum(isr)%phop(idx)%phop_energy * get_stir_soil_multiplier(isr)
            
-           !multiple the energy by the soil multiplier
-           local_op_energy = stircum(isr)%phop(idx)%phop_energy * get_stir_soil_multiplier(isr)
-           
-           ! print this line
-           write(luostir(isr),1000) stircum(isr)%phop(idx)%phopday, stircum(isr)%phop(idx)%phopmon, &
+              ! print this line
+              write(luostir(isr),1000) stircum(isr)%phop(idx)%phopday, stircum(isr)%phop(idx)%phopmon, &
      &                         stircum(isr)%phop(idx)%phopyr,                         &
      &                         trim(stircum(isr)%phop(idx)%stir_opname),              &
      &                         trim(stircum(isr)%phop(idx)%stir_cropname),            &
      &                         trim(stircum(isr)%phop(idx)%stir_fuelname),            &
      &                         stircum(isr)%phop(idx)%phop_stir, local_op_energy,     &
      &                         stircum(isr)%phop(idx)%crop_num, stircum(isr)%phop(idx)%last_harv
-         end do
-         return
+            end do
+         end if
       end if
+      return
 
 1000  format (i2,'/',i2,'/',i4,3(' | ',a),2(' | ',f8.2),2(' | ',i1) )
 
