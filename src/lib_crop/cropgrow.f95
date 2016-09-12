@@ -484,6 +484,7 @@
                   bcthucum = 0.0
                   bcthu_shoot_beg = 0.0
                   bcthu_shoot_end = bc0hue
+                  bcdayam = 0
                   ! allow vernalization to start over (bluegrass uses this)
                   bctchillucum = 0.0
                   ! reset shoot grow configuration
