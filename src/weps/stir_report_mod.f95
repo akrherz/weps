@@ -12,6 +12,7 @@ module stir_report_mod
       character*80 stir_opname   ! operation name from operation input
       character*80 stir_cropname ! crop name associated with this operation if a harvest
       character*80 stir_fuelname ! fuel name associated with this operation, may be blank to indicate use of the default fuel as defined by the interface
+      integer phop_skip          ! skip operation flag, 0 = do every rotation, 1 = skip all but first instance (also skippped in the stir report)
       integer phop_type          ! operation type flag, 0 = not yet initialized, 1 = planting operation, 2 = harvest operation
       real phop_stir             ! STIR value for that operation
       real phop_energy           ! energy value for that operation
@@ -203,14 +204,16 @@ module stir_report_mod
                 local_op_energy = 0.0
               end if
            
-              ! print this line
-              write(luostir(isr),1000) stircum(isr)%phop(idx)%phopday, stircum(isr)%phop(idx)%phopmon, &
+              if( stircum(isr)%phop(idx)%phop_skip .eq. 0 ) then
+                ! print this line
+                write(luostir(isr),1000) stircum(isr)%phop(idx)%phopday, stircum(isr)%phop(idx)%phopmon, &
      &                         stircum(isr)%phop(idx)%phopyr,                         &
      &                         trim(stircum(isr)%phop(idx)%stir_opname),              &
      &                         trim(stircum(isr)%phop(idx)%stir_cropname),            &
      &                         trim(stircum(isr)%phop(idx)%stir_fuelname),            &
      &                         stircum(isr)%phop(idx)%phop_stir, local_op_energy,     &
      &                         stircum(isr)%phop(idx)%crop_num, stircum(isr)%phop(idx)%last_harv
+              end if
             end do
          end if
       end if

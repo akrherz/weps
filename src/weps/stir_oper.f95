@@ -47,6 +47,7 @@
       stircum(isr)%phop(stircum(isr)%phopidx)%phopyr = lastoper(isr)%yr
       stircum(isr)%phop(stircum(isr)%phopidx)%stir_opname = lastoper(isr)%name
       stircum(isr)%phop(stircum(isr)%phopidx)%stir_fuelname = lastoper(isr)%fuel
+      stircum(isr)%phop(stircum(isr)%phopidx)%phop_skip = lastoper(isr)%skip
 
       return
       end
