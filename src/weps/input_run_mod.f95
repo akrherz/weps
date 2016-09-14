@@ -4,6 +4,8 @@
 !$HeadURL$
 module input_run_mod
 
+   logical :: old_run_file
+
 contains
 
    subroutine inprun( n_rot_cycles )
@@ -68,8 +70,6 @@ contains
       integer       lui1
       integer    :: sum_stat, alloc_stat
       character*80     awwisn   ! made local since not used anywhere else
-
-      logical :: old_run_file
 
 !     + + + Local Variable Definitions + + +
 !     isr - subregion index counter

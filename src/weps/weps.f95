@@ -62,6 +62,7 @@
       use hydro_data_struct_defs
       use wepp_param_mod
       use climate_input_mod, only: cliginit, getcli, windinit, getwin
+      use input_run_mod, only: old_run_file
 
 ! build and release info, fpp created by cook
       include 'build.inc'
@@ -918,10 +919,12 @@
           if (report_debug >= 2) then
               call print_yr_report_vars(nperiods(0), mandatbs(0)%mperod, n_rot_cycles(0), rep_report(isr)%yr_report)
           end if
-          call sci_report( isr, cellstate )
-          call print_ui1_output(luogui1(isr), nperiods(isr), mandatbs(isr)%mperod, n_rot_cycles(isr), rep_report(isr), &
-                                mandatbs(isr)%mandate) !Use for new WEPS gui
-          call print_mandate_output(luomandate(isr), mandatbs(isr)%mperod, mandatbs(isr)%mandate)
+          if(  (.not. old_run_file .or. (nsubr .gt. 1)) .or. (isr .gt. 0) ) then
+             call sci_report( isr, cellstate )
+             call print_ui1_output(luogui1(isr), nperiods(isr), mandatbs(isr)%mperod, n_rot_cycles(isr), rep_report(isr), &
+                                   mandatbs(isr)%mandate) !Use for new WEPS gui
+             call print_mandate_output(luomandate(isr), mandatbs(isr)%mperod, mandatbs(isr)%mandate)
+          end if
       end do
 
       if ((run_erosion.eq.2).or.(run_erosion.eq.3)) then

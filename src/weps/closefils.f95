@@ -14,6 +14,7 @@
       use manage_data_struct_defs, only: am0tfl, am0tdb
       use crop_data_struct_defs, only: am0cfl, am0cdb
       use decomp_data_struct_defs, only: am0dfl, am0ddb
+      use input_run_mod, only: old_run_file
 
       include 'p1werm.inc'
       include 'wpath.inc'
@@ -48,8 +49,10 @@
 
 !     these files are opened at all times
 
-      close(luogui1(0))
-      close(luomandate(0))
+      if( .not. old_run_file .or. (nsubr .gt. 1) ) then
+         close(luogui1(0))
+         close(luomandate(0))
+      end if
       do idx = 1, nsubr
          close(luogui1(idx))
          close(luomandate(idx))

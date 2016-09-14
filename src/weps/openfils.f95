@@ -21,6 +21,7 @@
       use manage_data_struct_defs, only: am0tfl, am0tdb
       use crop_data_struct_defs, only: am0cfl, am0cdb
       use decomp_data_struct_defs, only: am0dfl, am0ddb
+      use input_run_mod, only: old_run_file
 
       include 'p1werm.inc'
       include 'wpath.inc'
@@ -50,10 +51,15 @@
 
       ! create subregion directory names
       do idx = 1, nsubr
-          ! create the name
-          subr_text(idx) = makenamnum( 'subregion', idx, nsubr, '/' )
-          ! create the subdirectory
-          call makedir(trim(rootp)//trim(subr_text(idx)) )
+         if( old_run_file .and. (nsubr .eq. 1) ) then
+            ! create the name
+            subr_text(idx) = ''
+         else
+            ! create the name
+            subr_text(idx) = makenamnum( 'subregion', idx, nsubr, '/' )
+            ! create the subdirectory
+            call makedir(trim(rootp)//trim(subr_text(idx)) )
+         end if
       end do
 
 !     these files are opened at all times
@@ -74,8 +80,10 @@
       if( sum_stat .gt. 0 ) then
          Write(*,*) 'ERROR: unable to allocate luomandate, luoharvest_, luohydrobal, luoseason arrays'
       end if
-      call fopenk (luogui1(0), trim(rootp) // 'gui1_data.out', 'unknown')
-      call fopenk (luomandate(0), trim(rootp) // 'mandate.out', 'unknown')
+      if( .not. old_run_file .or. (nsubr .gt. 1) ) then
+         call fopenk (luogui1(0), trim(rootp) // 'gui1_data.out', 'unknown')
+         call fopenk (luomandate(0), trim(rootp) // 'mandate.out', 'unknown')
+      end if
       do idx = 1, nsubr
          call fopenk (luogui1(idx), trim(rootp) // trim(subr_text(idx)) // 'gui1_data.out', 'unknown')
          call fopenk (luomandate(idx), trim(rootp) // trim(subr_text(idx)) // 'mandate.out', 'unknown')
@@ -144,7 +152,9 @@
          if( sum_stat .gt. 0 ) then
             Write(*,*) 'ERROR: unable to allocate luosci, luostir arrays'
          end if
-         call fopenk (luosci(0), trim(rootp) // 'sci_energy.out', 'unknown')
+         if( .not. old_run_file .or. (nsubr .gt. 1) ) then
+            call fopenk (luosci(0), trim(rootp) // 'sci_energy.out', 'unknown')
+         end if
          do idx = 1, nsubr
             call fopenk (luosci(idx), trim(rootp) // trim(subr_text(idx)) // 'sci_energy.out', 'unknown')
             call fopenk (luostir(idx), trim(rootp) // trim(subr_text(idx)) // 'stir_energy.out', 'unknown')
