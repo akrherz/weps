@@ -464,7 +464,8 @@ SUBROUTINE update_yrly_update_vars(isr, yrly_update, yrot_update, yr_update, cel
 END SUBROUTINE update_yrly_update_vars
 
 
-SUBROUTINE update_yrly_report_vars(cur_year, nrot_years, yrly_update, yrot_update, yr_update, yrly_report, yr_report)
+SUBROUTINE update_yrly_report_vars(cur_year, nrot_years, &
+                  yrly_update, yrot_update, yr_update, yrly_report, yr_report, yrly_dates, yr_dates)
 
     USE pd_dates_vars
     USE pd_var_type_def
@@ -479,6 +480,8 @@ SUBROUTINE update_yrly_report_vars(cur_year, nrot_years, yrly_update, yrot_updat
     TYPE (pd_var_type), DIMENSION(Min_yrly_vars:), intent(inout) :: yr_update
     TYPE (pd_var_type), DIMENSION(Min_yrly_vars:,0:), intent(inout) :: yrly_report
     TYPE (pd_var_type), DIMENSION(Min_yrly_vars:,:), intent(inout) :: yr_report
+    TYPE (pd_dates_type), DIMENSION(:), intent(inout) :: yrly_dates
+    TYPE (pd_dates_type), DIMENSION(:), intent(inout) :: yr_dates
 
     INTEGER :: i        ! local loop variables
     INTEGER :: rot_y    ! local variables

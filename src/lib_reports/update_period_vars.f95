@@ -423,7 +423,7 @@ SUBROUTINE update_period_update_vars(isr, period_update, restot, croptot, biotot
 END SUBROUTINE update_period_update_vars
 
 
-SUBROUTINE update_period_report_vars(pd, npd, cur_yr, nrot_years, period_update, period_report)
+SUBROUTINE update_period_report_vars(pd, npd, cur_yr, nrot_years, period_update, period_report, period_dates)
 
     USE pd_dates_vars
     USE pd_var_type_def
@@ -436,6 +436,7 @@ SUBROUTINE update_period_report_vars(pd, npd, cur_yr, nrot_years, period_update,
     INTEGER, INTENT (IN) :: nrot_years
     TYPE (pd_var_type), DIMENSION(Min_period_vars:), intent(inout) :: period_update
     TYPE (pd_var_type), DIMENSION(Min_period_vars:,:), intent(inout) :: period_report
+    TYPE (pd_dates_type), target, DIMENSION(:), intent(inout) :: period_dates
 
     INTEGER :: i    ! local loop variables
     INTEGER :: rot_y    ! local variables

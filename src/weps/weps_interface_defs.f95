@@ -1787,7 +1787,7 @@
 !------------------------------
 
 !--------------- REPORTS Routines ----------------------------
-    SUBROUTINE init_report_vars(nperiods, nrot_yrs, ncycles, mandate, rep_report, rep_update)
+    SUBROUTINE init_report_vars(nperiods, nrot_yrs, ncycles, mandate, rep_report, rep_update, rep_dates)
     USE pd_dates_vars
     USE pd_update_vars
     USE pd_report_vars
@@ -1798,6 +1798,7 @@
     type (opercrop_date), dimension(:), intent(in) :: mandate
     type(reporting_report), intent(inout) :: rep_report
     type(reporting_update), intent(inout) :: rep_update
+    type(reporting_dates), target, intent(inout) :: rep_dates
     end subroutine init_report_vars
 !----------------------
     SUBROUTINE print_mandate_output(lun, mperod, mandate)
@@ -1816,7 +1817,8 @@
     type (opercrop_date), dimension(:), intent(in) :: mandate
     end subroutine print_report_vars
 !-----------------------
-SUBROUTINE print_ui1_output(luogui1, nperiods, nrot_years, ncycles, rep_report, mandate)
+SUBROUTINE print_ui1_output(luogui1, nperiods, nrot_years, ncycles, rep_report, rep_dates, mandate)
+    USE pd_dates_vars
     USE pd_report_vars
     use mandate_mod, only: opercrop_date
     integer, intent(in) :: luogui1         ! subregion number for output file selection
@@ -1824,6 +1826,7 @@ SUBROUTINE print_ui1_output(luogui1, nperiods, nrot_years, ncycles, rep_report, 
     INTEGER, INTENT (IN) :: nrot_years
     INTEGER, INTENT (IN) :: ncycles
     type(reporting_report), intent(in) :: rep_report
+    type(reporting_dates), intent(in) :: rep_dates
     type (opercrop_date), dimension(:), intent(in) :: mandate
     end subroutine print_ui1_output
 !-----------------------
@@ -1880,7 +1883,7 @@ SUBROUTINE print_ui1_output(luogui1, nperiods, nrot_years, ncycles, rep_report, 
     type(hydro_derived_et), intent(in) :: h1et
     end subroutine  update_monthly_update_vars
 !------------------------
-SUBROUTINE update_monthly_report_vars(cur_month, cur_year, nrot_years, monthly_update, mrot_update, monthly_report)
+SUBROUTINE update_monthly_report_vars(cur_month, cur_year, nrot_years, monthly_update, mrot_update, monthly_report, monthly_dates)
     USE pd_var_type_def
     USE pd_var_tables
     INTEGER, INTENT (IN) :: cur_month
@@ -1889,6 +1892,7 @@ SUBROUTINE update_monthly_report_vars(cur_month, cur_year, nrot_years, monthly_u
     TYPE (pd_var_type), DIMENSION(Min_monthly_vars:), intent(inout) :: monthly_update
     TYPE (pd_var_type), DIMENSION(Min_monthly_vars:,:), intent(inout) :: mrot_update
     TYPE (pd_var_type), DIMENSION(Min_monthly_vars:,:,0:), intent(inout) :: monthly_report
+    TYPE (pd_dates_type), DIMENSION(:,:), intent(inout) :: monthly_dates
     end SUBROUTINE update_monthly_report_vars
 !------------------------
 SUBROUTINE update_period_update_vars(sbr, period_update, restot, croptot, biotot, cellstate, h1et)
@@ -1906,7 +1910,7 @@ SUBROUTINE update_period_update_vars(sbr, period_update, restot, croptot, biotot
     type(hydro_derived_et), intent(in) :: h1et
     end subroutine  update_period_update_vars
 !-------------------------
-SUBROUTINE update_period_report_vars(pd, npd, cur_yr, nrot_years, period_update, period_report)
+SUBROUTINE update_period_report_vars(pd, npd, cur_yr, nrot_years, period_update, period_report, period_dates)
     USE pd_var_type_def
     USE pd_var_tables
     INTEGER, INTENT (IN) :: pd, npd
@@ -1914,6 +1918,7 @@ SUBROUTINE update_period_report_vars(pd, npd, cur_yr, nrot_years, period_update,
     INTEGER, INTENT (IN) :: nrot_years
     TYPE (pd_var_type), DIMENSION(Min_period_vars:), intent(inout) :: period_update
     TYPE (pd_var_type), DIMENSION(Min_period_vars:,:), intent(inout) :: period_report
+    TYPE (pd_dates_type), target, DIMENSION(:), intent(inout) :: period_dates
     end SUBROUTINE update_period_report_vars
 !-------------------------            
     SUBROUTINE update_yrly_update_vars(isr, yrly_update, yrot_update, yr_update, cellstate, h1et)
@@ -1929,7 +1934,8 @@ SUBROUTINE update_period_report_vars(pd, npd, cur_yr, nrot_years, period_update,
     type(hydro_derived_et), intent(in) :: h1et
     end subroutine update_yrly_update_vars
 !-------------------------            
-    SUBROUTINE update_yrly_report_vars(cur_year, nrot_years, yrly_update, yrot_update, yr_update, yrly_report, yr_report)
+    SUBROUTINE update_yrly_report_vars(cur_year, nrot_years, &
+               yrly_update, yrot_update, yr_update, yrly_report, yr_report, yrly_dates, yr_dates)
     USE pd_var_type_def
     USE pd_var_tables
     INTEGER, INTENT (IN) :: nrot_years
@@ -1939,6 +1945,8 @@ SUBROUTINE update_period_report_vars(pd, npd, cur_yr, nrot_years, period_update,
     TYPE (pd_var_type), DIMENSION(Min_yrly_vars:), intent(inout) :: yr_update
     TYPE (pd_var_type), DIMENSION(Min_yrly_vars:,0:), intent(inout) :: yrly_report
     TYPE (pd_var_type), DIMENSION(Min_yrly_vars:,:), intent(inout) :: yr_report
+    TYPE (pd_dates_type), DIMENSION(:), intent(inout) :: yrly_dates
+    TYPE (pd_dates_type), DIMENSION(:), intent(inout) :: yr_dates
     end SUBROUTINE update_yrly_report_vars
 !-------------------------            
 !---------------  Soil Routines ------------------------------       

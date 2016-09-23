@@ -353,7 +353,7 @@ END IF  !Have_Erosion flag
 END SUBROUTINE update_monthly_update_vars
 
 ! Update both monthly and rot_month reporting variables
-SUBROUTINE update_monthly_report_vars(cur_month, cur_year, nrot_years, monthly_update, mrot_update, monthly_report)
+SUBROUTINE update_monthly_report_vars(cur_month, cur_year, nrot_years, monthly_update, mrot_update, monthly_report, monthly_dates)
 
     USE pd_dates_vars
     USE pd_var_type_def
@@ -367,6 +367,7 @@ SUBROUTINE update_monthly_report_vars(cur_month, cur_year, nrot_years, monthly_u
     TYPE (pd_var_type), DIMENSION(Min_monthly_vars:), intent(inout) :: monthly_update
     TYPE (pd_var_type), DIMENSION(Min_monthly_vars:,:), intent(inout) :: mrot_update
     TYPE (pd_var_type), DIMENSION(Min_monthly_vars:,:,0:), intent(inout) :: monthly_report
+    TYPE (pd_dates_type), DIMENSION(:,:), intent(inout) :: monthly_dates
 
     INTEGER :: i        ! local loop variables
     INTEGER :: rot_y    ! local variables

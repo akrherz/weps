@@ -75,7 +75,6 @@ FUNCTION get_nperiods (nrot_yrs, mandate)
         ! of normal periods is the 14th day of each month.
 
         DO i = 1, size(mandate) 
-            !print *, "op date: ", mandate(i)%d, mandate(i)%m, mandate(i)%y
             IF (mandate(i)%y <= nrot_yrs) THEN
                ! Check if not 1st day of month and
                ! not middle start period day of month
@@ -91,11 +90,9 @@ FUNCTION get_nperiods (nrot_yrs, mandate)
                     CONTINUE               ! no new period here
                   ELSE                       ! We must have a new period
                     nperiods = nperiods + 1
-                    !print *, "new period start date", nperiods, mandate(i)%d, mandate(i)%m, mandate(i)%y
                   END IF
                ELSE
                   nperiods = nperiods +1
-                  !print *, "first new period start date", nperiods, mandate(i)%d, mandate(i)%m, mandate(i)%y
                END IF
             END IF
         END DO

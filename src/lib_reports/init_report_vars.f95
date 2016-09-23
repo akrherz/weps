@@ -4,7 +4,7 @@
 !$Revision$
 !$HeadURL$
 !
-SUBROUTINE init_report_vars(nperiods, nrot_yrs, ncycles, mandate, rep_report, rep_update)
+SUBROUTINE init_report_vars(nperiods, nrot_yrs, ncycles, mandate, rep_report, rep_update, rep_dates)
 
     USE pd_dates_vars
     USE pd_update_vars
@@ -24,13 +24,14 @@ SUBROUTINE init_report_vars(nperiods, nrot_yrs, ncycles, mandate, rep_report, re
     type (opercrop_date), dimension(:), intent(in) :: mandate
     type(reporting_report), intent(inout) :: rep_report
     type(reporting_update), intent(inout) :: rep_update
+    type(reporting_dates), target, intent(inout) :: rep_dates
 
     INTEGER :: status = 0
     INTEGER :: i,p,hm,m,y,z        ! local loop variables
 
     include 'command.inc'          !declarations for commandline args
 
-    status = alloc_pd_vars(nperiods, nrot_yrs, ncycles, rep_report, rep_update) !Allocate space for all pd variables
+    status = alloc_pd_vars(nperiods, nrot_yrs, ncycles, rep_report, rep_update, rep_dates) !Allocate space for all pd variables
     IF (status >= 1) THEN
        write(0,*) "Status of alloc_pd_vars: ", status
        write(0,*) "Error allocating pd_vars"
@@ -42,21 +43,21 @@ SUBROUTINE init_report_vars(nperiods, nrot_yrs, ncycles, mandate, rep_report, re
     ! yrly dates
     DO y=0, nrot_yrs
         ! set "start" dates
-        yrly_dates(y)%sd = 1
-        yrly_dates(y)%sm = 1
+        rep_dates%yrly(y)%sd = 1
+        rep_dates%yrly(y)%sm = 1
         IF (y == 0) THEN
-            yrly_dates(y)%sy = 1
+            rep_dates%yrly(y)%sy = 1
         ELSE
-            yrly_dates(y)%sy = y
+            rep_dates%yrly(y)%sy = y
         END IF
 
         ! set "end" dates
-        yrly_dates(y)%ed = 31
-        yrly_dates(y)%em = 12
+        rep_dates%yrly(y)%ed = 31
+        rep_dates%yrly(y)%em = 12
         IF (y == 0) THEN
-            yrly_dates(y)%ey = nrot_yrs
+            rep_dates%yrly(y)%ey = nrot_yrs
         ELSE
-            yrly_dates(y)%ey = y
+            rep_dates%yrly(y)%ey = y
         END IF
     END DO
 
@@ -64,14 +65,14 @@ SUBROUTINE init_report_vars(nperiods, nrot_yrs, ncycles, mandate, rep_report, re
     ! For a year by year report of yearly (and rotation year) averaged variables
     DO y=1, nrot_yrs*ncycles
         ! set "start" dates
-        yr_dates(y)%sd = 1
-        yr_dates(y)%sm = 1
-        yr_dates(y)%sy = y
+        rep_dates%yr(y)%sd = 1
+        rep_dates%yr(y)%sm = 1
+        rep_dates%yr(y)%sy = y
 
         ! set "end" dates
-        yr_dates(y)%ed = 31
-        yr_dates(y)%em = 12
-        yr_dates(y)%ey = y
+        rep_dates%yr(y)%ed = 31
+        rep_dates%yr(y)%em = 12
+        rep_dates%yr(y)%ey = y
     END DO
 
 
@@ -79,28 +80,28 @@ SUBROUTINE init_report_vars(nperiods, nrot_yrs, ncycles, mandate, rep_report, re
     DO y=0, nrot_yrs
         DO m=1, 12
             ! set "start" dates
-            monthly_dates(m,y)%sd = 1
-            monthly_dates(m,y)%sm = m
+            rep_dates%monthly(m,y)%sd = 1
+            rep_dates%monthly(m,y)%sm = m
             IF (y == 0) THEN
-               monthly_dates(m,y)%sy = 1
+               rep_dates%monthly(m,y)%sy = 1
             ELSE
-               monthly_dates(m,y)%sy = y
+               rep_dates%monthly(m,y)%sy = y
             END IF
 
             ! set "end" dates
             IF ( (m==1).or.(m==3).or.(m==5).or.(m==7).or.   &
                  (m==8).or.(m==10).or.(m==12) ) THEN
-                monthly_dates(m,y)%ed = 31
+                rep_dates%monthly(m,y)%ed = 31
             ELSE IF ( (m==4).or.(m==6).or.(m==9).or.(m==11) ) THEN
-                monthly_dates(m,y)%ed = 30
+                rep_dates%monthly(m,y)%ed = 30
             ELSE   ! m==2 (Feb)
-                monthly_dates(m,y)%ed = 29
+                rep_dates%monthly(m,y)%ed = 29
             END IF
-            monthly_dates(m,y)%em = m 
+            rep_dates%monthly(m,y)%em = m 
             IF (y == 0) THEN
-               monthly_dates(m,y)%ey = nrot_yrs
+               rep_dates%monthly(m,y)%ey = nrot_yrs
             ELSE
-               monthly_dates(m,y)%ey = y
+               rep_dates%monthly(m,y)%ey = y
             END IF
         END DO
     END DO
@@ -113,43 +114,43 @@ SUBROUTINE init_report_vars(nperiods, nrot_yrs, ncycles, mandate, rep_report, re
           m = (hm+1)/2       ! determine the month of the half-month period
           !print *, "y/m/hm/i: ",y,m,hm,i
           IF (i == 1) THEN   ! 1st half of each month
-             hmonth_dates(hm,y)%sd = 1
-             hmonth_dates(hm,y)%sm = m
+             rep_dates%hmonth(hm,y)%sd = 1
+             rep_dates%hmonth(hm,y)%sm = m
              IF (y == 0) THEN
-                hmonth_dates(hm,y)%sy = 1
+                rep_dates%hmonth(hm,y)%sy = 1
              ELSE
-                hmonth_dates(hm,y)%sy = y
+                rep_dates%hmonth(hm,y)%sy = y
              END IF
 
-             hmonth_dates(hm,y)%ed = 14
-             hmonth_dates(hm,y)%em = m
+             rep_dates%hmonth(hm,y)%ed = 14
+             rep_dates%hmonth(hm,y)%em = m
              IF (y == 0) THEN
-                hmonth_dates(hm,y)%ey = nrot_yrs
+                rep_dates%hmonth(hm,y)%ey = nrot_yrs
              ELSE
-                hmonth_dates(hm,y)%ey = y
+                rep_dates%hmonth(hm,y)%ey = y
              END IF
           ELSE               ! 2nd half month period
-             hmonth_dates(hm,y)%sd = 15
-             hmonth_dates(hm,y)%sm = m
+             rep_dates%hmonth(hm,y)%sd = 15
+             rep_dates%hmonth(hm,y)%sm = m
              IF (y == 0) THEN
-                hmonth_dates(hm,y)%sy = 1
+                rep_dates%hmonth(hm,y)%sy = 1
              ELSE
-                hmonth_dates(hm,y)%sy = y
+                rep_dates%hmonth(hm,y)%sy = y
              END IF
 
              IF ( (m==1).or.(m==3).or.(m==5).or.(m==7).or.   &
                    (m==8).or.(m==10).or.(m==12) ) THEN
-                hmonth_dates(hm,y)%ed = 31
+                rep_dates%hmonth(hm,y)%ed = 31
              ELSE IF ( (m==4).or.(m==6).or.(m==9).or.(m==11) ) THEN
-                hmonth_dates(hm,y)%ed = 30
+                rep_dates%hmonth(hm,y)%ed = 30
              ELSE                                  ! m==2 (Feb)
-                hmonth_dates(hm,y)%ed = 29
+                rep_dates%hmonth(hm,y)%ed = 29
              END IF
-             hmonth_dates(hm,y)%em = m
+             rep_dates%hmonth(hm,y)%em = m
              IF (y == 0) THEN
-                hmonth_dates(hm,y)%ey = nrot_yrs
+                rep_dates%hmonth(hm,y)%ey = nrot_yrs
              ELSE
-                hmonth_dates(hm,y)%ey = y
+                rep_dates%hmonth(hm,y)%ey = y
              END IF
           END IF    
        END DO    
@@ -162,13 +163,13 @@ SUBROUTINE init_report_vars(nperiods, nrot_yrs, ncycles, mandate, rep_report, re
       DO m = 1, 12
         ! 1st half month period
         i = i + 1    
-        period_dates(i)%sd = 1
-        period_dates(i)%sm = m
-        period_dates(i)%sy = y
+        rep_dates%period(i)%sd = 1
+        rep_dates%period(i)%sm = m
+        rep_dates%period(i)%sy = y
 
-        period_dates(i)%ed = 14
-        period_dates(i)%em = m
-        period_dates(i)%ey = y
+        rep_dates%period(i)%ed = 14
+        rep_dates%period(i)%em = m
+        rep_dates%period(i)%ey = y
 
         ! Hmm, this doesn't look like an efficient way to do this
         ! but, if it works that will be fine for now
@@ -181,37 +182,37 @@ SUBROUTINE init_report_vars(nperiods, nrot_yrs, ncycles, mandate, rep_report, re
           if( mandate(z)%d >  1 .AND. mandate(z)%d < 15 .AND. &
               mandate(z)%m == m .AND. mandate(z)%y == y .AND. &
               !The next line checks for additional ops on same date
-              mandate(z)%d /= period_dates(i)%sd ) then
+              mandate(z)%d /= rep_dates%period(i)%sd ) then
             i = i + 1    
-            period_dates(i)%sd = mandate(z)%d 
-            period_dates(i)%sm = mandate(z)%m
-            period_dates(i)%sy = mandate(z)%y
+            rep_dates%period(i)%sd = mandate(z)%d 
+            rep_dates%period(i)%sm = mandate(z)%m
+            rep_dates%period(i)%sy = mandate(z)%y
 
-            period_dates(i)%ed = 14
-            period_dates(i)%em = m
-            period_dates(i)%ey = y
+            rep_dates%period(i)%ed = 14
+            rep_dates%period(i)%em = m
+            rep_dates%period(i)%ey = y
 
             ! Fix previous period end date (day)
-            period_dates(i-1)%ed = period_dates(i)%sd-1
+            rep_dates%period(i-1)%ed = rep_dates%period(i)%sd-1
           end if
         end do
 
         ! 2nd half month period
         i = i + 1
-        period_dates(i)%sd = 15
-        period_dates(i)%sm = m
-        period_dates(i)%sy = y
+        rep_dates%period(i)%sd = 15
+        rep_dates%period(i)%sm = m
+        rep_dates%period(i)%sy = y
 
         IF ( (m==1).or.(m==3).or.(m==5).or.(m==7).or.   &
             (m==8).or.(m==10).or.(m==12) ) THEN
-            period_dates(i)%ed = 31
+            rep_dates%period(i)%ed = 31
         ELSE IF ( (m==4).or.(m==6).or.(m==9).or.(m==11) ) THEN
-            period_dates(i)%ed = 30
+            rep_dates%period(i)%ed = 30
         ELSE                                  ! m==2 (Feb)
-            period_dates(i)%ed = 29
+            rep_dates%period(i)%ed = 29
         END IF
-        period_dates(i)%em = m
-        period_dates(i)%ey = y
+        rep_dates%period(i)%em = m
+        rep_dates%period(i)%ey = y
 
         ! Get all op dates in second "half" of month
         SELECT CASE (m)
@@ -221,19 +222,19 @@ SUBROUTINE init_report_vars(nperiods, nrot_yrs, ncycles, mandate, rep_report, re
               if( mandate(z)%d > 15 .AND. mandate(z)%d <= 31 .AND. &
                   mandate(z)%m == m .AND. mandate(z)%y ==  y .AND. &
                   !The next line checks for additional ops on same date
-                  mandate(z)%d /= period_dates(i)%sd ) then
+                  mandate(z)%d /= rep_dates%period(i)%sd ) then
                 i = i + 1    
-                period_dates(i)%sd = mandate(z)%d 
-                period_dates(i)%sm = mandate(z)%m
-                period_dates(i)%sy = mandate(z)%y
+                rep_dates%period(i)%sd = mandate(z)%d 
+                rep_dates%period(i)%sm = mandate(z)%m
+                rep_dates%period(i)%sy = mandate(z)%y
 
-                period_dates(i)%em = m
-                period_dates(i)%ey = y
+                rep_dates%period(i)%em = m
+                rep_dates%period(i)%ey = y
 
-                period_dates(i)%ed = 31
+                rep_dates%period(i)%ed = 31
 
                 ! Fix previous period end date (day)
-                period_dates(i-1)%ed = period_dates(i)%sd-1
+                rep_dates%period(i-1)%ed = rep_dates%period(i)%sd-1
               end if
             end do
 
@@ -242,19 +243,19 @@ SUBROUTINE init_report_vars(nperiods, nrot_yrs, ncycles, mandate, rep_report, re
               if( mandate(z)%d > 15 .AND. mandate(z)%d <= 30 .AND. &
                   mandate(z)%m == m .AND. mandate(z)%y ==  y .AND. &
                   !The next line checks for additional ops on same date
-                  mandate(z)%d /= period_dates(i)%sd ) then
+                  mandate(z)%d /= rep_dates%period(i)%sd ) then
                 i = i + 1    
-                period_dates(i)%sd = mandate(z)%d 
-                period_dates(i)%sm = mandate(z)%m
-                period_dates(i)%sy = mandate(z)%y
+                rep_dates%period(i)%sd = mandate(z)%d 
+                rep_dates%period(i)%sm = mandate(z)%m
+                rep_dates%period(i)%sy = mandate(z)%y
 
-                period_dates(i)%em = m
-                period_dates(i)%ey = y
+                rep_dates%period(i)%em = m
+                rep_dates%period(i)%ey = y
 
-                period_dates(i)%ed = 30
+                rep_dates%period(i)%ed = 30
 
                 ! Fix previous period end date (day)
-                period_dates(i-1)%ed = period_dates(i)%sd-1
+                rep_dates%period(i-1)%ed = rep_dates%period(i)%sd-1
               end if
             end do
           CASE DEFAULT
@@ -262,19 +263,19 @@ SUBROUTINE init_report_vars(nperiods, nrot_yrs, ncycles, mandate, rep_report, re
               if( mandate(z)%d > 15 .AND. mandate(z)%d <= 29 .AND. &
                   mandate(z)%m == m .AND. mandate(z)%y ==  y .AND. &
                   !The next line checks for additional ops on same date
-                  mandate(z)%d /= period_dates(i)%sd ) then
+                  mandate(z)%d /= rep_dates%period(i)%sd ) then
                 i = i + 1    
-                period_dates(i)%sd = mandate(z)%d 
-                period_dates(i)%sm = mandate(z)%m
-                period_dates(i)%sy = mandate(z)%y
+                rep_dates%period(i)%sd = mandate(z)%d 
+                rep_dates%period(i)%sm = mandate(z)%m
+                rep_dates%period(i)%sy = mandate(z)%y
 
-                period_dates(i)%em = m
-                period_dates(i)%ey = y
+                rep_dates%period(i)%em = m
+                rep_dates%period(i)%ey = y
 
-                period_dates(i)%ed = 29
+                rep_dates%period(i)%ed = 29
 
                 ! Fix previous period end date (day)
-                period_dates(i-1)%ed = period_dates(i)%sd-1
+                rep_dates%period(i-1)%ed = rep_dates%period(i)%sd-1
               end if
             end do
         END SELECT
@@ -347,32 +348,32 @@ SUBROUTINE init_report_vars(nperiods, nrot_yrs, ncycles, mandate, rep_report, re
 
         ! yrly dates
         DO y=0, nrot_yrs
-            print *, "yrly_dates(",y,")", yrly_dates(y)
+            print *, "rep_dates%yrly(",y,")", rep_dates%yrly(y)
         END DO
 
         ! monthly dates
         DO y=0, nrot_yrs
             DO m=1, 12
-              print *, "monthly_dates(",m,",",y,")", monthly_dates(m,y)
+              print *, "rep_dates%monthly(",m,",",y,")", rep_dates%monthly(m,y)
             END DO
         END DO
 
         ! half month dates
         DO y=0, nrot_yrs
             DO hm=1, 24
-              print *, "hmonth_dates(",hm,",",y,")", hmonth_dates(hm,y)
+              print *, "rep_dates%hmonth(",hm,",",y,")", rep_dates%hmonth(hm,y)
             END DO
         END DO
 
         ! period dates
         DO i=1, nperiods
-            print *, "period_dates(",i,")", period_dates(i)
+            print *, "rep_dates%period(",i,")", rep_dates%period(i)
         END DO
 
         ! yr dates
         ! For a year by year report of yearly (and rotation year) averaged variables
         DO y=1, nrot_yrs*ncycles
-            print *, "yr_dates(",y,")", yr_dates(y)
+            print *, "rep_dates%yr(",y,")", rep_dates%yr(y)
         END DO
     end if
 
@@ -439,8 +440,8 @@ SUBROUTINE init_report_vars(nperiods, nrot_yrs, ncycles, mandate, rep_report, re
      ! Note that we are intentionally evaluating only one variable here for debugging purposes - LEW
      DO i=Min_yrly_vars,Min_yrly_vars
        DO y=0,nrot_yrs
-         IF (.not. ASSOCIATED(rep_report%yrly_report(i,y)%date,yrly_dates(y))) THEN
-           print *, "Error: rep_report%yrly_report(",i,y,")%date not ASSOCIATED with yrly_dates(",y,")"
+         IF (.not. ASSOCIATED(rep_report%yrly_report(i,y)%date,rep_dates%yrly(y))) THEN
+           print *, "Error: rep_report%yrly_report(",i,y,")%date not ASSOCIATED with rep_dates%yrly(",y,")"
          ELSE
            print *, "rep_report%yrly_report(",i,",",y,")%val,cnt,date", rep_report%yrly_report(i,y)%val,   &
                   rep_report%yrly_report(i,y)%cnt, rep_report%yrly_report(i,y)%date
@@ -450,8 +451,8 @@ SUBROUTINE init_report_vars(nperiods, nrot_yrs, ncycles, mandate, rep_report, re
      ! Note that we are intentionally evaluating only one variable here for debugging purposes - LEW
      DO i=Max_yrly_vars,Max_yrly_vars
        DO y=0,nrot_yrs
-         IF (.not. ASSOCIATED(rep_report%yrly_report(i,y)%date,yrly_dates(y))) THEN
-           print *, "Error: rep_report%yrly_report(",i,y,")%date not ASSOCIATED with yrly_dates(",y,")"
+         IF (.not. ASSOCIATED(rep_report%yrly_report(i,y)%date,rep_dates%yrly(y))) THEN
+           print *, "Error: rep_report%yrly_report(",i,y,")%date not ASSOCIATED with rep_dates%yrly(",y,")"
          ELSE
            print *, "rep_report%yrly_report(",i,",",y,")%val,cnt,date", rep_report%yrly_report(i,y)%val,   &
                   rep_report%yrly_report(i,y)%cnt, rep_report%yrly_report(i,y)%date
@@ -464,8 +465,8 @@ SUBROUTINE init_report_vars(nperiods, nrot_yrs, ncycles, mandate, rep_report, re
        DO y=0,nrot_yrs
          ! Note that we are intentionally evaluating only one m period here for debugging purposes - LEW
          DO m=1,1
-           IF (.not. ASSOCIATED(rep_report%monthly_report(i,m,y)%date,monthly_dates(m,y))) THEN
-             print *, "Error: rep_report%monthly_report(",i,m,y,")%date not ASSOCIATED with monthly_dates(",m,y,")"
+           IF (.not. ASSOCIATED(rep_report%monthly_report(i,m,y)%date,rep_dates%monthly(m,y))) THEN
+             print *, "Error: rep_report%monthly_report(",i,m,y,")%date not ASSOCIATED with rep_dates%monthly(",m,y,")"
            ELSE
              print *, "rep_report%monthly_report(",i, ",",m,",",y,")%val,cnt,date", rep_report%monthly_report(i,m,y)%val,   &
                   rep_report%monthly_report(i,m,y)%cnt, rep_report%monthly_report(i,m,y)%date
@@ -473,8 +474,8 @@ SUBROUTINE init_report_vars(nperiods, nrot_yrs, ncycles, mandate, rep_report, re
          END DO
          ! Note that we are intentionally evaluating only one m period here for debugging purposes - LEW
          DO m=12,12
-           IF (.not. ASSOCIATED(rep_report%monthly_report(i,m,y)%date,monthly_dates(m,y))) THEN
-             print *, "Error: rep_report%monthly_report(",i,m,y,")%date not ASSOCIATED with monthly_dates(",m,y,")"
+           IF (.not. ASSOCIATED(rep_report%monthly_report(i,m,y)%date,rep_dates%monthly(m,y))) THEN
+             print *, "Error: rep_report%monthly_report(",i,m,y,")%date not ASSOCIATED with rep_dates%monthly(",m,y,")"
            ELSE
              print *, "rep_report%monthly_report(",i, ",",m,",",y,")%val,cnt,date", rep_report%monthly_report(i,m,y)%val,   &
                   rep_report%monthly_report(i,m,y)%cnt, rep_report%monthly_report(i,m,y)%date
@@ -488,8 +489,8 @@ SUBROUTINE init_report_vars(nperiods, nrot_yrs, ncycles, mandate, rep_report, re
        DO y=0,nrot_yrs
          ! Note that we are intentionally evaluating only one m period here for debugging purposes - LEW
          DO m=1,1
-           IF (.not. ASSOCIATED(rep_report%monthly_report(i,m,y)%date,monthly_dates(m,y))) THEN
-             print *, "Error: rep_report%monthly_report(",i,m,y,")%date not ASSOCIATED with monthly_dates(",m,y,")"
+           IF (.not. ASSOCIATED(rep_report%monthly_report(i,m,y)%date,rep_dates%monthly(m,y))) THEN
+             print *, "Error: rep_report%monthly_report(",i,m,y,")%date not ASSOCIATED with rep_dates%monthly(",m,y,")"
            ELSE
              print *, "rep_report%monthly_report(",i, ",",m,",",y,")%val,cnt,date", rep_report%monthly_report(i,m,y)%val,   &
                   rep_report%monthly_report(i,m,y)%cnt, rep_report%monthly_report(i,m,y)%date
@@ -497,8 +498,8 @@ SUBROUTINE init_report_vars(nperiods, nrot_yrs, ncycles, mandate, rep_report, re
          END DO
          ! Note that we are intentionally evaluating only one m period here for debugging purposes - LEW
          DO m=12,12
-           IF (.not. ASSOCIATED(rep_report%monthly_report(i,m,y)%date,monthly_dates(m,y))) THEN
-             print *, "Error: rep_report%monthly_report(",i,m,y,")%date not ASSOCIATED with monthly_dates(",m,y,")"
+           IF (.not. ASSOCIATED(rep_report%monthly_report(i,m,y)%date,rep_dates%monthly(m,y))) THEN
+             print *, "Error: rep_report%monthly_report(",i,m,y,")%date not ASSOCIATED with rep_dates%monthly(",m,y,")"
            ELSE
              print *, "rep_report%monthly_report(",i, ",",m,",",y,")%val,cnt,date", rep_report%monthly_report(i,m,y)%val,   &
                   rep_report%monthly_report(i,m,y)%cnt, rep_report%monthly_report(i,m,y)%date
@@ -512,8 +513,8 @@ SUBROUTINE init_report_vars(nperiods, nrot_yrs, ncycles, mandate, rep_report, re
        DO y=0,nrot_yrs
          ! Note that we are intentionally evaluating only one hm period here for debugging purposes - LEW
          DO hm=1,1
-           IF (.not. ASSOCIATED(rep_report%hmonth_report(i,hm,y)%date,hmonth_dates(hm,y))) THEN
-               print *, "Error: rep_report%hmonth_report(",i,hm,y,")%date not ASSOCIATED with hmonth_dates(",hm,y,")"
+           IF (.not. ASSOCIATED(rep_report%hmonth_report(i,hm,y)%date,rep_dates%hmonth(hm,y))) THEN
+               print *, "Error: rep_report%hmonth_report(",i,hm,y,")%date not ASSOCIATED with rep_dates%hmonth(",hm,y,")"
            ELSE
              print *, "rep_report%hmonth_report(",i, ",",hm,",",y,")%val,cnt,date", rep_report%hmonth_report(i,hm,y)%val,   &
                   rep_report%hmonth_report(i,hm,y)%cnt, rep_report%hmonth_report(i,hm,y)%date
@@ -521,8 +522,8 @@ SUBROUTINE init_report_vars(nperiods, nrot_yrs, ncycles, mandate, rep_report, re
          END DO
          ! Note that we are intentionally evaluating only one hm period here for debugging purposes - LEW
          DO hm=24,24
-           IF (.not. ASSOCIATED(rep_report%hmonth_report(i,hm,y)%date,hmonth_dates(hm,y))) THEN
-               print *, "Error: rep_report%hmonth_report(",i,hm,y,")%date not ASSOCIATED with hmonth_dates(",hm,y,")"
+           IF (.not. ASSOCIATED(rep_report%hmonth_report(i,hm,y)%date,rep_dates%hmonth(hm,y))) THEN
+               print *, "Error: rep_report%hmonth_report(",i,hm,y,")%date not ASSOCIATED with rep_dates%hmonth(",hm,y,")"
            ELSE
              print *, "rep_report%hmonth_report(",i, ",",hm,",",y,")%val,cnt,date", rep_report%hmonth_report(i,hm,y)%val,   &
                   rep_report%hmonth_report(i,hm,y)%cnt, rep_report%hmonth_report(i,hm,y)%date
@@ -535,8 +536,8 @@ SUBROUTINE init_report_vars(nperiods, nrot_yrs, ncycles, mandate, rep_report, re
        DO y=0,nrot_yrs
          ! Note that we are intentionally evaluating only one hm period here for debugging purposes - LEW
          DO hm=1,1
-           IF (.not. ASSOCIATED(rep_report%hmonth_report(i,hm,y)%date,hmonth_dates(hm,y))) THEN
-               print *, "Error: rep_report%hmonth_report(",i,hm,y,")%date not ASSOCIATED with hmonth_dates(",hm,y,")"
+           IF (.not. ASSOCIATED(rep_report%hmonth_report(i,hm,y)%date,rep_dates%hmonth(hm,y))) THEN
+               print *, "Error: rep_report%hmonth_report(",i,hm,y,")%date not ASSOCIATED with rep_dates%hmonth(",hm,y,")"
            ELSE
              print *, "rep_report%hmonth_report(",i, ",",hm,",",y,")%val,cnt,date", rep_report%hmonth_report(i,hm,y)%val,   &
                   rep_report%hmonth_report(i,hm,y)%cnt, rep_report%hmonth_report(i,hm,y)%date
@@ -544,8 +545,8 @@ SUBROUTINE init_report_vars(nperiods, nrot_yrs, ncycles, mandate, rep_report, re
          END DO
          ! Note that we are intentionally evaluating only one hm period here for debugging purposes - LEW
          DO hm=24,24
-           IF (.not. ASSOCIATED(rep_report%hmonth_report(i,hm,y)%date,hmonth_dates(hm,y))) THEN
-               print *, "Error: rep_report%hmonth_report(",i,hm,y,")%date not ASSOCIATED with hmonth_dates(",hm,y,")"
+           IF (.not. ASSOCIATED(rep_report%hmonth_report(i,hm,y)%date,rep_dates%hmonth(hm,y))) THEN
+               print *, "Error: rep_report%hmonth_report(",i,hm,y,")%date not ASSOCIATED with rep_dates%hmonth(",hm,y,")"
            ELSE
              print *, "rep_report%hmonth_report(",i, ",",hm,",",y,")%val,cnt,date", rep_report%hmonth_report(i,hm,y)%val,   &
                   rep_report%hmonth_report(i,hm,y)%cnt, rep_report%hmonth_report(i,hm,y)%date
@@ -558,8 +559,8 @@ SUBROUTINE init_report_vars(nperiods, nrot_yrs, ncycles, mandate, rep_report, re
      DO i=Min_period_vars,Min_period_vars
          ! Note that we are intentionally evaluating only one period here for debugging purposes - LEW
          DO p=1,1
-           IF (.not. ASSOCIATED(rep_report%period_report(i,p)%date,period_dates(p))) THEN
-              print *, "Error: rep_report%period_report(",i,p,")%date not ASSOCIATED with period_dates(",p,")"
+           IF (.not. ASSOCIATED(rep_report%period_report(i,p)%date,rep_dates%period(p))) THEN
+              print *, "Error: rep_report%period_report(",i,p,")%date not ASSOCIATED with rep_dates%period(",p,")"
            ELSE
               print *, "rep_report%period_report(",i,",",p,")%val,cnt,date", rep_report%period_report(i,p)%val,   &
                  rep_report%period_report(i,p)%cnt,rep_report%period_report(i,p)%date
@@ -567,8 +568,8 @@ SUBROUTINE init_report_vars(nperiods, nrot_yrs, ncycles, mandate, rep_report, re
          END DO
          ! Note that we are intentionally evaluating only one period here for debugging purposes - LEW
          DO p=nperiods,nperiods
-           IF (.not. ASSOCIATED(rep_report%period_report(i,p)%date,period_dates(p))) THEN
-              print *, "Error: rep_report%period_report(",i,p,")%date not ASSOCIATED with period_dates(",p,")"
+           IF (.not. ASSOCIATED(rep_report%period_report(i,p)%date,rep_dates%period(p))) THEN
+              print *, "Error: rep_report%period_report(",i,p,")%date not ASSOCIATED with rep_dates%period(",p,")"
            ELSE
               print *, "rep_report%period_report(",i,",",p,")%val,cnt,date", rep_report%period_report(i,p)%val,   &
                  rep_report%period_report(i,p)%cnt,rep_report%period_report(i,p)%date
@@ -579,8 +580,8 @@ SUBROUTINE init_report_vars(nperiods, nrot_yrs, ncycles, mandate, rep_report, re
      DO i=Max_period_vars,Max_period_vars
          ! Note that we are intentionally evaluating only one period here for debugging purposes - LEW
          DO p=1,1
-           IF (.not. ASSOCIATED(rep_report%period_report(i,p)%date,period_dates(p))) THEN
-              print *, "Error: rep_report%period_report(",i,p,")%date not ASSOCIATED with period_dates(",p,")"
+           IF (.not. ASSOCIATED(rep_report%period_report(i,p)%date,rep_dates%period(p))) THEN
+              print *, "Error: rep_report%period_report(",i,p,")%date not ASSOCIATED with rep_dates%period(",p,")"
            ELSE
               print *, "rep_report%period_report(",i,",",p,")%val,cnt,date", rep_report%period_report(i,p)%val,   &
                  rep_report%period_report(i,p)%cnt,rep_report%period_report(i,p)%date
@@ -588,8 +589,8 @@ SUBROUTINE init_report_vars(nperiods, nrot_yrs, ncycles, mandate, rep_report, re
          END DO
          ! Note that we are intentionally evaluating only one period here for debugging purposes - LEW
          DO p=nperiods,nperiods
-           IF (.not. ASSOCIATED(rep_report%period_report(i,p)%date,period_dates(p))) THEN
-              print *, "Error: rep_report%period_report(",i,p,")%date not ASSOCIATED with period_dates(",p,")"
+           IF (.not. ASSOCIATED(rep_report%period_report(i,p)%date,rep_dates%period(p))) THEN
+              print *, "Error: rep_report%period_report(",i,p,")%date not ASSOCIATED with rep_dates%period(",p,")"
            ELSE
               print *, "rep_report%period_report(",i,",",p,")%val,cnt,date", rep_report%period_report(i,p)%val,   &
                  rep_report%period_report(i,p)%cnt,rep_report%period_report(i,p)%date
@@ -601,8 +602,8 @@ SUBROUTINE init_report_vars(nperiods, nrot_yrs, ncycles, mandate, rep_report, re
      ! Note that we are intentionally evaluating only one variable here for debugging purposes - LEW
      DO i=Min_yrly_vars,Min_yrly_vars
        DO y=1,nrot_yrs*ncycles
-         IF (.not. ASSOCIATED(rep_report%yr_report(i,y)%date,yr_dates(y))) THEN
-           print *, "Error: rep_report%yr_report(",i,y,")%date not ASSOCIATED with yr_dates(",y,")"
+         IF (.not. ASSOCIATED(rep_report%yr_report(i,y)%date,rep_dates%yr(y))) THEN
+           print *, "Error: rep_report%yr_report(",i,y,")%date not ASSOCIATED with rep_dates%yr(",y,")"
          ELSE
            print *, "rep_report%yr_report(",i,",",y,")%val,cnt,date", rep_report%yr_report(i,y)%val,   &
                   rep_report%yr_report(i,y)%cnt, rep_report%yr_report(i,y)%date

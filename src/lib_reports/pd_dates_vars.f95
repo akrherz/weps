@@ -12,11 +12,15 @@ MODULE pd_dates_vars
 
     USE pd_dates_type_def
 
-    ! "pd_dates" structures used by "pd_update" structures
-    TYPE (pd_dates_type),DIMENSION(:), TARGET, ALLOCATABLE :: yrly_dates
-    TYPE (pd_dates_type),DIMENSION(:,:), TARGET, ALLOCATABLE :: monthly_dates
-    TYPE (pd_dates_type),DIMENSION(:,:), TARGET, ALLOCATABLE :: hmonth_dates
-    TYPE (pd_dates_type),DIMENSION(:), TARGET, ALLOCATABLE :: period_dates
-    TYPE (pd_dates_type),DIMENSION(:), TARGET, ALLOCATABLE :: yr_dates
+    IMPLICIT NONE
+
+    type :: reporting_dates
+       ! "pd_dates" structures used by "pd_update" structures
+       TYPE (pd_dates_type),DIMENSION(:), ALLOCATABLE :: yrly
+       TYPE (pd_dates_type),DIMENSION(:,:), ALLOCATABLE :: monthly
+       TYPE (pd_dates_type),DIMENSION(:,:), ALLOCATABLE :: hmonth
+       TYPE (pd_dates_type),DIMENSION(:), ALLOCATABLE :: period
+       TYPE (pd_dates_type),DIMENSION(:), ALLOCATABLE :: yr
+    end type reporting_dates
 
 END MODULE pd_dates_vars

@@ -7,7 +7,7 @@
 MODULE alloc_pd_vars_func
 
 contains
-  FUNCTION alloc_pd_vars (nperiods, nrot_yrs, ncycles, rep_report, rep_update)
+  FUNCTION alloc_pd_vars (nperiods, nrot_yrs, ncycles, rep_report, rep_update, rep_dates)
 
     USE pd_var_type_def
     USE pd_dates_vars
@@ -26,6 +26,7 @@ contains
     INTEGER, INTENT (IN) :: ncycles    ! number of rotation cycles
     type(reporting_report), intent(inout) :: rep_report
     type(reporting_update), intent(inout) :: rep_update
+    type(reporting_dates), target, intent(inout) :: rep_dates
 
     INTRINSIC ASSOCIATED                ! use to verify status of pointers
 
@@ -149,40 +150,40 @@ contains
     END IF
 
 ! Allocate for reporting period dates
-    IF (.not. ALLOCATED (yrly_dates)) then
-        ALLOCATE (yrly_dates(0:nrot_yrs), STAT = alloc_status) 
+    IF (.not. ALLOCATED (rep_dates%yrly)) then
+        ALLOCATE (rep_dates%yrly(0:nrot_yrs), STAT = alloc_status) 
         IF (alloc_status /= 0) THEN
-            print *, "Error allocating yrly_dates(0:nrot_yrs)"
+            print *, "Error allocating rep_dates%yrly(0:nrot_yrs)"
             ret_status = ret_status + alloc_status
         END IF
     END IF
-    IF (.not. ALLOCATED (monthly_dates)) then
-        ALLOCATE (monthly_dates(1:12,0:nrot_yrs), STAT = alloc_status) 
+    IF (.not. ALLOCATED (rep_dates%monthly)) then
+        ALLOCATE (rep_dates%monthly(1:12,0:nrot_yrs), STAT = alloc_status) 
         IF (alloc_status /= 0) THEN
-            print *, "Error allocating monthly_dates(1:12,0:nrot_yrs)"
+            print *, "Error allocating rep_dates%monthly(1:12,0:nrot_yrs)"
             ret_status = ret_status + alloc_status
         END IF
     END IF
-    IF (.not. ALLOCATED (hmonth_dates)) then
-        ALLOCATE (hmonth_dates(1:24,0:nrot_yrs), STAT = alloc_status) 
+    IF (.not. ALLOCATED (rep_dates%hmonth)) then
+        ALLOCATE (rep_dates%hmonth(1:24,0:nrot_yrs), STAT = alloc_status) 
         IF (alloc_status /= 0) THEN
-            print *, "Error allocating hmonth_dates(1:24,0:nrot_yrs)"
+            print *, "Error allocating rep_dates%hmonth(1:24,0:nrot_yrs)"
             ret_status = ret_status + alloc_status
         END IF
     END IF
-    IF (.not. ALLOCATED (period_dates)) then
-        ALLOCATE (period_dates(1:nperiods), STAT = alloc_status) 
+    IF (.not. ALLOCATED (rep_dates%period)) then
+        ALLOCATE (rep_dates%period(1:nperiods), STAT = alloc_status) 
         IF (alloc_status /= 0) THEN
-            print *, "Error allocating period_dates(1:nperiods)"
+            print *, "Error allocating rep_dates%period(1:nperiods)"
             ret_status = ret_status + alloc_status
         END IF
     END IF
 
     ! For a year by year report of yearly (and rotation year) averaged variables
-    IF (.not. ALLOCATED (yr_dates)) then
-        ALLOCATE (yr_dates(1:nrot_yrs*ncycles), STAT = alloc_status) 
+    IF (.not. ALLOCATED (rep_dates%yr)) then
+        ALLOCATE (rep_dates%yr(1:nrot_yrs*ncycles), STAT = alloc_status) 
         IF (alloc_status /= 0) THEN
-            print *, "Error allocating yr_dates(1:nrot_yrs*ncycles)"
+            print *, "Error allocating rep_dates%yr(1:nrot_yrs*ncycles)"
             ret_status = ret_status + alloc_status
         END IF
     END IF
@@ -191,11 +192,11 @@ contains
 ! Associate "dates" pointers in "report" variable structures
     do i=Min_yrly_vars, Max_yrly_vars
       do y=0, nrot_yrs
-        rep_report%yrly_report(i,y)%date => yrly_dates(y)
+        rep_report%yrly_report(i,y)%date => rep_dates%yrly(y)
         IF (.not. ASSOCIATED(rep_report%yrly_report(i,y)%date)) THEN
-        !IF (.not. ASSOCIATED(rep_report%yrly_report(i,y)%date,yrly_dates(y))) THEN
-           write(0,*) "Error: rep_report%yrly_report(",i,y,")%date not ASSOCIATED with yrly_dates(",y,")"
-           write(0,*) "Error: rep_report%yrly_report var not associated with a yrly_dates var"
+        !IF (.not. ASSOCIATED(rep_report%yrly_report(i,y)%date,rep_dates%yrly(y))) THEN
+           write(0,*) "Error: rep_report%yrly_report(",i,y,")%date not ASSOCIATED with rep_dates%yrly(",y,")"
+           write(0,*) "Error: rep_report%yrly_report var not associated with a rep_dates%yrly var"
            call exit (1)
         END IF
       end do
@@ -204,11 +205,11 @@ contains
     do i=Min_monthly_vars, Max_monthly_vars
       do m=1, 12 !for each month
         do y=0, nrot_yrs
-        rep_report%monthly_report(i,m,y)%date => monthly_dates(m,y)
+        rep_report%monthly_report(i,m,y)%date => rep_dates%monthly(m,y)
         IF (.not. ASSOCIATED(rep_report%monthly_report(i,m,y)%date)) THEN
-        !IF (.not. ASSOCIATED(rep_report%monthly_report(i,m,y)%date,monthly_dates(m,y))) THEN
-           write(0,*) "Error: rep_report%monthly_report(",i,m,y,")%date not ASSOCIATED with monthly_dates(",m,y,")"
-           write(0,*) "Error: rep_report%monthly_report var not associated with a monthly_dates var"
+        !IF (.not. ASSOCIATED(rep_report%monthly_report(i,m,y)%date,rep_dates%monthly(m,y))) THEN
+           write(0,*) "Error: rep_report%monthly_report(",i,m,y,")%date not ASSOCIATED with rep_dates%monthly(",m,y,")"
+           write(0,*) "Error: rep_report%monthly_report var not associated with a rep_dates%monthly var"
            call exit (1)
         END IF
         end do
@@ -218,11 +219,11 @@ contains
     do i=Min_hmonth_vars, Max_hmonth_vars
       do hm=1, 24
         do y=0, nrot_yrs
-          rep_report%hmonth_report(i,hm,y)%date => hmonth_dates(hm,y)
+          rep_report%hmonth_report(i,hm,y)%date => rep_dates%hmonth(hm,y)
           IF (.not. ASSOCIATED(rep_report%hmonth_report(i,hm,y)%date)) THEN
-          !IF (.not. ASSOCIATED(rep_report%hmonth_report(i,hm,y)%date,hmonth_dates(hm,y))) THEN
-             write(0,*) "Error: rep_report%hmonth_report(",i,hm,y,")%date not ASSOCIATED with hmonth_dates(",hm,y,")"
-             write(0,*) "Error: rep_report%hmonth_report var not associated with a hmonth_dates var"
+          !IF (.not. ASSOCIATED(rep_report%hmonth_report(i,hm,y)%date,rep_dates%hmonth(hm,y))) THEN
+             write(0,*) "Error: rep_report%hmonth_report(",i,hm,y,")%date not ASSOCIATED with rep_dates%hmonth(",hm,y,")"
+             write(0,*) "Error: rep_report%hmonth_report var not associated with a rep_dates%hmonth var"
              call exit (1)
           END IF
         end do
@@ -231,11 +232,11 @@ contains
 
     do i=Min_period_vars, Max_period_vars
       do p=1, nperiods
-        rep_report%period_report(i,p)%date => period_dates(p)
+        rep_report%period_report(i,p)%date => rep_dates%period(p)
         IF (.not. ASSOCIATED(rep_report%period_report(i,p)%date)) THEN
-        !IF (.not. ASSOCIATED(rep_report%period_report(i,p)%date,period_dates(p))) THEN
-           write(0,*) "Error: rep_report%period_report(",i,p,")%date not ASSOCIATED with period_dates(",p,")"
-           write(0,*) "Error: rep_report%period_report var not associated with a period_dates var"
+        !IF (.not. ASSOCIATED(rep_report%period_report(i,p)%date,rep_dates%period(p))) THEN
+           write(0,*) "Error: rep_report%period_report(",i,p,")%date not ASSOCIATED with rep_dates%period(",p,")"
+           write(0,*) "Error: rep_report%period_report var not associated with a rep_dates%period var"
            call exit (1)
         END IF
       end do
@@ -244,11 +245,11 @@ contains
     ! For a year by year report of yearly (and rotation year) averaged variables
     do i=Min_yrly_vars, Max_yrly_vars
       do y=1, nrot_yrs*ncycles
-        rep_report%yr_report(i,y)%date => yr_dates(y)
+        rep_report%yr_report(i,y)%date => rep_dates%yr(y)
         IF (.not. ASSOCIATED(rep_report%yr_report(i,y)%date)) THEN
-        !IF (.not. ASSOCIATED(rep_report%yr_report(i,y)%date,yr_dates(y))) THEN
-           write(0,*) "Error: rep_report%yr_report(",i,y,")%date not ASSOCIATED with yr_dates(",y,")"
-           write(0,*) "Error: rep_report%yr_report var not associated with a yr_dates var"
+        !IF (.not. ASSOCIATED(rep_report%yr_report(i,y)%date,rep_dates%yr(y))) THEN
+           write(0,*) "Error: rep_report%yr_report(",i,y,")%date not ASSOCIATED with rep_dates%yr(",y,")"
+           write(0,*) "Error: rep_report%yr_report var not associated with a rep_dates%yr var"
            call exit (1)
         END IF
       end do
@@ -274,38 +275,38 @@ contains
 ! (initially point to first "pd_report_dates" for each var)
 
     DO i=Min_yrly_vars, Max_yrly_vars
-        rep_update%yrly_update(i)%date => yrly_dates(1)         ! Use yrly dates
+        rep_update%yrly_update(i)%date => rep_dates%yrly(1)         ! Use yrly dates
     END DO
     DO i=Min_monthly_vars, Max_monthly_vars
-        rep_update%monthly_update(i)%date => monthly_dates(1,1) ! 1st mon of 1st yr dates
+        rep_update%monthly_update(i)%date => rep_dates%monthly(1,1) ! 1st mon of 1st yr dates
     END DO
 
     DO i=Min_hmonth_vars, Max_hmonth_vars
-        rep_update%hmonth_update(i)%date => hmonth_dates(1,1)   ! 1st half month period
+        rep_update%hmonth_update(i)%date => rep_dates%hmonth(1,1)   ! 1st half month period
     END DO
 
     DO i=Min_period_vars, Max_period_vars
-        rep_update%period_update(i)%date => period_dates(1)     ! 1st period of rotation
+        rep_update%period_update(i)%date => rep_dates%period(1)     ! 1st period of rotation
     END DO
 
     DO i=Min_yrly_vars, Max_yrly_vars
-        rep_update%yrot_update(i)%date => yrly_dates(0)         ! Use yrly dates
+        rep_update%yrot_update(i)%date => rep_dates%yrly(0)         ! Use yrly dates
     END DO
     DO i=Min_monthly_vars, Max_monthly_vars
       DO m = 1,12
-        rep_update%mrot_update(i,m)%date => monthly_dates(m,0)    ! 1st mon of 1st yr dates
+        rep_update%mrot_update(i,m)%date => rep_dates%monthly(m,0)    ! 1st mon of 1st yr dates
       END DO
     END DO
 
     DO i=Min_hmonth_vars, Max_hmonth_vars
       DO hm = 1,24
-        rep_update%hmrot_update(i,hm)%date => hmonth_dates(hm,0)    ! 1st half month period
+        rep_update%hmrot_update(i,hm)%date => rep_dates%hmonth(hm,0)    ! 1st half month period
       END DO
     END DO
 
     ! For a year by year report of yearly (and rotation year) averaged variables
     DO i=Min_yrly_vars, Max_yrly_vars
-        rep_update%yr_update(i)%date => yr_dates(1)         ! Use yr dates
+        rep_update%yr_update(i)%date => rep_dates%yr(1)         ! Use yr dates
     END DO
 
     if (report_debug >= 1) then   !Validate pd vars allocation sizes

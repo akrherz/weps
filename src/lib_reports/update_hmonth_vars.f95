@@ -113,7 +113,6 @@ SUBROUTINE update_hmonth_report_vars(cur_day, cur_month, cur_yr, nrot_years, hmo
        hmonth_update(i)%cnt = 0
        hmonth_update(i)%val = 0.0
     END DO
-!   hmonth_dates(hm,rot_y)%ey = hmonth_dates(hm,rot_y)%ey + 1
 
     ! reset hmonth rotation update vars
     IF (rot_y == nrot_years) THEN
@@ -121,7 +120,6 @@ SUBROUTINE update_hmonth_report_vars(cur_day, cur_month, cur_yr, nrot_years, hmo
           hmrot_update(i,hm)%cnt = 0
           hmrot_update(i,hm)%val = 0.0
        END DO
-!      hmonth_dates(hm,0)%ey = hmonth_dates(hm,0)%ey + nrot_years
     END IF
 
 END SUBROUTINE update_hmonth_report_vars

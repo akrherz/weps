@@ -24,7 +24,7 @@
 ! All non-CAP key definitions refer to calendar year info
 ! (rotation years are combined, eg. rotation year 1 and 2 monthly info combined)
 
-SUBROUTINE print_ui1_output(luogui1, nperiods, nrot_years, ncycles, rep_report, mandate)
+SUBROUTINE print_ui1_output(luogui1, nperiods, nrot_years, ncycles, rep_report, rep_dates, mandate)
 
     USE pd_dates_vars
     USE pd_report_vars
@@ -41,6 +41,7 @@ SUBROUTINE print_ui1_output(luogui1, nperiods, nrot_years, ncycles, rep_report, 
     INTEGER, INTENT (IN) :: nrot_years
     INTEGER, INTENT (IN) :: ncycles
     type(reporting_report), intent(in) :: rep_report
+    type(reporting_dates), intent(in) :: rep_dates
     type (opercrop_date), dimension(:), intent(in) :: mandate
 
     INTEGER :: i,hm,m,y            ! local loop variables
@@ -107,11 +108,11 @@ SUBROUTINE print_ui1_output(luogui1, nperiods, nrot_years, ncycles, rep_report, 
        ! Print out the "P" rows here
        x = 1
        DO p = 1, nperiods
-          IF (period_dates(p)%sy == y) THEN
+          IF (rep_dates%period(p)%sy == y) THEN
              write (UNIT=luogui1,FMT="(' P |')",ADVANCE="NO")
-             write (UNIT=luogui1,FMT="(i2, '-',i2,'/',i2,'/',i2,'|')",ADVANCE="NO") &
-              period_dates(p)%sd, period_dates(p)%ed,                   &
-              period_dates(p)%sm, period_dates(p)%sy
+             write (UNIT=luogui1,FMT="(i2, '-',i2,'/',i2,'/',i0,'|')",ADVANCE="NO") &
+              rep_dates%period(p)%sd, rep_dates%period(p)%ed,                   &
+              rep_dates%period(p)%sm, rep_dates%period(p)%sy
 
              ! Check to see if an operation occurs on this date
              ! If so, set the flag and then look for any additional
@@ -120,8 +121,8 @@ SUBROUTINE print_ui1_output(luogui1, nperiods, nrot_years, ncycles, rep_report, 
              match = .false.
              match_no = 0
              DO i = 1, size(mandate)
-                IF ((mandate(i)%d == period_dates(p)%sd) .and.          &
-                    (mandate(i)%m == period_dates(p)%sm) .and.          &
+                IF ((mandate(i)%d == rep_dates%period(p)%sd) .and.          &
+                    (mandate(i)%m == rep_dates%period(p)%sm) .and.          &
                     (mandate(i)%y == y)) THEN
                    match = .true.
                    match_no = match_no + 1
@@ -223,10 +224,10 @@ SUBROUTINE print_ui1_output(luogui1, nperiods, nrot_years, ncycles, rep_report, 
              ! x = half_month index value that we last had a match
              match = .false.
              DO hm = x, 24
-              !print *, "p/hm/y: ", p, hm,y, period_dates(p), hmonth_dates(hm,y)
-                IF ((hmonth_dates(hm,y)%ed == period_dates(p)%ed) .and.  &
-                    (hmonth_dates(hm,y)%em == period_dates(p)%em) .and.  &
-                    (hmonth_dates(hm,y)%ey == period_dates(p)%ey)) THEN
+              !print *, "p/hm/y: ", p, hm,y, rep_dates%period(p), rep_dates%hmonth(hm,y)
+                IF ((rep_dates%hmonth(hm,y)%ed == rep_dates%period(p)%ed) .and.  &
+                    (rep_dates%hmonth(hm,y)%em == rep_dates%period(p)%em) .and.  &
+                    (rep_dates%hmonth(hm,y)%ey == rep_dates%period(p)%ey)) THEN
                    match = .true.
                    x = hm 
                    write (UNIT=luogui1,FMT="(4(f10.4,'|'))",ADVANCE="NO") &
@@ -297,7 +298,7 @@ SUBROUTINE print_ui1_output(luogui1, nperiods, nrot_years, ncycles, rep_report, 
        ! Print out the "Y" rows (rotation yearly values) here
        write (UNIT=luogui1,FMT="(' Y |')",ADVANCE="NO")
        write (UNIT=luogui1,FMT="(1('Rot. yr: ',i2,'|'))",ADVANCE="NO")  &
-              yrly_dates(y)%sy
+              rep_dates%yrly(y)%sy
        write (UNIT=luogui1,FMT="(1x,A125,'|')",ADVANCE="NO") "" !skip op field
        write (UNIT=luogui1,FMT="(1x,A125,'|')",ADVANCE="NO") "" !skip crop field
 

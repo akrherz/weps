@@ -119,6 +119,7 @@
 
       type(reporting_report), dimension(:), target, allocatable :: rep_report
       type(reporting_update), dimension(:), target, allocatable :: rep_update
+      type(reporting_dates), dimension(:), target, allocatable :: rep_dates
       type(hydro_derived_et), dimension(:), allocatable :: h1et   ! structure with reporting values for Evaporation/Transpiration
       type(wepp_param), dimension(:), allocatable :: wp           ! structure for wepp parameters by subregion
 
@@ -335,6 +336,8 @@
       sum_stat = sum_stat + alloc_stat
       allocate(rep_update(0:nsubr), stat=alloc_stat)
       sum_stat = sum_stat + alloc_stat
+      allocate(rep_dates(0:nsubr), stat=alloc_stat)
+      sum_stat = sum_stat + alloc_stat
       allocate(nperiods(0:nsubr), stat=alloc_stat)
       sum_stat = sum_stat + alloc_stat
       allocate(pd(0:nsubr), stat=alloc_stat)
@@ -435,8 +438,8 @@
           if( report_debug >= 1 ) then
               write(*,*) '# rot years', maxper, "nperiods", nperiods(isr), '# cycles', n_rot_cycles(isr)
           end if
-          call init_report_vars(nperiods(0), mandatbs(0)%mperod, n_rot_cycles(0), mandatbs(0)%mandate, &
-                                rep_report(isr), rep_update(isr))
+          call init_report_vars(nperiods(isr), mandatbs(isr)%mperod, n_rot_cycles(isr), mandatbs(isr)%mandate, &
+                                rep_report(isr), rep_update(isr), rep_dates(isr))
           pd(isr) = 1
       end do
 
@@ -848,48 +851,53 @@
                call update_yrly_update_vars( isr, rep_update(isr)%yrly_update, rep_update(isr)%yrot_update, &
                                              rep_update(isr)%yr_update, cellstate, h1et(isr) )
                if ( (cm == 12) .and. (cd == 31) ) then          ! end of current year
-                  call update_yrly_report_vars(yrsim, maxper, rep_update(isr)%yrly_update, rep_update(isr)%yrot_update, &
-                                               rep_update(isr)%yr_update, rep_report(isr)%yrly_report, rep_report(isr)%yr_report)
+                  call update_yrly_report_vars(yrsim, mandatbs(isr)%mperod, rep_update(isr)%yrly_update, &
+                                               rep_update(isr)%yrot_update, rep_update(isr)%yr_update, &
+                                               rep_report(isr)%yrly_report, rep_report(isr)%yr_report, &
+                                               rep_dates(isr)%yrly, rep_dates(isr)%yr)
                end if
 
                ! Compute monthly values
                call update_monthly_update_vars(isr, cm, rep_update(isr)%monthly_update, &
                                                rep_update(isr)%mrot_update, cellstate, h1et(isr))
                if (cd == lstday(cm,cy)) then                    ! end of current month
-                  call update_monthly_report_vars(cm, yrsim, maxper, &
-                       rep_update(isr)%monthly_update, rep_update(isr)%mrot_update, rep_report(isr)%monthly_report)
+                  call update_monthly_report_vars(cm, yrsim, mandatbs(isr)%mperod, &
+                       rep_update(isr)%monthly_update, rep_update(isr)%mrot_update, &
+                       rep_report(isr)%monthly_report, rep_dates(isr)%monthly)
                end if
 
                ! Compute half month values
                call update_hmonth_update_vars(isr, cd, cm, rep_update(isr)%hmonth_update, rep_update(isr)%hmrot_update, h1et(isr))
                if ((cd == 14) .or. (cd == lstday(cm,cy))) then  ! end of half month
-                  call update_hmonth_report_vars(cd, cm, yrsim, maxper, &
+                  call update_hmonth_report_vars(cd, cm, yrsim, mandatbs(isr)%mperod, &
                        rep_update(isr)%hmonth_update, rep_update(isr)%hmrot_update, rep_report(isr)%hmonth_report)
                end if
 
                ! Compute period values
                call update_period_update_vars(isr, rep_update(isr)%period_update, restot(isr), croptot(isr), biotot(isr), &
                                               cellstate, h1et(isr))
-               ! print *, pd, "  ",cy,cm,cd,"  ", period_dates(pd(isr))
+                                             
+               ! print *, pd, "  ",cy,cm,cd,"  ", rep_dates(isr)%period(pd(isr))
 
             end do
 
-            ! check for end of period and increment period counter
-            if ( (cd == 14) .or. (cd == lstday(cm,cy)) .or. ( (cd == period_dates(pd(0))%ed) .and. (cm == period_dates(pd(0))%em) &
-                .and. ((mod((cy-1),mandatbs(0)%mperod)+1) == period_dates(pd(0))%ey) ) ) then
-               ! end of period
-               do isr = 0, nsubr   ! 0 is whole region, and then all subregion     
-                  call update_period_report_vars( pd(0), nperiods(0), yrsim, mandatbs(0)%mperod, &
-                                               rep_update(isr)%period_update, rep_report(isr)%period_report)
-               end do
-               ! print *, "eop",pd,"  ",cy,cm,cd,"  ", period_dates(pd(0))
-               ! Update the current period index
-               if (pd(0) == nperiods(0)) then   ! Keep track of number of periods
-                  pd(0) = 1
-               else
-                 pd(0) = pd(0) + 1
-               endif
-            end if
+            do isr = 0, nsubr   ! 0 is whole region, and then all subregion     
+               ! check for end of period and increment period counter
+               if ( (cd == 14) .or. (cd == lstday(cm,cy)) &
+                  .or. ( (cd == rep_dates(isr)%period(pd(isr))%ed) .and. (cm == rep_dates(isr)%period(pd(isr))%em) &
+                         .and. ((mod((cy-1),mandatbs(isr)%mperod)+1) == rep_dates(isr)%period(pd(isr))%ey) ) ) then
+                  ! end of period
+                  call update_period_report_vars( pd(isr), nperiods(isr), yrsim, mandatbs(isr)%mperod, &
+                                               rep_update(isr)%period_update, rep_report(isr)%period_report, &
+                                               rep_dates(isr)%period )
+                  ! Update the current period index
+                  if (pd(isr) == nperiods(isr)) then   ! Keep track of number of periods
+                     pd(isr) = 1
+                  else
+                     pd(isr) = pd(isr) + 1
+                  endif
+               end if
+            end do
 
             if( ci_flag .eq. 1) then
                ! calculate confidence interval
@@ -922,7 +930,7 @@
           if(  (.not. old_run_file .or. (nsubr .gt. 1)) .or. (isr .gt. 0) ) then
              call sci_report( isr, cellstate )
              call print_ui1_output(luogui1(isr), nperiods(isr), mandatbs(isr)%mperod, n_rot_cycles(isr), rep_report(isr), &
-                                   mandatbs(isr)%mandate) !Use for new WEPS gui
+                                   rep_dates(isr), mandatbs(isr)%mandate) !Use for new WEPS gui
              call print_mandate_output(luomandate(isr), mandatbs(isr)%mperod, mandatbs(isr)%mandate)
           end if
       end do
