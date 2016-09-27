@@ -20,7 +20,6 @@ module p1unconv_mod
       real             mmtom
       integer          hrday
       real             hrtosec
-      real             daytosec
       real             degtorad
       real             radtodeg
       real             hatom2
@@ -30,7 +29,7 @@ module p1unconv_mod
       real             hrtomin
       real             sectohr
       real             secperday
-      integer          SEC_PER_DAY
+      real             SEC_PER_DAY
       real             KG_per_M2_to_LBS_per_ACRE
 
 !     + + + VARIABLE DECLARATIONS + + +
@@ -40,7 +39,6 @@ module p1unconv_mod
       parameter (mmtom  = 0.001)
       parameter (hrday  = 24)
       parameter (hrtosec = 3600.0)
-      parameter (daytosec = 86400.0)
       parameter (degtorad = pi/180.0) !pi/180
       parameter (radtodeg = 180.0/pi) !180/pi
       parameter (hatom2 = 10000.0) ! hectare to square meters
@@ -58,7 +56,6 @@ module p1unconv_mod
 !     mmtom  - Unit conversion constant (m/mm)
 !     hrday  - Number of hours in a day (hrs/day)
 !     hrtosec - Unit conversion constant (seconds/hour)
-!     daytosec - Unit conversion constant (seconds/day)
 !     degtorad - To convert Degrees to Radians, multiply by pi/180 (rad/deg)
 !     radtodeg - To convert Radians to Degrees, multiply by 180/pi (deg/rad)
 !     hatom2 - To convert hectares to square meters, multiply by 10,000

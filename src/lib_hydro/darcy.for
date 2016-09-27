@@ -741,8 +741,8 @@
 
 !     this section should be enabled to extend solution over
 !     multiple days when no outside process changes water contents
-!      if( beginday .lt. 100*daytosec )  then
-!          beginday = beginday + daytosec
+!      if( beginday .lt. 100*SEC_PER_DAY )  then
+!          beginday = beginday + SEC_PER_DAY
 !      else
 !          istate = 1   !-- initializes solution routines
 !          beginday = 0.0

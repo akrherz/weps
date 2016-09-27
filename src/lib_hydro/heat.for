@@ -32,7 +32,7 @@
       use weps_interface_defs, only: drainsnow
       use file_io_mod, only: luotempsoil
       use datetime_mod, only: get_simdate
-      use p1unconv_mod, only: mmtom, pi, secperday
+      use p1unconv_mod, only: mmtom, pi, SEC_PER_DAY
       use hydro_data_struct_defs, only: am0hfl
 
       include 'm1flag.inc'
@@ -202,7 +202,7 @@
           call energy_bal(bhtsno, nt_sno, bhfsnfrz, nf_sno,             &
      &         t_air, nt_lay(1), thermt_up, thermt_dn,                  &
      &         heat_cap_thaw, heat_cap_froz, 1.0, bhzsno,               &
-     &         secperday, rad_val, soil_heat_flux )
+     &         SEC_PER_DAY, rad_val, soil_heat_flux )
           t_surf_end = nt_sno
 
           ! clear surface radiation since it is absorbed by snow already
@@ -245,7 +245,7 @@
      &         nf_ice(lay),                                             &
      &         t_surf_end, nt_lay(bly), thermt_up, thermt_dn,           &
      &         heat_cap_thaw, heat_cap_froz, theta(lay), bszlyt(lay),   &
-     &         secperday, rad_val, soil_val )
+     &         SEC_PER_DAY, rad_val, soil_val )
 
           if( lay .eq. 1 ) then
               ! for surface layer
@@ -275,7 +275,7 @@
       call energy_bal(bhtsav(lay),nt_lay(lay), bhfice(lay), nf_ice(lay),&
      &         t_surf_end, bwtyav, thermt_up, thermt_dn,                &
      &         heat_cap_thaw, heat_cap_froz, theta(lay), bszlyt(lay),   &
-     &         secperday, rad_val, soil_val )
+     &         SEC_PER_DAY, rad_val, soil_val )
 
       delta_t = max(abs(delta_t-nt_lay(1)), 10.0*abs(delta_f-nf_ice(1)))
       loopcnt = loopcnt + 1
@@ -325,7 +325,7 @@
       thermk = thermk / bszlyd(layrsn)
 
       ! calculate angular frequency of the temperature oscillation
-      freq = (2*pi)/secperday
+      freq = (2*pi)/SEC_PER_DAY
 
       ! calculate diurnal damping depth
       zdamp= sqrt((2*(thermk/vsheat))/freq)
@@ -489,7 +489,7 @@
 !     the soil heat flux is returned in case it is need to describe a surface
 !     effect (enters into the ET calculation)
 
-      use p1unconv_mod, only: daytosec, mmtom
+      use p1unconv_mod, only: SEC_PER_DAY, mmtom
 
 !     + + + COMMON BLOCKS + + +
       include 'precision.inc'
@@ -543,7 +543,7 @@
 
       ! convert daily net radiation to rate
       ! Mj/m^2/day * 1000 j/Mj / 86400 sec/day
-      rate_rad_net = rad_net * 1000.0 / daytosec
+      rate_rad_net = rad_net * 1000.0 / SEC_PER_DAY
       
       ! set layer heat capacity
       if( froz_beg .lt. 0.5 ) then
@@ -648,8 +648,8 @@
       ! find soil heat flux (heat transfer on upper side of soil layer)
       ! provided as information if needed as in soil surface heat flux
       rate_soil_heat = thermt_up * (tup_end - tlay_end)
-      ! units (J/m^2/s * daytosec / 1000 j/Mj)
-      soil_heat_flux = rate_soil_heat * daytosec / 1000.0 
+      ! units (J/m^2/s * SEC_PER_DAY / 1000 j/Mj)
+      soil_heat_flux = rate_soil_heat * SEC_PER_DAY / 1000.0 
 
       return
       end
