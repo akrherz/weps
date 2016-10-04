@@ -382,12 +382,12 @@ module process_mod
 !     + + +  END SPECIFICATIONS + + +
 
 !       calc. abrasion coefficients
-        canag = exp(-2.07-0.077*seags**2.5-0.119*alog(seags))
+        canag = coef_abrasion(seags)
         if (secr .eq. 0.0) then  ! No crust stability value specified
           cancr = 0.0
           write(0,*) "Warning:  Crust stability value is set to zero"
         else
-          cancr = exp(-2.07-0.077*secr**2.5-0.119*alog(secr))
+          cancr = coef_abrasion(secr)
         end if
 
 !       calc. pm10 fractions in suspended soil
@@ -404,6 +404,22 @@ module process_mod
         sf10bk = -0.201-(0.52+(0.422+(0.1395+0.0156*lnc)*lnc)*lnc)*lnc + 0.131*exp(-ppt/175.6)
 
     end subroutine sbpm10
+
+    function coef_abrasion (stability) result (coef_abr)
+
+!     + + + PURPOSE + + +
+!     Calculates abrasion coefficients in sources of suspended soil
+
+!     + + + ARGUMENTS + + +   
+      real, intent(in) :: stability  ! soil component stability [Ln(J/Kg)]
+      real :: coef_abr               ! coefficent of abrasion (1/m)
+
+!     + + +  END SPECIFICATIONS + + +
+
+!       calc. abrasion coefficients
+        coef_abr = exp(-2.07-0.077*stability**2.5-0.119*alog(stability))
+
+    end function coef_abrasion
 
     subroutine sbaglos (wus, wust, wusto, sf84ic, asvroc, smaglosmx, smaglos, sf84mn, sf84)
 
