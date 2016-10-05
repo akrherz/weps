@@ -16,13 +16,12 @@
       real             asargo(mnsub)
       real             asxdks(mnsub)
       real             asxdkh(mnsub)
-      real             as0rrk(mnsub)
       real             aslrr(mnsub)
       real             aslrro(mnsub)
 
       common / s1sgeo /                                                 &
      &                 aszrgh, aszrho, asxrgw, asxrgs, asargo, asxdks,  &
-     &                 asxdkh, as0rrk, aslrr, aslrro
+     &                 asxdkh, aslrr, aslrro
 
       save :: /s1sgeo/
 
@@ -94,17 +93,6 @@
 
 !            - This variable contains the dike height for each of
 !              the subregions.
-
-!     as0rrk - Random roughness parameter K (shape)
-
-!              range values       min        max
-!              ------------   ---------  ---------
-!              fixed          fmin       fmax
-!              typical        tmin       tmax
-!              ------------   ---------  ---------
-
-!            - This variable contains the random roughness shape
-!              parameter (K) for each of  the subregions.
 
 !     aslrr - Allmaras random roughness parameter (mm) 
 !     aslrro - original random roughness height, after tillage, mm

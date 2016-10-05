@@ -390,11 +390,6 @@
          call restore_soil(isr, subrsurf(isr))
       end do
 
-!     temporarily initialize old random roughness
-      do isr =1, nsubr ! added subregion loop JG
-          as0rrk(isr) = 0.9
-      end do 
-
       do isr = 1, nsubr
           ! Likely that we will put all management data into memory
           ! and only read and initialize everything here, looping through

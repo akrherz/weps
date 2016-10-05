@@ -107,8 +107,7 @@
      &        ' h1et%zpta ')
  2053 format (5f10.2,2f12.2)
  2054 format ('      h1et%zea     h1et%zep    h1et%zptp ',                       &
-     &        ' ah0cng(',i2,') ah0cnp(',i2,') as0rrk(',i2,')',          &
-     &        ' aslrr(',i2,')')
+     &        ' ah0cng(',i2,') ah0cnp(',i2,') aslrr(',i2,')')
  2055 format (2f10.2,2f10.3,3f12.2)
  2056 format('layer aszlyt  ahrsk ahrwc ahrwcs ahrwca',                 &
      &       ' ahrwcf ahrwcw ah0cb aheaep ahtsmx ahtsmn')
@@ -141,7 +140,7 @@
                     ahzsmt(isr), h1et%zeta, h1et%zetp, h1et%zpta
       write(luohdb(isr),2054) isr, isr, isr, isr
       write(luohdb(isr),2055) h1et%zea, h1et%zep, h1et%zptp, ah0cng(isr), &
-                    ah0cnp(isr), as0rrk(isr), aslrr(isr)
+                    ah0cnp(isr), aslrr(isr)
       write(luohdb(isr),2056)
 
       do 200 l = 1,slay

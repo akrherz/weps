@@ -63,7 +63,6 @@
       ! Zszrho(isr) = aszrho(isr)  ! not defined yet
       ! Zsxdks(isr) = asxdks(isr)
       ! Zsxdkh(isr) = asxdkh(isr)
-      ! Zs0rrk(isr) = as0rrk(isr)
 
 !   Other
       Zsfalw(isr) = subrsurf%asfalw
@@ -183,7 +182,6 @@
       ! aszrho(isr) = Zszrho(isr)
       ! asxdks(isr) = Zsxdks(isr)
       ! asxdkh(isr) = Zsxdkh(isr)
-      ! as0rrk(isr) = Zs0rrk(isr)
 
 !   Other
       subrsurf%asfalw = Zsfalw(isr)
