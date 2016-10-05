@@ -30,7 +30,6 @@ subroutine erodsubr_update( sr, restot, croptot, biotot, h1et, subrsurf )
       include  's1layr.inc'
       include  's1phys.inc'
       include  's1agg.inc'
-      include  's1surf.inc'
       include  's1sgeo.inc'
       include  'h1db1.inc'
 
@@ -77,12 +76,6 @@ subroutine erodsubr_update( sr, restot, croptot, biotot, h1et, subrsurf )
 
     end do
 
-    subrsurf%asfcr = asfcr(sr)
-    subrsurf%aszcr = aszcr(sr)
-    subrsurf%asflos = asflos(sr)
-    subrsurf%asmlos = asmlos(sr)
-    subrsurf%asdcr = asdcr(sr)
-    subrsurf%asecr = asecr(sr)
     subrsurf%aslrr = aslrr(sr)
     subrsurf%aszrgh = aszrgh(sr)
     subrsurf%asxrgs = asxrgs(sr)

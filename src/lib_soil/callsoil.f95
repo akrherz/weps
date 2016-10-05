@@ -2,7 +2,7 @@
 !$Date$
 !$Revision$
 !$HeadURL$
-      subroutine callsoil(daysim, isr, croptot, biotot, h1et)
+      subroutine callsoil(daysim, isr, croptot, biotot, h1et, subrsurf)
 ! ***************************************************************** wjr
 ! Wrapper to call soil
 
@@ -11,12 +11,14 @@
       use timer_mod, only: timer, TIMSOIL, TIMSTART, TIMSTOP
       use soil_data_struct_defs, only: am0sdb
       use hydro_data_struct_defs, only: hydro_derived_et
+      use erosion_data_struct_defs, only: subregionsurfacestate
 
 ! Arguments
       integer daysim
       integer isr                   
       type(biototal), intent(in) :: croptot, biotot
       type(hydro_derived_et), intent(inout) :: h1et
+      type(subregionsurfacestate), intent(inout) :: subrsurf  ! subregion surface conditions
 
 ! Includes
       include 'p1werm.inc'
@@ -28,7 +30,6 @@
       include 's1dbh.inc'
       include 's1phys.inc'
       include 's1sgeo.inc'
-      include 's1surf.inc'
       include 'h1hydro.inc'
       include 'h1temp.inc'
       include 'h1db1.inc'
@@ -36,7 +37,7 @@
       call timer(TIMSOIL,TIMSTART)      
 
             if (am0sdb(isr) .eq. 1) then
-               call sdbug(isr, nslay(isr), croptot, biotot, h1et)
+               call sdbug(isr, nslay(isr), croptot, biotot, h1et, subrsurf)
             end if
             call soil(isr,daysim,ahlocirr(isr),h1et%zirr, ahzsmt(isr),  &
      &                 ahtsmx(1,isr), ahtsmn(1,isr),                    &
@@ -47,8 +48,6 @@
      &                 asfom(1,isr), asvroc(1,isr),                     &
      &                 asxrgs(isr), aszrgh(isr), aszrho(isr),           &
      &                 aslrr(isr), aslrro(isr),                         &
-     &                 aszcr(isr), asfcr(isr), asecr(isr),              &
-     &                 asdcr(isr), asmlos(isr), asflos(isr),            &
      &                 asdsblk(1,isr), asdwblk(1,isr),                  &
      &                 asdblk(0,isr), asdagd(0,isr),                    &
      &                 aslagm(0,isr), aslagn(0,isr),                    &
@@ -57,9 +56,9 @@
      &                 ask4d(1,isr), aslmin(1,isr), aslmax(1,isr),      &
      &                 biotot%ffcvtot, biotot%fscvtot,                  &
      &                 asfcce(1,isr), asfcec(1,isr),                    &
-     &                 ahzinf(isr), ahzwid(isr))
+     &                 ahzinf(isr), ahzwid(isr), subrsurf)
             if (am0sdb(isr) .eq. 1) then
-               call sdbug(isr, nslay(isr), croptot, biotot, h1et)
+               call sdbug(isr, nslay(isr), croptot, biotot, h1et, subrsurf)
             end if
 
       ! recalculate  depth to bottom of soil layer

@@ -32,7 +32,7 @@ module erosion_mod
 !     +++ ARGUMENT DECLARATIONS +++
       real min_erosion_awu       !Minimum erosive wind speed (m/s) to evaluate for erosion loss
       integer :: SURF_UPD_FLG    ! erosion surface updating (0 - disabled, 1 - enabled)
-      type(subregionsurfacestate), dimension(:) :: subrsurf  ! subregion surface conditions (erosion specific set)
+      type(subregionsurfacestate), dimension(0:), intent(inout) :: subrsurf  ! subregion surface conditions (erosion specific set)
       type(threshold), dimension(:), intent(out) :: noerod                 ! report values to show which factors prevented erosion
       type(cellsurfacestate), dimension(0:,0:), intent(inout) :: cellstate     ! initialized grid cell state values
 
@@ -113,7 +113,7 @@ module erosion_mod
       rusust_max = 0.0
 
       ! for subhourly, surface water content values should be interpolated. see hidx calculation
-      do icsr = 1, size(subrsurf)
+      do icsr = 1, size(subrsurf)-1
        ! initialize the subregion ratio
        rusust_sub = 0.0
 

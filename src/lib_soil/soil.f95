@@ -10,8 +10,6 @@
      &                 bsfsan, bsfsil, bsfcla, bsfom, bsvroc,           &
      &                 bsxrgs, bszrgh, bszrho,                          &
      &                 bszrr, bszrro,                                   &
-     &                 bszcr, bsfcr, bsecr, bsdcr,                      &
-     &                 bsmlos, bsflos,                                  &
      &                 bsdsblk, bsdwblk,                                &
      &                 bsdblk, bsdagd,                                  &
      &                 bslagm, bslagn,                                  &
@@ -19,7 +17,7 @@
      &                 bseagm, bseagmn, bseagmx,                        &
      &                 bsk4d, bslmin, bslmax,                           &
      &                 bbffcv, bbfscv,                                  &
-     &                 bsfcce, bsfcec, bhzinf, bhzwid)
+     &                 bsfcce, bsfcec, bhzinf, bhzwid, subrsurf)
 
 
 !     + + + PURPOSE + + +
@@ -42,6 +40,8 @@
       use file_io_mod, only: luosoilsurf, luosoillay
       use soil_data_struct_defs, only: am0sfl
       use climate_input_mod, only: cli_today
+      use erosion_data_struct_defs, only: subregionsurfacestate
+      use process_mod, only: coef_abrasion
 
       include 'p1werm.inc'
       include 'wpath.inc'
@@ -62,8 +62,6 @@
       real bsfom(1:mnsz), bsvroc(1:mnsz)
       real bsxrgs, bszrgh, bszrho
       real bszrr, bszrro
-      real bszcr, bsfcr, bsecr, bsdcr
-      real bsmlos, bsflos
       real bsdsblk(mnsz), bsdwblk(mnsz)
       real bsdblk(0:mnsz), bsdagd(0:mnsz)
       real bslagm(0:mnsz), bslagn(0:mnsz)
@@ -73,6 +71,7 @@
       real bbffcv, bbfscv
       real bsfcce(1:mnsz), bsfcec(1:mnsz)
       real bhzinf, bhzwid
+      type(subregionsurfacestate), intent(inout) :: subrsurf  ! subregion surface conditions
 
 !     + + + ARGUMENT DEFINITIONS + + +
 !   daysim    - an index for the day of simulation.
@@ -100,12 +99,6 @@
 !   bszrho    - ridge height right after tillage, mm.
 !   bszrr     - random roughness height, mm.
 !   bszrro    - random roughness height right after tillage, mm.
-!   bszcr     - crust thickness.
-!   bsfcr     - fraction of soil crust cover. m^2/m^2.
-!   bsecr     - dry crust stability, ln(J/kg).
-!   bsdcr     - crust density. Mg/m^2
-!   bsmlos    - amount of loose material on crusted area, kg/m^2.
-!   bsflos    - surface cover fraction of loose material on crust area, m^2/m^2.
 !   bsdsblk    - consolidated soil bulk density by layer, Mg/m^3
 !   bsdwblk    - Bulk Density of soil measured at 1/3 bar, Mg/m^3
 !   bsdblk    - current layer density may be different from bsdsblk.
@@ -211,9 +204,9 @@
 
 !
 !  CRUST SECTION:
-        call  cru(bszcr, cumpa, bsfcla(1), dcump,                       &
-     &    bsfcr, bhzsmt, bsmlos, bsfom(1), bsfcce(1),                   &
-     &    bsfsan(1), bsmls0, bszrgh, bszrr, bsflos)
+        call  cru(subrsurf%aszcr, cumpa, bsfcla(1), dcump, &
+          subrsurf%asfcr, bhzsmt, subrsurf%asmlos, bsfom(1), bsfcce(1), &
+          bsfsan(1), bsmls0, bszrgh, bszrr, subrsurf%asflos)
       endif
 
 !  skip layer update on first simulation day
@@ -223,12 +216,21 @@
      &  bseagmx, bseagmn, bseags,                                       &
      &  bhrwca, bhrwcw, bhrwcs,                                         &
      &  bhtsmn, bhtmx0(1,isr), bhtsmx,                                  &
-     &  bsecr,                                                          &
      &  bsk4d, bslmin, bslmax,                                          &
      &  bslagm,                                                         &
      &  bs0ags, bslagx, bsdblk,                                         &
-     &  bszlyt, bsdagd, bslay, bsdcr,                                   &
+     &  bszlyt, bsdagd, bslay,                                   &
      &  bsdsblk, bsdwblk, bhzinf, bhzwid, trigger)
+
+      ! update surface properties based on surface layer properties
+      ! crust stability
+      subrsurf%asecr = bseags(1)
+      ! crust density
+      subrsurf%asdcr = 0.576 + 0.603 * bsdsblk(1)
+      ! crust coefficient of abrasion
+      subrsurf%acancr = coef_abrasion(subrsurf%asecr)
+      ! aggregate coefficient of abrasion
+      subrsurf%acanag = coef_abrasion(bseags(1))
 
 !     Assign today's values to 'yesterday storage'
       do ldx = 1,bslay
@@ -271,7 +273,7 @@
          end if
 
          write(luosoilsurf(isr), 2200) daysim,idoy,yr, cump(isr), dcump,&
-     &        bszrgh, bsxrgs, bszrr, bszcr, bsfcr, bsecr, bsmlos, bsflos
+     &        bszrgh, bsxrgs, bszrr, subrsurf%aszcr, subrsurf%asfcr, subrsurf%asecr, subrsurf%asmlos, subrsurf%asflos
 
 ! output new values by layer to the soil output file.
          do ldx = 1,bslay

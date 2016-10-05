@@ -3,7 +3,7 @@
 !$Revision$
 !$HeadURL$
 
-      subroutine tdbug(sr, slay, output, crop, residue)
+      subroutine tdbug(sr, slay, output, crop, residue, subrsurf)
 
 !     + + + PURPOSE + + +
 !    This program prints out many of the global variables before
@@ -16,11 +16,13 @@
       use weps_interface_defs, ignore_me=>tdbug
       use file_io_mod, only: luotdb
       use biomaterial, only: biomatter
+      use erosion_data_struct_defs, only: subregionsurfacestate
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer sr, slay, output
       type(biomatter), intent(in) :: crop
       type(biomatter), dimension(:), intent(in) :: residue
+      type(subregionsurfacestate), intent(in) :: subrsurf  ! subregion surface conditions
 
 !     + + + ARGUMENT DEFINITIONS + + +
 !     sr      - subregion number
@@ -30,7 +32,6 @@
 !     + + + GLOBAL COMMON BLOCKS + + +
       include 'p1werm.inc'
       include 's1layr.inc'
-      include 's1surf.inc'
       include 's1phys.inc'
       include 's1agg.inc'
       include 's1dbh.inc'
@@ -94,7 +95,7 @@
  2072     format(3x,'asfcr  asflos')
  2073     format (1x,2f7.3)
           write(luotdb(sr),2072)
-          write(luotdb(sr),2073) asfcr(sr), asflos(sr)
+          write(luotdb(sr),2073) subrsurf%asfcr, subrsurf%asflos
           write(luotdb(sr),2070)
           write(luotdb(sr),2071) aszrgh(sr), asxrgw(sr), asxrgs(sr),        &
      &      asargo(sr), asxdks(sr), asxdkh(sr)

@@ -23,7 +23,7 @@ module sberod_mod
 !     +++ ARGUMENT DECLARATIONS +++
       real      time            ! time interval (seconds)
       integer   SURF_UPD_FLG    ! Surface update flag (1=on, 0=off)
-      type(subregionsurfacestate), dimension(:), intent(in) :: subrsurf  ! subregion surface conditions (erosion specific set)
+      type(subregionsurfacestate), dimension(0:), intent(in) :: subrsurf  ! subregion surface conditions (erosion specific set)
       type(cellsurfacestate), dimension(0:,0:), intent(inout) :: cellstate     ! initialized grid cell state values
 
 !     +++ LOCAL VARIABLES +++
@@ -207,7 +207,7 @@ module sberod_mod
       use process_mod, only: sbpm10, sbsfdi
 
 !     + + + ARGUEMENT DECLARATIONS + + +
-      type(subregionsurfacestate), dimension(:), intent(inout) :: subrsurf  ! subregion surface conditions (erosion specific set)
+      type(subregionsurfacestate), dimension(0:), intent(inout) :: subrsurf  ! subregion surface conditions (erosion specific set)
       type(cellsurfacestate), dimension(0:,0:), intent(inout) :: cellstate     ! initialized grid cell state values
 
 !     + + + LOCAL VARIABLES + + +
@@ -217,7 +217,7 @@ module sberod_mod
 !     + + + END SPECIFICATION + + +
 
       ! calculate abrasion and pm10 parameters    edit LH 3-4-05
-      do icsr = 1, size(subrsurf)
+      do icsr = 1, size(subrsurf)-1
          call sbpm10( subrsurf(icsr)%bsl(1)%aseags, subrsurf(icsr)%asecr, subrsurf(icsr)%bsl(1)%asfcla, &
               subrsurf(icsr)%bsl(1)%asfsan, awzypt, subrsurf(icsr)%acanag, subrsurf(icsr)%acancr, &
               subrsurf(icsr)%asf10an, subrsurf(icsr)%asf10en, subrsurf(icsr)%asf10bk )
@@ -301,7 +301,7 @@ module sberod_mod
       integer, intent(in) :: ntstep   ! max. no. of time steps in day
       real, intent(in) :: awu       ! input wind speed driving EROSION submodel (m/s).
       real, intent(out) :: rusust    ! max ratio of friction velocity to thresh. friction vel.
-      type(subregionsurfacestate), dimension(:), intent(in) :: subrsurf  ! subregion surface conditions (erosion specific set)
+      type(subregionsurfacestate), dimension(0:), intent(in) :: subrsurf  ! subregion surface conditions (erosion specific set)
       type(cellsurfacestate), dimension(0:,0:), intent(inout) :: cellstate     ! initialized grid cell state values
 
 !     +++ LOCAL VARIABLES +++

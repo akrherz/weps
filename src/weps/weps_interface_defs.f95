@@ -483,10 +483,11 @@
       real eratio      
       end function calctht0
 !---------------------------
-      subroutine callhydr(daysim, isr, crop, restot, biotot, h1et, wp)
+      subroutine callhydr(daysim, isr, crop, restot, biotot, h1et, wp, subrsurf)
       use biomaterial, only: biototal, biomatter
       use hydro_data_struct_defs, only: am0hdb, hydro_derived_et
       use wepp_param_mod, only: wepp_param
+      use erosion_data_struct_defs, only: subregionsurfacestate
       integer daysim
       integer isr                   
       type(biomatter), intent(in) :: crop
@@ -494,6 +495,7 @@
       type(biototal), intent(in) :: biotot
       type(hydro_derived_et), intent(inout) :: h1et
       type(wepp_param), intent(inout) :: wp
+      type(subregionsurfacestate), intent(inout) :: subrsurf  ! subregion surface conditions
       end subroutine callhydr
 !---------------------------
       subroutine darcy(isr, daysim, numeq, bszlyt, bszlyd, bulkden,     &
@@ -992,16 +994,20 @@
         type(opercrop_date), dimension(:), intent(in) :: mandate ! array of mandates from management file
         end function get_nperiods
 !-------------------------------
-      subroutine inpsub (isr)
-      integer isr
+      subroutine inpsub (isr, subrsurf)
+      use erosion_data_struct_defs, only: subregionsurfacestate
+      integer, intent(in) :: isr
+      type(subregionsurfacestate), intent(inout) :: subrsurf  ! subregion surface conditions
       end subroutine inpsub
 !------------------------------      
        subroutine   input( n_rot_cycles )
       integer, intent(out) :: n_rot_cycles
       end subroutine input
 !------------------------------
-      subroutine input_ifc(isr)
+      subroutine input_ifc(isr, subrsurf)
+      use erosion_data_struct_defs, only: subregionsurfacestate
       integer, intent(in) :: isr
+      type(subregionsurfacestate), intent(inout) :: subrsurf  ! subregion surface conditions
       end subroutine input_ifc
 !------------------------------
       subroutine mandates(sr, mandate)
@@ -1020,9 +1026,10 @@
       type(biomatter), dimension(:,:), intent(in) :: residue
       end subroutine closefils
 !--------------------------------
-      subroutine plotdata(sr, crop, restot, croptot, biotot, noerod, cellstate)
+      subroutine plotdata(sr, crop, restot, croptot, biotot, noerod, subrsurf, cellstate)
       use biomaterial, only: biomatter, biototal
       use erosion_data_struct_defs, only: threshold
+      use erosion_data_struct_defs, only: subregionsurfacestate
       use erosion_data_struct_defs, only: cellsurfacestate
       integer, intent(in) :: sr
       type(biomatter), intent(inout) :: crop
@@ -1030,12 +1037,21 @@
       type(biototal), intent(in) :: croptot
       type(biototal), intent(in) :: biotot
       type(threshold), intent(in) :: noerod
+      type(subregionsurfacestate), intent(in) :: subrsurf  ! subregion surface conditions
       type(cellsurfacestate), dimension(0:,0:), intent(in) :: cellstate     ! initialized grid cell state values
       end subroutine plotdata
 !--------------------------------
-      subroutine save_soil(isr)
+      subroutine save_soil(isr, subrsurf)
+      use erosion_data_struct_defs, only: subregionsurfacestate
       integer isr
+      type(subregionsurfacestate), intent(in) :: subrsurf  ! subregion surface conditions
       end subroutine save_soil
+!--------------------------------
+      subroutine restore_soil(isr, subrsurf)
+      use erosion_data_struct_defs, only: subregionsurfacestate
+      integer isr
+      type(subregionsurfacestate), intent(inout) :: subrsurf  ! subregion surface conditions
+      end subroutine restore_soil
 !--------------------------------
       subroutine sci_stir_init(isr)
       integer isr
@@ -1054,20 +1070,25 @@
       real iarr(*),p1, p5, p9
       end subroutine sort
 !--------------------------------
-      subroutine spllay(isr)
+      subroutine spllay(isr, subrsurf)
+      use erosion_data_struct_defs, only: subregionsurfacestate
       integer       isr
+      type(subregionsurfacestate), intent(inout) :: subrsurf  ! subregion surface conditions
       end subroutine spllay
 !--------------------------------
-      subroutine spllay_ifc (isr)
+      subroutine spllay_ifc (isr, subrsurf)
+      use erosion_data_struct_defs, only: subregionsurfacestate
       integer       isr
+      type(subregionsurfacestate), intent(inout) :: subrsurf  ! subregion surface conditions
       end subroutine spllay_ifc
 !--------------------------------
       subroutine submodels (isr, crop, residue, restot, croptot,        &
-     &                      biotot, decompfac, mandate, h1et, wp)
+     &                      biotot, decompfac, mandate, h1et, wp, subrsurf)
       use biomaterial, only: biomatter, biototal, decomp_factors
       use mandate_mod, only: opercrop_date
       use hydro_data_struct_defs, only: hydro_derived_et
       use wepp_param_mod, only: wepp_param
+      use erosion_data_struct_defs, only: subregionsurfacestate
       integer isr
       type(biomatter), intent(inout) :: crop    ! structure containing full crop description
       type(biomatter), dimension(:), intent(inout) :: residue
@@ -1076,6 +1097,7 @@
       type(opercrop_date), dimension(:), intent(inout) :: mandate
       type(hydro_derived_et), intent(inout) :: h1et
       type(wepp_param), intent(inout) :: wp
+      type(subregionsurfacestate), intent(inout) :: subrsurf  ! subregion surface conditions
       end subroutine submodels
 !-------------------------------
       subroutine sumbio(isr, crop, residue, restot, croptot, biotot)
@@ -1129,16 +1151,18 @@
       integer sr
       end subroutine dooper
 !---------------------------
-      subroutine   doproc (sr, bmrotation, crop, residue, biotot, mandate, h1et)
+      subroutine   doproc (sr, bmrotation, crop, residue, biotot, mandate, h1et, subrsurf)
       use biomaterial, only: biomatter, biototal
       use mandate_mod, only: opercrop_date
       use hydro_data_struct_defs, only: hydro_derived_et
+      use erosion_data_struct_defs, only: subregionsurfacestate
       integer sr, bmrotation
       type(biomatter), intent(inout) :: crop    ! structure containing full crop description
       type(biomatter), dimension(:), intent(inout) :: residue
       type(biototal), intent(in) :: biotot
       type(opercrop_date), dimension(:), intent(inout) :: mandate
       type(hydro_derived_et), intent(inout) :: h1et
+      type(subregionsurfacestate), intent(inout) :: subrsurf  ! subregion surface conditions
       end subroutine doproc
 !--------------------------
     SUBROUTINE get_calib_crops(sr, crop)
@@ -1156,10 +1180,11 @@
     type(biomatter), intent(inout) :: crop    ! structure containing full crop description
     end subroutine get_calib_yield
 !--------------------------
-      subroutine manage( sr, syear, crop, residue, biotot, mandate, h1et)
+      subroutine manage( sr, syear, crop, residue, biotot, mandate, h1et, subrsurf)
       use biomaterial, only: biomatter, biototal
       use mandate_mod, only: opercrop_date
       use hydro_data_struct_defs, only: hydro_derived_et
+      use erosion_data_struct_defs, only: subregionsurfacestate
       integer sr, syear
       integer lopdd, lopmm, lopyy
       type(biomatter), intent(inout) :: crop    ! structure containing full crop description
@@ -1167,6 +1192,7 @@
       type(biototal), intent(in) :: biotot
       type(opercrop_date), dimension(:), intent(inout) :: mandate
       type(hydro_derived_et), intent(inout) :: h1et
+      type(subregionsurfacestate), intent(inout) :: subrsurf  ! subregion surface conditions
       end subroutine manage
 !-------------------------
       subroutine mfinit (sr, fname)
@@ -1238,11 +1264,13 @@
       character line*80                
       end function  skpnam
 !--------------------------
-      subroutine tdbug(sr, slay, output, crop, residue)
+      subroutine tdbug(sr, slay, output, crop, residue, subrsurf)
       use biomaterial, only: biomatter
+      use erosion_data_struct_defs, only: subregionsurfacestate
       integer sr, slay, output
       type(biomatter), intent(in) :: crop
       type(biomatter), dimension(:), intent(in) :: residue
+      type(subregionsurfacestate), intent(in) :: subrsurf  ! subregion surface conditions
       end subroutine tdbug
 !--------------------------
       integer function tillay (tdepth, lthick, nlay)
@@ -1895,12 +1923,13 @@ SUBROUTINE update_monthly_report_vars(cur_month, cur_year, nrot_years, monthly_u
     TYPE (pd_dates_type), DIMENSION(:,:), intent(inout) :: monthly_dates
     end SUBROUTINE update_monthly_report_vars
 !------------------------
-SUBROUTINE update_period_update_vars(sbr, period_update, restot, croptot, biotot, cellstate, h1et)
+SUBROUTINE update_period_update_vars(sbr, period_update, restot, croptot, biotot, cellstate, h1et, subrsurf)
     USE pd_var_tables
     USE pd_var_type_def
     use biomaterial, only: biototal
     use erosion_data_struct_defs, only: cellsurfacestate
     use hydro_data_struct_defs, only: hydro_derived_et
+    use erosion_data_struct_defs, only: subregionsurfacestate
     INTEGER :: sbr              ! current subregion
     TYPE (pd_var_type), DIMENSION(Min_period_vars:), intent(inout) :: period_update
     type(biototal), intent(in) :: restot  ! contains:
@@ -1908,6 +1937,7 @@ SUBROUTINE update_period_update_vars(sbr, period_update, restot, croptot, biotot
     type(biototal), intent(in) :: biotot  ! contains:
     type(cellsurfacestate), dimension(0:,0:), intent(in) :: cellstate  ! egt, egtcs, egtss, egt10
     type(hydro_derived_et), intent(in) :: h1et
+    type(subregionsurfacestate), intent(in) :: subrsurf  ! subregion surface conditions
     end subroutine  update_period_update_vars
 !-------------------------
 SUBROUTINE update_period_report_vars(pd, npd, cur_yr, nrot_years, period_update, period_report, period_dates)
@@ -1975,13 +2005,15 @@ SUBROUTINE update_period_report_vars(pd, npd, cur_yr, nrot_years, period_update,
       real cslagx, se0, se1
       end subroutine asd
 !-------------         
-      subroutine callsoil(daysim, isr, croptot, biotot, h1et)
+      subroutine callsoil(daysim, isr, croptot, biotot, h1et, subrsurf)
       use biomaterial, only: biototal
       use hydro_data_struct_defs, only: hydro_derived_et
+      use erosion_data_struct_defs, only: subregionsurfacestate
       integer daysim
       integer isr                   
       type(biototal), intent(in) :: croptot, biotot
       type(hydro_derived_et), intent(inout) :: h1et
+      type(subregionsurfacestate), intent(inout) :: subrsurf  ! subregion surface conditions
       end subroutine callsoil 
 !-------------
       subroutine cru(bszcr,cumpa,csfcla,dcump,bsfcr,bhzsmt,             &
@@ -2018,12 +2050,14 @@ SUBROUTINE update_period_report_vars(pd, npd, cur_yr, nrot_years, period_update,
       real cumpa, dcump, bsvroc(*)  
       end subroutine rid
 !------------------
-      subroutine  sdbug(isr,slay, croptot, biotot, h1et)
+      subroutine  sdbug(isr,slay, croptot, biotot, h1et, subrsurf)
       use biomaterial, only: biototal
       use hydro_data_struct_defs, only: hydro_derived_et
+      use erosion_data_struct_defs, only: subregionsurfacestate
       integer isr, slay
       type(biototal), intent(in) :: croptot, biotot
-      type(hydro_derived_et), intent(inout) :: h1et
+      type(hydro_derived_et), intent(in) :: h1et
+      type(subregionsurfacestate), intent(in) :: subrsurf  ! subregion surface conditions
       end subroutine sdbug
 !------------------
       subroutine sinit (daysim,                                         &
@@ -2063,8 +2097,6 @@ SUBROUTINE update_period_report_vars(pd, npd, cur_yr, nrot_years, period_update,
      &                 bsfsan, bsfsil, bsfcla, bsfom, bsvroc,           &
      &                 bsxrgs, bszrgh, bszrho,                          &
      &                 bszrr, bszrro,                                   &
-     &                 bszcr, bsfcr, bsecr, bsdcr,                      &
-     &                 bsmlos, bsflos,                                  &
      &                 bsdsblk, bsdwblk,                                &
      &                 bsdblk, bsdagd,                                  &
      &                 bslagm, bslagn,                                  &
@@ -2072,7 +2104,8 @@ SUBROUTINE update_period_report_vars(pd, npd, cur_yr, nrot_years, period_update,
      &                 bseagm, bseagmn, bseagmx,                        &
      &                 bsk4d, bslmin, bslmax,                           &
      &                 bbffcv, bbfscv,                                  &
-     &                 bsfcce, bsfcec, bhzinf, bhzwid)
+     &                 bsfcce, bsfcec, bhzinf, bhzwid, subrsurf)
+      use erosion_data_struct_defs, only: subregionsurfacestate
       integer, intent(in) :: isr   ! subregion number
       integer daysim
       real bhlocirr, bhzirr, bhzsmt
@@ -2084,8 +2117,6 @@ SUBROUTINE update_period_report_vars(pd, npd, cur_yr, nrot_years, period_update,
       real bsfom(1:*), bsvroc(1:*)
       real bsxrgs, bszrgh, bszrho
       real bszrr, bszrro
-      real bszcr, bsfcr, bsecr, bsdcr
-      real bsmlos, bsflos
       real bsdsblk(*), bsdwblk(*)
       real bsdblk(0:*), bsdagd(0:*)
       real bslagm(0:*), bslagn(0:*)
@@ -2095,6 +2126,7 @@ SUBROUTINE update_period_report_vars(pd, npd, cur_yr, nrot_years, period_update,
       real bbffcv, bbfscv
       real bsfcce(1:*), bsfcec(1:*)
       real bhzinf, bhzwid
+      type(subregionsurfacestate), intent(inout) :: subrsurf  ! subregion surface conditions
       end subroutine soil
 !------------------------
       subroutine soilinit(isr)                                
@@ -2106,11 +2138,10 @@ SUBROUTINE update_period_report_vars(pd, npd, cur_yr, nrot_years, period_update,
      &  bseagmx, bseagmn, bseags,                                       &
      &  bhrwca, bhrwcw, bhrwcs,                                         &
      &  bhtsmn, bhtmx0, bhtsmx,                                         &
-     &  bsecr,                                                          &
      &  bsk4d, bslmin, bslmax,                                          &
      &  bslagm,                                                         &
      &  bs0ags, bslagx, bsdblk,                                         &
-     &  bszlyt, bsdagd, bslay, bsdcr,                                   &
+     &  bszlyt, bsdagd, bslay,                                          &
      &  bsdsblk, bsdwblk,                                               &
      &  bhzinf, bhzwid, trigger)
       integer daysim
@@ -2119,13 +2150,12 @@ SUBROUTINE update_period_report_vars(pd, npd, cur_yr, nrot_years, period_update,
       real  bseagmx(*), bseagmn(*), bseags(0:*)
       real  bhrwca(*), bhrwcw(*),bhrwcs(*)
       real  bhtsmn(*), bhtmx0(*), bhtsmx(*)
-      real  bsecr
       real bsk4d(*), bslmin(*), bslmax(*)
       real bslagm(0:*)
       real bs0ags(0:*), bslagx(0:*)
       real bsdblk(0:*), bhzinf
       real bszlyt(*), bsdagd(0:*)
-      real bsdcr, bsdsblk(*), bsdwblk(*)
+      real bsdsblk(*), bsdwblk(*)
       real bhzwid
       integer bslay, trigger(*)
       end subroutine updlay  
@@ -2587,9 +2617,10 @@ SUBROUTINE update_period_report_vars(pd, npd, cur_yr, nrot_years, period_update,
       character*(*) val
       end function begtrm
 !----------------------------------
-      subroutine dbgdmp(day, sr, crop, residue, croptot, biotot, h1et)
+      subroutine dbgdmp(day, sr, crop, residue, croptot, biotot, h1et, subrsurf)
       use biomaterial, only: biomatter, biototal
       use hydro_data_struct_defs, only: hydro_derived_et
+      use erosion_data_struct_defs, only: subregionsurfacestate
       integer, intent(in) :: day
       integer, intent(in) :: sr
       type(biomatter), intent(in) :: crop
@@ -2597,6 +2628,7 @@ SUBROUTINE update_period_report_vars(pd, npd, cur_yr, nrot_years, period_update,
       type(biototal), intent(in) :: croptot
       type(biototal), intent(in) :: biotot
       type(hydro_derived_et), intent(inout) :: h1et
+      type(subregionsurfacestate), intent(in) :: subrsurf  ! subregion surface conditions
       end subroutine dbgdmp
 !------------------------------------
       subroutine distriblay( nlay, bszlyd, bszlyt, layval, insertval, begind, endd )

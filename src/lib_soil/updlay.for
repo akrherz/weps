@@ -7,11 +7,10 @@
      &  bseagmx, bseagmn, bseags,                                       &
      &  bhrwca, bhrwcw, bhrwcs,                                         &
      &  bhtsmn, bhtmx0, bhtsmx,                                         &
-     &  bsecr,                                                          &
      &  bsk4d, bslmin, bslmax,                                          &
      &  bslagm,                                                         &
      &  bs0ags, bslagx, bsdblk,                                         &
-     &  bszlyt, bsdagd, bslay, bsdcr,                                   &
+     &  bszlyt, bsdagd, bslay,                                          &
      &  bsdsblk, bsdwblk,                                               &
      &  bhzinf, bhzwid, trigger)
 
@@ -28,13 +27,12 @@
       real  bseagmx(mnsz), bseagmn(mnsz), bseags(0:mnsz)
       real  bhrwca(mnsz), bhrwcw(mnsz),bhrwcs(mnsz)
       real  bhtsmn(mnsz), bhtmx0(mnsz), bhtsmx(mnsz)
-      real  bsecr
       real bsk4d(mnsz), bslmin(mnsz), bslmax(mnsz)
       real bslagm(0:mnsz)
       real bs0ags(0:mnsz), bslagx(0:mnsz)
       real bsdblk(0:mnsz), bhzinf
       real bszlyt(mnsz), bsdagd(0:mnsz)
-      real bsdcr, bsdsblk(mnsz), bsdwblk(mnsz)
+      real bsdsblk(mnsz), bsdwblk(mnsz)
       real bhzwid
 
       integer bslay, trigger(bslay)
@@ -89,9 +87,4 @@
 
       end do
 
-!     calc. new crust stability
-      bsecr = bseags(1)
-
-!     update crust density                                       (S-58)
-      bsdcr = 0.576 + 0.603 * bsdsblk(1)
       end

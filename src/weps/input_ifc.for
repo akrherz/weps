@@ -3,7 +3,7 @@
 !$Revision$
 !$HeadURL$
 
-      subroutine input_ifc(isr)
+      subroutine input_ifc(isr, subrsurf)
 ! ***************************************************************** wjr
 ! reads initial field conditions (IFC) file (Version: 1.0)
 
@@ -16,9 +16,11 @@
       use sci_soil_texture_mod, only : update_sci_soil_multiplier
       use stir_soil_texture_mod, only : update_stir_soil_multiplier
       use file_io_mod, only: fopenk      
+      use erosion_data_struct_defs, only: subregionsurfacestate
 
 !     + + + ARGUMENTS + + +
       integer, intent(in) :: isr
+      type(subregionsurfacestate), intent(inout) :: subrsurf  ! subregion surface conditions
 
       include 'p1werm.inc'
       include 'wpath.inc'
@@ -26,7 +28,6 @@
       include 'm1sim.inc'
       include 'm1flag.inc'
       include 's1layr.inc'
-      include 's1surf.inc'
       include 's1phys.inc'
       include 's1agg.inc'
       include 's1dbh.inc'
@@ -57,20 +58,20 @@
       ! temporary initialization until proper structures put this in better place
       ! these are accumulated in update_period_update_vars but are not set until
       ! erosion is called at least once (sbinit, sbpm10)
-      acanag = 0
-      acancr = 0
+      subrsurf%acanag = 0
+      subrsurf%acancr = 0
 
       call fopenk (lui1, sinfil(isr), 'old') ! open IFC file
        
 !     Check to see if this is a "versioned" IFC file
       read (lui1,'(a)',err=901) line
       if (line(1:12) .eq. 'Version: 1.0') then
-         call inp_ifc_v1(isr, lui1)  ! For version 1.0 IFC file format only
+         call inp_ifc_v1(isr, lui1, subrsurf)  ! For version 1.0 IFC file format only
       else if (line(1:12) .eq. 'Version: 1.1') then
-         call inp_ifc_v1_1(isr, lui1)  ! For version 1.1 IFC file format only
+         call inp_ifc_v1_1(isr, lui1, subrsurf)  ! For version 1.1 IFC file format only
       else  ! Assuming obsolete unversioned IFC file formats only
          close (lui1)    
-         call inpsub(isr)  ! For obsolete IFC file formats only
+         call inpsub(isr, subrsurf)  ! For obsolete IFC file formats only
          return            ! initialization is already done in inpsub
       end if
                    
@@ -86,10 +87,11 @@
       end do
 
       ! Set layer thickness of the soils as is appropriate for the simulation
-      call spllay_ifc(isr)
+      call spllay_ifc(isr, subrsurf)
 
       ! Wet Albedo (calculate from dry albedo)
-      asfalw(isr) = asfald(isr)/((1.33**2.)*(1-asfald(isr))+asfald(isr))
+      subrsurf%asfalw = subrsurf%asfald                                 &
+     &                / ((1.33**2.)*(1-subrsurf%asfald)+subrsurf%asfald)
 
       ! Settled Bulk Density, Reference Bulk Density, and Particle Density (texture based calculation)
       call proptext(nslay(isr),asfcla(1,isr),asfsan(1,isr),asfom(1,isr),&

@@ -3,7 +3,7 @@
 !$Revision$
 !$HeadURL$
 
-      subroutine  sdbug(isr,slay, croptot, biotot, h1et)
+      subroutine  sdbug(isr,slay, croptot, biotot, h1et, subrsurf)
 
 !     + + + PURPOSE + + +
 !    This program prints out many of the global variables before
@@ -23,6 +23,7 @@
       use erosion_data_struct_defs, only: awadir, awhrmx, awudmx, awudmn
       use climate_input_mod, only: cli_today
       use hydro_data_struct_defs, only: hydro_derived_et
+      use erosion_data_struct_defs, only: subregionsurfacestate
 
 !     + + + GLOBAL COMMON BLOCKS + + +
       include 'p1werm.inc'
@@ -30,7 +31,6 @@
       include 'm1sim.inc'
       include 'm1flag.inc'
       include 's1layr.inc'
-      include 's1surf.inc'
       include 's1phys.inc'
       include 's1agg.inc'
       include 's1dbh.inc'
@@ -49,7 +49,8 @@
 !     + + + ARGUMENT DECLARATIONS + + +
       integer isr, slay
       type(biototal), intent(in) :: croptot, biotot
-      type(hydro_derived_et), intent(inout) :: h1et
+      type(hydro_derived_et), intent(in) :: h1et
+      type(subregionsurfacestate), intent(in) :: subrsurf  ! subregion surface conditions
 
 !     + + + LOCAL VARIABLES + + +
       integer cd, cm, cy, l
@@ -133,8 +134,8 @@
       write(luosdb(isr),2053) h1et%zrun,h1et%zirr,ahzsno(isr),      &
      &               ahzsmt(isr), asxrgs(isr),aszrgh(isr),aslrr(isr)
       write(luosdb(isr),2054) isr,isr,isr,isr,isr,isr,isr
-      write(luosdb(isr),2055) asfcr(isr), asecr(isr), asmlos(isr),      &
-     &               asflos(isr), croptot%c0rg,as0rrk(isr),aszcr(isr)
+      write(luosdb(isr),2055) subrsurf%asfcr, subrsurf%asecr, subrsurf%asmlos, &
+     &               subrsurf%asflos, croptot%c0rg, as0rrk(isr), subrsurf%aszcr
       write(luosdb(isr),2056)
 
       do 200 l = 1,slay

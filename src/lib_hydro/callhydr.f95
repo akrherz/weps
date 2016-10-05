@@ -3,7 +3,7 @@
 !$Revision$
 !$HeadURL$
 
-      subroutine callhydr(daysim, isr, crop, restot, biotot, h1et, wp)
+      subroutine callhydr(daysim, isr, crop, restot, biotot, h1et, wp, subrsurf)
 
 ! ***************************************************************** wjr
 ! Wrapper to call hydro
@@ -14,6 +14,7 @@
       use erosion_data_struct_defs, only: awudav
       use hydro_data_struct_defs, only: am0hdb, hydro_derived_et
       use wepp_param_mod, only: wepp_param
+      use erosion_data_struct_defs, only: subregionsurfacestate
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer daysim
@@ -23,6 +24,7 @@
       type(biototal), intent(in) :: biotot
       type(hydro_derived_et), intent(inout) :: h1et
       type(wepp_param), intent(inout) :: wp
+      type(subregionsurfacestate), intent(in) :: subrsurf  ! subregion surface conditions
 
 !     + + + ARGUMENT DEFINITIONS + + +
 !     restot          - structure array containing summary residue pool amounts for all subregions
@@ -38,7 +40,6 @@
       include 's1dbh.inc'
       include 's1phys.inc'
       include 's1sgeo.inc'
-      include 's1surf.inc'
       include 'h1hydro.inc'
       include 'h1temp.inc'
       include 'h1db1.inc'
@@ -63,7 +64,7 @@
      &            asfsan(1,isr), asfsil(1,isr), asfcla(1,isr),          &
      &            asvroc(1,isr), asfom(1,isr), asfcec(1,isr),           &
      &            ahtsav(1,isr), biotot%dstmtot, biotot%ffcvtot,        &
-     &            asxrgs(isr), aszrgh(isr), asfcr(isr),                 &
+     &            asxrgs(isr), aszrgh(isr), subrsurf%asfcr, &
      &            aslrro(isr), aslrr(isr), amzele,                      &
      &            ahzdmaxirr(isr), ahratirr(isr), ahdurirr(isr),        &
      &            ahlocirr(isr), ahminirr(isr), am0monirr(isr),         &
@@ -73,7 +74,7 @@
      &            ahzsmt(isr), ahfice(1, isr), ahrsk(1, isr),           &
      &            ahtsmx(1, isr), ahtsmn(1, isr),                       &
      &            ahrwc0(1, isr), daysim,                               &
-     &            asfald(isr), asfalw(isr), aszlyt(1,isr),              &
+     &            subrsurf%asfald, subrsurf%asfalw, aszlyt(1,isr), &
      &            awudav, ahzwid(isr),                  &
      &            ahzeasurf(isr),                                       &
      &            cumprecip(isr), cumirrig(isr), &

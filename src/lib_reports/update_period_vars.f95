@@ -3,7 +3,7 @@
 !$Revision$
 !$HeadURL$
 
-SUBROUTINE update_period_update_vars(isr, period_update, restot, croptot, biotot, cellstate, h1et)
+SUBROUTINE update_period_update_vars(isr, period_update, restot, croptot, biotot, cellstate, h1et, subrsurf)
 
     use weps_interface_defs, ignore_me=>update_period_update_vars
     USE pd_var_tables
@@ -13,6 +13,7 @@ SUBROUTINE update_period_update_vars(isr, period_update, restot, croptot, biotot
     use hydro_data_struct_defs, only: hydro_derived_et
     use grid_mod, only: imax, jmax, sim_area
     use process_mod, only: sbsfdi
+    use erosion_data_struct_defs, only: subregionsurfacestate
 
     IMPLICIT NONE
 
@@ -41,6 +42,16 @@ SUBROUTINE update_period_update_vars(isr, period_update, restot, croptot, biotot
     type(hydro_derived_et), intent(in) :: h1et  ! contains:
                                 ! ahzpta(isr)     daily transpiration (mm)
                                 ! ahzpta(isr)     daily evaporation (mm)
+    type(subregionsurfacestate), intent(in) :: subrsurf  ! subregion surface conditions
+                                ! asfcr (crust fraction)
+                                ! aszcr (crust thickness)
+                                ! asmlos (mass of loose material on crusted surface)
+                                ! asflos (fraction of crusted surface with loose material)
+                                ! asdcr (density of crust)
+                                ! asecr (stability of crust)
+                                ! acancr(crust coeff. of abrasion)
+                                ! acanag (agg. coeff. of abrasion)
+
 
     include "p1werm.inc"        ! needed by other include files
 
@@ -51,15 +62,6 @@ SUBROUTINE update_period_update_vars(isr, period_update, restot, croptot, biotot
 
     include "s1agg.inc"         ! aslagm, as0ags, aslagn, aslagx (ASD parms)
                                 ! aseags (agg stability), asdagd (agg density)
-    include "s1surf.inc"        ! asfcr (crust fraction)
-                                ! aszcr (crust thickness)
-                                ! asmlos (mass of loose material on crusted surface)
-                                ! asflos (fraction of crusted surface with loose material)
-                                ! asdcr (density of crust)
-                                ! asecr (stability of crust)
-                                ! ascancr(crust coeff. of abrasion)
-                                ! ascanag (agg. coeff. of abrasion)
-
     include "h1balance.inc"     ! pressswc(isr)  daily surface water content in all soil layers (mm)
 
 !    REAL :: biodrag		! biodrag() function in util/misc/biodrag.for
@@ -131,28 +133,28 @@ SUBROUTINE update_period_update_vars(isr, period_update, restot, croptot, biotot
     period_update(Surface_Ag_DN)%val = asdagd(1,isr)  !Ag Density (Mg/m^3)
     period_update(Surface_Ag_DN)%cnt = period_update(Surface_Ag_DN)%cnt + 1
 
-    period_update(Surface_Ag_CA)%val = acanag(isr)  !Ag Coeff. of abrasion (1/m)
+    period_update(Surface_Ag_CA)%val = subrsurf%acanag  !Ag Coeff. of abrasion (1/m)
     period_update(Surface_Ag_CA)%cnt = period_update(Surface_Ag_CA)%cnt + 1
 
-    period_update(Surface_Cr)%val = asfcr(isr)  !Surface Crust fraction
+    period_update(Surface_Cr)%val = subrsurf%asfcr  !Surface Crust fraction
     period_update(Surface_Cr)%cnt = period_update(Surface_Cr)%cnt + 1
 
-    period_update(Surface_Cr_AS)%val = asecr(isr)  !Surface Crust stability (J/m^2)
+    period_update(Surface_Cr_AS)%val = subrsurf%asecr  !Surface Crust stability (J/m^2)
     period_update(Surface_Cr_AS)%cnt = period_update(Surface_Cr_AS)%cnt + 1
 
-    period_update(Surface_Cr_LM)%val = asmlos(isr)  !Surface Crust loose material (Mg/m^2)
+    period_update(Surface_Cr_LM)%val = subrsurf%asmlos  !Surface Crust loose material (Mg/m^2)
     period_update(Surface_Cr_LM)%cnt = period_update(Surface_Cr_LM)%cnt + 1
 
-    period_update(Surface_Cr_TH)%val = aszcr(isr)  !Surface Crust thickness (mm)
+    period_update(Surface_Cr_TH)%val = subrsurf%aszcr  !Surface Crust thickness (mm)
     period_update(Surface_Cr_TH)%cnt = period_update(Surface_Cr_TH)%cnt + 1
 
-    period_update(Surface_Cr_DN)%val = asdcr(isr)  !Surface Crust density (Mg/m^3)
+    period_update(Surface_Cr_DN)%val = subrsurf%asdcr  !Surface Crust density (Mg/m^3)
     period_update(Surface_Cr_DN)%cnt = period_update(Surface_Cr_DN)%cnt + 1
 
-    period_update(Surface_Cr_LF)%val = asflos(isr)  !Surface Crust - fraction of loose material (m^2/m^2)
+    period_update(Surface_Cr_LF)%val = subrsurf%asflos  !Surface Crust - fraction of loose material (m^2/m^2)
     period_update(Surface_Cr_LF)%cnt = period_update(Surface_Cr_LF)%cnt + 1
 
-    period_update(Surface_Cr_CA)%val = acancr(isr)  !Surface Crust Coeff. of abrasion (1/m)
+    period_update(Surface_Cr_CA)%val = subrsurf%acancr  !Surface Crust Coeff. of abrasion (1/m)
     period_update(Surface_Cr_CA)%cnt = period_update(Surface_Cr_CA)%cnt + 1
 
 ! Soil Water

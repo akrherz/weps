@@ -357,12 +357,12 @@ module sae_in_out_mod
       write(luo_saeinp,*) (subrsurf(sr)%bsl(l)%as0ags, l=1,subrsurf(sr)%nslay)
       write(luo_saeinp,2225)
  2225 format('#',/, &
-      '#     asfcr(s), R, (s1surf.inc) Surface crust fraction (m^2/m^2)',/, &
-      '#     aszcr(s), R, (s1surf.inc) Surface crust thickness (mm)',/, &
-      '#     asflos(s), R, (s1surf.inc) Fraction of loose material on surface (m^2/m^2)',/, &
-      '#     asmlos(s), R, (s1surf.inc) Mass of loose material on crust (kg/m^2)',/, &
-      '#     asdcr(s), R, (s1surf.inc) Soil crust density (Mg/m^3)',/, &
-      '#     asecr(s), R, (s1surf.inc) Soil crust stability ln(J/kg)')
+      '#     asfcr(s), R,  Surface crust fraction (m^2/m^2)',/, &
+      '#     aszcr(s), R,  Surface crust thickness (mm)',/, &
+      '#     asflos(s), R,  Fraction of loose material on surface (m^2/m^2)',/, &
+      '#     asmlos(s), R,  Mass of loose material on crust (kg/m^2)',/, &
+      '#     asdcr(s), R,  Soil crust density (Mg/m^3)',/, &
+      '#     asecr(s), R,  Soil crust stability ln(J/kg)')
       write(luo_saeinp,*) subrsurf(sr)%asfcr, subrsurf(sr)%aszcr, subrsurf(sr)%asflos, subrsurf(sr)%asmlos, &
                           subrsurf(sr)%asdcr, subrsurf(sr)%asecr
       write(luo_saeinp,2230)

@@ -3,12 +3,13 @@
 !$Revision$
 !$HeadURL$
 
-      subroutine plotdata(sr, crop, restot, croptot, biotot, noerod, cellstate)
+      subroutine plotdata(sr, crop, restot, croptot, biotot, noerod, subrsurf, cellstate)
 
       use datetime_mod, only: get_simdate, get_simdate_doy
       use file_io_mod, only: luoplt
       use biomaterial, only: biomatter, biototal
       use erosion_data_struct_defs, only: threshold
+      use erosion_data_struct_defs, only: subregionsurfacestate
       use erosion_data_struct_defs, only: cellsurfacestate
       use erosion_data_struct_defs, only: awadir, awudmx
       use erosion_data_struct_defs, only: am0efl
@@ -27,6 +28,7 @@
       type(biototal), intent(in) :: croptot
       type(biototal), intent(in) :: biotot
       type(threshold), intent(in) :: noerod
+      type(subregionsurfacestate), intent(in) :: subrsurf  ! subregion surface conditions
       type(cellsurfacestate), dimension(0:,0:), intent(in) :: cellstate     ! initialized grid cell state values
  
 !       Edit History
@@ -39,7 +41,6 @@
       include 's1phys.inc'
       include 's1sgeo.inc'
       include 's1agg.inc'
-      include 's1surf.inc'
       include 'h1hydro.inc'
       include 'm1subr.inc'
       include 'main/main.inc'
@@ -156,8 +157,8 @@
      &                    total, suspen, pmten,                         &
      &                    awudmx, awadir, cli_today%zdpt, ahrwc0(12, sr), &
      &                    aszrgh(sr), asargo(sr), aslrr(sr),            &
-     &                    aslagm(1,sr), aseags(1,sr), asfcr(sr),        &
-     &                    asmlos(sr), asflos(sr), asdblk(1,sr),         &
+     &                    aslagm(1,sr), aseags(1,sr), subrsurf%asfcr, &
+     &                    subrsurf%asmlos, subrsurf%asflos, asdblk(1,sr), &
      &                    biotot%ffcvtot, biotot%fscvtot,               &
      &                    croptot%rlaitot, croptot%rsaitot,             &
      &                    croptot%msttot, croptot%ftcancov

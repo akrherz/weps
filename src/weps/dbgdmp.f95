@@ -3,7 +3,7 @@
 !$Revision$
 !$HeadURL$
 
-      subroutine dbgdmp(day, sr, crop, residue, croptot, biotot, h1et)
+      subroutine dbgdmp(day, sr, crop, residue, croptot, biotot, h1et, subrsurf)
 ! ****************************************************************** wjr
 !     The dumps variables that have gone out of range
 
@@ -14,6 +14,7 @@
       use erosion_data_struct_defs, only: awdair, awadir, awhrmx, awudmx, awudmn, awudav, subday, ntstep
       use climate_input_mod, only: cli_today, cli_tyav
       use hydro_data_struct_defs, only: hydro_derived_et
+      use erosion_data_struct_defs, only: subregionsurfacestate
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer, intent(in) :: day
@@ -23,6 +24,7 @@
       type(biototal), intent(in) :: croptot
       type(biototal), intent(in) :: biotot
       type(hydro_derived_et), intent(inout) :: h1et
+      type(subregionsurfacestate), intent(in) :: subrsurf  ! subregion surface conditions
 
 !     + + + GLOBAL COMMON BLOCKS + + +
 
@@ -32,7 +34,6 @@
       include 'm1sim.inc'
       include 'm1flag.inc'
       include 's1layr.inc'
-      include 's1surf.inc'
       include 's1phys.inc'
       include 's1agg.inc'
       include 's1dbh.inc'
@@ -69,31 +70,31 @@
 ! s1surf
 
       if (dmpflg) write(*,*) 's1surf'
-!
-      if (aszcr(sr).lt.0.0.or.aszcr(sr).gt.23.0)                        &
-     &  write(*,*) 'day ',day,' aszcr ', aszcr(sr)
-!
-      if (asfcr(sr).lt.0.0.or.asfcr(sr).gt.1.0)                         &
-     &  write(*,*) 'day ',day,' asfcr ', asfcr(sr)
-!
-      if (asmlos(sr).lt.0.0.or.asmlos(sr).gt.2.0)                       &
-     &  write(*,*) 'day ',day,' asmlos ', asmlos(sr)
-!
-      if (asflos(sr).lt.0.0.or.asflos(sr).gt.1.0)                       &
-     &  write(*,*) 'day ',day,' asflos ', asflos(sr)
-!
+
+      if (subrsurf%aszcr.lt.0.0.or.subrsurf%aszcr.gt.23.0) &
+        write(*,*) 'day ',day,' aszcr ', subrsurf%aszcr
+
+      if (subrsurf%asfcr.lt.0.0.or.subrsurf%asfcr.gt.1.0) &
+        write(*,*) 'day ',day,' asfcr ', subrsurf%asfcr
+
+      if (subrsurf%asmlos.lt.0.0.or.subrsurf%asmlos.gt.2.0) &
+        write(*,*) 'day ',day,' asmlos ', subrsurf%asmlos
+
+      if (subrsurf%asflos.lt.0.0.or.subrsurf%asflos.gt.1.0) &
+        write(*,*) 'day ',day,' asflos ', subrsurf%asflos
+
 ! wjr,  test values based on definition
-      if (asdcr(sr).lt.0.6.or.asdcr(sr).gt.2.0)                         &
-     &  write(*,*) 'day ',day,' asdcr ', asdcr(sr)
-!
-      if (asecr(sr).lt.0.1.or.asecr(sr).gt.7.0)                         &
-     &  write(*,*) 'day ',day,' asecr ', asecr(sr)
-!
-      if (asfald(sr).lt.0.05.or.asfald(sr).gt.0.25)                     &
-     &  write(*,*) 'day ',day,' asfald ', asfald(sr)
-!
-      if (asfalw(sr).lt.0.05.or.asfalw(sr).gt.0.2)                      &
-     &  write(*,*) 'day ',day,' asfalw ', asfalw(sr)
+      if (subrsurf%asdcr.lt.0.6.or.subrsurf%asdcr.gt.2.0) &
+        write(*,*) 'day ',day,' asdcr ', subrsurf%asdcr
+
+      if (subrsurf%asecr.lt.0.1.or.subrsurf%asecr.gt.7.0) &
+        write(*,*) 'day ',day,' asecr ', subrsurf%asecr
+
+      if (subrsurf%asfald.lt.0.05.or.subrsurf%asfald.gt.0.25) &
+        write(*,*) 'day ',day,' asfald ', subrsurf%asfald
+
+      if (subrsurf%asfalw.lt.0.05.or.subrsurf%asfalw.gt.0.2) &
+        write(*,*) 'day ',day,' asfalw ', subrsurf%asfalw
 !
 ! w1info
 !     

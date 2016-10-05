@@ -76,12 +76,14 @@ module erosion_data_struct_defs
      real :: abffcv     ! abffcv(s), R, (b1geom.inc) Flat biomass cover (m^2/m^2)
      integer :: nslay   ! nslay(s), I, (s1layr.inc) Number of soil layers
      type(by_soil_layer), dimension(:), allocatable :: bsl
-     real :: asfcr      ! asfcr(s), R, (s1surf.inc) Surface crust fraction (m^2/m^2)
-     real :: aszcr      ! aszcr(s), R, (s1surf.inc) Surface crust thickness (mm)
-     real :: asflos     ! asflos(s), R, (s1surf.inc) Fraction of loose material on surface (m^2/m^2)
-     real :: asmlos     ! asmlos(s), R, (s1surf.inc) Mass of loose material on crust (kg/m^2)
-     real :: asdcr      ! asdcr(s), R, (s1surf.inc) Soil crust density (Mg/m^3)
-     real :: asecr      ! asecr(s), R, (s1surf.inc) Soil crust stability ln(J/kg)
+     real :: asfcr      ! asfcr(s), R,  Surface crust fraction (m^2/m^2)
+     real :: aszcr      ! aszcr(s), R,  Surface crust thickness (mm)
+     real :: asflos     ! asflos(s), R,  Fraction of loose material on surface (m^2/m^2)
+     real :: asmlos     ! asmlos(s), R,  Mass of loose material on crust (kg/m^2)
+     real :: asdcr      ! asdcr(s), R,  Soil crust density (Mg/m^3)
+     real :: asecr      ! asecr(s), R,  Soil crust stability ln(J/kg)
+     real :: asfald     ! Dry soil albedo
+     real :: asfalw     ! Wet soil albedo
      real :: aslrr      ! aslrr(s), R, (s1sgeo.inc) Allmaras random roughness (mm)
      real :: aszrgh     ! aszrgh(s), R, (s1sgeo.inc) Ridge height (mm)
      real :: asxrgs     ! asxrgs(s), R, (s1sgeo.inc) Ridge spacing (mm)

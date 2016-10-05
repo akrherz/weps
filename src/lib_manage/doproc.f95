@@ -3,7 +3,7 @@
 !$Revision$
 !$HeadURL$
 
-      subroutine   doproc (sr, bmrotation, crop, residue, biotot, mandate, h1et)
+      subroutine   doproc (sr, bmrotation, crop, residue, biotot, mandate, h1et, subrsurf)
 
 !     + + + PURPOSE + + +
 !     Doproc is called when a processline is found in the management file
@@ -24,6 +24,7 @@
       use crop_data_struct_defs, only: am0cfl
       use soilden_mod, only: setbdproc_wc
       use hydro_data_struct_defs, only: hydro_derived_et
+      use erosion_data_struct_defs, only: subregionsurfacestate
 
 !     + + + PARAMETERS AND COMMON BLOCKS + + +
       include 'command.inc'
@@ -34,7 +35,6 @@
       include 's1agg.inc'
       include 's1sgeo.inc'
       include 's1phys.inc'
-      include 's1surf.inc'
       include 's1dbh.inc'
       include 's1dbc.inc'
       include 'c1gen.inc'
@@ -60,6 +60,7 @@
       type(biototal), intent(in) :: biotot
       type(opercrop_date), dimension(:), intent(inout) :: mandate
       type(hydro_derived_et), intent(inout) :: h1et
+      type(subregionsurfacestate), intent(inout) :: subrsurf  ! subregion surface conditions
 
 !     + + + ARGUMENT DEFINITIONS + + +
 !     sr - the subregion being processed
@@ -323,17 +324,17 @@
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before crust breakdown process//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
         end if
 
         am0til = .true.  !set flag for surface modification
 !     do process
-        call crust(kappa,fracarea,asfcr(sr),asflos(sr),asmlos(sr))
+        call crust(kappa,fracarea,subrsurf%asfcr,subrsurf%asflos,subrsurf%asmlos)
 
 !     post-process stuff
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After crust breakdown process//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
         end if
 !-----END crust breakdown process (process code 01)
 
@@ -345,7 +346,7 @@
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before random roughness process//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
         end if
 
 !     read the random roughness for the implement. tillage intensity
@@ -368,7 +369,7 @@
 !     post-process stuff
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After random roughness process//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
         end if
 !-----END random roughness process (process code 02)
 
@@ -378,7 +379,7 @@
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before oriented roughness1 process//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
         end if
 
 !     read the oriented roughness (ridge) parameters for the implement
@@ -404,7 +405,7 @@
 
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After oriented roughness process//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
         end if
 !-----END oriented roughness process (process code 03)
 
@@ -414,7 +415,7 @@
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before oriented roughness2 process//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
         end if
 
 !     read the oriented roughness (dike) parameters for the implement
@@ -431,7 +432,7 @@
 !     post-process stuff
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After oriented roughness process//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
         end if
 !-----END oriented roughness dike only process (process code 04)
 
@@ -441,7 +442,7 @@
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before oriented roughness process//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
         end if
 
 !     read the oriented roughness parameters for the implement
@@ -460,7 +461,7 @@
 !     post-process stuff
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After oriented roughness process//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
         end if
 !-----END oriented roughness process (process code 05)
 
@@ -470,7 +471,7 @@
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before crushing process//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
         end if
 !        write (*,*) '//Before crushing process//'
         if( aslagm(5,sr).gt.aslagx(5,sr) ) then
@@ -515,7 +516,7 @@
 !
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After crushing process//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
         end if
 !-----END crushing process (process code 11)
 
@@ -525,7 +526,7 @@
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before loosening process//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
         end if
         if( aslagm(5,sr).gt.aslagx(5,sr) ) then
             write (*,*) 'before loose:',aslagm(5,sr),aslagx(5,sr)
@@ -577,7 +578,7 @@
 
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After loosening process//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
         end if
 !-----END loosening process (process code 12)
 
@@ -588,7 +589,7 @@
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before mixing process//'
           write (luotdb(sr),*) 'Tillage layer depth is', tlayer
-          call tdbug(sr, nslay(sr), prcode, crop, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
         end if
 !        write (*,*) '//Before mixing process//'
         if( aslagm(5,sr).gt.aslagx(5,sr) ) then
@@ -658,7 +659,7 @@
 
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After mixing process//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
         end if
 
 !-----END mixing process (process code 13)
@@ -669,7 +670,7 @@
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before inversion process//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
         end if
 !        write (*,*) '//Before inversion process//'
 !        write (*,*) 'dia,sd',aslagm(1,sr),as0ags(1,sr)
@@ -702,7 +703,7 @@
 
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After inversion process//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
         end if
 !-----END inversion process (process code 14)
 
@@ -712,7 +713,7 @@
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before compaction process//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
         end if
         if( aslagm(5,sr).gt.aslagx(5,sr) ) then
             write (*,*) 'before compaction:',aslagm(5,sr),aslagx(5,sr)
@@ -755,7 +756,7 @@
 
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After compaction process//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
         end if
         !-----END Compaction (process code 21)
 
@@ -765,7 +766,7 @@
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before flatten variable toughness proc.//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
         end if
 
         mcur(sr) = mcur(sr) + 1
@@ -785,7 +786,7 @@
 
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After flatten variable toughness proc.//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
         end if
 !-----END flatten process variable toughness (process code 24)
 !
@@ -795,7 +796,7 @@
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before mass bury variable toughness pr.//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
         end if
 
         mcur(sr) = mcur(sr) + 1
@@ -828,7 +829,7 @@
 !     post-process stuff
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After mass bury variable toughness pr.//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
         end if
 !-----END mass bury process variable toughness (process code 25)
 !
@@ -838,7 +839,7 @@
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before re-surface vari. toughness proc.//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
         end if
 
         mcur(sr) = mcur(sr) + 1
@@ -857,7 +858,7 @@
 !     post-process stuff
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After re-surface vari. toughness proc.//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
         end if
 !-----END re-surface process variable toughness (process code 26)
 
@@ -875,7 +876,7 @@
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before defoliate process//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
         end if
 
 !       Some operations will not kill certain types of crops,
@@ -913,7 +914,7 @@
 !     post-process stuff
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After defoliate process//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
         end if
 !-----END defoliate process (process code 30)
 
@@ -930,7 +931,7 @@
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before kill process//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
         end if
 
 !       Some operations will not kill certain types of crops,
@@ -1011,7 +1012,7 @@
 !     post-process stuff
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After kill process//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
         end if
 !-----END killing process (process code 31)
 
@@ -1021,7 +1022,7 @@
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before cutting to height process//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
         end if
 
         ! set process parameters
@@ -1043,7 +1044,7 @@
 !     post-process stuff
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After cutting to height process//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
         end if
         ! crop pool state has been changed, force dependent variable update  
         am0cropupfl = 1
@@ -1089,7 +1090,7 @@
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before cutting by fraction process//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
         end if
 
         mcur(sr) = mcur(sr) + 1
@@ -1109,7 +1110,7 @@
 !     post-process stuff
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After cutting by fraction process//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
         end if
         ! crop pool state has been changed, force dependent variable update  
         am0cropupfl = 1
@@ -1155,7 +1156,7 @@
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before modify standing fall rate proc.//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
         end if
 
         mcur(sr) = mcur(sr) + 1
@@ -1179,7 +1180,7 @@
 !     post-process stuff
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After modify standing fall rate proc.//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
         end if
 !-----END modify standing fall rate process variable toughness (process code 34)
 
@@ -1189,7 +1190,7 @@
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before thinning to population process//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
         end if
 
         mcur(sr) = mcur(sr) + 1
@@ -1210,7 +1211,7 @@
 !     post-process stuff
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After thinning to population process//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
         end if
         ! crop pool state has been changed, force dependent variable update  
         am0cropupfl = 1
@@ -1256,7 +1257,7 @@
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before thinning by fraction process//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
         end if
 
         mcur(sr) = mcur(sr) + 1
@@ -1276,7 +1277,7 @@
 !     post-process stuff
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After thinning by fraction process//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
         end if
         ! crop pool state has been changed, force dependent variable update  
         am0cropupfl = 1
@@ -1319,7 +1320,7 @@
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before biomass transfer process//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
         end if
 
 !     do process
@@ -1351,7 +1352,7 @@
 !     post-process stuff
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After biomass transfer process//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
         end if
 !-----END crop to biomass transfer process (process code 40)
 
@@ -1361,7 +1362,7 @@
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before flagged cutting to height proc.//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
         end if
 
         ! set process parameters
@@ -1384,7 +1385,7 @@
 !     post-process stuff
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After flagged cutting to height proc.//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
         end if
         ! crop pool state has been changed, force dependent variable update  
         am0cropupfl = 1
@@ -1431,7 +1432,7 @@
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before flagged cutting by fraction pr.//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
         end if
 
         mcur(sr) = mcur(sr) + 1
@@ -1452,7 +1453,7 @@
 !     post-process stuff
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After flagged cutting by fraction pr.//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
         end if
         ! crop pool state has been changed, force dependent variable update  
         am0cropupfl = 1
@@ -1499,7 +1500,7 @@
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write(luotdb(sr),*)'//Before flagged thinning to population pr.//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
         end if
 
         mcur(sr) = mcur(sr) + 1
@@ -1521,7 +1522,7 @@
 !     post-process stuff
         if (am0tdb(sr) .eq. 1) then
           write(luotdb(sr),*) '//After flagged thinning to population pr.//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
         end if
         ! crop pool state has been changed, force dependent variable update  
         am0cropupfl = 1
@@ -1568,7 +1569,7 @@
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before flagged thinning by fraction pr.//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
         end if
 
         mcur(sr) = mcur(sr) + 1
@@ -1589,7 +1590,7 @@
 !     post-process stuff
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After flagged thinning by fraction pr.//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
         end if
         ! crop pool state has been changed, force dependent variable update  
         am0cropupfl = 1
@@ -1638,7 +1639,7 @@
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before residue initialization process//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
         end if
 
         ! do process
@@ -1712,7 +1713,7 @@
 !     post-process stuff
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After residue initialization process//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
         end if
 !-----END residue initialization process (process code 50)
 !
@@ -1722,7 +1723,7 @@
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before planting process//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
         end if
 !     kill and transfer only if existing crop and new crop
       if( crop%growth%am0cgf.and.(crop%geometry%dstm.gt.0.0) ) then
@@ -1930,7 +1931,7 @@
 !       post-process stuff
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After planting process//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
         end if
         call set_calib(sr, crop)
         if( rpt_season_flg ) then
@@ -1945,7 +1946,7 @@
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before biomass remove process//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
         end if
 
         mcur(sr) = mcur(sr) + 1
@@ -1976,7 +1977,7 @@
 !     post-process stuff
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After biomass remove process//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
         end if
         ! crop pool state has been changed, force dependent variable update  
         am0cropupfl = 1
@@ -2022,7 +2023,7 @@
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before biomass remove pool process//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
         end if
 
         mcur(sr) = mcur(sr) + 1
@@ -2051,7 +2052,7 @@
         ! post-process stuff
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After biomass remove pool process//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
         end if
         ! crop pool state has been changed, force dependent variable update  
         am0cropupfl = 1
@@ -2108,7 +2109,7 @@
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before add residue process//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
         end if
 
         mcur(sr) = mcur(sr) + 1
@@ -2195,7 +2196,7 @@
 !     post-process stuff
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After add residue process//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
         end if
 !-----END add residue process (process code 65)
 
@@ -2219,7 +2220,7 @@
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before add manure process//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
         end if
 
         ! get additional line of data
@@ -2323,7 +2324,7 @@
 !     post-process stuff
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After add manure process//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
         end if
 !-----END add manure process (process code 66)
 
@@ -2333,7 +2334,7 @@
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before irrigation process//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
         end if
 
         mcur(sr) = mcur(sr) + 1
@@ -2356,7 +2357,7 @@
 !     post-process stuff
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After irrigate process//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
         end if
 !-----END irrigate process (process code 71)
 
@@ -2366,7 +2367,7 @@
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before irrigation monitoring process//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
         end if
 
         mcur(sr) = mcur(sr) + 1
@@ -2382,7 +2383,7 @@
 !     post-process stuff
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After irrigation monitoring process//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
         end if
 !-----END irrigation monitoring process (process code 72)
 
@@ -2392,7 +2393,7 @@
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before single event irrigation process//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
         end if
 
         mcur(sr) = mcur(sr) + 1
@@ -2406,12 +2407,12 @@
         call ratedura(h1et%zirr, ahratirr(sr), ahdurirr(sr))
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After single event irrigation process//'
-          !call tdbug(sr, nslay(sr), prcode, crop, residue)
+          !call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
         end if
 !     post-process stuff
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After single event irrigation process//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
         end if
 !-----END irrigation monitoring process (process code 73)
 
@@ -2421,14 +2422,14 @@
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*)
           write (luotdb(sr),*) '//Before terminate irrigation monitoring//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
         end if
 !     do process
         am0monirr(sr) = 0
 !     post-process stuff
         if (am0tdb(sr) .eq. 1) then
           write (luotdb(sr),*) '//After terminate irrigation monitoring//'
-          call tdbug(sr, nslay(sr), prcode, crop, residue)
+          call tdbug(sr, nslay(sr), prcode, crop, residue, subrsurf)
         end if
 !-----END terminate irrigation monitoring process (process code 74)
 

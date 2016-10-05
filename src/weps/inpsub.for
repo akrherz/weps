@@ -4,7 +4,7 @@
 !$Revision$
 !$HeadURL$
 !
-      subroutine inpsub (isr)
+      subroutine inpsub (isr, subrsurf)
 ! ***************************************************************** wjr
 ! reads initial field conditions (IFC) file for all subregions
 !
@@ -17,12 +17,13 @@
 
       use weps_interface_defs, ignore_me=>inpsub
       use file_io_mod, only: fopenk
+      use erosion_data_struct_defs, only: subregionsurfacestate
+
       include 'p1werm.inc'
       include 'wpath.inc'
       include 'm1subr.inc'
       include 'm1sim.inc'
       include 's1layr.inc'
-      include 's1surf.inc'
       include 's1phys.inc'
       include 's1agg.inc'
       include 's1dbh.inc'
@@ -34,7 +35,8 @@
       include 'command.inc'          !declarations for commandline args
 
 !     + + + Arguments + + +
-      integer isr
+      integer, intent(in) :: isr
+      type(subregionsurfacestate), intent(inout) :: subrsurf  ! subregion surface conditions
 
 !     + + + LOCAL COMMON BLOCKS + + +
       include 'main/main.inc'
@@ -128,19 +130,19 @@
           read(line,*,err=82) (aseags(lay,isr), lay=1,nslay(isr))
         case (22)
 !     read crust properties
-          read(line,*,err=82) aszcr(isr)
+          read(line,*,err=82) subrsurf%aszcr
         case (23)
-          read(line,*,err=82) asdcr(isr)
+          read(line,*,err=82) subrsurf%asdcr
         case (24)
-          read(line,*,err=82) asecr(isr)
+          read(line,*,err=82) subrsurf%asecr
         case (25)
-          read(line,*,err=82) asfcr(isr)
+          read(line,*,err=82) subrsurf%asfcr
         case (26)
 !     read surface properties
-          read(line,*,err=82) asmlos(isr)
+          read(line,*,err=82) subrsurf%asmlos
 !      write(*,*) ' inpsub: asmlos(isr) ', asmlos(isr)
         case (27)
-          read(line,*,err=82) asflos(isr)
+          read(line,*,err=82) subrsurf%asflos
         case (28)
           read(line,*,err=82) aslrr(isr)
           aslrro(isr) = aslrr(isr)
@@ -181,7 +183,7 @@
         case (42)
           read(line,*,err=82) ah0cng(isr)
         case (43)
-          read(line,*,err=82) asfald(isr)
+          read(line,*,err=82) subrsurf%asfald
 
 !         Code added to "skip" extra parameter not available in "old" ifc files
           ! set default outflow height to zero (minimum depression storage)
@@ -267,10 +269,11 @@
 
 
       ! set layer thickness of the soils as is appropriate for the simulation
-      call spllay(isr)
+      call spllay(isr, subrsurf)
 
       ! calculate wet albedo from dry
-      asfalw(isr) = asfald(isr)/((1.33**2.)*(1-asfald(isr))+asfald(isr))
+      subrsurf%asfalw = subrsurf%asfald                                 &
+     &                / ((1.33**2.)*(1-subrsurf%asfald)+subrsurf%asfald)
 
       ! texture based calculation of settled bulk density and particle density
       call proptext(nslay(isr),asfcla(1,isr),asfsan(1,isr),asfom(1,isr),&

@@ -59,7 +59,8 @@
       use sci_soil_texture_mod, only: create_sci_soil_multiplier, destroy_sci_soil_multiplier
       use stir_report_mod, only: create_stir_accumulator, destroy_stir_accumulator
       use sci_report_mod
-      use hydro_data_struct_defs
+      use hydro_data_struct_defs, only: hydro_derived_et
+      use sim_area_average_mod, only: sim_area_average
       use wepp_param_mod
       use climate_input_mod, only: cliginit, getcli, windinit, getwin
       use input_run_mod, only: old_run_file
@@ -296,15 +297,21 @@
       ! create sci and stir arrays (before input_ifc which needs them)
       call create_sci_soil_multiplier(nsubr)
       call create_stir_soil_multiplier(nsubr)
-      call create_stir_accumulator(nsubr, 4000)   ! note, conceivably, the operation count could be tallied in advance, 400 for now.
+      call create_stir_accumulator(nsubr, 4000)   ! note, conceivably, the operation count could be tallied in advance, 4000 for now.
+
+      ! erosion subregion surface values array
+      sum_stat = 0
+      allocate(subrsurf(0:nsubr), stat=alloc_stat)
+      sum_stat = sum_stat + alloc_stat
+      allocate(noerod(nsubr), stat=alloc_stat)
+      sum_stat = sum_stat + alloc_stat
 
       ! done before allocations which use layers
       do isr = 1, nsubr 
-         call input_ifc(isr)  ! read soil file and setup layers
+         call input_ifc(isr, subrsurf(isr))  ! read soil file and setup layers
       end do
 
       ! allocate subregion crop and residue pool arrays
-      sum_stat = 0
       allocate(crop(nsubr), stat=alloc_stat)
       sum_stat = sum_stat + alloc_stat
       allocate(croptot(0:nsubr), stat=alloc_stat)
@@ -323,12 +330,6 @@
       allocate(mandatbs(0:nsubr), stat=alloc_stat)
       sum_stat = sum_stat + alloc_stat
       allocate(lastoper(0:nsubr), stat=alloc_stat)
-      sum_stat = sum_stat + alloc_stat
-
-      ! erosion subregion surface values array
-      allocate(subrsurf(nsubr), stat=alloc_stat)
-      sum_stat = sum_stat + alloc_stat
-      allocate(noerod(nsubr), stat=alloc_stat)
       sum_stat = sum_stat + alloc_stat
 
       ! report accummulation arrays
@@ -375,7 +376,7 @@
 
 ! save variabled for each subregion by JG
       do isr = 1, nsubr 
-         call save_soil(isr)  
+         call save_soil(isr, subrsurf(isr))  
       end do
 
       call openfils(residue)
@@ -386,7 +387,7 @@
       ! for calibration run purposes.
       ! call input_ifc  !Changed bck for now
       do  isr =1, nsubr   
-         call restore_soil(isr)  !Assuming only one subregion for now
+         call restore_soil(isr, subrsurf(isr))
       end do
 
 !     temporarily initialize old random roughness
@@ -471,7 +472,7 @@
 
       do isr = 1, nsubr
          ! this prints header to plot.out file
-         call plotdata( isr, crop(isr), restot(isr), croptot(isr), biotot(isr), noerod(isr), cellstate )  ! print to plot data file
+         call plotdata( isr, crop(isr), restot(isr), croptot(isr), biotot(isr), noerod(isr), subrsurf(isr), cellstate )  ! print to plot data file
          ! this prints header to decomp.out file
          call bpools( isr, residue(1:size(residue,1),isr), restot(isr), biotot(isr), decompfac(isr) )
       end do
@@ -549,11 +550,11 @@
          do isr=1,nsubr   ! do multiple subregion      
           ! isr = 1 !Note: we are no longer dealing with multiple subregions here
           call submodels(isr, crop(isr), residue(1:size(residue,1),isr), restot(isr), croptot(isr),  &
-     &                   biotot(isr), decompfac(isr), mandatbs(isr)%mandate, h1et(isr), wp(isr))
+     &                   biotot(isr), decompfac(isr), mandatbs(isr)%mandate, h1et(isr), wp(isr), subrsurf(isr))
           ! set initialization flag to .false. after first day
           if (am0ifl) am0ifl = .false.
 
-          call plotdata( isr, crop(isr), restot(isr), croptot(isr), biotot(isr), noerod(isr), cellstate )  ! print to plot data file
+          call plotdata( isr, crop(isr), restot(isr), croptot(isr), biotot(isr), noerod(isr), subrsurf(isr), cellstate )  ! print to plot data file
           ! write decomposition biomass pool amounts to files
           call bpools(isr, residue(1:size(residue,1),isr), restot(isr), biotot(isr), decompfac(isr))
 !        write(*,*) 'weps:yrsim cd,cm,cy am0jd,daysim',                 &
@@ -632,9 +633,9 @@
 !            isr = 1 !Note: we are no longer dealing with multiple subregions here
             do isr=1,nsubr   ! do multiple subregion     
             call submodels(isr, crop(isr), residue(1:size(residue,1),isr), restot(isr), croptot(isr),&
-     &                     biotot(isr), decompfac(isr), mandatbs(isr)%mandate, h1et(isr), wp(isr))
+     &                     biotot(isr), decompfac(isr), mandatbs(isr)%mandate, h1et(isr), wp(isr), subrsurf(isr))
 
-            call plotdata( isr, crop(isr), restot(isr), croptot(isr), biotot(isr), noerod(isr), cellstate )  ! print to plot data file
+            call plotdata( isr, crop(isr), restot(isr), croptot(isr), biotot(isr), noerod(isr), subrsurf(isr), cellstate )  ! print to plot data file
 
             ! write decomposition biomass pool amounts to files
             call bpools(isr, residue(1:size(residue,1),isr), restot(isr), biotot(isr), decompfac(isr))
@@ -759,7 +760,7 @@
 
             do isr=1,nsubr   ! do multiple subregion     
                call submodels(isr, crop(isr), residue(1:size(residue,1),isr), restot(isr), croptot(isr), &
-                              biotot(isr), decompfac(isr), mandatbs(isr)%mandate, h1et(isr), wp(isr))
+                              biotot(isr), decompfac(isr), mandatbs(isr)%mandate, h1et(isr), wp(isr), subrsurf(isr))
             end do
 
             ! set the barrier interpolation in time
@@ -768,7 +769,7 @@
             if (run_erosion > 0) then   ! Are we simulating erosion in this RUN
                if (awudmx .gt. 8.0) then ! if wind is great enough, call erosion
                   ! transfer data values from submodel structures into erosion input structure
-                  do isr=1,nsubr   ! do multiple subregion     
+                  do isr=1,nsubr   ! do multiple subregion
                      call erodsubr_update( isr, restot(isr), croptot(isr), biotot(isr), h1et(isr), subrsurf(isr) )
                   end do
                   ! write(*,*) "Start calcwu"
@@ -809,7 +810,7 @@
                end if
 
                call sci_cum( isr, restot(isr), cellstate )   ! Keep running total for soil conditioning index (SCI)
-               call plotdata( isr, crop(isr), restot(isr), croptot(isr), biotot(isr), noerod(isr), cellstate )  ! print to plot data file
+               call plotdata( isr, crop(isr), restot(isr), croptot(isr), biotot(isr), noerod(isr), subrsurf(isr), cellstate )  ! print to plot data file
                ! write decomposition biomass pool amounts to files
                call bpools(isr, residue(1:size(residue,1),isr), restot(isr), biotot(isr), decompfac(isr))
 
@@ -844,7 +845,7 @@
             end if
 
             ! area average values over simregion for 0 index reporting
-            call sim_area_ave_h1et( subr_poly, h1et )
+            call sim_area_average( subr_poly, h1et, subrsurf )
 
             do isr = 0, nsubr   ! 0 is whole region, and then all subregion     
                ! Compute yrly values
@@ -875,7 +876,7 @@
 
                ! Compute period values
                call update_period_update_vars(isr, rep_update(isr)%period_update, restot(isr), croptot(isr), biotot(isr), &
-                                              cellstate, h1et(isr))
+                                              cellstate, h1et(isr), subrsurf(isr))
                                              
                ! print *, pd, "  ",cy,cm,cd,"  ", rep_dates(isr)%period(pd(isr))
 
@@ -928,6 +929,7 @@
               call print_yr_report_vars(nperiods(0), mandatbs(0)%mperod, n_rot_cycles(0), rep_report(isr)%yr_report)
           end if
           if(  (.not. old_run_file .or. (nsubr .gt. 1)) .or. (isr .gt. 0) ) then
+
              call sci_report( isr, cellstate )
              call print_ui1_output(luogui1(isr), nperiods(isr), mandatbs(isr)%mperod, n_rot_cycles(isr), rep_report(isr), &
                                    rep_dates(isr), mandatbs(isr)%mandate) !Use for new WEPS gui

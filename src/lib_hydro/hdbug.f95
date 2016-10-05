@@ -40,7 +40,6 @@
       include 'm1subr.inc'
       include 'm1flag.inc'
       include 's1layr.inc'
-      include 's1surf.inc'
       include 's1phys.inc'
       include 's1agg.inc'
       include 's1dbh.inc'

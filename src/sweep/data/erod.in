@@ -170,12 +170,12 @@
  12.0
 #
 #
-#     asfcr(s), R, (s1surf.inc) Surface crust fraction (m^2/m^2)
-#     aszcr(s), R, (s1surf.inc) Surface crust thickness (mm)
-#     asflos(s), R, (s1surf.inc) Fraction of loose material on surface (m^2/m^2)
-#     asmlos(s), R, (s1surf.inc) Mass of loose material on crust (kg/m^2)
-#     asdcr(s), R, (s1surf.inc) Soil crust density (Mg/m^3)
-#     asecr(s), R, (s1surf.inc) Soil crust stability ln(J/kg)
+#     asfcr(s), R,  Surface crust fraction (m^2/m^2)
+#     aszcr(s), R,  Surface crust thickness (mm)
+#     asflos(s), R,  Fraction of loose material on surface (m^2/m^2)
+#     asmlos(s), R,  Mass of loose material on crust (kg/m^2)
+#     asdcr(s), R,  Soil crust density (Mg/m^3)
+#     asecr(s), R,  Soil crust stability ln(J/kg)
  0.6 7.0 0.2 0.4 0.1 1.0
 #
 #
@@ -314,22 +314,22 @@
 #     as0ags(1,s), R (soil aggregate geo. std. dev.)
   0
   ag_std
-#     asfcr(s), R, (s1surf.inc) Surface crust fraction (m^2/m^2)
+#     asfcr(s), R,  Surface crust fraction (m^2/m^2)
   0
   crust_cv
-#     aszcr(s), R, (s1surf.inc) Surface crust thickness (mm)
+#     aszcr(s), R,  Surface crust thickness (mm)
   0
  crust_z(mm)
-#     asflos(s), R, (s1surf.inc) Fraction of loose material on surface (m^2/m^2)
+#     asflos(s), R,  Fraction of loose material on surface (m^2/m^2)
   0
   los_cv
-#     asmlos(s), R, (s1surf.inc) Mass of loose material on crust (kg/m^2)
+#     asmlos(s), R,  Mass of loose material on crust (kg/m^2)
   0
   los(kg/m^2)
-#     asdcr(s), R, (s1surf.inc) Soil crust density (Mg/m^3)
+#     asdcr(s), R,  Soil crust density (Mg/m^3)
   0
   cr_den(Mg/m^3)
-#     asecr(s), R, (s1surf.inc) Soil crust stability ln(J/kg)
+#     asecr(s), R,  Soil crust stability ln(J/kg)
   0
   cr_se
 #     aslrr(s), R, (s1sgeo.inc) Allmaras random roughness (mm)

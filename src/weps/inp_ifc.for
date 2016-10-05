@@ -4,12 +4,13 @@
 !$Revision$
 !$HeadURL$
 !
-      subroutine inp_ifc_v1 (isr, lui1)
+      subroutine inp_ifc_v1 (isr, lui1, subrsurf)
+
+      use erosion_data_struct_defs, only: subregionsurfacestate
 
       include 'p1werm.inc'
       include 'm1subr.inc'
       include 's1layr.inc'
-      include 's1surf.inc'
       include 's1phys.inc'
       include 's1agg.inc'
       include 's1dbh.inc'
@@ -22,6 +23,7 @@
 !     + + + Arguments + + +
       integer isr
       integer lui1
+      type(subregionsurfacestate), intent(inout) :: subrsurf  ! subregion surface conditions
 
 !     + + + LOCAL COMMON BLOCKS + + +
       include 'main/main.inc'
@@ -61,7 +63,7 @@
 
 !     read IP surface physical properties
         case (5)                                                      ! Dry soil albedo (fraction)
-          read(line,*,err=902) asfald(isr)
+          read(line,*,err=902) subrsurf%asfald
         case (6)                                                      ! Slope gradient (m/m)
           ! set default outflow height to zero (minimum depression storage)
           ahzoutflow(isr) = 0.0
@@ -147,17 +149,17 @@
 
 !     read IC crust properties
         case (33)                                                     ! Crust thickness (mm)
-          read(line,*,err=902) aszcr(isr)
+          read(line,*,err=902) subrsurf%aszcr
         case (34)                                                     ! Crust density (Mg/m^3)
-          read(line,*,err=902) asdcr(isr)
+          read(line,*,err=902) subrsurf%asdcr
         case (35)                                                     ! Crust stability (ln(J/m^2))
-          read(line,*,err=902) asecr(isr)
+          read(line,*,err=902) subrsurf%asecr
         case (36)                                                     ! Crust surface frction (m^2/m^2)
-          read(line,*,err=902) asfcr(isr)
+          read(line,*,err=902) subrsurf%asfcr
         case (37)                                                     ! Mass of loose material on crust (kg/m^2)
-          read(line,*,err=902) asmlos(isr)
+          read(line,*,err=902) subrsurf%asmlos
         case (38)                                                     ! Fraction of loose material on crust (m^2/m^2)
-          read(line,*,err=902) asflos(isr)
+          read(line,*,err=902) subrsurf%asflos
 
 !     read IC surface roughness properties
         case (39)                                                     ! Random roughness (mm)
@@ -241,7 +243,7 @@
       end
 
 !-----------------------------------------------------------------------
-      subroutine inp_ifc_v1_1 (isr, lui1)
+      subroutine inp_ifc_v1_1 (isr, lui1, subrsurf)
 
       ! input routine for Version 1.1 IFC file format
 
@@ -249,10 +251,11 @@
       ! and missing soil surface initialization values
       ! dike height and spacing values
 
+      use erosion_data_struct_defs, only: subregionsurfacestate
+
       include 'p1werm.inc'
       include 'm1subr.inc'
       include 's1layr.inc'
-      include 's1surf.inc'
       include 's1phys.inc'
       include 's1agg.inc'
       include 's1dbh.inc'
@@ -268,6 +271,7 @@
 !     + + + Arguments + + +
       integer isr
       integer lui1
+      type(subregionsurfacestate), intent(inout) :: subrsurf  ! subregion surface conditions
 
 !     + + + LOCAL VARIABLES + + +
       integer       lay
@@ -310,7 +314,7 @@
 
 !     read IP surface physical properties
         case (7)                                                      ! Dry soil albedo (fraction)
-          read(line,*,err=902) asfald(isr)
+          read(line,*,err=902) subrsurf%asfald
         case (8)                                                      ! Slope gradient (m/m)
           ! set default outflow height to zero (minimum depression storage)
           ahzoutflow(isr) = 0.0
@@ -396,17 +400,17 @@
 
 !     read IC crust properties
         case (35)                                                     ! Crust thickness (mm)
-          read(line,*,err=902) aszcr(isr)
+          read(line,*,err=902) subrsurf%aszcr
         case (36)                                                     ! Crust density (Mg/m^3)
-          read(line,*,err=902) asdcr(isr)
+          read(line,*,err=902) subrsurf%asdcr
         case (37)                                                     ! Crust stability (ln(J/m^2))
-          read(line,*,err=902) asecr(isr)
+          read(line,*,err=902) subrsurf%asecr
         case (38)                                                     ! Crust surface frction (m^2/m^2)
-          read(line,*,err=902) asfcr(isr)
+          read(line,*,err=902) subrsurf%asfcr
         case (39)                                                     ! Mass of loose material on crust (kg/m^2)
-          read(line,*,err=902) asmlos(isr)
+          read(line,*,err=902) subrsurf%asmlos
         case (40)                                                     ! Fraction of loose material on crust (m^2/m^2)
-          read(line,*,err=902) asflos(isr)
+          read(line,*,err=902) subrsurf%asflos
 
 !     read IC surface roughness properties
         case (41)                                                     ! Random roughness (mm)

@@ -4,7 +4,7 @@
 !$Revision$
 !$HeadURL$
 !
-      subroutine spllay_ifc (isr)
+      subroutine spllay_ifc (isr, subrsurf)
 ! ***************************************************************** wjr
 ! Converts NASIS layered IFC files into 10,40,50,... IFC files
 !
@@ -13,13 +13,13 @@
 !     10-Oct-04   lew   modified to work with "versioned" IFC files only
 
       use weps_interface_defs, ignore_me=>spllay_ifc
+      use erosion_data_struct_defs, only: subregionsurfacestate
 
       include 'p1werm.inc'
       include 'wpath.inc'
       include 'm1subr.inc'
       include 'm1sim.inc'
       include 's1layr.inc'
-      include 's1surf.inc'
       include 's1phys.inc'
       include 's1agg.inc'
       include 's1dbh.inc'
@@ -30,13 +30,15 @@
       include 'h1db1.inc'
       include 'command.inc'          !declarations for commandline args
 
+      integer       isr
+      type(subregionsurfacestate), intent(inout) :: subrsurf  ! subregion surface conditions
+
 !     + + + LOCAL COMMON BLOCKS + + +
       include 'main/main.inc'
 
 !     + + + LOCAL VARIABLES + + +
 !      integer      lay
 !      character    line*256
-      integer       isr
       real          max_depth, add_depth
       real          totthk, tgtthk
       ! real          curdep

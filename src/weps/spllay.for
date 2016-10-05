@@ -4,23 +4,24 @@
 !$Revision$
 !$HeadURL$
 !
-      subroutine spllay(isr)
+      subroutine spllay(isr, subrsurf)
 ! ***************************************************************** wjr
 ! Converts NASIS layered IFC files into 10,40,50,... IFC files
 !
 !     Edit History
 !     07-Feb-01   wjr   created
       use weps_interface_defs, ignore_me=>spllay
+      use erosion_data_struct_defs, only: subregionsurfacestate
 
 !     + + + ARGUMENTS + + +
       integer       isr
+      type(subregionsurfacestate), intent(inout) :: subrsurf  ! subregion surface conditions
 
       include 'p1werm.inc'
       include 'wpath.inc'
       include 'm1subr.inc'
       include 'm1sim.inc'
       include 's1layr.inc'
-      include 's1surf.inc'
       include 's1phys.inc'
       include 's1agg.inc'
       include 's1dbh.inc'

@@ -4,7 +4,7 @@
 !$Revision$
 !$HeadURL$
 !
-      subroutine save_soil(isr)
+      subroutine save_soil(isr, subrsurf)
 
 ! ***************************************************************** LEW
 ! Saves and Restores soil surface and layer properties
@@ -13,13 +13,14 @@
 !     Edit History
 !  Aug 21, 2005 - LEW
 
+      use erosion_data_struct_defs, only: subregionsurfacestate
+
       include 'p1werm.inc'
       include 'wpath.inc'
       include 'm1subr.inc'
       include 'm1sim.inc'
       include 'm1flag.inc'
       include 's1layr.inc'
-      include 's1surf.inc'
       include 's1phys.inc'
       include 's1agg.inc'
       include 's1dbh.inc'
@@ -31,23 +32,25 @@
 
       include 'soil_save.inc'
 
+      integer :: isr
+      type(subregionsurfacestate), intent(in) :: subrsurf  ! subregion surface conditions
 
-      integer isr, ldx
+      integer :: ldx
 
       ! write(*,*) 'isr', isr
       ! write(*,*) 'nslay(isr)', nslay(isr)
-      Zsfald(isr) = asfald(isr)
+      Zsfald(isr) = subrsurf%asfald
       Zmrslp(isr) = amrslp(isr)
       ZSFCov(isr) = SFCov(isr)
       Zbedrock_depth(isr) = bedrock_depth(isr)
       Zrestrict_depth(isr) = restrict_depth(isr)
 !   Crust Properties
-      Zszcr(isr) = aszcr(isr)
-      Zsdcr(isr) = asdcr(isr)
-      Zsecr(isr) = asecr(isr)
-      Zsfcr(isr) = asfcr(isr)
-      Zsmlos(isr) = asmlos(isr)
-      Zsflos(isr) = asflos(isr)
+      Zszcr(isr) = subrsurf%aszcr
+      Zsdcr(isr) = subrsurf%asdcr
+      Zsecr(isr) = subrsurf%asecr
+      Zsfcr(isr) = subrsurf%asfcr
+      Zsmlos(isr) = subrsurf%asmlos
+      Zsflos(isr) = subrsurf%asflos
 !   Surface roughness Properties
       Zslrr(isr) = aslrr(isr)
       Zslrro(isr) = aslrro(isr)
@@ -64,7 +67,7 @@
       ! Zslrrc(isr) = aslrrc(isr)
 
 !   Other
-      Zsfalw(isr) = asfalw(isr)
+      Zsfalw(isr) = subrsurf%asfalw
 
 !   Zero based indexes
       ! Zsfsan(0, isr) = asfsan(0, isr) ! Not defined yet (or used?)
@@ -131,7 +134,9 @@
       return
       end
 
-      subroutine restore_soil(isr)
+      subroutine restore_soil(isr, subrsurf)
+
+      use erosion_data_struct_defs, only: subregionsurfacestate
 
       include 'p1werm.inc'
       include 'wpath.inc'
@@ -139,7 +144,6 @@
       include 'm1sim.inc'
       include 'm1flag.inc'
       include 's1layr.inc'
-      include 's1surf.inc'
       include 's1phys.inc'
       include 's1agg.inc'
       include 's1dbh.inc'
@@ -151,21 +155,23 @@
 
       include 'soil_save.inc'
 
+      integer :: isr
+      type(subregionsurfacestate), intent(inout) :: subrsurf  ! subregion surface conditions
 
-      integer isr, ldx
+      integer :: ldx
 
-      asfald(isr) = Zsfald(isr)
+      subrsurf%asfald = Zsfald(isr)
       amrslp(isr) = Zmrslp(isr)
       SFCov(isr) = ZSFCov(isr)
       bedrock_depth(isr) = Zbedrock_depth(isr)
       restrict_depth(isr) = Zrestrict_depth(isr)
 !   Crust Properties
-      aszcr(isr) = Zszcr(isr)
-      asdcr(isr) = Zsdcr(isr)
-      asecr(isr) = Zsecr(isr)
-      asfcr(isr) = Zsfcr(isr)
-      asmlos(isr) = Zsmlos(isr)
-      asflos(isr) = Zsflos(isr)
+      subrsurf%aszcr = Zszcr(isr)
+      subrsurf%asdcr = Zsdcr(isr)
+      subrsurf%asecr = Zsecr(isr)
+      subrsurf%asfcr = Zsfcr(isr)
+      subrsurf%asmlos = Zsmlos(isr)
+      subrsurf%asflos = Zsflos(isr)
 !   Surface roughness Properties
       aslrr(isr) = Zslrr(isr)
       aslrro(isr) = Zslrro(isr)
@@ -182,7 +188,7 @@
       ! aslrrc(isr) = Zslrrc(isr)
 
 !   Other
-      asfalw(isr) = Zsfalw(isr)
+      subrsurf%asfalw = Zsfalw(isr)
 
 !   aero based indexes
       ! asfsan(0, isr) = Zsfsan(0, isr)
