@@ -177,7 +177,8 @@
      &       noerod%flat_cov, noerod%surf_wet, noerod%ag_den,           &
      &       noerod%wust
 
-        if( noerod%wus .gt. 0.0 ) then
+        ! guard against underflow, division fails
+        if( noerod%wus .gt. tiny(noerod%wus) ) then
           ! ratios of friction velocity outputs
           write (luoplt(sr), 2086, ADVANCE="NO")                            &
      &       noerod%wus_anemom/noerod%wus, noerod%wus_random/noerod%wus,&
