@@ -10,6 +10,7 @@ program adjust_wind_to_cli
   ! Outputs to stdout, the adjusted windgen file data
 
   use datetime_mod, only: julday
+  use f2kcli, only: COMMAND_ARGUMENT_COUNT
   use Running_Stats
 
   implicit none
@@ -64,8 +65,6 @@ program adjust_wind_to_cli
 
   integer       :: idx
 
-  INTEGER  COMMAND_ARGUMENT_COUNT ! required by the Lahey f95 compiler
-  EXTERNAL COMMAND_ARGUMENT_COUNT
   character*512 argv    ! For Fortran 2k commandline parsing
   integer       numarg
   integer       ll,ss

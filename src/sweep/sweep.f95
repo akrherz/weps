@@ -14,6 +14,7 @@
       use sweep_io_mod
       use datetime_mod, only: update_system_time, get_systime_string, julday
       use file_io_mod, only: fopenk, luo_erod, luo_egrd, luo_emit, luo_sgrd
+      use f2kcli, only: COMMAND_ARGUMENT_COUNT
       use erosion_mod, only: erosion, erodinit
       use erosion_data_struct_defs, only: subregionsurfacestate, threshold, cellsurfacestate, erod_interval, ntstep, &
                                           am0eif, am0efl
@@ -98,9 +99,6 @@
                                  !to evaluate for erosion loss
 
       integer :: SURF_UPD_FLG    ! erosion surface updating (0 - disabled, 1 - enabled)
-
-      INTEGER  COMMAND_ARGUMENT_COUNT ! required by the Lahey f95 compiler
-      EXTERNAL COMMAND_ARGUMENT_COUNT
 
 !     +++ END SPECIFICATIONS +++
 

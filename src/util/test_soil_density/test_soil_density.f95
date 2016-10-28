@@ -8,6 +8,7 @@ program test_soil_density
   ! test of bulk density routines
 
   use file_io_mod, only: fopenk
+  use f2kcli, only: COMMAND_ARGUMENT_COUNT
 
   real testbdref
   real testsetbdref
@@ -58,8 +59,6 @@ program test_soil_density
                                               ! while wetting under normal field conditions due to entrapped air
 
   ! Declarations for command line arguments
-  INTEGER  COMMAND_ARGUMENT_COUNT ! required by the Lahey f95 compiler
-  EXTERNAL COMMAND_ARGUMENT_COUNT
   character*512 argv    ! For Fortran 2k commandline parsing
   integer       icmd    ! index through numarg commands
   integer       numarg  ! number of command line arguments

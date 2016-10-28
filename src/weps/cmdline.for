@@ -20,14 +20,11 @@
       use weps_interface_defs, ignore_me=>cmdline
       use datetime_mod, only: julday
       use file_io_mod, only: fopenk, luolog
+      use f2kcli, only: COMMAND_ARGUMENT_COUNT
 
       include 'p1werm.inc'
       include 'wpath.inc'
       include 'm1flag.inc'
-
-!      include 'util/misc/f2kcli.inc'  !declarations for f2k commandline functions
-      INTEGER  COMMAND_ARGUMENT_COUNT ! required by the Lahey f95 compiler
-      EXTERNAL COMMAND_ARGUMENT_COUNT
       include 'command.inc'          !declarations for commandline args
 
 !     + + + LOCAL COMMON BLOCKS + + +

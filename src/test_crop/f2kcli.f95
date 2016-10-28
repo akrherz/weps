@@ -1,13 +1,12 @@
-!
 !$Author$
 !$Date$
 !$Revision$
 !$HeadURL$
-!
+
 ! F2KCLI : Fortran 200x Command Line Interface
 ! copyright Interactive Software Services Ltd. 2001
 ! For conditions of use see manual.txt
-!
+
 ! Platform    : Unix/Linux
 ! Compiler    : Any Fortran 9x compiler supporting IARGC/GETARG
 !               which counts the first true command line argument
@@ -18,18 +17,18 @@
 !               (exact compiler name will vary)
 ! Implementer : Lawson B. Wakefield, I.S.S. Ltd.
 ! Date        : February 2001
-!
-      MODULE F2KCLI
-!
-      CONTAINS
-!
+
+  MODULE F2KCLI
+
+    CONTAINS
+
       SUBROUTINE GET_COMMAND(COMMAND,LENGTH,STATUS)
-!
+
 ! Description. Returns the entire command by which the program was
 !   invoked.
-!
+
 ! Class. Subroutine.
-!
+
 ! Arguments.
 ! COMMAND (optional) shall be scalar and of type default character.
 !   It is an INTENT(OUT) argument. It is assigned the entire command
@@ -48,16 +47,16 @@
 !   an INTENT(OUT) argument. It is assigned the value 0 if the
 !   command retrieval is sucessful. It is assigned a processor-dependent
 !   non-zero value if the command retrieval fails.
-!
+
       CHARACTER(LEN=*), INTENT(OUT), OPTIONAL :: COMMAND
       INTEGER         , INTENT(OUT), OPTIONAL :: LENGTH
       INTEGER         , INTENT(OUT), OPTIONAL :: STATUS
-!
+
       INTEGER                   :: IARG,NARG,IPOS
       INTEGER            , SAVE :: LENARG
       CHARACTER(LEN=2000), SAVE :: ARGSTR
       LOGICAL            , SAVE :: GETCMD = .TRUE.
-!
+
 ! The following INTEGER/EXTERNAL declarations of IARGC should not
 ! really be necessary. However, at least one compiler (PGI) comments
 ! on their absence, so they are included for completeness.
@@ -165,24 +164,24 @@
       CHARACTER(LEN=*), INTENT(OUT), OPTIONAL :: VALUE
       INTEGER         , INTENT(OUT), OPTIONAL :: LENGTH
       INTEGER         , INTENT(OUT), OPTIONAL :: STATUS
-!
+
 !  A temporary variable for the rare case case where LENGTH is
 !  specified but VALUE is not. An arbitrary maximum argument length
 !  of 1000 characters should cover virtually all situations.
-!
+
       CHARACTER(LEN=1000) :: TMPVAL
-!
+
 ! The following INTEGER/EXTERNAL declarations of IARGC should not
 ! really be necessary. However, at least one compiler (PGI) comments
 ! on their absence, so they are included for completeness.
-!
+
 !     INTEGER :: IARGC
 !     EXTERNAL   IARGC
-!
+
 ! Possible error codes:
 ! 1 = Argument number is less than minimum
 ! 2 = Argument number exceeds maximum
-!
+
       IF (NUMBER < 0) THEN
           IF (PRESENT(VALUE )) VALUE  = ' '
           IF (PRESENT(LENGTH)) LENGTH = 0
@@ -194,18 +193,18 @@
           IF (PRESENT(STATUS)) STATUS = 2
           RETURN
       END IF
-!
+
 ! Get the argument if VALUE is present
-!
+
       IF (PRESENT(VALUE)) CALL GETARG(NUMBER,VALUE)
-!
+
 ! The LENGTH option is fairly pointless under Unix.
 ! Trailing spaces can only be specified using quotes.
 ! Since the command line has already been processed by the
 ! shell before the application sees it, we have no way of
 ! knowing the true length of any quoted arguments. LEN_TRIM
 ! is used to ensure at least some sort of meaningful result.
-!
+
       IF (PRESENT(LENGTH)) THEN
           IF (PRESENT(VALUE)) THEN
               LENGTH = LEN_TRIM(VALUE)
@@ -214,11 +213,11 @@
               LENGTH = LEN_TRIM(TMPVAL)
           END IF
       END IF
-!
+
 ! Since GETARG does not return a result code, assume success
-!
+
       IF (PRESENT(STATUS)) STATUS = 0
       RETURN
       END SUBROUTINE GET_COMMAND_ARGUMENT
-!
-      END MODULE F2KCLI
+
+  END MODULE F2KCLI
