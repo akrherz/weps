@@ -13,20 +13,20 @@
 !     + + + VARIABLE DECLARATIONS + + +
 
       real             as0ph(mnsz, mnsub)
-      real             ascmg(mnsz, mnsub)
-      real             ascna(mnsz, mnsub)
+      real             ascmg(mnsz, mnsub)       ! remove
+      real             ascna(mnsz, mnsub)       ! remove
       real             asfcce(mnsz, mnsub)
       real             asfcec(mnsz, mnsub)
-      real             asfesp(mnsz, mnsub)
+      real             asfesp(mnsz, mnsub)       ! remove
       real             asfom(0:mnsz, mnsub)
-      real             asfnoh(mnsz,mnsub)
-      real             asfpoh(mnsz,mnsub)
-      real             asfpsp(mnsz,mnsub)
-      real             asfsmb(mnsz,mnsub)
-      real             asftap(mnsz,mnsub)
-      real             asftan(mnsz,mnsub)
-      real             asmno3(mnsub)
-      real             asrsar(mnsz,mnsub)
+      real             asfnoh(mnsz,mnsub)       ! remove
+      real             asfpoh(mnsz,mnsub)       ! remove
+      real             asfpsp(mnsz,mnsub)       ! remove
+      real             asfsmb(mnsz,mnsub)       ! remove
+      real             asftap(mnsz,mnsub)       ! remove
+      real             asftan(mnsz,mnsub)       ! remove
+      real             asmno3(mnsub)            ! remove
+      real             asrsar(mnsz,mnsub)       ! remove
       real             as0ec(mnsz,mnsub)         ! Not used - not read in Version 1.0 IFC file
 
 

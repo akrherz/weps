@@ -82,8 +82,11 @@ module erosion_data_struct_defs
      real :: asmlos     ! Mass of loose material on crust (kg/m^2)
      real :: asdcr      ! Soil crust density (Mg/m^3)
      real :: asecr      ! Soil crust stability ln(J/kg)
+
+! (remove)
      real :: asfald     ! Dry soil albedo
      real :: asfalw     ! Wet soil albedo
+
      real :: aszrgh     ! Ridge height (mm)
      real :: aszrho     ! Original ridge height, after tillage, (mm)
      real :: asxrgw     ! Ridge width (mm)
@@ -92,7 +95,10 @@ module erosion_data_struct_defs
      real :: asxdks     ! Dike spacing (mm)
      real :: asxdkh     ! Dike Height (mm)
      real :: aslrr      ! Allmaras random roughness (mm)
+
+! (remove)
      real :: aslrro     ! Original random roughness height, after tillage, mm
+
      real :: ahzsnd     ! (h1db1.inc) Snow depth (mm)
      real, dimension(:), allocatable :: ahrwc0
      ! derived

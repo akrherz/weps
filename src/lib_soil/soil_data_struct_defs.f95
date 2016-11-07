@@ -5,15 +5,313 @@
 
 module soil_data_struct_defs
 
-     integer, dimension(:), allocatable :: am0sfl    ! flag to print SOIL output
+  integer, dimension(:), allocatable :: am0sfl    ! flag to print SOIL output
                                                      ! 0 = no output
                                                      ! 1 = detailed output file created
-     integer, dimension(:), allocatable :: am0sdb    ! flag to print SOIL variables before and after the call to SOIL
+  integer, dimension(:), allocatable :: am0sdb    ! flag to print SOIL variables before and after the call to SOIL
                                                      ! 0 = no output
                                                      ! 1 = output
+  type soil_intrinsic
+     real :: asfald     ! Dry soil albedo
+     real :: asfalw     ! Wet soil albedo
+     real :: restrict_depth    ! depth to impermeable layer/restricting zone (mm)
+     real :: bedrock_depth     ! depth to bedrock (mm)
+     real, dimension(:), pointer :: asvroc    ! Soil layer rock volume (m^3/m^3)
+     real, dimension(:), pointer :: asfsan    ! Soil layer sand content (Mg/Mg)
+     real, dimension(:), pointer :: asfsil    ! Soil layer silt content (Mg/Mg)
+     real, dimension(:), pointer :: asfcla    ! Soil layer clay content (Mg/Mg)
+     real, dimension(:), pointer :: as0ph     ! PH (0-14)
+     real, dimension(:), pointer :: asfcce    ! Soil layer calcium carbonate equivalent [CaCO3] (kg/kg) ? (dec %)
+     real, dimension(:), pointer :: asfcec    ! Soil layer cation exchange capacity (cmol/kg) (meq/100g)
+     real, dimension(:), pointer :: asfom     ! Soil layer organic matter content (Mg/Mg)
+     real, dimension(:), pointer :: asdwblk   ! Soil layer bulk density at 1/3 bar (Mg/m^3)
+     real, dimension(:), pointer :: asdsblk   ! Soil layer settled bulk density (Mg/m^3)
+     real, dimension(:), pointer :: asdprocblk ! Soil layer proctor bulk density (Mg/m^3)
+     real, dimension(:), pointer :: aslagn    ! minimum agg size (mm)
+     real, dimension(:), pointer :: aslagx    ! maximum agg size (mm)
+     real, dimension(:), pointer :: asfcle    ! Linear extensibility ((Mg/m^3)/(Mg/m^3))
+     real, dimension(:), pointer :: asfvcs    ! Soil layer content of very coarse sand (Mg/Mg)
+     real, dimension(:), pointer :: asfcs     ! Soil layer content of coarse sand (Mg/Mg)
+     real, dimension(:), pointer :: asfms     ! Soil layer content of medium sand (Mg/Mg)
+     real, dimension(:), pointer :: asffs     ! Soil layer content of fine sand (Mg/Mg)
+     real, dimension(:), pointer :: asfvfs    ! Soil layer content of very fine sand sand (Mg/Mg)
+     real, dimension(:), pointer :: asfwdc    ! Soil layer content of water dispersible clay (Mg/Mg)
+                                              ! Not used - not input in Version 1.0 IFC file
+  end type soil_intrinsic
 
-!  contains
+  type soil_state
+     real :: aszrgh     ! Ridge height (mm)
+     real :: aszrho     ! Original ridge height, after tillage, (mm)
+     real :: asxrgw     ! Ridge width (mm)
+     real :: asxrgs     ! Ridge spacing (mm)
+     real :: asargo     ! Ridge orientation (deg)
+     real :: asxdks     ! Dike spacing (mm)
+     real :: asxdkh     ! Dike Height (mm)
+     real :: aslrr      ! Allmaras random roughness (mm)
+     real :: aslrro     ! Original random roughness height, after tillage, mm
+     real :: asfcr      ! Surface crust fraction (m^2/m^2)
+     real :: aszcr      ! Surface crust thickness (mm)
+     real :: asflos     ! Fraction of loose material on surface (m^2/m^2)
+     real :: asmlos     ! Mass of loose material on crust (kg/m^2)
+     real :: asdcr      ! Soil crust density (Mg/m^3)
+     real :: asecr      ! Soil crust stability ln(J/kg)
+     real :: watertable_depth  ! depth to watertable (mm)
+     real, dimension(:), pointer :: aszlyt    ! Soil layer thickness (mm)
+     real, dimension(:), pointer :: asdblk    ! Soil layer bulk density (Mg/m^3)
+     real, dimension(:), pointer :: asdagd    ! agg density (Mg/m^3)
+     real, dimension(:), pointer :: aseags    ! agg stability ln(J/kg)
+     real, dimension(:), pointer :: aslagm    ! GMD (mm)
+     real, dimension(:), pointer :: as0ags    ! GSD (mm/mm)
+  end type soil_state
 
+  type soil_derived
+     real :: acanag     ! coefficient of abrasion for aggregates (1/m)
+     real :: acancr     ! coefficient of abrasion for crust (1/m)
+     real :: asf10an    ! soil fraction pm10 in abraded suspension
+     real :: asf10en    ! soil fraction pm10 in emitted suspension
+     real :: asf10bk    ! soil fraction pm10 in saltation breakage suspension
+     real, dimension(:), pointer :: asdpart   ! Soil layer average particle density adjusted from mineral only
+                                              ! to include organic matter content
+     real, dimension(:), pointer :: aszlyd    ! Depth to bottom of each soil layer for each subregion (mm)
+     real, dimension(:), pointer :: asdwsrat  ! Nondimensional ratio of wet to settled bulk density
+     real, dimension(:), pointer :: asdblk0   ! Soil layer bulk density from previous day
+                                              ! for use in hydro to update parameters based on bulk density changes
+
+     real, dimension(:), pointer :: ahrwc     ! Soil water content (Mg/Mg)
+     real, dimension(:), pointer :: ahrwcdmx  ! daily maximum soil water content (Mg/Mg)
+     real, dimension(:), pointer :: aheaep    ! Soil air entry potential (J/kg)
+     real, dimension(:), pointer :: ah0cb     ! Power of Brooks and Corey water release curve model (unitless)
+     real, dimension(:), pointer :: ahrsk     ! Saturated soil hydraulic conductivity (m/s)
+
+     real, dimension(:), pointer :: ahrwcr    ! Soil layer residual water content (Mg/Mg)
+     real, dimension(:), pointer :: ahrwcw    ! Soil layer wilting point water content (Mg/Mg)
+     real, dimension(:), pointer :: ahrwcf    ! Soil layer field capacity water content (Mg/Mg)
+     real, dimension(:), pointer :: ahrwcs    ! Soil layer saturated water content (Mg/Mg)
+     real, dimension(:), pointer :: ahrwca    ! Available soil layer water content (Mg/Mg)
+     real, dimension(:), pointer :: ahrwc1    ! Soil layer water content at 0.1 bar (Mg/Mg)
+     real, dimension(:), pointer :: ahfredsat ! fraction of soil porosity that will be filled with water
+                       ! while wetting under normal field conditions due to entrapped air
+  end type soil_derived
+
+  type soil_def
+     character*(512) :: infile ! soil input file name
+     integer :: nslay          ! number of soil layers
+     type(soil_intrinsic) :: intri    ! properties that are instrinsic, modify by changing the material in the soil
+     type(soil_state) :: state        ! properties indicating the state of the soil (can change without material changing)
+     type(soil_derived) :: deriv      ! calculate values from state and intrinsics that are used by other process modules
+  end type soil_def
+
+contains
+
+  subroutine allocate_soil(nsoillay, soil)
+     integer, intent(in) :: nsoillay
+     type(soil_def), intent(inout) :: soil
+
+     ! local variable
+     integer :: alloc_stat  ! allocation status return
+     integer :: sum_stat    ! summation of status return values
+
+     ! allocate below ground arrays
+     sum_stat = 0
+
+     ! intrinsic
+     allocate(soil%intri%asvroc(nsoillay), stat=alloc_stat)
+     sum_stat = sum_stat + alloc_stat
+     allocate(soil%intri%asfsan(nsoillay), stat=alloc_stat)
+     sum_stat = sum_stat + alloc_stat
+     allocate(soil%intri%asfsil(nsoillay), stat=alloc_stat)
+     sum_stat = sum_stat + alloc_stat
+     allocate(soil%intri%asfcla(nsoillay), stat=alloc_stat)
+     sum_stat = sum_stat + alloc_stat
+     allocate(soil%intri%as0ph(nsoillay), stat=alloc_stat)
+     sum_stat = sum_stat + alloc_stat
+     allocate(soil%intri%asfcce(nsoillay), stat=alloc_stat)
+     sum_stat = sum_stat + alloc_stat
+     allocate(soil%intri%asfcec(nsoillay), stat=alloc_stat)
+     sum_stat = sum_stat + alloc_stat
+     allocate(soil%intri%asfom(nsoillay), stat=alloc_stat)
+     sum_stat = sum_stat + alloc_stat
+     allocate(soil%intri%asdwblk(nsoillay), stat=alloc_stat)
+     sum_stat = sum_stat + alloc_stat
+     allocate(soil%intri%asdsblk(nsoillay), stat=alloc_stat)
+     sum_stat = sum_stat + alloc_stat
+     allocate(soil%intri%asdprocblk(nsoillay), stat=alloc_stat)
+     sum_stat = sum_stat + alloc_stat
+     allocate(soil%intri%aslagn(nsoillay), stat=alloc_stat)
+     sum_stat = sum_stat + alloc_stat
+     allocate(soil%intri%aslagx(nsoillay), stat=alloc_stat)
+     sum_stat = sum_stat + alloc_stat
+     allocate(soil%intri%asfcle(nsoillay), stat=alloc_stat)
+     sum_stat = sum_stat + alloc_stat
+     allocate(soil%intri%asfvcs(nsoillay), stat=alloc_stat)
+     sum_stat = sum_stat + alloc_stat
+     allocate(soil%intri%asfcs(nsoillay), stat=alloc_stat)
+     sum_stat = sum_stat + alloc_stat
+     allocate(soil%intri%asfms(nsoillay), stat=alloc_stat)
+     sum_stat = sum_stat + alloc_stat
+     allocate(soil%intri%asffs(nsoillay), stat=alloc_stat)
+     sum_stat = sum_stat + alloc_stat
+     allocate(soil%intri%asfvfs(nsoillay), stat=alloc_stat)
+     sum_stat = sum_stat + alloc_stat
+     allocate(soil%intri%asfwdc(nsoillay), stat=alloc_stat)
+     sum_stat = sum_stat + alloc_stat
+
+     ! state
+     allocate(soil%state%aszlyt(nsoillay), stat=alloc_stat)
+     sum_stat = sum_stat + alloc_stat
+     allocate(soil%state%asdblk(nsoillay), stat=alloc_stat)
+     sum_stat = sum_stat + alloc_stat
+     allocate(soil%state%asdagd(nsoillay), stat=alloc_stat)
+     sum_stat = sum_stat + alloc_stat
+     allocate(soil%state%aseags(nsoillay), stat=alloc_stat)
+     sum_stat = sum_stat + alloc_stat
+     allocate(soil%state%aslagm(nsoillay), stat=alloc_stat)
+     sum_stat = sum_stat + alloc_stat
+     allocate(soil%state%as0ags(nsoillay), stat=alloc_stat)
+     sum_stat = sum_stat + alloc_stat
+
+     ! derived
+     allocate(soil%deriv%asdpart(nsoillay), stat=alloc_stat)
+     sum_stat = sum_stat + alloc_stat
+     allocate(soil%deriv%aszlyd(nsoillay), stat=alloc_stat)
+     sum_stat = sum_stat + alloc_stat
+     allocate(soil%deriv%asdwsrat(nsoillay), stat=alloc_stat)
+     sum_stat = sum_stat + alloc_stat
+     allocate(soil%deriv%asdblk0(nsoillay), stat=alloc_stat)
+     sum_stat = sum_stat + alloc_stat
+     allocate(soil%deriv%ahrwc(nsoillay), stat=alloc_stat)
+     sum_stat = sum_stat + alloc_stat
+     allocate(soil%deriv%ahrwcdmx(nsoillay), stat=alloc_stat)
+     sum_stat = sum_stat + alloc_stat
+     allocate(soil%deriv%aheaep(nsoillay), stat=alloc_stat)
+     sum_stat = sum_stat + alloc_stat
+     allocate(soil%deriv%ah0cb(nsoillay), stat=alloc_stat)
+     sum_stat = sum_stat + alloc_stat
+     allocate(soil%deriv%ahrsk(nsoillay), stat=alloc_stat)
+     sum_stat = sum_stat + alloc_stat
+     allocate(soil%deriv%ahrwcr(nsoillay), stat=alloc_stat)
+     sum_stat = sum_stat + alloc_stat
+     allocate(soil%deriv%ahrwcw(nsoillay), stat=alloc_stat)
+     sum_stat = sum_stat + alloc_stat
+     allocate(soil%deriv%ahrwcf(nsoillay), stat=alloc_stat)
+     sum_stat = sum_stat + alloc_stat
+     allocate(soil%deriv%ahrwcs(nsoillay), stat=alloc_stat)
+     sum_stat = sum_stat + alloc_stat
+     allocate(soil%deriv%ahrwca(nsoillay), stat=alloc_stat)
+     sum_stat = sum_stat + alloc_stat
+     allocate(soil%deriv%ahrwc1(nsoillay), stat=alloc_stat)
+     sum_stat = sum_stat + alloc_stat
+     allocate(soil%deriv%ahfredsat(nsoillay), stat=alloc_stat)
+
+     if( sum_stat .gt. 0 ) then
+        write(*,*) 'ERROR: unable to allocate memory for soil'
+        stop 1
+     end if
+  end subroutine allocate_soil
+
+  subroutine deallocate_soil(soil)
+     type(soil_def), intent(inout) :: soil
+
+     ! local variable
+     integer :: dealloc_stat  ! deallocation status return
+     integer :: sum_stat      ! summation of status return values
+
+     ! deallocate below ground arrays
+     sum_stat = 0
+
+     ! intrinsic
+     deallocate(soil%intri%asvroc, stat=dealloc_stat)
+     sum_stat = sum_stat + dealloc_stat
+     deallocate(soil%intri%asfsan, stat=dealloc_stat)
+     sum_stat = sum_stat + dealloc_stat
+     deallocate(soil%intri%asfsil, stat=dealloc_stat)
+     sum_stat = sum_stat + dealloc_stat
+     deallocate(soil%intri%asfcla, stat=dealloc_stat)
+     sum_stat = sum_stat + dealloc_stat
+     deallocate(soil%intri%as0ph, stat=dealloc_stat)
+     sum_stat = sum_stat + dealloc_stat
+     deallocate(soil%intri%asfcce, stat=dealloc_stat)
+     sum_stat = sum_stat + dealloc_stat
+     deallocate(soil%intri%asfcec, stat=dealloc_stat)
+     sum_stat = sum_stat + dealloc_stat
+     deallocate(soil%intri%asfom, stat=dealloc_stat)
+     sum_stat = sum_stat + dealloc_stat
+     deallocate(soil%intri%asdwblk, stat=dealloc_stat)
+     sum_stat = sum_stat + dealloc_stat
+     deallocate(soil%intri%asdsblk, stat=dealloc_stat)
+     sum_stat = sum_stat + dealloc_stat
+     deallocate(soil%intri%asdprocblk, stat=dealloc_stat)
+     sum_stat = sum_stat + dealloc_stat
+     deallocate(soil%intri%aslagn, stat=dealloc_stat)
+     sum_stat = sum_stat + dealloc_stat
+     deallocate(soil%intri%aslagx, stat=dealloc_stat)
+     sum_stat = sum_stat + dealloc_stat
+     deallocate(soil%intri%asfcle, stat=dealloc_stat)
+     sum_stat = sum_stat + dealloc_stat
+     deallocate(soil%intri%asfvcs, stat=dealloc_stat)
+     sum_stat = sum_stat + dealloc_stat
+     deallocate(soil%intri%asfcs, stat=dealloc_stat)
+     sum_stat = sum_stat + dealloc_stat
+     deallocate(soil%intri%asfms, stat=dealloc_stat)
+     sum_stat = sum_stat + dealloc_stat
+     deallocate(soil%intri%asffs, stat=dealloc_stat)
+     sum_stat = sum_stat + dealloc_stat
+     deallocate(soil%intri%asfvfs, stat=dealloc_stat)
+     sum_stat = sum_stat + dealloc_stat
+     deallocate(soil%intri%asfwdc, stat=dealloc_stat)
+     sum_stat = sum_stat + dealloc_stat
+
+     ! state
+     deallocate(soil%state%aszlyt, stat=dealloc_stat)
+     sum_stat = sum_stat + dealloc_stat
+     deallocate(soil%state%asdblk, stat=dealloc_stat)
+     sum_stat = sum_stat + dealloc_stat
+     deallocate(soil%state%asdagd, stat=dealloc_stat)
+     sum_stat = sum_stat + dealloc_stat
+     deallocate(soil%state%aseags, stat=dealloc_stat)
+     sum_stat = sum_stat + dealloc_stat
+     deallocate(soil%state%aslagm, stat=dealloc_stat)
+     sum_stat = sum_stat + dealloc_stat
+     deallocate(soil%state%as0ags, stat=dealloc_stat)
+     sum_stat = sum_stat + dealloc_stat
+
+     ! derived
+     deallocate(soil%deriv%asdpart, stat=dealloc_stat)
+     sum_stat = sum_stat + dealloc_stat
+     deallocate(soil%deriv%aszlyd, stat=dealloc_stat)
+     sum_stat = sum_stat + dealloc_stat
+     deallocate(soil%deriv%asdwsrat, stat=dealloc_stat)
+     sum_stat = sum_stat + dealloc_stat
+     deallocate(soil%deriv%asdblk0, stat=dealloc_stat)
+     sum_stat = sum_stat + dealloc_stat
+     deallocate(soil%deriv%ahrwc, stat=dealloc_stat)
+     sum_stat = sum_stat + dealloc_stat
+     deallocate(soil%deriv%ahrwcdmx, stat=dealloc_stat)
+     sum_stat = sum_stat + dealloc_stat
+     deallocate(soil%deriv%aheaep, stat=dealloc_stat)
+     sum_stat = sum_stat + dealloc_stat
+     deallocate(soil%deriv%ah0cb, stat=dealloc_stat)
+     sum_stat = sum_stat + dealloc_stat
+     deallocate(soil%deriv%ahrsk, stat=dealloc_stat)
+     sum_stat = sum_stat + dealloc_stat
+     deallocate(soil%deriv%ahrwcr, stat=dealloc_stat)
+     sum_stat = sum_stat + dealloc_stat
+     deallocate(soil%deriv%ahrwcw, stat=dealloc_stat)
+     sum_stat = sum_stat + dealloc_stat
+     deallocate(soil%deriv%ahrwcf, stat=dealloc_stat)
+     sum_stat = sum_stat + dealloc_stat
+     deallocate(soil%deriv%ahrwcs, stat=dealloc_stat)
+     sum_stat = sum_stat + dealloc_stat
+     deallocate(soil%deriv%ahrwca, stat=dealloc_stat)
+     sum_stat = sum_stat + dealloc_stat
+     deallocate(soil%deriv%ahrwc1, stat=dealloc_stat)
+     sum_stat = sum_stat + dealloc_stat
+     deallocate(soil%deriv%ahfredsat, stat=dealloc_stat)
+
+     if( sum_stat .gt. 0 ) then
+        write(*,*) 'ERROR: unable to deallocate memory for soil'
+     end if
+  end subroutine deallocate_soil
 
 end module soil_data_struct_defs
 
