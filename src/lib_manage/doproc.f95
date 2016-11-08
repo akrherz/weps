@@ -25,6 +25,7 @@
       use soilden_mod, only: setbdproc_wc
       use hydro_data_struct_defs, only: hydro_derived_et
       use erosion_data_struct_defs, only: subregionsurfacestate
+      use soil_mod, only: depthini
 
 !     + + + PARAMETERS AND COMMON BLOCKS + + +
       include 'command.inc'

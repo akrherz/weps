@@ -17,6 +17,7 @@ module split_layers_mod
 !     10-Oct-04   lew   modified to work with "versioned" IFC files only
 
       use erosion_data_struct_defs, only: subregionsurfacestate
+      use soil_mod, only: depthini
 
       include 'p1werm.inc'
       include 'wpath.inc'
@@ -298,6 +299,7 @@ module split_layers_mod
 !     Edit History
 !     07-Feb-01   wjr   created
       use erosion_data_struct_defs, only: subregionsurfacestate
+      use soil_mod, only: depthini
 
 !     + + + ARGUMENTS + + +
       integer       isr

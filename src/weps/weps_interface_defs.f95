@@ -1989,17 +1989,6 @@ SUBROUTINE update_period_report_vars(pd, npd, cur_yr, nrot_years, period_update,
       real cslagx, se0, se1
       end subroutine asd
 !-------------         
-      subroutine callsoil(daysim, isr, croptot, biotot, h1et, subrsurf)
-      use biomaterial, only: biototal
-      use hydro_data_struct_defs, only: hydro_derived_et
-      use erosion_data_struct_defs, only: subregionsurfacestate
-      integer daysim
-      integer isr                   
-      type(biototal), intent(in) :: croptot, biotot
-      type(hydro_derived_et), intent(inout) :: h1et
-      type(subregionsurfacestate), intent(inout) :: subrsurf  ! subregion surface conditions
-      end subroutine callsoil 
-!-------------
       subroutine cru(bszcr,cumpa,csfcla,dcump,bsfcr,bhzsmt,             &
      &  bsmlos,csfom,csfcce,csfsan,bsmls0,bszrgh,bszrr,bsflos)
       real bszcr,cumpa,csfcla,dcump,bsfcr,bhzsmt,bsmlos,csfom
@@ -2016,11 +2005,6 @@ SUBROUTINE update_period_report_vars(pd, npd, cur_yr, nrot_years, period_update,
       integer trigger
       end subroutine den
 !----------------      
-      subroutine depthini(nlay, bszlyt, bszlyd)
-      integer nlay
-      real    bszlyt(*), bszlyd(*)
-      end subroutine depthini
-!----------------
       subroutine ranrou(                                                &
      &  csfsil, csfsan, bszrr, bszrro, cumpa, dcump, cf2cov, csvroc)
       real csfsil, csfsan
@@ -2044,75 +2028,6 @@ SUBROUTINE update_period_report_vars(pd, npd, cur_yr, nrot_years, period_update,
       type(subregionsurfacestate), intent(in) :: subrsurf  ! subregion surface conditions
       end subroutine sdbug
 !------------------
-      subroutine sinit (daysim,                                         &
-     &                 bhtsmx, bhrwc, bsfom, bszlyt,                    &
-     &                 bslay, bsfsan, bsfsil, bsfcla,                   &
-     &                 bszrgh, bszrr, bsfcce, bsfcec,                   &
-     &                 cump, dcump, bsk4d,                              &
-     &                 bhtmx0, bhrwc0, szlyd,                           &
-     &                 bszrr0, bszrh0,                                  &
-     &                 bseagm, bseagmn, bseagmx,                        &
-     &                 bslmin, bslmax,                                  &
-     &                 rain, snow, sprink,                              &
-     &                 bhzirr, bszrho,                                  &
-     &                 bhlocirr, bhzsmt, bszrro,                        &
-     &                 bsdsblk, bwzdpt, bwtdav, trigger)
-      integer daysim
-      real bhtsmx(*), bhrwc(*), bsfom(1:*), bszlyt(*)
-      integer bslay
-      real bsfsan(1:*), bsfsil(1:*), bsfcla(1:*)
-      real bszrgh, bszrr, bsfcce(1:*), bsfcec(1:*)
-      real cump, dcump, bsk4d(*)
-      real bhtmx0(*), bhrwc0(*), szlyd(*)
-      real bszrr0, bszrh0
-      real bseagm(*), bseagmn(*), bseagmx(*)
-      real bslmin(*),bslmax(*)
-      real rain, snow, sprink
-      real bhzirr, bszrho
-      real bhlocirr, bhzsmt, bszrro
-      real bsdsblk(*), bwzdpt, bwtdav
-      integer trigger(*)
-      end subroutine sinit
-!-----------------
-      subroutine soil (isr, daysim, bhlocirr, bhzirr, bhzsmt,           &
-     &                 bhtsmx, bhtsmn,                                  &
-     &                 bhrwc, bhrwcdmx, bhrwca,                         &
-     &                 bhrwcw, bhrwcs, bszlyt, bslay,                   &
-     &                 bsfsan, bsfsil, bsfcla, bsfom, bsvroc,           &
-     &                 bsdsblk, bsdwblk,                                &
-     &                 bsdblk, bsdagd,                                  &
-     &                 bslagm, bslagn,                                  &
-     &                 bs0ags, bslagx, bseags,                          &
-     &                 bseagm, bseagmn, bseagmx,                        &
-     &                 bsk4d, bslmin, bslmax,                           &
-     &                 bbffcv, bbfscv,                                  &
-     &                 bsfcce, bsfcec, bhzinf, bhzwid, subrsurf)
-      use erosion_data_struct_defs, only: subregionsurfacestate
-      integer, intent(in) :: isr   ! subregion number
-      integer daysim
-      real bhlocirr, bhzirr, bhzsmt
-      real bhtsmx(*), bhtsmn(*)
-      real bhrwc(*), bhrwcdmx(*), bhrwca(*)
-      real bhrwcw(*), bhrwcs(*), bszlyt(*)
-      integer bslay
-      real bsfsan(1:*), bsfsil(1:*), bsfcla(1:*)
-      real bsfom(1:*), bsvroc(1:*)
-      real bsdsblk(*), bsdwblk(*)
-      real bsdblk(0:*), bsdagd(0:*)
-      real bslagm(0:*), bslagn(0:*)
-      real bs0ags(0:*), bslagx(0:*), bseags(0:*)
-      real bseagm(*), bseagmn(*), bseagmx(*)
-      real bsk4d(*), bslmin(*), bslmax(*)
-      real bbffcv, bbfscv
-      real bsfcce(1:*), bsfcec(1:*)
-      real bhzinf, bhzwid
-      type(subregionsurfacestate), intent(inout) :: subrsurf  ! subregion surface conditions
-      end subroutine soil
-!------------------------
-      subroutine soilinit(isr)                                
-      integer isr
-      end subroutine soilinit
-!-----------------------
       subroutine updlay(daysim, szlyd,                                  &
      &  bhrwc0, bhrwc, bhrwcdmx,                                        &
      &  bseagmx, bseagmn, bseags,                                       &
