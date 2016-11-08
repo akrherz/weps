@@ -999,22 +999,10 @@
         INTEGER :: nrot_yrs            ! Number of rotation years
         type(opercrop_date), dimension(:), intent(in) :: mandate ! array of mandates from management file
         end function get_nperiods
-!-------------------------------
-      subroutine inpsub (isr, subrsurf)
-      use erosion_data_struct_defs, only: subregionsurfacestate
-      integer, intent(in) :: isr
-      type(subregionsurfacestate), intent(inout) :: subrsurf  ! subregion surface conditions
-      end subroutine inpsub
 !------------------------------      
        subroutine   input( n_rot_cycles )
       integer, intent(out) :: n_rot_cycles
       end subroutine input
-!------------------------------
-      subroutine input_ifc(isr, subrsurf)
-      use erosion_data_struct_defs, only: subregionsurfacestate
-      integer, intent(in) :: isr
-      type(subregionsurfacestate), intent(inout) :: subrsurf  ! subregion surface conditions
-      end subroutine input_ifc
 !------------------------------
       subroutine mandates(sr, mandate)
       use mandate_mod, only: opercrop_date, create_mandate    ! Load shared mandate() array

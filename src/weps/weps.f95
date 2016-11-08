@@ -45,6 +45,7 @@
       use subregions_mod, only: subr_poly, acct_poly
       use barriers_mod, only: barrier, barseas, minht_barriers, destroy_barrier, set_barrier_season
       use file_io_mod, only: luo_egrd, luo_emit, luo_sgrd, luogui1, luomandate, makedir
+      use input_soil_mod, only: input_ifc
       use biomaterial
       use debug_mod
       use mandate_mod

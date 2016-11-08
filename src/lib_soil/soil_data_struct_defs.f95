@@ -29,6 +29,12 @@ module soil_data_struct_defs
      real, dimension(:), pointer :: asdprocblk ! Soil layer proctor bulk density (Mg/m^3)
      real, dimension(:), pointer :: aslagn    ! minimum agg size (mm)
      real, dimension(:), pointer :: aslagx    ! maximum agg size (mm)
+     real, dimension(:), pointer :: aseagm    ! soil layer mean aggregate stabillity (J/m^2)
+     real, dimension(:), pointer :: aseagmn   ! soil layer minimum aggregate stability
+     real, dimension(:), pointer :: aseagmx   ! soil layer maximum aggregate stability
+     real, dimension(:), pointer :: ask4d     ! soil layer drying stability coefficient
+     real, dimension(:), pointer :: aslmin    ! min values of geom. mean agg. diameter (eq. S-45, S-46)
+     real, dimension(:), pointer :: aslmax    ! max values of geom. mean agg. diameter (eq. S-45, S-46)
      real, dimension(:), pointer :: asfcle    ! Linear extensibility ((Mg/m^3)/(Mg/m^3))
      real, dimension(:), pointer :: asfvcs    ! Soil layer content of very coarse sand (Mg/Mg)
      real, dimension(:), pointer :: asfcs     ! Soil layer content of coarse sand (Mg/Mg)
@@ -141,6 +147,18 @@ contains
      sum_stat = sum_stat + alloc_stat
      allocate(soil%intri%aslagx(nsoillay), stat=alloc_stat)
      sum_stat = sum_stat + alloc_stat
+     allocate(soil%intri%aseagm(nsoillay), stat=alloc_stat)
+     sum_stat = sum_stat + alloc_stat
+     allocate(soil%intri%aseagmn(nsoillay), stat=alloc_stat)
+     sum_stat = sum_stat + alloc_stat
+     allocate(soil%intri%aseagmx(nsoillay), stat=alloc_stat)
+     sum_stat = sum_stat + alloc_stat
+     allocate(soil%intri%ask4d(nsoillay), stat=alloc_stat)
+     sum_stat = sum_stat + alloc_stat
+     allocate(soil%intri%aslmin(nsoillay), stat=alloc_stat)
+     sum_stat = sum_stat + alloc_stat
+     allocate(soil%intri%aslmax(nsoillay), stat=alloc_stat)
+     sum_stat = sum_stat + alloc_stat
      allocate(soil%intri%asfcle(nsoillay), stat=alloc_stat)
      sum_stat = sum_stat + alloc_stat
      allocate(soil%intri%asfvcs(nsoillay), stat=alloc_stat)
@@ -245,6 +263,18 @@ contains
      deallocate(soil%intri%aslagn, stat=dealloc_stat)
      sum_stat = sum_stat + dealloc_stat
      deallocate(soil%intri%aslagx, stat=dealloc_stat)
+     sum_stat = sum_stat + dealloc_stat
+     deallocate(soil%intri%aseagm, stat=dealloc_stat)
+     sum_stat = sum_stat + dealloc_stat
+     deallocate(soil%intri%aseagmn, stat=dealloc_stat)
+     sum_stat = sum_stat + dealloc_stat
+     deallocate(soil%intri%aseagmx, stat=dealloc_stat)
+     sum_stat = sum_stat + dealloc_stat
+     deallocate(soil%intri%ask4d, stat=dealloc_stat)
+     sum_stat = sum_stat + dealloc_stat
+     deallocate(soil%intri%aslmin, stat=dealloc_stat)
+     sum_stat = sum_stat + dealloc_stat
+     deallocate(soil%intri%aslmax, stat=dealloc_stat)
      sum_stat = sum_stat + dealloc_stat
      deallocate(soil%intri%asfcle, stat=dealloc_stat)
      sum_stat = sum_stat + dealloc_stat
