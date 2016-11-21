@@ -1914,14 +1914,13 @@ SUBROUTINE update_monthly_report_vars(cur_month, cur_year, nrot_years, monthly_u
     TYPE (pd_dates_type), DIMENSION(:,:), intent(inout) :: monthly_dates
     end SUBROUTINE update_monthly_report_vars
 !------------------------
-SUBROUTINE update_period_update_vars(sbr, period_update, soil, restot, croptot, biotot, cellstate, h1et, subrsurf)
+SUBROUTINE update_period_update_vars(sbr, period_update, soil, restot, croptot, biotot, cellstate, h1et)
     USE pd_var_tables
     USE pd_var_type_def
     use soil_data_struct_defs, only: soil_def
     use biomaterial, only: biototal
     use erosion_data_struct_defs, only: cellsurfacestate
     use hydro_data_struct_defs, only: hydro_derived_et
-    use erosion_data_struct_defs, only: subregionsurfacestate
     INTEGER :: sbr              ! current subregion
     TYPE (pd_var_type), DIMENSION(Min_period_vars:), intent(inout) :: period_update
     type(soil_def), intent(in) :: soil  ! soil for this subregion
@@ -1930,7 +1929,6 @@ SUBROUTINE update_period_update_vars(sbr, period_update, soil, restot, croptot, 
     type(biototal), intent(in) :: biotot  ! contains:
     type(cellsurfacestate), dimension(0:,0:), intent(in) :: cellstate  ! egt, egtcs, egtss, egt10
     type(hydro_derived_et), intent(in) :: h1et
-    type(subregionsurfacestate), intent(in) :: subrsurf  ! subregion surface conditions
     end subroutine  update_period_update_vars
 !-------------------------
 SUBROUTINE update_period_report_vars(pd, npd, cur_yr, nrot_years, period_update, period_report, period_dates)

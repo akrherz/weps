@@ -53,12 +53,6 @@ module input_soil_mod
       integer linnum
       data linnum /1/
 
-      ! temporary initialization until proper structures put this in better place
-      ! these are accumulated in update_period_update_vars but are not set until
-      ! erosion is called at least once (sbinit, sbpm10)
-      soil%acanag = 0
-      soil%acancr = 0
-
       call fopenk (lui1, sinfil(isr), 'old') ! open IFC file
        
 !     Check to see if this is a "versioned" IFC file

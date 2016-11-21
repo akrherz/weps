@@ -335,9 +335,9 @@
 !     &      ,t80,'swc',t87,'*hfwsf',t101,'*czrtd',t115,'*snwc'
 !     &      ,t122,'theta'/,
 !     *  /, t16,34('-'),'mm',33('-')/1x, 100('-'))
- 2080 format('# daysim doy yr  h1et%zetp  h1et%zep h1et%zptp  h1et%zea h1et%zpta h1et%zper&
-     & h1et%zirr cli_today%zdpt  dprec h1et%zrun bhzinf   lswc   swc  h1et%zsnd bhzsno  c&
-     &heck cropdp rootwc rootwcap bhfwsf surfdry tdav vaptrans evaplim&
+ 2080 format('# daysim doy yr  ahzetp  ahzep ahzptp  ahzea ahzpta bhzper&
+     & bhzirr bwzdpt  dprec bhzrun bhzinf   lswc   swc  bhzsnd bhzsno  c&
+     &heck cropdp rootwc rootwcap bhfwsf surfdry bwtdav vaptrans evaplim&
      &it st_evapr fl_evapr to_evapr')
  2090 format(1x,i6,1x,i3,1x,i4,11(1x,f6.2),2(1x,f8.2),2(1x,f6.2),       &
      &       1x,f7.3,11(1x,f6.2))

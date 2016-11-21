@@ -877,7 +877,7 @@
 
                ! Compute period values
                call update_period_update_vars(isr, rep_update(isr)%period_update, soil(isr), &
-                    restot(isr), croptot(isr), biotot(isr), cellstate, h1et(isr), subrsurf(isr))
+                    restot(isr), croptot(isr), biotot(isr), cellstate, h1et(isr))
                                              
                ! print *, pd, "  ",cy,cm,cd,"  ", rep_dates(isr)%period(pd(isr))
 

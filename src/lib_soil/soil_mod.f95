@@ -219,10 +219,10 @@ module soil_mod
         soil%asdcr = 0.576 + 0.603 * soil%asdsblk(1)
       end if
 
-      ! crust coefficient of abrasion
-      soil%acancr = coef_abrasion(soil%asecr)
       ! aggregate coefficient of abrasion
       soil%acanag = coef_abrasion(soil%aseags(1))
+      ! crust coefficient of abrasion
+      soil%acancr = coef_abrasion(soil%asecr)
 
 !     Assign today's values to 'yesterday storage'
       do ldx = 1,bslay
@@ -235,7 +235,7 @@ module soil_mod
 
 !     + + + OUTPUT FORMATS + + +
  2100 format('#daysim idoy yr cump dcump bszrgh bsxrgs bszrr bszcr bsfcr&
-     & bsecr bsmlos bsflos')
+     & bsecr bsmlos bsflos bcanag bcancr')
  2200 format( 3(1x,i4), 10(1x,f8.4) )
  2300 format('#daysim idoy yr layer depth bszlyt bsdblk bseags bseagmn b&
      &seagm bseagmx bslagn bslmin bslagm bslmax bslagx bs0ags bsdagd rel&
@@ -266,7 +266,8 @@ module soil_mod
 
          write(luosoilsurf(isr), 2200) daysim,idoy,yr, cump(isr), dcump, &
               soil%aszrgh, soil%asxrgs, soil%aslrr, soil%aszcr, &
-              soil%asfcr, soil%asecr, soil%asmlos, soil%asflos
+              soil%asfcr, soil%asecr, soil%asmlos, soil%asflos, &
+              soil%acanag, soil%acancr
 
 ! output new values by layer to the soil output file.
          do ldx = 1,bslay
