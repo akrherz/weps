@@ -31,7 +31,6 @@
 !     + + + GLOBAL COMMON BLOCKS + + +
       include 'p1werm.inc'
       include 'h1hydro.inc'
-      include 'h1scs.inc'
       include 'h1db1.inc'
 
 !     + + + LOCAL COMMON BLOCKS + + +

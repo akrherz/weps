@@ -30,7 +30,6 @@
       include 'p1werm.inc'
       include 'm1flag.inc'
       include 'h1hydro.inc'
-      include 'h1scs.inc'
       include 'h1db1.inc'
       include 'h1temp.inc'
 

@@ -20,7 +20,6 @@
       include 'hydro/htheta.inc'
 
       include 'main/main.inc'
-      include 'h1scs.inc'
       
       include 'wepp_erosion.inc'
 
@@ -87,8 +86,6 @@
 
       h1et%zrun = 0.0
       ahzsmt(isr) = 0.0
-      ah0cng(isr) = 0.0
-      ah0cnp(isr) = 0.0
       ahfwsf(isr) = 1.0
       h1et%zper = 0.0
 

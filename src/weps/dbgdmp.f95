@@ -39,7 +39,6 @@
       include 'c1db1.inc'
       include 'c1db2.inc'
       include 'h1hydro.inc'
-      include 'h1scs.inc'
       include 'h1db1.inc'
       include 'h1temp.inc'
 
@@ -463,16 +462,6 @@
 !
       if (ahzsmt(sr).lt.0.0.or.ahzsmt(sr).gt.tstmax)                    &
      &  write(*,*) 'day ',day,' ahzsmt ', ahzsmt(sr)
-!
-! h1scs
-!
-      if (dmpflg) write(*,*) 'h1scs'
-!      
-      if (ah0cng(sr).lt.6.0.or.ah0cng(sr).gt.91.0)                      &
-     &  write(*,*) 'day ',day,' ah0cng ', ah0cng(sr)
-!
-      if (ah0cnp(sr).lt.45.0.or.ah0cnp(sr).gt.94.0)                     &
-     &  write(*,*) 'day ',day,' ah0cnp ', ah0cnp(sr)
 !
 ! h1db1
 !

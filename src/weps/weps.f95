@@ -290,7 +290,7 @@
       if (calibrate_crops > 3) max_calib_cycles = calibrate_crops
 
 !     open input files and read run files
-      call input(run_rot_cycles, soil)
+      call input(run_rot_cycles, soil_in)
 
       ! set total number of subregions from size of allocated subr_poly array
       nsubr = size(subr_poly)
@@ -306,8 +306,8 @@
       sum_stat = sum_stat + alloc_stat
       allocate(noerod(nsubr), stat=alloc_stat)
       sum_stat = sum_stat + alloc_stat
-      allocate(soil_in(nsubr), stat=alloc_stat)
-      sum_stat = sum_stat + alloc_stat
+!      allocate(soil_in(nsubr), stat=alloc_stat)
+!      sum_stat = sum_stat + alloc_stat
       allocate(soil(0:nsubr), stat=alloc_stat)
       sum_stat = sum_stat + alloc_stat
 

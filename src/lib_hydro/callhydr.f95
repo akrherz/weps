@@ -37,7 +37,6 @@
       include 'h1hydro.inc'
       include 'h1temp.inc'
       include 'h1db1.inc'
-      include 'h1scs.inc'
       include 'h1balance.inc'
 
       call timer(TIMHYDR,TIMSTART)      

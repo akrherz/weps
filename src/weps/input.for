@@ -31,7 +31,7 @@
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer, intent(out) :: n_rot_cycles
-      type(soil_def), dimension(:), intent(inout) :: soil 
+      type(soil_def), dimension(:), allocatable, intent(inout) :: soil 
 
       include 'p1werm.inc'
       include 'wpath.inc'

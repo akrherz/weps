@@ -192,7 +192,6 @@ module input_soil_mod
 
       include 'p1werm.inc'
       include 'h1hydro.inc'
-      include 'h1scs.inc'
       include 'h1db1.inc'
 
 !     + + + Arguments + + +
@@ -432,7 +431,6 @@ module input_soil_mod
 
       include 'p1werm.inc'
       include 'h1hydro.inc'
-      include 'h1scs.inc'
       include 'h1db1.inc'
 
 !     + + + LOCAL COMMON BLOCKS + + +
@@ -685,7 +683,6 @@ module input_soil_mod
       include 'wpath.inc'
       include 'm1sim.inc'
       include 'h1hydro.inc'
-      include 'h1scs.inc'
       include 'h1db1.inc'
       include 'command.inc'          !declarations for commandline args
 
@@ -833,9 +830,9 @@ module input_soil_mod
         case (40)
           read(line,*,err=82) (soil%ahrsk(lay), lay=1,soil%nslay)
         case (41)
-          read(line,*,err=82) ah0cnp(isr)
+          read(line,*,err=82) temp  ! no nonger used, ah0cnp(isr)
         case (42)
-          read(line,*,err=82) ah0cng(isr)
+          read(line,*,err=82) temp  ! no nonger used, ah0cng(isr)
         case (43)
           read(line,*,err=82) soil%asfald
 

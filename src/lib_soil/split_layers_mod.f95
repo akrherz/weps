@@ -301,7 +301,6 @@ module split_layers_mod
       include 'wpath.inc'
       include 'm1sim.inc'
       include 'h1hydro.inc'
-      include 'h1scs.inc'
       include 'h1db1.inc'
       include 'command.inc'          !declarations for commandline args
 
@@ -407,7 +406,6 @@ module split_layers_mod
       include 'wpath.inc'
       include 'm1sim.inc'
       include 'h1hydro.inc'
-      include 'h1scs.inc'
       include 'h1db1.inc'
       include 'command.inc'          !declarations for commandline args
 

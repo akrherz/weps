@@ -33,7 +33,7 @@ contains
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer, intent(out) :: n_rot_cycles
-      type(soil_def), dimension(:), intent(inout) :: soil 
+      type(soil_def), dimension(:), allocatable, intent(inout) :: soil 
 
       include 'p1werm.inc'
       include 'wpath.inc'
@@ -41,7 +41,6 @@ contains
       include 'm1flag.inc'
       include 'c1gen.inc'
       include 'h1hydro.inc'
-      include 'h1scs.inc'
       include 'h1db1.inc'
 
 !     + + + LOCAL COMMON BLOCKS + + +
@@ -333,7 +332,7 @@ contains
             sum_stat = sum_stat + alloc_stat
             allocate(am0dfl(nsubr), stat=alloc_stat)
             sum_stat = sum_stat + alloc_stat
-            if( alloc_stat .gt. 0 ) then
+            if( sum_stat .gt. 0 ) then
                write(*,*) 'ERROR: memory alloc., submodel output flags'
             end if
 
@@ -349,9 +348,15 @@ contains
             sum_stat = sum_stat + alloc_stat
             allocate(am0ddb(nsubr), stat=alloc_stat)
             sum_stat = sum_stat + alloc_stat
-            if( alloc_stat .gt. 0 ) then
+            if( sum_stat .gt. 0 ) then
                write(*,*) 'ERROR: memory alloc., debug output flags'
             end if
+
+            allocate(soil(nsubr), stat=alloc_stat)
+            if( alloc_stat .gt. 0 ) then
+               write(*,*) 'ERROR: memory alloc., soil structure array'
+            end if
+
             ! read in initial field conditions file name
             sinfil(isr) = rootp(1:len_trim(rootp)) // line
 
