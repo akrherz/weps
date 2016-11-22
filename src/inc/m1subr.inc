@@ -15,26 +15,27 @@
 
 !      integer          nsubr
       integer          amnryr(mnsub)
-      real             amrslp(mnsub)
-      real             SFCov(mnsub)
-      real             WaterErosion(mnsub)
-      real             SoilRockFragments(mnsub)
-      character*160    am0sid(mnsub)
-      character*80     am0tax(mnsub)
-      character*80     am0localphase(mnsub)
-      character*20     SoilLossTol(mnsub)
+!      real             amrslp(mnsub)
+!      real             SFCov(mnsub)
+!      real             WaterErosion(mnsub)
+!      real             SoilRockFragments(mnsub)
+!      character*160    am0sid(mnsub)
+!      character*80     am0tax(mnsub)
+!      character*80     am0localphase(mnsub)
+!      character*20     SoilLossTol(mnsub)
 
       common   / m1subr /                                               &
 !     &                   nsubr,                                         &
-     &                   amnryr,                                        &
-     &                   amrslp,                                        &
-     &                   SFCov,                                         &
-     &                   WaterErosion,                                  & 
-     &                   SoilRockFragments,                             & 
-     &                   am0sid,                                        &
-     &                   am0tax,                                        &
-     &                   am0localphase,                                 &
-     &                   SoilLossTol
+     &                   amnryr
+!,                                        &
+!     &                   amrslp,                                        &
+!     &                   SFCov,                                         &
+!     &                   WaterErosion,                                  & 
+!     &                   SoilRockFragments,                             & 
+!     &                   am0sid,                                        &
+!     &                   am0tax,                                        &
+!     &                   am0localphase,                                 &
+!     &                   SoilLossTol
 
       save :: /m1subr/
 

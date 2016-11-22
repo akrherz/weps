@@ -33,7 +33,6 @@
       include 'p1werm.inc'
       include 'c1gen.inc'
       include 'm1sim.inc'
-      include 'm1subr.inc'
       include 'm1flag.inc'
       include 'h1hydro.inc'
       include 'h1temp.inc'
@@ -47,7 +46,7 @@
          call hdbug(isr, soil, crop, restot, h1et)
       end if
 
-      call hydro( isr, soil%nslay, amrslp(isr), biotot%zht_ave,         &
+      call hydro( isr, soil%nslay, soil%amrslp, biotot%zht_ave,         &
      &            crop%deriv%rlai, crop%deriv%rsai, crop%geometry%zht, crop%growth%dayap,   &
      &       acxrow(isr), ac0rg(isr), biotot%ftcancov, crop%growth%fliveleaf,&
      &         biotot%mftot, biotot%evapredu, crop%geometry%zrtd, ahfwsf(isr), &

@@ -38,7 +38,6 @@
 
 !     + + + GLOBAL COMMON BLOCKS + + +
       include 'p1werm.inc'
-      include 'm1subr.inc'
       include 'm1flag.inc'
       include 'h1hydro.inc'
       include 'h1scs.inc'
@@ -128,7 +127,7 @@
 !      write(luohdb(isr),2045) isr
 
       write(luohdb(isr),2050) isr, isr, isr, isr, isr, isr, isr
-      write(luohdb(isr),2051) amrslp(isr), crop%deriv%ftcv, crop%deriv%rlai, &
+      write(luohdb(isr),2051) soil%amrslp, crop%deriv%ftcv, crop%deriv%rlai, &
                     crop%geometry%zrtd, restot%mftot, ahfwsf(isr), h1et%zper
       write(luohdb(isr),2052) isr, isr, isr, isr
       write(luohdb(isr),2053) h1et%zrun, h1et%zirr, ahzsno(isr), &

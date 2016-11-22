@@ -116,7 +116,6 @@
       include 'p1solar.inc'
       include 'm1sim.inc'
       include 'c1gen.inc'
-      include 'm1subr.inc'
       include 'c1info.inc'
 
 !     + + + FUNCTION DECLARATIONS + + +

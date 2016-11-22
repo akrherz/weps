@@ -1004,8 +1004,10 @@
         type(opercrop_date), dimension(:), intent(in) :: mandate ! array of mandates from management file
         end function get_nperiods
 !------------------------------      
-       subroutine   input( n_rot_cycles )
+       subroutine   input( n_rot_cycles, soil )
+      use soil_data_struct_defs, only: soil_def
       integer, intent(out) :: n_rot_cycles
+      type(soil_def), dimension(:), intent(inout) :: soil 
       end subroutine input
 !------------------------------
       subroutine mandates(sr, mandate)

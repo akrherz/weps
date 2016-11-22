@@ -28,7 +28,6 @@
 
       include 'm1flag.inc'
       include 'command.inc'
-      include 'm1subr.inc'
 
 !     + + + ARGUMENT DECLARATIONS + + +
       type(biomatter), dimension(:,:), intent(out) :: residue

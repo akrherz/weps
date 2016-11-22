@@ -28,12 +28,8 @@ module input_soil_mod
 
       include 'p1werm.inc'
       include 'wpath.inc'
-      include 'm1subr.inc'
       include 'm1sim.inc'
       include 'm1flag.inc'
-!      include 'h1hydro.inc'
-!      include 'h1scs.inc'
-!      include 'h1db1.inc'
       include 'command.inc'          !declarations for commandline args
 
 !     + + + LOCAL COMMON BLOCKS + + +
@@ -168,9 +164,9 @@ module input_soil_mod
       end if
 
       ! Check if override of rock fragments are specified
-      if (SoilRockFragments(isr) .ge. 0.0) then
+      if (soil%SoilRockFragments .ge. 0.0) then
         do lay = 1, soil%nslay
-          soil%asvroc(lay) = SoilRockFragments(isr)
+          soil%asvroc(lay) = soil%SoilRockFragments
         end do
       end if
       
@@ -195,7 +191,6 @@ module input_soil_mod
       use soil_data_struct_defs, only: soil_def, allocate_soil
 
       include 'p1werm.inc'
-      include 'm1subr.inc'
       include 'h1hydro.inc'
       include 'h1scs.inc'
       include 'h1db1.inc'
@@ -232,14 +227,14 @@ module input_soil_mod
       typeidx = typeidx + 1
         select case (typeidx)
         case (1)                                                      ! Soil ID string
-          am0sid(isr) = line(1:160)
+          soil%am0sid = line(1:160)
         case (2)                                                      ! Local Phase string
-          read(line,*,err=902) am0localphase(isr)
+          read(line,*,err=902) soil%am0localphase
         case (3)                                                      ! Taxonomy string
-          read(line,*,err=902) am0tax(isr)
+          read(line,*,err=902) soil%am0tax
 
         case (4)                                                      ! NRCS Soil Loss Tolerance (t/ac/yr)
-          read(line,*,err=902) SoilLossTol(isr)
+          read(line,*,err=902) soil%SoilLossTol
 
 !     read IP surface physical properties
         case (5)                                                      ! Dry soil albedo (fraction)
@@ -248,25 +243,25 @@ module input_soil_mod
           ! set default outflow height to zero (minimum depression storage)
           ahzoutflow(isr) = 0.0
           ! check value read in from weps.run
-          if( amrslp(isr) .lt. -1.5 ) then
+          if( soil%amrslp .lt. -1.5 ) then
              ! weps.run specifies a level basin with no runoff
-             amrslp(isr) = 0.0
+             soil%amrslp = 0.0
              ! set outflow height of 1/2 meter (minimum depression storage)
              ahzoutflow(isr) = 0.5
-          else if( amrslp(isr) .lt. 0.0 ) then
+          else if( soil%amrslp .lt. 0.0 ) then
              ! no value entered by user (from weps.run)
-             read(line,*,err=902) amrslp(isr)
+             read(line,*,err=902) soil%amrslp
              ! check subregion slope value for validity
-             if( amrslp(isr) .lt. 0.0 ) then
+             if( soil%amrslp .lt. 0.0 ) then
                 ! no valid value found in IFC file either, set default value of 1%
-                amrslp(isr) = 0.01
+                soil%amrslp = 0.01
              end if
           else
              ! value from weps.run being used, throw away soil value
              read(line,*,err=902) temp
           end if
         case (7)                                                      ! Surface frag cover (area fraction)
-          read(line,*,err=902) SFCov(isr)
+          read(line,*,err=902) soil%SFCov
 
         case (8)                                                      ! Depth to bedrock (mm)
           read(line,*,err=902) soil%bedrock_depth
@@ -436,7 +431,6 @@ module input_soil_mod
       use soil_data_struct_defs, only: soil_def, allocate_soil
 
       include 'p1werm.inc'
-      include 'm1subr.inc'
       include 'h1hydro.inc'
       include 'h1scs.inc'
       include 'h1db1.inc'
@@ -479,14 +473,14 @@ module input_soil_mod
           !SSURGO_date(isr) = line
 
         case (3)                                                      ! Soil ID string
-          am0sid(isr) = line(1:160)
+          soil%am0sid = line(1:160)
         case (4)                                                      ! Local Phase string
-          read(line,*,err=902) am0localphase(isr)
+          read(line,*,err=902) soil%am0localphase
         case (5)                                                      ! Taxonomy string
-          read(line,*,err=902) am0tax(isr)
+          read(line,*,err=902) soil%am0tax
 
         case (6)                                                      ! NRCS Soil Loss Tolerance (t/ac/yr)
-          read(line,*,err=902) SoilLossTol(isr)
+          read(line,*,err=902) soil%SoilLossTol
 
 !     read IP surface physical properties
         case (7)                                                      ! Dry soil albedo (fraction)
@@ -495,25 +489,25 @@ module input_soil_mod
           ! set default outflow height to zero (minimum depression storage)
           ahzoutflow(isr) = 0.0
           ! check value read in from weps.run
-          if( amrslp(isr) .lt. -1.5 ) then
+          if( soil%amrslp .lt. -1.5 ) then
              ! weps.run specifies a level basin with no runoff
-             amrslp(isr) = 0.0
+             soil%amrslp = 0.0
              ! set outflow height of 1/2 meter (minimum depression storage)
              ahzoutflow(isr) = 0.5
-          else if( amrslp(isr) .lt. 0.0 ) then
+          else if( soil%amrslp .lt. 0.0 ) then
              ! no value entered by user (from weps.run)
-             read(line,*,err=902) amrslp(isr)
+             read(line,*,err=902) soil%amrslp
              ! check subregion slope value for validity
-             if( amrslp(isr) .lt. 0.0 ) then
+             if( soil%amrslp .lt. 0.0 ) then
                 ! no valid value found in IFC file either, set default value of 1%
-                amrslp(isr) = 0.01
+                soil%amrslp = 0.01
              end if
           else
              ! value from weps.run being used, throw away soil value
              read(line,*,err=902) temp
           end if
         case (9)                                                      ! Surface frag cover (area fraction)
-          read(line,*,err=902) SFCov(isr)
+          read(line,*,err=902) soil%SFCov
 
         case (10)                                                      ! Depth to bedrock (mm)
           read(line,*,err=902) soil%bedrock_depth
@@ -689,7 +683,6 @@ module input_soil_mod
 
       include 'p1werm.inc'
       include 'wpath.inc'
-      include 'm1subr.inc'
       include 'm1sim.inc'
       include 'h1hydro.inc'
       include 'h1scs.inc'
@@ -741,9 +734,9 @@ module input_soil_mod
         select case (typidx)
         case (1)
 !     read initial field conditions file
-          am0sid(isr) = line(1:160)
+          soil%am0sid = line(1:160)
         case (2)
-          read(line,*,err=82) am0tax(isr)
+          read(line,*,err=82) soil%am0tax
         case (3)
           read(line,*,err=82) soil%nslay
           ! allocate soil arrays
@@ -851,32 +844,32 @@ module input_soil_mod
           ahzoutflow(isr) = 0.0
           if (ifc_format .eq. 1) then !old ifc format (skip next typidx line)
              typidx = typidx + 1
-             if( amrslp(isr) .lt. -1.5 ) then
+             if( soil%amrslp .lt. -1.5 ) then
                 ! weps.run specifies a level basin with no runoff
-                amrslp(isr) = 0.0
+                soil%amrslp = 0.0
                 ! set outflow height of 1/2 meter (minimum depression storage)
                 ahzoutflow(isr) = 0.5
-             else if( amrslp(isr) .lt. 0.0 ) then
+             else if( soil%amrslp .lt. 0.0 ) then
                 ! no value entered by user (from weps.run)
                 ! no valid value found in IFC file either, set default value of 1%
-                amrslp(isr) = 0.01
+                soil%amrslp = 0.01
              end if
           endif
 
         case (44)    !This line only gets read if new ifc format is specified
           ! check value read in from weps.run
-          if( amrslp(isr) .lt. -1.5 ) then
+          if( soil%amrslp .lt. -1.5 ) then
              ! weps.run specifies a level basin with no runoff
-             amrslp(isr) = 0.0
+             soil%amrslp = 0.0
              ! set outflow height of 1/2 meter (minimum depression storage)
              ahzoutflow(isr) = 0.5
-          else if( amrslp(isr) .lt. 0.0 ) then
+          else if( soil%amrslp .lt. 0.0 ) then
              ! no value entered by user (from weps.run)
-             read(line,*,err=82) amrslp(isr)
+             read(line,*,err=82) soil%amrslp
              ! check subregion slope value for validity
-             if( amrslp(isr) .lt. 0.0 ) then
+             if( soil%amrslp .lt. 0.0 ) then
                 ! no valid value found in IFC file either, set default value of 1%
-                amrslp(isr) = 0.01
+                soil%amrslp = 0.01
              end if
           else
              ! value from weps.run being used, throw away soil value

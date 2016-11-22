@@ -3,7 +3,7 @@
 !$Revision$
 !$HeadURL$
 
-      subroutine   input( n_rot_cycles )
+      subroutine   input( n_rot_cycles, soil )
 
 !     + + + PURPOSE + + +
 !     This subroutine perforns some screen I/O, reads in the
@@ -26,14 +26,15 @@
 !     WEPS, cligen, windgen
 
 !     + + + GLOBAL COMMON BLOCKS + + +
+      use soil_data_struct_defs, only: soil_def
       use input_run_mod, only: inprun
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer, intent(out) :: n_rot_cycles
+      type(soil_def), dimension(:), intent(inout) :: soil 
 
       include 'p1werm.inc'
       include 'wpath.inc'
-      include 'm1subr.inc'
       include 'm1sim.inc'
       include 'command.inc'
 
@@ -57,7 +58,7 @@
       end if
 
 !     load the simulation run file
-      call inprun(n_rot_cycles)
+      call inprun(n_rot_cycles, soil)
 
 !     If this is a simulation that does water erosion read any extra WEPP
 !     input data.

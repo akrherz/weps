@@ -34,7 +34,6 @@
 
 !     + + + GLOBAL COMMON BLOCKS + + +
       include 'p1werm.inc'
-      include 'm1subr.inc'
       include 'm1flag.inc'
       include 'c1db1.inc'
       include 'c1db2.inc'
@@ -122,7 +121,7 @@
 !      write(luocdb(isr),2045) isr
 
       write(luocdb(isr),2050) isr, isr, isr, isr, isr, isr, isr
-      write(luocdb(isr),2051) amrslp(isr), crop%deriv%ftcv, crop%deriv%rlai,    &
+      write(luocdb(isr),2051) soil%amrslp, crop%deriv%ftcv, crop%deriv%rlai,    &
      &               crop%geometry%zrtd, restot%mftot, ahfwsf(isr), crop%bname
       write(luocdb(isr),2052) isr, isr, isr, isr
       write(luocdb(isr),2053)                                           &

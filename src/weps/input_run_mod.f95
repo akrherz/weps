@@ -8,7 +8,7 @@ module input_run_mod
 
 contains
 
-   subroutine inprun( n_rot_cycles )
+   subroutine inprun( n_rot_cycles, soil )
 ! ***************************************************************** wjr
 ! reads weps simulation run file
 !
@@ -16,6 +16,7 @@ contains
 !     06-Feb-99   wjr   created from existing code, select added
 
 !     + + + Modules Used + + +
+      use soil_data_struct_defs, only: soil_def
       use datetime_mod, only: lstday
       use Polygons_Mod, only: create_polygon, set_area_polygon
       use subregions_mod, only: acct_poly, subr_poly
@@ -32,10 +33,10 @@ contains
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer, intent(out) :: n_rot_cycles
+      type(soil_def), dimension(:), intent(inout) :: soil 
 
       include 'p1werm.inc'
       include 'wpath.inc'
-      include 'm1subr.inc'
       include 'm1sim.inc'
       include 'm1flag.inc'
       include 'c1gen.inc'
@@ -481,7 +482,7 @@ contains
             ! ie. not entered. It is now the only way to set a 
             ! non default slope when using the older "non-versioned"
             ! IFC files.
-            read (line,*,err=80) amrslp(isr)        ! weps.run file has slope gradient (m/m)
+            read (line,*,err=80) soil(isr)%amrslp        ! weps.run file has slope gradient (m/m)
             ! disabled reading in multiple subregion points, only one was allowed in old files
             ! isr = isr + 1
             ! if (isr.le.nsubr) typidx=typidx-3
@@ -621,7 +622,7 @@ contains
             ! this does nothing but skip the line for shape radius
    
          case (42)
-            read (line,*,err=80) WaterErosion(isr)
+            read (line,*,err=80) soil(isr)%WaterErosion
             isr = isr + 1
             if (isr.le.nsubr) typidx=typidx-1
             !!!! I don't think this works as intended - LEW
@@ -630,7 +631,7 @@ contains
             isr = 1
 
          case (43)
-            read (line,*,err=80) SoilRockFragments(isr)
+            read (line,*,err=80) soil(isr)%SoilRockFragments
             isr = isr + 1
             if (isr.le.nsubr) typidx=typidx-1
             !!!! I don't think this works as intended - LEW
@@ -973,10 +974,10 @@ contains
             !        ie. not entered. It is now the only way to set a 
             !        non default slope when using the older "non-versioned"
             !        IFC files.   
-            read (line,*,err=80) amrslp(isr)        ! weps.run file has slope gradient (m/m)
+            read (line,*,err=80) soil(isr)%amrslp        ! weps.run file has slope gradient (m/m)
    
          case (30)
-            read (line,*,err=80) SoilRockFragments(isr)
+            read (line,*,err=80) soil(isr)%SoilRockFragments
 
          case (31)
             ! read in initial field conditions file name
@@ -987,8 +988,7 @@ contains
             tinfil(isr) = rootp(1:len_trim(rootp)) // line
 
          case (33)
-            read (line,*,err=80) WaterErosion(isr)
-            write(*,*) "WaterErosion",WaterErosion(isr)
+            read (line,*,err=80) soil(isr)%WaterErosion
 
             ! this is last item in subregion group
             ! index to next subregion or continue on

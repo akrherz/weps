@@ -282,8 +282,6 @@
       max_calib_cycles = 3  ! Default value unless increased via cmdline option
       calib_done = .false.
 
-      SoilRockFragments(1) = -1  ! Setting default value to -1 (single subregion only for now!!!)
-
       ci = 0.90    ! default confidence interval value
 
 !     Read command line arguments and options
@@ -292,7 +290,7 @@
       if (calibrate_crops > 3) max_calib_cycles = calibrate_crops
 
 !     open input files and read run files
-      call input(run_rot_cycles)
+      call input(run_rot_cycles, soil)
 
       ! set total number of subregions from size of allocated subr_poly array
       nsubr = size(subr_poly)
@@ -931,7 +929,7 @@
           end if
           if(  (.not. old_run_file .or. (nsubr .gt. 1)) .or. (isr .gt. 0) ) then
 
-             call sci_report( isr, cellstate )
+             call sci_report( isr, cellstate, soil )
              call print_ui1_output(luogui1(isr), nperiods(isr), mandatbs(isr)%mperod, n_rot_cycles(isr), rep_report(isr), &
                                    rep_dates(isr), mandatbs(isr)%mandate) !Use for new WEPS gui
              call print_mandate_output(luomandate(isr), mandatbs(isr)%mperod, mandatbs(isr)%mandate)

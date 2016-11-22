@@ -13,7 +13,12 @@ module soil_data_struct_defs
                                                      ! 1 = output
   type soil_def
      ! metadata
-     character*(512) :: infile ! soil input file name
+     character*(512) :: infile        ! soil input file name
+     character*(160) :: am0sid        ! soil identification
+     character*(80)  :: am0tax        ! soil taxonomic order
+     character*(80)  :: am0localphase ! soil local phase
+     character*(20)  :: SoilLossTol   ! NRCS assigned "soil loss tolerance" value
+
      integer :: nslay          ! number of soil layers
 
      ! intrinsic - properties that are instrinsic, modify by changing the material in the soil
@@ -23,6 +28,7 @@ module soil_data_struct_defs
      real :: bedrock_depth     ! depth to bedrock (mm)
      real :: amrslp            ! Average subregion slope (m/m)
      real :: SFCov             ! NRCS "Surface Fragment Cover" or "Surface Layer Fragment" fraction (%)
+     real :: SoilRockFragments ! fraction of soil volume that is soil rock fragments (m^3/m^3)
      real, dimension(:), allocatable :: asvroc    ! Soil layer rock volume (m^3/m^3)
      real, dimension(:), allocatable :: asfsan    ! Soil layer sand content (Mg/Mg)
      real, dimension(:), allocatable :: asfsil    ! Soil layer silt content (Mg/Mg)
@@ -39,7 +45,6 @@ module soil_data_struct_defs
      real, dimension(:), allocatable :: aseagm    ! soil layer mean aggregate stabillity (J/m^2)
      real, dimension(:), allocatable :: aseagmn   ! soil layer minimum aggregate stability
      real, dimension(:), allocatable :: aseagmx   ! soil layer maximum aggregate stability
-     real, dimension(:), allocatable :: ask4d     ! soil layer drying stability coefficient
      real, dimension(:), allocatable :: aslmin    ! min values of geom. mean agg. diameter (eq. S-45, S-46)
      real, dimension(:), allocatable :: aslmax    ! max values of geom. mean agg. diameter (eq. S-45, S-46)
      real, dimension(:), allocatable :: asfcle    ! Linear extensibility ((Mg/m^3)/(Mg/m^3))
@@ -68,6 +73,7 @@ module soil_data_struct_defs
      real :: asdcr      ! Soil crust density (Mg/m^3)
      real :: asecr      ! Soil crust stability ln(J/kg)
      real :: watertable_depth  ! depth to watertable (mm)
+     real :: WaterErosion ! water erosion soil loss
      real, dimension(:), allocatable :: aszlyt    ! Soil layer thickness (mm)
      real, dimension(:), allocatable :: asdblk    ! Soil layer bulk density (Mg/m^3)
      real, dimension(:), allocatable :: asdagd    ! agg density (Mg/m^3)
@@ -151,8 +157,6 @@ contains
      allocate(soil%aseagmn(nsoillay), stat=alloc_stat)
      sum_stat = sum_stat + alloc_stat
      allocate(soil%aseagmx(nsoillay), stat=alloc_stat)
-     sum_stat = sum_stat + alloc_stat
-     allocate(soil%ask4d(nsoillay), stat=alloc_stat)
      sum_stat = sum_stat + alloc_stat
      allocate(soil%aslmin(nsoillay), stat=alloc_stat)
      sum_stat = sum_stat + alloc_stat
@@ -269,8 +273,6 @@ contains
      deallocate(soil%aseagmn, stat=dealloc_stat)
      sum_stat = sum_stat + dealloc_stat
      deallocate(soil%aseagmx, stat=dealloc_stat)
-     sum_stat = sum_stat + dealloc_stat
-     deallocate(soil%ask4d, stat=dealloc_stat)
      sum_stat = sum_stat + dealloc_stat
      deallocate(soil%aslmin, stat=dealloc_stat)
      sum_stat = sum_stat + dealloc_stat

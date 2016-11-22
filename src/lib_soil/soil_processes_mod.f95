@@ -59,33 +59,31 @@ module soil_processes_mod
 !  + + +  UPDATE LAYERS: + + +
 
       do ldx = 1, bslay
-!        check for dry soil - then no changes
-         if ((bhrwc(ldx) .lt. bhrwcw(ldx)) .and.                        &
-     &       (bhrwcdmx(ldx) .lt. bhrwcw(ldx)) .and.                     &
-     &       (bhrwc0(ldx) .lt. bhrwcw(ldx))) go to 90
-!
-       !estimate parameters as fn of depth
-        k4td = 0.4*(1+0.00333*szlyd(ldx))
-        k4td = min(k4td,0.667)
-        k4d  = 0.6*(1+0.00333*szlyd(ldx))
-        k4d  = min(k4d, 1.0)
-!Tmp ####
-!       write (*,*)'ldx=',ldx,'szlyd=',szlyd(ldx),'k4d=',k4d
-!
-         call aggsta(daysim, bseags(ldx), bseagmn(ldx), bseagmx(ldx),   &
-     &    bhrwc0(ldx), bhrwc(ldx), bhrwcdmx(ldx),                       &
-     &    bhrwcw(ldx), bhrwcs(ldx),                         &
-     &    bhtmx0(ldx), bhtsmn(ldx), bhtsmx(ldx),            &
-     &    se0,se1,  trigger(ldx),                                       &
-     &    k4f, k4fs, k4fd, k4td, k4w, k4d)
+         ! check for dry soil - then no changes
+         if ((bhrwc(ldx) .lt. bhrwcw(ldx)) .and. &
+             (bhrwcdmx(ldx) .lt. bhrwcw(ldx)) .and. &
+             (bhrwc0(ldx) .lt. bhrwcw(ldx))) go to 90
 
-          call asd(bslagm(ldx), bslmin(ldx),                            &
-     &    bslmax(ldx), bhtsmx(ldx), bhtmx0(ldx), bs0ags(ldx),           &
-     &    bslagx(ldx), se0, se1)
-!
+         ! estimate parameters as fn of depth
+         k4td = 0.4*(1+0.00333*szlyd(ldx))
+         k4td = min(k4td,0.667)
+         k4d  = 0.6*(1+0.00333*szlyd(ldx))
+         k4d  = min(k4d, 1.0)
+
+         call aggsta(daysim, bseags(ldx), bseagmn(ldx), bseagmx(ldx), &
+          bhrwc0(ldx), bhrwc(ldx), bhrwcdmx(ldx), &
+          bhrwcw(ldx), bhrwcs(ldx), &
+          bhtmx0(ldx), bhtsmn(ldx), bhtsmx(ldx), &
+          se0,se1,  trigger(ldx),  &
+          k4f, k4fs, k4fd, k4td, k4w, k4d)
+
+         call asd(bslagm(ldx), bslmin(ldx), &
+          bslmax(ldx), bhtsmx(ldx), bhtmx0(ldx), bs0ags(ldx), &
+          bslagx(ldx), se0, se1)
+
          call den(bsdblk(ldx), bsdsblk(ldx), &
-     &    bszlyt(ldx), bsdagd(ldx), &
-     &    bhzinf, bhzwid, trigger(ldx))
+          bszlyt(ldx), bsdagd(ldx), &
+          bhzinf, bhzwid, trigger(ldx))
    90    continue
 
       end do

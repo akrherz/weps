@@ -24,7 +24,6 @@ module soil_mod
 
       ! Includes
       include 'p1werm.inc'
-      include 'm1subr.inc'
       include 'm1flag.inc'
       include 'h1hydro.inc'
       include 'h1temp.inc'
@@ -85,7 +84,6 @@ module soil_mod
 
       include 'p1werm.inc'
       include 'wpath.inc'
-      include 'm1subr.inc'
 
 !     + + + GLOBAL COMMON BLOCKS + + +
       include 'soil/cumulat.inc'
@@ -166,19 +164,19 @@ module soil_mod
 !     + + + INITIALIZATION  SECTION + + +
 
 ! call daily initialization
-      call sinit (daysim,                                               &
-     &                 bhtsmx, soil%ahrwc, soil%asfom, soil%aszlyt,                    &
-     &                 bslay, soil%asfsan, soil%asfsil, soil%asfcla,                   &
-                       soil%aszrgh, soil%aslrr, soil%asfcce, soil%asfcec, &
-     &                 cump(isr), dcump, soil%ask4d,                         &
-     &                 bhtmx0(1,isr), bhrwc0(1,isr), szlyd,          &
-     &                 bszrr0(isr), bszrh0(isr),                        &
-     &                 soil%aseagm, soil%aseagmn, soil%aseagmx,                        &
-     &                 soil%aslmin, soil%aslmax,                                  &
-     &                 rain, snow, sprink,                              &
-                       bhzirr, soil%aszrho, &
-                       bhlocirr, bhzsmt, soil%aslrro, &
-     &                 soil%asdsblk, cli_today%zdpt, cli_today%tdav, trigger)
+      call sinit (daysim, &
+                  bhtsmx, soil%ahrwc, soil%asfom, soil%aszlyt, &
+                  bslay, soil%asfsan, soil%asfsil, soil%asfcla, &
+                  soil%aszrgh, soil%aslrr, soil%asfcce, soil%asfcec, &
+                  cump(isr), dcump, &
+                  bhtmx0(1,isr), bhrwc0(1,isr), szlyd, &
+                  bszrr0(isr), bszrh0(isr), &
+                  soil%aseagm, soil%aseagmn, soil%aseagmx, &
+                  soil%aslmin, soil%aslmax, &
+                  rain, snow, sprink, &
+                  bhzirr, soil%aszrho, &
+                  bhlocirr, bhzsmt, soil%aslrro, &
+                  soil%asdsblk, cli_today%zdpt, cli_today%tdav, trigger)
 
 !  UPDATE SURFACE
 !     do surface processes if (rain+sprinkler+snowmelt>0)
@@ -316,7 +314,7 @@ module soil_mod
      &                 bhtsmx, bhrwc, bsfom, bszlyt,                    &
      &                 bslay, bsfsan, bsfsil, bsfcla,                   &
      &                 bszrgh, bszrr, bsfcce, bsfcec,                   &
-     &                 cump, dcump, bsk4d,                              &
+     &                 cump, dcump,                                     &
      &                 bhtmx0, bhrwc0, szlyd,                           &
      &                 bszrr0, bszrh0,                                  &
      &                 bseagm, bseagmn, bseagmx,                        &
@@ -341,7 +339,6 @@ module soil_mod
 
       include 'p1werm.inc'
       include 'wpath.inc'
-      include 'm1subr.inc'
       include 'm1sim.inc'
       include 'm1flag.inc'
 
@@ -351,7 +348,7 @@ module soil_mod
       integer bslay
       real bsfsan(*), bsfsil(*), bsfcla(*)
       real bszrgh, bszrr, bsfcce(*), bsfcec(*)
-      real cump, dcump, bsk4d(*)
+      real cump, dcump
       real bhtmx0(*), bhrwc0(*), szlyd(*)
       real bszrr0, bszrh0
       real bseagm(*), bseagmn(*), bseagmx(*)
@@ -379,7 +376,6 @@ module soil_mod
 !   cump      - cumulative (rain + sprinkler + snow-melt) to current
 !               day from day 1 or time of last tillage
 !   dcump     - total rain + sprinkler + snow-melt for current day.
-!   bsk4d     - drying process coef. to calc. aggregate stability
 !   bhtmx0    - layer maximum temperature of yesterday. in C
 !   bhrwc0    - soil water content for yesterday. mass basis kg/kg.
 !   szlyd     - depth to bottom of each soil layer, mm
@@ -544,13 +540,15 @@ module soil_mod
 ! ***     *        (1+exp(-(szlyd(ldx)-506.8)/118.5)))
 ! *** eodf
 
-!           set stability drying process coefficient:
-            if( ldx .eq. 1) then
-              bsk4d(ldx) = 0.46 - 0.23 * exp(-(szlyd(ldx)/2.0)/88.57)
-            else
-              bsk4d(ldx) = 0.46 - 0.23 * exp(-(szlyd(ldx-1) +           &
-     &               (szlyd(ldx) - szlyd(ldx-1))/2.0)/88.57)
-            end if
+! *** removed since value is set in updlay for every layer calculation
+! *** This equation is not the same and does not match the most current documentation
+! ***          set stability drying process coefficient:
+! ***            if( ldx .eq. 1) then
+! ***              bsk4d(ldx) = 0.46 - 0.23 * exp(-(szlyd(ldx)/2.0)/88.57)
+! ***            else
+! ***              bsk4d(ldx) = 0.46 - 0.23 * exp(-(szlyd(ldx-1) +           &
+! ***     &               (szlyd(ldx) - szlyd(ldx-1))/2.0)/88.57)
+! ***            end if
 
  10      continue
 
@@ -629,7 +627,6 @@ module soil_mod
 
 !     + + + GLOBAL COMMON BLOCKS + + +
       include 'p1werm.inc'
-      include 'm1subr.inc'
       include 'm1sim.inc'
       include 'm1flag.inc'
       include 'h1hydro.inc'
@@ -721,7 +718,7 @@ module soil_mod
 
       write(luosdb(isr),2050) isr,isr,isr,isr,isr,isr,isr
 
-      write(luosdb(isr),2051) amrslp(isr), croptot%ftcvtot,             &
+      write(luosdb(isr),2051) soil%amrslp, croptot%ftcvtot,             &
      &              croptot%rlaitot,                                    &
      &              croptot%zrtd, biotot%mftot, ahfwsf(isr), h1et%zper
       write(luosdb(isr),2052) isr,isr,isr,isr,isr,isr,isr

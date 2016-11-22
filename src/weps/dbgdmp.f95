@@ -387,8 +387,8 @@
        if (amnryr(sr).lt.1.or.amnryr(sr).gt.10)                          &
      &  write(*,*) 'day ',day,' amnryr ', amnryr(sr)
 !
-      if (amrslp(sr).lt.0.0.or.amrslp(sr).gt.1.0)                       &
-     &  write(*,*) 'day ',day,' amrslp ', amrslp(sr)
+      if (soil%amrslp.lt.0.0.or.soil%amrslp.gt.1.0)                       &
+     &  write(*,*) 'day ',day,' amrslp ', soil%amrslp
 !
 ! h1temp
 !

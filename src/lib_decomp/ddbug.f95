@@ -28,7 +28,6 @@
 
 !     + + + GLOBAL COMMON BLOCKS + + +
       include 'p1werm.inc'
-      include 'm1subr.inc'
       include 'm1flag.inc'
       include 'h1hydro.inc'
       include 'h1scs.inc'

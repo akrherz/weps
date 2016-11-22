@@ -80,7 +80,7 @@
 #
 # +++ SUBREGION REGIONS +++
 #
-#     nsubr, I, (m1subr.inc) Number of subregions (1-5)
+#     nsubr, I, Number of subregions
  1
 #
 #     NOTE: Remaining SUBREGION inputs (BIOMASS, SOIL, and HYDROLOGY,

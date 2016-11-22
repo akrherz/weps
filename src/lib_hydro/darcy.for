@@ -115,7 +115,6 @@
 !     + + + COMMON BLOCKS + + +
       include 'p1werm.inc'
       include 'm1flag.inc'
-      include 'm1subr.inc'
 
 !     + + + LOCAL COMMON BLOCKS + + +
       include 'hydro/lsoda.inc'

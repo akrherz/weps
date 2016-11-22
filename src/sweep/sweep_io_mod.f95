@@ -188,8 +188,6 @@ module sweep_io_mod
 
       ! +++ SUBREGION REGIONS +++
 
-      ! m1subr.inc
-
       ! Number of subregions
       line = getline(i_unit)
       read (line,*) nsubr
@@ -677,8 +675,6 @@ module sweep_io_mod
       end do
 
       ! +++ SUBREGION REGIONS +++
-
-      ! m1subr.inc
 
       ! Number of subregions
       line = getline(i_unit)

@@ -19,12 +19,13 @@ module sci_report_mod
 
    contains
 
-      subroutine sci_report(isr, cellstate )
+      subroutine sci_report(isr, cellstate, soil )
 
 !     + + + PURPOSE + + +
 !     Calculate and write to file the SCI values for each subregion or
 !     for subregion 0, calculate an area averaged value of SCI.
 
+      use soil_data_struct_defs, only: soil_def
       use weps_interface_defs
       use file_io_mod, only: luosci
       use erosion_data_struct_defs, only: cellsurfacestate
@@ -34,11 +35,11 @@ module sci_report_mod
 !     + + + ARGUMENT DECLARATIONS + + +
       integer :: isr                                                        ! subregion index
       type(cellsurfacestate), dimension(0:,0:), intent(in) :: cellstate     ! initialized grid cell state values
+      type(soil_def), dimension(:), intent(in) :: soil 
 
 !     + + + INCLUDE + + +
       include 'p1werm.inc'
       include 'command.inc'
-      include 'm1subr.inc'
       include 'manage/man.inc'
 
 !     + + + LOCAL VARIABLES + + +
@@ -146,7 +147,7 @@ module sci_report_mod
           allerosion_avg(sdx) = scisum(sdx)%allerosion * 365.25 / scisum(sdx)%days 
           avgallbiomass = avgallbiomass + allbiomass_avg(sdx) * sarea_ratio(sdx)
           avgallerosion = avgallerosion + allerosion_avg(sdx) * sarea_ratio(sdx)
-          avgallwatererosion =avgallwatererosion+WaterErosion(sdx)*sarea_ratio(sdx)
+          avgallwatererosion =avgallwatererosion+soil(sdx)%WaterErosion*sarea_ratio(sdx)
 
           ! get soil texture multiplier
           texmult  = get_sci_soil_multiplier(sdx)
@@ -167,7 +168,7 @@ module sci_report_mod
       else
           avgallbiomass = scisum(isr)%allbiomass / scisum(isr)%days
           avgallerosion = -scisum(isr)%allerosion * 365.25 / scisum(isr)%days  ! make erosion positive to match renner
-          avgallwatererosion = WaterErosion(isr)
+          avgallwatererosion = soil(isr)%WaterErosion
 
           ! get soil texture multiplier
           texmult  = get_sci_soil_multiplier(isr)

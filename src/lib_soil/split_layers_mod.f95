@@ -299,7 +299,6 @@ module split_layers_mod
 
       include 'p1werm.inc'
       include 'wpath.inc'
-      include 'm1subr.inc'
       include 'm1sim.inc'
       include 'h1hydro.inc'
       include 'h1scs.inc'
@@ -406,7 +405,6 @@ module split_layers_mod
 
       include 'p1werm.inc'
       include 'wpath.inc'
-      include 'm1subr.inc'
       include 'm1sim.inc'
       include 'h1hydro.inc'
       include 'h1scs.inc'

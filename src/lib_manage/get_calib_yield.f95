@@ -35,8 +35,6 @@ SUBROUTINE get_calib_yield(sr,rotation_no,mass_removed, mass_left, crop)
 !   + + + PARAMETERS AND COMMON BLOCKS + + +
     include 'p1werm.inc'
     include 'm1flag.inc'
-    include 'm1subr.inc'
-!    include 'main/main.inc'
     include 'c1gen.inc'
     include 'c1db1.inc'
     include 'command.inc'
