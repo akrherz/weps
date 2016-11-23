@@ -36,7 +36,6 @@ SUBROUTINE get_calib_yield(sr,rotation_no,mass_removed, mass_left, crop)
     include 'p1werm.inc'
     include 'm1flag.inc'
     include 'c1gen.inc'
-    include 'c1db1.inc'
     include 'command.inc'
 
 !   + + + LOCAL DECLARATIONS + + +
@@ -70,7 +69,7 @@ SUBROUTINE get_calib_yield(sr,rotation_no,mass_removed, mass_left, crop)
 
 !!! TYPE (calib_crop_type) :: var
 
-    IF (acbaflg(sr) == 0) RETURN           ! crop not flagged for calibration
+    IF (crop%database%baflg == 0) RETURN           ! crop not flagged for calibration
     IF (init_loop .or. report_loop) RETURN ! not a calibrating cycle
 
     no_get_calib_yield_call = no_get_calib_yield_call + 1
@@ -212,7 +211,7 @@ SUBROUTINE get_calib_yield(sr,rotation_no,mass_removed, mass_left, crop)
     Calib_Yield%YP%YData%Index = calib_yield_cnt
     Calib_Yield%YP%YData%calib_yield_info%rot_no = rotation_no
     Calib_Yield%YP%YData%calib_yield_info%cycle_no = calib_cycle
-    Calib_Yield%YP%YData%calib_yield_info%bio_adj_val = acbaf(sr)
+    Calib_Yield%YP%YData%calib_yield_info%bio_adj_val = crop%database%baf
     Calib_Yield%YP%YData%calib_yield_info%harv_yield = mass_removed
 
     ! Find "crop calibration info" for "this crop's harvest"
@@ -345,11 +344,11 @@ SUBROUTINE get_calib_yield(sr,rotation_no,mass_removed, mass_left, crop)
           IF ( (est_yield(c_no,calib_cycle) < t_yld) ) THEN
              new_adj(c_no) = est_adj(c_no,calib_cycle) * FACTOR      ! Initial guess for 2nd calibration cycle run
              print *, "Cycle 1: Crop no: ",c_no,"Est. Yield ", est_yield(c_no,calib_cycle), &
-                      "is low (",t_yld,"), reset acbaf from: ", acbaf(sr),"to: ", new_adj(c_no)
+                      "is low (",t_yld,"), reset acbaf from: ", crop%database%baf,"to: ", new_adj(c_no)
           ELSE
              new_adj(c_no) = est_adj(c_no,calib_cycle) / FACTOR      ! Initial guess for 2nd calibration cycle run
              print *, "Cycle 1: Crop no: ",c_no,"Est. Yield ", est_yield(c_no,calib_cycle), &
-                      "is high (",t_yld,"), reset acbaf from: ", acbaf(sr),"to: ", new_adj(c_no)
+                      "is high (",t_yld,"), reset acbaf from: ", crop%database%baf,"to: ", new_adj(c_no)
           END IF
 
        ELSE IF (.not. yield_bracketed(c_no)) THEN
@@ -377,13 +376,13 @@ SUBROUTINE get_calib_yield(sr,rotation_no,mass_removed, mass_left, crop)
                 print *, "Cycle ",calib_cycle,": Crop no: ", c_no,"Est. Yield (not bracketed)", &
                          est_yield(c_no,calib_cycle), "and ", &
                          est_yield(c_no,calib_cycle-1), "are low (",t_yld,"), ", &
-                         "reset acbaf from: ", acbaf(sr), "to: ", new_adj(c_no)
+                         "reset acbaf from: ", crop%database%baf, "to: ", new_adj(c_no)
              ELSE
                 new_adj(c_no) = est_adj(c_no,calib_cycle-1) * FACTOR
                 print *, "Cycle ",calib_cycle-1,": Crop no: ", c_no,"Est. Yield (not bracketed)", &
                          est_yield(c_no,calib_cycle), "and ", &
                          est_yield(c_no,calib_cycle-1), "are low (",t_yld,"), ", &
-                         "reset acbaf from: ", acbaf(sr), "to: ", new_adj(c_no)
+                         "reset acbaf from: ", crop%database%baf, "to: ", new_adj(c_no)
              END IF
 
           ELSE IF ( (est_yield(c_no,calib_cycle) > t_yld) .and. (est_yield(c_no,calib_cycle-1) > t_yld) ) THEN
@@ -392,13 +391,13 @@ SUBROUTINE get_calib_yield(sr,rotation_no,mass_removed, mass_left, crop)
                 print *, "Cycle ",calib_cycle,": Crop no: ", c_no,"Est. Yield (not bracketed)", &
                          est_yield(c_no,calib_cycle), "and ", &
                          est_yield(c_no,calib_cycle-1), "are high (",t_yld,"), ", &
-                         "reset acbaf from: ", acbaf(sr), "to: ", new_adj(c_no)
+                         "reset acbaf from: ", crop%database%baf, "to: ", new_adj(c_no)
              ELSE
                 new_adj(c_no) = est_adj(c_no,calib_cycle-1) / FACTOR
                 print *, "Cycle ",calib_cycle-1,": Crop no: ", c_no,"Est. Yield (not bracketed)", &
                          est_yield(c_no,calib_cycle), "and ", &
                          est_yield(c_no,calib_cycle-1), "are high (",t_yld,"), ", &
-                         "reset acbaf from: ", acbaf(sr), "to: ", new_adj(c_no)
+                         "reset acbaf from: ", crop%database%baf, "to: ", new_adj(c_no)
              END IF
           END IF
 
@@ -448,13 +447,13 @@ SUBROUTINE get_calib_yield(sr,rotation_no,mass_removed, mass_left, crop)
                    print *, "Cycle ",calib_cycle,": Crop no: ", c_no,"Est. Yield (not bracketed)", &
                          est_yield(c_no,calib_cycle), "and ", &
                          est_yield(c_no,calib_cycle-1), "are low (",t_yld,"), ", &
-                         "reset acbaf from: ", acbaf(sr), "to: ", new_adj(c_no)
+                         "reset acbaf from: ", crop%database%baf, "to: ", new_adj(c_no)
                 ELSE
                    new_adj(c_no) = est_adj(c_no,calib_cycle-1) * (FACTOR-0.55)
                    print *, "Cycle ",calib_cycle-1,": Crop no: ", c_no,"Est. Yield (not bracketed)", &
                          est_yield(c_no,calib_cycle), "and ", &
                          est_yield(c_no,calib_cycle-1), "are low (",t_yld,"), ", &
-                         "reset acbaf from: ", acbaf(sr), "to: ", new_adj(c_no)
+                         "reset acbaf from: ", crop%database%baf, "to: ", new_adj(c_no)
                 END IF
 
              ELSE IF ( (est_yield(c_no,calib_cycle) > t_yld) .and. (est_yield(c_no,calib_cycle-1) > t_yld) ) THEN
@@ -463,13 +462,13 @@ SUBROUTINE get_calib_yield(sr,rotation_no,mass_removed, mass_left, crop)
                    print *, "Cycle ",calib_cycle,": Crop no: ", c_no,"Est. Yield (not bracketed)", &
                          est_yield(c_no,calib_cycle), "and ", &
                          est_yield(c_no,calib_cycle-1), "are high (",t_yld,"), ", &
-                         "reset acbaf from: ", acbaf(sr), "to: ", new_adj(c_no)
+                         "reset acbaf from: ", crop%database%baf, "to: ", new_adj(c_no)
                 ELSE
                    new_adj(c_no) = est_adj(c_no,calib_cycle-1) / (FACTOR-0.55)
                    print *, "Cycle ",calib_cycle-1,": Crop no: ", c_no,"Est. Yield (not bracketed)", &
                          est_yield(c_no,calib_cycle), "and ", &
                          est_yield(c_no,calib_cycle-1), "are high (",t_yld,"), ", &
-                         "reset acbaf from: ", acbaf(sr), "to: ", new_adj(c_no)
+                         "reset acbaf from: ", crop%database%baf, "to: ", new_adj(c_no)
                 END IF
              END IF
              print *, "Cycle ", calib_cycle,": Crop no: ", c_no, ": Yield is still bracketed! [low, target, high, new] yields:", &

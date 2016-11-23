@@ -17,7 +17,6 @@
       include 'c1info.inc'
       include 'c1gen.inc'
       include 'c1report.inc'
-      include 'c1db1.inc'
       include 'c1db2.inc'
       include 'manage/tcrop.inc'
       include 'crop/gcrop.inc'
@@ -162,9 +161,9 @@
       aggrainf(isr) = 0.0
 
       ! values that need initialization for cdbug calls (before initial crop entry)
-      actdtm(isr) = 0
+      crop%database%tdtm = 0
 
-      ac0shoot(isr) = 0.0
+      crop%database%shoot = 0.0
 
       return
       end

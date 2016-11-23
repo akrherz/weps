@@ -36,7 +36,6 @@
       include 'm1flag.inc'
       include 'c1info.inc'
       include 'c1gen.inc'
-      include 'c1db1.inc'
       include 'c1db2.inc'
       include 'h1hydro.inc'
       include 'h1db1.inc'
@@ -642,76 +641,59 @@
 
       if (dmpflg) write(*,*) 'c1db1'
       
-      if (acrcn(sr).lt.0.0.or.acrcn(sr).gt.tstmax)                      &
-     &  write(*,*) 'day ',day,' acrcn ', acrcn(sr)
-
-      if (actdtm(sr).lt.0.0.or.actdtm(sr).gt.tstmax)                    &
-     &  write(*,*) 'day ',day,' actdtm ', actdtm(sr)
+      if (crop%database%tdtm.lt.0.0.or.crop%database%tdtm.gt.tstmax) &
+     &  write(*,*) 'day ',day,' actdtm ', crop%database%tdtm
 !
-      if (aczmrt(sr).lt.0.0.or.aczmrt(sr).gt.tstmax)                    &
-     &  write(*,*) 'day ',day,' aczmrt ', aczmrt(sr)
+      if (crop%database%zmrt.lt.0.0.or.crop%database%zmrt.gt.tstmax) &
+     &  write(*,*) 'day ',day,' aczmrt ', crop%database%zmrt
 !
-      if (aczmxc(sr).lt.0.0.or.aczmxc(sr).gt.tstmax)                    &
-     &  write(*,*) 'day ',day,' aczmxc ', aczmxc(sr)
+      if (crop%database%zmxc.lt.0.0.or.crop%database%zmxc.gt.tstmax) &
+     &  write(*,*) 'day ',day,' aczmxc ', crop%database%zmxc
 !
-      if (acrbe(sr).lt.0.0.or.acrbe(sr).gt.tstmax)                      &
-     &  write(*,*) 'day ',day,' acrbe ', acrbe(sr)
+      if (crop%database%ehu0.lt.0.0.or.crop%database%ehu0.gt.tstmax) &
+     &  write(*,*) 'day ',day,' acehu0 ', crop%database%ehu0
 !
-      if (acrbed(sr).lt.0.0.or.acrbed(sr).gt.tstmax)                    &
-     &  write(*,*) 'day ',day,' acrbed ', acrbed(sr)
+      if (crop%database%alf.lt.0.0.or.crop%database%alf.gt.tstmax) &
+     &  write(*,*) 'day ',day,' ac0alf ', crop%database%alf
 !
-      do 220 idx=1,mncz
-      if (ac0lad(idx, sr).lt.0.0.or.ac0lad(idx, sr).gt.tstmax)          &
-     &  write(*,*) 'day ',day,' ac0lad(',idx,') ', ac0lad(idx, sr)
+      if (crop%database%blf.lt.0.0.or.crop%database%blf.gt.tstmax) &
+     &  write(*,*) 'day ',day,' ac0blf ', crop%database%blf
 !
-      if (ac0sad(idx, sr).lt.0.0.or.ac0sad(idx, sr).gt.tstmax)          &
-     &  write(*,*) 'day ',day,' ac0sad(',idx,') ', ac0sad(idx, sr)
-  220 continue     
+      if (crop%database%clf.lt.0.0.or.crop%database%clf.gt.tstmax) &
+     &  write(*,*) 'day ',day,' ac0clf ', crop%database%clf
 !
-      if (acehu0(sr).lt.0.0.or.acehu0(sr).gt.tstmax)                    &
-     &  write(*,*) 'day ',day,' acehu0 ', acehu0(sr)
+      if (crop%database%dlf.lt.0.0.or.crop%database%dlf.gt.tstmax) &
+     &  write(*,*) 'day ',day,' ac0dlf ', crop%database%dlf
 !
-      if (ac0alf(sr).lt.0.0.or.ac0alf(sr).gt.tstmax)                    &
-     &  write(*,*) 'day ',day,' ac0alf ', ac0alf(sr)
+      if (crop%database%arp.lt.0.0.or.crop%database%arp.gt.tstmax) &
+     &  write(*,*) 'day ',day,' ac0arp ', crop%database%arp
 !
-      if (ac0blf(sr).lt.0.0.or.ac0blf(sr).gt.tstmax)                    &
-     &  write(*,*) 'day ',day,' ac0blf ', ac0blf(sr)
+      if (crop%database%brp.lt.0.0.or.crop%database%brp.gt.tstmax) &
+     &  write(*,*) 'day ',day,' ac0brp ', crop%database%brp
 !
-      if (ac0clf(sr).lt.0.0.or.ac0clf(sr).gt.tstmax)                    &
-     &  write(*,*) 'day ',day,' ac0clf ', ac0clf(sr)
+      if (crop%database%crp.lt.0.0.or.crop%database%crp.gt.tstmax) &
+     &  write(*,*) 'day ',day,' ac0crp ', crop%database%crp
 !
-      if (ac0dlf(sr).lt.0.0.or.ac0dlf(sr).gt.tstmax)                    &
-     &  write(*,*) 'day ',day,' ac0dlf ', ac0dlf(sr)
+      if (crop%database%drp.lt.0.0.or.crop%database%drp.gt.tstmax) &
+     &  write(*,*) 'day ',day,' ac0drp ', crop%database%drp
 !
-      if (ac0arp(sr).lt.0.0.or.ac0arp(sr).gt.tstmax)                    &
-     &  write(*,*) 'day ',day,' ac0arp ', ac0arp(sr)
+      if (crop%database%aht.lt.0.0.or.crop%database%aht.gt.tstmax) &
+     &  write(*,*) 'day ',day,' ac0aht ', crop%database%aht
 !
-      if (ac0brp(sr).lt.0.0.or.ac0brp(sr).gt.tstmax)                    &
-     &  write(*,*) 'day ',day,' ac0brp ', ac0brp(sr)
+      if (crop%database%bht.lt.0.0.or.crop%database%bht.gt.tstmax) &
+     &  write(*,*) 'day ',day,' ac0bht ', crop%database%bht
 !
-      if (ac0crp(sr).lt.0.0.or.ac0crp(sr).gt.tstmax)                    &
-     &  write(*,*) 'day ',day,' ac0crp ', ac0crp(sr)
+      if (crop%database%ssa.lt.0.0.or.crop%database%ssa.gt.tstmax) &
+     &  write(*,*) 'day ',day,' ac0ssa ', crop%database%ssa
 !
-      if (ac0drp(sr).lt.0.0.or.ac0drp(sr).gt.tstmax)                    &
-     &  write(*,*) 'day ',day,' ac0drp ', ac0drp(sr)
-!
-      if (ac0aht(sr).lt.0.0.or.ac0aht(sr).gt.tstmax)                    &
-     &  write(*,*) 'day ',day,' ac0aht ', ac0aht(sr)
-!
-      if (ac0bht(sr).lt.0.0.or.ac0bht(sr).gt.tstmax)                    &
-     &  write(*,*) 'day ',day,' ac0bht ', ac0bht(sr)
-!
-      if (ac0ssa(sr).lt.0.0.or.ac0ssa(sr).gt.tstmax)                    &
-     &  write(*,*) 'day ',day,' ac0ssa ', ac0ssa(sr)
-!
-      if (ac0ssb(sr).lt.0.0.or.ac0ssb(sr).gt.tstmax)                    &
-     &  write(*,*) 'day ',day,' ac0ssb ', ac0ssb(sr)
+      if (crop%database%ssb.lt.0.0.or.crop%database%ssb.gt.tstmax) &
+     &  write(*,*) 'day ',day,' ac0ssb ', crop%database%ssb
 
       if (crop%database%sla.lt.0.0.or.crop%database%sla.gt.tstmax) &
         write(*,*) 'day ',day,' ac0sla ', crop%database%sla
 
-      if (ac0hue(sr).lt.0.0.or.ac0hue(sr).gt.tstmax)                    &
-     &  write(*,*) 'day ',day,' ac0hue ', ac0hue(sr)
+      if (crop%database%hue.lt.0.0.or.crop%database%hue.gt.tstmax) &
+     &  write(*,*) 'day ',day,' ac0hue ', crop%database%hue
 !
       if (dmpflg) write(*,*) 'end dbgdmp'
 !      

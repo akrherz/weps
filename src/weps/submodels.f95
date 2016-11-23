@@ -18,7 +18,6 @@
       include 'm1flag.inc'      !am0cropupfl
       include 'main/main.inc'   !daysim, iy
       include 'c1gen.inc'       !ac0rg, acxrow
-      include 'c1db1.inc'       !ac0ssa, ac0ssb, acdpop
       include 'h1hydro.inc'     !ahztranspdepth, ahzfurcut, ahztransprtmin, ahztransprtmax
 
 !     + + + ARGUMENT DECLARATIONS + + +
@@ -43,7 +42,7 @@
             call cropupdate( &
      &      soil%aszrgh, soil%aszlyd, &
      &      ac0rg(isr), acxrow(isr), &
-     &      soil%nslay, ac0ssa(isr), ac0ssb(isr), &
+     &      soil%nslay, crop%database%ssa, crop%database%ssb, &
      &      acdpop(isr), &
      &      ahztranspdepth(isr), ahzfurcut(isr), &
      &      ahztransprtmin(isr), ahztransprtmax(isr), crop, croptot  )

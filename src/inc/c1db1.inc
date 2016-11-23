@@ -11,36 +11,36 @@
 
 !     + + + VARIABLE DECLARATIONS + + +
 
-      integer          acbaflg(mnsub)
-      real             acbaf(mnsub)
-      real             acyraf(mnsub)
-      real             acrcn(mnsub)
-      integer          actdtm(mnsub)
-      real             acthum(mnsub)
-      real             aczmrt(mnsub)
-      real             aczmxc(mnsub)
-      real             acrbe(mnsub)
-      real             acrbed(mnsub)
-      real             ac0lad(mncz, mnsub)
-      real             ac0sad(mncz, mnsub)
-      real             acgrf(mnsub)
-      real             acehu0(mnsub)
-      real             actverndel(mnsub)
-      real             ac0bceff(mnsub)
-      real             ac0alf(mnsub)
-      real             ac0blf(mnsub)
-      real             ac0clf(mnsub)
-      real             ac0dlf(mnsub)
-      real             ac0arp(mnsub)
-      real             ac0brp(mnsub)
-      real             ac0crp(mnsub)
-      real             ac0drp(mnsub)
-      real             ac0aht(mnsub)
-      real             ac0bht(mnsub)
-      real             ac0ssa(mnsub)
-      real             ac0ssb(mnsub)
+!      integer          acbaflg(mnsub)
+!      real             acbaf(mnsub)
+!      real             acyraf(mnsub)
+!      real             acrcn(mnsub)
+!      integer          actdtm(mnsub)
+!      real             acthum(mnsub)
+!      real             aczmrt(mnsub)
+!      real             aczmxc(mnsub)
+!      real             acrbe(mnsub)
+!      real             acrbed(mnsub)
+!      real             ac0lad(mncz, mnsub)
+!      real             ac0sad(mncz, mnsub)
+!      real             acgrf(mnsub)
+!      real             acehu0(mnsub)
+!      real             actverndel(mnsub)
+!      real             ac0bceff(mnsub)
+!      real             ac0alf(mnsub)
+!      real             ac0blf(mnsub)
+!      real             ac0clf(mnsub)
+!      real             ac0dlf(mnsub)
+!      real             ac0arp(mnsub)
+!      real             ac0brp(mnsub)
+!      real             ac0crp(mnsub)
+!      real             ac0drp(mnsub)
+!      real             ac0aht(mnsub)
+!      real             ac0bht(mnsub)
+!      real             ac0ssa(mnsub)
+!      real             ac0ssb(mnsub)
 !      real             ac0sla(mnsub)
-      real             ac0hue(mnsub)
+!      real             ac0hue(mnsub)
 
 !      integer          acrbc(mnsub)
 
@@ -73,14 +73,14 @@
       real    aczloc_regrow(mnsub)
 
       common / c1db1 /                                                  &
-     &                 acbaflg,                                         &
-     &                 acbaf, acyraf,                                   &
-     &                 acrcn, actdtm, acthum, aczmrt, aczmxc,           &
-     &                 acrbe, acrbed, ac0lad, ac0sad ,acgrf,            &
-     &                 acehu0, actverndel, ac0bceff, ac0alf ,ac0blf,    &
-     &                 ac0clf, ac0dlf, ac0arp, ac0brp, ac0crp, ac0drp,  &
+!     &                 acbaflg,                                         &
+!     &                 acbaf, acyraf,                                   &
+!     &                 acrcn, actdtm, acthum, aczmrt, aczmxc, &
+!     &                 acrbe, acrbed, ac0lad, ac0sad ,acgrf, &
+!     &                 acehu0, actverndel, ac0bceff,
+!     &                 ac0alf ,ac0blf, ac0clf, ac0dlf,
+!     &                  ac0arp, ac0brp, ac0crp, ac0drp,                 &
 !     &                 ac0aht, ac0bht, ac0ssa, ac0ssb, ac0sla, ac0hue,  &
-     &                 ac0aht, ac0bht, ac0ssa, ac0ssb, ac0hue,          &
 !     &                 acrbc,                                           &
 !     &                 acdkrate, acxstm, acddsthrsh, accovfact,         &
      &                 acdmaxshoot,                                     &

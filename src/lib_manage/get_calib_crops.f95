@@ -29,9 +29,7 @@ SUBROUTINE get_calib_crops(sr, crop)
 !   + + + PARAMETERS AND COMMON BLOCKS + + +
     include 'p1werm.inc'
     include 'm1flag.inc'
-!    include 'main/main.inc'
     include 'c1gen.inc'
-    include 'c1db1.inc'
     include 'command.inc'
 
 !   + + + LOCAL DECLARATIONS + + +
@@ -42,7 +40,7 @@ SUBROUTINE get_calib_crops(sr, crop)
 
     IF (got_all_calib_crops) RETURN   ! No need to find the crops if we already have them
 
-    IF (acbaflg(sr) == 0) RETURN       ! crop not flagged for calibration
+    IF (crop%database%baflg == 0) RETURN       ! crop not flagged for calibration
 
     IF (firstime) THEN
         CALL LI_Init_List(Calib_Crop_List)
@@ -87,7 +85,7 @@ SUBROUTINE get_calib_crops(sr, crop)
     Calib_Crop%CP%CData%calib_crop_info%harv_day = lastoper(sr)%day
     Calib_Crop%CP%CData%calib_crop_info%harv_month = lastoper(sr)%mon
     Calib_Crop%CP%CData%calib_crop_info%harv_rotyear = lastoper(sr)%yr
-    Calib_Crop%CP%CData%calib_crop_info%bio_adj_val = acbaf(sr)
+    Calib_Crop%CP%CData%calib_crop_info%bio_adj_val = crop%database%baf
     Calib_Crop%CP%CData%calib_crop_info%target_yield = (acytgt(sr)/acycon(sr)) * (1.0-(acywct(sr)/100.0))
     CLink = TRANSFER (Calib_Crop, CLink)
     CALL LI_Add_To_Head (CLink, Calib_Crop_List)

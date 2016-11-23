@@ -142,12 +142,8 @@
 !     bctopt - optimum temperature (deg. C)
 !     bc0bceff - biomass conversion efficiency (kg/ha/mj)
 !     bszlyd - depth from top of soil to botom of layer, m
-!     acbaflg - flag for biomass adjustment action
-!         0     o normal crop growth
-!         1     o find biomass adjustment factor for target yield
-!         2     o Use given biomass adjustment factor
-!     acbaf  - biomass adjustment factor
-!     acyraf - yield to biomass ratio adjustment factor
+!     bcbaf  - biomass adjustment factor
+!     bcyraf - yield to biomass ratio adjustment factor
 !     bhtsmx - daily maximum soil temperature by layer (deg.C)
 !     bhtsmn - daily minimum soil temperature by layer (deg.C)
 !     bcthum - potential heat units for crop maturity (deg. C)

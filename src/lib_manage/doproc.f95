@@ -33,7 +33,6 @@
       include 'm1flag.inc'
       include 'm1sim.inc'
       include 'c1gen.inc'
-      include 'c1db1.inc'
       include 'c1db2.inc'
       include 'c1info.inc'
       include 'h1hydro.inc'
@@ -976,7 +975,7 @@
      &         crop%bname, am0cfl(sr), &
      &         soil%nslay, ac0idc(sr), crop%growth%dayam, &
      &         aplant_day(sr), aplant_month(sr), aplant_rotyr(sr),      &
-     &         acthum(sr), crop%geometry%xstmrep, &
+     &         crop%database%thum, crop%geometry%xstmrep, &
      &         prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
      &         prevflatstem(sr), prevflatleaf(sr), prevflatstore(sr),    &
      &         prevbgstemz(1,sr),                                        &
@@ -1061,7 +1060,7 @@
      &        crop%bname, am0cfl(sr), &
      &        soil%nslay, ac0idc(sr), crop%growth%dayam, &
      &        aplant_day(sr), aplant_month(sr), aplant_rotyr(sr),       &
-     &        acthum(sr), crop%geometry%xstmrep, &
+     &        crop%database%thum, crop%geometry%xstmrep, &
      &        prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
      &        prevflatstem(sr), prevflatleaf(sr), prevflatstore(sr),    &
      &        prevbgstemz(1,sr),                                        &
@@ -1127,7 +1126,7 @@
      &        crop%bname, am0cfl(sr), &
      &        soil%nslay, ac0idc(sr), crop%growth%dayam, &
      &        aplant_day(sr), aplant_month(sr), aplant_rotyr(sr),       &
-     &        acthum(sr), crop%geometry%xstmrep, &
+     &        crop%database%thum, crop%geometry%xstmrep, &
      &        prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
      &        prevflatstem(sr), prevflatleaf(sr), prevflatstore(sr),    &
      &        prevbgstemz(1,sr),                                        &
@@ -1228,7 +1227,7 @@
      &        crop%bname, am0cfl(sr), &
      &        soil%nslay, ac0idc(sr), crop%growth%dayam, &
      &        aplant_day(sr), aplant_month(sr), aplant_rotyr(sr),       &
-     &        acthum(sr), crop%geometry%xstmrep, &
+     &        crop%database%thum, crop%geometry%xstmrep, &
      &        prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
      &        prevflatstem(sr), prevflatleaf(sr), prevflatstore(sr),    &
      &        prevbgstemz(1,sr),                                        &
@@ -1291,7 +1290,7 @@
      &        crop%bname, am0cfl(sr), &
      &        soil%nslay, ac0idc(sr), crop%growth%dayam, &
      &        aplant_day(sr), aplant_month(sr), aplant_rotyr(sr),       &
-     &        acthum(sr), crop%geometry%xstmrep, &
+     &        crop%database%thum, crop%geometry%xstmrep, &
      &        prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
      &        prevflatstem(sr), prevflatleaf(sr), prevflatstore(sr),    &
      &        prevbgstemz(1,sr),                                        &
@@ -1403,7 +1402,7 @@
      &        crop%bname, am0cfl(sr), &
      &        soil%nslay, ac0idc(sr), crop%growth%dayam, &
      &        aplant_day(sr), aplant_month(sr), aplant_rotyr(sr),       &
-     &        acthum(sr), crop%geometry%xstmrep, &
+     &        crop%database%thum, crop%geometry%xstmrep, &
      &        prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
      &        prevflatstem(sr), prevflatleaf(sr), prevflatstore(sr),    &
      &        prevbgstemz(1,sr),                                        &
@@ -1471,7 +1470,7 @@
      &        crop%bname, am0cfl(sr), &
      &        soil%nslay, ac0idc(sr), crop%growth%dayam, &
      &        aplant_day(sr), aplant_month(sr), aplant_rotyr(sr),       &
-     &        acthum(sr), crop%geometry%xstmrep, &
+     &        crop%database%thum, crop%geometry%xstmrep, &
      &        prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
      &        prevflatstem(sr), prevflatleaf(sr), prevflatstore(sr),    &
      &        prevbgstemz(1,sr),                                        &
@@ -1540,7 +1539,7 @@
      &        crop%bname, am0cfl(sr), &
      &        soil%nslay, ac0idc(sr), crop%growth%dayam, &
      &        aplant_day(sr), aplant_month(sr), aplant_rotyr(sr),       &
-     &        acthum(sr), crop%geometry%xstmrep, &
+     &        crop%database%thum, crop%geometry%xstmrep, &
      &        prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
      &        prevflatstem(sr), prevflatleaf(sr), prevflatstore(sr),    &
      &        prevbgstemz(1,sr),                                        &
@@ -1608,7 +1607,7 @@
      &        crop%bname, am0cfl(sr), &
      &        soil%nslay, ac0idc(sr), crop%growth%dayam, &
      &        aplant_day(sr), aplant_month(sr), aplant_rotyr(sr),       &
-     &        acthum(sr), crop%geometry%xstmrep, &
+     &        crop%database%thum, crop%geometry%xstmrep, &
      &        prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
      &        prevflatstem(sr), prevflatleaf(sr), prevflatstore(sr),    &
      &        prevbgstemz(1,sr),                                        &
@@ -1755,7 +1754,7 @@
      &        crop%bname, am0cfl(sr), &
      &        soil%nslay, ac0idc(sr), crop%growth%dayam, &
      &        aplant_day(sr), aplant_month(sr), aplant_rotyr(sr),       &
-     &        acthum(sr), crop%geometry%xstmrep, &
+     &        crop%database%thum, crop%geometry%xstmrep, &
      &        prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
      &        prevflatstem(sr), prevflatleaf(sr), prevflatstore(sr),    &
      &        prevbgstemz(1,sr),                                        &
@@ -1779,8 +1778,8 @@
         mcur(sr) = mcur(sr) + 1
         line = mtbl(mcur(sr))
         read(line(2:len_trim(line)),* , err=901)                        &
-     &    acdpop(sr), acdmaxshoot(sr), acbaflg(sr), acytgt(sr),         &
-     &    acbaf(sr), acyraf(sr), crop%geometry%hyfg
+     &    acdpop(sr), crop%database%dmaxshoot, crop%database%baflg, acytgt(sr), &
+     &    crop%database%baf, crop%database%yraf, crop%geometry%hyfg
 
 !     get additional line of data
         mcur(sr) = mcur(sr) + 1
@@ -1792,39 +1791,39 @@
         line = mtbl(mcur(sr))
 !     read yield reporting values and growth characteristics
         read(line(2:len_trim(line)), *, err=901)                        &
-     &    acywct(sr), acycon(sr), ac0idc(sr), acgrf(sr),                &
-     &    crop%database%ck, acehu0(sr)
+     &    acywct(sr), acycon(sr), ac0idc(sr), crop%database%grf,                &
+     &    crop%database%ck, crop%database%ehu0
 
         mcur(sr) = mcur(sr) + 1
         line = mtbl(mcur(sr))
 !     read crop growth parameters
         read(line(2:len_trim(line)), *, err=901)                        &
-     &    aczmxc(sr), ac0growdepth(sr), aczmrt(sr), actmin(sr),         &
-     &    actopt(sr), acthudf(sr), actdtm(sr), acthum(sr)
+     &    crop%database%zmxc, crop%database%growdepth, crop%database%zmrt, actmin(sr), &
+     &    actopt(sr), acthudf(sr), crop%database%tdtm, crop%database%thum
 
         mcur(sr) = mcur(sr) + 1
         line = mtbl(mcur(sr))
         read(line(2:len_trim(line)), *, err=901)                        &
      &    ac0fd1(1,sr), ac0fd2(1,sr), ac0fd1(2,sr), ac0fd2(2,sr),       &
-     &    actverndel(sr), ac0bceff(sr)
+     &    crop%database%tverndel, crop%database%bceff
 
         mcur(sr) = mcur(sr) + 1
         line = mtbl(mcur(sr))
         read(line(2:len_trim(line)), *, err=901)                        &
-     &    ac0alf(sr), ac0blf(sr), ac0clf(sr), ac0dlf(sr),               &
-     &    ac0arp(sr), ac0brp(sr), ac0crp(sr), ac0drp(sr)
+     &    crop%database%alf, crop%database%blf, crop%database%clf, crop%database%dlf, &
+     &    crop%database%arp, crop%database%brp, crop%database%crp, crop%database%drp
 
         mcur(sr) = mcur(sr) + 1
         line = mtbl(mcur(sr))
         read(line(2:len_trim(line)), *, err=901)                        &
-     &    ac0aht(sr), ac0bht(sr), ac0ssa(sr), ac0ssb(sr),               &
-     &    crop%database%sla, ac0hue(sr), ac0transf(sr), ac0diammax(sr)
+     &    crop%database%aht, crop%database%bht, crop%database%ssa, crop%database%ssb, &
+     &    crop%database%sla, crop%database%hue, crop%database%transf, crop%database%diammax
 
         mcur(sr) = mcur(sr) + 1
         line = mtbl(mcur(sr))
         read(line(2:len_trim(line)), *, err=901)                        &
-     &    ac0storeinit(sr), ac0shoot(sr), acfleafstem(sr), acfshoot(sr),&
-     &    acfleaf2stor(sr), acfstem2stor(sr), acfstor2stor(sr),crop%database%rbc
+     &    crop%database%storeinit, crop%database%shoot, crop%database%fleafstem, crop%database%fshoot, &
+     &    crop%database%fleaf2stor, crop%database%fstem2stor, crop%database%fstor2stor,crop%database%rbc
 
         mcur(sr) = mcur(sr) + 1
         line = mtbl(mcur(sr))
@@ -1835,18 +1834,18 @@
         mcur(sr) = mcur(sr) + 1
         line = mtbl(mcur(sr))
         read(line(2:len_trim(line)), *, err=901)                        &
-     &    crop%database%resevapa, crop%database%resevapb, acyld_coef(sr), acresid_int(sr),&
-     &    aczloc_regrow(sr), noparam3, noparam2, noparam1
+     &    crop%database%resevapa, crop%database%resevapb, crop%database%yld_coef, crop%database%resid_int, &
+     &    crop%database%zloc_regrow, noparam3, noparam2, noparam1
 
         ! reading of process parameters complete
 
         ! input is residue yield ratio. internal use is total biomass yield ratio
         ! all input values are on a dry weight basis.
-!        acyld_coef(sr) = acyld_coef(sr) + 1.0
+!        crop%database%yld_coef = crop%database%yld_coef + 1.0
 
         ! adjust yield coefficient to generate values on dry weight basis
         ! from total above ground biomass increments
-        acyld_coef(sr) = (acyld_coef(sr) + 1.0 - acywct(sr)/100.0)      &
+        crop%database%yld_coef = (crop%database%yld_coef + 1.0 - acywct(sr)/100.0)      &
      &                 / (1.0-acywct(sr)/100.0)
 
         ! check crop type to see if yield coefficient and grain fraction are used
@@ -1855,8 +1854,8 @@
      &         .or. (crop%geometry%hyfg .eq. 1)                                 &
      &         .or. (crop%geometry%hyfg .eq. 5) ) then
             ! grain fraction is used
-                if(       (acyld_coef(sr) .gt. 1.0 )                    &
-     &              .and. (acyld_coef(sr) * acgrf(sr) .lt. 1.0) ) then
+                if(       (crop%database%yld_coef .gt. 1.0 )                    &
+     &              .and. (crop%database%yld_coef * crop%database%grf .lt. 1.0) ) then
                     ! these values will physically require the transfer of
                     ! biomass from stem or leaf pools to meet the incremental
                     ! need for reproductive mass to meet the residue yield ratio.
@@ -1865,7 +1864,7 @@
                     write(*,*) 'Error: crop named (', trim(cropname),   &
      &         ') has bad grain fraction and residue yield ratio values'
                     write(*,*) 'Error: grf*(ryrat+1-mc)/(1-mc) must be > 1',&
-     &                         ', Value is: ',acyld_coef(sr)*acgrf(sr)
+     &                         ', Value is: ',crop%database%yld_coef*crop%database%grf
                     stop
                 end if
             end if
@@ -1894,10 +1893,9 @@
               if( (ac0rg(sr) .eq. 0) .and. (rdgflag .eq. 1) ) then
                 ! seed placed in furrow bottom and ridge made unconditionally
                 ! set transpiration depth parameters (meters)
-                ahzfurcut(sr) = mmtom                                   &
-     &                     * furrowcut(soil%aszrgh,soil%asxrgw,soil%asxrgs)
-                ahztransprtmin(sr) = ahzfurcut(sr) + ac0growdepth(sr)
-                ahztransprtmax(sr) = aczmrt(sr)
+                ahzfurcut(sr) = mmtom * furrowcut(soil%aszrgh,soil%asxrgw,soil%asxrgs)
+                ahztransprtmin(sr) = ahzfurcut(sr) + crop%database%growdepth
+                ahztransprtmax(sr) = crop%database%zmrt
               end if
            else  ! no ridges, so this is a broadcast crop
               acxrow(sr) = 0.0
@@ -1994,7 +1992,7 @@
      &        crop%bname, am0cfl(sr), &
      &        soil%nslay, ac0idc(sr), crop%growth%dayam, &
      &        aplant_day(sr), aplant_month(sr), aplant_rotyr(sr),       &
-     &        acthum(sr), crop%geometry%xstmrep, &
+     &        crop%database%thum, crop%geometry%xstmrep, &
      &        prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
      &        prevflatstem(sr), prevflatleaf(sr), prevflatstore(sr),    &
      &        prevbgstemz(1,sr),                                        &
@@ -2072,7 +2070,7 @@
      &        crop%bname, am0cfl(sr), &
      &        soil%nslay, ac0idc(sr), crop%growth%dayam, &
      &        aplant_day(sr), aplant_month(sr), aplant_rotyr(sr),       &
-     &        acthum(sr), crop%geometry%xstmrep, &
+     &        crop%database%thum, crop%geometry%xstmrep, &
      &        prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
      &        prevflatstem(sr), prevflatleaf(sr), prevflatstore(sr),    &
      &        prevbgstemz(1,sr),                                        &

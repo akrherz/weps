@@ -29,7 +29,6 @@
       include 'p1werm.inc'
       include 'm1flag.inc'
       include 'c1gen.inc'
-      include 'c1db1.inc'
       include 'c1report.inc'
 
 !     + + + LOCAL DECLARATIONS + + +
@@ -51,7 +50,7 @@
           ! to eliminate newline at beginning of file
           cprevcalibrotation(sr) = 1
           RETURN
-      else if (acbaflg(sr) == 0) then       ! crop not flagged for calibration
+      else if (crop%database%baflg == 0) then       ! crop not flagged for calibration
           RETURN
       endif
 
@@ -113,9 +112,9 @@
       !Print out "biomass adj factor", "yield adj factor",
       !          "target yield" and "target yield units"
       write(unit=luoharvest_calib(sr),fmt=1040,advance='NO')            &
-     &    acbaflg(sr),acbaf(sr),acyraf(sr),acytgt(sr),trim(acynmu(sr))
+     &    crop%database%baflg,crop%database%baf,crop%database%yraf,acytgt(sr),trim(acynmu(sr))
       write(unit=luoharvest_calib_parm(sr),fmt=1041,advance='NO')       &
-     &    acbaf(sr)
+     &    crop%database%baf
 
       !Print out "wet target yield" (metric) and "dry target yield" (metric)
       write(unit=luoharvest_calib(sr),fmt=1050,advance='NO')            &

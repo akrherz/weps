@@ -20,7 +20,7 @@ SUBROUTINE set_calib(sr, crop)
 
 !   + + + ARGUMENT DECLARATIONS + + +
     INTEGER :: sr
-    type(biomatter), intent(in) :: crop    ! structure containing full crop description
+    type(biomatter), intent(inout) :: crop    ! structure containing full crop description
 
 !   + + + ARGUMENT DEFINITIONS + + +
 !   sr    - subregion number
@@ -38,7 +38,7 @@ SUBROUTINE set_calib(sr, crop)
 
     IF (.not. got_all_calib_crops) RETURN   ! Don't do anything if all crops not identified
 
-    IF (acbaflg(sr) == 0) RETURN       ! crop not flagged for calibration
+    IF (crop%database%baflg == 0) RETURN       ! crop not flagged for calibration
 
     ! Check to see if we already have this crop
     ! If so, stop looking for crops to add to calibration list (set "got_all_calib_crops" flag)
@@ -55,8 +55,8 @@ SUBROUTINE set_calib(sr, crop)
              IF (.not. first_full_cycle(c_no)) RETURN 
 
              print *, "Found calibration crop to adjust at planting time"
-             print *, "Setting crop no: ",c_no,"bio_adj value from: ",acbaf(sr),"to: ",new_adj(c_no)
-             acbaf(sr) = new_adj(c_no)
+             print *, "Setting crop no: ",c_no,"bio_adj value from: ",crop%database%baf,"to: ",new_adj(c_no)
+             crop%database%baf = new_adj(c_no)
              RETURN
        END IF
        CLink = LI_Get_Next(CLink)

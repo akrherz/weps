@@ -114,6 +114,54 @@ module biomaterial
   end type bioderived
 
   type biodatabase ! from c1db1.inc, c1gen.inc
+     integer :: baflg   ! flag for biomass adjustment action
+                          ! 0 - normal crop growth
+                          ! 1 - find biomass adjustment factor for target yield
+                          ! 2 - Use given biomass adjustment factor
+     real :: baf        ! biomass adjustment factor
+     real :: yraf       ! yield to biomass ratio adjustment factor
+     integer :: tdtm    ! days from planting to maturity for summer crops, or the days
+                        ! from start of spring growth to maturity for winter and perennial crops. 
+     real :: thum       ! accumulated heat units from planting to maturity, or from 
+                        ! start of growth to maturity for perennial crops
+     real :: zmrt       ! Maximum crop root depth (m)
+     real :: zmxc       ! Maximum crop height (m)
+     real :: grf        ! Fraction of reproductive biomass that is grain (Mg/Mg)
+     real :: ehu0       ! heat unit index leaf senescence starts
+     real :: tverndel   ! thermal delay coefficient pre-vernalization
+     real :: bceff      ! biomass conversion efficiency
+     real :: alf        ! leaf mass partitioning coefficient a
+     real :: blf        ! leaf mass partitioning coefficient b
+     real :: clf        ! leaf mass partitioning coefficient c
+     real :: dlf        ! leaf mass partitioning coefficient d
+     real :: arp        ! reproductive mass partitioning coefficient a
+     real :: brp        ! reproductive mass partitioning coefficient b
+     real :: crp        ! reproductive mass partitioning coefficient c
+     real :: drp        ! reproductive mass partitioning coefficient d
+     real :: aht        ! plant height coefficient a
+     real :: bht        ! plant height coefficient b
+     real :: ssa        ! stem area to mass coefficient a, result is m^2 per plant
+     real :: ssb        ! stem area to mass coefficient b, argument is kg per plant
+     real :: hue        ! heat unit index where emergence is complete
+     real :: dmaxshoot  ! maximum number of shoots possible from each plant
+     integer :: transf  ! db input flag:
+                          ! 0 = crop is planted using stored biomass of seed or vegatative propagants
+                          ! 1 = crop is planted as a transplant with roots, stems and leaves present
+     real :: storeinit  ! db input, crop storage root mass initialzation (mg/plant)
+     real :: fshoot     ! crop ratio of shoot diameter to length
+     real :: growdepth  ! depth of growing point at time of planting (m)
+     real :: fleafstem  ! crop leaf to stem mass ratio for shoots
+     real :: shoot      ! mass from root storage required for each regrowth shoot (mg/shoot)
+                        ! seed shoots are smaller and adjusted for available seed mass
+     real :: diammax    ! crop maximum plant diameter (m)
+
+     real :: fleaf2stor ! fraction of assimilate partitioned to leaf that is diverted to root store
+     real :: fstem2stor ! fraction of assimilate partitioned to stem that is diverted to root store
+     real :: fstor2stor ! fraction of assimilate partitioned to standing storage (reproductive) that is diverted to root store
+     real :: yld_coef   ! yield coefficient (kg/kg)     harvest_residue = acyld_coef(kg/kg) * Yield + acresid_int (kg/m^2)
+     real :: resid_int  ! residue intercept (kg/m^2)   harvest_residue = acyld_coef(kg/kg) * Yield + acresid_int (kg/m^2)
+     real :: zloc_regrow ! location of regrowth point (+ on stem, 0 or negative from crown)
+
      real, dimension(1:5) :: dkrate ! array of decomposition rate parameters
                                     ! acdkrate(1) - standing residue mass decomposition rate (d<1) (g/g/day)
                                     ! acdkrate(2) - flat residue mass decomposition rate (d<1) (g/g/day)

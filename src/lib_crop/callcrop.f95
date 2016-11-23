@@ -25,7 +25,6 @@
 
 ! Includes
       include 'p1werm.inc'
-      include 'c1db1.inc'
       include 'c1db2.inc'
       include 'c1info.inc'
       include 'c1gen.inc'
@@ -49,7 +48,7 @@
 ! to be disabled, we won't worry about it right now.  LEW - 04/23/99
 
       ! check for a valid growing crop
-      if(      (ac0shoot(sr) .le. 0.0) &
+      if(      (crop%database%shoot .le. 0.0) &
           .or. (acdpop(sr) .le. 0.0) &
           .or. (ac0idc(sr) .le. 0) ) then
           ! this is not a valid growing crop
@@ -61,26 +60,26 @@
 
          if (am0cdb(sr).eq.1) call cdbug(sr, soil, crop, restot, h1et)
 
-         call cropgrow(sr, soil%nslay, soil%aszlyd,                     &
-     &   crop%database%ck, acgrf(sr), acehu0(sr), aczmxc(sr),                  &
+         call cropgrow(sr, soil%nslay, soil%aszlyd, &
+     &   crop%database%ck, crop%database%grf, crop%database%ehu0, crop%database%zmxc, &
      &   crop%bname,ac0idc(sr), acxrow(sr),                             &
-     &   actdtm(sr), aczmrt(sr), actmin(sr), actopt(sr),                &
+     &   crop%database%tdtm, crop%database%zmrt, actmin(sr), actopt(sr), &
      &   ac0fd1(1,sr), ac0fd2(1,sr), ac0fd1(2,sr), ac0fd2(2,sr),        &
-     &   ac0bceff(sr),                                                  &
-     &   ac0alf(sr), ac0blf(sr), ac0clf(sr),                            &
-     &   ac0dlf(sr), ac0arp(sr), ac0brp(sr), ac0crp(sr),                &
-     &   ac0drp(sr), ac0aht(sr), ac0bht(sr),                            &
-     &   crop%database%sla, ac0hue(sr),  actverndel(sr),                       &
+     &   crop%database%bceff, &
+     &   crop%database%alf, crop%database%blf, crop%database%clf, &
+     &   crop%database%dlf, crop%database%arp, crop%database%brp, crop%database%crp, &
+     &   crop%database%drp, crop%database%aht, crop%database%bht, &
+     &   crop%database%sla, crop%database%hue, crop%database%tverndel, &
      &   ahtsmx(1,sr), ahtsmn(1,sr),                                    &
      &   ahfwsf(sr),                                                    &
-     &   crop%growth%am0cif,                                            &
-     &   acthudf(sr), acbaf(sr),                                        &
-     &   crop%geometry%hyfg, acthum(sr), acdpop(sr), acdmaxshoot(sr),           &
-     &   ac0storeinit(sr), acfshoot(sr),                                &
-     &   ac0growdepth(sr), acfleafstem(sr), ac0shoot(sr),               &
-     &   ac0diammax(sr), ac0ssa(sr), ac0ssb(sr),                        &
-     &   acfleaf2stor(sr), acfstem2stor(sr), acfstor2stor(sr),          &
-     &   acyld_coef(sr), acresid_int(sr), crop%database%xstm, &
+     &   crop%growth%am0cif, &
+     &   acthudf(sr), crop%database%baf, &
+     &   crop%geometry%hyfg, crop%database%thum, acdpop(sr), crop%database%dmaxshoot, &
+     &   crop%database%storeinit, crop%database%fshoot, &
+     &   crop%database%growdepth, crop%database%fleafstem, crop%database%shoot, &
+     &   crop%database%diammax, crop%database%ssa, crop%database%ssb, &
+     &   crop%database%fleaf2stor, crop%database%fstem2stor, crop%database%fstor2stor, &
+     &   crop%database%yld_coef, crop%database%resid_int, crop%database%xstm, &
      &   crop%mass%standstem, crop%mass%standleaf, crop%mass%standstore, &
      &   crop%mass%flatstem, crop%mass%flatleaf, crop%mass%flatstore, &
      &   crop%growth%mshoot, crop%growth%mtotshoot, crop%mass%stemz, &
@@ -99,7 +98,7 @@
      &   prevht(sr), prevzshoot(sr), prevstm(sr), prevrtd(sr),          &
      &   prevdayap(sr), prevhucum(sr), prevrthucum(sr),                 &
      &   prevgrainf(sr), prevchillucum(sr), prevliveleaf(sr),           &
-     &   prevdayspring(sr), daysim, crop%growth%dayspring, aczloc_regrow(sr), &
+     &   prevdayspring(sr), daysim, crop%growth%dayspring, crop%database%zloc_regrow, &
      &   agmstandstem(sr), agmstandleaf(sr), agmstandstore(sr),         &
      &   agmflatstem(sr), agmflatleaf(sr), agmflatstore(sr),            &
      &   agmbgstemz(1,sr),                                              &
@@ -138,7 +137,7 @@
       call cropupdate(                                                  &
             soil%aszrgh, soil%aszlyd, &
      &      ac0rg(sr), acxrow(sr), &
-     &      soil%nslay, ac0ssa(sr), ac0ssb(sr), &
+     &      soil%nslay, crop%database%ssa, crop%database%ssb, &
      &      acdpop(sr), &
      &      ahztranspdepth(sr), ahzfurcut(sr),                          &
      &      ahztransprtmin(sr), ahztransprtmax(sr), crop, croptot  )

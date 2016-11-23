@@ -78,7 +78,6 @@
       include 'm1flag.inc'
       include 'c1info.inc'
       include 'c1gen.inc'
-      include 'c1db1.inc'
       include 'h1hydro.inc'
       include 'command.inc'   !declarations for commandline args
       include 'precision.inc' !declaration for portable math range checking
@@ -485,8 +484,8 @@
          ! initialize soil depth to bottom of layers (mm) from layer thickness (mm)
          call soilinit(soil(isr))
          ! initialize croptot variables
-         call cropupdate( soil(isr)%aszrgh, soil(isr)%aszlyd, ac0rg(isr), acxrow(isr), soil(isr)%nslay, ac0ssa(isr), &
-                          ac0ssb(isr), acdpop(isr), &
+         call cropupdate( soil(isr)%aszrgh, soil(isr)%aszlyd, ac0rg(isr), acxrow(isr), soil(isr)%nslay, crop(isr)%database%ssa, &
+                          crop(isr)%database%hue, acdpop(isr), &
                           ahztranspdepth(isr), ahzfurcut(isr), ahztransprtmin(isr), ahztransprtmax(isr), &
                           crop(isr), croptot(isr) )
          call sumbio(soil(isr), crop(isr), residue(1:size(residue,1), isr), restot(isr), croptot(isr), biotot(isr))

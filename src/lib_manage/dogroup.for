@@ -19,7 +19,6 @@
 !     + + + PARAMETERS AND COMMON BLOCKS + + +
       include 'p1werm.inc'
       include 'm1flag.inc'
-      include 'c1db1.inc'
       include 'manage/man.inc'
       include 'manage/mproc.inc'
 
