@@ -25,7 +25,6 @@
 
 ! Includes
       include 'p1werm.inc'
-      include 'c1info.inc'
       include 'm1flag.inc'
       include 'h1hydro.inc'
       include 'h1temp.inc'
@@ -48,7 +47,7 @@
       ! check for a valid growing crop
       if(      (crop%database%shoot .le. 0.0) &
           .or. (crop%geometry%dpop .le. 0.0) &
-          .or. (ac0idc(sr) .le. 0) ) then
+          .or. (crop%database%idc .le. 0) ) then
           ! this is not a valid growing crop
           crop%growth%am0cgf = .false.
       end if
@@ -60,7 +59,7 @@
 
          call cropgrow(sr, soil%nslay, soil%aszlyd, &
      &   crop%database%ck, crop%database%grf, crop%database%ehu0, crop%database%zmxc, &
-     &   crop%bname,ac0idc(sr), crop%geometry%xrow, &
+     &   crop%bname, crop%database%idc, crop%geometry%xrow, &
      &   crop%database%tdtm, crop%database%zmrt, crop%database%tmin, crop%database%topt, &
      &   crop%database%fd1(1), crop%database%fd2(1), crop%database%fd1(2), crop%database%fd2(2), &
      &   crop%database%bceff, &

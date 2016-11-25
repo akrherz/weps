@@ -76,7 +76,6 @@
       include 'm1subr.inc'
       include 'm1sim.inc'  ! am0jd
       include 'm1flag.inc'
-      include 'c1info.inc'
       include 'h1hydro.inc'
       include 'command.inc'   !declarations for commandline args
       include 'precision.inc' !declaration for portable math range checking

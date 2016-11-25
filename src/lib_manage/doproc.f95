@@ -32,7 +32,6 @@
       include 'p1werm.inc'
       include 'm1flag.inc'
       include 'm1sim.inc'
-      include 'c1info.inc'
       include 'h1hydro.inc'
       include 'h1db1.inc'
       include 'manage/asd.inc'
@@ -945,9 +944,9 @@
 
         if( crop%growth%am0cgf .and. .not. crop%growth%am0cif ) then
           ! crop growth flag on and not on initialization cycle
-          if ((am0kilfl.eq.2).or.((am0kilfl.eq.1).and.((ac0idc(sr).eq.1)&
-     &       .or.(ac0idc(sr).eq.2).or.(ac0idc(sr).eq.4)                 &
-     &       .or.(ac0idc(sr).eq.5)))) then
+          if ((am0kilfl.eq.2).or.((am0kilfl.eq.1).and.((crop%database%idc.eq.1)&
+     &       .or.(crop%database%idc.eq.2).or.(crop%database%idc.eq.4)                 &
+     &       .or.(crop%database%idc.eq.5)))) then
 !            Stop the crop growth (ie. stop calling crop submodel) and
 !            transfer crop state to temporary crop pool
              call kill_crop( crop%growth%am0cgf, soil%nslay, &
@@ -971,7 +970,7 @@
                mature_warn_flg = 1
                call crop_endseason( sr, bmrotation, mperod(sr), &
      &         crop%bname, am0cfl(sr), &
-     &         soil%nslay, ac0idc(sr), crop%growth%dayam, &
+     &         soil%nslay, crop%database%idc, crop%growth%dayam, &
      &         crop%database%plant_day, crop%database%plant_month, crop%database%plant_rotyr, &
      &         crop%database%thum, crop%geometry%xstmrep, &
      &         prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
@@ -1056,7 +1055,7 @@
               call report_hydrobal( sr, bmrotation, mperod(sr) )
               call crop_endseason( sr, bmrotation, mperod(sr), &
      &        crop%bname, am0cfl(sr), &
-     &        soil%nslay, ac0idc(sr), crop%growth%dayam, &
+     &        soil%nslay, crop%database%idc, crop%growth%dayam, &
      &        crop%database%plant_day, crop%database%plant_month, crop%database%plant_rotyr, &
      &        crop%database%thum, crop%geometry%xstmrep, &
      &        prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
@@ -1122,7 +1121,7 @@
               call report_hydrobal( sr, bmrotation, mperod(sr) )
               call crop_endseason( sr, bmrotation, mperod(sr), &
      &        crop%bname, am0cfl(sr), &
-     &        soil%nslay, ac0idc(sr), crop%growth%dayam, &
+     &        soil%nslay, crop%database%idc, crop%growth%dayam, &
      &        crop%database%plant_day, crop%database%plant_month, crop%database%plant_rotyr, &
      &        crop%database%thum, crop%geometry%xstmrep, &
      &        prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
@@ -1223,7 +1222,7 @@
               call report_hydrobal( sr, bmrotation, mperod(sr) )
               call crop_endseason( sr, bmrotation, mperod(sr), &
      &        crop%bname, am0cfl(sr), &
-     &        soil%nslay, ac0idc(sr), crop%growth%dayam, &
+     &        soil%nslay, crop%database%idc, crop%growth%dayam, &
      &        crop%database%plant_day, crop%database%plant_month, crop%database%plant_rotyr, &
      &        crop%database%thum, crop%geometry%xstmrep, &
      &        prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
@@ -1286,7 +1285,7 @@
               call report_hydrobal( sr, bmrotation, mperod(sr) )
               call crop_endseason( sr, bmrotation, mperod(sr), &
      &        crop%bname, am0cfl(sr), &
-     &        soil%nslay, ac0idc(sr), crop%growth%dayam, &
+     &        soil%nslay, crop%database%idc, crop%growth%dayam, &
      &        crop%database%plant_day, crop%database%plant_month, crop%database%plant_rotyr, &
      &        crop%database%thum, crop%geometry%xstmrep, &
      &        prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
@@ -1398,7 +1397,7 @@
               call report_hydrobal( sr, bmrotation, mperod(sr) )
               call crop_endseason( sr, bmrotation, mperod(sr), &
      &        crop%bname, am0cfl(sr), &
-     &        soil%nslay, ac0idc(sr), crop%growth%dayam, &
+     &        soil%nslay, crop%database%idc, crop%growth%dayam, &
      &        crop%database%plant_day, crop%database%plant_month, crop%database%plant_rotyr, &
      &        crop%database%thum, crop%geometry%xstmrep, &
      &        prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
@@ -1466,7 +1465,7 @@
               call report_hydrobal( sr, bmrotation, mperod(sr) )
               call crop_endseason( sr, bmrotation, mperod(sr), &
      &        crop%bname, am0cfl(sr), &
-     &        soil%nslay, ac0idc(sr), crop%growth%dayam, &
+     &        soil%nslay, crop%database%idc, crop%growth%dayam, &
      &        crop%database%plant_day, crop%database%plant_month, crop%database%plant_rotyr, &
      &        crop%database%thum, crop%geometry%xstmrep, &
      &        prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
@@ -1535,7 +1534,7 @@
               call report_hydrobal( sr, bmrotation, mperod(sr) )
               call crop_endseason( sr, bmrotation, mperod(sr), &
      &        crop%bname, am0cfl(sr), &
-     &        soil%nslay, ac0idc(sr), crop%growth%dayam, &
+     &        soil%nslay, crop%database%idc, crop%growth%dayam, &
      &        crop%database%plant_day, crop%database%plant_month, crop%database%plant_rotyr, &
      &        crop%database%thum, crop%geometry%xstmrep, &
      &        prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
@@ -1603,7 +1602,7 @@
               call report_hydrobal( sr, bmrotation, mperod(sr) )
               call crop_endseason( sr, bmrotation, mperod(sr), &
      &        crop%bname, am0cfl(sr), &
-     &        soil%nslay, ac0idc(sr), crop%growth%dayam, &
+     &        soil%nslay, crop%database%idc, crop%growth%dayam, &
      &        crop%database%plant_day, crop%database%plant_month, crop%database%plant_rotyr, &
      &        crop%database%thum, crop%geometry%xstmrep, &
      &        prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
@@ -1750,7 +1749,7 @@
           call stir_crop(sr, crop%bname, 2)
           call crop_endseason( sr, bmrotation, mperod(sr), &
      &        crop%bname, am0cfl(sr), &
-     &        soil%nslay, ac0idc(sr), crop%growth%dayam, &
+     &        soil%nslay, crop%database%idc, crop%growth%dayam, &
      &        crop%database%plant_day, crop%database%plant_month, crop%database%plant_rotyr, &
      &        crop%database%thum, crop%geometry%xstmrep, &
      &        prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
@@ -1789,7 +1788,7 @@
         line = mtbl(mcur(sr))
 !     read yield reporting values and growth characteristics
         read(line(2:len_trim(line)), *, err=901)                        &
-     &    crop%database%ywct, crop%database%ycon, ac0idc(sr), crop%database%grf, &
+     &    crop%database%ywct, crop%database%ycon, crop%database%idc, crop%database%grf, &
      &    crop%database%ck, crop%database%ehu0
 
         mcur(sr) = mcur(sr) + 1
@@ -1906,7 +1905,7 @@
 
 !       do process
 !       do not initialize crop if no crop is present
-        if( (crop%geometry%dpop .gt. 0.0) .and. (ac0idc(sr) .gt. 0) ) then
+        if( (crop%geometry%dpop .gt. 0.0) .and. (crop%database%idc .gt. 0) ) then
 !         set flag for crop initialization - jt
           crop%growth%am0cif = .true.
 !         set crop growth flag on - jt
@@ -1987,7 +1986,7 @@
               call report_hydrobal( sr, bmrotation, mperod(sr) )
               call crop_endseason( sr, bmrotation, mperod(sr), &
      &        crop%bname, am0cfl(sr), &
-     &        soil%nslay, ac0idc(sr), crop%growth%dayam, &
+     &        soil%nslay, crop%database%idc, crop%growth%dayam, &
      &        crop%database%plant_day, crop%database%plant_month, crop%database%plant_rotyr, &
      &        crop%database%thum, crop%geometry%xstmrep, &
      &        prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
@@ -2065,7 +2064,7 @@
             call report_hydrobal( sr, bmrotation, mperod(sr) )
             call crop_endseason( sr, bmrotation, mperod(sr), &
      &        crop%bname, am0cfl(sr), &
-     &        soil%nslay, ac0idc(sr), crop%growth%dayam, &
+     &        soil%nslay, crop%database%idc, crop%growth%dayam, &
      &        crop%database%plant_day, crop%database%plant_month, crop%database%plant_rotyr, &
      &        crop%database%thum, crop%geometry%xstmrep, &
      &        prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &

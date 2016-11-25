@@ -124,6 +124,12 @@ module biomaterial
   end type bioderived
 
   type biodatabase ! from c1db1, c1gen .inc
+     integer :: idc     ! The crop type number (1 = annual, perennial, . . .)
+                          ! 1,4 Summer Annual
+                          ! 2,5 Winter Annual
+                          ! 3,6 Perennial
+                          ! 7   Biannual with tuber dormancy
+                          ! 8   Perennial with staged crown bud release
      integer :: baflg   ! flag for biomass adjustment action
                           ! 0 - normal crop growth
                           ! 1 - find biomass adjustment factor for target yield

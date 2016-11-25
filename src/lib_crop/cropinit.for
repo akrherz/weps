@@ -14,7 +14,6 @@
 
 !     + + + PARAMETERS AND COMMON BLOCKS + + +
       include 'p1werm.inc'
-      include 'c1info.inc'
       include 'c1report.inc'
       include 'manage/tcrop.inc'
       include 'crop/gcrop.inc'
@@ -95,7 +94,7 @@
       crop%database%ywct = 0.0
 
 !     initialize crop type id to 0 indicating no crop type is growing
-      ac0idc(isr) = 0
+      crop%database%idc = 0
       crop%database%sla = 0.0
       crop%geometry%dpop = 0.0
 
