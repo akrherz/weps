@@ -3,7 +3,7 @@
 !$Revision$
 !$HeadURL$
 
-      subroutine   doproc (sr, bmrotation, soil, crop, residue, biotot, mandate, h1et)
+      subroutine   doproc (sr, bmrotation, soil, crop, cropprev, residue, biotot, mandate, h1et)
 
 !     + + + PURPOSE + + +
 !     Doproc is called when a processline is found in the management file
@@ -18,7 +18,7 @@
       use weps_interface_defs, ignore_me=>doproc
       use file_io_mod, only: luomanage, luotdb
       use soil_data_struct_defs, only: soil_def
-      use biomaterial, only: biomatter, biototal
+      use biomaterial, only: biomatter, biototal, bio_prevday
       use mandate_mod, only: opercrop_date
       use p1unconv_mod, only: mmtom
       use manage_data_struct_defs, only: am0tfl, am0tdb, lastoper
@@ -40,14 +40,12 @@
 !     rdgflag  - flag indicating whether ridge modifications are needed
 !     imprs  - implement ridge spacing (can be used to set row spacing)
       include 'manage/tcrop.inc'
-!      include 'main/main.inc'
-      include 'crop/prevstate.inc'
-      include 'crop/prevderiv.inc'
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer sr, bmrotation
       type(soil_def), intent(inout) :: soil  ! soil for this subregion
       type(biomatter), intent(inout) :: crop    ! structure containing full crop description
+      type(bio_prevday), intent(inout) :: cropprev    ! structure containing crop previous day values
       type(biomatter), dimension(:), intent(inout) :: residue
       type(biototal), intent(in) :: biotot
       type(opercrop_date), dimension(:), intent(inout) :: mandate
@@ -973,14 +971,14 @@
      &         soil%nslay, crop%database%idc, crop%growth%dayam, &
      &         crop%database%plant_day, crop%database%plant_month, crop%database%plant_rotyr, &
      &         crop%database%thum, crop%geometry%xstmrep, &
-     &         prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
-     &         prevflatstem(sr), prevflatleaf(sr), prevflatstore(sr),    &
-     &         prevbgstemz(1,sr),                                        &
-     &         prevrootstorez(1,sr), prevrootfiberz(1,sr),               &
-     &         prevht(sr), prevstm(sr), prevrtd(sr),                     &
-     &         prevdayap(sr), prevhucum(sr), prevrthucum(sr),            &
-     &         prevgrainf(sr), prevchillucum(sr), prevliveleaf(sr), &
-     &         prevcancov(sr), prevdayspring(sr), mature_warn_flg )
+     &         cropprev%standstem, cropprev%standleaf, cropprev%standstore, &
+     &         cropprev%flatstem, cropprev%flatleaf, cropprev%flatstore, &
+     &         cropprev%bgstemz, &
+     &         cropprev%rootstorez, cropprev%rootfiberz, &
+     &         cropprev%ht, cropprev%stm, cropprev%rtd, &
+     &         cropprev%dayap, cropprev%hucum, cropprev%rthucum, &
+     &         cropprev%grainf, cropprev%chillucum, cropprev%liveleaf, &
+     &         cropprev%cancov, cropprev%dayspring, mature_warn_flg )
                ! set to stop additional report in this operation
                rpt_season_flg = .false.
              end if
@@ -1058,14 +1056,14 @@
      &        soil%nslay, crop%database%idc, crop%growth%dayam, &
      &        crop%database%plant_day, crop%database%plant_month, crop%database%plant_rotyr, &
      &        crop%database%thum, crop%geometry%xstmrep, &
-     &        prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
-     &        prevflatstem(sr), prevflatleaf(sr), prevflatstore(sr),    &
-     &        prevbgstemz(1,sr),                                        &
-     &        prevrootstorez(1,sr), prevrootfiberz(1,sr),               &
-     &        prevht(sr), prevstm(sr), prevrtd(sr),                     &
-     &        prevdayap(sr), prevhucum(sr), prevrthucum(sr),            &
-     &        prevgrainf(sr), prevchillucum(sr), prevliveleaf(sr), &
-     &        prevcancov(sr), prevdayspring(sr), mature_warn_flg )
+     &        cropprev%standstem, cropprev%standleaf, cropprev%standstore, &
+     &        cropprev%flatstem, cropprev%flatleaf, cropprev%flatstore, &
+     &        cropprev%bgstemz, &
+     &        cropprev%rootstorez, cropprev%rootfiberz, &
+     &        cropprev%ht, cropprev%stm, cropprev%rtd, &
+     &        cropprev%dayap, cropprev%hucum, cropprev%rthucum, &
+     &        cropprev%grainf, cropprev%chillucum, cropprev%liveleaf, &
+     &        cropprev%cancov, cropprev%dayspring, mature_warn_flg )
               ! set to stop additional report in this operation
               rpt_season_flg = .false.
           end if
@@ -1124,14 +1122,14 @@
      &        soil%nslay, crop%database%idc, crop%growth%dayam, &
      &        crop%database%plant_day, crop%database%plant_month, crop%database%plant_rotyr, &
      &        crop%database%thum, crop%geometry%xstmrep, &
-     &        prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
-     &        prevflatstem(sr), prevflatleaf(sr), prevflatstore(sr),    &
-     &        prevbgstemz(1,sr),                                        &
-     &        prevrootstorez(1,sr), prevrootfiberz(1,sr),               &
-     &        prevht(sr), prevstm(sr), prevrtd(sr),                     &
-     &        prevdayap(sr), prevhucum(sr), prevrthucum(sr),            &
-     &        prevgrainf(sr), prevchillucum(sr), prevliveleaf(sr), &
-     &        prevcancov(sr), prevdayspring(sr), mature_warn_flg )
+     &        cropprev%standstem, cropprev%standleaf, cropprev%standstore, &
+     &        cropprev%flatstem, cropprev%flatleaf, cropprev%flatstore, &
+     &        cropprev%bgstemz, &
+     &        cropprev%rootstorez, cropprev%rootfiberz, &
+     &        cropprev%ht, cropprev%stm, cropprev%rtd, &
+     &        cropprev%dayap, cropprev%hucum, cropprev%rthucum, &
+     &        cropprev%grainf, cropprev%chillucum, cropprev%liveleaf, &
+     &        cropprev%cancov, cropprev%dayspring, mature_warn_flg )
               ! set to stop additional report in this operation
               rpt_season_flg = .false.
           end if
@@ -1225,14 +1223,14 @@
      &        soil%nslay, crop%database%idc, crop%growth%dayam, &
      &        crop%database%plant_day, crop%database%plant_month, crop%database%plant_rotyr, &
      &        crop%database%thum, crop%geometry%xstmrep, &
-     &        prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
-     &        prevflatstem(sr), prevflatleaf(sr), prevflatstore(sr),    &
-     &        prevbgstemz(1,sr),                                        &
-     &        prevrootstorez(1,sr), prevrootfiberz(1,sr),               &
-     &        prevht(sr), prevstm(sr), prevrtd(sr),                     &
-     &        prevdayap(sr), prevhucum(sr), prevrthucum(sr),            &
-     &        prevgrainf(sr), prevchillucum(sr), prevliveleaf(sr), &
-     &        prevcancov(sr), prevdayspring(sr), mature_warn_flg )
+     &        cropprev%standstem, cropprev%standleaf, cropprev%standstore, &
+     &        cropprev%flatstem, cropprev%flatleaf, cropprev%flatstore, &
+     &        cropprev%bgstemz, &
+     &        cropprev%rootstorez, cropprev%rootfiberz, &
+     &        cropprev%ht, cropprev%stm, cropprev%rtd, &
+     &        cropprev%dayap, cropprev%hucum, cropprev%rthucum, &
+     &        cropprev%grainf, cropprev%chillucum, cropprev%liveleaf, &
+     &        cropprev%cancov, cropprev%dayspring, mature_warn_flg )
               ! set to stop additional report in this operation
               rpt_season_flg = .false.
           end if
@@ -1288,14 +1286,14 @@
      &        soil%nslay, crop%database%idc, crop%growth%dayam, &
      &        crop%database%plant_day, crop%database%plant_month, crop%database%plant_rotyr, &
      &        crop%database%thum, crop%geometry%xstmrep, &
-     &        prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
-     &        prevflatstem(sr), prevflatleaf(sr), prevflatstore(sr),    &
-     &        prevbgstemz(1,sr),                                        &
-     &        prevrootstorez(1,sr), prevrootfiberz(1,sr),               &
-     &        prevht(sr), prevstm(sr), prevrtd(sr),                     &
-     &        prevdayap(sr), prevhucum(sr), prevrthucum(sr),            &
-     &        prevgrainf(sr), prevchillucum(sr), prevliveleaf(sr), &
-     &        prevcancov(sr), prevdayspring(sr), mature_warn_flg )
+     &        cropprev%standstem, cropprev%standleaf, cropprev%standstore, &
+     &        cropprev%flatstem, cropprev%flatleaf, cropprev%flatstore, &
+     &        cropprev%bgstemz, &
+     &        cropprev%rootstorez, cropprev%rootfiberz, &
+     &        cropprev%ht, cropprev%stm, cropprev%rtd, &
+     &        cropprev%dayap, cropprev%hucum, cropprev%rthucum, &
+     &        cropprev%grainf, cropprev%chillucum, cropprev%liveleaf, &
+     &        cropprev%cancov, cropprev%dayspring, mature_warn_flg )
               ! set to stop additional report in this operation
               rpt_season_flg = .false.
             end if
@@ -1400,14 +1398,14 @@
      &        soil%nslay, crop%database%idc, crop%growth%dayam, &
      &        crop%database%plant_day, crop%database%plant_month, crop%database%plant_rotyr, &
      &        crop%database%thum, crop%geometry%xstmrep, &
-     &        prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
-     &        prevflatstem(sr), prevflatleaf(sr), prevflatstore(sr),    &
-     &        prevbgstemz(1,sr),                                        &
-     &        prevrootstorez(1,sr), prevrootfiberz(1,sr),               &
-     &        prevht(sr), prevstm(sr), prevrtd(sr),                     &
-     &        prevdayap(sr), prevhucum(sr), prevrthucum(sr),            &
-     &        prevgrainf(sr), prevchillucum(sr), prevliveleaf(sr), &
-     &        prevcancov(sr), prevdayspring(sr), mature_warn_flg )
+     &        cropprev%standstem, cropprev%standleaf, cropprev%standstore, &
+     &        cropprev%flatstem, cropprev%flatleaf, cropprev%flatstore, &
+     &        cropprev%bgstemz, &
+     &        cropprev%rootstorez, cropprev%rootfiberz, &
+     &        cropprev%ht, cropprev%stm, cropprev%rtd, &
+     &        cropprev%dayap, cropprev%hucum, cropprev%rthucum, &
+     &        cropprev%grainf, cropprev%chillucum, cropprev%liveleaf, &
+     &        cropprev%cancov, cropprev%dayspring, mature_warn_flg )
               ! set to stop additional report in this operation
               rpt_season_flg = .false.
           end if
@@ -1468,14 +1466,14 @@
      &        soil%nslay, crop%database%idc, crop%growth%dayam, &
      &        crop%database%plant_day, crop%database%plant_month, crop%database%plant_rotyr, &
      &        crop%database%thum, crop%geometry%xstmrep, &
-     &        prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
-     &        prevflatstem(sr), prevflatleaf(sr), prevflatstore(sr),    &
-     &        prevbgstemz(1,sr),                                        &
-     &        prevrootstorez(1,sr), prevrootfiberz(1,sr),               &
-     &        prevht(sr), prevstm(sr), prevrtd(sr),                     &
-     &        prevdayap(sr), prevhucum(sr), prevrthucum(sr),            &
-     &        prevgrainf(sr), prevchillucum(sr), prevliveleaf(sr), &
-     &        prevcancov(sr), prevdayspring(sr), mature_warn_flg )
+     &        cropprev%standstem, cropprev%standleaf, cropprev%standstore, &
+     &        cropprev%flatstem, cropprev%flatleaf, cropprev%flatstore, &
+     &        cropprev%bgstemz, &
+     &        cropprev%rootstorez, cropprev%rootfiberz, &
+     &        cropprev%ht, cropprev%stm, cropprev%rtd, &
+     &        cropprev%dayap, cropprev%hucum, cropprev%rthucum, &
+     &        cropprev%grainf, cropprev%chillucum, cropprev%liveleaf, &
+     &        cropprev%cancov, cropprev%dayspring, mature_warn_flg )
               ! set to stop additional report in this operation
               rpt_season_flg = .false.
           end if
@@ -1537,14 +1535,14 @@
      &        soil%nslay, crop%database%idc, crop%growth%dayam, &
      &        crop%database%plant_day, crop%database%plant_month, crop%database%plant_rotyr, &
      &        crop%database%thum, crop%geometry%xstmrep, &
-     &        prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
-     &        prevflatstem(sr), prevflatleaf(sr), prevflatstore(sr),    &
-     &        prevbgstemz(1,sr),                                        &
-     &        prevrootstorez(1,sr), prevrootfiberz(1,sr),               &
-     &        prevht(sr), prevstm(sr), prevrtd(sr),                     &
-     &        prevdayap(sr), prevhucum(sr), prevrthucum(sr),            &
-     &        prevgrainf(sr), prevchillucum(sr), prevliveleaf(sr), &
-     &        prevcancov(sr), prevdayspring(sr), mature_warn_flg )
+     &        cropprev%standstem, cropprev%standleaf, cropprev%standstore, &
+     &        cropprev%flatstem, cropprev%flatleaf, cropprev%flatstore, &
+     &        cropprev%bgstemz, &
+     &        cropprev%rootstorez, cropprev%rootfiberz, &
+     &        cropprev%ht, cropprev%stm, cropprev%rtd, &
+     &        cropprev%dayap, cropprev%hucum, cropprev%rthucum, &
+     &        cropprev%grainf, cropprev%chillucum, cropprev%liveleaf, &
+     &        cropprev%cancov, cropprev%dayspring, mature_warn_flg )
               ! set to stop additional report in this operation
               rpt_season_flg = .false.
           end if
@@ -1605,14 +1603,14 @@
      &        soil%nslay, crop%database%idc, crop%growth%dayam, &
      &        crop%database%plant_day, crop%database%plant_month, crop%database%plant_rotyr, &
      &        crop%database%thum, crop%geometry%xstmrep, &
-     &        prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
-     &        prevflatstem(sr), prevflatleaf(sr), prevflatstore(sr),    &
-     &        prevbgstemz(1,sr),                                        &
-     &        prevrootstorez(1,sr), prevrootfiberz(1,sr),               &
-     &        prevht(sr), prevstm(sr), prevrtd(sr),                     &
-     &        prevdayap(sr), prevhucum(sr), prevrthucum(sr),            &
-     &        prevgrainf(sr), prevchillucum(sr), prevliveleaf(sr), &
-     &        prevcancov(sr), prevdayspring(sr), mature_warn_flg )
+     &        cropprev%standstem, cropprev%standleaf, cropprev%standstore, &
+     &        cropprev%flatstem, cropprev%flatleaf, cropprev%flatstore, &
+     &        cropprev%bgstemz, &
+     &        cropprev%rootstorez, cropprev%rootfiberz, &
+     &        cropprev%ht, cropprev%stm, cropprev%rtd, &
+     &        cropprev%dayap, cropprev%hucum, cropprev%rthucum, &
+     &        cropprev%grainf, cropprev%chillucum, cropprev%liveleaf, &
+     &        cropprev%cancov, cropprev%dayspring, mature_warn_flg )
               ! set to stop additional report in this operation
               rpt_season_flg = .false.
           end if
@@ -1752,14 +1750,14 @@
      &        soil%nslay, crop%database%idc, crop%growth%dayam, &
      &        crop%database%plant_day, crop%database%plant_month, crop%database%plant_rotyr, &
      &        crop%database%thum, crop%geometry%xstmrep, &
-     &        prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
-     &        prevflatstem(sr), prevflatleaf(sr), prevflatstore(sr),    &
-     &        prevbgstemz(1,sr),                                        &
-     &        prevrootstorez(1,sr), prevrootfiberz(1,sr),               &
-     &        prevht(sr), prevstm(sr), prevrtd(sr),                     &
-     &        prevdayap(sr), prevhucum(sr), prevrthucum(sr),            &
-     &        prevgrainf(sr), prevchillucum(sr), prevliveleaf(sr), &
-     &        prevcancov(sr), prevdayspring(sr), mature_warn_flg )
+     &        cropprev%standstem, cropprev%standleaf, cropprev%standstore, &
+     &        cropprev%flatstem, cropprev%flatleaf, cropprev%flatstore, &
+     &        cropprev%bgstemz, &
+     &        cropprev%rootstorez, cropprev%rootfiberz, &
+     &        cropprev%ht, cropprev%stm, cropprev%rtd, &
+     &        cropprev%dayap, cropprev%hucum, cropprev%rthucum, &
+     &        cropprev%grainf, cropprev%chillucum, cropprev%liveleaf, &
+     &        cropprev%cancov, cropprev%dayspring, mature_warn_flg )
           ! set to guarantee corresponding report hydrolbal at end of planting
           rpt_season_flg = .true.
       endif
@@ -1989,14 +1987,14 @@
      &        soil%nslay, crop%database%idc, crop%growth%dayam, &
      &        crop%database%plant_day, crop%database%plant_month, crop%database%plant_rotyr, &
      &        crop%database%thum, crop%geometry%xstmrep, &
-     &        prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
-     &        prevflatstem(sr), prevflatleaf(sr), prevflatstore(sr),    &
-     &        prevbgstemz(1,sr),                                        &
-     &        prevrootstorez(1,sr), prevrootfiberz(1,sr),               &
-     &        prevht(sr), prevstm(sr), prevrtd(sr),                     &
-     &        prevdayap(sr), prevhucum(sr), prevrthucum(sr),            &
-     &        prevgrainf(sr), prevchillucum(sr), prevliveleaf(sr), &
-     &        prevcancov(sr), prevdayspring(sr), mature_warn_flg )
+     &        cropprev%standstem, cropprev%standleaf, cropprev%standstore, &
+     &        cropprev%flatstem, cropprev%flatleaf, cropprev%flatstore, &
+     &        cropprev%bgstemz, &
+     &        cropprev%rootstorez, cropprev%rootfiberz, &
+     &        cropprev%ht, cropprev%stm, cropprev%rtd, &
+     &        cropprev%dayap, cropprev%hucum, cropprev%rthucum, &
+     &        cropprev%grainf, cropprev%chillucum, cropprev%liveleaf, &
+     &        cropprev%cancov, cropprev%dayspring, mature_warn_flg )
               ! set to stop additional report in this operation
               rpt_season_flg = .false.
           end if
@@ -2067,14 +2065,14 @@
      &        soil%nslay, crop%database%idc, crop%growth%dayam, &
      &        crop%database%plant_day, crop%database%plant_month, crop%database%plant_rotyr, &
      &        crop%database%thum, crop%geometry%xstmrep, &
-     &        prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr), &
-     &        prevflatstem(sr), prevflatleaf(sr), prevflatstore(sr),    &
-     &        prevbgstemz(1,sr),                                        &
-     &        prevrootstorez(1,sr), prevrootfiberz(1,sr),               &
-     &        prevht(sr), prevstm(sr), prevrtd(sr),                     &
-     &        prevdayap(sr), prevhucum(sr), prevrthucum(sr),            &
-     &        prevgrainf(sr), prevchillucum(sr), prevliveleaf(sr), &
-     &        prevcancov(sr), prevdayspring(sr), mature_warn_flg )
+     &        cropprev%standstem, cropprev%standleaf, cropprev%standstore, &
+     &        cropprev%flatstem, cropprev%flatleaf, cropprev%flatstore, &
+     &        cropprev%bgstemz, &
+     &        cropprev%rootstorez, cropprev%rootfiberz, &
+     &        cropprev%ht, cropprev%stm, cropprev%rtd, &
+     &        cropprev%dayap, cropprev%hucum, cropprev%rthucum, &
+     &        cropprev%grainf, cropprev%chillucum, cropprev%liveleaf, &
+     &        cropprev%cancov, cropprev%dayspring, mature_warn_flg )
               ! set to stop additional report in this operation
             rpt_season_flg = .false.
           end if

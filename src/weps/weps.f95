@@ -108,6 +108,7 @@
       type(soil_def), dimension(:), allocatable :: soil             ! structure with soil state and parameters as updated suring simulation
       type(biomatter), dimension(:), allocatable :: crop            ! structure with crop state and parameters
       type(biototal), dimension(:), allocatable :: croptot          ! structure with totalized values of crop state
+      type(bio_prevday), dimension(:), allocatable :: cropprev      ! structure with crop values from the previous day
       type(biomatter), dimension(:,:), allocatable :: residue       ! structure with residue state and parameters
       type(biototal), dimension(:), allocatable :: restot           ! structure with totalized values of residue state
       type(biototal), dimension(:), allocatable :: biotot           ! structure with totalized values of all biomass state
@@ -317,6 +318,8 @@
       ! allocate subregion crop and residue pool arrays
       allocate(crop(nsubr), stat=alloc_stat)
       sum_stat = sum_stat + alloc_stat
+      allocate(cropprev(nsubr), stat=alloc_stat)
+      sum_stat = sum_stat + alloc_stat
       allocate(croptot(0:nsubr), stat=alloc_stat)
       sum_stat = sum_stat + alloc_stat
       allocate(residue(mnbpls, nsubr), stat=alloc_stat)
@@ -361,6 +364,7 @@
       do isr = 1, nsubr
          ! complete allocation of layers
          crop(isr) = create_biomatter(soil_in(isr)%nslay, mncz)
+         cropprev(isr) = create_bio_prevday(soil_in(isr)%nslay)
          croptot(isr) = create_biototal(soil_in(isr)%nslay, mncz)
          do ipl = 1, mnbpls
             residue(ipl,isr) = create_biomatter(soil_in(isr)%nslay, mncz)
@@ -540,7 +544,7 @@
          end if
          do isr=1,nsubr
           ! do multiple subregion      
-          call submodels(isr, soil(isr), crop(isr), residue(1:size(residue,1),isr), restot(isr), croptot(isr),  &
+          call submodels(isr, soil(isr), crop(isr), cropprev(isr), residue(1:size(residue,1),isr), restot(isr), croptot(isr),  &
      &                   biotot(isr), decompfac(isr), mandatbs(isr)%mandate, h1et(isr), wp(isr))
           ! set initialization flag to .false. after first day
           if (am0ifl) am0ifl = .false.
@@ -624,7 +628,7 @@
 
 !            isr = 1 !Note: we are no longer dealing with multiple subregions here
             do isr=1,nsubr   ! do multiple subregion     
-            call submodels(isr, soil(isr), crop(isr), residue(1:size(residue,1),isr), restot(isr), croptot(isr), &
+            call submodels(isr, soil(isr), crop(isr), cropprev(isr), residue(1:size(residue,1),isr), restot(isr), croptot(isr), &
      &                     biotot(isr), decompfac(isr), mandatbs(isr)%mandate, h1et(isr), wp(isr))
 
             call plotdata( isr, soil(isr), crop(isr), restot(isr), croptot(isr), biotot(isr), noerod(isr), cellstate )  ! print to plot data file
@@ -755,7 +759,7 @@
                !   call dbgdmp(daysim, isr, soil(isr), crop(isr), residue(1:size(residue,1),isr),croptot(isr),biotot(isr),h1et(isr))
                !end if
 
-               call submodels(isr, soil(isr), crop(isr), residue(1:size(residue,1),isr), restot(isr), croptot(isr), &
+               call submodels(isr, soil(isr), crop(isr), cropprev(isr), residue(1:size(residue,1),isr), restot(isr), croptot(isr), &
                               biotot(isr), decompfac(isr), mandatbs(isr)%mandate, h1et(isr), wp(isr))
             end do
 
@@ -979,6 +983,7 @@
       ! destroy layers
       do isr = 1, nsubr
          call destroy_biomatter(crop(isr))
+         call destroy_bio_prevday(cropprev(isr))
          call destroy_biototal(croptot(isr))
          do ipl = 1, mnbpls
             call destroy_biomatter(residue(ipl,isr))
@@ -997,6 +1002,8 @@
 
       !remove main arrays
       deallocate(crop, stat=alloc_stat)
+      sum_stat = sum_stat + alloc_stat
+      deallocate(cropprev, stat=alloc_stat)
       sum_stat = sum_stat + alloc_stat
       deallocate(croptot, stat=alloc_stat)
       sum_stat = sum_stat + alloc_stat

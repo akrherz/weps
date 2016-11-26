@@ -43,14 +43,15 @@
       
 !-------------------- CROP Routines --------------------------------
 !------------------------
-      subroutine callcrop(daysim, sr, soil, crop, residue, restot, croptot, h1et)
+      subroutine callcrop(daysim, sr, soil, crop, cropprev, residue, restot, croptot, h1et)
       use soil_data_struct_defs, only: soil_def
-      use biomaterial, only: biomatter, biototal
+      use biomaterial, only: biomatter, biototal, bio_prevday
       use hydro_data_struct_defs, only: hydro_derived_et
       integer daysim
       integer sr
       type(soil_def), intent(in) :: soil  ! soil for this subregion
       type(biomatter), intent(inout) :: crop    ! structure containing full crop description
+      type(bio_prevday), intent(inout) :: cropprev    ! structure containing crop previous day values
       type(biomatter), dimension(:), intent(inout) :: residue  ! structure containing full residue pool description
       type(biototal), intent(in) :: restot
       type(biototal), intent(inout) :: croptot
@@ -1021,16 +1022,17 @@
       real iarr(*),p1, p5, p9
       end subroutine sort
 !--------------------------------
-      subroutine submodels (isr, soil, crop, residue, restot, croptot,        &
+      subroutine submodels (isr, soil, crop, cropprev, residue, restot, croptot, &
      &                      biotot, decompfac, mandate, h1et, wp)
       use soil_data_struct_defs, only: soil_def
-      use biomaterial, only: biomatter, biototal, decomp_factors
+      use biomaterial, only: biomatter, biototal, decomp_factors, bio_prevday
       use mandate_mod, only: opercrop_date
       use hydro_data_struct_defs, only: hydro_derived_et
       use wepp_param_mod, only: wepp_param
       integer isr
       type(soil_def), intent(inout) :: soil     ! soil for this subregion
       type(biomatter), intent(inout) :: crop    ! structure containing full crop description
+      type(bio_prevday), intent(inout) :: cropprev
       type(biomatter), dimension(:), intent(inout) :: residue
       type(biototal), intent(inout) :: restot, croptot, biotot
       type(decomp_factors), intent(inout) :: decompfac
@@ -1094,14 +1096,15 @@
       integer sr
       end subroutine dooper
 !---------------------------
-      subroutine   doproc (sr, bmrotation, soil, crop, residue, biotot, mandate, h1et)
+      subroutine   doproc (sr, bmrotation, soil, crop, cropprev, residue, biotot, mandate, h1et)
       use soil_data_struct_defs, only: soil_def
-      use biomaterial, only: biomatter, biototal
+      use biomaterial, only: biomatter, biototal, bio_prevday
       use mandate_mod, only: opercrop_date
       use hydro_data_struct_defs, only: hydro_derived_et
       integer sr, bmrotation
       type(soil_def), intent(inout) :: soil  ! soil for this subregion
       type(biomatter), intent(inout) :: crop    ! structure containing full crop description
+      type(bio_prevday), intent(inout) :: cropprev    ! structure containing crop previous day values
       type(biomatter), dimension(:), intent(inout) :: residue
       type(biototal), intent(in) :: biotot
       type(opercrop_date), dimension(:), intent(inout) :: mandate
@@ -1123,15 +1126,16 @@
     type(biomatter), intent(inout) :: crop    ! structure containing full crop description
     end subroutine get_calib_yield
 !--------------------------
-      subroutine manage( sr, syear, soil, crop, residue, biotot, mandate, h1et)
+      subroutine manage( sr, syear, soil, crop, cropprev, residue, biotot, mandate, h1et)
       use soil_data_struct_defs, only: soil_def
-      use biomaterial, only: biomatter, biototal
+      use biomaterial, only: biomatter, biototal, bio_prevday
       use mandate_mod, only: opercrop_date
       use hydro_data_struct_defs, only: hydro_derived_et
       integer sr, syear
       integer lopdd, lopmm, lopyy
       type(soil_def), intent(inout) :: soil  ! soil for this subregion
       type(biomatter), intent(inout) :: crop    ! structure containing full crop description
+      type(bio_prevday), intent(inout) :: cropprev    ! structure containing crop previous day values
       type(biomatter), dimension(:), intent(inout) :: residue
       type(biototal), intent(in) :: biotot
       type(opercrop_date), dimension(:), intent(inout) :: mandate

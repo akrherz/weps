@@ -266,31 +266,36 @@ module biomaterial
                           ! (adffcvtot + adfscvtot)
      real :: ftcancov     ! fraction of soil surface covered by canopy across pools (m^2/m^2)
      real :: evapredu     ! composite evaporation reduction from across pools (ea/ep ratio)
-
-!     abdstm - Total number of stems (#/m^2) (live and dead) May be a weighted summation.
-!     abzht  - Composite weighted average biomass height (m)
-!     abzmht - Tallest biomass height (m) greatest of daily crop or residue height
-!     abm - Total biomass (kg/m^2) standing + roots + flat + buried + yield
-!     abmst - Standing biomass - above ground (kg/m^2)
-!     abmf    - Flat biomass (kg/m^2)
-!     abmbg - Buried biomass (kg/m^2)
-!     abmrt - Buried root biomass (kg/m^2)
-!     abmbgz - Buried biomass by soil layer (kg/m^2)
-!     abmrtz - Buried root biomass by soil layer (kg/m^2)
-!     abrsai - Biomass stem area index (m^2/m^2)
-!     abrlai - Biomass leaf area index (m^2/m^2)
-!     abrcd  - effective Biomass silhouette area (SAI+LAI) (m^2/m^2)
-!              (combination of leaf area and stem area indices)
-!     abrsaz - Biomass stem area index by height (1/m)
-!     abrlaz - Biomass leaf area index by height (1/m)
-!     abffcv - Biomass cover - flat  (m^2/m^2)
-!     abfscv - Biomass cover - standing  (m^2/m^2)
-!     abftcv - Biomass cover - total  (m^2/m^2)
-!              (sum of abffcv and abfscv)
-!     abfcancov - fraction of soil surface covered by all canopy (m^2/m^2)
-!     abevapredu - composite evaporation reduction from crop and residue materials (ea/ep ratio)
-
   end type biototal
+
+  type bio_prevday
+     real :: standstem    ! crop standing stem mass (kg/m^2)
+     real :: standleaf    ! crop standing leaf mass (kg/m^2)
+     real :: standstore   ! crop standing storage mass (kg/m^2) (head with seed, or vegetative head (cabbage, pineapple))
+     real :: flatstem     ! crop flat stem mass (kg/m^2)
+     real :: flatleaf     ! crop flat leaf mass (kg/m^2)
+     real :: flatstore    ! crop flat storage mass (kg/m^2)
+     real :: mshoot       ! mass of shoot growing from root storage biomass (kg/m^2)
+     real :: mtotshoot    ! total mass of shoot growing from root storage biomass (kg/m^2)
+                          ! in the period from beginning to completion of emegence heat units
+     real, dimension(:), allocatable :: bgstemz      ! crop stem mass below soil surface by layer (kg/m^2)
+     real, dimension(:), allocatable :: rootstorez   ! crop root storage mass by soil layer (kg/m^2)
+                                                     ! (tubers (potatoes, carrots), extended leaf (onion), seeds (peanuts))
+     real, dimension(:), allocatable :: rootfiberz   ! crop root fibrous mass by soil layer (kg/m^2)
+     real :: ht           ! Crop height (m)
+     real :: zshoot       ! length of actively growing shoot from root biomass (m)
+     real :: stm          ! Number of crop stems per unit area (#/m^2)
+                          ! It is computed by taking the tillering factor times the plant population density.
+     real :: rtd          ! Crop root depth (m)
+     integer :: dayap     ! number of days of growth completed since crop planted
+     real :: hucum        ! crop accumulated heat units
+     real :: rthucum      ! crop accumulated heat units with no vernalization/photoperiod delay
+     real :: grainf       ! internally computed grain fraction of reproductive mass
+     real :: chillucum    ! accumulated chilling units (days)
+     real :: liveleaf     ! fraction of standing plant leaf which is living (transpiring)
+     integer :: dayspring ! day of year in which a winter annual releases stored growth
+     real :: cancov       ! crop canopy cover (fraction)
+  end type bio_prevday
 
   type decomp_factors
      real :: aqua    ! sum of precip, irrigation and snow melt (mm)
@@ -465,6 +470,50 @@ contains
         write(*,*) 'ERROR: unable to deallocate memory for biomatter'
      end if
   end subroutine destroy_biototal
+
+  function create_bio_prevday(nsoillay) result(prevday)
+     integer, intent(in) :: nsoillay
+     type(bio_prevday) :: prevday
+
+     ! local variable
+     integer :: alloc_stat  ! allocation status return
+     integer :: sum_stat    ! accumulates allocation status results so only one write/exit statement needed
+
+     sum_stat = 0
+     ! allocate below and above ground arrays
+     allocate(prevday%bgstemz(nsoillay), stat=alloc_stat)
+     sum_stat = sum_stat + alloc_stat
+     allocate(prevday%rootstorez(nsoillay), stat=alloc_stat)
+     sum_stat = sum_stat + alloc_stat
+     allocate(prevday%rootfiberz(nsoillay), stat=alloc_stat)
+     sum_stat = sum_stat + alloc_stat
+
+     if( sum_stat .gt. 0 ) then
+        write(*,*) 'ERROR: unable to allocate memory for bio_prevday'
+        stop 1
+     end if
+  end function create_bio_prevday
+
+  subroutine destroy_bio_prevday(prevday)
+     type(bio_prevday), intent(inout) :: prevday
+
+     ! local variable
+     integer :: dealloc_stat
+     integer :: sum_stat    ! accumulates allocation status results so only one write/exit statement needed
+
+     sum_stat = 0
+     ! allocate below and above ground arrays
+     deallocate(prevday%bgstemz, stat=dealloc_stat)
+     sum_stat = sum_stat + dealloc_stat
+     deallocate(prevday%rootstorez, stat=dealloc_stat)
+     sum_stat = sum_stat + dealloc_stat
+     deallocate(prevday%rootfiberz, stat=dealloc_stat)
+     sum_stat = sum_stat + dealloc_stat
+
+     if( sum_stat .gt. 0 ) then
+        write(*,*) 'ERROR: unable to deallocate memory for biomatter'
+     end if
+  end subroutine destroy_bio_prevday
 
   function create_decomp_factors(nsoillay) result(decompfac)
      integer, intent(in) :: nsoillay

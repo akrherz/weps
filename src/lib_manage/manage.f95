@@ -3,7 +3,7 @@
 !$Revision$
 !$HeadURL$
 
-      subroutine manage( sr, startyr, soil, crop, residue, biotot, mandate, h1et)
+      subroutine manage( sr, startyr, soil, crop, cropprev, residue, biotot, mandate, h1et)
 
 !     + + + PURPOSE + + +
 !     This is the main routine of the MANAGEMENT submodel. The date passed
@@ -23,7 +23,7 @@
       use datetime_mod, only: difdat, get_simdate
       use file_io_mod, only: luomanage
       use soil_data_struct_defs, only: soil_def
-      use biomaterial, only: biomatter, biototal
+      use biomaterial, only: biomatter, biototal, bio_prevday
       use mandate_mod, only: opercrop_date
       use stir_report_mod, only: stir_report
       use manage_data_struct_defs, only: am0tfl, lastoper
@@ -39,6 +39,7 @@
       integer sr, startyr
       type(soil_def), intent(inout) :: soil  ! soil for this subregion
       type(biomatter), intent(inout) :: crop    ! structure containing full crop description
+      type(bio_prevday), intent(inout) :: cropprev    ! structure containing crop previous day values
       type(biomatter), dimension(:), intent(inout) :: residue
       type(biototal), intent(in) :: biotot
       type(opercrop_date), dimension(:), intent(inout) :: mandate
@@ -128,7 +129,7 @@
       case ('P')
         if(lastoper(sr)%skip.eq.0) then
 
-           call doproc(sr, mcount(sr), soil, crop, residue, biotot, mandate, h1et)
+           call doproc(sr, mcount(sr), soil, crop, cropprev, residue, biotot, mandate, h1et)
         endif
       case ('D')
         call stir_report(sr, .false., lastoper(sr)%stir, lastoper(sr)%energyarea)

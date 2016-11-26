@@ -40,7 +40,6 @@
       include 'h1temp.inc'
 
 !     + + + LOCAL COMMON BLOCKS + + +
-      include 'crop/cenvr.inc'
       include 'crop/tcdbug.inc'
       include 'main/main.inc'
 

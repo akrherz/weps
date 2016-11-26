@@ -3,12 +3,12 @@
 !$Revision$
 !$HeadURL$
 
-      subroutine submodels (isr, soil, crop, residue, restot, croptot,     &
+      subroutine submodels (isr, soil, crop, cropprev, residue, restot, croptot, &
      &                      biotot, decompfac, mandate, h1et, wp)
 
       use weps_interface_defs, ignore_me=>submodels
       use soil_data_struct_defs, only: soil_def
-      use biomaterial, only: biomatter, biototal, decomp_factors
+      use biomaterial, only: biomatter, biototal, decomp_factors, bio_prevday
       use mandate_mod, only: opercrop_date
       use hydro_data_struct_defs, only: hydro_derived_et
       use wepp_param_mod, only: wepp_param
@@ -23,6 +23,7 @@
       integer isr
       type(soil_def), intent(inout) :: soil     ! soil for this subregion
       type(biomatter), intent(inout) :: crop    ! structure containing full crop description
+      type(bio_prevday), intent(inout) :: cropprev
       type(biomatter), dimension(:), intent(inout) :: residue
       type(biototal), intent(inout) :: restot, croptot, biotot
       type(decomp_factors), intent(inout) :: decompfac
@@ -34,7 +35,7 @@
 !     restot          - structure array containing summary residue pool amounts for all subregions
 
 !        write(*,*) "Start manage"      !MANAGEment (tillage) submodel
-        call manage(isr, iy, soil, crop, residue, biotot, mandate, h1et)
+        call manage(isr, iy, soil, crop, cropprev, residue, biotot, mandate, h1et)
 
         if( am0cropupfl.gt.0 ) then
             ! update all derived globals for crop global variables
@@ -64,7 +65,7 @@
 !        write(*,*) "Start callcrop"     !CROP submodel
         ! Crop growth flag indicates growing crop
         if( crop%growth%am0cgf ) then
-            call callcrop(daysim, isr, soil, crop, residue, restot, croptot, h1et)
+            call callcrop(daysim, isr, soil, crop, cropprev, residue, restot, croptot, h1et)
         end if
 
 !        write(*,*) "Start decomp"

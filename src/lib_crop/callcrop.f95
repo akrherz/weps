@@ -2,13 +2,13 @@
 !$Date$
 !$Revision$
 !$HeadURL$
-      subroutine callcrop(daysim, sr, soil, crop, residue, restot, croptot, h1et)
+      subroutine callcrop(daysim, sr, soil, crop, cropprev, residue, restot, croptot, h1et)
 ! ***************************************************************** wjr
 ! Wrapper to call crop
 
       use weps_interface_defs, ignore_me=>callcrop
       use soil_data_struct_defs, only: soil_def
-      use biomaterial, only: biomatter, biototal
+      use biomaterial, only: biomatter, biototal, bio_prevday
       use timer_mod, only: timer, TIMCROP, TIMSTART, TIMSTOP
       use crop_data_struct_defs, only: am0cdb
       use hydro_data_struct_defs, only: hydro_derived_et
@@ -18,6 +18,7 @@
       integer sr
       type(soil_def), intent(in) :: soil  ! soil for this subregion
       type(biomatter), intent(inout) :: crop    ! structure containing full crop description
+      type(bio_prevday), intent(inout) :: cropprev    ! structure containing crop previous day values
       type(biomatter), dimension(:), intent(inout) :: residue  ! structure containing full residue pool description
       type(biototal), intent(in) :: restot
       type(biototal), intent(inout) :: croptot
@@ -28,8 +29,6 @@
       include 'm1flag.inc'
       include 'h1hydro.inc'
       include 'h1temp.inc'
-      include 'crop/prevstate.inc'
-      include 'crop/prevderiv.inc'
       include 'crop/gcrop.inc'
 
 ! Local Variables
@@ -88,14 +87,14 @@
      &   crop%growth%leafareatrend, crop%growth%stemmasstrend, crop%growth%twarmdays, &
      &   crop%growth%tchillucum, crop%growth%thardnx, crop%growth%thu_shoot_beg, &
      &   crop%growth%thu_shoot_end, crop%geometry%xstmrep, &
-     &   prevstandstem(sr), prevstandleaf(sr), prevstandstore(sr),      &
-     &   prevflatstem(sr), prevflatleaf(sr), prevflatstore(sr),         &
-     &   prevmshoot(sr), prevbgstemz(1,sr),                             &
-     &   prevrootstorez(1,sr), prevrootfiberz(1,sr),                    &
-     &   prevht(sr), prevzshoot(sr), prevstm(sr), prevrtd(sr),          &
-     &   prevdayap(sr), prevhucum(sr), prevrthucum(sr),                 &
-     &   prevgrainf(sr), prevchillucum(sr), prevliveleaf(sr),           &
-     &   prevdayspring(sr), daysim, crop%growth%dayspring, crop%database%zloc_regrow, &
+     &   cropprev%standstem, cropprev%standleaf, cropprev%standstore, &
+     &   cropprev%flatstem, cropprev%flatleaf, cropprev%flatstore, &
+     &   cropprev%mshoot, cropprev%bgstemz, &
+     &   cropprev%rootstorez, cropprev%rootfiberz, &
+     &   cropprev%ht, cropprev%zshoot, cropprev%stm, cropprev%rtd, &
+     &   cropprev%dayap, cropprev%hucum, cropprev%rthucum, &
+     &   cropprev%grainf, cropprev%chillucum, cropprev%liveleaf, &
+     &   cropprev%dayspring, daysim, crop%growth%dayspring, crop%database%zloc_regrow, &
      &   agmstandstem(sr), agmstandleaf(sr), agmstandstore(sr),         &
      &   agmflatstem(sr), agmflatleaf(sr), agmflatstore(sr),            &
      &   agmbgstemz(1,sr),                                              &
@@ -140,7 +139,7 @@
      &      ahztransprtmin(sr), ahztransprtmax(sr), crop, croptot  )
 
       ! set prevday derived variable for later reference in end_season
-      prevcancov(sr) = crop%deriv%fcancov
+      cropprev%cancov = crop%deriv%fcancov
 
       call timer(TIMCROP,TIMSTOP)
 
