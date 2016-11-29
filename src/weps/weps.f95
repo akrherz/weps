@@ -570,6 +570,8 @@
        end do  ! end for subregion loop
       end do    ! end loop of multiple years
       init_loop = .false.
+      ! set initialization flag to .false. if initialization was skipped
+      if (am0ifl) am0ifl = .false.
       write(6,*) "Finished initialization stage"
 !     End of "initialization" section
 ! Do all resetting of variables necessary for "calibrate" and "report"
