@@ -387,14 +387,6 @@
       ! accumulate chill units
       call chillunit_cum(bctchillucum)
 
-      ! zero out temp pool variables used in testing for residue from regrowth in callcrop
-      bgmstandstem = 0.0
-      bgmstandleaf = 0.0
-      bgmstandstore = 0.0
-      bgmflatstem = 0.0
-      bgmflatleaf = 0.0
-      bgmflatstore = 0.0
-
       ! check crop type for shoot growth action
       regrowth_flg = -1
       if(    (bcfleaf2stor .gt. 0.0)                                    &

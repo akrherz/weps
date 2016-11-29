@@ -16,7 +16,6 @@
       include 'p1werm.inc'
       include 'c1report.inc'
       include 'manage/tcrop.inc'
-      include 'crop/gcrop.inc'
 
 !     + + + LOCAL VARIABLE DECLARATIONS + + +
       integer idx
@@ -132,30 +131,6 @@
       atxstmrep(isr) = 0.0
       atzrtd(isr) = 0.0
       atgrainf(isr) = 0.0
-
-      ! temporary crop 
-      agmstandstem(isr) = 0.0
-      agmstandleaf(isr) = 0.0
-      agmstandstore(isr) = 0.0
-      agmflatstem(isr) = 0.0
-      agmflatleaf(isr) = 0.0
-      agmflatstore(isr) = 0.0
-      agmflatrootstore(isr) = 0.0
-      agmflatrootfiber(isr) = 0.0
-
-      do idx = 1, mnsz
-          agmbgstemz(idx,isr) = 0.0
-          agmbgleafz(idx,isr) = 0.0
-          agmbgstorez(idx,isr) = 0.0
-          agmbgrootstorez(idx,isr) = 0.0
-          agmbgrootfiberz(idx,isr) = 0.0
-      end do
-
-      agzht(isr) = 0.0
-      agdstm(isr) = 0.0
-      agxstmrep(isr) = 0.0
-      agzrtd(isr) = 0.0
-      aggrainf(isr) = 0.0
 
       ! values that need initialization for cdbug calls (before initial crop entry)
       crop%database%tdtm = 0

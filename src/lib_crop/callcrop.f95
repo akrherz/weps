@@ -10,7 +10,7 @@
       use soil_data_struct_defs, only: soil_def
       use biomaterial, only: biomatter, biototal, bio_prevday
       use timer_mod, only: timer, TIMCROP, TIMSTART, TIMSTOP
-      use crop_data_struct_defs, only: am0cdb
+      use crop_data_struct_defs, only: am0cdb, crop_residue, create_crop_residue, destroy_crop_residue
       use hydro_data_struct_defs, only: hydro_derived_et
 
 !     + + +   ARGUMENT DECLARATIONS + + +
@@ -29,10 +29,10 @@
       include 'm1flag.inc'
       include 'h1hydro.inc'
       include 'h1temp.inc'
-      include 'crop/gcrop.inc'
 
 ! Local Variables
       integer lay
+      type(crop_residue) :: cropres
 
 !     + + + END OF SPECIFICATIONS + + +
 
@@ -50,6 +50,9 @@
           ! this is not a valid growing crop
           crop%growth%am0cgf = .false.
       end if
+
+      ! allocate and zero out crop residue structure
+      cropres = create_crop_residue(soil%nslay)
 
 !     only continue if crop is growing
       if( crop%growth%am0cgf ) then
@@ -95,39 +98,33 @@
      &   cropprev%dayap, cropprev%hucum, cropprev%rthucum, &
      &   cropprev%grainf, cropprev%chillucum, cropprev%liveleaf, &
      &   cropprev%dayspring, daysim, crop%growth%dayspring, crop%database%zloc_regrow, &
-     &   agmstandstem(sr), agmstandleaf(sr), agmstandstore(sr),         &
-     &   agmflatstem(sr), agmflatleaf(sr), agmflatstore(sr),            &
-     &   agmbgstemz(1,sr),                                              &
-     &   agzht(sr), agdstm(sr), agxstmrep(sr), aggrainf(sr) )
+     &   cropres%standstem, cropres%standleaf, cropres%standstore, &
+     &   cropres%flatstem, cropres%flatleaf, cropres%flatstore, &
+     &   cropres%bgstemz, &
+     &   cropres%zht, cropres%dstm, cropres%xstmrep, cropres%grainf )
 
          if (am0cdb(sr).eq.1) call cdbug(sr, soil, crop, restot, h1et)
       end if
 
       ! check for abandoned stems in crop regrowth
-      if( ( agmstandstem(sr) + agmstandleaf(sr) + agmstandstore(sr)     &
-     &     + agmflatstem(sr) + agmflatleaf(sr) + agmflatstore(sr) )     &
+      if( ( cropres%standstem + cropres%standleaf + cropres%standstore &
+     &     + cropres%flatstem + cropres%flatleaf + cropres%flatstore ) &
      &    .gt. 0.0 ) then
-          ! zero out residue pools which crop is not transferring
-          agmflatrootstore(sr) = 0.0
-          agmflatrootfiber(sr) = 0.0
-          do lay = 1, soil%nslay
-              agmbgleafz(lay,sr) = 0.0
-              agmbgstorez(lay,sr) = 0.0
-              agmbgrootstorez(lay,sr) = 0.0
-              agmbgrootfiberz(lay,sr) = 0.0
-          end do
-          call trans(                                                   &
-     &      agmstandstem(sr), agmstandleaf(sr), agmstandstore(sr),      &
-     &      agmflatstem(sr), agmflatleaf(sr), agmflatstore(sr),         &
-     &      agmflatrootstore(sr), agmflatrootfiber(sr),                 &
-     &      agmbgstemz(1,sr), agmbgleafz(1,sr), agmbgstorez(1,sr),      &
-     &      agmbgrootstorez(1,sr), agmbgrootfiberz(1,sr),               &
-     &      agzht(sr), agdstm(sr), agxstmrep(sr), aggrainf(sr),         &
+          call trans( &
+     &      cropres%standstem, cropres%standleaf, cropres%standstore, &
+     &      cropres%flatstem, cropres%flatleaf, cropres%flatstore, &
+     &      cropres%flatrootstore, cropres%flatrootfiber, &
+     &      cropres%bgstemz, cropres%bgleafz, cropres%bgstorez, &
+     &      cropres%bgrootstorez, cropres%bgrootfiberz, &
+     &      cropres%zht, cropres%dstm, cropres%xstmrep, cropres%grainf, &
      &      crop%bname, crop%database%xstm, crop%database%rbc, crop%database%sla, crop%database%ck, &
      &      crop%database%dkrate, crop%database%covfact, crop%database%ddsthrsh, crop%geometry%hyfg, &
      &      crop%database%resevapa, crop%database%resevapb, &
      &      soil%nslay, residue)
       end if
+
+      ! deallocate crop residue structure
+      call destroy_crop_residue(cropres)
 
       ! update all derived globals for crop global variables
       call cropupdate(                                                  &
