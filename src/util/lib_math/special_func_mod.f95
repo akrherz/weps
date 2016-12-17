@@ -1,12 +1,13 @@
-!
 !$Author$
 !$Date$
 !$Revision$
 !$HeadURL$
-!
-!     file: scrv1.for
 
-      subroutine scrv1 (x1, y1, x2, y2, a, b)
+module special_func_mod
+
+  contains
+
+    subroutine scrv1 (x1, y1, x2, y2, a, b)
 
 !     Author : Amare Retta
 !     + + + PURPOSE + + +
@@ -31,4 +32,8 @@
 ! 901   format('a,b,xx1,xx2,y1,y2')
 !       write(21,*)a,b,xx1,xx2,y1,y2
         return
-        end
+      end subroutine scrv1
+
+end module special_func_mod
+
+

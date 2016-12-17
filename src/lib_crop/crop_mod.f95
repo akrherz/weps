@@ -147,11 +147,13 @@ module crop_mod
 ! ***************************************************************** wjr
 ! Wrapper to call crop
 
+      use weps_interface_defs
       use soil_data_struct_defs, only: soil_def
       use biomaterial, only: biomatter, biototal, bio_prevday
       use timer_mod, only: timer, TIMCROP, TIMSTART, TIMSTOP
       use crop_data_struct_defs, only: am0cdb, crop_residue, create_crop_residue, destroy_crop_residue
       use hydro_data_struct_defs, only: hydro_derived_et
+      use crop_growth_mod, only: cropgrow
 
 !     + + +   ARGUMENT DECLARATIONS + + +
       integer daysim

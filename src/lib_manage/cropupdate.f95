@@ -15,6 +15,7 @@
       use biomaterial, only: biomatter, biototal
       use p1unconv_mod, only: pi
       use wind_mod, only: biodrag
+      use crop_growth_mod, only: ht_dia_sai
 
 !     INCLUDE
       include 'p1werm.inc'
