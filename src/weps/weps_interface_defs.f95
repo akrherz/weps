@@ -23,7 +23,7 @@
        interface
 
 !---------------------- ASD Routines ----------------------------      
-!-----------------------      
+!-----------------------
       subroutine asd2m (mnot, minf, gmd, gsd, nlay, mf)
       real, intent(in) :: mnot(*), minf(*)
       real, intent(in) :: gmd(*), gsd(*)
@@ -40,22 +40,10 @@
       real, intent(in) ::  mnot(*), minf(*)
       real, intent(out) :: gmd(*), gsd(*)
       end subroutine m2asd 
-      
-!-------------------- CROP Routines --------------------------------
-!------------------------
-      subroutine spline(x,y,n,yp1,ypn,y2)
-      real x(*), y(*), yp1, ypn, y2(*)
-      integer n                           
-      end subroutine spline
-!-------------------------------------
-      subroutine splint(xa,ya,y2a,n,x,y)
-
-      real x, y, y2a(*), ya(*), xa(*)
-      integer n  
-      end subroutine splint
 !-------------------------------------
 
 !-------------- DECOMP Routines ------------------------------
+!-----------------------
       subroutine  ddbug(isr, slay, residue)
       use biomaterial, only: biomatter
       integer isr, slay

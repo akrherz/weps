@@ -734,6 +734,7 @@ module crop_growth_mod
       use climate_input_mod, only: cli_mav
       use crop_climate_mod, only: huc1
       use special_func_mod, only: scrv1
+      use cubic_spline_mod
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer, intent(in) :: isr   ! subregion number
