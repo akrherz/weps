@@ -5,6 +5,8 @@
 
 module crop_mod
 
+  integer, dimension(:), allocatable :: cprevseasonrotation ! rotation count number previously printed in crop season report
+
   contains
 
     subroutine cropinit(isr, crop)
@@ -17,7 +19,6 @@ module crop_mod
 
 !     + + + PARAMETERS AND COMMON BLOCKS + + +
       include 'p1werm.inc'
-      include 'c1report.inc'
       include 'manage/tcrop.inc'
 
 !     + + + LOCAL VARIABLE DECLARATIONS + + +
@@ -85,9 +86,6 @@ module crop_mod
       ! initialize some derived globals for crop global variables
       crop%deriv%fcancov = 0.0
       crop%deriv%rcd = 0.0
-
-!     crop harvest reporting day counters
-      cprevrotation(isr) = 1
 
 !     initialize crop yield reporting parameters in case harvest call before planting
       crop%bname = ''
@@ -366,7 +364,6 @@ module crop_mod
 
 !     + + + GLOBAL COMMON BLOCKS + + +
       include 'p1werm.inc'
-      include 'c1report.inc'
       include 'm1flag.inc'
 
 !     + + + LOCAL VARIABLES + + +

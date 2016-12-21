@@ -861,26 +861,6 @@
       type(biototal), intent(inout) :: restot
       end subroutine poolupdate
 !------------------------
-      subroutine report_calib_harvest(sr,bmrotation,mass_rem, mass_left, crop)
-      use biomaterial, only: biomatter
-      integer sr, bmrotation
-      real mass_rem, mass_left
-      type(biomatter), intent(in) :: crop    ! structure containing full crop description
-      end subroutine report_calib_harvest
-!------------------------
-      subroutine report_harvest( sr, bmrotation, mass_rem, mass_left,   &
-     &                           harv_unit_flg, harv_report_flg,        &
-     &                           mandate, crop )
-      use mandate_mod, only: opercrop_date
-      use biomaterial, only: biomatter
-      integer sr, bmrotation
-      real mass_rem, mass_left
-      integer harv_unit_flg
-      integer harv_report_flg
-      type(opercrop_date), dimension(:), intent(inout) :: mandate
-      type(biomatter), intent(inout) :: crop    ! structure containing full crop description
-      end subroutine  report_harvest
-!-------------------------
     SUBROUTINE set_calib(sr, crop)
     use biomaterial, only: biomatter
     INTEGER :: sr

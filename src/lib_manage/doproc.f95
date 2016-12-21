@@ -27,6 +27,7 @@
       use hydro_data_struct_defs, only: hydro_derived_et
       use soil_mod, only: depthini
       use crop_mod, only: crop_endseason
+      use report_harvest_mod, only: report_harvest, report_calib_harvest
 
 !     + + + PARAMETERS AND COMMON BLOCKS + + +
       include 'command.inc'

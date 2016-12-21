@@ -49,7 +49,8 @@
       use input_soil_mod, only: input_ifc
       use soil_data_struct_defs, only: soil_def
       use soil_mod, only: soilinit
-      use crop_mod, only: cropinit
+      use crop_mod, only: cropinit, cprevseasonrotation
+      use report_harvest_mod, only: cprevrotation, cprevcalibrotation
       use biomaterial
       use debug_mod
       use mandate_mod
@@ -326,6 +327,14 @@
       allocate(residue(mnbpls, nsubr), stat=alloc_stat)
       sum_stat = sum_stat + alloc_stat
       allocate(decompfac(nsubr), stat=alloc_stat)
+      sum_stat = sum_stat + alloc_stat
+
+      ! crop end of season reporting variables
+      allocate(cprevseasonrotation(nsubr), stat=alloc_stat)
+      sum_stat = sum_stat + alloc_stat
+      allocate(cprevrotation(nsubr), stat=alloc_stat)
+      sum_stat = sum_stat + alloc_stat
+      allocate(cprevcalibrotation(nsubr), stat=alloc_stat)
       sum_stat = sum_stat + alloc_stat
 
       ! summary / total types are allocated with 0 for total simulation area
@@ -1018,6 +1027,15 @@
       sum_stat = sum_stat + alloc_stat
       deallocate(decompfac, stat=alloc_stat)
       sum_stat = sum_stat + alloc_stat
+
+      ! crop end of season reporting variables
+      deallocate(cprevseasonrotation, stat=alloc_stat)
+      sum_stat = sum_stat + alloc_stat
+      deallocate(cprevrotation, stat=alloc_stat)
+      sum_stat = sum_stat + alloc_stat
+      deallocate(cprevcalibrotation, stat=alloc_stat)
+      sum_stat = sum_stat + alloc_stat
+
       deallocate(h1et, stat=alloc_stat)
       sum_stat = sum_stat + alloc_stat
       deallocate(wp, stat=alloc_stat)
