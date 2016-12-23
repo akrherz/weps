@@ -93,6 +93,7 @@ contains
 
         integer idx
         character header*128
+        integer :: ioc                    ! error return from read statement
         ! real junk1, junk2
 
         rewind luicli
@@ -106,26 +107,38 @@ contains
         endif
 
         if (cli_gen_fmt_flag == 3) then
-            read(luicli,'(a128)') header
+            read(luicli,'(a128)', iostat=ioc) header
+            if( ioc .ne. 0 ) then
+                write(6,*) 'Error reading cligen header line 0'
+            end if
         end if
 
         if (cli_gen_fmt_flag >= 2) then  !Forest Service cligen db format
 
             do idx = 1, 5
-                read(luicli,'(a128)') header
-               ! write(6,*) 'header: ', header,':'
+                read(luicli,'(a128)',iostat=ioc) header
+                if( ioc .ne. 0 ) then
+                    write(6,*) 'Error reading cligen header line ', idx
+                end if
             end do
 
             ! read monthy average of daily maximum temperature
-            read(luicli,*) (cli_mav%tmx(idx), idx = 1,12)
-            ! write(6,*)  (awtmxav(idx), idx = 1,12)
+            read(luicli,*,iostat=ioc) (cli_mav%tmx(idx), idx = 1,12)
+            if( ioc .ne. 0 ) then
+                write(6,*) 'Error reading cligen average monthly max temperature values line.'
+            end if
 
-            read(luicli,'(a128)') header
-            ! write(6,*) 'header: ', header
+            read(luicli,'(a128)',iostat=ioc) header
+            if( ioc .ne. 0 ) then
+                write(6,*) 'Error reading cligen header line: '
+                write(6,*) 'Line = ', header
+            end if
 
             ! read monthy average of daily minimum temperature
-            read(luicli,*) (cli_mav%tmn(idx), idx = 1,12)
-            ! write(6,*)  (awtmnav(idx), idx = 1,12)
+            read(luicli,*,iostat=ioc) (cli_mav%tmn(idx), idx = 1,12)
+            if( ioc .ne. 0 ) then
+                write(6,*) 'Error reading cligen average monthly min temperature values line.'
+            end if
 
             ! find yearly average temperature
             cli_tyav = 0.0
@@ -137,13 +150,18 @@ contains
 
             ! read three lines to get to precipitation values
             do idx = 1, 3
-                read(luicli,'(a128)') header
-                ! write(6,*) 'header: ', header,':'
+                read(luicli,'(a128)',iostat=ioc) header
+                if( ioc .ne. 0 ) then
+                    write(6,*) 'Error reading cligen header line: '
+                    write(6,*) 'Line = ', header
+                end if
             end do
 
             ! read average monthy total precipitation
-            read(luicli,*) (cli_mav%zpt(idx), idx = 1,12)
-            ! write(6,*)  (awzmpt(idx), idx = 1,12)
+            read(luicli,*,iostat=ioc) (cli_mav%zpt(idx), idx = 1,12)
+            if( ioc .ne. 0 ) then
+                write(6,*) 'Error reading cligen average monthly precipitation values line.'
+            end if
 
             ! find average yearly total precipitation
             awzypt = 0.0
@@ -207,7 +225,7 @@ contains
 
         ! read line from file
         read (luicli,'(a)',iostat=ioc) line
-        if (ioc .eq. -1) then
+        if (ioc .ne. 0) then
             ! failure reading data line from file
             errflg = 1
             return
@@ -217,7 +235,7 @@ contains
         read(line, *, iostat=ioc) cli_oneday%day, cli_oneday%month, cli_oneday%year, &
             cli_oneday%zdpt, cli_oneday%durpt, cli_oneday%peaktpt, cli_oneday%peakipt, &
             cli_oneday%tdmx, cli_oneday%tdmn, cli_oneday%grad, dummy, dummy, cli_oneday%tdpt
-        if (ioc .eq. -1) then
+        if (ioc .ne. 0) then
             ! We have a failure parsing the data line
             errflg = 2
             return
@@ -515,7 +533,7 @@ contains
 
         ! read single line from file
         read (luiwin,'(a)',iostat=ioc) line
-        if (ioc .eq. -1) then
+        if (ioc .ne. 0) then
             ! failure reading data line from file
             errflg = 1
             return
@@ -524,7 +542,7 @@ contains
         if (wind_gen_fmt_flag == 1) then   ! original wind_gen file format
             read(line, *, iostat=ioc) wind_oneday%day, wind_oneday%month, wind_oneday%year, wind_oneday%wwadir, &
                                       wind_oneday%wwudmx, wind_oneday%wwudmn, wind_oneday%wwhrmx
-            if( ioc .eq. -1 ) then
+            if( ioc .ne. 0 ) then
                 ! error reading individual line
                 errflg = 2
                 return
@@ -532,7 +550,7 @@ contains
         else                               ! wind_gen2 file format
             read(line, *, iostat=ioc) wind_oneday%day, wind_oneday%month, wind_oneday%year, wind_oneday%wwadir, &
                                       (wind_oneday%wawu(idx), idx=1,ntstep)
-            if( ioc .eq. -1 ) then
+            if( ioc .ne. 0 ) then
                 ! error reading individual line
                 errflg = 2
                 return

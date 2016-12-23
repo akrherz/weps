@@ -740,7 +740,7 @@ contains
             ! read 1st line of CLIGEN file
 
             read(luicli,fmt="(a)",err=290) line
-            write(6,*) '1st cligen output line is: ', line
+            write(6,*) '1st cligen input line is: ', line
 
             ! I think this is pretty messy.  It was working with the Lahey compiler
             ! with a "73x,f" format but the Sun F95 compiler didn't like that, so
