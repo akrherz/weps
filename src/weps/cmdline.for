@@ -20,7 +20,7 @@
       use weps_interface_defs, ignore_me=>cmdline
       use datetime_mod, only: julday
       use file_io_mod, only: fopenk, luolog
-      use f2kcli, only: COMMAND_ARGUMENT_COUNT
+      use f2kcli, only: COMMAND_ARGUMENT_COUNT, GET_COMMAND_ARGUMENT
 
       include 'p1werm.inc'
       include 'wpath.inc'

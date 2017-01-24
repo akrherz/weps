@@ -62,7 +62,7 @@
 ! really be necessary. However, at least one compiler (PGI) comments
 ! on their absence, so they are included for completeness.
 !
-!     INTEGER :: IARGC
+     INTEGER :: IARGC
 !     EXTERNAL   IARGC
 !
 ! Under Unix we must reconstruct the command line from its constituent
@@ -112,7 +112,7 @@
 ! really be necessary. However, at least one compiler (PGI) comments
 ! on their absence, so they are included for completeness.
 !
-!     INTEGER :: IARGC
+     INTEGER :: IARGC
 !     EXTERNAL   IARGC
 !
       COMMAND_ARGUMENT_COUNT = IARGC()
@@ -176,7 +176,7 @@
 ! really be necessary. However, at least one compiler (PGI) comments
 ! on their absence, so they are included for completeness.
 !
-!     INTEGER :: IARGC
+     INTEGER :: IARGC
 !     EXTERNAL   IARGC
 !
 ! Possible error codes:
