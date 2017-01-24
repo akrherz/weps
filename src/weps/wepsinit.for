@@ -53,12 +53,6 @@
           harv_calib_not_selected(idx) = .true.
       end do
 
-      ! main/input.for
-      clifil = "cli_gen.cli"     ! main/main.inc
-      runfil = "weps.run"        ! main/main.inc
-      winfil = "win_gen.win"     ! main/main.inc
-      subfil = ""                ! main/main.inc
-
       return
       end
 

@@ -25,6 +25,7 @@
       use erosion_data_struct_defs, only: awadir, awhrmx, awudmx, awudmn
       use erosion_data_struct_defs, only: awudav, subday, ntstep, am0efl
       use climate_input_mod, only: wind_gen_fmt_flag
+      use input_run_mod, only: subfil
 
 !     + + + GLOBAL COMMON BLOCKS + + +
       include 'p1werm.inc'

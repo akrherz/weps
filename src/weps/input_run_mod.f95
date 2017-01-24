@@ -5,17 +5,80 @@
 module input_run_mod
 
    logical :: old_run_file
+   character*512 :: clifil
+   character*512 :: runfil
+   character*512 :: subfil
+   character*512 :: winfil
 
 contains
 
-   subroutine inprun( n_rot_cycles, soil )
-! ***************************************************************** wjr
-! reads weps simulation run file
-!
-!     Edit History
-!     06-Feb-99   wjr   created from existing code, select added
+    subroutine input( n_rot_cycles, soil )
 
-!     + + + Modules Used + + +
+!     + + + PURPOSE + + +
+!     This subroutine perforns some screen I/O, reads in the
+!     run files and performs various error checkings.
+
+!     author: John Tatarko
+!     version: 95.08
+
+!     EDIT History
+!     06-Feb-99   wjr   changed crop_db, etc., location
+!                       to be scenario dir
+!     06-Feb-99   wjr   made inprun and inpsub into separate subrs
+!     06-Feb-99   wjr   used select statement to read config files
+!     06-Feb-99   wjr   moved opening of sinfil from inprun to inpsub
+!     06-Feb-99   wjr   changed files.inc to file.inc
+!     06-Feb-99   wjr   added luolog & luodbg
+!     06-Nov-03   LEW   removed cmdline processing and put in "cmdline.for"
+
+!     + + + KEY WORDS + + +
+!     WEPS, cligen, windgen
+
+!     + + + GLOBAL COMMON BLOCKS + + +
+      use soil_data_struct_defs, only: soil_def
+
+!     + + + ARGUMENT DECLARATIONS + + +
+      integer, intent(out) :: n_rot_cycles
+      type(soil_def), dimension(:), allocatable, intent(inout) :: soil 
+
+      include 'p1werm.inc'
+      include 'wpath.inc'
+      include 'm1sim.inc'
+      include 'command.inc'
+
+!     + + + LOCAL COMMON BLOCKS + + +
+      include 'main/main.inc'
+
+!     + + + LOCAL VARIABLES + + +
+      logical       fexist
+
+!     + + + LOCAL DEFINITIONS + + +
+!   fexist    - flag used to indicate result of file existence
+
+!     + + + END SPECIFICATIONS + + +
+
+!     open simulation run file
+      runfil = rootp(1:len_trim(rootp)) // 'weps.run'
+      inquire(file = runfil(1:len_trim(runfil)), exist = fexist)
+      if (.not.fexist) then
+        write(0,*) ' simulation run file not found '
+        call exit(1)
+      end if
+
+!     load the simulation run file
+      call inprun(n_rot_cycles, soil)
+
+!     If this is a simulation that does water erosion read any extra WEPP
+!     input data.
+      if (run_erosion.gt.1) call inpwepp
+
+      return
+    end subroutine input
+
+    subroutine inprun( n_rot_cycles, soil )
+      ! reads weps simulation run file
+
+      !     + + + Modules Used + + +
       use soil_data_struct_defs, only: soil_def
       use datetime_mod, only: lstday
       use Polygons_Mod, only: create_polygon, set_area_polygon
@@ -943,6 +1006,11 @@ contains
             sum_stat = sum_stat + alloc_stat
             if( alloc_stat .gt. 0 ) then
                write(*,*) 'ERROR: memory alloc., debug output flags'
+            end if
+
+            allocate(soil(nsubr), stat=alloc_stat)
+            if( alloc_stat .gt. 0 ) then
+               write(*,*) 'ERROR: memory alloc., soil structure array'
             end if
 
          case (25)

@@ -52,7 +52,7 @@
 
        use datetime_mod, only: difdat
 
-       type(mandate_array), dimension(:) :: mandatbs
+       type(mandate_array), dimension(0:) :: mandatbs
 
        integer :: alloc_stat
        integer :: sum_stat
@@ -161,7 +161,7 @@
 
        use datetime_mod, only: difdat
 
-       type(mandate_array), dimension(:) :: mandatbs
+       type(mandate_array), dimension(0:) :: mandatbs
 
        integer :: npass       ! counter 1 = count dates prior to allocation, 2 = populate date array
        integer :: alloc_stat
@@ -189,9 +189,9 @@
        integer, dimension(:), allocatable :: idx_cycles    ! index indicating the present subregion date array cycle
        integer, dimension(:), allocatable :: add_yr    ! number of years too add subregion date to make it match multiple cycles
 
-
        if( allocated( mandatbs(lbound(mandatbs,1))%mandate ) ) then
-          return   ! already allocated so values are already populated (calibration mode)
+          ! already allocated so values are already populated (calibration mode)
+          return
        end if
 
        ! note: this structure is passed with the (0) index array used to hold the result

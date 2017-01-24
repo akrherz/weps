@@ -69,7 +69,7 @@
       use sim_area_average_mod, only: sim_area_average
       use wepp_param_mod
       use climate_input_mod, only: cliginit, getcli, windinit, getwin
-      use input_run_mod, only: old_run_file
+      use input_run_mod, only: old_run_file, input
 
 ! build and release info, fpp created by cook
       include 'build.inc'
@@ -143,7 +143,6 @@
 !   end_init_d - the last day of initialization
 !   end_init_m - the last month of initialization
 !   end_init_y - the last year of initialization
-!   clifil    - This variable holds the CLIGEN input file name.
 !   daysim    - This variable holds the total current days of simulation.
 !   id,im,iy  - The initial day, month, and year of simulation.
 !   ijday     - The initial julian day of the simulation run.
@@ -167,7 +166,6 @@
 !   usrloc    - This character variable holds a location
 !               description of the simulation site.
 !   usrnam    - This character variable holds the user name.
-!   winfil    - This variable holds the WINDGEN input file name.
 !   ci_flag   - determines when confidence interval is calculated in report loop
 !               0 - no calculation
 !               1 - calcuation called
@@ -439,6 +437,7 @@
 
       do isr = 0, nsubr
           n_rot_cycles(isr) = run_rot_cycles * maxper / mandatbs(isr)%mperod
+
           nperiods(isr) = get_nperiods(mandatbs(isr)%mperod, mandatbs(isr)%mandate)   !Get # of periods for reports ( 0 is for global simulation area)
           if( report_debug >= 1 ) then
               write(*,*) '# rot years', maxper, "nperiods", nperiods(isr), '# cycles', n_rot_cycles(isr)

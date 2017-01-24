@@ -10,18 +10,18 @@
 
 !     + + + VARIABLE DECLARATIONS + + +
 
-      character        clifil*512
+!      character        clifil*512
 !      character        dinfil*512
 !      character        hinfil*512
-      character        runfil*512
+!      character        runfil*512
 !      character        simout*512
 !      character        sinfil(mnsub)*512
-      character        subfil*512
+!      character        subfil*512
       character        tinfil(mnsub)*512
       character        usrid*256
       character        usrloc*256
       character        usrnam*256
-      character        winfil*512
+!      character        winfil*512
 !      character        series(mnsub)*80
 !      character        wsum*80
 
@@ -45,12 +45,7 @@
       logical          subflg
 
       common / simday /                                                 &
-     &                  clifil,                                         &
-!dinfil, hinfil,
-     &                  runfil,                                         &
-! simout,         &
-! sinfil, &
-     &                  subfil, tinfil, usrid, usrloc, usrnam, winfil,  &
+     &                  tinfil, usrid, usrloc, usrnam,                  &
 !     &                  series,                                         &
 
      &                  daysim,                                         &
