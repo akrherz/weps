@@ -189,8 +189,6 @@
        integer, dimension(:), allocatable :: idx_cycles    ! index indicating the present subregion date array cycle
        integer, dimension(:), allocatable :: add_yr    ! number of years too add subregion date to make it match multiple cycles
 
-       write(*,*) 'ALLMANDAT',lbound(mandatbs,1),ubound(mandatbs,1)
-
        if( allocated( mandatbs(lbound(mandatbs,1))%mandate ) ) then
           ! already allocated so values are already populated (calibration mode)
           return
