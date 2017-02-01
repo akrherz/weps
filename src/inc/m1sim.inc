@@ -13,14 +13,15 @@
 !      integer          ntstep
       integer          am0jd
 !      integer          erod_interval
-      real             amalat
-      real             amalon
-      real             amzele
+!      real             amalat
+!      real             amalon
+!      real             amzele
 
       common /m1sim/                                                    &
 !     &                 am0jd, ntstep, erod_interval,                    &
-     &                 am0jd,                                           &
-     &                 amalat, amalon, amzele
+     &                 am0jd
+!,                                           &
+!     &                 amalat, amalon, amzele
 
       save :: /m1sim/
 

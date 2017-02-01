@@ -85,6 +85,10 @@ module climate_input_mod
     type(windgen_state) :: wind_today  ! wind data for the requested day
     type(windgen_state) :: wind_next   ! last wind data read from file
 
+   real :: amalat  ! site latitude (degrees)
+   real :: amalon  ! site longitude (degrees)
+   real :: amzele  ! site elevation (m)
+
 contains
 
     subroutine cliginit
@@ -258,8 +262,6 @@ contains
         integer :: ccd    ! requested day of month
         integer :: ccm    ! requested month of year
         integer :: ccy    ! requested year
-
-        include 'm1sim.inc'  ! amzele
 
         ! + + + LOCAL VARIABLES + + +
         integer :: ioc     ! file and string read error return code

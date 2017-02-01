@@ -55,7 +55,7 @@
       use wind_mod, only: sbzdisp, sbzo, biodrag
       use hydro_data_struct_defs, only: am0hfl, hydro_derived_et
       use wepp_param_mod, only: wepp_param
-      use climate_input_mod, only: cli_tyav, cli_next, cli_today, cli_prev
+      use climate_input_mod, only: cli_tyav, cli_next, cli_today, cli_prev, amalat, amalon
       use air_water_mod, only: et, rel_humid
 
 !     + + + ARGUMENT DECLARATIONS + + +
@@ -198,7 +198,6 @@
 !     + + + COMMON BLOCKS + + +
       include 'p1werm.inc'
       include 'p1solar.inc'
-      include 'm1sim.inc'
       include 'm1flag.inc'
       include 'h1db1.inc'
       include 'command.inc'

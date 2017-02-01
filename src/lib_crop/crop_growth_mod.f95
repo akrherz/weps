@@ -60,6 +60,7 @@ module crop_growth_mod
       use p1unconv_mod, only: mgtokg
       use crop_data_struct_defs, only: am0cfl
       use crop_climate_mod, only: huc1, freezeharden, chillunit_cum, warmday_cum
+      use climate_input_mod, only: amalat
       use special_func_mod, only: scrv1
 
 !     + + + ARGUMENT DECLARATIONS + + +
@@ -232,7 +233,6 @@ module crop_growth_mod
 !     + + + GLOBAL COMMON BLOCKS + + +
       include 'p1werm.inc'
       include 'p1solar.inc'
-      include 'm1sim.inc'
 
 !     + + + LOCAL VARIABLES + + +
       integer :: jd     ! simulation day of year
@@ -731,7 +731,7 @@ module crop_growth_mod
       use file_io_mod, only: luoinpt
       use p1unconv_mod, only: mgtokg, mmtom
       use crop_data_struct_defs, only: am0cfl
-      use climate_input_mod, only: cli_mav
+      use climate_input_mod, only: cli_mav, amalat
       use crop_climate_mod, only: huc1
       use special_func_mod, only: scrv1
       use cubic_spline_mod
@@ -812,7 +812,6 @@ module crop_growth_mod
 !     + + + GLOBAL COMMON BLOCKS + + +
       include 'p1werm.inc'
       include 'p1solar.inc'
-      include 'm1sim.inc'
 
 !     + + + FUNCTION DECLARATIONS + + +
 !      real daylen

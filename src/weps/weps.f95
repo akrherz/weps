@@ -69,14 +69,13 @@
       use sim_area_average_mod, only: sim_area_average
       use wepp_param_mod
       use climate_input_mod, only: cliginit, getcli, windinit, getwin
-      use input_run_mod, only: old_run_file, input
+      use input_run_mod, only: old_run_file, input, run_rot_cycles
 
 ! build and release info, fpp created by cook
       include 'build.inc'
       include 'p1werm.inc'
       include 'wpath.inc'
       include 'm1subr.inc'
-      include 'm1sim.inc'  ! am0jd
       include 'm1flag.inc'
       include 'h1hydro.inc'
       include 'command.inc'   !declarations for commandline args
@@ -98,7 +97,7 @@
      &        ndiy,                                                     &
      &        isr, ipl,                                                 &
      &        simyrs,                                                   &
-     &        yrsim, run_rot_cycles
+     &        yrsim
       integer lcaljday, keep(mnsub)
       integer ci_flag, ci_year
       real    ci
@@ -128,6 +127,7 @@
       type(wepp_param), dimension(:), allocatable :: wp           ! structure for wepp parameters by subregion
 
       integer :: alloc_stat, sum_stat
+      integer :: am0jd   ! Current julian day of simulation
 
 !     + + + LOCAL DEFINITIONS + + +
 
@@ -173,7 +173,6 @@
 !   ci        - confidence interval value (decimal)
 
 !     + + + SUBROUTINES CALLED + + +
-!     calcwu   -  Subdaily wind speed generation
 !     caldat   -  Converts julian day to day, month, and year (cd,cm,cy)
 !     cdbug    -  Prints global variables before and after call to CROP
 !     crop     -  Crop submodel
@@ -288,7 +287,7 @@
       if (calibrate_crops > 3) max_calib_cycles = calibrate_crops
 
 !     open input files and read run files
-      call input(run_rot_cycles, soil_in)
+      call input(soil_in)
 
       ! set total number of subregions from size of allocated subr_poly array
       nsubr = size(subr_poly)
@@ -784,8 +783,6 @@
                      call erodsubr_update( isr, soil(isr), crop(isr), restot(isr), croptot(isr), &
                                            biotot(isr), h1et(isr), subrsurf(isr) )
                   end do
-                  ! write(*,*) "Start calcwu"
-                  call calcwu
 
                   ! check for creation of stand alone erosion input files on this day
                   if( (saeinp_daysim .eq. daysim) .or. (saeinp_jday .eq. am0jd) .or. (saeinp_all .gt. 0) ) then

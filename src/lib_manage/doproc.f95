@@ -33,7 +33,6 @@
       include 'command.inc'
       include 'p1werm.inc'
       include 'm1flag.inc'
-      include 'm1sim.inc'
       include 'h1hydro.inc'
       include 'h1db1.inc'
       include 'manage/asd.inc'

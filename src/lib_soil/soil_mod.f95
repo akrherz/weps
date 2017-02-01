@@ -339,7 +339,6 @@ module soil_mod
 
       include 'p1werm.inc'
       include 'wpath.inc'
-      include 'm1sim.inc'
       include 'm1flag.inc'
 
 !     + + + ARGUMENT DECLARATIONS + + +
@@ -622,12 +621,11 @@ module soil_mod
       use soil_data_struct_defs, only: soil_def
       use biomaterial, only: biototal
       use erosion_data_struct_defs, only: awadir, awhrmx, awudmx, awudmn
-      use climate_input_mod, only: cli_today
+      use climate_input_mod, only: cli_today, amzele
       use hydro_data_struct_defs, only: hydro_derived_et
 
 !     + + + GLOBAL COMMON BLOCKS + + +
       include 'p1werm.inc'
-      include 'm1sim.inc'
       include 'm1flag.inc'
       include 'h1hydro.inc'
       include 'h1db1.inc'

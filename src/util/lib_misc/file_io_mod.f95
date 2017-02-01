@@ -9,7 +9,6 @@ module file_io_mod
 ! global in scope, so only one unit required
     integer :: luicli          ! reading cligen input
     integer :: luiwin          ! reading windgen input
-    integer :: luiwsd          ! reading wind subdaily
 
     integer :: luolog          ! write logfil.txt for cmdline and inprun
 

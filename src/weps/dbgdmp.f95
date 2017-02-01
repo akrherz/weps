@@ -13,7 +13,7 @@
       use soil_data_struct_defs, only: soil_def
       use biomaterial, only: biomatter, biototal
       use erosion_data_struct_defs, only: awdair, awadir, awhrmx, awudmx, awudmn, awudav, subday, ntstep
-      use climate_input_mod, only: cli_today, cli_tyav
+      use climate_input_mod, only: cli_today, cli_tyav, amalat, amalon, amzele
       use hydro_data_struct_defs, only: hydro_derived_et
       use erosion_data_struct_defs, only: subregionsurfacestate
 
@@ -32,7 +32,6 @@
       include 'p1werm.inc'
       include 'wpath.inc'
       include 'm1subr.inc'
-      include 'm1sim.inc'
       include 'm1flag.inc'
       include 'h1hydro.inc'
       include 'h1db1.inc'
@@ -362,9 +361,6 @@
 !      
       if (ntstep.lt.1.or.ntstep.gt.96)                                  &
      &  write(*,*) 'day ',day,' ntstep ', ntstep
-!
-      if (am0jd.ne.day)                                                 &
-     &  write(*,*) 'day ',day,' am0jd ', am0jd
 !
       if (amalat.lt.15.0.or.amalat.gt.75.0)                             &
      &  write(*,*) 'day ',day,' amalat ', amalat

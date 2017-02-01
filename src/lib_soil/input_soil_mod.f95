@@ -28,7 +28,6 @@ module input_soil_mod
 
       include 'p1werm.inc'
       include 'wpath.inc'
-      include 'm1sim.inc'
       include 'm1flag.inc'
       include 'command.inc'          !declarations for commandline args
 
@@ -681,7 +680,6 @@ module input_soil_mod
 
       include 'p1werm.inc'
       include 'wpath.inc'
-      include 'm1sim.inc'
       include 'h1hydro.inc'
       include 'h1db1.inc'
       include 'command.inc'          !declarations for commandline args

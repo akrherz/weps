@@ -5,14 +5,20 @@
 module input_run_mod
 
    logical :: old_run_file
-   character*512 :: clifil
-   character*512 :: runfil
-   character*512 :: subfil
-   character*512 :: winfil
+   character*512 :: clifil  ! climate file name
+   character*512 :: runfil  ! run file name
+   character*512 :: subfil  ! subdaily wind file name
+   character*512 :: winfil  ! wind file name
+   character*256 :: usrnam  ! user name
+   character*256 :: farmid  ! Farm identifier
+   character*256 :: tractid ! Tract identifier
+   character*256 :: fieldid ! Field identifier
+
+   integer :: run_rot_cycles ! number of rotation cycles
 
 contains
 
-    subroutine input( n_rot_cycles, soil )
+    subroutine input( soil )
 
 !     + + + PURPOSE + + +
 !     This subroutine perforns some screen I/O, reads in the
@@ -38,12 +44,10 @@ contains
       use soil_data_struct_defs, only: soil_def
 
 !     + + + ARGUMENT DECLARATIONS + + +
-      integer, intent(out) :: n_rot_cycles
       type(soil_def), dimension(:), allocatable, intent(inout) :: soil 
 
       include 'p1werm.inc'
       include 'wpath.inc'
-      include 'm1sim.inc'
       include 'command.inc'
 
 !     + + + LOCAL COMMON BLOCKS + + +
@@ -66,7 +70,7 @@ contains
       end if
 
 !     load the simulation run file
-      call inprun(n_rot_cycles, soil)
+      call inprun(soil)
 
 !     If this is a simulation that does water erosion read any extra WEPP
 !     input data.
@@ -75,7 +79,7 @@ contains
       return
     end subroutine input
 
-    subroutine inprun( n_rot_cycles, soil )
+    subroutine inprun( soil )
       ! reads weps simulation run file
 
       !     + + + Modules Used + + +
@@ -83,7 +87,7 @@ contains
       use datetime_mod, only: lstday
       use Polygons_Mod, only: create_polygon, set_area_polygon
       use subregions_mod, only: acct_poly, subr_poly
-      use file_io_mod, only: fopenk, luicli, luiwin, luiwsd, luolog
+      use file_io_mod, only: fopenk, luicli, luiwin, luolog
       use erosion_data_struct_defs, only: subday, ntstep, am0efl
       use barriers_mod, only: create_barrier, barrier, barseas
       use grid_mod, only: amasim, amxsim, sim_area, xgdpt, ygdpt
@@ -93,14 +97,13 @@ contains
       use crop_data_struct_defs, only: am0cfl, am0cdb
       use decomp_data_struct_defs, only: am0dfl, am0ddb
       use climate_input_mod, only: cli_gen_fmt_flag, wind_gen_fmt_flag, cligen_sname
+      use climate_input_mod, only: amalat, amalon, amzele
 
 !     + + + ARGUMENT DECLARATIONS + + +
-      integer, intent(out) :: n_rot_cycles
       type(soil_def), dimension(:), allocatable, intent(inout) :: soil 
 
       include 'p1werm.inc'
       include 'wpath.inc'
-      include 'm1sim.inc'
       include 'm1flag.inc'
       include 'h1hydro.inc'
       include 'h1db1.inc'
@@ -203,12 +206,12 @@ contains
             usrnam = line(1:80)
 
          case (2)
-            usrid = line(1:80)
-            read (usrid((index(usrid,"|",back=.true.)+1):),*,err=80, iostat=ios) n_rot_cycles
-            print *, 'n_rot_cycles', n_rot_cycles
+            farmid = line(1:80)
+            read (farmid((index(farmid,"|",back=.true.)+1):),*,err=80, iostat=ios) run_rot_cycles
+            print *, 'run_rot_cycles', run_rot_cycles
 
          case (3)
-            usrloc = line(1:80)
+            fieldid = line(1:80)
 
          case (4)
             read (line,*,err=80, iostat=ios) amalat
@@ -352,26 +355,7 @@ contains
             ! read subdaily wind file name
             if (line(1:4) .ne. 'none') then
                subfil = rootp(1:len_trim(rootp)) // line
-
-!     inquire(file = subfil, exist = fexist)
-!      if(.not. fexist) then
-!         write(*,*) '      '
-!         write(*,*) ' warning, the subdaily wind file:'
-!         write(*,*) subfil,'was not found - all winds will be generated'
-!      end if
-
-               ! open sub-daily wind file (i.e.'real' data) if it exists
-               inquire(file = subfil, exist = fexist)
-               if(fexist) then
-                  write(*,2270) subfil
-                  call fopenk (luiwsd, subfil, 'old')
-               else
-                  ! assign value so close knows not to close
-                  luiwsd = -1
-               endif
-            else
-               ! assign value so close knows not to close
-               luiwsd = -1
+               write(*,*) 'Subdaily wind file feature obsolete. File specified is: ', trim(subfil)
             end if
 
          case (15)
@@ -728,12 +712,12 @@ contains
             usrnam = line(1:80)
 
          case (2)
-            usrid = line(1:80)
-            read (usrid((index(usrid,"|",back=.true.)+1):),*,err=80, iostat=ios) n_rot_cycles
-            print *, 'n_rot_cycles', n_rot_cycles
+            farmid = line(1:80)
+            read (farmid((index(farmid,"|",back=.true.)+1):),*,err=80, iostat=ios) run_rot_cycles
+            print *, 'run_rot_cycles', run_rot_cycles
 
          case (3)
-            usrloc = line(1:80)
+            fieldid = line(1:80)
 
          case (4)
             read (line,*,err=80, iostat=ios) amalat
@@ -877,26 +861,7 @@ contains
             ! read subdaily wind file name
             if (line(1:4) .ne. 'none') then
                subfil = rootp(1:len_trim(rootp)) // line
-
-!     inquire(file = subfil, exist = fexist)
-!      if(.not. fexist) then
-!         write(*,*) '      '
-!         write(*,*) ' warning, the subdaily wind file:'
-!         write(*,*) subfil,'was not found - all winds will be generated'
-!      end if
-
-               ! open sub-daily wind file (i.e.'real' data) if it exists
-               inquire(file = subfil, exist = fexist)
-               if(fexist) then
-                  write(*,2270) subfil
-                  call fopenk (luiwsd, subfil, 'old')
-               else
-                  ! assign value so close knows not to close
-                  luiwsd = -1
-               endif
-            else
-               ! assign value so close knows not to close
-               luiwsd = -1
+               write(*,*) 'Subdaily wind file feature obsolete. File specified is: ', trim(subfil)
             end if
 
          case (15)

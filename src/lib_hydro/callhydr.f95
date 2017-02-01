@@ -15,6 +15,7 @@
       use erosion_data_struct_defs, only: awudav
       use hydro_data_struct_defs, only: am0hdb, hydro_derived_et
       use wepp_param_mod, only: wepp_param
+      use climate_input_mod, only: amzele
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer daysim
@@ -31,7 +32,6 @@
 
 ! Includes
       include 'p1werm.inc'
-      include 'm1sim.inc'
       include 'm1flag.inc'
       include 'h1hydro.inc'
       include 'h1temp.inc'

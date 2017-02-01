@@ -77,9 +77,6 @@
       integer    isr
       type(biomatter), dimension(:), intent(in) :: residue
       end subroutine decout
-!---------------- EROSION Routines ---------------------------
-      subroutine calcwu()
-      end subroutine calcwu
 !---------------------------
 
 !---------------  HYDRO Routines -----------------------------
