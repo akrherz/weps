@@ -5,7 +5,7 @@
 
       Program tstasd
 
-      use soil_data_struct_defs, only: soil_def
+      use soil_data_struct_defs, only: soil_def, allocate_soil
 
       include 'p1werm.inc'
       include 'm1subr.inc'
@@ -24,7 +24,7 @@
 
       nsubr = 1
       sum_stat = 0
-      allocate(soil(nsubr), stat=alloc_stat)
+      allocate(soil(0:nsubr), stat=alloc_stat)
       sum_stat = sum_stat + alloc_stat
       if( sum_stat .gt. 0 ) then
 !        write(0,*) "ERROR: unable to allocate enough memory for weps main data arrays."
@@ -34,7 +34,7 @@
 
       do sr=1, nsubr
         soil(sr)%nslay = 29
-        call allocate_soil(soil) ! allocate layer arrays
+        call allocate_soil(soil(sr)) ! allocate layer arrays
       end do
 
       write (0,*) 'soil(1)%nslay: ', soil(1)%nslay
