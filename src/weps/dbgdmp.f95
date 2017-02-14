@@ -30,7 +30,6 @@
 !     + + + GLOBAL COMMON BLOCKS + + +
 
       include 'p1werm.inc'
-      include 'wpath.inc'
       include 'm1subr.inc'
       include 'm1flag.inc'
       include 'h1hydro.inc'

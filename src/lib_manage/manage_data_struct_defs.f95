@@ -5,6 +5,8 @@
 
 module manage_data_struct_defs
 
+   character(len=512), dimension(:), allocatable :: tinfil
+
    integer, dimension(:), allocatable :: am0tfl    ! flag to print MANAGEment (TILLAGE) output
                                                      ! 0 = no output
                                                      ! 1 = detailed output file created

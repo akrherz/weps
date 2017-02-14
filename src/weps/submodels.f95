@@ -9,6 +9,7 @@
       use weps_interface_defs, ignore_me=>submodels
       use soil_data_struct_defs, only: soil_def
       use biomaterial, only: biomatter, biototal, decomp_factors, bio_prevday
+      use input_run_mod, only: iy
       use mandate_mod, only: opercrop_date
       use hydro_data_struct_defs, only: hydro_derived_et
       use wepp_param_mod, only: wepp_param

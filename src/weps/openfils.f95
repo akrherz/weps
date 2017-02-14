@@ -20,12 +20,10 @@
       use manage_data_struct_defs, only: am0tfl, am0tdb
       use crop_data_struct_defs, only: am0cfl, am0cdb
       use decomp_data_struct_defs, only: am0dfl, am0ddb
-      use input_run_mod, only: old_run_file
+      use input_run_mod, only: old_run_file, rootp
       use crop_mod, only: cpout
 
       include 'p1werm.inc'
-      include 'wpath.inc'
-
       include 'm1flag.inc'
       include 'command.inc'
 

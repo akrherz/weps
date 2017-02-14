@@ -18,12 +18,12 @@
 
 !     + + + GLOBAL COMMON BLOCKS + + +
       use weps_interface_defs, ignore_me=>cmdline
+      use input_run_mod, only: rootp
       use datetime_mod, only: julday
       use file_io_mod, only: fopenk, luolog
       use f2kcli, only: COMMAND_ARGUMENT_COUNT, GET_COMMAND_ARGUMENT
 
       include 'p1werm.inc'
-      include 'wpath.inc'
       include 'm1flag.inc'
       include 'command.inc'          !declarations for commandline args
 
@@ -40,14 +40,12 @@
       integer       i
       integer       numarg
       integer       ll,ss
-
+      integer       id, im, iy
 
 !     + + + LOCAL DEFINITIONS + + +
 
 !   i         - Generic loop counter.
-!   id,im,iy  - The initial day, month, and year of simulation.
-!   ijday     - This variable contains the initial julian day of
-!               the simulation run.
+!   id,im,iy  - The day, month, and year
 !   lchar     - This variable holds the character position in a string
 !               so to ignore leading blanks in that string.
 !   arglen    - This variable holds size of the specified cmdline argument

@@ -16,6 +16,15 @@ module input_run_mod
 
    integer :: run_rot_cycles ! number of rotation cycles
 
+   integer :: id     ! initial simulation day of month
+   integer :: im     ! initial simulation month of year
+   integer :: iy     ! initial simulation year
+   integer :: ld     ! final (last) simulation day of month
+   integer :: lm     ! final (last) simulation month of year
+   integer :: ly     ! final (last) simulation year
+
+   character*512 :: rootp*512  ! the root path from which the weps command was started.
+
 contains
 
     subroutine input( soil )
@@ -47,7 +56,6 @@ contains
       type(soil_def), dimension(:), allocatable, intent(inout) :: soil 
 
       include 'p1werm.inc'
-      include 'wpath.inc'
       include 'command.inc'
 
 !     + + + LOCAL COMMON BLOCKS + + +
@@ -93,7 +101,7 @@ contains
       use grid_mod, only: amasim, amxsim, sim_area, xgdpt, ygdpt
       use hydro_data_struct_defs, only: am0hfl, am0hdb
       use soil_data_struct_defs, only: am0sfl, am0sdb
-      use manage_data_struct_defs, only: am0tfl, am0tdb
+      use manage_data_struct_defs, only: am0tfl, am0tdb, tinfil
       use crop_data_struct_defs, only: am0cfl, am0cdb
       use decomp_data_struct_defs, only: am0dfl, am0ddb
       use climate_input_mod, only: cli_gen_fmt_flag, wind_gen_fmt_flag, cligen_sname
@@ -103,7 +111,6 @@ contains
       type(soil_def), dimension(:), allocatable, intent(inout) :: soil 
 
       include 'p1werm.inc'
-      include 'wpath.inc'
       include 'm1flag.inc'
       include 'h1hydro.inc'
       include 'h1db1.inc'
@@ -400,6 +407,11 @@ contains
             end if
 
             allocate(soil(nsubr), stat=alloc_stat)
+            if( alloc_stat .gt. 0 ) then
+               write(*,*) 'ERROR: memory alloc., soil structure array'
+            end if
+
+            allocate(tinfil(nsubr), stat=alloc_stat)
             if( alloc_stat .gt. 0 ) then
                write(*,*) 'ERROR: memory alloc., soil structure array'
             end if
@@ -974,6 +986,11 @@ contains
             end if
 
             allocate(soil(nsubr), stat=alloc_stat)
+            if( alloc_stat .gt. 0 ) then
+               write(*,*) 'ERROR: memory alloc., soil structure array'
+            end if
+
+            allocate(tinfil(nsubr), stat=alloc_stat)
             if( alloc_stat .gt. 0 ) then
                write(*,*) 'ERROR: memory alloc., soil structure array'
             end if

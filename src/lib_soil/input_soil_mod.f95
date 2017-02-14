@@ -5,6 +5,10 @@
 
 module input_soil_mod
 
+      use soil_data_struct_defs, only: soil_def
+
+      type(soil_def), dimension(:), allocatable :: soil_in ! structure with soil state and parameters input from ifc
+
   contains
 
     subroutine input_ifc(isr, soil)
@@ -27,7 +31,6 @@ module input_soil_mod
       type(soil_def), intent(inout) :: soil  ! soil for this subregion
 
       include 'p1werm.inc'
-      include 'wpath.inc'
       include 'm1flag.inc'
       include 'command.inc'          !declarations for commandline args
 
@@ -679,7 +682,6 @@ module input_soil_mod
       use soil_data_struct_defs, only: soil_def, allocate_soil
 
       include 'p1werm.inc'
-      include 'wpath.inc'
       include 'h1hydro.inc'
       include 'h1db1.inc'
       include 'command.inc'          !declarations for commandline args

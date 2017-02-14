@@ -28,7 +28,6 @@
       use file_io_mod, only: fopenk
       use manage_data_struct_defs, only: lastoper
       include 'p1werm.inc'
-      include 'wpath.inc'
       include 'm1flag.inc'
       include 'manage/man.inc'
       include 'manage/asd.inc'

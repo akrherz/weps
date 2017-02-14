@@ -298,7 +298,6 @@ module split_layers_mod
       type(soil_def), intent(inout) :: soil  ! soil for the subregion
 
       include 'p1werm.inc'
-      include 'wpath.inc'
       include 'h1hydro.inc'
       include 'h1db1.inc'
       include 'command.inc'          !declarations for commandline args
@@ -402,7 +401,6 @@ module split_layers_mod
       type(soil_def), intent(inout) :: soil  ! subregion surface conditions
 
       include 'p1werm.inc'
-      include 'wpath.inc'
       include 'h1hydro.inc'
       include 'h1db1.inc'
       include 'command.inc'          !declarations for commandline args

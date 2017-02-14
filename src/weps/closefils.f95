@@ -17,7 +17,6 @@
       use input_run_mod, only: old_run_file
 
       include 'p1werm.inc'
-      include 'wpath.inc'
       include 'command.inc'
 
 !     + + + ARGUMENT DECLARATIONS + + +

@@ -46,7 +46,7 @@
       use subregions_mod, only: subr_poly, acct_poly
       use barriers_mod, only: barrier, barseas, minht_barriers, destroy_barrier, set_barrier_season
       use file_io_mod, only: luo_egrd, luo_emit, luo_sgrd, luogui1, luomandate, makedir
-      use input_soil_mod, only: input_ifc
+      use input_soil_mod, only: input_ifc, soil_in
       use soil_data_struct_defs, only: soil_def
       use soil_mod, only: soilinit
       use crop_mod, only: cropinit, cprevseasonrotation
@@ -54,7 +54,7 @@
       use biomaterial
       use debug_mod
       use mandate_mod
-      use manage_data_struct_defs, only: lastoper
+      use manage_data_struct_defs, only: lastoper, tinfil
       use erosion_mod, only: erosion, erodinit
       use erosion_data_struct_defs, only: create_subregionsurfacestate, subregionsurfacestate, threshold, cellsurfacestate, &
                                           erod_interval, awudmx, am0eif, am0efl
@@ -69,12 +69,11 @@
       use sim_area_average_mod, only: sim_area_average
       use wepp_param_mod
       use climate_input_mod, only: cliginit, getcli, windinit, getwin
-      use input_run_mod, only: old_run_file, input, run_rot_cycles
+      use input_run_mod, only: old_run_file, input, run_rot_cycles, id, im, iy, ld, lm, ly, rootp
 
 ! build and release info, fpp created by cook
       include 'build.inc'
       include 'p1werm.inc'
-      include 'wpath.inc'
       include 'm1subr.inc'
       include 'm1flag.inc'
       include 'h1hydro.inc'
@@ -105,7 +104,6 @@
       integer :: SURF_UPD_FLG              ! erosion surface updating (0 - disabled, 1 - enabled)
       integer :: nsubr                     ! total number of subregions (read in inprun, derived from allocated subr_poly)
 
-      type(soil_def), dimension(:), allocatable :: soil_in          ! structure with soil state and parameters input from ifc
       type(soil_def), dimension(:), allocatable :: soil             ! structure with soil state and parameters as updated suring simulation
       type(biomatter), dimension(:), allocatable :: crop            ! structure with crop state and parameters
       type(biototal), dimension(:), allocatable :: croptot          ! structure with totalized values of crop state
@@ -144,11 +142,8 @@
 !   end_init_m - the last month of initialization
 !   end_init_y - the last year of initialization
 !   daysim    - This variable holds the total current days of simulation.
-!   id,im,iy  - The initial day, month, and year of simulation.
 !   ijday     - The initial julian day of the simulation run.
 !   isr       - This variable holds the subregion index.
-!   iy        - Starting year of simulation run (used in management).
-!   ld,lm,ly  - The last day, month, and year of simulation.
 !   ljday     - The last julian day of the simulation run.
 !   maxper    - The maximum number of years in a rotation of all
 !               subregions.

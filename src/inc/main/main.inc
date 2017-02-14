@@ -17,7 +17,7 @@
 !      character        simout*512
 !      character        sinfil(mnsub)*512
 !      character        subfil*512
-      character        tinfil(mnsub)*512
+!      character        tinfil(mnsub)*512
 !      character        usrid*256
 !      character        usrloc*256
 !      character        usrnam*256
@@ -26,13 +26,13 @@
 !      character        wsum*80
 
       integer          daysim
-      integer          id
-      integer          im
-      integer          iy
+!      integer          id
+!      integer          im
+!      integer          iy
       integer          ijday
-      integer          ld
-      integer          lm
-      integer          ly
+!      integer          ld
+!      integer          lm
+!      integer          ly
 !      integer          lopday
 !      integer          lopmon
 !      integer          lopyr
@@ -45,13 +45,13 @@
       logical          subflg
 
       common / simday /                                                 &
-     &                  tinfil,                                         &
+!     &                  tinfil,                                         &
 ! usrid, usrloc, usrnam,                  &
 !     &                  series,                                         &
 
-     &                  daysim,                                         &
-     &                  id, im, iy, ijday,                              &
-     &                  ld, lm, ly, ljday,                              &
+     &                  daysim, ijday, ljday,                           &
+!     &                  id, im, iy, ijday,                              &
+!     &                  ld, lm, ly, ljday,                              &
 !     &                  lopday, lopmon, lopyr,                          &
      &                  maxper, ncycles,                                &
      &                  outcnt, tyears,                                 &

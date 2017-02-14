@@ -83,7 +83,6 @@ module soil_mod
       use soil_data_struct_defs, only: soil_def
 
       include 'p1werm.inc'
-      include 'wpath.inc'
 
 !     + + + GLOBAL COMMON BLOCKS + + +
       include 'soil/cumulat.inc'
@@ -343,7 +342,6 @@ module soil_mod
 !     + + + GLOBAL COMMON BLOCKS + + +
 
       include 'p1werm.inc'
-      include 'wpath.inc'
       include 'm1flag.inc'
 
 !     + + + ARGUMENT DECLARATIONS + + +
