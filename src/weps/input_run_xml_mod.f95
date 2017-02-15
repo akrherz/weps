@@ -1,7 +1,7 @@
-!$Author: joelevin $
-!$Date: 2011-03-24 10:33:26 -0600 (Thu, 24 Mar 2011) $
-!$Revision: 11724 $
-!$HeadURL: https://infosys.ars.usda.gov/svn/code/weps1/branches/weps.src.subregion/src/test_crop/m_cropxml.f95 $
+!$Author$
+!$Date$
+!$Revision$
+!$HeadURL$
 
 
 module input_run_xml_mod
@@ -274,32 +274,53 @@ contains
   subroutine pcdata_chunk_handler(chunk)
     use input_run_mod
     use datetime_mod, only: lstday, difdat
-    use Polygons_Mod, only: create_polygon, set_area_polygon
+    use Polygons_Mod, only: polygon, create_polygon, destroy_polygon, set_area_polygon
     use subregions_mod, only: acct_poly, subr_poly
     use file_io_mod, only: fopenk, luicli, luiwin, luolog
     use climate_input_mod, only: cli_gen_fmt_flag, wind_gen_fmt_flag, cligen_sname
     use climate_input_mod, only: amalat, amalon, amzele
     use erosion_data_struct_defs, only: subday, ntstep, am0efl
-    use barriers_mod, only: create_barrier, barrier, barseas
     use grid_mod, only: amasim, amxsim, sim_area, xgdpt, ygdpt
     use hydro_data_struct_defs, only: am0hfl, am0hdb
     use soil_data_struct_defs, only: am0sfl, am0sdb
     use manage_data_struct_defs, only: am0tfl, am0tdb, tinfil
     use crop_data_struct_defs, only: am0cfl, am0cdb
     use decomp_data_struct_defs, only: am0dfl, am0ddb
-    use input_soil_mod, only: soil_in
-
+    use input_soil_mod, only: soil_def, soil_in
+    use Points_Mod, only: point
+    use barriers_mod, only: create_barrier, barrier, barseas
+    use barriers_mod, only: barrier_day_state, barrier_params, barrier_climate
 
     ! arguments
     character(len=*), intent(in) :: chunk
 
     character(len=80) :: param_value
-    integer :: sum_stat, alloc_stat
+    integer :: sum_stat, alloc_stat, dealloc_stat
     integer :: read_stat
     real :: cligen_version
+    logical, dimension(:), allocatable :: subregion_complete
     logical, dimension(:), allocatable :: season_complete
     logical, dimension(:), allocatable :: points_complete
     logical, dimension(:,:), allocatable :: clipar_complete
+    integer :: count_complete
+    ! temporary holder for array elements until index is read
+    integer :: t_am0hfl
+    integer :: t_am0sfl
+    integer :: t_am0tfl
+    integer :: t_am0cfl
+    integer :: t_am0dfl
+    integer :: t_am0hdb
+    integer :: t_am0sdb
+    integer :: t_am0tdb
+    integer :: t_am0cdb
+    integer :: t_am0ddb
+    type(polygon) :: t_polygon
+    type(soil_def) :: t_soil
+    character(len=512) :: t_tinfil
+    type(point) :: t_point
+    type(barrier_day_state) :: t_day_state
+    type(barrier_params) :: t_params
+    type(barrier_climate) :: t_climate
 
     param_value = trim(chunk)
 
@@ -564,7 +585,6 @@ contains
           call exit(1)
         end if
         run_tag(SubregionNo)%acquired = .true.
-        isr = 1
         ! create array of subregion polygons
         allocate(subr_poly(nsubr), stat = alloc_stat)
         if( alloc_stat .gt. 0 ) then
@@ -616,24 +636,26 @@ contains
         ! Subregion
         if (run_tag(SubregionNo)%acquired) then
           if (run_tag(n_index)%in_tag) then
-            call read_param(n_index, param_value, soil_in(isr)%n_index)
+            call read_param(n_index, param_value, isr)
+            ! adjust from base 0 to base 1 arrays
+            isr = isr + 1
             run_tag(n_index)%acquired = .true.
           else if (run_tag(SubmodelOutput)%in_tag) then
             ! SubmodelOutput
             if (run_tag(hydro)%in_tag) then
-              call read_param(hydro, param_value, am0hfl(isr))
+              call read_param(hydro, param_value, t_am0hfl)
               run_tag(hydro)%acquired = .true.
             else if (run_tag(soil)%in_tag) then
-              call read_param(soil, param_value, am0sfl(isr))
+              call read_param(soil, param_value, t_am0sfl)
               run_tag(soil)%acquired = .true.
             else if (run_tag(man)%in_tag) then
-              call read_param(man, param_value, am0tfl(isr))
+              call read_param(man, param_value, t_am0tfl)
               run_tag(man)%acquired = .true.
             else if (run_tag(crop)%in_tag) then
-              call read_param(crop, param_value, am0cfl(isr))
+              call read_param(crop, param_value, t_am0cfl)
               run_tag(crop)%acquired = .true.
             else if (run_tag(decomp)%in_tag) then
-              call read_param(decomp, param_value, am0dfl(isr))
+              call read_param(decomp, param_value, t_am0dfl)
               run_tag(decomp)%acquired = .true.
             end if
             if (    run_tag(hydro)%acquired &
@@ -651,19 +673,19 @@ contains
           else if (run_tag(DebugOutput)%in_tag) then
             ! DebugOutput
             if (run_tag(hydro)%in_tag) then
-              call read_param(hydro, param_value, am0hdb(isr))
+              call read_param(hydro, param_value, t_am0hdb)
               run_tag(hydro)%acquired = .true.
             else if (run_tag(soil)%in_tag) then
-              call read_param(soil, param_value, am0sdb(isr))
+              call read_param(soil, param_value, t_am0sdb)
               run_tag(soil)%acquired = .true.
             else if (run_tag(man)%in_tag) then
-              call read_param(man, param_value, am0tdb(isr))
+              call read_param(man, param_value, t_am0tdb)
               run_tag(man)%acquired = .true.
             else if (run_tag(crop)%in_tag) then
-              call read_param(crop, param_value, am0cdb(isr))
+              call read_param(crop, param_value, t_am0cdb)
               run_tag(crop)%acquired = .true.
             else if (run_tag(decomp)%in_tag) then
-              call read_param(decomp, param_value, am0ddb(isr))
+              call read_param(decomp, param_value, t_am0ddb)
               run_tag(decomp)%acquired = .true.
             end if
             if (    run_tag(hydro)%acquired &
@@ -684,14 +706,14 @@ contains
               call read_param(Number, param_value, poly_np)
               if (poly_np .gt. 0) then
                 ! create polygon point storage
-                subr_poly(iar) = create_polygon(poly_np)
+                t_polygon = create_polygon(poly_np)
                 ! initialize polygon point counter
                 ipol = 1
               end if
               run_tag(Number)%acquired = .true.
             else if (run_tag(coordinate)%in_tag) then
               if (run_tag(Number)%acquired) then
-                call read_param(coordinate, param_value, subr_poly(iar)%points(ipol)%x, subr_poly(iar)%points(ipol)%y)
+                call read_param(coordinate, param_value, t_polygon%points(ipol)%x, t_polygon%points(ipol)%y)
                 ipol = ipol + 1
                 if (ipol .gt. poly_np) then
                   run_tag(coordinates)%acquired = .true.
@@ -707,22 +729,21 @@ contains
             !        ie. not entered. It is now the only way to set a 
             !        non default slope when using the older "non-versioned"
             !        IFC files.   
-            call read_param(AverageSlope, param_value, soil_in(isr)%amrslp)
+            call read_param(AverageSlope, param_value, t_soil%amrslp)
             run_tag(AverageSlope)%acquired = .true.
 
           else if (run_tag(SoilRockFragments)%in_tag) then
-            call read_param(SoilRockFragments, param_value, soil_in(isr)%SoilRockFragments)
+            call read_param(SoilRockFragments, param_value, t_soil%SoilRockFragments)
             run_tag(SoilRockFragments)%acquired = .true.
-            
 
           else if (run_tag(SoilFile)%in_tag) then
             ! read in initial field conditions file name
-            soil_in(isr)%sinfil = rootp(1:len_trim(rootp)) // param_value(1:len_trim(param_value))
+            t_soil%sinfil = rootp(1:len_trim(rootp)) // param_value(1:len_trim(param_value))
             run_tag(SoilFile)%acquired = .true.
 
           else if (run_tag(ManageFile)%in_tag) then
             ! read in management file name
-            tinfil(isr) = rootp(1:len_trim(rootp)) // param_value(1:len_trim(param_value))
+            t_tinfil = rootp(1:len_trim(rootp)) // param_value(1:len_trim(param_value))
             run_tag(ManageFile)%acquired = .true.
 
           else if (run_tag(WaterErosionLoss)%in_tag) then
@@ -752,8 +773,28 @@ contains
             run_tag(SoilFile)%acquired = .false.
             run_tag(ManageFile)%acquired = .false.
             run_tag(WaterErosionLoss)%acquired = .false.
-            isr = isr + 1
-            if (isr .gt. nsubr) then
+            am0hfl(isr) = t_am0hfl
+            am0sfl(isr) = t_am0sfl
+            am0tfl(isr) = t_am0tfl
+            am0cfl(isr) = t_am0cfl
+            am0dfl(isr) = t_am0dfl
+            am0hdb(isr) = t_am0hdb
+            am0sdb(isr) = t_am0sdb
+            am0tdb(isr) = t_am0tdb
+            am0cdb(isr) = t_am0cdb
+            am0ddb(isr) = t_am0ddb
+            subr_poly(isr) = t_polygon
+            call destroy_polygon(t_polygon)
+            soil_in(isr) = t_soil
+            tinfil(isr) = t_tinfil
+            subregion_complete(isr) = .true.
+            count_complete = 0
+            do isr = 1, nsubr
+              if (subregion_complete(isr)) then
+                count_complete = count_complete + 1
+              end if
+            end do
+            if (count_complete .ge. nsubr) then
               run_tag(Subregion)%acquired = .true.
             end if
           end if
@@ -802,7 +843,6 @@ contains
         if (run_tag(BarrierNo)%required) then
           if (run_tag(BarrierSeasonFlag)%in_tag) then
             call read_param(BarrierSeasonFlag, param_value, seas_flg)
-            
             run_tag(BarrierSeasonFlag)%acquired = .true.
           else if (run_tag(BarCliNo)%in_tag) then
             call read_param(BarCliNo, param_value, ntm_seas)
@@ -838,38 +878,37 @@ contains
             sum_stat = sum_stat + alloc_stat
             allocate(clipar_complete(poly_np, ntm_seas), stat = alloc_stat)
             sum_stat = sum_stat + alloc_stat
-            ! set counter for reading each point pair
-            ipol = 1
-            iseas = 1
 
           else if (run_tag(BarCli)%in_tag) then
             ! BarCli Climate transition parameters
             if (run_tag(n_index)%in_tag) then
-              !call read_param(n_index, param_value, barseas(ibr)%dst(iseas)%n_index)
+              call read_param(n_index, param_value, iseas)
+              ! adjust from base 0 to base 1 arrays
+              iseas = iseas + 1
               run_tag(n_index)%acquired = .true.
             else if (run_tag(TimeMark)%in_tag) then
-              call read_param(TimeMark, param_value, barseas(ibr)%dst(iseas)%doy)
+              call read_param(TimeMark, param_value, t_day_state%doy)
               run_tag(TimeMark)%acquired = .true.
             else if (run_tag(TimeDesc)%in_tag) then
-              barseas(ibr)%dst(iseas)%st_desc = param_value
+              t_day_state%st_desc = param_value
               run_tag(TimeDesc)%acquired = .true.
             else if (run_tag(BegTranFlg)%in_tag) then
-              call read_param(BegTranFlg, param_value, barseas(ibr)%clim(iseas)%beg_flg)
+              call read_param(BegTranFlg, param_value, t_climate%beg_flg)
               run_tag(BegTranFlg)%acquired = .true.
             else if (run_tag(BegTranThresh)%in_tag) then
-              call read_param(BegTranThresh, param_value, barseas(ibr)%clim(iseas)%beg_thresh)
+              call read_param(BegTranThresh, param_value, t_climate%beg_thresh)
               run_tag(BegTranThresh)%acquired = .true.
             else if (run_tag(BegTranBase)%in_tag) then
-              call read_param(BegTranBase, param_value, barseas(ibr)%clim(iseas)%beg_base)
+              call read_param(BegTranBase, param_value, t_climate%beg_base)
               run_tag(BegTranBase)%acquired = .true.
             else if (run_tag(EndTranFlg)%in_tag) then
-              call read_param(EndTranFlg, param_value, barseas(ibr)%clim(iseas)%end_flg)
+              call read_param(EndTranFlg, param_value, t_climate%end_flg)
               run_tag(EndTranFlg)%acquired = .true.
             else if (run_tag(EndTranThresh)%in_tag) then
-              call read_param(EndTranThresh, param_value, barseas(ibr)%clim(iseas)%end_thresh)
+              call read_param(EndTranThresh, param_value, t_climate%end_thresh)
               run_tag(EndTranThresh)%acquired = .true.
             else if (run_tag(EndTranBase)%in_tag) then
-              call read_param(EndTranBase, param_value, barseas(ibr)%clim(iseas)%end_base)
+              call read_param(EndTranBase, param_value, t_climate%end_base)
               run_tag(EndTranBase)%acquired = .true.
             end if
             if( seas_flg .eq. 2 ) then
@@ -883,7 +922,6 @@ contains
                 .and. run_tag(EndTranThresh)%acquired &
                 .and. run_tag(EndTranBase)%acquired &
                 ) then
-                iseas = iseas + 1
                 run_tag(n_index)%acquired = .false.
                 run_tag(TimeMark)%acquired = .false.
                 run_tag(TimeDesc)%acquired = .false.
@@ -893,7 +931,16 @@ contains
                 run_tag(EndTranFlg)%acquired = .false.
                 run_tag(EndTranThresh)%acquired = .false.
                 run_tag(EndTranBase)%acquired = .false.
-                if (iseas .gt. ntm_seas) then
+                barseas(ibr)%dst(iseas) = t_day_state
+                barseas(ibr)%clim(iseas) = t_climate
+                season_complete(iseas) = .true.
+                count_complete = 0
+                do iseas = 1, ntm_seas
+                  if (season_complete(iseas)) then
+                    count_complete = count_complete + 1
+                  end if
+                end do
+                if (count_complete .ge. ntm_seas) then
                   run_tag(BarCli)%acquired = .true.
                 end if
               end if  
@@ -902,7 +949,6 @@ contains
                 .and. run_tag(TimeMark)%acquired & 
                 .and. run_tag(TimeDesc)%acquired &
                 ) then
-                iseas = iseas + 1
                 run_tag(n_index)%acquired = .false.
                 run_tag(TimeMark)%acquired = .false.
                 run_tag(TimeDesc)%acquired = .false.
@@ -914,58 +960,121 @@ contains
           else if (run_tag(coord)%in_tag) then
             !coord
             if (run_tag(n_index)%in_tag) then
+              call read_param(n_index, param_value, ipol)
+              ! adjust from base 0 to base 1 arrays
+              ipol = ipol + 1
+              run_tag(n_index)%acquired = .true.
             else if (run_tag(x)%in_tag) then
-              call read_param(EndTranBase, param_value, barseas(ibr)%points(ipol)%x)
+              call read_param(EndTranBase, param_value, t_point%x)
               run_tag(x)%acquired = .true.
             else if (run_tag(y)%in_tag) then
-              call read_param(EndTranBase, param_value, barseas(ibr)%points(ipol)%y)
+              call read_param(EndTranBase, param_value, t_point%y)
               run_tag(y)%acquired = .true.
             end if
-            if(     run_tag(x)%acquired &
+            if(     run_tag(n_index)%acquired &
+              .and. run_tag(x)%acquired &
               .and. run_tag(y)%acquired &
               ) then
+              run_tag(n_index)%acquired = .false.
               run_tag(x)%acquired = .false.
               run_tag(y)%acquired = .false.
-              run_tag(coord)%acquired = .true.
+              barseas(ibr)%points(ipol) = t_point
               !  also place in fixed barrier structure
               barrier(ibr)%points(ipol) = barseas(ibr)%points(ipol)
+              points_complete(ipol) = .true.
+              count_complete = 0
+              do ipol = 1, poly_np
+                if (points_complete(ipol)) then
+                  count_complete = count_complete + 1
+                end if
+              end do
+              if (count_complete .ge. poly_np) then
+                run_tag(coord)%acquired = .true.
+              end if
             end if
           else if (run_tag(pointBarCli)%in_tag) then
             ! pointBarCli
              if (run_tag(coordI)%in_tag) then
+              call read_param(coordI, param_value, ipol) 
+              ! adjust from base 0 to base 1 arrays
+              ipol = ipol + 1
+              run_tag(coordI)%acquired = .true.
             else if (run_tag(BarCliI)%in_tag) then
+              call read_param(BarCliI, param_value, iseas)
+              ! adjust from base 0 to base 1 arrays
+              iseas = iseas + 1
+              run_tag(BarCliI)%acquired = .true.
             else if (run_tag(height)%in_tag) then
-              call read_param(height, param_value, barseas(ibr)%param(ipol,iseas)%amzbr)
+              call read_param(height, param_value, t_params%amzbr)
               run_tag(height)%acquired = .true.
             else if (run_tag(width)%in_tag) then
-              call read_param(width, param_value, barseas(ibr)%param(ipol,iseas)%amxbrw)
+              call read_param(width, param_value, t_params%amxbrw)
               run_tag(width)%acquired = .true.
             else if (run_tag(porosity)%in_tag) then
-              call read_param(porosity, param_value, barseas(ibr)%param(ipol,iseas)%ampbr)
+              call read_param(porosity, param_value, t_params%ampbr)
               run_tag(porosity)%acquired = .true.
             end if
-          end if
-          if (    run_tag(coord)%acquired &
-            .and. run_tag(pointBarCli)%acquired &
-            ) then
-            run_tag(coord)%acquired = .false.
-            run_tag(pointBarCli)%acquired = .false.
-            ipol = ipol + 1
+            if (    run_tag(coordI)%acquired &
+              .and. run_tag(BarCliI)%acquired &
+              .and. run_tag(height)%acquired &
+              .and. run_tag(width)%acquired &
+              .and. run_tag(porosity)%acquired &
+              ) then
+              if( t_params%amzbr .le. 0.0 ) then
+                write(*,*) 'ERROR: Barrier height must be > 0'
+                write(*,FMT='(2(i0))') 'Barrier #: ', ibr, 'Point #: ', ipol, 'Season #: ', iseas
+                call exit(40)
+              end if
+              run_tag(coordI)%acquired = .false.
+              run_tag(BarCliI)%acquired = .false.
+              run_tag(height)%acquired = .false.
+              run_tag(width)%acquired = .false.
+              run_tag(porosity)%acquired = .false.
+              barseas(ibr)%param(ipol,iseas) = t_params
+              clipar_complete(ipol,iseas) = .true.
+              count_complete = 0
+              do ipol = 1, poly_np
+                do iseas = 1, ntm_seas
+                  if (clipar_complete(ipol,iseas)) then
+                    count_complete = count_complete + 1
+                  end if
+                end do
+              end do
+              if (count_complete .ge. poly_np*ntm_seas) then
+                run_tag(pointBarCli)%acquired = .true.
+              end if
+            end if
           end if
           if (    run_tag(BarrierSeasonFlag)%acquired &
             .and. run_tag(BarCliNo)%acquired &
             .and. run_tag(coordNo)%acquired &
             .and. run_tag(BarCli)%acquired &
-            .and. (ipol .gt. poly_np) &
+            .and. run_tag(coord)%acquired &
+            .and. run_tag(pointBarCli)%acquired &
             ) then
             run_tag(BarrierSeasonFlag)%acquired = .false.
             run_tag(BarCliNo)%acquired = .false.
             run_tag(coordNo)%acquired = .false.
             run_tag(BarCli)%acquired = .false.
+            run_tag(coord)%acquired = .false.
+            run_tag(pointBarCli)%acquired = .false.
             ibr = ibr + 1
             if (ibr .gt. nbr) then
               run_tag(Barrier_tag)%acquired = .true.
             end if
+
+            sum_stat = 0
+            deallocate(season_complete, stat=dealloc_stat)
+            sum_stat = sum_stat + dealloc_stat
+            deallocate(points_complete, stat=dealloc_stat)
+            sum_stat = sum_stat + dealloc_stat
+            deallocate(clipar_complete, stat=dealloc_stat)
+            sum_stat = sum_stat + dealloc_stat
+            if( sum_stat .gt. 0 ) then
+              ! deallocation failed
+              write(*,*) "ERROR: unable to deallocate memory for Polygon"
+            end if
+
           end if
         else
           write(*,*) 'Error: Number of barriers must be specified before reading in barrier data'
@@ -981,7 +1090,7 @@ contains
         run_tag(AccNo)%acquired = .true.
       end if
       if ( (run_tag(BarrierNo)%required .and. run_tag(Barrier_tag)%acquired) ) then
-        ! AccNo wa present and had value greater than zero and Account was acquired 
+        ! BarrierNo wa present and had value greater than zero and Barrier_tag was acquired 
         run_tag(BarrierNo)%acquired = .true.
       end if
       ! check for acquisition of all required elements
@@ -1021,7 +1130,12 @@ contains
         .and. run_tag(BarrierNo)%acquired &
         !.and. run_tag(Barrier_tag)%acquired &
         ) then
-            run_tag(runFileData)%acquired = .true.
+        run_tag(runFileData)%acquired = .true.
+        deallocate(subregion_complete, stat=dealloc_stat)
+        if( dealloc_stat .gt. 0 ) then
+          ! deallocation failed
+          write(*,*) "ERROR: unable to deallocate memory for subregion_complete"
+        end if
       end if
     end if
 
