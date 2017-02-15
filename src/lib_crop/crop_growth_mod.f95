@@ -946,8 +946,8 @@ module crop_growth_mod
           bcmrootstorez(1) = 0.0
       end if
       do i=2,bnslay
-          if( ( (bszlyd(i-1)*mmtom .lt. bczrtd)                         &
-     &        .and. (bszlyd(i)*mmtom .ge. bczrtd) ) ) then
+          if( ( (bszlyd(i-1)*mmtom .le. bczrtd)                         &
+     &        .and. (bszlyd(i)*mmtom .gt. bczrtd) ) ) then
               ! mg/plant * #/m^2 * 1kg/1.0e6mg = kg/m^2
               bcmrootstorez(i) = bc0storeinit * bcdpop * mgtokg
 !              write(*,*) "cinit: stor lay ", i, bczrtd, bcmrootstorez(i)
