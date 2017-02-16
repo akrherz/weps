@@ -1,7 +1,7 @@
-!$Author:$
-!$Date:$
-!$Revision:$
-!$HeadURL:$
+!$Author$
+!$Date$
+!$Revision$
+!$HeadURL$
 
 module weps_main_mod
 
