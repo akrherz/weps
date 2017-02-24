@@ -1,4 +1,4 @@
-      Program tstasd3
+      Program tstasd4
 
       use soil_data_struct_defs, only: soil_def, allocate_soil
 
@@ -18,7 +18,7 @@
 
       integer :: sr,l,i
       real    :: massf(msieve+1,mnsz) ! allocate space for the maximum number of sieve "cuts" (msieve+1)
-      real    :: gmd_prime, gsd_prime
+      real    :: gmd_prime, gsd_prime, gmd2_prime, gsd2_prime
 
       real    :: initgmd = 3.75 , initgsd = 39.55
       real    :: m_not = 0.005, m_inf = 1000.0
@@ -76,6 +76,8 @@
           soil(sr)%aslagx(l) = m_inf
         end do
       end do
+      soil2 = soil
+
       write(UNIT=6,FMT="(2(A), 6(A))",ADVANCE="YES") '  sr', ' lay', '     m_not', '   initgmd', '   initgsd', &
                                                                      '     m_inf', ' gmd_prime', ' gsd_prime'
       do sr=1, nsubr
@@ -98,7 +100,8 @@
       do sr=1, nsubr
         do l=1, soil(sr)%nslay
           call asd2m(soil(sr)%aslagn(l), soil(sr)%aslagx(l),                &
-     &         soil(sr)%aslagm(l), soil(sr)%as0ags(l),                      &
+     &          soil(sr)%aslagm(l), soil(sr)%as0ags(l), &
+!     &         gmd_prime, gsd_prime,                      &
      &         soil(sr)%nslay, massf)
 
           write(0,*) 'sr lay:',sr, l, 'nsieve+1', nsieve+1
@@ -117,18 +120,18 @@
 !      subroutine m2asd (mf, nlay, mnot, minf, gmd, gsd)
       do sr=1, nsubr
         do l=1, soil(sr)%nslay
-          call m2asd(massf, soil(sr)%nslay,                                 &
-     &         soil(sr)%aslagn(l), soil(sr)%aslagx(l),                      &
-     &         soil(sr)%aslagm(l), soil(sr)%as0ags(l))
+          call m2asd(massf, soil2(sr)%nslay,                                 &
+     &         soil2(sr)%aslagn(l), soil2(sr)%aslagx(l),                      &
+     &         soil2(sr)%aslagm(l), soil2(sr)%as0ags(l))
 
           write(UNIT=6,FMT="(2(i4), 4(f10.4))",ADVANCE="NO") sr, l, &
-               soil(sr)%aslagn(l), soil(sr)%aslagm(l), soil(sr)%as0ags(l), soil(sr)%aslagx(l)
+               soil2(sr)%aslagn(l), soil2(sr)%aslagm(l), soil2(sr)%as0ags(l), soil2(sr)%aslagx(l)
 
-          gmd_prime = (soil(sr)%aslagm(l)-soil(sr)%aslagn(l)) * (soil(sr)%aslagx(l)-soil(sr)%aslagn(l)) / &
-               (soil(sr)%aslagx(l)-soil(sr)%aslagm(l))
-          gsd_prime = (soil(sr)%as0ags(l)-soil(sr)%aslagn(l)) * (soil(sr)%aslagx(l)-soil(sr)%aslagn(l)) / &
-               (soil(sr)%aslagx(l)-soil(sr)%as0ags(l))
-          write(UNIT=6,FMT="(2(f10.4))",ADVANCE="YES") gmd_prime, gsd_prime
+          gmd2_prime = (soil2(sr)%aslagm(l)-soil2(sr)%aslagn(l)) * (soil2(sr)%aslagx(l)-soil2(sr)%aslagn(l)) / &
+               (soil2(sr)%aslagx(l)-soil2(sr)%aslagm(l))
+          gsd2_prime = (soil2(sr)%as0ags(l)-soil2(sr)%aslagn(l)) * (soil2(sr)%aslagx(l)-soil2(sr)%aslagn(l)) / &
+               (soil2(sr)%aslagx(l)-soil2(sr)%as0ags(l))
+          write(UNIT=6,FMT="(2(f10.4))",ADVANCE="YES") gmd2_prime, gsd2_prime
 
           write(0,*)
 
@@ -137,14 +140,14 @@
 
       do sr=1, nsubr
         do l=1, soil(sr)%nslay
-          call m2asd(massf, soil(sr)%nslay,                                 &
-     &         soil(sr)%aslagn(l), soil(sr)%aslagx(l),                      &
-     &         gmd_prime, gsd_prime)
+          call m2asd(massf, soil2(sr)%nslay,                                 &
+     &         soil2(sr)%aslagn(l), soil2(sr)%aslagx(l),                      &
+     &         soil2(sr)%aslagm(l), soil2(sr)%as0ags(l))
 
           write(UNIT=6,FMT="(2(i4), 4(f10.4))",ADVANCE="NO") sr, l, &
-               soil(sr)%aslagn(l), gmd_prime, gsd_prime, soil(sr)%aslagx(l)
+               soil2(sr)%aslagn(l), soil2(sr)%aslagm(l), soil2(sr)%as0ags(l), soil2(sr)%aslagx(l)
 
-          gmd_prime = (gsd_prime-soil(sr)%aslagn(l)) * (soil(sr)%aslagx(l)-soil(sr)%aslagn(l)) / &
+          gmd_prime = (gmd_prime-soil(sr)%aslagn(l)) * (soil(sr)%aslagx(l)-soil(sr)%aslagn(l)) / &
                (soil(sr)%aslagx(l)- gmd_prime)
           gsd_prime = (gsd_prime-soil(sr)%aslagn(l)) * (soil(sr)%aslagx(l)-soil(sr)%aslagn(l)) / &
                (soil(sr)%aslagx(l)-gsd_prime)
@@ -155,46 +158,6 @@
         end do
       end do
 
-     soil(1)%aslagm(1) = gmd_prime
-     soil(1)%as0ags(1) = gsd_prime
-     do sr=1, nsubr
-        do l=1, soil(sr)%nslay
-          call asd2m(soil(sr)%aslagn(l), soil(sr)%aslagx(l),                &
-     &         soil(sr)%aslagm(l), soil(sr)%as0ags(l),                      &
-     &         soil(sr)%nslay, massf)
-
-          write(0,*) 'sr lay:',sr, l, 'nsieve+1', nsieve+1
-          write(UNIT=0,FMT="(30(i8))",ADVANCE="YES") (i, i=1,nsieve+1)
-          write(UNIT=0,FMT="(30(f8.3))",ADVANCE="YES") (massf(i,sr), i=1, nsieve+1)
-
-          total = 0.0
-          do i=1, msieve
-             total = total + massf(i,sr)
-          end do
-          write(0,*) 'total: ', total
-          write(0,*)
-        end do
-      end do
-!      subroutine m2asd (mf, nlay, mnot, minf, gmd, gsd)
-      do sr=1, nsubr
-        do l=1, soil(sr)%nslay
-          call m2asd(massf, soil(sr)%nslay,                                 &
-     &         soil(sr)%aslagn(l), soil(sr)%aslagx(l),                      &
-     &         soil(sr)%aslagm(l), soil(sr)%as0ags(l))
-
-          write(UNIT=6,FMT="(2(i4), 4(f10.4))",ADVANCE="NO") sr, l, &
-               soil(sr)%aslagn(l), soil(sr)%aslagm(l), soil(sr)%as0ags(l), soil(sr)%aslagx(l)
-
-          gmd_prime = (soil(sr)%aslagm(l)-soil(sr)%aslagn(l)) * (soil(sr)%aslagx(l)-soil(sr)%aslagn(l)) / &
-               (soil(sr)%aslagx(l)-soil(sr)%aslagm(l))
-          gsd_prime = (soil(sr)%as0ags(l)-soil(sr)%aslagn(l)) * (soil(sr)%aslagx(l)-soil(sr)%aslagn(l)) / &
-               (soil(sr)%aslagx(l)-soil(sr)%as0ags(l))
-          write(UNIT=6,FMT="(2(f10.4))",ADVANCE="YES") gmd_prime, gsd_prime
-
-          write(0,*)
-
-        end do
-      end do
 
       stop
       end program
