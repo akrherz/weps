@@ -562,8 +562,8 @@ contains
                ! number of time marks in season
                ntm_seas = 1
                ! create storage for point and barrier data
-               barrier(ibr) = create_barrier(poly_np)
-               barseas(ibr) = create_barrier(poly_np,ntm_seas,0)
+               call create_barrier(barrier(ibr), poly_np)
+               call create_barrier(barseas(ibr), poly_np,ntm_seas,0)
                ! read first point pair
                ipol = 1
                read (line,*,err=80) barseas(ibr)%points(ipol)%x, barseas(ibr)%points(ipol)%y
@@ -1092,8 +1092,8 @@ contains
             read (line,*,err=80) poly_np
             ! create storage for point and barrier data
             ! this also sets values for barr%np and barr%ntm
-            barrier(ibr) = create_barrier(poly_np)
-            barseas(ibr) = create_barrier(poly_np,ntm_seas,seas_flg)
+            call create_barrier(barrier(ibr), poly_np)
+            call create_barrier(barseas(ibr), poly_np,ntm_seas,seas_flg)
             ! set counter for reading each point pair
             ipol = 1
             iseas = 1

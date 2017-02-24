@@ -164,8 +164,8 @@ module sweep_io_mod
         line = getline(i_unit)
         read (line,*) poly_np
         ! create storage for point and barrier data
-        barrier(ibr) = create_barrier(poly_np)
-        barseas(ibr) = create_barrier(poly_np,1,0)
+        call create_barrier(barrier(ibr), poly_np)
+        call create_barrier(barseas(ibr), poly_np,1,0)
         ! read in points and point data
         do ipol = 1, poly_np
            ! read point pair
@@ -651,7 +651,7 @@ module sweep_io_mod
         ! number of points in barrier polyline
         poly_np = 2
         ! create storage for point and barrier data
-        barrier(ibr) = create_barrier(poly_np)
+        call create_barrier(barrier(ibr), poly_np)
         ! set points
         ipol = 1
         barrier(ibr)%points(ipol)%x = pt_x1

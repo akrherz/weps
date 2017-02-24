@@ -85,9 +85,9 @@ module barriers_mod
 contains
  
   ! allocates a barrier_data structure which can contain nump points
-  function create_barrier_fixed(nump) result(barr)
+  subroutine create_barrier_fixed(barr, nump)
+    type(barrier_data), intent(inout) :: barr   ! barrier to be allocated
     integer, intent(in) :: nump  ! number of points in barrier_params and polyline created
-    type(barrier_data) :: barr
 
     ! local variable
     integer :: sum_stat
@@ -105,7 +105,7 @@ contains
     else
       barr%np = nump
     end if 
-  end function create_barrier_fixed
+  end subroutine create_barrier_fixed
  
   ! deallocates a barrier_data structure
   subroutine destroy_barrier_fixed(barr)
@@ -127,11 +127,11 @@ contains
   end subroutine destroy_barrier_fixed
 
   ! allocates a barrier_data structure which can contain nump points
-  function create_barrier_seasonal(nump,numtm,sflg) result(barr)
+  subroutine create_barrier_seasonal(barr, nump,numtm,sflg)
+    type(barrier_seasonal), intent(inout) :: barr ! barrier to be allocated
     integer, intent(in) :: nump  ! number of points in barrier_params and polyline created
     integer, intent(in) :: numtm ! number of time marks in barrier_params
     integer, intent(in) :: sflg  ! flag which selects type of internal season transition
-    type(barrier_seasonal) :: barr
 
     ! local variable
     integer :: sum_stat
@@ -163,7 +163,7 @@ contains
       barr%ntm = numtm
       barr%seas_flg = sflg
     end if 
-  end function create_barrier_seasonal
+  end subroutine create_barrier_seasonal
  
   ! deallocates a barrier_data structure
   subroutine destroy_barrier_seasonal(barr)

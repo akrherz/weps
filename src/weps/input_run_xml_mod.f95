@@ -386,7 +386,6 @@ contains
     type(barrier_day_state), save :: t_day_state
     type(barrier_params), save :: t_params
     type(barrier_climate), save :: t_climate
-    character(len=80), save :: t_amzbt
 
     param_value = trim(chunk)
 
@@ -877,9 +876,8 @@ contains
         ! read in barrier info
         if (run_tag(BarrierNo)%acquired) then
           if (run_tag(Description)%in_tag) then
-            t_amzbt = trim(param_value)
-            !  also place in fixed barrier structure
-            t_amzbt = barseas(ibr)%amzbt
+              barseas(ibr)%amzbt = trim(param_value)
+              barrier(ibr)%amzbt = barseas(ibr)%amzbt
             run_tag(Description)%acquired = .true.
           else if (run_tag(BarrierSeasonFlag)%in_tag) then
             call read_param(BarrierSeasonFlag, param_value, seas_flg)
@@ -908,13 +906,8 @@ contains
             run_tag(coordNo)%acquired = .true.
             ! create storage for point and barrier data
             ! this also sets values for barr%np and barr%ntm
-            barrier(ibr) = create_barrier(poly_np)
-            barseas(ibr) = create_barrier(poly_np,ntm_seas,seas_flg)
-            if( run_tag(Description)%acquired ) then
-              ! acquired so assign value to description
-              barseas(ibr)%amzbt = t_amzbt
-              barrier(ibr)%amzbt = t_amzbt
-            end if
+            call create_barrier(barrier(ibr), poly_np)
+            call create_barrier(barseas(ibr), poly_np,ntm_seas,seas_flg)
             ! create storage for season, points and climate parameter index tracking
             sum_stat = 0
             allocate(season_complete(ntm_seas), stat = alloc_stat)
