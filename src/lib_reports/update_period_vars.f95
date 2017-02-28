@@ -60,7 +60,7 @@ SUBROUTINE update_period_update_vars(isr, period_update, soil, restot, croptot, 
 
     include "p1werm.inc"        ! needed by other include files
 
-    include "h1balance.inc"     ! pressswc(isr)  daily surface water content in all soil layers (mm)
+    include "h1balance.inc"     ! presswc(isr)  daily water content in all soil layers (mm)
 
 !    REAL :: biodrag		! biodrag() function in util/misc/biodrag.for
 
@@ -105,9 +105,7 @@ SUBROUTINE update_period_update_vars(isr, period_update, soil, restot, croptot, 
 
     !End of period (eop) variables
 
-  if( isr .gt. 0 ) then
-
-! Roughness vars
+    ! Roughness vars
     period_update(Random_rough)%val = soil%aslrr
     period_update(Random_rough)%cnt = period_update(Random_rough)%cnt + 1
 
@@ -154,11 +152,13 @@ SUBROUTINE update_period_update_vars(isr, period_update, soil, restot, croptot, 
     period_update(Surface_Cr_CA)%val = soil%acancr  !Surface Crust Coeff. of abrasion (1/m)
     period_update(Surface_Cr_CA)%cnt = period_update(Surface_Cr_CA)%cnt + 1
 
-! Soil Water
+  if( isr .gt. 0 ) then
+    ! Soil Water
     period_update(Soil_Water)%val = presswc(isr)  !Soil Water content in full soil profile (mm)
     period_update(Soil_Water)%cnt = period_update(Soil_Water)%cnt + 1
+  end if
 
-! Crop vars
+    ! Crop vars
     period_update(Crop_canopy_cov)%val = croptot%ftcancov
     period_update(Crop_canopy_cov)%cnt = period_update(Crop_canopy_cov)%cnt + 1
 
@@ -184,8 +184,7 @@ SUBROUTINE update_period_update_vars(isr, period_update, soil, restot, croptot, 
     period_update(Crop_number_stems)%val = croptot%dstmtot
     period_update(Crop_number_stems)%cnt = period_update(Crop_number_stems)%cnt + 1
 
-  end if
-! Residue vars
+    ! Residue vars
     period_update(Res_flat_cov)%val = restot%ftcvtot
     period_update(Res_flat_cov)%cnt = period_update(Res_flat_cov)%cnt + 1
 
@@ -210,16 +209,14 @@ SUBROUTINE update_period_update_vars(isr, period_update, soil, restot, croptot, 
     period_update(Res_number_stems)%val = restot%dstmtot
     period_update(Res_number_stems)%cnt = period_update(Res_number_stems)%cnt + 1
 
-! Biomass vars
+    ! Biomass vars
     period_update(All_flat_cov)%val = biotot%ftcvtot
     period_update(All_flat_cov)%cnt = period_update(All_flat_cov)%cnt + 1
 
     period_update(All_stand_sil)%val = biotot%rcdtot
     period_update(All_stand_sil)%cnt = period_update(All_stand_sil)%cnt + 1
 
-  if( isr .gt. 0 ) then
-
-  ! Remove live flat crop reproductive mass from reported value
+    ! Remove live flat crop reproductive mass from reported value
     period_update(All_flat_mass)%val = biotot%mftot - croptot%mflatstore
     period_update(All_flat_mass)%cnt = period_update(All_flat_mass)%cnt + 1
 
@@ -230,7 +227,6 @@ SUBROUTINE update_period_update_vars(isr, period_update, soil, restot, croptot, 
     period_update(All_buried_mass)%val = croptot%mrttot + restot%mrttot + restot%mbgtot
     period_update(All_buried_mass)%cnt = period_update(All_buried_mass)%cnt + 1
 
-  end if
 ! ------------------------------------------------------------------------------------------------------------------
     ! Determine if we have any net soil loss occurring from any grid cell (erosion)
     ! We assume that we don't have any net suspension loss if we don't have any net salt/creep loss
@@ -453,7 +449,6 @@ SUBROUTINE update_period_report_vars(pd, npd, cur_yr, nrot_years, period_update,
     DO i = Min_eop_vars, Max_eop_vars
        CALL run_ave (period_report(i,pd), period_update(i)%val, 1 )
     END DO
-
 
     ! If we have saltating loss, add the area and fraction info
     DO i = Min_lave_vars, Max_lave_vars

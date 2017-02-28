@@ -47,7 +47,7 @@
       use barriers_mod, only: barrier, barseas, minht_barriers, destroy_barrier, set_barrier_season
       use file_io_mod, only: luo_egrd, luo_emit, luo_sgrd, luogui1, luomandate, makedir
       use input_soil_mod, only: input_ifc, soil_in
-      use soil_data_struct_defs, only: soil_def
+      use soil_data_struct_defs, only: soil_def, allocate_soil, deallocate_soil
       use soil_mod, only: soilinit
       use crop_mod, only: cropinit, cprevseasonrotation
       use report_harvest_mod, only: cprevrotation, cprevcalibrotation
@@ -391,6 +391,10 @@
       do  isr = 1, nsubr   
          soil(isr) = soil_in(isr)
       end do
+      ! allocate soil layer arrays for soil(0)
+      soil(0)%nslay = 1 ! only need one for report usage
+      ! allocate layer arrays
+      call allocate_soil(soil(0))
 
       do isr = 1, nsubr
           ! Likely that we will put all management data into memory
@@ -849,7 +853,7 @@
             end if
 
             ! area average values over simregion for 0 index reporting
-            call sim_area_average( subr_poly, h1et, subrsurf )
+            call sim_area_average( subr_poly, h1et, subrsurf, soil, croptot, restot, biotot )
 
             do isr = 0, nsubr   ! 0 is whole region, and then all subregion     
                ! Compute yrly values
@@ -981,6 +985,17 @@
           end do
           deallocate(barseas)
       end if
+
+      ! deallocate soil arrays
+      do isr = 1, nsubr
+        call deallocate_soil(soil_in(isr))
+        call deallocate_soil(soil(isr))
+      end do
+      call deallocate_soil(soil(0))
+      deallocate(soil_in, stat=alloc_stat)
+      sum_stat = sum_stat + alloc_stat
+      deallocate(soil, stat=alloc_stat)
+      sum_stat = sum_stat + alloc_stat
 
       ! deallocate subregion crop and residue pool arrays
       ! destroy layers
