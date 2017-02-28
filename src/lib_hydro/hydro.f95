@@ -26,11 +26,7 @@
      &                   daysim, bsfald, bsfalw, bszlyt,                &
      &                   bwudav, bhzwid, &
      &                   bhzeasurf,                                     &
-     &                   cumprecip, cumirrig, &
-     &                   cumrunoff, cumevap, &
-     &                   cumtrans, cumdrain,                            &
-     &                   presswc, pressnow, presday,                    &
-     &                   bhztranspdepth, restot, h1et, wp)
+     &                   bhztranspdepth, restot, h1et, h1bal, wp)
 
 !     + + + PURPOSE + + +
 !     This subroutine is the main (supervisory) program for the
@@ -54,6 +50,7 @@
       use Points_Mod, only: slen
       use wind_mod, only: sbzdisp, sbzo, biodrag
       use hydro_data_struct_defs, only: am0hfl, hydro_derived_et
+      use report_hydrobal_mod, only: hydro_balance
       use wepp_param_mod, only: wepp_param
       use climate_input_mod, only: cli_tyav, cli_next, cli_today, cli_prev, amalat, amalon
       use air_water_mod, only: et, rel_humid
@@ -91,13 +88,10 @@
       real bsfald, bsfalw, bszlyt(*)
       real bwudav, bhzwid
       real bhzeasurf
-      real cumprecip, cumirrig
-      real cumrunoff, cumevap
-      real cumtrans, cumdrain
-      real presswc, pressnow, presday
       real bhztranspdepth
       type(biototal), intent(in) :: restot
       type(hydro_derived_et), intent(inout) :: h1et
+      type(hydro_balance), intent(inout) :: h1bal
       type(wepp_param), intent(inout) :: wp
 
 !     + + +  ARGUMENT DEFINITIONS + + +
@@ -741,15 +735,15 @@
 
 !     update cumulative variables
       swc = dot_product(theta(1:layrsn),bszlyt(1:layrsn))
-      cumprecip = cumprecip + cli_today%zdpt
-      cumirrig = cumirrig + h1et%zirr
-      cumrunoff = cumrunoff + h1et%zrun
-      cumevap = cumevap + h1et%zea
-      cumtrans = cumtrans + h1et%zpta
-      cumdrain = cumdrain + h1et%zper
-      presswc = swc
-      pressnow = bhzsno
-      presday = daysim
+      h1bal%cumprecip = h1bal%cumprecip + cli_today%zdpt
+      h1bal%cumirrig = h1bal%cumirrig + h1et%zirr
+      h1bal%cumrunoff = h1bal%cumrunoff + h1et%zrun
+      h1bal%cumevap = h1bal%cumevap + h1et%zea
+      h1bal%cumtrans = h1bal%cumtrans + h1et%zpta
+      h1bal%cumdrain = h1bal%cumdrain + h1et%zper
+      h1bal%presswc = swc
+      h1bal%pressnow = bhzsno
+      h1bal%presday = daysim
       
 !     Added for WEPP bookeeping      
       wp%totalPrecip = wp%totalPrecip + cli_today%zdpt

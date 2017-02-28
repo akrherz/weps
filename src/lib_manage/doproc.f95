@@ -28,6 +28,7 @@
       use soil_mod, only: depthini
       use crop_mod, only: crop_endseason
       use report_harvest_mod, only: report_harvest, report_calib_harvest
+      use report_hydrobal_mod, only: report_hydrobal
 
 !     + + + PARAMETERS AND COMMON BLOCKS + + +
       include 'command.inc'

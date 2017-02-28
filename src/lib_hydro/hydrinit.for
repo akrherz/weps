@@ -3,19 +3,19 @@
 !$Revision$
 !$HeadURL$
 
-      subroutine hydrinit(isr, soil, h1et, wp)
+      subroutine hydrinit(isr, soil, h1et, h1bal, wp)
 
 ! Contains init code from main
 
       use weps_interface_defs, only: saxpar
       use soil_data_struct_defs, only: soil_def
       use hydro_data_struct_defs, only: hydro_derived_et
+      use report_hydrobal_mod, only: hydro_balance
       use wepp_param_mod, only: wepp_param
 
       include 'p1werm.inc'
       include 'h1db1.inc'
       include 'h1hydro.inc'
-      include 'h1balance.inc'
       include 'h1temp.inc'
       include 'hydro/htheta.inc'
 
@@ -27,6 +27,7 @@
       integer isr
       type(soil_def), intent(inout) :: soil  ! soil for this subregion
       type(hydro_derived_et), intent(inout) :: h1et
+      type(hydro_balance), intent(inout) :: h1bal
       type(wepp_param), intent(inout) :: wp
 
       integer idx
@@ -55,22 +56,22 @@
       ahfsnfrz(isr) = 0.0
 
       ! set hydrologic balance variables
-      initswc(isr) = dot_product(ltheta(1:soil%nslay),                  &
-     &                           soil%aszlyt(1:soil%nslay))
-      initsnow(isr) = ahzsno(isr)
-      initday(isr) = daysim
+      h1bal%initswc = dot_product(ltheta(1:soil%nslay),                 &
+     &                            soil%aszlyt(1:soil%nslay))
+      h1bal%initsnow = ahzsno(isr)
+      h1bal%initday = daysim
 
-      presswc(isr) = initswc(isr)
-      pressnow(isr) = initsnow(isr)
-      presday(isr) = initday(isr)
+      h1bal%presswc = h1bal%initswc
+      h1bal%pressnow = h1bal%initsnow
+      h1bal%presday = h1bal%initday
 
-      cumprecip(isr) = 0.0
-      cumirrig(isr) = 0.0
-      cumrunoff(isr) = 0.0
-      cumevap(isr) = 0.0
-      cumtrans(isr) = 0.0
-      cumdrain(isr) = 0.0
-      hprevrotation(isr) = 1
+      h1bal%cumprecip = 0.0
+      h1bal%cumirrig = 0.0
+      h1bal%cumrunoff = 0.0
+      h1bal%cumevap = 0.0
+      h1bal%cumtrans = 0.0
+      h1bal%cumdrain = 0.0
+      h1bal%hprevrotation = 1
 
 !     Initialize irrigation type and depth so values are set if no
 !     irrigation processes are invoked

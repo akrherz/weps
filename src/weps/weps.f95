@@ -66,6 +66,7 @@
       use stir_report_mod, only: create_stir_accumulator, destroy_stir_accumulator
       use sci_report_mod
       use hydro_data_struct_defs, only: hydro_derived_et
+      use report_hydrobal_mod, only: h1bal
       use sim_area_average_mod, only: sim_area_average
       use wepp_param_mod
       use climate_input_mod, only: cliginit, getcli, windinit, getwin
@@ -357,6 +358,8 @@
       sum_stat = sum_stat + alloc_stat
       allocate(h1et(0:nsubr), stat=alloc_stat)
       sum_stat = sum_stat + alloc_stat
+      allocate(h1bal(0:nsubr), stat=alloc_stat)
+      sum_stat = sum_stat + alloc_stat
       allocate(wp(nsubr), stat=alloc_stat)
       sum_stat = sum_stat + alloc_stat
       if( sum_stat .gt. 0 ) then
@@ -489,7 +492,7 @@
          call updres(soil(isr), residue(1:size(residue,1), isr), restot(isr))
          call sci_stir_init(isr)
          ! Initialize the water holding capacity variable
-         call hydrinit(isr, soil(isr), h1et(isr), wp(isr))
+         call hydrinit(isr, soil(isr), h1et(isr), h1bal(isr), wp(isr))
          ! initialize soil depth to bottom of layers (mm) from layer thickness (mm)
          call soilinit(soil(isr))
          ! initialize croptot variables
@@ -552,7 +555,7 @@
          do isr=1,nsubr
           ! do multiple subregion      
           call submodels(isr, soil(isr), crop(isr), cropprev(isr), residue(1:size(residue,1),isr), restot(isr), croptot(isr),  &
-     &                   biotot(isr), decompfac(isr), mandatbs(isr)%mandate, h1et(isr), wp(isr))
+     &                   biotot(isr), decompfac(isr), mandatbs(isr)%mandate, h1et(isr), h1bal(isr), wp(isr))
           ! set initialization flag to .false. after first day
           if (am0ifl) am0ifl = .false.
 
@@ -638,7 +641,7 @@
 !            isr = 1 !Note: we are no longer dealing with multiple subregions here
             do isr=1,nsubr   ! do multiple subregion     
             call submodels(isr, soil(isr), crop(isr), cropprev(isr), residue(1:size(residue,1),isr), restot(isr), croptot(isr), &
-     &                     biotot(isr), decompfac(isr), mandatbs(isr)%mandate, h1et(isr), wp(isr))
+     &                     biotot(isr), decompfac(isr), mandatbs(isr)%mandate, h1et(isr), h1bal(isr), wp(isr))
 
             call plotdata( isr, soil(isr), crop(isr), restot(isr), croptot(isr), biotot(isr), noerod(isr), cellstate )  ! print to plot data file
 
@@ -769,7 +772,7 @@
                !end if
 
                call submodels(isr, soil(isr), crop(isr), cropprev(isr), residue(1:size(residue,1),isr), restot(isr), croptot(isr), &
-                              biotot(isr), decompfac(isr), mandatbs(isr)%mandate, h1et(isr), wp(isr))
+                              biotot(isr), decompfac(isr), mandatbs(isr)%mandate, h1et(isr), h1bal(isr), wp(isr))
             end do
 
             ! set the barrier interpolation in time
@@ -853,7 +856,7 @@
             end if
 
             ! area average values over simregion for 0 index reporting
-            call sim_area_average( subr_poly, h1et, subrsurf, soil, croptot, restot, biotot )
+            call sim_area_average( subr_poly, h1et, h1bal, subrsurf, soil, croptot, restot, biotot )
 
             do isr = 0, nsubr   ! 0 is whole region, and then all subregion     
                ! Compute yrly values
@@ -884,7 +887,7 @@
 
                ! Compute period values
                call update_period_update_vars(isr, rep_update(isr)%period_update, soil(isr), &
-                    restot(isr), croptot(isr), biotot(isr), cellstate, h1et(isr))
+                    restot(isr), croptot(isr), biotot(isr), cellstate, h1et(isr), h1bal(isr))
                                              
                ! print *, pd, "  ",cy,cm,cd,"  ", rep_dates(isr)%period(pd(isr))
 
@@ -1043,6 +1046,8 @@
       sum_stat = sum_stat + alloc_stat
 
       deallocate(h1et, stat=alloc_stat)
+      sum_stat = sum_stat + alloc_stat
+      deallocate(h1bal, stat=alloc_stat)
       sum_stat = sum_stat + alloc_stat
       deallocate(wp, stat=alloc_stat)
       sum_stat = sum_stat + alloc_stat

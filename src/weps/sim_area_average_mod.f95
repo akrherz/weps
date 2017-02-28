@@ -6,6 +6,7 @@
 module sim_area_average_mod
     use Polygons_Mod, only: polygon
     use hydro_data_struct_defs, only: hydro_derived_et
+    use report_hydrobal_mod, only: hydro_balance
     use erosion_data_struct_defs, only: subregionsurfacestate
     use soil_data_struct_defs, only: soil_def
     use biomaterial, only: biototal
@@ -14,9 +15,10 @@ module sim_area_average_mod
 
   contains
 
-    subroutine sim_area_average( subr_poly, h1et, subrsurf, soil, croptot, restot, biotot )
+    subroutine sim_area_average( subr_poly, h1et, h1bal, subrsurf, soil, croptot, restot, biotot )
        type(polygon), dimension(:), intent(in) :: subr_poly
        type(hydro_derived_et), dimension(0:), intent(inout) :: h1et
+       type(hydro_balance), dimension(0:), intent(inout) :: h1bal
        type(subregionsurfacestate), dimension(0:), intent(inout) :: subrsurf  ! subregion surface conditions
        type(soil_def), dimension(0:), intent(inout) :: soil  ! contains:
                                 ! aslagm, as0ags, aslagn, aslagx (ASD parms)
@@ -77,6 +79,8 @@ module sim_area_average_mod
        h1et(0)%zirr = 0.0
        h1et(0)%zper = 0.0
        h1et(0)%zrun = 0.0
+
+       h1bal(0)%presswc = 0.0
 
        subrsurf(0)%acanag = 0.0  ! Ag Coeff. of abrasion (1/m)
        subrsurf(0)%asfcr = 0.0   ! Surface Crust fraction
@@ -153,6 +157,8 @@ module sim_area_average_mod
           h1et(0)%zirr = h1et(0)%zirr + h1et(isr)%zirr * frac_area
           h1et(0)%zper = h1et(0)%zper + h1et(isr)%zper * frac_area
           h1et(0)%zrun = h1et(0)%zrun + h1et(isr)%zrun * frac_area
+
+          h1bal(0)%presswc = h1bal(0)%presswc + h1bal(isr)%presswc * frac_area
 
           subrsurf(0)%acanag = subrsurf(0)%acanag + subrsurf(isr)%acanag * frac_area
           subrsurf(0)%asfcr = subrsurf(0)%asfcr + subrsurf(isr)%asfcr * frac_area

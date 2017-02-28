@@ -128,10 +128,11 @@
       real eratio      
       end function calctht0
 !---------------------------
-      subroutine callhydr(daysim, isr, soil, crop, restot, biotot, h1et, wp)
+      subroutine callhydr(daysim, isr, soil, crop, restot, biotot, h1et, h1bal, wp)
       use soil_data_struct_defs, only: soil_def
       use biomaterial, only: biototal, biomatter
       use hydro_data_struct_defs, only: am0hdb, hydro_derived_et
+      use report_hydrobal_mod, only: hydro_balance
       use wepp_param_mod, only: wepp_param
       integer daysim
       integer isr                   
@@ -140,6 +141,7 @@
       type(biototal), intent(in) :: restot
       type(biototal), intent(in) :: biotot
       type(hydro_derived_et), intent(inout) :: h1et
+      type(hydro_balance), intent(inout) :: h1bal
       type(wepp_param), intent(inout) :: wp
       end subroutine callhydr
 !---------------------------
@@ -273,13 +275,15 @@
       real bszlyd(*), bszlyt(*), vaptrans, evaplimit 
       end subroutine hinit
 !------------------------
-      subroutine hydrinit(isr, soil, h1et, wp)
+      subroutine hydrinit(isr, soil, h1et, h1bal, wp)
       use soil_data_struct_defs, only: soil_def
       use hydro_data_struct_defs, only: hydro_derived_et
+      use report_hydrobal_mod, only: hydro_balance
       use wepp_param_mod, only: wepp_param
       integer isr
       type(soil_def), intent(in) :: soil
       type(hydro_derived_et), intent(inout) :: h1et
+      type(hydro_balance), intent(inout) :: h1bal
       type(wepp_param), intent(inout) :: wp
       end subroutine hydrinit
 !-------------------------
@@ -306,13 +310,10 @@
      &                   daysim, bsfald, bsfalw, bszlyt,                &
      &                   bwudav, bhzwid, &
      &                   bhzeasurf,                                     &
-     &                   cumprecip, cumirrig,                           &
-     &                   cumrunoff, cumevap,                            &
-     &                   cumtrans, cumdrain,                            &
-     &                   presswc, pressnow, presday,                    &
-     &                   bhztranspdepth, restot, h1et, wp)
+     &                   bhztranspdepth, restot, h1et, h1bal, wp)
       use biomaterial, only: biototal
       use hydro_data_struct_defs, only: am0hfl, hydro_derived_et
+      use report_hydrobal_mod, only: hydro_balance
       use wepp_param_mod, only: wepp_param
       integer, intent(in) :: isr   ! subregion number
       integer layrsn
@@ -346,13 +347,10 @@
       real bsfald, bsfalw, bszlyt(*)
       real bwudav, bhzwid
       real bhzeasurf
-      real cumprecip, cumirrig
-      real cumrunoff, cumevap
-      real cumtrans, cumdrain
-      real presswc, pressnow, presday
       real bhztranspdepth
       type(biototal), intent(in) :: restot
       type(hydro_derived_et), intent(inout) :: h1et
+      type(hydro_balance), intent(inout) :: h1bal
       type(wepp_param), intent(inout) :: wp
       end subroutine hydro
 !-----------------------
@@ -491,11 +489,6 @@
 
       real bhzirr, bhratirr, bhdurirr              
       end subroutine ratedura
-!----------------------------------
-      subroutine report_hydrobal( isr, bmrotation, bmperod )
-
-      integer isr, bmrotation, bmperod
-      end subroutine report_hydrobal
 !----------------------------------
       real function resevapredu(                                           &
      &           prev_redu_ratio, biomass, coeff_a, coeff_b)
@@ -694,11 +687,12 @@
       end subroutine sort
 !--------------------------------
       subroutine submodels (isr, soil, crop, cropprev, residue, restot, croptot, &
-     &                      biotot, decompfac, mandate, h1et, wp)
+     &                      biotot, decompfac, mandate, h1et, h1bal, wp)
       use soil_data_struct_defs, only: soil_def
       use biomaterial, only: biomatter, biototal, decomp_factors, bio_prevday
       use mandate_mod, only: opercrop_date
       use hydro_data_struct_defs, only: hydro_derived_et
+      use report_hydrobal_mod, only: hydro_balance
       use wepp_param_mod, only: wepp_param
       integer isr
       type(soil_def), intent(inout) :: soil     ! soil for this subregion
@@ -709,6 +703,7 @@
       type(decomp_factors), intent(inout) :: decompfac
       type(opercrop_date), dimension(:), intent(inout) :: mandate
       type(hydro_derived_et), intent(inout) :: h1et
+      type(hydro_balance), intent(inout) :: h1bal
       type(wepp_param), intent(inout) :: wp
       end subroutine submodels
 !-------------------------------
@@ -1534,13 +1529,14 @@ SUBROUTINE update_monthly_report_vars(cur_month, cur_year, nrot_years, monthly_u
     TYPE (pd_dates_type), DIMENSION(:,:), intent(inout) :: monthly_dates
     end SUBROUTINE update_monthly_report_vars
 !------------------------
-SUBROUTINE update_period_update_vars(sbr, period_update, soil, restot, croptot, biotot, cellstate, h1et)
+SUBROUTINE update_period_update_vars(sbr, period_update, soil, restot, croptot, biotot, cellstate, h1et, h1bal)
     USE pd_var_tables
     USE pd_var_type_def
     use soil_data_struct_defs, only: soil_def
     use biomaterial, only: biototal
     use erosion_data_struct_defs, only: cellsurfacestate
     use hydro_data_struct_defs, only: hydro_derived_et
+    use report_hydrobal_mod, only: hydro_balance
     INTEGER :: sbr              ! current subregion
     TYPE (pd_var_type), DIMENSION(Min_period_vars:), intent(inout) :: period_update
     type(soil_def), intent(in) :: soil  ! soil for this subregion
@@ -1549,6 +1545,7 @@ SUBROUTINE update_period_update_vars(sbr, period_update, soil, restot, croptot, 
     type(biototal), intent(in) :: biotot  ! contains:
     type(cellsurfacestate), dimension(0:,0:), intent(in) :: cellstate  ! egt, egtcs, egtss, egt10
     type(hydro_derived_et), intent(in) :: h1et
+    type(hydro_balance), intent(in) :: h1bal
     end subroutine  update_period_update_vars
 !-------------------------
 SUBROUTINE update_period_report_vars(pd, npd, cur_yr, nrot_years, period_update, period_report, period_dates)

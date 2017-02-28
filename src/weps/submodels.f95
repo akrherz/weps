@@ -4,7 +4,7 @@
 !$HeadURL$
 
       subroutine submodels (isr, soil, crop, cropprev, residue, restot, croptot, &
-     &                      biotot, decompfac, mandate, h1et, wp)
+     &                      biotot, decompfac, mandate, h1et, h1bal, wp)
 
       use weps_interface_defs, ignore_me=>submodels
       use soil_data_struct_defs, only: soil_def
@@ -12,6 +12,7 @@
       use input_run_mod, only: iy
       use mandate_mod, only: opercrop_date
       use hydro_data_struct_defs, only: hydro_derived_et
+      use report_hydrobal_mod, only: hydro_balance
       use wepp_param_mod, only: wepp_param
       use soil_mod, only: callsoil
       use crop_mod, only: callcrop
@@ -31,6 +32,7 @@
       type(decomp_factors), intent(inout) :: decompfac
       type(opercrop_date), dimension(:), intent(inout) :: mandate
       type(hydro_derived_et), intent(inout) :: h1et
+      type(hydro_balance), intent(inout) :: h1bal
       type(wepp_param), intent(inout) :: wp
 
 !     + + + ARGUMENT DEFINITIONS + + +
@@ -57,7 +59,7 @@
         call updres(soil, residue, restot)                 !update decomp residue pools
 
 !        write(*,*) "Start callhydr"
-        call callhydr(daysim, isr, soil, crop, restot, biotot, h1et, wp)      !call HYDROLOGY submodel
+        call callhydr(daysim, isr, soil, crop, restot, biotot, h1et, h1bal, wp)      !call HYDROLOGY submodel
         ! do not change order. Hydro may set irrigation amounts that
         ! will affect soil.
 

@@ -3,7 +3,7 @@
 !$Revision$
 !$HeadURL$
 
-SUBROUTINE update_period_update_vars(isr, period_update, soil, restot, croptot, biotot, cellstate, h1et)
+SUBROUTINE update_period_update_vars(isr, period_update, soil, restot, croptot, biotot, cellstate, h1et, h1bal)
 
     use weps_interface_defs, ignore_me=>update_period_update_vars
     USE pd_var_tables
@@ -12,6 +12,7 @@ SUBROUTINE update_period_update_vars(isr, period_update, soil, restot, croptot, 
     use biomaterial, only: biototal
     use erosion_data_struct_defs, only: cellsurfacestate
     use hydro_data_struct_defs, only: hydro_derived_et
+    use report_hydrobal_mod, only: hydro_balance
     use grid_mod, only: imax, jmax, sim_area
     use process_mod, only: sbsfdi
 
@@ -57,10 +58,10 @@ SUBROUTINE update_period_update_vars(isr, period_update, soil, restot, croptot, 
     type(hydro_derived_et), intent(in) :: h1et  ! contains:
                                 ! ahzpta(isr)     daily transpiration (mm)
                                 ! ahzpta(isr)     daily evaporation (mm)
+    type(hydro_balance), intent(in) :: h1bal  ! contains:
+                                ! presswc(isr)  daily water content in all soil layers (mm)
 
     include "p1werm.inc"        ! needed by other include files
-
-    include "h1balance.inc"     ! presswc(isr)  daily water content in all soil layers (mm)
 
 !    REAL :: biodrag		! biodrag() function in util/misc/biodrag.for
 
@@ -152,11 +153,9 @@ SUBROUTINE update_period_update_vars(isr, period_update, soil, restot, croptot, 
     period_update(Surface_Cr_CA)%val = soil%acancr  !Surface Crust Coeff. of abrasion (1/m)
     period_update(Surface_Cr_CA)%cnt = period_update(Surface_Cr_CA)%cnt + 1
 
-  if( isr .gt. 0 ) then
     ! Soil Water
-    period_update(Soil_Water)%val = presswc(isr)  !Soil Water content in full soil profile (mm)
+    period_update(Soil_Water)%val = h1bal%presswc  !Soil Water content in full soil profile (mm)
     period_update(Soil_Water)%cnt = period_update(Soil_Water)%cnt + 1
-  end if
 
     ! Crop vars
     period_update(Crop_canopy_cov)%val = croptot%ftcancov

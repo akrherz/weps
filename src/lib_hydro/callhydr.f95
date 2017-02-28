@@ -3,7 +3,7 @@
 !$Revision$
 !$HeadURL$
 
-      subroutine callhydr(daysim, isr, soil, crop, restot, biotot, h1et, wp)
+      subroutine callhydr(daysim, isr, soil, crop, restot, biotot, h1et, h1bal, wp)
 
 ! ***************************************************************** wjr
 ! Wrapper to call hydro
@@ -14,6 +14,7 @@
       use timer_mod, only: timer, TIMHYDR, TIMSTART, TIMSTOP
       use erosion_data_struct_defs, only: awudav
       use hydro_data_struct_defs, only: am0hdb, hydro_derived_et
+      use report_hydrobal_mod, only: hydro_balance
       use wepp_param_mod, only: wepp_param
       use climate_input_mod, only: amzele
 
@@ -25,6 +26,7 @@
       type(biototal), intent(in) :: restot
       type(biototal), intent(in) :: biotot
       type(hydro_derived_et), intent(inout) :: h1et
+      type(hydro_balance), intent(inout) :: h1bal
       type(wepp_param), intent(inout) :: wp
 
 !     + + + ARGUMENT DEFINITIONS + + +
@@ -36,7 +38,6 @@
       include 'h1hydro.inc'
       include 'h1temp.inc'
       include 'h1db1.inc'
-      include 'h1balance.inc'
 
       call timer(TIMHYDR,TIMSTART)      
 
@@ -69,11 +70,7 @@
      &            soil%asfald, soil%asfalw, soil%aszlyt, &
      &            awudav, ahzwid(isr),                  &
      &            ahzeasurf(isr),                                       &
-     &            cumprecip(isr), cumirrig(isr), &
-     &            cumrunoff(isr), cumevap(isr),         &
-     &            cumtrans(isr), cumdrain(isr),                         &
-     &            presswc(isr), pressnow(isr), presday(isr),            &
-     &            ahztranspdepth(isr), restot, h1et, wp )
+     &            ahztranspdepth(isr), restot, h1et, h1bal, wp )
 
 ! removed from call: ah0cng(isr), ah0cnp(isr), 
 !                 initswc(isr), initsnow(isr), initday(isr)
