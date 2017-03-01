@@ -37,11 +37,7 @@
       integer isr, slay
       type(biomatter), dimension(:), intent(in) :: residue
 
-!     + + + LOCAL COMMON BLOCKS + + +
-      include 'main/main.inc'
-
 !     + + + LOCAL VARIABLES + + +
-
       integer cd, cm, cy, l
 
 !     + + + LOCAL DEFINITIONS + + +

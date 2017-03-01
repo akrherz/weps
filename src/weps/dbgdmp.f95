@@ -37,7 +37,6 @@
       include 'h1temp.inc'
 
 !     + + + LOCAL COMMON BLOCKS + + +
-      include 'main/main.inc'
       include 'manage/man.inc'
 
       integer  idx,jdx

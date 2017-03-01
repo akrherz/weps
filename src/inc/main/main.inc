@@ -25,40 +25,40 @@
 !      character        series(mnsub)*80
 !      character        wsum*80
 
-      integer          daysim
+!      integer          daysim
 !      integer          id
 !      integer          im
 !      integer          iy
-      integer          ijday
+!      integer          ijday
 !      integer          ld
 !      integer          lm
 !      integer          ly
 !      integer          lopday
 !      integer          lopmon
 !      integer          lopyr
-      integer          ljday
-      integer          maxper
-      integer          ncycles
-      integer          outcnt
-      integer          tyears
+!      integer          ljday
+!      integer          maxper
+!      integer          ncycles
+!      integer          outcnt
+!      integer          tyears
 
-      logical          subflg
+!      logical          subflg
 
-      common / simday /                                                 &
+!      common / simday /                                                 &
 !     &                  tinfil,                                         &
 ! usrid, usrloc, usrnam,                  &
 !     &                  series,                                         &
 
-     &                  daysim, ijday, ljday,                           &
+!     &                  daysim, ijday, ljday,                           &
 !     &                  id, im, iy, ijday,                              &
 !     &                  ld, lm, ly, ljday,                              &
 !     &                  lopday, lopmon, lopyr,                          &
-     &                  maxper, ncycles,                                &
-     &                  outcnt, tyears,                                 &
+!     &                  maxper, ncycles,                                &
+!     &                  outcnt, tyears,                                 &
 
-     &                  subflg
+!     &                  subflg
 
-      save :: /simday/
+!      save :: /simday/
 
 !     + + + VARIABLE DEFINITIONS + + +
 

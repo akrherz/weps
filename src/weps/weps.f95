@@ -33,6 +33,7 @@
 !     external common_handler
 !     + + + GLOBAL COMMON BLOCKS + + +
 
+      use weps_main_mod, only: daysim, ijday, ljday, maxper, ncycles, wepsinit
       use weps_interface_defs
       use wepp_interface_defs
       use timer_mod, only: timer, TIMWEPS, TIMSTART, TIMSTOP, TIMPRINT
@@ -82,7 +83,6 @@
       include 'precision.inc' !declaration for portable math range checking
 
 !     + + + LOCAL COMMON BLOCKS + + +
-      include 'main/main.inc'
       include 'manage/man.inc'
     
 !     + + + LOCAL VARIABLES + + +
@@ -155,8 +155,6 @@
 !               variable is defined in (/inc/manage/man.inc)
 !   simyrs    - The number of years in a simulation run excluding the
 !               years for surface initialization.
-!   subflg    - This logical variable is used to read header information
-!               in the subdaily wind file (if .true., read header).
 !   usrid     - This character variable is an identification string
 !               to aid the user in identifying the simulation run.
 !   usrloc    - This character variable holds a location
@@ -682,7 +680,6 @@
 !        end if
 ! Go back to "initialization" and restart after resetting the appropriate variables here
          daysim = 0
-         outcnt = 0
          amnryr = 1
          !mnsize = 0.09
          !mxsize = 601.2

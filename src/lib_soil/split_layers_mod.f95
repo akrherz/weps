@@ -302,9 +302,6 @@ module split_layers_mod
       include 'h1db1.inc'
       include 'command.inc'          !declarations for commandline args
 
-!     + + + LOCAL COMMON BLOCKS + + +
-      include 'main/main.inc'
-
 !     + + + LOCAL VARIABLES + + +
       type(soil_def) :: soil_split
 
@@ -404,9 +401,6 @@ module split_layers_mod
       include 'h1hydro.inc'
       include 'h1db1.inc'
       include 'command.inc'          !declarations for commandline args
-
-!     + + + LOCAL COMMON BLOCKS + + +
-      include 'main/main.inc'
 
 !     + + + LOCAL VARIABLES + + +
       type(soil_def) :: soil_split

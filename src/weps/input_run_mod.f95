@@ -26,9 +26,6 @@ contains
       include 'p1werm.inc'
       include 'command.inc'
 
-!     + + + LOCAL COMMON BLOCKS + + +
-      include 'main/main.inc'
-
 !     + + + LOCAL VARIABLES + + +
       logical :: fexist
       type(xml_t) :: fxml
@@ -106,9 +103,6 @@ contains
       include 'm1flag.inc'
       include 'h1hydro.inc'
       include 'h1db1.inc'
-
-!     + + + LOCAL COMMON BLOCKS + + +
-      include 'main/main.inc'
 
 !     + + + LOCAL VARIABLES + + +
       integer :: nacctr   ! Number of accounting regions

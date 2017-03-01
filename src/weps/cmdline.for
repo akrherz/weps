@@ -27,9 +27,6 @@
       include 'm1flag.inc'
       include 'command.inc'          !declarations for commandline args
 
-!     + + + LOCAL COMMON BLOCKS + + +
-      include 'main/main.inc'
-
 !     + + + LOCAL VARIABLES + + +
       integer       ln
 

@@ -34,7 +34,6 @@
       include 'h1db1.inc'
 
 !     + + + LOCAL COMMON BLOCKS + + +
-      include 'main/main.inc'
       include 'manage/tcrop.inc'
 
 !     + + + LOCAL VARIABLES + + +

@@ -7,6 +7,7 @@
 
 ! Contains init code from main
 
+      use weps_main_mod, only: daysim
       use weps_interface_defs, only: saxpar
       use soil_data_struct_defs, only: soil_def
       use hydro_data_struct_defs, only: hydro_derived_et
@@ -19,8 +20,6 @@
       include 'h1temp.inc'
       include 'hydro/htheta.inc'
 
-      include 'main/main.inc'
-      
       include 'wepp_erosion.inc'
 
 !     + + + ARGUMENT DECLARATIONS + + +

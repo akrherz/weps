@@ -619,6 +619,7 @@ module soil_mod
 !     + + + KEY WORDS + + +
 !     wind, erosion, hydrology, tillage, soil, crop, decomposition
 
+      use weps_main_mod, only: daysim
       use datetime_mod, only: get_simdate
       use file_io_mod, only: luosdb
       use soil_data_struct_defs, only: soil_def
@@ -635,7 +636,6 @@ module soil_mod
       include 'h1temp.inc'
 
 !     + + + LOCAL COMMON BLOCKS + + +
-      include 'main/main.inc'
       include 'soil/tsdbug.inc'
 
 !     + + + ARGUMENT DECLARATIONS + + +

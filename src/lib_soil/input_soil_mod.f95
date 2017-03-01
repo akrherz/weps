@@ -34,9 +34,6 @@ module input_soil_mod
       include 'm1flag.inc'
       include 'command.inc'          !declarations for commandline args
 
-!     + + + LOCAL COMMON BLOCKS + + +
-      include 'main/main.inc'
-
 !     + + + LOCAL VARIABLES + + +
       integer       lay
       character     line*512
@@ -200,9 +197,6 @@ module input_soil_mod
       integer isr
       integer lui1
       type(soil_def), intent(inout) :: soil  ! soil structure
-
-!     + + + LOCAL COMMON BLOCKS + + +
-      include 'main/main.inc'
 
 !     + + + LOCAL VARIABLES + + +
       integer       lay
@@ -434,9 +428,6 @@ module input_soil_mod
       include 'p1werm.inc'
       include 'h1hydro.inc'
       include 'h1db1.inc'
-
-!     + + + LOCAL COMMON BLOCKS + + +
-      include 'main/main.inc'
 
 !     + + + Arguments + + +
       integer isr
@@ -690,8 +681,6 @@ module input_soil_mod
       integer, intent(in) :: isr
       type(soil_def), intent(inout) :: soil  ! subregion surface conditions
 
-!     + + + LOCAL COMMON BLOCKS + + +
-      include 'main/main.inc'
 !     + + + LOCAL VARIABLES + + +
       integer       lay
       character     line*256

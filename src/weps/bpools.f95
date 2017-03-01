@@ -12,6 +12,7 @@
 
       subroutine bpools( isr, residue, restot, biotot, decompfac )
 
+      use weps_main_mod, only: daysim
       use datetime_mod, only: get_simdate_doy, get_simdate_year
       use biomaterial, only: biomatter, biototal, decomp_factors
       use file_io_mod, only: luocrp1, luobio1
@@ -27,7 +28,6 @@
 
       include 'p1werm.inc'
       include 'm1flag.inc'
-      include 'main/main.inc'   ! daysim
 
 ! statements below added by Simon
 

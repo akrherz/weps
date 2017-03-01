@@ -613,9 +613,6 @@ module crop_mod
       include 'h1db1.inc'
       include 'h1temp.inc'
 
-!     + + + LOCAL COMMON BLOCKS + + +
-      include 'main/main.inc'
-
 !     + + + LOCAL VARIABLES + + +
 
       integer cd, cm, cy

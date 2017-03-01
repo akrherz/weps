@@ -6,6 +6,7 @@
       subroutine submodels (isr, soil, crop, cropprev, residue, restot, croptot, &
      &                      biotot, decompfac, mandate, h1et, h1bal, wp)
 
+      use weps_main_mod, only: daysim
       use weps_interface_defs, ignore_me=>submodels
       use soil_data_struct_defs, only: soil_def
       use biomaterial, only: biomatter, biototal, decomp_factors, bio_prevday
@@ -19,7 +20,6 @@
 
       include 'p1werm.inc'
       include 'm1flag.inc'      !am0cropupfl
-      include 'main/main.inc'   !daysim, iy
       include 'h1hydro.inc'     !ahztranspdepth, ahzfurcut, ahztransprtmin, ahztransprtmax
 
 !     + + + ARGUMENT DECLARATIONS + + +

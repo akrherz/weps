@@ -44,7 +44,6 @@
       include 'h1temp.inc'
 
 !     + + + LOCAL COMMON BLOCKS + + +
-      include 'main/main.inc'
       include 'hydro/thdbug.inc'
 
 !     + + + LOCAL VARIABLES + + +
