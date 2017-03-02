@@ -10,8 +10,9 @@ MODULE asd_vars
   INTEGER :: nsieves                   ! Number of sieves actually used
 
   REAL, DIMENSION(:), ALLOCATABLE :: sdia    ! Array holding the sieve size diameters used to compute the sieve cuts (mm)
-  REAL, DIMENSION(:), ALLOCATABLE :: trdia   ! Array holding the transformed sieve size diameters used to compute the sieve cuts (mm)
+  REAL, DIMENSION(:), ALLOCATABLE :: trsdia  ! Array holding the transformed sieve size diameters used to compute the sieve cuts (mm)
   REAL, DIMENSION(:), ALLOCATABLE :: gmdia   ! Array holding the geometric mean diameters of the sieve cuts (mm)
+  REAL, DIMENSION(:), ALLOCATABLE :: trgmdia ! Array holding the transformed geometric mean diameters of the sieve cuts (mm)
   REAL, DIMENSION(:), ALLOCATABLE :: mf      ! Array holding the actual number of sieve "cuts" (nsieve+1)
   REAL :: mnsize = 0.005                     ! Minimum aggregate size to use for computing the lower sieve cut geometric mean diameter (mm)
   REAL :: mxsize = 1000.0                    ! Maximum aggregate size to use for computing the upper sieve cut geometric mean diameter (mm)
@@ -59,10 +60,10 @@ contains
       END IF
     END IF
 
-    IF (ALLOCATED (trdia) .neqv. .TRUE.) THEN
-      ALLOCATE (trdia(nsieves), STAT = alloc_status)
+    IF (ALLOCATED (trsdia) .neqv. .TRUE.) THEN
+      ALLOCATE (trsdia(nsieves), STAT = alloc_status)
       IF (alloc_status /= 0) THEN
-        write(0,*) "Error allocating trdia(nsieves) - alloc_status: ", alloc_status
+        write(0,*) "Error allocating trsdia(nsieves) - alloc_status: ", alloc_status
         ret_status = ret_status + alloc_status
         call EXIT (ret_status)
       END IF
@@ -72,6 +73,15 @@ contains
       ALLOCATE (gmdia(nsieves+1), STAT = alloc_status)
       IF (alloc_status /= 0) THEN
         write(0,*) "Error allocating gmdia(nsieves+1) - alloc_status: ", alloc_status
+        ret_status = ret_status + alloc_status
+        call EXIT (ret_status)
+      END IF
+    END IF
+
+    IF (ALLOCATED (trgmdia) .neqv. .TRUE.) THEN
+      ALLOCATE (trgmdia(nsieves+1), STAT = alloc_status)
+      IF (alloc_status /= 0) THEN
+        write(0,*) "Error allocating trgmdia(nsieves+1) - alloc_status: ", alloc_status
         ret_status = ret_status + alloc_status
         call EXIT (ret_status)
       END IF
@@ -150,7 +160,7 @@ contains
     ! Compute transformed sieve dia. sizes
     DO i = 1, nsieves
       IF (sdia(i) .lt. minf) THEN
-        trdia(i) = (sdia(i)-mnot) * (minf-mnot) / (minf-sdia(i))
+        trsdia(i) = (sdia(i)-mnot) * (minf-mnot) / (minf-sdia(i))
       END IF
     END DO
 
@@ -163,7 +173,7 @@ contains
       IF (sdia(i) .le. mnot) THEN
         this = 1.0
       ELSE IF (sdia(i) .lt. minf) THEN
-        this = 0.5 -0.5*erf((alog(trdia(i)) - lngmdx) / lngsdx)
+        this = 0.5 -0.5*erf((alog(trsdia(i)) - lngmdx) / lngsdx)
       ELSE
         this = 0.0
       END IF
@@ -220,15 +230,16 @@ contains
     istop = nsieves + 1
 
     ! do transformations for "modified" log-normal cases
-    DO i= istart, istop
-       trdia(i) = (gmdia(i)-mnot)*(minf-mnot)/(minf-gmdia(i))
+!    DO i= istart, istop
+     DO i = 1, nsieves+1
+       trgmdia(i) = (gmdia(i)-mnot)*(minf-mnot)/(minf-gmdia(i))
 
        ! now compute the log of the gmd dia
-       trdia(i) = log(trdia(i))
+       trgmdia(i) = log(trgmdia(i))
 
        ! sum diameters  & their squares, over all aggregate sizes
-       alpha = alpha + (mfr(i)*trdia(i))
-       beta = beta + (mfr(i)*trdia(i)*trdia(i))
+       alpha = alpha + (mfr(i)*trgmdia(i))
+       beta = beta + (mfr(i)*trgmdia(i)*trgmdia(i))
      END DO
 
      ! compute geometric mean and standard deviation
