@@ -6,7 +6,7 @@ USE asd_vars
 REAL :: initgmd = 3.75, initgsd = 39.55
 REAL :: initmnot = 0.005, initminf = 1000.0
 REAL :: gmdp, gsdp
-INTEGER :: result
+INTEGER :: result, n
 
 !    mnsize = 0.005
 !    mxsize = 1000.0
@@ -25,12 +25,19 @@ INTEGER :: result
     END IF
 
 !    write(0,*) "Calling asd2mf"
-    call asd2mf(initgmd, initgsd, initmnot, initminf, mf)
+    call asd2mf(initgmd, initgsd, initmnot, initminf, mf, mf_cum)
 !    write(0,*) "Called asd2mf"
 
     call mf2asd (gmdp, gsdp, initmnot, initminf, mf)
 
 !    write(0,*) 'gmdp gsdp', gmdp, gsdp
+
+!   DO n = 1, 5
+!     write (0,*) "Calling asd2mf: ", n
+!     call asd2mf(gmdp, gsdp, initmnot, initminf, mf, mf_cum)
+!     write (0,*) "Calling mf2asd: ", n
+!     call mf2asd (gmdp, gsdp, initmnot, initminf, mf)
+!   END DO
 
 STOP
 END PROGRAM tstasd7
