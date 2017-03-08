@@ -150,7 +150,10 @@
       real    manure_buried_fraction, manure_total_mass
       real :: compact_load  ! 
       real, dimension(:), allocatable :: procbdadj
-      real :: gmd, gsd  ! geometric mean dia. (mm) and geometric std. deviation (mm/mm)
+      real :: gmdx, gsdx  ! transformed geometric mean dia. (mm) and geometric std. deviation (mm/mm)
+      real :: mnot, minf  ! max and min aggregate size values of aggregate size distribution (mm)
+      real :: asddepth    ! Depth of soil to apply "set_asd" parameters
+      integer :: asdlayer ! Number of soil layers to apply "set_asd" parameters
       integer :: i,j
 
 !     + + + LOCAL VARIABLE DEFINITIONS + + +
@@ -2428,82 +2431,98 @@
       case (91)
 !-----START initialize soil layer asd (process code 91)
 !     pre-process stuff
-        if (am0tdb(sr) .eq. 1) then
-          write (luotdb(sr),*)
-          write (luotdb(sr),*) '//Before initialize soil layer asd conditions//'
-          call tdbug(sr, prcode, soil, crop, residue)
-        end if
-
-        write (UNIT=0,FMT="(A)",ADVANCE="NO") '//Before set_asd process// '
-        write(0,*) 'no. of soil layers to modify/total are: ', tlayer, soil%nslay
-        write(UNIT=0,FMT="(A3,4(A10))") 'lay', 'GMDx', 'GSDx', 'm_not', 'm_inf'
-        do i=1, tlayer
-          write (UNIT=0,FMT="(i3,4(f10.4))",ADVANCE="YES")                                        &
-      &       i, soil%aszlyt(i), soil%aslagm(i), soil%as0ags(i), soil%aslagn(i), soil%aslagx(i)
-        end do
-        write(0,*) ""
-        do i=tlayer+1, soil%nslay
-          write (UNIT=0,FMT="(i3,5(f10.4))",ADVANCE="YES")                                        &
-      &       i, soil%aszlyt(i), soil%aslagm(i), soil%as0ags(i), soil%aslagn(i), soil%aslagx(i)
-        end do
-
-!       Convert ASD from modified log-normal to sieve classes
-        call asd2m(soil%aslagn, soil%aslagx, soil%aslagm, soil%as0ags, soil%nslay, massf)
-
-        write(0,*) 'msieve: ', msieve, 'nsieve: ', nsieve
-
-        do i=1, tlayer
-          write(UNIT=0, FMT="('massf(',A,',',i2,')')",ADVANCE="NO") 'x', i
-          do j=1, msieve+1
-           if (j < msieve+1) then
-             write(UNIT=0,FMT="(f9.4)",ADVANCE="NO") massf(j,i)
-           else
-             write(UNIT=0,FMT="(A)",ADVANCE="YES") ""
-           endif
-         end do
-       end do
-
-
+       if (am0tdb(sr) .eq. 1) then
+         write (luotdb(sr),*)
+         write (luotdb(sr),*) '//Before initialize soil layer asd conditions//'
+         call tdbug(sr, prcode, soil, crop, residue)
+       end if
 
  !     read in asd variables here
        mcur(sr) = mcur(sr) + 1
         line = mtbl(mcur(sr))
-        read(line(2:len_trim(line)),* , err=901) gmd, gsd
+        read(line(2:len_trim(line)),* , err=901) asddepth, gmdx, gsdx, mnot, minf
+       !New parameters for set_asd initialization process
+       write(UNIT=0,FMT="(5(f10.4))") asddepth, gmdx, gsdx, mnot, minf
+       write(0,*)
 
-!       check for valid asd parameters
-        if (gmd .gt. soil%aslagx(1)) then
-           write(0,*) 'Process 91:ASD:gmd=',gmd,                         &
-     &                'must be less than gmd_max=',soil%aslagx(1)
- !!!          call exit (-1)
-        endif
-        if (gmd .lt. soil%aslagn(1)) then
-           write(0,*) 'Process 91:ASD:gmd=',gmd,                         &
-     &                'must be greater than gmd_min=',soil%aslagn(1)
-           call exit (-1)
-        endif
+       asdlayer = tillay(asddepth, soil%aszlyt, soil%nslay)
 
+       write (UNIT=0,FMT="(A)",ADVANCE="NO") '//Before set_asd process// '
+       write(0,*) 'no. of soil layers to modify/total and depth are: ', asdlayer, soil%nslay, asddepth
+       write(UNIT=0,FMT="(A3,5(A10))") 'lay', 'depth', 'GMDx', 'GSDx', 'm_not', 'm_inf'
+       do i=1, asdlayer
+         write (UNIT=0,FMT="(i3,5(f10.4))",ADVANCE="YES")                                        &
+      &      i, soil%aszlyt(i), soil%aslagm(i), soil%as0ags(i), soil%aslagn(i), soil%aslagx(i)
+       end do
+       write(0,*) "layers below asdlayer"
+       do i=asdlayer+1, soil%nslay
+         write (UNIT=0,FMT="(i3,5(f10.4))",ADVANCE="YES")                                        &
+      &      i, soil%aszlyt(i), soil%aslagm(i), soil%as0ags(i), soil%aslagn(i), soil%aslagx(i)
+       end do
 
+!      Convert ASD from modified log-normal to sieve classes
+       call asd2m(soil%aslagn, soil%aslagx, soil%aslagm, soil%as0ags, soil%nslay, massf)
 
-!     do process
-        call set_asd(gmd, gsd, tlayer, soil)
+       write(0,*) 'msieve: ', msieve, 'nsieve: ', nsieve
 
-!     post-process stuff
-        if (am0tdb(sr) .eq. 1) then
-          write (luotdb(sr),*) '//After initialize soil layer asd conditions//'
-          call tdbug(sr, prcode, soil, crop, residue)
-        end if
-
-        write (UNIT=0,FMT="(A)",ADVANCE="NO") '//After set_asd process// '
-        write(0,*) 'no. of modified soil layers/total are: ', tlayer, soil%nslay
-        do i=1, tlayer
-          write (UNIT=0,FMT="(i3,5(f10.4))",ADVANCE="YES")                                        &
-      &       i, soil%aszlyt(i), soil%aslagm(i), soil%as0ags(i), soil%aslagn(i), soil%aslagx(i)
+       do i=1, asdlayer
+         write(UNIT=0, FMT="('massf(',A,',',i2,')')",ADVANCE="NO") 'x', i
+         do j=1, msieve+1
+          if (j < msieve+1) then
+            write(UNIT=0,FMT="(f9.4)",ADVANCE="NO") massf(j,i)
+          else
+            write(UNIT=0,FMT="(A)",ADVANCE="YES") ""
+          endif
         end do
-        write(0,*) ""
-        do i=tlayer+1, soil%nslay
-          write (UNIT=0,FMT="(i3,5(f10.4))",ADVANCE="YES")                                        &
-      &       i, soil%aszlyt(i), soil%aslagm(i), soil%as0ags(i), soil%aslagn(i), soil%aslagx(i)
+       end do
+
+
+ !!       check for valid asd parameters
+!        if (gmd .gt. soil%aslagx(1)) then
+!           write(0,*) 'Process 91:ASD:gmd=',gmd,                         &
+!     &                'must be less than gmd_max=',soil%aslagx(1)
+! !!!          call exit (-1)
+!        endif
+!        if (gmd .lt. soil%aslagn(1)) then
+!           write(0,*) 'Process 91:ASD:gmd=',gmd,                         &
+!     &                'must be greater than gmd_min=',soil%aslagn(1)
+!           call exit (-1)
+!        endif
+
+
+!      do process
+       call set_asd(gmdx, gsdx, mnot, minf, asdlayer, soil)
+
+
+
+       write (UNIT=0,FMT="(A)",ADVANCE="NO") '//After set_asd process// '
+       write(0,*) 'no. of soil layers to modify/total and depth are: ', asdlayer, soil%nslay, asddepth
+       write(UNIT=0,FMT="(A3,5(A10))") 'lay', 'depth', 'GMDx', 'GSDx', 'm_not', 'm_inf'
+       do i=1, asdlayer
+         write (UNIT=0,FMT="(i3,5(f10.4))",ADVANCE="YES")                                        &
+      &      i, soil%aszlyt(i), soil%aslagm(i), soil%as0ags(i), soil%aslagn(i), soil%aslagx(i)
+       end do
+       write(0,*) "layers below asdlayer"
+       do i=asdlayer+1, soil%nslay
+         write (UNIT=0,FMT="(i3,5(f10.4))",ADVANCE="YES")                                        &
+      &      i, soil%aszlyt(i), soil%aslagm(i), soil%as0ags(i), soil%aslagn(i), soil%aslagx(i)
+       end do
+
+!      Convert ASD from modified log-normal to sieve classes
+       call asd2m(soil%aslagn, soil%aslagx, soil%aslagm, soil%as0ags, soil%nslay, massf)
+
+       write(0,*) 'msieve: ', msieve, 'nsieve: ', nsieve
+
+       do i=1, asdlayer
+         write(UNIT=0, FMT="('massf(',A,',',i2,')')",ADVANCE="NO") 'x', i
+         do j=1, msieve+1
+          if (j < msieve+1) then
+            write(UNIT=0,FMT="(f9.4)",ADVANCE="NO") massf(j,i)
+          else
+            write(UNIT=0,FMT="(A)",ADVANCE="YES") ""
+          endif
         end do
+       end do
 
 
 !       Convert ASD from modified log-normal to sieve classes
@@ -2547,6 +2566,11 @@
 
 
 
+!     post-process stuff
+        if (am0tdb(sr) .eq. 1) then
+          write (luotdb(sr),*) '//After initialize soil layer asd conditions//'
+          call tdbug(sr, prcode, soil, crop, residue)
+        end if
 
 
 !-----END terminate initialize soil layer asd process (process code 91)

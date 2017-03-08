@@ -18,41 +18,46 @@
 ! Currently assumes we have "logcas = 3" condition (mnot != 0, minf != infinity)
 
 !     + + + KEYWORDS + + +
-!     soil layer, asd, mgmd, mgsd
+!     soil layer, asd, gmd, gsd
 
-      subroutine set_asd (mgmd, mgsd, nlay, soil)
+SUBROUTINE set_asd (gmdx, gsdx, mnot, minf, nlay, soil)
 
-      use soil_data_struct_defs, only: soil_def
-
-!     + + + ARGUMENT DECLARATIONS + + +
-      real       mgmd 
-      real       mgsd
-      integer    nlay
-      type(soil_def), intent(inout) :: soil
+  USE soil_data_struct_defs, only: soil_def
+  TYPE(soil_def), INTENT(OUT) :: soil
 !      type(soil_def), intent(inout) :: soil%aslagm, soil%as0ags  ! for this subregion only
 
-!     + + + ARGUMENT DEFINITIONS + + +
-!     mgmd    - geometric mean diameter of aggregate size distribution
-!              (or transformed gmd for "modified" lognormal cases)
-!     mgsd    - geometric standard deviation of aggregate size distribution
-!              (or transformed gsd for "modified" lognormal cases)
-!     nlay   - number of soil layers used
+!     + + + ARGUMENT DECLARATIONS + + +
+  REAL, INTENT (IN)    :: gmdx, gsdx
+  REAL, INTENT (IN)    :: mnot, minf
+  INTEGER, INTENT (IN) :: nlay
 
-!     + + + LOCAL VARIABLES + + +
-      integer j
+! + + + ARGUMENT DEFINITIONS + + +
+! gmdx    - geometric mean diameter of aggregate size distribution
+!          (or transformed gmd for "modified" lognormal cases)
+! gsdx    - geometric standard deviation of aggregate size distribution
+!          (or transformed gsd for "modified" lognormal cases)
+! mnot    - minimum aggregate size in aggregate size distribution
+!          (for "modified" lognormal cases)
+! minf    - maximum aggregate size in aggregate size distribution
+!          (for "modified" lognormal cases)
+! nlay   - number of soil layers used
 
-!     + + + LOCAL VARIABLE DEFINITIONS + + +
-!     j      - loop variable for soil layers
 
-      if (nlay .ge. 1) then
-!         for each soil layer
-          do 100 j=1,nlay
-              soil%aslagm(j) = mgmd
-              soil%as0ags(j) = mgsd
-100       continue
-      else
-          write (0,*) "Tillage depth is negative, ASD values not assigned."
-      end if
+! + + + LOCAL VARIABLES + + +
+  INTEGER :: j
 
-      return
-      end
+! + + + LOCAL VARIABLE DEFINITIONS + + +
+! j      - loop variable for soil layers
+
+  IF (nlay .ge. 1) THEN    !for each soil layer
+     DO j=1,nlay
+        soil%aslagm(j) = gmdx
+        soil%as0ags(j) = gsdx
+        soil%aslagn(j) = mnot
+        soil%aslagx(j) = minf
+     END DO
+  ELSE
+     write (0,*) "Tillage depth is negative, ASD values not assigned."
+  END IF
+
+END SUBROUTINE set_asd
