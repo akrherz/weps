@@ -23,13 +23,14 @@
 SUBROUTINE set_asd (gmdx, gsdx, mnot, minf, nlay, soil)
 
   USE soil_data_struct_defs, only: soil_def
-  TYPE(soil_def), INTENT(OUT) :: soil
-!      type(soil_def), intent(inout) :: soil%aslagm, soil%as0ags  ! for this subregion only
+  TYPE(soil_def), INTENT(INOUT) :: soil
+!      REAL,DIMENSION(:), intent(inout) :: soil%aslagm, soil%as0ags  ! for this subregion only
 
 !     + + + ARGUMENT DECLARATIONS + + +
   REAL, INTENT (IN)    :: gmdx, gsdx
   REAL, INTENT (IN)    :: mnot, minf
   INTEGER, INTENT (IN) :: nlay
+
 
 ! + + + ARGUMENT DEFINITIONS + + +
 ! gmdx    - geometric mean diameter of aggregate size distribution
