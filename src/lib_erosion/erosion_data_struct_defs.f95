@@ -91,6 +91,7 @@ module erosion_data_struct_defs
      real :: asxdkh     ! Dike Height (mm)
      real :: aslrr      ! Allmaras random roughness (mm)
      real :: ahzsnd     ! (h1db1.inc) Snow depth (mm)
+     integer :: nswet   ! number of surface wetness values
      real, dimension(:), allocatable :: ahrwc0
      ! derived
      real :: abrsai     ! abrsai - Biomass stem area index (m^2/m^2)
@@ -213,48 +214,66 @@ contains
   end subroutine destroy_cellsurfacestate
 
   ! NOTE: defined as subroutine to accomodate sweep usage. Values are assigned to non-array elements before number of layers is known.
-  subroutine create_subregionsurfacestate(nslay, nswet, subrsurf)
+  subroutine create_subregionsoillayers(nslay, subrsurf)
      integer, intent(in) :: nslay             ! number of soil layers
+     type(subregionsurfacestate), intent(inout) :: subrsurf  ! this needs to retain values already in non array entities for erodin in sweep
+
+     ! local variable
+     integer :: alloc_stat  ! allocation status return
+
+     subrsurf%nslay = nslay
+
+     ! allocate soil layer array
+     allocate(subrsurf%bsl(1:nslay), stat=alloc_stat)
+     if( alloc_stat .gt. 0 ) then
+        write(*,*) 'ERROR: unable to allocate memory for soil layers'
+        stop 1
+     end if
+  end subroutine create_subregionsoillayers
+
+  subroutine destroy_subregionsoillayers(subrsurf)
+     type(subregionsurfacestate), intent(inout) :: subrsurf
+
+     ! local variable
+     integer :: dealloc_stat
+
+     ! deallocate arrays
+     deallocate(subrsurf%bsl, stat=dealloc_stat)
+     if( dealloc_stat .gt. 0 ) then
+        write(*,*) 'ERROR: unable to deallocate memory for soil layers'
+     end if
+  end subroutine destroy_subregionsoillayers
+
+  subroutine create_subregionsurfacewet(nswet, subrsurf)
      integer, intent(in) :: nswet             ! number of surface wetness values
      type(subregionsurfacestate), intent(inout) :: subrsurf  ! this needs to retain values already in non array entities for erodin in sweep
 
      ! local variable
      integer :: alloc_stat  ! allocation status return
-     integer :: sum_stat    ! accumulates allocation status results so only one write/exit statement needed
 
-     subrsurf%nslay = nslay
+     subrsurf%nswet = nswet
 
-     sum_stat = 0
      ! allocate soil layer array
-     allocate(subrsurf%bsl(1:nslay), stat=alloc_stat)
-     sum_stat = sum_stat + alloc_stat
      allocate(subrsurf%ahrwc0(1:nswet), stat=alloc_stat)
-     sum_stat = sum_stat + alloc_stat
-
-     if( sum_stat .gt. 0 ) then
-        write(*,*) 'ERROR: unable to allocate memory for biomatter'
+     if( alloc_stat .gt. 0 ) then
+        write(*,*) 'ERROR: unable to allocate memory for subdaily surface wetness'
         stop 1
      end if
-  end subroutine create_subregionsurfacestate
+  end subroutine create_subregionsurfacewet
 
-  subroutine destroy_subregionsurfacestate(subrsurf)
+  subroutine destroy_subregionsurfacewet(subrsurf)
      type(subregionsurfacestate), intent(inout) :: subrsurf
 
      ! local variable
      integer :: dealloc_stat
      integer :: sum_stat    ! accumulates allocation status results so only one write/exit statement needed
 
-     sum_stat = 0
      ! deallocate arrays
-     deallocate(subrsurf%bsl, stat=dealloc_stat)
-     sum_stat = sum_stat + dealloc_stat
      deallocate(subrsurf%ahrwc0, stat=dealloc_stat)
-     sum_stat = sum_stat + dealloc_stat
-
-     if( sum_stat .gt. 0 ) then
-        write(*,*) 'ERROR: unable to deallocate memory for biomatter'
+     if( dealloc_stat .gt. 0 ) then
+        write(*,*) 'ERROR: unable to deallocate memory for subdaily surface wetness'
      end if
-  end subroutine destroy_subregionsurfacestate
+  end subroutine destroy_subregionsurfacewet
 
   function create_threshold(nsubr) result(noerod)
      integer, intent(in) :: nsubr

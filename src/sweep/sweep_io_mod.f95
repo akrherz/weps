@@ -25,7 +25,7 @@ module sweep_io_mod
 
    contains
 
-   subroutine erodin (i_unit, o_unit, cmdebugflag, hagen_plot_flag, subrsurf)
+   subroutine erodin (input_filepath, i_unit, o_unit, cmdebugflag, hagen_plot_flag, subrsurf)
 
       ! +++ PURPOSE +++
       ! Utility to read initial conditions and variables from
@@ -36,15 +36,20 @@ module sweep_io_mod
       ! + + + Modules Used + + +
       use Polygons_Mod, only: create_polygon
       use subregions_mod, only: subr_poly, acct_poly
-      use erosion_data_struct_defs, only: subregionsurfacestate, create_subregionsurfacestate, &
+      use erosion_data_struct_defs, only: subregionsurfacestate, &
+                                          create_subregionsoillayers, create_subregionsurfacewet, &
                                           awzypt, awdair, anemht, awzzo, wzoflg, &
                                           ntstep, awadir, awudmx, subday, am0eif
       use p1erode_def, only: SLRR_MIN, SLRR_MAX, WZZO_MIN, WZZO_MAX
       use barriers_mod, only: create_barrier, barrier, barseas
       use grid_mod, only: amasim, amxsim, xgdpt, ygdpt
       use sae_in_out_mod, only: saeinp
+      use flib_sax
+      use sweep_io_xml_mod, only: input_tag, sweepData, init_input_xml
+      use sweep_io_xml_mod, only: begin_element_handler, end_element_handler, pcdata_chunk_handler
 
       ! +++ ARGUMENT DECLARATIONS +++
+      character*1024  :: input_filepath
       integer :: i_unit
       integer :: o_unit
       integer :: cmdebugflag
@@ -70,8 +75,8 @@ module sweep_io_mod
       integer :: nbr         ! number of barriers (read from input file)
       character*(mrcl) line
 
-      ! +++ FUNCTIONS CALLED +++
-      ! getline
+      type(xml_t) :: fxml   ! xml file handle structure
+      integer :: iostat     ! input/output status
 
       ! +++ END SPECIFICATIONS +++
 
@@ -85,6 +90,29 @@ module sweep_io_mod
       if (line (1:8).eq.'Version: ') then
           ! get next input line of versioned file
           line = getline(i_unit)
+      else if (index(line, 'xml') .gt. 0) then
+          if (i_unit .ne. 5) then
+            close(i_unit)
+          else
+            write(*,*) 'ERROR: XML input file must be input using the -i flag on the command line'
+            call exit(1)
+          endif
+          ! open input file
+          write (*,*) 'Input file is ', '>>', trim(input_filepath), '<<'
+          call open_xmlfile(trim(input_filepath),fxml,iostat)
+          if (iostat /= 0) stop "Cannot open xml input file"
+          ! read in xml based input file
+          call init_input_xml()
+          call xml_parse(fxml, &
+             begin_element_handler = begin_element_handler, &
+             end_element_handler = end_element_handler, &
+             pcdata_chunk_handler = pcdata_chunk_handler, &
+             verbose = .false.)
+          if (.not. input_tag(SweepData)%acquired) then
+            write(*,*) 'Simulation run file incomplete'
+            call exit(1)
+          end if
+          return
       else
           ! unversioned file, read old file format
           call erodin_legacy (line, i_unit, o_unit, cmdebugflag, hagen_plot_flag, subrsurf)
@@ -280,7 +308,8 @@ module sweep_io_mod
         read (line,*) subrsurf(sr)%nslay
 
         ! allocate arrays for soil layer and surface wetness values
-        call create_subregionsurfacestate(subrsurf(sr)%nslay, 24, subrsurf(sr))
+        call create_subregionsoillayers(subrsurf(sr)%nslay, subrsurf(sr))
+        call create_subregionsurfacewet(24, subrsurf(sr))
 
         ! Soil layer thickness
         line = getline(i_unit)
@@ -364,7 +393,7 @@ module sweep_io_mod
         line = getline(i_unit)
         read (line,*) subrsurf(sr)%aszrgh, subrsurf(sr)%asxrgs, subrsurf(sr)%asxrgw, subrsurf(sr)%asargo
 
-        ! Oriented Roughness ( spacing)
+        ! Oriented Roughness ( furrow dike spacing)
         line = getline(i_unit)
         read (line,*) subrsurf(sr)%asxdks
 
@@ -524,11 +553,12 @@ module sweep_io_mod
       ! + + + Modules Used + + +
       use Polygons_Mod, only: create_polygon
       use subregions_mod, only: subr_poly, acct_poly
-      use erosion_data_struct_defs, only: subregionsurfacestate, create_subregionsurfacestate, &
+      use erosion_data_struct_defs, only: subregionsurfacestate, &
+                                          create_subregionsoillayers, create_subregionsurfacewet, &
                                           awzypt, awdair, anemht, awzzo, wzoflg, &
                                           ntstep, awadir, awudmx, subday, am0eif
       use p1erode_def, only: SLRR_MIN, SLRR_MAX, WZZO_MIN, WZZO_MAX
-      use barriers_mod, only: create_barrier, barrier
+      use barriers_mod, only: create_barrier, barrier, barseas
       use grid_mod, only: amasim, amxsim
       use sae_in_out_mod, only: saeinp
 
@@ -636,8 +666,14 @@ module sweep_io_mod
       line = getline(i_unit)
       read (line,*) nbr
 
+      write(*,*) 'ERODIN: number of barriers:', nbr
+
       ! allocate structure for barriers (nbr .lt. 1 gives zero size array)
       allocate(barrier(nbr), stat = alloc_stat)
+      if( alloc_stat .gt. 0 ) then
+         Write(*,*) 'ERROR: memory alloc., barriers'
+      end if
+      allocate(barseas(nbr), stat = alloc_stat)
       if( alloc_stat .gt. 0 ) then
          Write(*,*) 'ERROR: memory alloc., barriers'
       end if
@@ -652,20 +688,31 @@ module sweep_io_mod
         poly_np = 2
         ! create storage for point and barrier data
         call create_barrier(barrier(ibr), poly_np)
+        call create_barrier(barseas(ibr), poly_np,1,0)
         ! set points
         ipol = 1
+        barseas(ibr)%points(ipol)%x = pt_x1
+        barseas(ibr)%points(ipol)%y = pt_y1
+        !  also place in fixed barrier structure
         barrier(ibr)%points(ipol)%x = pt_x1
         barrier(ibr)%points(ipol)%y = pt_y1
         ipol = 2
+        barseas(ibr)%points(ipol)%x = pt_x2
+        barseas(ibr)%points(ipol)%y = pt_y2
+        !  also place in fixed barrier structure
         barrier(ibr)%points(ipol)%x = pt_x2
         barrier(ibr)%points(ipol)%y = pt_y2
 
         ! barrier height, porosity, width
         line = getline(i_unit)
         ipol = 1
-        read (line,*) barrier(ibr)%param(ipol)%amzbr, barrier(ibr)%param(ipol)%ampbr, barrier(ibr)%param(ipol)%amxbrw
+        read (line,*) barseas(ibr)%param(ipol,1)%amzbr, barseas(ibr)%param(ipol,1)%ampbr, barseas(ibr)%param(ipol,1)%amxbrw
+        !  also place in fixed barrier structure
+        barrier(ibr)%param(ipol) = barseas(ibr)%param(ipol,1)
         ipol = 2
-        read (line,*) barrier(ibr)%param(ipol)%amzbr, barrier(ibr)%param(ipol)%ampbr, barrier(ibr)%param(ipol)%amxbrw
+        read (line,*) barseas(ibr)%param(ipol,1)%amzbr, barseas(ibr)%param(ipol,1)%ampbr, barseas(ibr)%param(ipol,1)%amxbrw
+        !  also place in fixed barrier structure
+        barrier(ibr)%param(ipol) = barseas(ibr)%param(ipol,1)
         if( barrier(ibr)%param(ipol)%amzbr .le. 0.0 ) then
            write(*,*) 'ERROR: Barrier height must be > 0'
            write(*,FMT='(2(i0))') 'Barrier #: ', ibr, 'Point #: ', ipol
@@ -777,7 +824,8 @@ module sweep_io_mod
         read (line,*) subrsurf(sr)%nslay
 
         ! allocate arrays for soil layer and surface wetness values
-        call create_subregionsurfacestate(subrsurf(sr)%nslay, 24, subrsurf(sr))
+        call create_subregionsoillayers(subrsurf(sr)%nslay, subrsurf(sr))
+        call create_subregionsurfacewet(24, subrsurf(sr))
 
         ! Soil layer thickness
         line = getline(i_unit)

@@ -57,7 +57,8 @@
       use mandate_mod
       use manage_data_struct_defs, only: lastoper, tinfil
       use erosion_mod, only: erosion, erodinit
-      use erosion_data_struct_defs, only: create_subregionsurfacestate, subregionsurfacestate, threshold, cellsurfacestate, &
+      use erosion_data_struct_defs, only: create_subregionsoillayers, create_subregionsurfacewet, &
+                                          subregionsurfacestate, threshold, cellsurfacestate, &
                                           erod_interval, awudmx, am0eif, am0efl, subrsurf
       use wind_mod, only: anemometer_init
       use grid_mod, only: sbgrid, sbigrd, imax, jmax, ix, jy, xgdpt, ygdpt, amxsim
@@ -376,7 +377,8 @@
          biotot(isr) = create_biototal(soil_in(isr)%nslay, mncz)
          decompfac(isr) = create_decomp_factors(soil_in(isr)%nslay)
          ! allocate layer and per/day in subregion surface state passed to erosion
-         call create_subregionsurfacestate(soil_in(isr)%nslay, 24, subrsurf(isr))
+         call create_subregionsoillay(soil_in(isr)%nslay, subrsurf(isr))
+         call create_subregionsurfacewet(24, subrsurf(isr))
          wp(isr) = create_wepp_param(soil_in(isr)%nslay)
       end do
 

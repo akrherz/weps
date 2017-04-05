@@ -17,7 +17,7 @@
       use f2kcli, only: COMMAND_ARGUMENT_COUNT
       use erosion_mod, only: erosion, erodinit
       use erosion_data_struct_defs, only: subregionsurfacestate, threshold, cellsurfacestate, erod_interval, ntstep, &
-                                          am0eif, am0efl
+                                          am0eif, am0efl, subrsurf
       use barriers_mod, only: minht_barriers
       use wind_mod, only: anemometer_init
       use grid_mod, only: sbgrid, imax, jmax, ix, jy, xgdpt, ygdpt, amxsim
@@ -42,7 +42,6 @@
 !     ++++ LOCAL VARIABLES +++
       character(len=21) :: rundatetime
       integer :: nsubr       ! number of subregions (found from size of subrsurf)
-      type(subregionsurfacestate), dimension(:), allocatable :: subrsurf
       type(threshold), dimension(:), allocatable :: noerod                 ! report values to show which factors prevented erosion
       type(cellsurfacestate), dimension(:,:), allocatable :: cellstate     ! grid cell state values (allocate in erodinit)
 
@@ -401,10 +400,10 @@
       end if
       if (opnd .eqv. .true.) then
          !write(0,*) 'calling erodin with output unit no: ', o_einp_unit
-         call erodin(i_unit, o_einp_unit, force_debug_flag, hagen_plot_flag, subrsurf) !Echo input to a file
+         call erodin(input_filepath, i_unit, o_einp_unit, force_debug_flag, hagen_plot_flag, subrsurf) !Echo input to a file
       else
          !write(0,*) 'calling erodin with output unit no: ', o_unit
-         call erodin(i_unit, o_unit, force_debug_flag, hagen_plot_flag, subrsurf)  !Doesn't echo input to file
+         call erodin(input_filepath, i_unit, o_unit, force_debug_flag, hagen_plot_flag, subrsurf)  !Doesn't echo input to file
       endif
 
       ! Set based on allocated size of subrsurf (accounting for 0 based index)
