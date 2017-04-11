@@ -279,13 +279,13 @@
                !extract input file basename from it's path
                indx = index(trim(input_filepath),'/',back=.true.)
                !cut extension from input filename (if it exists)
-               rndx = index(trim(input_filepath),'.',back=.true.) - 1
+               rndx = index(trim(input_filepath),'.',back=.true.)
                if (rndx == 0) then   !No input filename extension found
-                  rndx = len_trim(input_filepath)
+                  rndx = len_trim(input_filepath) + 1
                endif
                !input file and filepath basenames
-               file_bname = trim(input_filepath(indx+1:rndx))
-               fpath_bname = trim(input_filepath(:rndx))
+               file_bname = trim(input_filepath(indx+1:rndx-1))
+               fpath_bname = trim(input_filepath(:rndx-1))
                input_filename = trim(input_filepath(indx+1:))
              endif
 			 
