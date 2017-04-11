@@ -98,7 +98,6 @@ module sweep_io_mod
             call exit(1)
           endif
           ! open input file
-          write (*,*) 'Input file is ', '>>', trim(input_filepath), '<<'
           call open_xmlfile(trim(input_filepath),fxml,iostat)
           if (iostat /= 0) stop "Cannot open xml input file"
           ! read in xml based input file
@@ -107,7 +106,7 @@ module sweep_io_mod
              begin_element_handler = begin_element_handler, &
              end_element_handler = end_element_handler, &
              pcdata_chunk_handler = pcdata_chunk_handler, &
-             verbose = .false.)
+             verbose = .true.)
           if (.not. input_tag(SweepData)%acquired) then
             write(*,*) 'Simulation run file incomplete'
             call exit(1)
@@ -424,8 +423,6 @@ module sweep_io_mod
 
       ! +++ WEATHER +++
 
-      write(*,*) 'ERODIN: ready to read weather'
-
       ! Average annual precipitation
       line = getline(i_unit)
       read (line,*) awzypt
@@ -442,9 +439,6 @@ module sweep_io_mod
 
       ! Number of "steps" during 24 hours (96 = 15 minute intervals)
       line = getline(i_unit)
-
-      write(*,*) 'ERODIN: line for ntstep', trim(line)
-
       read (line,*) ntstep
 
       ! allocate wind direction and speed array
@@ -665,8 +659,6 @@ module sweep_io_mod
       ! Number of barriers
       line = getline(i_unit)
       read (line,*) nbr
-
-      write(*,*) 'ERODIN: number of barriers:', nbr
 
       ! allocate structure for barriers (nbr .lt. 1 gives zero size array)
       allocate(barrier(nbr), stat = alloc_stat)
@@ -940,8 +932,6 @@ module sweep_io_mod
 
       ! +++ WEATHER +++
 
-      write(*,*) 'ERODIN: ready to read weather'
-
       ! Average annual precipitation
       awzypt = 300.0
 
@@ -957,9 +947,6 @@ module sweep_io_mod
 
       ! Number of "steps" during 24 hours (96 = 15 minute intervals)
       line = getline(i_unit)
-
-      write(*,*) 'ERODIN: line for ntstep', trim(line)
-
       read (line,*) ntstep
 
       ! allocate wind direction and speed array

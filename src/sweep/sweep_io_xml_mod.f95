@@ -147,6 +147,7 @@ module sweep_io_xml_mod
   logical, dimension(:), allocatable :: soillay_complete
   logical, dimension(:), allocatable :: surfwat_complete
   logical, dimension(:), allocatable :: wind_complete
+  logical, dimension(:), allocatable :: barrier_complete
   integer :: count_complete
   ! temporary holder for array elements until index is read
   type(barrier_day_state) :: t_day_state
@@ -170,7 +171,7 @@ contains
     do idx = 1, size(input_tag)
       if( input_tag(idx)%name .eq. name ) then
         input_tag(idx)%in_tag = .true.
-        ! write(*,*) 'In tag ', trim(name)
+        write(*,*) 'In tag ', trim(name)
         exit  ! found tag, no need to look further
       end if
     end do
@@ -179,6 +180,7 @@ contains
       .or. (idx .eq. SCI_WindSpeed) &
       .or. (idx .eq. SCI_SurfaceSubDayWater) &
       .or. (idx .eq. SCI_SoilLay) &
+      .or. (idx .eq. SCI_Barrier) &
       .or. (idx .eq. SCI_BarPoint) &
       .or. (idx .eq. SCI_coord) ) then
       if ( has_key(attributes, input_tag(SCI_index)%name) ) then
@@ -204,6 +206,11 @@ contains
           ! adjust from base 0 to base 1 arrays
           isl = isl + 1
           !write(*,*) 'Soil Layer Index: ', isl
+        case (SCI_Barrier)
+          call read_param(SCI_index, param_value, ibr)
+          ! adjust from base 0 to base 1 arrays
+          ibr = ibr + 1
+          !write(*,*) 'Barrier Index: ', ibr
         case (SCI_BarPoint)
           call read_param(SCI_index, param_value, ipol)
           ! adjust from base 0 to base 1 arrays
@@ -495,42 +502,42 @@ contains
           write(*,*) 'ERROR: memory alloc., accounting region polygons'
         end if
 
-      else if (input_tag(SCI_Account)%in_tag) then
-        ! Accounting region SCI_coordinates
-        if (input_tag(SCI_AccNo)%required) then
-          if (input_tag(SCI_coordinates)%in_tag) then
-            !SCI_coordinates
-            if (input_tag(SCI_Number)%in_tag) then
-              call read_param(SCI_Number, param_value, poly_np)
-              if (poly_np .gt. 0) then
-                ! create polygon point storage
-                acct_poly(iar) = create_polygon(poly_np)
-                ! initialize polygon point counter
-                ipol = 1
-              end if
-              input_tag(SCI_Number)%acquired = .true.
-            else if (input_tag(SCI_coordinate)%in_tag) then
-              if (input_tag(SCI_Number)%acquired) then
-                call read_param(SCI_coordinate, param_value, acct_poly(iar)%points(ipol)%x, acct_poly(iar)%points(ipol)%y)
-                ipol = ipol + 1
-                if (ipol .gt. poly_np) then
-                  ! finished with this accounting region
-                  call set_area_polygon( acct_poly(iar) )
-                  iar = iar + 1
-                end if
-              else
-                write(*,*) 'Error: Number of coordinates must be specified before reading in SCI_coordinates'
-              end if
-            end if
-          end if
-          if (iar .gt. nacctr) then
-            input_tag(SCI_AccNo)%acquired = .true.
-            input_tag(SCI_Account)%acquired = .true.
-            input_tag(SCI_Number)%acquired = .false.
-          end if
-        else
-          write(*,*) 'Error: Number of accounting regions must be specified before reading in accounting region data'
-        end if
+!      else if (input_tag(SCI_Account)%in_tag) then
+!        ! Accounting region SCI_coordinates
+!        if (input_tag(SCI_AccNo)%required) then
+!          if (input_tag(SCI_coordinates)%in_tag) then
+!            !SCI_coordinates
+!            if (input_tag(SCI_Number)%in_tag) then
+!              call read_param(SCI_Number, param_value, poly_np)
+!              if (poly_np .gt. 0) then
+!                ! create polygon point storage
+!                acct_poly(iar) = create_polygon(poly_np)
+!                ! initialize polygon point counter
+!                ipol = 1
+!              end if
+!              input_tag(SCI_Number)%acquired = .true.
+!            else if (input_tag(SCI_coordinate)%in_tag) then
+!              if (input_tag(SCI_Number)%acquired) then
+!                call read_param(SCI_coordinate, param_value, acct_poly(iar)%points(ipol)%x, acct_poly(iar)%points(ipol)%y)
+!                ipol = ipol + 1
+!                if (ipol .gt. poly_np) then
+!                  ! finished with this accounting region
+!                  call set_area_polygon( acct_poly(iar) )
+!                  iar = iar + 1
+!                end if
+!              else
+!                write(*,*) 'Error: Number of coordinates must be specified before reading in SCI_coordinates'
+!              end if
+!            end if
+!          end if
+!          if (iar .gt. nacctr) then
+!            input_tag(SCI_AccNo)%acquired = .true.
+!            input_tag(SCI_Account)%acquired = .true.
+!            input_tag(SCI_Number)%acquired = .false.
+!          end if
+!        else
+!          write(*,*) 'Error: Number of accounting regions must be specified before reading in accounting region data'
+!        end if
 
       else if (input_tag(SCI_SubregionNo)%in_tag) then
         call read_param(SCI_SubregionNo, param_value, nsubr)
@@ -846,6 +853,10 @@ contains
             input_tag(SCI_SurfaceSubDayWaterNo)%acquired = .true.
 
           else if (input_tag(SCI_SurfaceSubDayWater)%in_tag) then
+
+            write(*,*) isurfwat, input_tag(SCI_SurfaceSubDayWaterNo)%acquired, &
+                             loc(input_tag(SCI_SurfaceSubDayWaterNo)%acquired)
+
             if (input_tag(SCI_SurfaceSubDayWaterNo)%acquired) then
               call read_param(SCI_SurfaceSubDayWater, param_value, subrsurf(isr)%ahrwc0(isurfwat))
               surfwat_complete(isurfwat) = .true.
@@ -994,18 +1005,15 @@ contains
       else if (input_tag(SCI_BarrierNo)%in_tag) then
         call read_param(SCI_BarrierNo, param_value, nbr)
         input_tag(SCI_BarrierNo)%acquired = .true.
-        if (nbr .gt. 0) then
-          ! set counter ibr for reading in Barriers Regions
-          ibr = 1
-        end if
         ! allocate structure for barriers (nbr .lt. 1 gives zero size array)
+        sum_stat = 0
         allocate(barrier(nbr), stat = alloc_stat)
-        if( alloc_stat .gt. 0 ) then
-          write(*,*) 'ERROR: memory alloc., barrier'
-        end if
+        sum_stat = sum_stat + alloc_stat
         allocate(barseas(nbr), stat = alloc_stat)
-        if( alloc_stat .gt. 0 ) then
-          write(*,*) 'ERROR: memory alloc., seasonal barrier'
+        sum_stat = sum_stat + alloc_stat
+        allocate(barrier_complete(nbr), stat = alloc_stat)
+        if( sum_stat .gt. 0 ) then
+          write(*,*) 'ERROR: memory alloc., barrier arrays'
         end if
 
       else if (input_tag(SCI_Barrier)%in_tag) then
@@ -1086,6 +1094,9 @@ contains
                 input_tag(SCI_width)%acquired = .false.
                 input_tag(SCI_porosity)%acquired = .false.
                 points_complete(ipol) = .true.
+                ! copy barseas into fixed barrier
+                barrier(ibr)%points(ipol) = barseas(ibr)%points(ipol)
+                barrier(ibr)%param(ipol) = barseas(ibr)%param(ipol,iseas)
                 count_complete = 0
                 do idx = 1, poly_np
                   if (points_complete(idx)) then
@@ -1109,12 +1120,23 @@ contains
 
           if ( input_tag(SCI_BarPoint)%acquired ) then
             input_tag(SCI_BarPoint)%acquired = .false.
-            ibr = ibr + 1
-            if (ibr .gt. nbr) then
+            barrier_complete(ibr) = .true.
+            count_complete = 0
+            do idx = 1, nbr
+              if (barrier_complete(idx)) then
+                count_complete = count_complete + 1
+              end if
+            end do
+            if (count_complete .ge. nbr) then
               input_tag(SCI_Barrier)%acquired = .true.
+              deallocate(barrier_complete, stat=dealloc_stat)
+              if( dealloc_stat .gt. 0 ) then
+                write(*,*) 'ERROR: memory deallocation, barrier_complete'
+                call exit(1)
+              end if
             end if
-
           end if
+
         else
           write(*,*) 'Error: Number of barriers must be specified before reading in barrier data'
         end if
@@ -1172,6 +1194,13 @@ contains
               write(*,*) 'ERROR: memory deallocation, wind_complete'
               call exit(1)
             end if
+            ! Determine the maximum wind speed during the day
+            awudmx = 0.0
+            do idx = 1, ntstep
+              if( awudmx .lt. subday(idx)%awu ) then
+                awudmx = subday(idx)%awu
+              endif
+            end do
           end if
         else
           write(*,*) 'Number of wind speed values must precede wind speed data input'
