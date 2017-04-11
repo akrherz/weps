@@ -842,6 +842,7 @@ contains
               write(*,*) 'Number of soil layers must precede soil layer data input'
               call exit(1)
             end if
+
           else if (input_tag(SCI_SurfaceSubDayWaterNo)%in_tag) then
             call read_param(SCI_SurfaceSubDayWaterNo, param_value, subrsurf(isr)%nswet)
             allocate(surfwat_complete(subrsurf(isr)%nswet), stat=alloc_stat)
@@ -851,6 +852,10 @@ contains
             end if
             call create_subregionsurfacewet(subrsurf(isr)%nswet, subrsurf(isr))
             input_tag(SCI_SurfaceSubDayWaterNo)%acquired = .true.
+            ! initialize _complete arrays to .false.
+            do idx = 1, subrsurf(isr)%nswet
+              surfwat_complete(idx) = .false.
+            end do
 
           else if (input_tag(SCI_SurfaceSubDayWater)%in_tag) then
 
@@ -1015,6 +1020,11 @@ contains
         if( sum_stat .gt. 0 ) then
           write(*,*) 'ERROR: memory alloc., barrier arrays'
         end if
+        ! initialize _complete arrays to .false.
+        do idx = 1, nbr
+          barrier_complete(idx) = .false.
+        end do
+
 
       else if (input_tag(SCI_Barrier)%in_tag) then
         !  These barriers as entered are considered to be thin, having no real
