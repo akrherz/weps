@@ -45,7 +45,7 @@ module sweep_io_mod
       use grid_mod, only: amasim, amxsim, xgdpt, ygdpt
       use sae_in_out_mod, only: saeinp
       use flib_sax
-      use sweep_io_xml_mod, only: input_tag, sweepData, init_input_xml
+      use sweep_io_xml_mod, only: sweepdata_complete, init_input_xml
       use sweep_io_xml_mod, only: begin_element_handler, end_element_handler, pcdata_chunk_handler
 
       ! +++ ARGUMENT DECLARATIONS +++
@@ -107,7 +107,7 @@ module sweep_io_mod
              end_element_handler = end_element_handler, &
              pcdata_chunk_handler = pcdata_chunk_handler, &
              verbose = .false.)
-          if (.not. input_tag(SweepData)%acquired) then
+          if (.not. sweepdata_complete) then
             write(*,*) 'Simulation run file incomplete'
             call exit(1)
           end if
