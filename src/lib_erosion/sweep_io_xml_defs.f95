@@ -106,7 +106,8 @@ module sweep_io_xml_defs
   end interface
 
   interface w_whole_tag
-    module procedure w_whole_tag_a0
+    module procedure w_whole_tag_a0_real
+    module procedure w_whole_tag_a0_integer
     module procedure w_whole_tag_a1
   end interface
 
@@ -292,8 +293,8 @@ contains
     write(luo_saeinp,*) '</', trim(tag_name), '>'
   end subroutine w_end_tag
 
-  ! write whole tag with zero attributes
-  subroutine w_whole_tag_a0( luo_saeinp, tag_name, value )
+  ! write whole tag with zero attributes and real number value
+  subroutine w_whole_tag_a0_real( luo_saeinp, tag_name, value )
     integer, intent(in) :: luo_saeinp      ! output unit number
     character(len=*), intent(in) :: tag_name
     real, intent(in) :: value
@@ -305,7 +306,22 @@ contains
     write(luo_saeinp,*) '<', trim(tag_name), '>', &
                          adjustl(trim(real_str)), &
                         '</', trim(tag_name), '>'
-  end subroutine w_whole_tag_a0
+  end subroutine w_whole_tag_a0_real
+
+  ! write whole tag with zero attributes and integer number value
+  subroutine w_whole_tag_a0_integer( luo_saeinp, tag_name, value )
+    integer, intent(in) :: luo_saeinp      ! output unit number
+    character(len=*), intent(in) :: tag_name
+    integer, intent(in) :: value
+
+    character(len=MAX_NAME_LEN) :: integer_str
+
+    write(integer_str, '(g0)') value
+    call w_spaces( luo_saeinp )
+    write(luo_saeinp,*) '<', trim(tag_name), '>', &
+                         adjustl(trim(integer_str)), &
+                        '</', trim(tag_name), '>'
+  end subroutine w_whole_tag_a0_integer
 
   ! write whole tag with one attribute
   subroutine w_whole_tag_a1( luo_saeinp, tag_name, attrib1, attr1_value, value )

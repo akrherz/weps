@@ -33,6 +33,7 @@ module sae_in_out_mod
 !     + + + Modules Used + + +
       use datetime_mod, only: caldat
       use file_io_mod, only: fopenk, makenamnum
+      use climate_input_mod, only: amalat, amalon, amzele
       use grid_mod, only: amxsim, amasim, xgdpt, ygdpt
       use subregions_mod
       use barriers_mod, only: barrier
@@ -45,7 +46,7 @@ module sae_in_out_mod
 
 !     +++ LOCAL VARIABLES +++
       integer k,l, sr, ip
-      integer b, nbr
+      integer b, nbr, nacctr, nsubr
       integer day, mon, yr
       
 
@@ -59,412 +60,175 @@ module sae_in_out_mod
         call fopenk (luo_saeinp, trim(mksaeinp%fullpath) // makenamnum('saeros', mksaeinp%simday, mksaeinp%maxday, '.in'),'unknown')
         call caldat (mksaeinp%jday,day,mon,yr)
         write(*,'(4(a,i0))') 'Made SWEEP input file D/M/Y: ', day,'/', mon,'/', yr,' simulation day: ', mksaeinp%simday
-        write(luo_saeinp,*) 'Version:   100 multiple subregions'
-        write(luo_saeinp,2101) day, mon, yr
- 2101   format('# WEPS erosion day mon yr',2(1x,i2),2x,i4)
+        ! XML header
+        write(luo_saeinp,*) '<?xml version="1.0" encoding="ISO-8859-1"?><!DOCTYPE sweepData SYSTEM "sweep.dtd">'
+        call w_begin_tag( luo_saeinp, 'WEPS_date' )
+        call w_whole_tag( luo_saeinp, 'WEPS_day', day )
+        call w_whole_tag( luo_saeinp, 'WEPS_month', mon )
+        call w_whole_tag( luo_saeinp, 'WEPS_year', yr )
+        call w_whole_tag( luo_saeinp, 'WEPS_SimulationDay', mksaeinp%simday )
+        call w_end_tag( luo_saeinp, 'WEPS_date' )
       else
         write(luo_saeinp,*) '      REPORT OF INPUTS (read by erodin.for) '
       end if
 
+      call w_begin_tag( luo_saeinp, input_tag(sweepData)%name )
+        call w_whole_tag( luo_saeinp, input_tag(GUI_lat)%name, amalat )
+        call w_whole_tag( luo_saeinp, input_tag(GUI_lon)%name, amalon )
+        call w_whole_tag( luo_saeinp, input_tag(SCI_XOrigin)%name, amxsim(1)%x )
+        call w_whole_tag( luo_saeinp, input_tag(SCI_YOrigin)%name, amxsim(1)%y )
+        call w_whole_tag( luo_saeinp, input_tag(SCI_XLength)%name, amxsim(2)%x )
+        call w_whole_tag( luo_saeinp, input_tag(SCI_YLength)%name, amxsim(2)%y )
+        call w_whole_tag( luo_saeinp, input_tag(SCI_RegionAngle)%name, amasim )
+        call w_whole_tag( luo_saeinp, input_tag(SCI_XGrid)%name, xgdpt )
+        call w_whole_tag( luo_saeinp, input_tag(SCI_YGrid)%name, ygdpt )
 
-!     print header info
-      write(luo_saeinp,1005)
- 1005 format ( &
-      '#',65('*'),/, &
-      '#',/, &
-      '# +++ PURPOSE +++',/, &
-      '#',/, &
-      '#     File for input to standalone erosion submodel program (sweep)',/, &
-      '#',/, &
-      '#     All lines beginning with a "#" character are assumed to',/, &
-      '#     be comment lines and are skipped.',/, &
-      '#',/, &
-      '#     +++ DEFINITIONS +++',/, &
-      '#',/, &
-      '#     All comments prior to each line of data input',/, &
-      '#     in this template input file have the following format:',/, &
-      '#',/, &
-      '#     Variable_Name, Var_type, Text Definition',/, &
-      '#',/, &
-      '#     where Var_type is: I = integer L = logical R = real',/, &
-      '#',/, &
-      '#',/, &
-      '# +++ DEBUG FLAG +++',/, &
-      '#',/, &
-      '#     debugflg - debug flag for providing different levels of debug info',/, &
-      '#                currently useful to debug/check input file data format',/, &
-      '#',/, &
-      '#                value of 0 will print no debug information',/, &
-      '#                value of 1 will print out and number all input file lines',/, &
-      '#                value of 2 will print out and number all data input lines',/, &
-      '#                value of 3 will do both 1 and 2')
-      write(luo_saeinp,*) '0'
+        nacctr = size(acct_poly)
+        if ( nacctr .gt. 0 ) then
+          call w_begin_tag( luo_saeinp, input_tag(SCI_Accounts)%name, &
+                                        input_tag(SCI_number)%name, nacctr)
+          ! loop through all accounting regions
+          do sr = 1, nacctr                ! NOTE: index adjusted to zero based
+            call w_begin_tag( luo_saeinp, input_tag(SCI_Account)%name, &
+                                          input_tag(SCI_index)%name, sr-1)
+              ! number of coordinate pairs in polygon
+              call w_begin_tag( luo_saeinp, input_tag(SCI_coords)%name, &
+                                            input_tag(SCI_number)%name, acct_poly(sr)%np)
+              ! the coordinate pairs
+              do ip = 1, acct_poly(sr)%np    ! NOTE: index adjusted to zero based
+                call w_begin_tag( luo_saeinp, input_tag(SCI_coord)%name, &
+                                              input_tag(SCI_index)%name, ip-1)
+                  call w_whole_tag( luo_saeinp, input_tag(SCI_x)%name, acct_poly(sr)%points(ip)%x )
+                  call w_whole_tag( luo_saeinp, input_tag(SCI_y)%name, acct_poly(sr)%points(ip)%y )
+                call w_end_tag( luo_saeinp, input_tag(SCI_coord)%name )
+              end do
+              call w_end_tag( luo_saeinp, input_tag(SCI_coords)%name )
+            call w_end_tag( luo_saeinp, input_tag(SCI_Account)%name )
+          end do
+          call w_end_tag( luo_saeinp, input_tag(SCI_Accounts)%name )
+        end if
+  
+        ! subregions
+        nsubr = size(subr_poly)
+        call w_begin_tag( luo_saeinp, input_tag(SCI_Subregions)%name, &
+                                      input_tag(SCI_number)%name, nsubr)
+        ! loop through all subregions
+        do sr = 1, nsubr                ! NOTE: index adjusted to zero based
+          call w_begin_tag( luo_saeinp, input_tag(SCI_Subregion)%name, &
+                                        input_tag(SCI_index)%name, sr-1)
+            call w_begin_tag( luo_saeinp, input_tag(SCI_coords)%name, &
+                                          input_tag(SCI_number)%name, subr_poly(sr)%np)
+            ! the coordinate pairs
+            do ip = 1, subr_poly(sr)%np    ! NOTE: index adjusted to zero based
+              call w_begin_tag( luo_saeinp, input_tag(SCI_coord)%name, &
+                                            input_tag(SCI_index)%name, ip-1)
+                call w_whole_tag( luo_saeinp, input_tag(SCI_x)%name, subr_poly(sr)%points(ip)%x )
+                call w_whole_tag( luo_saeinp, input_tag(SCI_y)%name, subr_poly(sr)%points(ip)%y )
+              call w_end_tag( luo_saeinp, input_tag(SCI_coord)%name )
+            end do
+            call w_end_tag( luo_saeinp, input_tag(SCI_coords)%name )
+            call w_whole_tag( luo_saeinp, input_tag(SCI_ResidueHeight)%name, subrsurf(sr)%adzht_ave )
+            call w_whole_tag( luo_saeinp, input_tag(SCI_CropHeight)%name, subrsurf(sr)%aczht )
+            call w_whole_tag( luo_saeinp, input_tag(SCI_CropSAI)%name, subrsurf(sr)%acrsai )
+            call w_whole_tag( luo_saeinp, input_tag(SCI_CropLAI)%name, subrsurf(sr)%acrlai )
+            call w_whole_tag( luo_saeinp, input_tag(SCI_ResidueSAI)%name, subrsurf(sr)%adrsaitot )
+            call w_whole_tag( luo_saeinp, input_tag(SCI_ResidueLAI)%name, subrsurf(sr)%adrlaitot )
+            call w_whole_tag( luo_saeinp, input_tag(SCI_CropRowSpacing)%name, subrsurf(sr)%acxrow )
+            call w_whole_tag( luo_saeinp, input_tag(SCI_CropSeedPlace)%name, subrsurf(sr)%ac0rg )
+            call w_whole_tag( luo_saeinp, input_tag(SCI_BiomassFlatCover)%name, subrsurf(sr)%abffcv )
+            call w_whole_tag( luo_saeinp, input_tag(SCI_CrustCover)%name, subrsurf(sr)%asfcr )
+            call w_whole_tag( luo_saeinp, input_tag(SCI_CrustThick)%name, subrsurf(sr)%aszcr )
+            call w_whole_tag( luo_saeinp, input_tag(SCI_CrustFracCoverLoose)%name, subrsurf(sr)%asflos )
+            call w_whole_tag( luo_saeinp, input_tag(SCI_CrustMassCoverLoose)%name, subrsurf(sr)%asmlos )
+            call w_whole_tag( luo_saeinp, input_tag(SCI_CrustDensity)%name, subrsurf(sr)%asdcr )
+            call w_whole_tag( luo_saeinp, input_tag(SCI_CrustStability)%name, subrsurf(sr)%asecr )
+            call w_whole_tag( luo_saeinp, input_tag(SCI_RandomRoughness)%name, subrsurf(sr)%aslrr )
+            call w_whole_tag( luo_saeinp, input_tag(SCI_RidgeHeight)%name, subrsurf(sr)%aszrgh )
+            call w_whole_tag( luo_saeinp, input_tag(SCI_RidgeSpacing)%name, subrsurf(sr)%asxrgs )
+            call w_whole_tag( luo_saeinp, input_tag(SCI_RidgeWidth)%name, subrsurf(sr)%asxrgw )
+            call w_whole_tag( luo_saeinp, input_tag(SCI_RidgeOrientation)%name, subrsurf(sr)%asargo )
+            call w_whole_tag( luo_saeinp, input_tag(SCI_DikeSpacing)%name, subrsurf(sr)%asxdks )
+            call w_whole_tag( luo_saeinp, input_tag(SCI_SnowDepth)%name, subrsurf(sr)%ahzsnd )
+            ! soil
+            call w_begin_tag( luo_saeinp, input_tag(SCI_SoilLays)%name, &
+                                          input_tag(SCI_number)%name, subrsurf(sr)%nslay)
+            ! the coordinate pairs
+            do l = 1, subrsurf(sr)%nslay    ! NOTE: index adjusted to zero based
+              call w_begin_tag( luo_saeinp, input_tag(SCI_SoilLay)%name, &
+                                            input_tag(SCI_index)%name, l-1)
+                call w_whole_tag( luo_saeinp, input_tag(SCI_LayerThickness)%name, subrsurf(sr)%bsl(l)%aszlyt )
+                call w_whole_tag( luo_saeinp, input_tag(SCI_BulkDensity)%name, subrsurf(sr)%bsl(l)%asdblk )
+                call w_whole_tag( luo_saeinp, input_tag(SCI_Sand)%name, subrsurf(sr)%bsl(l)%asfsan )
+                call w_whole_tag( luo_saeinp, input_tag(SCI_VeryFineSand)%name, subrsurf(sr)%bsl(l)%asfvfs )
+                call w_whole_tag( luo_saeinp, input_tag(SCI_Silt)%name, subrsurf(sr)%bsl(l)%asfsil )
+                call w_whole_tag( luo_saeinp, input_tag(SCI_Clay)%name, subrsurf(sr)%bsl(l)%asfcla )
+                call w_whole_tag( luo_saeinp, input_tag(SCI_RockVolume)%name, subrsurf(sr)%bsl(l)%asvroc )
+                call w_whole_tag( luo_saeinp, input_tag(SCI_AggregateDensity)%name, subrsurf(sr)%bsl(l)%asdagd )
+                call w_whole_tag( luo_saeinp, input_tag(SCI_AggregateStability)%name, subrsurf(sr)%bsl(l)%aseags )
+                call w_whole_tag( luo_saeinp, input_tag(SCI_AggregateGMD)%name, subrsurf(sr)%bsl(l)%aslagm )
+                call w_whole_tag( luo_saeinp, input_tag(SCI_AggregateGSD)%name, subrsurf(sr)%bsl(l)%as0ags )
+                call w_whole_tag( luo_saeinp, input_tag(SCI_AggregateMIN)%name, subrsurf(sr)%bsl(l)%aslagn )
+                call w_whole_tag( luo_saeinp, input_tag(SCI_AggregateMAX)%name, subrsurf(sr)%bsl(l)%aslagx )
+                call w_whole_tag( luo_saeinp, input_tag(SCI_WiltingPoint)%name, subrsurf(sr)%bsl(l)%ahrwcw )
+                call w_whole_tag( luo_saeinp, input_tag(SCI_WaterContent)%name, subrsurf(sr)%bsl(l)%ahrwca )
+              call w_end_tag( luo_saeinp, input_tag(SCI_SoilLay)%name )
+            end do
+            call w_end_tag( luo_saeinp, input_tag(SCI_SoilLays)%name )
+            call w_begin_tag( luo_saeinp, input_tag(SCI_SurfaceSubDayWaters)%name, &
+                                          input_tag(SCI_number)%name, subrsurf(sr)%nswet)
+            do l = 1, subrsurf(sr)%nswet    ! NOTE: index adjusted to zero based
+              call w_whole_tag( luo_saeinp, input_tag(SCI_SurfaceSubDayWater)%name, &
+                                            input_tag(SCI_index)%name, l-1, &
+                                            subrsurf(sr)%ahrwc0(l) )
+            end do
+            call w_end_tag( luo_saeinp, input_tag(SCI_SurfaceSubDayWaters)%name )
+          call w_end_tag( luo_saeinp, input_tag(SCI_Subregion)%name )
+        end do
+        call w_end_tag( luo_saeinp, input_tag(SCI_Subregions)%name )
 
-      write(luo_saeinp,2000)
- 2000 format( &
-      '#',/, &
-      '#',/, &
-      '# +++ INITIALIZATION +++',/, &
-      '#',/, &
-      '#     am0eif, L, EROSION "initialization" flag',/, &
-      '#                Must be set to .TRUE. for standalone erosion runs')
-      write(luo_saeinp,*) '.TRUE.'
+        ! barriers
+        nbr = size(barrier)
+        if ( nbr .gt. 0 ) then
+          call w_begin_tag( luo_saeinp, input_tag(SCI_Barriers)%name, &
+                                        input_tag(SCI_number)%name, nbr)
+          ! loop through all accounting regions
+          do b = 1, nbr                   ! NOTE: index adjusted to zero based
+            call w_begin_tag( luo_saeinp, input_tag(SCI_Barrier)%name, &
+                                          input_tag(SCI_index)%name, b-1, &
+                                          input_tag(SCI_number)%name, barrier(b)%np )
+            do ip = 1, barrier(b)%np        ! NOTE: index adjusted to zero based
+              call w_begin_tag( luo_saeinp, input_tag(SCI_BarPoint)%name, &
+                                            input_tag(SCI_index)%name, ip-1 )
+                call w_whole_tag( luo_saeinp, input_tag(SCI_x)%name, barrier(b)%points(ip)%x )
+                call w_whole_tag( luo_saeinp, input_tag(SCI_y)%name, barrier(b)%points(ip)%y )
+                call w_whole_tag( luo_saeinp, input_tag(SCI_height)%name, barrier(b)%param(ip)%amzbr )
+                call w_whole_tag( luo_saeinp, input_tag(SCI_width)%name, barrier(b)%param(ip)%amxbrw )
+                call w_whole_tag( luo_saeinp, input_tag(SCI_porosity)%name, barrier(b)%param(ip)%ampbr )
+              call w_end_tag( luo_saeinp, input_tag(SCI_BarPoint)%name )
+            end do
+            call w_end_tag( luo_saeinp, input_tag(SCI_Barrier)%name )
+          end do
+          call w_end_tag( luo_saeinp, input_tag(SCI_Barriers)%name )
+        end if
 
-      write(luo_saeinp,2100)
- 2100 format ( &
-      '#',/, &
-      '#',/, &
-      '# +++ SIMULATION REGION +++',/, &
-      '#',/, &
-      '#     amxsim(x,y), R, Simulation Region diagonal coordinates (meters)',/, &
-      '#                     Input (x,y) coordinates in this form: x1,y1 x2,y2',/, &
-      '#                     If orientation in 0 degrees, then x axis is East-West',/, &
-      '#                     and y axis is North-South.',/, &
-      '#                      Typical Range: 10.0 to 1600.0',/, &
-      '#',/, &
-      '#                     NOTE:  Accounting region and Subregion coordinates',/, &
-      '#                            must also be set to the same values',/, &
-      '#')
-      write(luo_saeinp,*) amxsim(1)%x, amxsim(1)%y, amxsim(2)%x, amxsim(2)%y
+        ! weather
+        call w_whole_tag( luo_saeinp, input_tag(SCI_AirDensity)%name, awdair )
+        call w_whole_tag( luo_saeinp, input_tag(SCI_WindDirection)%name, awadir )
+        call w_whole_tag( luo_saeinp, input_tag(SCI_AnemometerHeight)%name, anemht )
+        call w_whole_tag( luo_saeinp, input_tag(SCI_AerodynamicRoughness)%name, awzzo )
+        call w_whole_tag( luo_saeinp, input_tag(SCI_AnemometerFlag)%name, wzoflg )
+        call w_whole_tag( luo_saeinp, input_tag(SCI_AverageAnnualPrecipitation)%name, awzypt )
 
-      write(luo_saeinp,2105)
- 2105 format( &
-      '#',/, &
-      '#',/, &
-      '#     amasim, R, Simulation Region orientation angle (degrees from North)')
-      write(luo_saeinp,*) amasim
-
-      write(luo_saeinp,2107)
- 2107 format( &
-      '#',/, &
-      '# +++ NUMBER OF GRID POINTS +++',/, &
-      '#',/, &
-      '#     xgdpt, ygdpt, I, Number of grid points in simulation region x and y directions',/, &
-      '#                      A value of 0 for both values uses the default internal grid.',/, &
-      '#                      A value of 0 for only one generates and error.')
-      write(luo_saeinp,*) xgdpt, ygdpt
-
-      write(luo_saeinp,2110)
- 2110 format('#',/, &
-      '#  +++ ACCOUNTING REGIONS +++',/, &
-      '#',/, &
-      '# nacctr, I, Number of accounting regions')
-      write(luo_saeinp,*) size(acct_poly)
-
-      ! loop through all accounting regions
-      do sr = 1, size(acct_poly)
-
-      write(luo_saeinp,2115)
- 2115 format('#',/, &
-      '# accounting region polygon, count, xy pairs (subregions_mod)',/,&
-      '#         polygons can be:',/, &
-      '#         - open (the last point connects to the first point)',/,&
-      '#         - closed (last point is same as first point)',/, &
-      '#         - complex (multiple closed polygons entered as one)')
-      ! number of coordinate pairs in polygon
-      write(luo_saeinp,*) acct_poly(sr)%np
-      ! the coordinate pairs
-      do ip = 1, acct_poly(sr)%np
-        write(luo_saeinp,*) acct_poly(sr)%points(ip)%x, acct_poly(sr)%points(ip)%y
-      end do
-
-      end do
-
-!       barriers
-      write(luo_saeinp,2120)
- 2120 format ('#',/, &
-      '# +++ BARRIERS +++',/, &
-      '#',/, &
-      '#     nbr, I, Number of barriers (0-5) ')
-      nbr = size(barrier)
-      write(luo_saeinp,*) nbr
-      write(luo_saeinp,2122)
- 2122 format ('#',/, &
-      '#     NOTE: Remaining BARRIER inputs are repeated for each barrier specified',/, &
-      '#     If no barriers specified (nbr=0), then no BARRIER inputs will be here',/, &
-      '#',/, &
-      '#     barrier(b)%np, I, number of points in barrier polyline',/, &
-      '#     Inputs are repeated for each point specified',/, &
-      '#     barrier(b)%points(n)%x, barrier(b)%points(n)%y, R, x,y coordinate pair',/, &
-      '# Example: 0.0 500.0 ',/, &
-      '#     barrier(b)%points(n)%amzbr, R, Barrier height (m)',/, &
-      '#     barrier(b)%points(n)%amxbrw, R, Barrier width (m)',/, &
-      '#     barrier(b)%points(n)%ampbr, R, Barrier porosity (m^2/m^2)',/, &
-      '# Example: 1.2 2.0 0.50 ',/, &
-      '#')
-
-      do b = 1, nbr
-         write(luo_saeinp,2125)
- 2125    format('# ',/, &
-         '# barrier(b)%np, I, number of points in barrier polyline')
-         write(luo_saeinp,*) barrier(b)%np
-
-         do ip = 1, barrier(b)%np
-            write(luo_saeinp,2127)
- 2127       format('# barrier(b)%points(n)%x, barrier(b)%points(n)%y, R, x,y coordinate pair')
-            write(luo_saeinp,*) barrier(b)%points(ip)%x, barrier(b)%points(ip)%y
-
-            write (luo_saeinp,2130)
- 2130       format('# amzbr(b), amxbrw(b), ampbr(b)')
-            write (luo_saeinp,*) barrier(b)%param(ip)%amzbr, barrier(b)%param(ip)%amxbrw, barrier(b)%param(ip)%ampbr
-         end do
-      end do
-
-!       subregions
-      write(luo_saeinp,2135)
- 2135 format( &
-      '#',/, &
-      '# +++ SUBREGIONS +++',/, &
-      '#',/, &
-      '#     nsubr, I, Number of subregions (at least 1)',/, &
-      '#            NOTE: together all must cover simulation region')
-      write(luo_saeinp,*) size(subr_poly)
-
-      write(luo_saeinp,2137)
- 2137 format( &
-      '#',/, &
-      '#     NOTE: Remaining SUBREGION inputs (BIOMASS, SOIL, and HYDROLOGY,',/, &
-      '#     ie. variables defined by subregion) are repeated for nsubr',/, &
-      '#     subregions specified')
-
-      ! loop through all subregions
-      do sr = 1, size(subr_poly)
-
-      write(luo_saeinp,2138)
- 2138 format( &
-      '#',/, &
-      '#     subregion polygon, count, xy pairs (subregions_mod)',/, &
-      '#         polygons can be:',/, &
-      '#         - open (the last point connects to the first point)',/,&
-      '#         - closed (last point is same as first point)',/, &
-      '#         - complex (multiple closed polygons entered as one)')
-      ! number of coordinate pairs in polygon
-      write(luo_saeinp,*) subr_poly(sr)%np
-      ! the coordinate pairs
-      do ip = 1, subr_poly(sr)%np
-        write(luo_saeinp,*) subr_poly(sr)%points(ip)%x, subr_poly(sr)%points(ip)%y
-      end do
-
-      write(luo_saeinp,2140)
- 2140 format('#',/, &
-      '#     +++ BIOMASS +++',/, &
-      '#',/, &
-      '#      subrsurf(s)adzht_ave, R, Average residue height (m)')
-      write(luo_saeinp,*) subrsurf(sr)%adzht_ave
-! Changed above to use "average residue height" instead of "overall height" - LEW 1/26/06
-!      '#       biotot(s)%zht_ave, R, Overall biomass height (m)')
-!      write(luo_saeinp,*) biotot(s)%zht_ave
-
-      write(luo_saeinp,2146)
- 2146 format('#',/, &
-      '#       aczht(s), R, Crop height (m)')
-      write(luo_saeinp,*) subrsurf(sr)%aczht
-
-      write(luo_saeinp,2147)
- 2147 format('#',/, &
-      '#       acrsai(s), R, Crop stem area index (m^2/m^2)',/, &
-      '#       acrlai(s), R, Crop leaf area index (m^2/m^2)')
-      write(luo_saeinp,*) subrsurf(sr)%acrsai, subrsurf(sr)%acrlai
-
-      write(luo_saeinp,2148)
- 2148 format('#',/, &
-      '#       subrsurf(s)%adrsaitot, R, Residue stem area index (m^2/m^2)',/, &
-      '#       subrsurf(s)%adrlaitot, R, Residue leaf area index (m^2/m^2)')
-      write(luo_saeinp,*) subrsurf(sr)%adrsaitot, subrsurf(sr)%adrlaitot
-
-      write(luo_saeinp,2149)
- 2149 format('#',/, &
-      '#       acxrow(s) Crop row spacing (m)',/, &
-      '#       ac0rg(s)  Crop seed placement (0 - furrow, 1 - ridge)')
-      write(luo_saeinp,*) subrsurf(sr)%acxrow, subrsurf(sr)%ac0rg
-
-      write(luo_saeinp,2150)
- 2150 format('#',/, &
-      '# These are not implemented within EROSION',/, &
-      '#       abrsaz(h,s), R, (b1geom.inc) Biomass stem area index by ht (1/m)',/, &
-      '#             (should be 5 values here when used)',/, &
-      '#       abrlaz(h,s), R, (b1geom.inc) Biomass leaf area index by ht (1/m)',/, &
-      '#             (should be 5 values here when used)',/, &
-      '#',/, &
-      '# Only abffcv(s) is currently implemented within EROSION',/, &
-      '#       abffcv(s), R, (b1geom.inc) Flat biomass cover (m^2/m^2)',/, &
-      '#       abfscv(s), R, (b1geom.inc) Standing biomass cover (m^2/m^2)',/, &
-      '#       abftcv(s), R, (b1geom.inc) Total biomass cover (m^2/m^2)',/, &
-      '#             (should be 3 values here when abffcv(s) and abfscv(s) are used)')
-      write(luo_saeinp,*) subrsurf(sr)%abffcv
-
-!      soil
-      write(luo_saeinp,2160)
- 2160 format('#',/, &
-      '#     +++ SOIL +++',/, &
-      '#',/, &
-      '#     nslay(s), I, Number of soil layers (3-10)')
-
-      write(luo_saeinp,*) subrsurf(sr)%nslay
-
-      write(luo_saeinp,2165)
- 2165 format('#',/, &
-      '#     NOTE: Remaining SOIL inputs are repeated for each layer specified',/, &
-      '#',/, &
-      '#     aszlyt(l,s), R, Soil layer thickness (mm)')
-      write(luo_saeinp,*) (subrsurf(sr)%bsl(l)%aszlyt, l=1,subrsurf(sr)%nslay)
-      write(luo_saeinp,2170)
- 2170 format('#',/, &
-      '#     asdblk(l,s), R, Soil layer bulk density (Mg/m^3')
-      write(luo_saeinp,*) (subrsurf(sr)%bsl(l)%asdblk, l=1,subrsurf(sr)%nslay)
-      write(luo_saeinp,2175)
- 2175 format('#',/, &
-      '#     asfsan(l,s),R, Soil layer sand content (Mg/Mg)')
-      write(luo_saeinp,*) (subrsurf(sr)%bsl(l)%asfsan, l=1,subrsurf(sr)%nslay)
-      write(luo_saeinp,2177)
- 2177 format('#',/, &
-      '#     asfvfs(l,s), R, Soil layer very fine sand (Mg/Mg)')
-      write(luo_saeinp,*) (subrsurf(sr)%bsl(l)%asfvfs, l=1,subrsurf(sr)%nslay)
-      write(luo_saeinp,2180)
- 2180 format('#',/, &
-      '#     asfsil(l,s),R, Soil layer silt content (Mg/Mg)')
-      write(luo_saeinp,*) (subrsurf(sr)%bsl(l)%asfsil, l=1,subrsurf(sr)%nslay)
-      write(luo_saeinp,2185)
- 2185 format('#',/, &
-      '#     asfcla(l,s),R, Soil layer clay content (Mg/Mg)')
-      write(luo_saeinp,*) (subrsurf(sr)%bsl(l)%asfcla, l=1,subrsurf(sr)%nslay)
-      write(luo_saeinp,2190)
- 2190 format('#',/, &
-      '#     asvroc(l,s), R, Soil layer rock volume (m^3/m^3)')
-      write(luo_saeinp,*) (subrsurf(sr)%bsl(l)%asvroc, l=1,subrsurf(sr)%nslay)
-      write(luo_saeinp,2195)
- 2195 format('#',/, &
-      '#     asdagd(l,s),R, Soil layer agg density (Mg/m^3)')
-      write(luo_saeinp,*) (subrsurf(sr)%bsl(l)%asdagd, l=1,subrsurf(sr)%nslay)
-      write(luo_saeinp,2200)
- 2200 format('#',/, &
-      '#     aseags(l,s), R, Soil layer agg stability ln(J/kg)')
-      write(luo_saeinp,*) (subrsurf(sr)%bsl(l)%aseags, l=1,subrsurf(sr)%nslay)
-      write(luo_saeinp,2205)
- 2205 format('#',/, &
-      '#     aslagm(l,s), R, Soil layer GMD (mm)')
-      write(luo_saeinp,*) (subrsurf(sr)%bsl(l)%aslagm, l=1,subrsurf(sr)%nslay)
-      write(luo_saeinp,2210)
- 2210 format('#',/, &
-      '#     aslagn(l,s), R, Soil layer minimum agg size (mm)')
-      write(luo_saeinp,*) (subrsurf(sr)%bsl(l)%aslagn, l=1,subrsurf(sr)%nslay)
-      write(luo_saeinp,2215)
- 2215 format('#',/, &
-      '#     aslagx(l,s), R, Soil layer maximum agg size (mm)')
-      write(luo_saeinp,*) (subrsurf(sr)%bsl(l)%aslagx, l=1,subrsurf(sr)%nslay)
-      write(luo_saeinp,2220)
- 2220 format('#',/, &
-      '#     as0ags(l,s), R, Soil layer GSD (mm/mm)')
-      write(luo_saeinp,*) (subrsurf(sr)%bsl(l)%as0ags, l=1,subrsurf(sr)%nslay)
-      write(luo_saeinp,2225)
- 2225 format('#',/, &
-      '#     asfcr(s), R,  Surface crust fraction (m^2/m^2)',/, &
-      '#     aszcr(s), R,  Surface crust thickness (mm)',/, &
-      '#     asflos(s), R,  Fraction of loose material on surface (m^2/m^2)',/, &
-      '#     asmlos(s), R,  Mass of loose material on crust (kg/m^2)',/, &
-      '#     asdcr(s), R,  Soil crust density (Mg/m^3)',/, &
-      '#     asecr(s), R,  Soil crust stability ln(J/kg)')
-      write(luo_saeinp,*) subrsurf(sr)%asfcr, subrsurf(sr)%aszcr, subrsurf(sr)%asflos, subrsurf(sr)%asmlos, &
-                          subrsurf(sr)%asdcr, subrsurf(sr)%asecr
-      write(luo_saeinp,2230)
- 2230 format('#',/, &
-      '#     aslrr(s), R, Allmaras random roughness (mm)')
-      write(luo_saeinp,*) subrsurf(sr)%aslrr
-      write(luo_saeinp,2235)
- 2235 format('#',/, &
-      '#     aszrgh(s), R, Ridge height (mm)',/, &
-      '#     asxrgs(s), R, Ridge spacing (mm)',/, &
-      '#     asxrgw(s), R, Ridge width (mm)',/, &
-      '#     asargo(s), R, Ridge orientation (deg)')
-      write(luo_saeinp,*) subrsurf(sr)%aszrgh, subrsurf(sr)%asxrgs, subrsurf(sr)%asxrgw, subrsurf(sr)%asargo
-      write(luo_saeinp,2240)
- 2240 format('#',/, &
-      '#     asxdks(s), R, Dike spacing (mm)')
-      write(luo_saeinp,*) subrsurf(sr)%asxdks
-      write(luo_saeinp,2245)
-!      hydrology
- 2245 format('#',/, &
-      '#     +++ HYDROLOGY +++',/, &
-      '#',/, &
-      '#     ahzsnd(s), R, Snow depth (mm)')
-      write(luo_saeinp,*) subrsurf(sr)%ahzsnd
-      write(luo_saeinp,2250)
- 2250 format('#',/, &
-      '#     ahrwcw(l,s), R, (h1db1.inc) Soil layer wilting point water content (Mg/Mg)')
-      write(luo_saeinp,*) (subrsurf(sr)%bsl(l)%ahrwcw, l=1,subrsurf(sr)%nslay)
-      write(luo_saeinp,2255)
- 2255 format('#',/, &
-      '#     ahrwca(l,s), R, (h1db1.inc) Soil layer water content (Mg/Mg)')
-      write(luo_saeinp,*) (subrsurf(sr)%bsl(l)%ahrwca, l=1,subrsurf(sr)%nslay)
-      write(luo_saeinp,2260)
- 2260 format('#',/, &
-      '#     ahrwc0(h,s), R, (h1db1.inc) Surface layer water content (Mg/Mg)',/, &
-      '#                  NOTE: the near surface water content is specified on an',/, &
-      '#                        hourly basis.  We read in the hrly water content',/, &
-      '#                        on two lines, with 12 values in each line.')
-      write(luo_saeinp,22) (subrsurf(sr)%ahrwc0(l), l=1,12)
- 22   format(12(1x,f10.7))
-      write(luo_saeinp,22) (subrsurf(sr)%ahrwc0(l), l=13,24)
-
-      ! end of subregion loop
-      end do
-
-!      weather
-      write(luo_saeinp,2270)
- 2270 format('#',/, &
-      '# NOTE: This is the end of the SUBREGION variables',/, &
-      '#',/, &
-      '#     +++ WEATHER +++',/, &
-      '#',/, &
-      '#     awzypt, R, Average annual precipitation (mm)')
-      write(luo_saeinp,*) awzypt
-      write(luo_saeinp,2273)
- 2273 format('#',/, &
-      '#     awdair, R, Air density (kg/m^3)')
-      write(luo_saeinp,*) awdair
-      write(luo_saeinp,2275)
- 2275 format('#',/, &
-      '#     awadir, R, Wind direction (deg)')
-      write(luo_saeinp,*) awadir
-      write(luo_saeinp,2280)
- 2280 format('#',/, &
-      '#     ntstep, I, (local variable) Number of intervals/day to run EROSION')
-      write(luo_saeinp,*) ntstep
-      write(luo_saeinp,2285)
- 2285 format('#',/, &
-      '#     anemht, R  anemometer height (m)',/, &
-      '#     awzzo,  R  aerodynamic roughness at anemometer site (mm)', /, &
-      '#     wzoflg, I (global variable) zo location flag',/, &
-      '#               (flag =0 - zo fixed at wx sta. location)',/, &
-      '#               (flag = 1 - zo variable at field location)')
-      write(luo_saeinp,*) anemht, awzzo, wzoflg
-      write(luo_saeinp,2290)
- 2290 format('#',/, &
-      '#     wflg, I, (local variable) Wind/Weibull flag',/, &
-      '#              (0 - read in Weibull parameters, 1 - read in wind speeds)')
-      write(luo_saeinp,*) '1'
-      write(luo_saeinp,2295)
- 2295 format('#',/, &
-      '# NOTE: This is only present when the above (wflg=0)',/, &
-      '#     wfcalm, R, (local variable) Fraction of time winds are calm (hr/hr)',/, &
-      '#     wuc, R, (local variable) Weibull "c" factor (m/s)',/, &
-      '#     w0k, R, (local variable) Weibull "k" factor (fraction)',/, &
-      '#   0.263    5.856    1.720', &
-      '#',/, &
-      '# NOTE: The remaining data is only present when (wflg=1)',/, &
-      '#       wflg=1 uses standard input from windgen in WEPS.',/, &
-      '#',/, &
-      '#       awu(i), R, (w1wind) Wind speed for (ntstep) intervals (m/s)',/, &
-      '#',/, &
-      '# I think I can read multiple lines with variable number of values',/, &
-      '# We will try and see - LEW  Must use 6 values per line LH.',/, &
-      '#')
-      write(luo_saeinp,*) (subday(k)%awu, k=1,6)
-      write(luo_saeinp,*) (subday(k)%awu, k=7,12)
-      write(luo_saeinp,*) (subday(k)%awu, k=13,18)
-      write(luo_saeinp,*) (subday(k)%awu, k=19,24)
-      write(luo_saeinp,2300)
- 2300 format( '#' )
+        ! wind
+        call w_begin_tag( luo_saeinp, input_tag(SCI_WindSpeeds)%name, &
+                                      input_tag(SCI_number)%name, ntstep)
+        do k = 1, ntstep                ! NOTE: index adjusted to zero based
+          call w_whole_tag( luo_saeinp, input_tag(SCI_WindSpeed)%name, &
+                                        input_tag(SCI_index)%name, k-1, &
+                                        subday(k)%awu )
+        end do
+        call w_end_tag( luo_saeinp, input_tag(SCI_WindSpeeds)%name )
+      call w_end_tag( luo_saeinp, input_tag(sweepData)%name )
 
       close(luo_saeinp)
 
