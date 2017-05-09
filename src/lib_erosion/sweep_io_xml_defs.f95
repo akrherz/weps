@@ -99,23 +99,8 @@ module sweep_io_xml_defs
   integer, parameter, public :: SCI_YOrigin = 75
   integer, parameter, public :: sweepData = 76
 
-  interface w_begin_tag
-    module procedure w_begin_tag_a0
-    module procedure w_begin_tag_a1
-    module procedure w_begin_tag_a2
-  end interface
-
-  interface w_whole_tag
-    module procedure w_whole_tag_a0_real
-    module procedure w_whole_tag_a0_integer
-    module procedure w_whole_tag_a1
-  end interface
-
   public :: input_tag
   public :: init_input_xml
-  public :: w_begin_tag
-  public :: w_end_tag
-  public :: w_whole_tag
 
 contains
 
@@ -221,128 +206,6 @@ contains
     ! makes chunk code more understandable.
 
   end subroutine init_input_xml
-
-  subroutine w_spaces( luo_saeinp )
-    integer, intent(in) :: luo_saeinp      ! output unit number
-
-    integer :: idx
-
-    do idx = 1, indent
-      write(luo_saeinp,'(a1)',advance='no') ' '
-    end do
-  end subroutine w_spaces
-
-  ! write beginning tag with zero attributes
-  subroutine w_begin_tag_a0( luo_saeinp, tag_name )
-    integer, intent(in) :: luo_saeinp      ! output unit number
-    character(len=*), intent(in) :: tag_name
-
-    call w_spaces( luo_saeinp )
-    write(luo_saeinp,*) '<', trim(tag_name), '>'
-
-    indent = indent + INDENT_SPACES
-  end subroutine w_begin_tag_a0
-
-  ! write beginning tag with one attribute
-  subroutine w_begin_tag_a1( luo_saeinp, tag_name, attrib1, attr1_value )
-    integer, intent(in) :: luo_saeinp      ! output unit number
-    character(len=*), intent(in) :: tag_name
-    character(len=*), intent(in) :: attrib1
-    integer, intent(in) :: attr1_value
-
-    character(len=MAX_NAME_LEN) :: attr1_str
-
-    write(attr1_str, '(i0)') attr1_value
-    call w_spaces( luo_saeinp )
-    write(luo_saeinp,*) '<', trim(tag_name), &
-                        ' ', trim(attrib1), '="', adjustl(trim(attr1_str)), '">'
-
-    indent = indent + INDENT_SPACES
-  end subroutine w_begin_tag_a1
-
-  ! write beginning tag with two attributes
-  subroutine w_begin_tag_a2( luo_saeinp, tag_name, attrib1, attr1_value, attrib2, attr2_value )
-    integer, intent(in) :: luo_saeinp      ! output unit number
-    character(len=*), intent(in) :: tag_name
-    character(len=*), intent(in) :: attrib1
-    integer, intent(in) :: attr1_value
-    character(len=*), intent(in) :: attrib2
-    integer, intent(in) :: attr2_value
-
-    character(len=MAX_NAME_LEN) :: attr1_str
-    character(len=MAX_NAME_LEN) :: attr2_str
-
-    write(attr1_str, '(i0)') attr1_value
-    write(attr2_str, '(i0)') attr2_value
-    call w_spaces( luo_saeinp )
-    write(luo_saeinp,*) '<', trim(tag_name), &
-                        ' ', trim(attrib1), '="', adjustl(trim(attr1_str)), '">', &
-                        ' ', trim(attrib2), '="', adjustl(trim(attr2_str)), '">'
-
-    indent = indent + INDENT_SPACES
-  end subroutine w_begin_tag_a2
-
-  ! write ending tag
-  subroutine w_end_tag( luo_saeinp, tag_name )
-    integer, intent(in) :: luo_saeinp      ! output unit number
-    character(len=*), intent(in) :: tag_name
-
-    indent = indent - INDENT_SPACES
-
-    call w_spaces( luo_saeinp )
-    write(luo_saeinp,*) '</', trim(tag_name), '>'
-  end subroutine w_end_tag
-
-  ! write whole tag with zero attributes and real number value
-  subroutine w_whole_tag_a0_real( luo_saeinp, tag_name, value )
-    integer, intent(in) :: luo_saeinp      ! output unit number
-    character(len=*), intent(in) :: tag_name
-    real, intent(in) :: value
-
-    character(len=MAX_NAME_LEN) :: real_str
-
-    write(real_str, '(g0)') value
-    call w_spaces( luo_saeinp )
-    write(luo_saeinp,*) '<', trim(tag_name), '>', &
-                         adjustl(trim(real_str)), &
-                        '</', trim(tag_name), '>'
-  end subroutine w_whole_tag_a0_real
-
-  ! write whole tag with zero attributes and integer number value
-  subroutine w_whole_tag_a0_integer( luo_saeinp, tag_name, value )
-    integer, intent(in) :: luo_saeinp      ! output unit number
-    character(len=*), intent(in) :: tag_name
-    integer, intent(in) :: value
-
-    character(len=MAX_NAME_LEN) :: integer_str
-
-    write(integer_str, '(g0)') value
-    call w_spaces( luo_saeinp )
-    write(luo_saeinp,*) '<', trim(tag_name), '>', &
-                         adjustl(trim(integer_str)), &
-                        '</', trim(tag_name), '>'
-  end subroutine w_whole_tag_a0_integer
-
-  ! write whole tag with one attribute
-  subroutine w_whole_tag_a1( luo_saeinp, tag_name, attrib1, attr1_value, value )
-    integer, intent(in) :: luo_saeinp      ! output unit number
-    character(len=*), intent(in) :: tag_name
-    character(len=*), intent(in) :: attrib1
-    integer, intent(in) :: attr1_value
-    real, intent(in) :: value
-
-    character(len=MAX_NAME_LEN) :: attr1_str
-    character(len=MAX_NAME_LEN) :: real_str
-
-    write(attr1_str, '(i0)') attr1_value
-    write(real_str, '(g0)') value
-
-    call w_spaces( luo_saeinp )
-    write(luo_saeinp,*) '<', trim(tag_name), &
-                        ' ', trim(attrib1), '="', adjustl(trim(attr1_str)), '">', &
-                        adjustl(trim(real_str)), &
-                        '</', trim(tag_name), '>'
-  end subroutine w_whole_tag_a1
 
 end module sweep_io_xml_defs
 

@@ -23,15 +23,8 @@ module sweep_io_xml_mod
   use barriers_mod, only: barrier_day_state, barrier_params, barrier_climate
   use grid_mod, only: amasim, amxsim, xgdpt, ygdpt
   use sae_in_out_mod, only: saeinp
+  use read_write_xml_mod, only: read_param
  
-  interface read_param
-    module procedure read_param_real_1
-    module procedure read_param_real_2
-    module procedure read_param_int_1
-    module procedure read_param_int_2
-    module procedure read_param_int_3
-  end interface
-
   integer, parameter :: max_simyear = 100000  ! value used to test simulation year input range
   integer :: nacctr   ! Number of accounting regions
   integer :: nsubr    ! Number of subregions
@@ -98,7 +91,7 @@ contains
         call get_value(attributes, input_tag(SCI_number)%name, param_value, ret_stat)
         select case (idx)
         case (SCI_Subregions)
-          call read_param(SCI_number, param_value, nsubr)
+          call read_param(input_tag(SCI_number)%name, param_value, nsubr)
           !write(*,*) 'Number of Subregions: ', nsubr
           ! create data array to hold input and derived values for each subregion
           sum_stat = 0
@@ -118,7 +111,7 @@ contains
           end do
 
         case (SCI_coords)
-          call read_param(SCI_number, param_value, poly_np)
+          call read_param(input_tag(SCI_number)%name, param_value, poly_np)
           ! write(*,*) 'Number of Subregion Coordinate Points: ', poly_np
           if (poly_np .ge. 3) then
             if ( input_tag(SCI_Subregion)%in_tag ) then
@@ -144,7 +137,7 @@ contains
           end if
 
         case (SCI_SoilLays)
-          call read_param(SCI_number, param_value, subrsurf(isr)%nslay)
+          call read_param(input_tag(SCI_number)%name, param_value, subrsurf(isr)%nslay)
           !write(*,*) 'Number of Soil Layers: ', subrsurf(isr)%nslay
           allocate(soillay_complete(subrsurf(isr)%nslay), stat=alloc_stat)
           if( alloc_stat .gt. 0 ) then
@@ -158,7 +151,7 @@ contains
           call create_subregionsoillayers(subrsurf(isr)%nslay, subrsurf(isr))
 
         case (SCI_SurfaceSubDayWaters)
-          call read_param(SCI_number, param_value, subrsurf(isr)%nswet)
+          call read_param(input_tag(SCI_number)%name, param_value, subrsurf(isr)%nswet)
           !write(*,*) 'Number of Surface Water Sub Day values: ', subrsurf(isr)%nswet
             allocate(surfwat_complete(subrsurf(isr)%nswet), stat=alloc_stat)
             if( alloc_stat .gt. 0 ) then
@@ -172,7 +165,7 @@ contains
             end do
 
         case (SCI_Accounts)
-          call read_param(SCI_number, param_value, nacctr)
+          call read_param(input_tag(SCI_number)%name, param_value, nacctr)
           !write(*,*) 'Number of Accounting Regions: ', nacctr
           ! allocate structure for accounting regions (nacctr .lt. 1 gives zero size array)
           sum_stat = 0
@@ -190,7 +183,7 @@ contains
           accounts_present = .true.
 
         case (SCI_Barriers)
-          call read_param(SCI_number, param_value, nbr)
+          call read_param(input_tag(SCI_number)%name, param_value, nbr)
           !write(*,*) 'Number of Barriers: ', nbr
           ! allocate structure for barriers (nbr .lt. 1 gives zero size array)
           sum_stat = 0
@@ -209,7 +202,7 @@ contains
           barriers_present = .true.
 
         case (SCI_WindSpeeds)
-          call read_param(SCI_number, param_value, ntstep)
+          call read_param(input_tag(SCI_number)%name, param_value, ntstep)
           !write(*,*) 'Number of Wind Speeds: ', ntstep
           ! allocate wind accounting, direction and speed arrays
           sum_stat = 0
@@ -241,37 +234,37 @@ contains
         call get_value(attributes, input_tag(SCI_index)%name, param_value, ret_stat)
         select case (idx)
         case (SCI_Subregion)
-          call read_param(SCI_index, param_value, isr)
+          call read_param(input_tag(SCI_index)%name, param_value, isr)
           ! adjust from base 0 to base 1 arrays
           isr = isr + 1
           !write(*,*) 'Subregion Index: ', isr
         case (SCI_coord)
-          call read_param(SCI_index, param_value, ipol)
+          call read_param(input_tag(SCI_index)%name, param_value, ipol)
           ! adjust from base 0 to base 1 arrays
           ipol = ipol + 1
           !write(*,*) 'Subregion Coordinates Point Index: ', ipol
         case (SCI_SoilLay)
-          call read_param(SCI_index, param_value, isl)
+          call read_param(input_tag(SCI_index)%name, param_value, isl)
           ! adjust from base 0 to base 1 arrays
           isl = isl + 1
           !write(*,*) 'Soil Layer Index: ', isl
         case (SCI_SurfaceSubDayWater)
-          call read_param(SCI_index, param_value, isurfwat)
+          call read_param(input_tag(SCI_index)%name, param_value, isurfwat)
           ! adjust from base 0 to base 1 arrays
           isurfwat = isurfwat + 1
           !write(*,*) 'Surface Water Index: ', isurfwat
         case (SCI_Account)
-          call read_param(SCI_index, param_value, iar)
+          call read_param(input_tag(SCI_index)%name, param_value, iar)
           ! adjust from base 0 to base 1 arrays
           iar = iar + 1
           !write(*,*) 'Accounting region Index: ', iar
         case (SCI_BarPoint)
-          call read_param(SCI_index, param_value, ipol)
+          call read_param(input_tag(SCI_index)%name, param_value, ipol)
           ! adjust from base 0 to base 1 arrays
           ipol = ipol + 1
           !write(*,*) 'Barrier Point Index: ', ipol
         case (SCI_WindSpeed)
-          call read_param(SCI_index, param_value, iwind)
+          call read_param(input_tag(SCI_index)%name, param_value, iwind)
           ! adjust from base 0 to base 1 arrays
           iwind = iwind + 1
           !write(*,*) 'Wind Speed Index: ', iwind
@@ -284,7 +277,7 @@ contains
     else if ( (idx .eq. SCI_Barrier) ) then
       if ( has_key(attributes, input_tag(SCI_index)%name) ) then
         call get_value(attributes, input_tag(SCI_index)%name, param_value, ret_stat)
-        call read_param(SCI_index, param_value, ibr)
+        call read_param(input_tag(SCI_index)%name, param_value, ibr)
         ! adjust from base 0 to base 1 arrays
         ibr = ibr + 1
         !write(*,*) 'Barrier Index: ', ibr
@@ -294,7 +287,7 @@ contains
       end if
       if ( has_key(attributes, input_tag(SCI_number)%name) ) then
         call get_value(attributes, input_tag(SCI_number)%name, param_value, ret_stat)
-        call read_param(SCI_number, param_value, poly_np)
+        call read_param(input_tag(SCI_number)%name, param_value, poly_np)
         !write(*,*) 'Number of Barrier Points: ', poly_np
         ! create storage for point and barrier data
         ! this also sets values for barr%np and barr%ntm
@@ -886,31 +879,31 @@ contains
 
     if (input_tag(SweepData)%in_tag) then
       if (input_tag(SCI_RegionAngle)%in_tag) then
-        call read_param(SCI_RegionAngle, param_value, amasim)
+        call read_param(input_tag(SCI_RegionAngle)%name, param_value, amasim)
         input_tag(SCI_RegionAngle)%acquired = .true.
 
       else if (input_tag(SCI_XOrigin)%in_tag) then
-        call read_param(SCI_XOrigin, param_value, amxsim(1)%x)
+        call read_param(input_tag(SCI_XOrigin)%name, param_value, amxsim(1)%x)
         input_tag(SCI_XOrigin)%acquired = .true.
 
       else if (input_tag(SCI_YOrigin)%in_tag) then
-        call read_param(SCI_YOrigin, param_value, amxsim(1)%y)
+        call read_param(input_tag(SCI_YOrigin)%name, param_value, amxsim(1)%y)
         input_tag(SCI_YOrigin)%acquired = .true.
 
       else if (input_tag(SCI_XLength)%in_tag) then
-        call read_param(SCI_XLength, param_value, amxsim(2)%x)
+        call read_param(input_tag(SCI_XLength)%name, param_value, amxsim(2)%x)
         input_tag(SCI_XLength)%acquired = .true.
 
       else if (input_tag(SCI_YLength)%in_tag) then
-        call read_param(SCI_YLength, param_value, amxsim(2)%y)
+        call read_param(input_tag(SCI_YLength)%name, param_value, amxsim(2)%y)
         input_tag(SCI_YLength)%acquired = .true.
 
       else if (input_tag(SCI_XGrid)%in_tag) then
-        call read_param(SCI_XGrid, param_value, xgdpt)
+        call read_param(input_tag(SCI_XGrid)%name, param_value, xgdpt)
         input_tag(SCI_XGrid)%acquired = .true.
 
       else if (input_tag(SCI_YGrid)%in_tag) then
-        call read_param(SCI_YGrid, param_value, ygdpt)
+        call read_param(input_tag(SCI_YGrid)%name, param_value, ygdpt)
         input_tag(SCI_YGrid)%acquired = .true.
 
       else if (input_tag(SCI_Accounts)%in_tag) then
@@ -919,10 +912,10 @@ contains
             if (input_tag(SCI_coord)%in_tag) then
               !SCI_coord
               if (input_tag(SCI_x)%in_tag) then
-                call read_param(SCI_x, param_value, acct_poly(iar)%points(ipol)%x)
+                call read_param(input_tag(SCI_x)%name, param_value, acct_poly(iar)%points(ipol)%x)
                 input_tag(SCI_x)%acquired = .true.
               else if (input_tag(SCI_y)%in_tag) then
-                call read_param(SCI_y, param_value, acct_poly(iar)%points(ipol)%y)
+                call read_param(input_tag(SCI_y)%name, param_value, acct_poly(iar)%points(ipol)%y)
                 input_tag(SCI_y)%acquired = .true.
               end if
             end if
@@ -936,76 +929,76 @@ contains
             if (input_tag(SCI_coord)%in_tag) then
               !SCI_coord
               if (input_tag(SCI_x)%in_tag) then
-                call read_param(SCI_x, param_value, subr_poly(isr)%points(ipol)%x)
+                call read_param(input_tag(SCI_x)%name, param_value, subr_poly(isr)%points(ipol)%x)
                 input_tag(SCI_x)%acquired = .true.
               else if (input_tag(SCI_y)%in_tag) then
-                call read_param(SCI_y, param_value, subr_poly(isr)%points(ipol)%y)
+                call read_param(input_tag(SCI_y)%name, param_value, subr_poly(isr)%points(ipol)%y)
                 input_tag(SCI_y)%acquired = .true.
               end if
             end if
 
           else if (input_tag(SCI_ResidueHeight)%in_tag) then
-            call read_param(SCI_ResidueHeight, param_value, subrsurf(isr)%adzht_ave)
+            call read_param(input_tag(SCI_ResidueHeight)%name, param_value, subrsurf(isr)%adzht_ave)
             input_tag(SCI_ResidueHeight)%acquired = .true.
 
           else if (input_tag(SCI_CropHeight)%in_tag) then
-            call read_param(SCI_CropHeight, param_value, subrsurf(isr)%aczht)
+            call read_param(input_tag(SCI_CropHeight)%name, param_value, subrsurf(isr)%aczht)
             input_tag(SCI_CropHeight)%acquired = .true.
 
           else if (input_tag(SCI_CropSAI)%in_tag) then
-            call read_param(SCI_CropSAI, param_value, subrsurf(isr)%acrsai)
+            call read_param(input_tag(SCI_CropSAI)%name, param_value, subrsurf(isr)%acrsai)
             input_tag(SCI_CropSAI)%acquired = .true.
 
           else if (input_tag(SCI_CropLAI)%in_tag) then
-            call read_param(SCI_CropLAI, param_value, subrsurf(isr)%acrlai)
+            call read_param(input_tag(SCI_CropLAI)%name, param_value, subrsurf(isr)%acrlai)
             input_tag(SCI_CropLAI)%acquired = .true.
 
           else if (input_tag(SCI_ResidueSAI)%in_tag) then
-            call read_param(SCI_ResidueSAI, param_value, subrsurf(isr)%adrsaitot)
+            call read_param(input_tag(SCI_ResidueSAI)%name, param_value, subrsurf(isr)%adrsaitot)
             input_tag(SCI_ResidueSAI)%acquired = .true.
 
           else if (input_tag(SCI_ResidueLAI)%in_tag) then
-            call read_param(SCI_ResidueLAI, param_value, subrsurf(isr)%adrlaitot)
+            call read_param(input_tag(SCI_ResidueLAI)%name, param_value, subrsurf(isr)%adrlaitot)
             input_tag(SCI_ResidueLAI)%acquired = .true.
 
           else if (input_tag(SCI_CropRowSpacing)%in_tag) then
-            call read_param(SCI_CropRowSpacing, param_value, subrsurf(isr)%acxrow)
+            call read_param(input_tag(SCI_CropRowSpacing)%name, param_value, subrsurf(isr)%acxrow)
             input_tag(SCI_CropRowSpacing)%acquired = .true.
 
           else if (input_tag(SCI_CropSeedPlace)%in_tag) then
-            call read_param(SCI_CropSeedPlace, param_value, subrsurf(isr)%ac0rg)
+            call read_param(input_tag(SCI_CropSeedPlace)%name, param_value, subrsurf(isr)%ac0rg)
             input_tag(SCI_CropSeedPlace)%acquired = .true.
 
           else if (input_tag(SCI_BiomassFlatCover)%in_tag) then
-            call read_param(SCI_BiomassFlatCover, param_value, subrsurf(isr)%abffcv)
+            call read_param(input_tag(SCI_BiomassFlatCover)%name, param_value, subrsurf(isr)%abffcv)
             input_tag(SCI_BiomassFlatCover)%acquired = .true.
 
           else if (input_tag(SCI_CrustCover)%in_tag) then
-            call read_param(SCI_CrustCover, param_value, subrsurf(isr)%asfcr)
+            call read_param(input_tag(SCI_CrustCover)%name, param_value, subrsurf(isr)%asfcr)
             input_tag(SCI_CrustCover)%acquired = .true.
 
           else if (input_tag(SCI_CrustThick)%in_tag) then
-            call read_param(SCI_CrustThick, param_value, subrsurf(isr)%aszcr)
+            call read_param(input_tag(SCI_CrustThick)%name, param_value, subrsurf(isr)%aszcr)
             input_tag(SCI_CrustThick)%acquired = .true.
 
           else if (input_tag(SCI_CrustFracCoverLoose)%in_tag) then
-            call read_param(SCI_CrustFracCoverLoose, param_value, subrsurf(isr)%asflos)
+            call read_param(input_tag(SCI_CrustFracCoverLoose)%name, param_value, subrsurf(isr)%asflos)
             input_tag(SCI_CrustFracCoverLoose)%acquired = .true.
 
           else if (input_tag(SCI_CrustMassCoverLoose)%in_tag) then
-            call read_param(SCI_CrustMassCoverLoose, param_value, subrsurf(isr)%asmlos)
+            call read_param(input_tag(SCI_CrustMassCoverLoose)%name, param_value, subrsurf(isr)%asmlos)
             input_tag(SCI_CrustMassCoverLoose)%acquired = .true.
 
           else if (input_tag(SCI_CrustDensity)%in_tag) then
-            call read_param(SCI_CrustDensity, param_value, subrsurf(isr)%asdcr)
+            call read_param(input_tag(SCI_CrustDensity)%name, param_value, subrsurf(isr)%asdcr)
             input_tag(SCI_CrustDensity)%acquired = .true.
 
           else if (input_tag(SCI_CrustStability)%in_tag) then
-            call read_param(SCI_CrustStability, param_value, subrsurf(isr)%asecr)
+            call read_param(input_tag(SCI_CrustStability)%name, param_value, subrsurf(isr)%asecr)
             input_tag(SCI_CrustStability)%acquired = .true.
 
           else if (input_tag(SCI_RandomRoughness)%in_tag) then
-            call read_param(SCI_RandomRoughness, param_value, subrsurf(isr)%aslrr)
+            call read_param(input_tag(SCI_RandomRoughness)%name, param_value, subrsurf(isr)%aslrr)
             input_tag(SCI_RandomRoughness)%acquired = .true.
 
             !Lower and upper limits of grid cell RR allowed by erosion submodel
@@ -1027,82 +1020,82 @@ contains
             end if
 
           else if (input_tag(SCI_RidgeHeight)%in_tag) then
-            call read_param(SCI_RidgeHeight, param_value, subrsurf(isr)%aszrgh)
+            call read_param(input_tag(SCI_RidgeHeight)%name, param_value, subrsurf(isr)%aszrgh)
             input_tag(SCI_RidgeHeight)%acquired = .true.
 
           else if (input_tag(SCI_RidgeSpacing)%in_tag) then
-            call read_param(SCI_RidgeSpacing, param_value, subrsurf(isr)%asxrgs)
+            call read_param(input_tag(SCI_RidgeSpacing)%name, param_value, subrsurf(isr)%asxrgs)
             input_tag(SCI_RidgeSpacing)%acquired = .true.
 
           else if (input_tag(SCI_RidgeWidth)%in_tag) then
-            call read_param(SCI_RidgeWidth, param_value, subrsurf(isr)%asxrgw)
+            call read_param(input_tag(SCI_RidgeWidth)%name, param_value, subrsurf(isr)%asxrgw)
             input_tag(SCI_RidgeWidth)%acquired = .true.
 
           else if (input_tag(SCI_RidgeOrientation)%in_tag) then
-            call read_param(SCI_RidgeOrientation, param_value, subrsurf(isr)%asargo)
+            call read_param(input_tag(SCI_RidgeOrientation)%name, param_value, subrsurf(isr)%asargo)
             input_tag(SCI_RidgeOrientation)%acquired = .true.
 
           else if (input_tag(SCI_DikeSpacing)%in_tag) then
-            call read_param(SCI_DikeSpacing, param_value, subrsurf(isr)%asxdks)
+            call read_param(input_tag(SCI_DikeSpacing)%name, param_value, subrsurf(isr)%asxdks)
             input_tag(SCI_DikeSpacing)%acquired = .true.
 
           else if (input_tag(SCI_SnowDepth)%in_tag) then
-            call read_param(SCI_SnowDepth, param_value, subrsurf(isr)%ahzsnd)
+            call read_param(input_tag(SCI_SnowDepth)%name, param_value, subrsurf(isr)%ahzsnd)
             input_tag(SCI_SnowDepth)%acquired = .true.
 
           else if (input_tag(SCI_SoilLays)%in_tag) then
             if (input_tag(SCI_SoilLay)%in_tag) then
               if (input_tag(SCI_LayerThickness)%in_tag) then
-                call read_param(SCI_LayerThickness, param_value, subrsurf(isr)%bsl(isl)%aszlyt)
+                call read_param(input_tag(SCI_LayerThickness)%name, param_value, subrsurf(isr)%bsl(isl)%aszlyt)
                 input_tag(SCI_LayerThickness)%acquired = .true.
               else if (input_tag(SCI_BulkDensity)%in_tag) then
-                call read_param(SCI_BulkDensity, param_value, subrsurf(isr)%bsl(isl)%asdblk)
+                call read_param(input_tag(SCI_BulkDensity)%name, param_value, subrsurf(isr)%bsl(isl)%asdblk)
                 input_tag(SCI_BulkDensity)%acquired = .true.
               else if (input_tag(SCI_Sand)%in_tag) then
-                call read_param(SCI_Sand, param_value, subrsurf(isr)%bsl(isl)%asfsan)
+                call read_param(input_tag(SCI_Sand)%name, param_value, subrsurf(isr)%bsl(isl)%asfsan)
                 input_tag(SCI_Sand)%acquired = .true.
               else if (input_tag(SCI_Silt)%in_tag) then
-                call read_param(SCI_Silt, param_value, subrsurf(isr)%bsl(isl)%asfsil)
+                call read_param(input_tag(SCI_Silt)%name, param_value, subrsurf(isr)%bsl(isl)%asfsil)
                 input_tag(SCI_Silt)%acquired = .true.
               else if (input_tag(SCI_Clay)%in_tag) then
-                call read_param(SCI_Clay, param_value, subrsurf(isr)%bsl(isl)%asfcla)
+                call read_param(input_tag(SCI_Clay)%name, param_value, subrsurf(isr)%bsl(isl)%asfcla)
                 input_tag(SCI_Clay)%acquired = .true.
               else if (input_tag(SCI_VeryFineSand)%in_tag) then
-                call read_param(SCI_VeryFineSand, param_value, subrsurf(isr)%bsl(isl)%asfvfs)
+                call read_param(input_tag(SCI_VeryFineSand)%name, param_value, subrsurf(isr)%bsl(isl)%asfvfs)
                 input_tag(SCI_VeryFineSand)%acquired = .true.
               else if (input_tag(SCI_RockVolume)%in_tag) then
-                call read_param(SCI_RockVolume, param_value, subrsurf(isr)%bsl(isl)%asvroc)
+                call read_param(input_tag(SCI_RockVolume)%name, param_value, subrsurf(isr)%bsl(isl)%asvroc)
                 input_tag(SCI_RockVolume)%acquired = .true.
               else if (input_tag(SCI_AggregateDensity)%in_tag) then
-                call read_param(SCI_AggregateDensity, param_value, subrsurf(isr)%bsl(isl)%asdagd)
+                call read_param(input_tag(SCI_AggregateDensity)%name, param_value, subrsurf(isr)%bsl(isl)%asdagd)
                 input_tag(SCI_AggregateDensity)%acquired = .true.
               else if (input_tag(SCI_AggregateStability)%in_tag) then
-                call read_param(SCI_AggregateStability, param_value, subrsurf(isr)%bsl(isl)%aseags)
+                call read_param(input_tag(SCI_AggregateStability)%name, param_value, subrsurf(isr)%bsl(isl)%aseags)
                 input_tag(SCI_AggregateStability)%acquired = .true.
               else if (input_tag(SCI_AggregateGMD)%in_tag) then
-                call read_param(SCI_AggregateGMD, param_value, subrsurf(isr)%bsl(isl)%aslagm)
+                call read_param(input_tag(SCI_AggregateGMD)%name, param_value, subrsurf(isr)%bsl(isl)%aslagm)
                 input_tag(SCI_AggregateGMD)%acquired = .true.
               else if (input_tag(SCI_AggregateGSD)%in_tag) then
-                call read_param(SCI_AggregateGSD, param_value, subrsurf(isr)%bsl(isl)%as0ags)
+                call read_param(input_tag(SCI_AggregateGSD)%name, param_value, subrsurf(isr)%bsl(isl)%as0ags)
                 input_tag(SCI_AggregateGSD)%acquired = .true.
               else if (input_tag(SCI_AggregateMIN)%in_tag) then
-                call read_param(SCI_AggregateMIN, param_value, subrsurf(isr)%bsl(isl)%aslagn)
+                call read_param(input_tag(SCI_AggregateMIN)%name, param_value, subrsurf(isr)%bsl(isl)%aslagn)
                 input_tag(SCI_AggregateMIN)%acquired = .true.
               else if (input_tag(SCI_AggregateMAX)%in_tag) then
-                call read_param(SCI_AggregateMAX, param_value, subrsurf(isr)%bsl(isl)%aslagx)
+                call read_param(input_tag(SCI_AggregateMAX)%name, param_value, subrsurf(isr)%bsl(isl)%aslagx)
                 input_tag(SCI_AggregateMAX)%acquired = .true.
               else if (input_tag(SCI_WiltingPoint)%in_tag) then
-                call read_param(SCI_WiltingPoint, param_value, subrsurf(isr)%bsl(isl)%ahrwcw)
+                call read_param(input_tag(SCI_WiltingPoint)%name, param_value, subrsurf(isr)%bsl(isl)%ahrwcw)
                 input_tag(SCI_WiltingPoint)%acquired = .true.
               else if (input_tag(SCI_WaterContent)%in_tag) then
-                call read_param(SCI_WaterContent, param_value, subrsurf(isr)%bsl(isl)%ahrwca)
+                call read_param(input_tag(SCI_WaterContent)%name, param_value, subrsurf(isr)%bsl(isl)%ahrwca)
                 input_tag(SCI_WaterContent)%acquired = .true.
               end if
             end if
 
           else if (input_tag(SCI_SurfaceSubDayWaters)%in_tag) then
             if (input_tag(SCI_SurfaceSubDayWater)%in_tag) then
-              call read_param(SCI_SurfaceSubDayWater, param_value, subrsurf(isr)%ahrwc0(isurfwat))
+              call read_param(input_tag(SCI_SurfaceSubDayWater)%name, param_value, subrsurf(isr)%ahrwc0(isurfwat))
               surfwat_complete(isurfwat) = .true.
             end if
           end if
@@ -1132,44 +1125,44 @@ contains
           ! SCI_BarPoint
           !write(*,*) 'ibr: ',ibr, 'ipol: ', ipol
           if (input_tag(SCI_x)%in_tag) then
-            call read_param(SCI_x, param_value, barseas(ibr)%points(ipol)%x)
+            call read_param(input_tag(SCI_x)%name, param_value, barseas(ibr)%points(ipol)%x)
             input_tag(SCI_x)%acquired = .true.
           else if (input_tag(SCI_y)%in_tag) then
-            call read_param(SCI_x, param_value, barseas(ibr)%points(ipol)%y)
+            call read_param(input_tag(SCI_x)%name, param_value, barseas(ibr)%points(ipol)%y)
             input_tag(SCI_y)%acquired = .true.
           else if (input_tag(SCI_height)%in_tag) then
-            call read_param(SCI_height, param_value, barseas(ibr)%param(ipol,iseas)%amzbr)
+            call read_param(input_tag(SCI_height)%name, param_value, barseas(ibr)%param(ipol,iseas)%amzbr)
             input_tag(SCI_height)%acquired = .true.
           else if (input_tag(SCI_width)%in_tag) then
-            call read_param(SCI_width, param_value, barseas(ibr)%param(ipol,iseas)%amxbrw)
+            call read_param(input_tag(SCI_width)%name, param_value, barseas(ibr)%param(ipol,iseas)%amxbrw)
             input_tag(SCI_width)%acquired = .true.
           else if (input_tag(SCI_porosity)%in_tag) then
-            call read_param(SCI_porosity, param_value, barseas(ibr)%param(ipol,iseas)%ampbr)
+            call read_param(input_tag(SCI_porosity)%name, param_value, barseas(ibr)%param(ipol,iseas)%ampbr)
             input_tag(SCI_porosity)%acquired = .true.
           end if
         end if
 
       else if (input_tag(SCI_AirDensity)%in_tag) then
-        call read_param(SCI_AirDensity, param_value, awdair)
+        call read_param(input_tag(SCI_AirDensity)%name, param_value, awdair)
         input_tag(SCI_AirDensity)%acquired = .true.
       else if (input_tag(SCI_WindDirection)%in_tag) then
-        call read_param(SCI_WindDirection, param_value, awadir)
+        call read_param(input_tag(SCI_WindDirection)%name, param_value, awadir)
         input_tag(SCI_WindDirection)%acquired = .true.
       else if (input_tag(SCI_AnemometerHeight)%in_tag) then
-        call read_param(SCI_AnemometerHeight, param_value, anemht)
+        call read_param(input_tag(SCI_AnemometerHeight)%name, param_value, anemht)
         input_tag(SCI_AnemometerHeight)%acquired = .true.
       else if (input_tag(SCI_AerodynamicRoughness)%in_tag) then
-        call read_param(SCI_AerodynamicRoughness, param_value, awzzo)
+        call read_param(input_tag(SCI_AerodynamicRoughness)%name, param_value, awzzo)
         input_tag(SCI_AerodynamicRoughness)%acquired = .true.
       else if (input_tag(SCI_AnemometerFlag)%in_tag) then
-        call read_param(SCI_AnemometerFlag, param_value, wzoflg)
+        call read_param(input_tag(SCI_AnemometerFlag)%name, param_value, wzoflg)
         input_tag(SCI_AnemometerFlag)%acquired = .true.
       else if (input_tag(SCI_AverageAnnualPrecipitation)%in_tag) then
-        call read_param(SCI_AverageAnnualPrecipitation, param_value, awzypt)
+        call read_param(input_tag(SCI_AverageAnnualPrecipitation)%name, param_value, awzypt)
         input_tag(SCI_AverageAnnualPrecipitation)%acquired = .true.
       else if (input_tag(SCI_WindSpeeds)%in_tag) then
         if (input_tag(SCI_WindSpeed)%in_tag) then
-          call read_param(SCI_WindSpeed, param_value, subday(iwind)%awu)
+          call read_param(input_tag(SCI_WindSpeed)%name, param_value, subday(iwind)%awu)
           wind_complete(iwind) = .true.
         end if
       end if
@@ -1177,69 +1170,5 @@ contains
     end if
 
   end subroutine pcdata_chunk_handler
-
-  subroutine read_param_real_1(tag, param_string, val)
-    integer, intent(in) :: tag
-    character(len=80), intent(in) :: param_string
-    real, intent(out) :: val
-    integer :: read_stat
-    read(param_string,*,iostat=read_stat) val
-    if (read_stat .gt. 0) then
-      write(*,*) 'Error reading ', input_tag(tag)%name, ' Value: ', param_string
-      call exit(1)
-    end if
-  end subroutine read_param_real_1
-
-  subroutine read_param_real_2(tag, param_string, val_1, val_2)
-    integer, intent(in) :: tag
-    character(len=80), intent(in) :: param_string
-    real, intent(out) :: val_1
-    real, intent(out) :: val_2
-    integer :: read_stat
-    read(param_string,*,iostat=read_stat) val_1, val_2
-    if (read_stat .gt. 0) then
-      write(*,*) 'Error reading ', input_tag(tag)%name, ' Value: ', param_string
-      call exit(1)
-    end if
-  end subroutine read_param_real_2
-
-  subroutine read_param_int_1(tag, param_string, val)
-    integer, intent(in) :: tag
-    character(len=80), intent(in) :: param_string
-    integer, intent(out) :: val
-    integer :: read_stat
-    read(param_string,*,iostat=read_stat) val
-    if (read_stat .gt. 0) then
-      write(*,*) 'Error reading ', input_tag(tag)%name, ' Value: ', param_string
-      call exit(1)
-    end if
-  end subroutine read_param_int_1
-
-  subroutine read_param_int_2(tag, param_string, val_1, val_2)
-    integer, intent(in) :: tag
-    character(len=80), intent(in) :: param_string
-    integer, intent(out) :: val_1
-    integer, intent(out) :: val_2
-    integer :: read_stat
-    read(param_string,*,iostat=read_stat) val_1, val_2
-    if (read_stat .gt. 0) then
-      write(*,*) 'Error reading ', input_tag(tag)%name, ' Value: ', param_string
-      call exit(1)
-    end if
-  end subroutine read_param_int_2
-
-  subroutine read_param_int_3(tag, param_string, val_1, val_2, val_3)
-    integer, intent(in) :: tag
-    character(len=80), intent(in) :: param_string
-    integer, intent(out) :: val_1
-    integer, intent(out) :: val_2
-    integer, intent(out) :: val_3
-    integer :: read_stat
-    read(param_string,*,iostat=read_stat) val_1, val_2, val_3
-    if (read_stat .gt. 0) then
-      write(*,*) 'Error reading ', input_tag(tag)%name, ' Value: ', param_string
-      call exit(1)
-    end if
-  end subroutine read_param_int_3
 
 end module sweep_io_xml_mod

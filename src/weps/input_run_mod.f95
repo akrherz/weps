@@ -476,7 +476,7 @@ contains
 
          case (27)
             ! set accounting region polygon point count
-            poly_np = 5
+            poly_np = 4
             ! create polygon point storage
             acct_poly(iar) = create_polygon(poly_np)
             ! read first corner into first location
@@ -489,15 +489,14 @@ contains
             read (line,*,err=80) acct_poly(iar)%points(ipol)%x, acct_poly(iar)%points(ipol)%y
             ! fill out remaining points for square accounting region
             ipol = 2
-            acct_poly(iar)%points(ipol)%x = acct_poly(iar)%points(1)%x
-            acct_poly(iar)%points(ipol)%y = acct_poly(iar)%points(3)%y
-            ipol = 4
             acct_poly(iar)%points(ipol)%x = acct_poly(iar)%points(3)%x
             acct_poly(iar)%points(ipol)%y = acct_poly(iar)%points(1)%y
-            ! close the polygon
-            ipol = 5
+            ipol = 4
             acct_poly(iar)%points(ipol)%x = acct_poly(iar)%points(1)%x
-            acct_poly(iar)%points(ipol)%y = acct_poly(iar)%points(1)%y
+            acct_poly(iar)%points(ipol)%y = acct_poly(iar)%points(3)%y
+            ! Single polygon, no need to close
+            ! polygon complete
+            call set_area_polygon(acct_poly(isr))
             ! send us back to case (25) to read in array
             if (iar.lt.nacctr) typidx = typidx - 2
             iar = iar + 1
@@ -507,7 +506,7 @@ contains
             ! read in sub-region data (currently only 1 allowed)
             isr = 1
             ! set subregion polygon point count
-            poly_np = 5
+            poly_np = 4
             ! create polygon container for the single subregion
             subr_poly(isr) = create_polygon(poly_np)
 
@@ -522,15 +521,12 @@ contains
             read (line,*,err=80) subr_poly(isr)%points(ipol)%x, subr_poly(isr)%points(ipol)%y
             ! fill out remaining points for square sub-region
             ipol = 2
-            subr_poly(isr)%points(ipol)%x = subr_poly(isr)%points(1)%x
-            subr_poly(isr)%points(ipol)%y = subr_poly(isr)%points(3)%y
-            ipol = 4
             subr_poly(isr)%points(ipol)%x = subr_poly(isr)%points(3)%x
             subr_poly(isr)%points(ipol)%y = subr_poly(isr)%points(1)%y
-            ! close the polygon
-            ipol = 5
+            ipol = 4
             subr_poly(isr)%points(ipol)%x = subr_poly(isr)%points(1)%x
-            subr_poly(isr)%points(ipol)%y = subr_poly(isr)%points(1)%y
+            subr_poly(isr)%points(ipol)%y = subr_poly(isr)%points(3)%y
+            ! Single polygon, no need to close
             ! polygon complete
             call set_area_polygon(subr_poly(isr))
 

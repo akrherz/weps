@@ -39,6 +39,7 @@ module sae_in_out_mod
       use barriers_mod, only: barrier
       use erosion_data_struct_defs, only: subregionsurfacestate, awzypt, awdair, anemht, awzzo, wzoflg, awadir, subday, ntstep
       use sweep_io_xml_defs
+      use read_write_xml_mod, only: w_begin_tag, w_end_tag, w_whole_tag
 
 !     +++ ARGUMENT DECLARATIONS +++
       integer, intent(inout) :: luo_saeinp      ! output unit number
