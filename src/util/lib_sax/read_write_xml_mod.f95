@@ -183,7 +183,7 @@ contains
 
     character(len=MAX_NAME_LEN) :: real_str
 
-    write(real_str, '(g0)') value
+    write(real_str, '(g39.15)') value
     call w_spaces( luo_saeinp )
     write(luo_saeinp,*) '<', trim(tag_name), '>', &
                          adjustl(trim(real_str)), &
@@ -198,7 +198,7 @@ contains
 
     character(len=MAX_NAME_LEN) :: integer_str
 
-    write(integer_str, '(g0)') value
+    write(integer_str, '(i0)') value
     call w_spaces( luo_saeinp )
     write(luo_saeinp,*) '<', trim(tag_name), '>', &
                          adjustl(trim(integer_str)), &
@@ -217,7 +217,7 @@ contains
     character(len=MAX_NAME_LEN) :: real_str
 
     write(attr1_str, '(i0)') attr1_value
-    write(real_str, '(g0)') value
+    write(real_str, '(g39.15)') value
 
     call w_spaces( luo_saeinp )
     write(luo_saeinp,*) '<', trim(tag_name), &
