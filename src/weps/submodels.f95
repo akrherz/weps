@@ -17,6 +17,7 @@
       use wepp_param_mod, only: wepp_param
       use soil_mod, only: callsoil
       use crop_mod, only: callcrop
+      use manage_mod, only: manage
 
       include 'p1werm.inc'
       include 'm1flag.inc'      !am0cropupfl

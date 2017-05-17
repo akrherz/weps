@@ -800,27 +800,6 @@
     type(biomatter), intent(inout) :: crop    ! structure containing full crop description
     end subroutine get_calib_yield
 !--------------------------
-      subroutine manage( sr, syear, soil, crop, cropprev, residue, biotot, mandate, h1et)
-      use soil_data_struct_defs, only: soil_def
-      use biomaterial, only: biomatter, biototal, bio_prevday
-      use mandate_mod, only: opercrop_date
-      use hydro_data_struct_defs, only: hydro_derived_et
-      integer sr, syear
-      integer lopdd, lopmm, lopyy
-      type(soil_def), intent(inout) :: soil  ! soil for this subregion
-      type(biomatter), intent(inout) :: crop    ! structure containing full crop description
-      type(bio_prevday), intent(inout) :: cropprev    ! structure containing crop previous day values
-      type(biomatter), dimension(:), intent(inout) :: residue
-      type(biototal), intent(in) :: biotot
-      type(opercrop_date), dimension(:), intent(inout) :: mandate
-      type(hydro_derived_et), intent(inout) :: h1et
-      end subroutine manage
-!-------------------------
-      subroutine mfinit (sr, fname)
-      integer sr
-      character fname*(*)
-      end subroutine mfinit
-!--------------------------
       subroutine mgdreset (bhzirr)
       real :: bhzirr   ! daily irrigation amount
       end subroutine mgdreset

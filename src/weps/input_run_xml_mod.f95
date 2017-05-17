@@ -136,6 +136,93 @@ module input_run_xml_mod
 
 contains
 
+  subroutine init_run_xml()
+
+    integer :: idx
+    integer :: alloc_stat
+
+    max_tags = 62   ! count of unique tags needed from all dtd files
+    allocate( run_tag(max_tags), stat=alloc_stat)
+    if( alloc_stat .gt. 0 ) then
+      write(*,*) 'ERROR: memory alloc., run_tag'
+    end if
+
+    ! assign defaults to flag status values
+    do idx = 1, max_tags
+      run_tag(idx)%required = .true.
+      run_tag(idx)%acquired = .false.
+      run_tag(idx)%in_tag = .false.
+    end do
+
+    ! assign tag names
+    run_tag(1)%name = "SCI_Accounts"
+    run_tag(2)%name = "SCI_Account"
+    run_tag(3)%name = "SCI_AverageSlope"
+    run_tag(4)%name = "SCI_BarCli"
+    run_tag(5)%name = "SCI_BarCliIndex"
+    run_tag(6)%name = "SCI_BarCliNumber"
+    run_tag(7)%name = "SCI_Barrier"
+    run_tag(8)%name = "SCI_Barriers"
+    run_tag(9)%name = "SCI_BarrierSeasonFlag"
+    run_tag(10)%name = "SCI_BegTranBase"
+    run_tag(11)%name = "SCI_BegTranFlg"
+    run_tag(12)%name = "SCI_BegTranThresh"
+    run_tag(13)%name = "SCI_climateFile"
+    run_tag(14)%name = "SCI_CoordinateNumber"
+    run_tag(15)%name = "SCI_coord"
+    run_tag(16)%name = "SCI_coordIndex"
+    run_tag(17)%name = "SCI_coords"
+    run_tag(18)%name = "SCI_crop"
+    run_tag(19)%name = "SCI_CycleCount"
+    run_tag(20)%name = "SCI_DebugOutput"
+    run_tag(21)%name = "SCI_decomp"
+    run_tag(22)%name = "SCI_Description"
+    run_tag(23)%name = "SCI_Elevation"
+    run_tag(24)%name = "SCI_EndDate"
+    run_tag(25)%name = "SCI_EndTranBase"
+    run_tag(26)%name = "SCI_EndTranFlg"
+    run_tag(27)%name = "SCI_EndTranThresh"
+    run_tag(28)%name = "SCI_ErosionSubmodelOutput"
+    run_tag(29)%name = "SCI_height"
+    run_tag(30)%name = "SCI_hydro"
+    run_tag(31)%name = "SCI_index"
+    run_tag(32)%name = "SCI_LatLong"
+    run_tag(33)%name = "SCI_ManageFile"
+    run_tag(34)%name = "SCI_man"
+    run_tag(35)%name = "SCI_number"
+    run_tag(36)%name = "SCI_PointBarCli"
+    run_tag(37)%name = "SCI_PointBarClis"
+    run_tag(38)%name = "SCI_porosity"
+    run_tag(39)%name = "SCI_RegionAngle"
+    run_tag(40)%name = "runFileData"
+    run_tag(41)%name = "SCI_SoilFile"
+    run_tag(42)%name = "SCI_soil"
+    run_tag(43)%name = "SCI_SoilRockFragments"
+    run_tag(44)%name = "SCI_StartDate"
+    run_tag(45)%name = "SCI_subDailyFile"
+    run_tag(46)%name = "SCI_SubmodelOutput"
+    run_tag(47)%name = "SCI_Subregion"
+    run_tag(48)%name = "SCI_Subregions"
+    run_tag(49)%name = "SCI_TimeDesc"
+    run_tag(50)%name = "SCI_TimeMark"
+    run_tag(51)%name = "SCI_TimeSteps"
+    run_tag(52)%name = "SCI_WaterErosionLoss"
+    run_tag(53)%name = "SCI_width"
+    run_tag(54)%name = "SCI_windFile"
+    run_tag(55)%name = "SCI_XGrid"
+    run_tag(56)%name = "SCI_XLength"
+    run_tag(57)%name = "SCI_XOrigin"
+    run_tag(58)%name = "SCI_x"
+    run_tag(59)%name = "SCI_YGrid"
+    run_tag(60)%name = "SCI_YLength"
+    run_tag(61)%name = "SCI_YOrigin"
+    run_tag(62)%name = "SCI_y"
+
+    ! create integer variable names for tags and assign index number.
+    ! makes chunk code more understandable.
+
+  end subroutine init_run_xml
+
   subroutine begin_element_handler(name,attributes)
     character(len=*), intent(in)   :: name
     type(dictionary_t), intent(in) :: attributes
@@ -970,93 +1057,6 @@ contains
     end do
 
   end subroutine end_element_handler
-
-  subroutine init_run_xml()
-
-    integer :: idx
-    integer :: alloc_stat
-
-    max_tags = 62   ! count of unique tags needed from all dtd files
-    allocate( run_tag(max_tags), stat=alloc_stat)
-    if( alloc_stat .gt. 0 ) then
-      write(*,*) 'ERROR: memory alloc., run_tag'
-    end if
-
-    ! assign defaults to flag status values
-    do idx = 1, max_tags
-      run_tag(idx)%required = .true.
-      run_tag(idx)%acquired = .false.
-      run_tag(idx)%in_tag = .false.
-    end do
-
-    ! assign tag names
-    run_tag(1)%name = "SCI_Accounts"
-    run_tag(2)%name = "SCI_Account"
-    run_tag(3)%name = "SCI_AverageSlope"
-    run_tag(4)%name = "SCI_BarCli"
-    run_tag(5)%name = "SCI_BarCliIndex"
-    run_tag(6)%name = "SCI_BarCliNumber"
-    run_tag(7)%name = "SCI_Barrier"
-    run_tag(8)%name = "SCI_Barriers"
-    run_tag(9)%name = "SCI_BarrierSeasonFlag"
-    run_tag(10)%name = "SCI_BegTranBase"
-    run_tag(11)%name = "SCI_BegTranFlg"
-    run_tag(12)%name = "SCI_BegTranThresh"
-    run_tag(13)%name = "SCI_climateFile"
-    run_tag(14)%name = "SCI_CoordinateNumber"
-    run_tag(15)%name = "SCI_coord"
-    run_tag(16)%name = "SCI_coordIndex"
-    run_tag(17)%name = "SCI_coords"
-    run_tag(18)%name = "SCI_crop"
-    run_tag(19)%name = "SCI_CycleCount"
-    run_tag(20)%name = "SCI_DebugOutput"
-    run_tag(21)%name = "SCI_decomp"
-    run_tag(22)%name = "SCI_Description"
-    run_tag(23)%name = "SCI_Elevation"
-    run_tag(24)%name = "SCI_EndDate"
-    run_tag(25)%name = "SCI_EndTranBase"
-    run_tag(26)%name = "SCI_EndTranFlg"
-    run_tag(27)%name = "SCI_EndTranThresh"
-    run_tag(28)%name = "SCI_ErosionSubmodelOutput"
-    run_tag(29)%name = "SCI_height"
-    run_tag(30)%name = "SCI_hydro"
-    run_tag(31)%name = "SCI_index"
-    run_tag(32)%name = "SCI_LatLong"
-    run_tag(33)%name = "SCI_ManageFile"
-    run_tag(34)%name = "SCI_man"
-    run_tag(35)%name = "SCI_number"
-    run_tag(36)%name = "SCI_PointBarCli"
-    run_tag(37)%name = "SCI_PointBarClis"
-    run_tag(38)%name = "SCI_porosity"
-    run_tag(39)%name = "SCI_RegionAngle"
-    run_tag(40)%name = "runFileData"
-    run_tag(41)%name = "SCI_SoilFile"
-    run_tag(42)%name = "SCI_soil"
-    run_tag(43)%name = "SCI_SoilRockFragments"
-    run_tag(44)%name = "SCI_StartDate"
-    run_tag(45)%name = "SCI_subDailyFile"
-    run_tag(46)%name = "SCI_SubmodelOutput"
-    run_tag(47)%name = "SCI_Subregion"
-    run_tag(48)%name = "SCI_Subregions"
-    run_tag(49)%name = "SCI_TimeDesc"
-    run_tag(50)%name = "SCI_TimeMark"
-    run_tag(51)%name = "SCI_TimeSteps"
-    run_tag(52)%name = "SCI_WaterErosionLoss"
-    run_tag(53)%name = "SCI_width"
-    run_tag(54)%name = "SCI_windFile"
-    run_tag(55)%name = "SCI_XGrid"
-    run_tag(56)%name = "SCI_XLength"
-    run_tag(57)%name = "SCI_XOrigin"
-    run_tag(58)%name = "SCI_x"
-    run_tag(59)%name = "SCI_YGrid"
-    run_tag(60)%name = "SCI_YLength"
-    run_tag(61)%name = "SCI_YOrigin"
-    run_tag(62)%name = "SCI_y"
-
-    ! create integer variable names for tags and assign index number.
-    ! makes chunk code more understandable.
-
-  end subroutine init_run_xml
 
   subroutine pcdata_chunk_handler(chunk)
     character(len=*), intent(in) :: chunk

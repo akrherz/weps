@@ -7,13 +7,15 @@ module manage_mod
 
   use flib_sax
 
+  integer, parameter :: MAX_NAME_LEN  = 40
+
   type :: tag_def
     character(len=MAX_NAME_LEN)  :: name   ! tag name
     logical :: acquired                    ! .true. if tag has been read
     logical :: in_tag                      ! .true. if inside tag now
   end type tag_def
 
-  type(tag_def), dimension(:), allocatable :: input_tag
+  type(tag_def), dimension(:), allocatable :: man_tag
   integer :: max_tags
 
   integer, parameter, public :: rotationyears = 1
@@ -74,14 +76,15 @@ module manage_mod
     module procedure procCreate
   end interface
 
+  integer :: int_cnt
+  integer :: real_cnt
+
 contains
 
   subroutine init_man_xml()
 
     integer :: idx
     integer :: alloc_stat
-
-    indent = 0
 
     max_tags = 13   ! count of unique tags needed from management files
     allocate( man_tag(max_tags), stat=alloc_stat)
@@ -122,13 +125,13 @@ contains
 
     allocate(operPntr, stat=alloc_stat)
     if( alloc_stat .gt. 0 ) then
-      write(*,'(a,i0)') 'Unable to allocate Operation pointer: P ', operType
+      write(*,'(a,i0)') 'Unable to allocate Operation pointer: P ', operID
     end if
     operPntr%operID = operID
     read(operID, *) operPntr%operType
     allocate(operPntr%r_params(real_cnt), stat=alloc_stat)
     if( alloc_stat .gt. 0 ) then
-      write(*,'(a,i0)') 'Unable to allocate Operation params: P ', operType
+      write(*,'(a,i0)') 'Unable to allocate Operation params: P ', operID
     end if
     operNew =>operPntr
         
@@ -144,13 +147,13 @@ contains
 
     allocate(grpPntr, stat=alloc_stat)
     if( alloc_stat .gt. 0 ) then
-      write(*,'(a,i0)') 'Unable to allocate Group pointer: G ', grpType
+      write(*,'(a,i0)') 'Unable to allocate Group pointer: G ', grpID
     end if
     grpPntr%grpID = grpID
     read(grpID, *) grpPntr%grpType
     allocate(grpPntr%r_params(real_cnt), stat=alloc_stat)
     if( alloc_stat .gt. 0 ) then
-      write(*,'(a,i0)') 'Unable to allocate Group params: G ', grpType
+      write(*,'(a,i0)') 'Unable to allocate Group params: G ', grpID
     end if
     grpNew =>grpPntr
         
@@ -168,7 +171,7 @@ contains
 
     allocate(procPntr, stat=alloc_stat)
     if( alloc_stat .gt. 0 ) then
-      write(*,'(a,i0)') 'Unable to allocate Process pointer: P ', procType
+      write(*,'(a,i0)') 'Unable to allocate Process pointer: P ', procID
     end if
     procPntr%procID = procID
     read(procID, *) procPntr%procType
@@ -178,92 +181,94 @@ contains
     allocate(procPntr%r_params(real_cnt), stat=alloc_stat)
     sum_stat = sum_stat + alloc_stat
     if( sum_stat .gt. 0 ) then
-      write(*,'(a,i0)') 'Unable to allocate Process params: P ', procType
+      write(*,'(a,i0)') 'Unable to allocate Process params: P ', procID
     end if
     procNew =>procPntr
         
   end function procCreate
 
-  subroutine read_manage_xml()
+!  subroutine read_manage_xml()
 
-    operType = 0
-    operFirst => elemCreate( operFirst, operType, real_cnt )
-    oper => operFirst
+!    operType = 0
+!    operFirst => elemCreate( operFirst, operType, real_cnt )
+!    oper => operFirst
 
-    grpType = 0
-    oper%grpFirst => elemCreate( oper%grpFirst, grpType, real_cnt )
-    grp => oper%grpFirst
-    procType = 0
-    grp%procFirst => elemCreate( grp%procFirst, procType, int_cnt, real_cnt )
-    proc => grp%procFirst
-    do procType = 1, 5
-      proc%procNext => elemCreate( proc%procNext, procType, int_cnt, real_cnt )
-      proc => proc%procNext
-    end do
-    nullify( proc%procNext )
-    do grpType = 1, 5
-      grp => elemCreate( grp%grpNext, grpType )
-      procType = 0
-      grp%procFirst => elemCreate( grp%procFirst, procType )
-      proc => grp%procFirst
-      do procType = 1, 5
-        proc%procNext => elemCreate( proc%procNext, procType )
-        proc => proc%procNext
-      end do
-      nullify( proc%procNext )
-    end do
-    nullify( grp%grpNext )
+!    grpType = 0
+!    oper%grpFirst => elemCreate( oper%grpFirst, grpType, real_cnt )
+!    grp => oper%grpFirst
+!    procType = 0
+!    grp%procFirst => elemCreate( grp%procFirst, procType, int_cnt, real_cnt )
+!    proc => grp%procFirst
+!    do procType = 1, 5
+!      proc%procNext => elemCreate( proc%procNext, procType, int_cnt, real_cnt )
+!      proc => proc%procNext
+!    end do
+!    nullify( proc%procNext )
+!    do grpType = 1, 5
+!      grp => elemCreate( grp%grpNext, grpType )
+!      procType = 0
+!      grp%procFirst => elemCreate( grp%procFirst, procType )
+!      proc => grp%procFirst
+!      do procType = 1, 5
+!        proc%procNext => elemCreate( proc%procNext, procType )
+!        proc => proc%procNext
+!      end do
+!      nullify( proc%procNext )
+!    end do
+!    nullify( grp%grpNext )
 
-    do operType = 1, 5
-      oper => elemCreate( oper%operNext, operType )
-      grpType = 0
-      oper%grpFirst => elemCreate( oper%grpFirst, grpType )
-      grp => oper%grpFirst
-      procType = 0
-      grp%procFirst => elemCreate( grp%procFirst, procType )
-      proc => grp%procFirst
-      do procType = 1, 5
-        proc%procNext => elemCreate( proc%procNext, procType )
-        proc => proc%procNext
-      end do
-      nullify( proc%procNext )
-      do grpType = 1, 5
-        grp => elemCreate( grp%grpNext, grpType )
-        procType = 0
-        grp%procFirst => elemCreate( grp%procFirst, procType )
-        proc => grp%procFirst
-        do procType = 1, 5
-          proc%procNext => elemCreate( proc%procNext, procType )
-          proc => proc%procNext
-        end do
-        nullify( proc%procNext )
-      end do
-      nullify( grp%grpNext )
-    end do
+!    do operType = 1, 5
+!      oper => elemCreate( oper%operNext, operType )
+!      grpType = 0
+!      oper%grpFirst => elemCreate( oper%grpFirst, grpType )
+!      grp => oper%grpFirst
+!      procType = 0
+!      grp%procFirst => elemCreate( grp%procFirst, procType )
+!      proc => grp%procFirst
+!      do procType = 1, 5
+!        proc%procNext => elemCreate( proc%procNext, procType )
+!        proc => proc%procNext
+!      end do
+!      nullify( proc%procNext )
+!      do grpType = 1, 5
+!        grp => elemCreate( grp%grpNext, grpType )
+!        procType = 0
+!        grp%procFirst => elemCreate( grp%procFirst, procType )
+!        proc => grp%procFirst
+!        do procType = 1, 5
+!          proc%procNext => elemCreate( proc%procNext, procType )
+!          proc => proc%procNext
+!        end do
+!        nullify( proc%procNext )
+!      end do
+!      nullify( grp%grpNext )
+!    end do
 
-    oper%operNext => operFirst
+!    oper%operNext => operFirst
 
-    oper => operFirst
-    operType = 0
-    do while( operType .lt. 12 )
-      write(*,'(a,i0)') 'OPER: ', oper%operType
-      grp => oper%grpFirst
-      do while( associated(grp) )
-        write(*,'(a,i0)') '  GRP: ', grp%grpType
-        proc => grp%procFirst
-        do while( associated(proc) )
-          write(*,'(a,i0)') '    PROC: ', proc%procType
-          proc => proc%procNext
-        end do
-        grp => grp%grpNext
-      end do
-      oper => oper%operNext
-      operType = operType + 1
-    end do
+!    oper => operFirst
+!    operType = 0
+!    do while( operType .lt. 12 )
+!      write(*,'(a,i0)') 'OPER: ', oper%operType
+!      grp => oper%grpFirst
+!      do while( associated(grp) )
+!        write(*,'(a,i0)') '  GRP: ', grp%grpType
+!        proc => grp%procFirst
+!        do while( associated(proc) )
+!          write(*,'(a,i0)') '    PROC: ', proc%procType
+!          proc => proc%procNext
+!        end do
+!        grp => grp%grpNext
+!      end do
+!      oper => oper%operNext
+!      operType = operType + 1
+!    end do
 
-  end subroutine read_manage_xml
+!  end subroutine read_manage_xml
 
   subroutine begin_element_handler(name,attributes)
+    character(len=*), intent(in)   :: name
+    type(dictionary_t), intent(in) :: attributes
 
     character(len=3) :: operID
     character(len=3) :: grpID
