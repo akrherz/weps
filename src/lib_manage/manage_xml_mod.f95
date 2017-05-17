@@ -1,0 +1,387 @@
+!$Author$
+!$Date$
+!$Revision$
+!$HeadURL$
+
+module manage_mod
+
+  use flib_sax
+
+  type :: tag_def
+    character(len=MAX_NAME_LEN)  :: name   ! tag name
+    logical :: acquired                    ! .true. if tag has been read
+    logical :: in_tag                      ! .true. if inside tag now
+  end type tag_def
+
+  type(tag_def), dimension(:), allocatable :: input_tag
+  integer :: max_tags
+
+  integer, parameter, public :: rotationyears = 1
+  integer, parameter, public :: wepsmanvalue = 2
+  integer, parameter, public :: date = 3
+  integer, parameter, public :: operationDB = 4
+  integer, parameter, public :: operationname = 5
+  integer, parameter, public :: actionvalue = 6
+  integer, parameter, public :: identity = 7
+  integer, parameter, public :: code = 8
+  integer, parameter, public :: id = 9
+  integer, parameter, public :: param = 10
+  integer, parameter, public :: p_name = 11
+  integer, parameter, public :: value = 12
+  integer, parameter, public :: version = 13
+
+  type operation_date
+    integer :: day
+    integer :: month
+    integer :: year
+  end type operation_date
+
+  type process
+    character(len=3) :: procID
+    integer :: procType
+    type(process), pointer :: procNext
+    integer, dimension(:), allocatable :: i_params
+    real, dimension(:), allocatable :: r_params
+    character(len=80) :: s_param
+  end type process
+
+  type group
+    character(len=3) :: grpID
+    integer :: grpType
+    type(group), pointer :: grpNext
+    type(process), pointer :: procFirst
+    real, dimension(:), allocatable :: r_params
+    character(len=80) :: s_param
+  end type group
+
+  type operation
+    type(operation_date) :: operDate
+    character(len=3) :: operID
+    integer :: operType
+    type(operation), pointer :: operNext
+    type(group), pointer :: grpFirst
+    real, dimension(:), allocatable :: r_params
+    character(len=80) :: s_param
+  end type operation
+
+  type(operation), pointer :: operFirst, oper
+  type(group), pointer :: grp
+  type(process), pointer :: proc
+
+  interface elemCreate
+    module procedure operCreate
+    module procedure grpCreate
+    module procedure procCreate
+  end interface
+
+contains
+
+  subroutine init_man_xml()
+
+    integer :: idx
+    integer :: alloc_stat
+
+    indent = 0
+
+    max_tags = 13   ! count of unique tags needed from management files
+    allocate( man_tag(max_tags), stat=alloc_stat)
+    if( alloc_stat .gt. 0 ) then
+      write(*,*) 'ERROR: memory alloc., input_tag'
+    end if
+
+    ! assign defaults to flag status values
+    do idx = 1, max_tags
+      man_tag(idx)%acquired = .false.
+      man_tag(idx)%in_tag = .false.
+    end do
+
+    ! assign tag names
+    man_tag(1)%name = "rotationyears"
+    man_tag(2)%name = "wepsmanvalue"
+    man_tag(3)%name = "date"
+    man_tag(4)%name = "operationDB"
+    man_tag(5)%name = "operationname"
+    man_tag(6)%name = "actionvalue"
+    man_tag(7)%name = "identity"
+    man_tag(8)%name = "code"
+    man_tag(9)%name = "id"
+    man_tag(10)%name = "param"
+    man_tag(11)%name = "name"
+    man_tag(12)%name = "value"
+    man_tag(13)%name = "version"
+
+  end subroutine init_man_xml
+
+  function operCreate(operPntr, operID, real_cnt) result(operNew)
+    type(operation), pointer :: operPntr
+    character(len=*), intent(in) :: operID
+    integer, intent(in) :: real_cnt
+    type(operation), pointer :: operNew
+
+    integer :: alloc_stat
+
+    allocate(operPntr, stat=alloc_stat)
+    if( alloc_stat .gt. 0 ) then
+      write(*,'(a,i0)') 'Unable to allocate Operation pointer: P ', operType
+    end if
+    operPntr%operID = operID
+    read(operID, *) operPntr%operType
+    allocate(operPntr%r_params(real_cnt), stat=alloc_stat)
+    if( alloc_stat .gt. 0 ) then
+      write(*,'(a,i0)') 'Unable to allocate Operation params: P ', operType
+    end if
+    operNew =>operPntr
+        
+  end function operCreate
+
+  function grpCreate(grpPntr, grpID, real_cnt) result(grpNew)
+    type(group), pointer :: grpPntr
+    character(len=*), intent(in) :: grpID
+    integer, intent(in) :: real_cnt
+    type(group), pointer :: grpNew
+
+    integer :: alloc_stat
+
+    allocate(grpPntr, stat=alloc_stat)
+    if( alloc_stat .gt. 0 ) then
+      write(*,'(a,i0)') 'Unable to allocate Group pointer: G ', grpType
+    end if
+    grpPntr%grpID = grpID
+    read(grpID, *) grpPntr%grpType
+    allocate(grpPntr%r_params(real_cnt), stat=alloc_stat)
+    if( alloc_stat .gt. 0 ) then
+      write(*,'(a,i0)') 'Unable to allocate Group params: G ', grpType
+    end if
+    grpNew =>grpPntr
+        
+  end function grpCreate
+
+  function procCreate(procPntr, procID, int_cnt, real_cnt) result(procNew)
+    type(process), pointer :: procPntr
+    character(len=*), intent(in) :: procID
+    integer, intent(in) :: int_cnt
+    integer, intent(in) :: real_cnt
+    type(process), pointer :: procNew
+
+    integer :: alloc_stat
+    integer :: sum_stat
+
+    allocate(procPntr, stat=alloc_stat)
+    if( alloc_stat .gt. 0 ) then
+      write(*,'(a,i0)') 'Unable to allocate Process pointer: P ', procType
+    end if
+    procPntr%procID = procID
+    read(procID, *) procPntr%procType
+    sum_stat = 0
+    allocate(procPntr%i_params(int_cnt), stat=alloc_stat)
+    sum_stat = sum_stat + alloc_stat
+    allocate(procPntr%r_params(real_cnt), stat=alloc_stat)
+    sum_stat = sum_stat + alloc_stat
+    if( sum_stat .gt. 0 ) then
+      write(*,'(a,i0)') 'Unable to allocate Process params: P ', procType
+    end if
+    procNew =>procPntr
+        
+  end function procCreate
+
+  subroutine read_manage_xml()
+
+    operType = 0
+    operFirst => elemCreate( operFirst, operType, real_cnt )
+    oper => operFirst
+
+    grpType = 0
+    oper%grpFirst => elemCreate( oper%grpFirst, grpType, real_cnt )
+    grp => oper%grpFirst
+    procType = 0
+    grp%procFirst => elemCreate( grp%procFirst, procType, int_cnt, real_cnt )
+    proc => grp%procFirst
+    do procType = 1, 5
+      proc%procNext => elemCreate( proc%procNext, procType, int_cnt, real_cnt )
+      proc => proc%procNext
+    end do
+    nullify( proc%procNext )
+    do grpType = 1, 5
+      grp => elemCreate( grp%grpNext, grpType )
+      procType = 0
+      grp%procFirst => elemCreate( grp%procFirst, procType )
+      proc => grp%procFirst
+      do procType = 1, 5
+        proc%procNext => elemCreate( proc%procNext, procType )
+        proc => proc%procNext
+      end do
+      nullify( proc%procNext )
+    end do
+    nullify( grp%grpNext )
+
+    do operType = 1, 5
+      oper => elemCreate( oper%operNext, operType )
+      grpType = 0
+      oper%grpFirst => elemCreate( oper%grpFirst, grpType )
+      grp => oper%grpFirst
+      procType = 0
+      grp%procFirst => elemCreate( grp%procFirst, procType )
+      proc => grp%procFirst
+      do procType = 1, 5
+        proc%procNext => elemCreate( proc%procNext, procType )
+        proc => proc%procNext
+      end do
+      nullify( proc%procNext )
+      do grpType = 1, 5
+        grp => elemCreate( grp%grpNext, grpType )
+        procType = 0
+        grp%procFirst => elemCreate( grp%procFirst, procType )
+        proc => grp%procFirst
+        do procType = 1, 5
+          proc%procNext => elemCreate( proc%procNext, procType )
+          proc => proc%procNext
+        end do
+        nullify( proc%procNext )
+      end do
+      nullify( grp%grpNext )
+    end do
+
+    oper%operNext => operFirst
+
+    oper => operFirst
+    operType = 0
+    do while( operType .lt. 12 )
+      write(*,'(a,i0)') 'OPER: ', oper%operType
+      grp => oper%grpFirst
+      do while( associated(grp) )
+        write(*,'(a,i0)') '  GRP: ', grp%grpType
+        proc => grp%procFirst
+        do while( associated(proc) )
+          write(*,'(a,i0)') '    PROC: ', proc%procType
+          proc => proc%procNext
+        end do
+        grp => grp%grpNext
+      end do
+      oper => oper%operNext
+      operType = operType + 1
+    end do
+
+  end subroutine read_manage_xml
+
+  subroutine begin_element_handler(name,attributes)
+
+    character(len=3) :: operID
+    character(len=3) :: grpID
+    character(len=3) :: procID
+
+        select case (operID)
+        case ('01')
+          real_cnt = 5
+        case ('03')
+          real_cnt = 7
+        case ('04')
+          real_cnt = 2
+        case default
+          real_cnt = 0
+        end select
+
+        select case (grpID)
+        case ('01')
+          real_cnt = 6
+        case ('02')
+          real_cnt = 1
+        case default
+          real_cnt = 0
+        end select
+
+        select case (procID)
+        case ('02')
+          int_cnt = 1
+          real_cnt = 1
+        case ('05')
+          int_cnt = 1
+          real_cnt = 5
+        case ('11')
+          int_cnt = 0
+          real_cnt = 2
+        case ('12')
+          int_cnt = 0
+          real_cnt = 1
+        case ('13')
+          int_cnt = 0
+          real_cnt = 1
+        case ('24')
+          int_cnt = 1
+          real_cnt = 5
+        case ('25')
+          int_cnt = 1
+          real_cnt = 5
+        case ('26')
+          int_cnt = 0
+          real_cnt = 5
+        case ('30')
+          int_cnt = 1
+          real_cnt = 0
+        case ('31')
+          int_cnt = 1
+          real_cnt = 0
+        case ('32')
+          int_cnt = 1
+          real_cnt = 4
+        case ('33')
+          int_cnt = 0
+          real_cnt = 4
+        case ('34')
+          int_cnt = 1
+          real_cnt = 10
+        case ('37')
+          int_cnt = 0
+          real_cnt = 4
+        case ('38')
+          int_cnt = 0
+          real_cnt = 4
+        case ('42')
+          int_cnt = 5
+          real_cnt = 4
+        case ('43')
+          int_cnt = 4
+          real_cnt = 4
+        case ('47')
+          int_cnt = 4
+          real_cnt = 4
+        case ('48')
+          int_cnt = 4
+          real_cnt = 4
+        case ('50')
+          int_cnt = 1
+          real_cnt = 18
+        case ('51')
+          int_cnt = 9
+          real_cnt = 61
+        case ('61')
+          int_cnt = 2
+          real_cnt = 5
+        case ('62')
+          int_cnt = 7
+          real_cnt = 5
+        case ('65')
+          int_cnt = 1
+          real_cnt = 18
+        case ('66')
+          int_cnt = 1
+          real_cnt = 20
+        case ('71')
+          int_cnt = 1
+          real_cnt = 1
+        case ('72')
+          int_cnt = 1
+          real_cnt = 7
+        case ('73')
+          int_cnt = 0
+          real_cnt = 4
+        case ('91')
+          int_cnt = 0
+          real_cnt = 5
+        case default
+          int_cnt = 0
+          real_cnt = 0
+        end select
+  end subroutine begin_element_handler
+
+end module manage_mod
+
