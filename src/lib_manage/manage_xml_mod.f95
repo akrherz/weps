@@ -3,7 +3,7 @@
 !$Revision$
 !$HeadURL$
 
-module manage_mod
+module manage_xml_mod
 
   use flib_sax
 
@@ -78,6 +78,8 @@ module manage_mod
 
   integer :: int_cnt
   integer :: real_cnt
+
+  logical :: manfile_complete
 
 contains
 
@@ -388,5 +390,13 @@ contains
         end select
   end subroutine begin_element_handler
 
-end module manage_mod
+  subroutine end_element_handler(name)
+    character(len=*), intent(in)     :: name
+  end subroutine end_element_handler
+
+  subroutine pcdata_chunk_handler(chunk)
+    character(len=*), intent(in) :: chunk
+  end subroutine pcdata_chunk_handler
+
+end module manage_xml_mod
 

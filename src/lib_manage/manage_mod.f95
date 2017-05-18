@@ -191,6 +191,11 @@ module manage_mod
       use weps_interface_defs
       use file_io_mod, only: fopenk
       use manage_data_struct_defs, only: lastoper
+      use flib_sax
+      use manage_xml_mod, only: init_man_xml
+      use manage_xml_mod, only: manfile_complete
+      use manage_xml_mod, only: begin_element_handler, end_element_handler, pcdata_chunk_handler
+
       include 'p1werm.inc'
       include 'm1flag.inc'
       include 'manage/man.inc'
@@ -211,6 +216,9 @@ module manage_mod
       character*256      line
       integer           idx
       integer           luimandate   ! unit number for reading in management file
+
+      type(xml_t) :: fxml   ! xml file handle structure
+      integer :: read_stat  ! reading file status
 
 !     + + + SUBROUTINES CALLED + + +
 
@@ -266,8 +274,30 @@ module manage_mod
 
 !     read in management file
 
-      call fopenk(luimandate, fname(1:len_trim(fname)), 'old')
-   10 read(luimandate, '(a)', end=20) line
+      call fopenk(luimandate, trim(fname), 'old')
+      read(luimandate, '(a)', iostat=read_stat) line
+      if (read_stat /= 0) stop "Cannot read input file"
+      if ( (line (1:8).ne.'Version: ') .and. (index(line, 'xml') .gt. 0) ) then
+        close(luimandate)
+        ! open input file
+        call open_xmlfile(trim(fname),fxml,read_stat)
+        if (read_stat /= 0) stop "Cannot open xml input file"
+        ! read in xml based input file
+        call init_man_xml()
+        call xml_parse(fxml, &
+           begin_element_handler = begin_element_handler, &
+           end_element_handler = end_element_handler, &
+           pcdata_chunk_handler = pcdata_chunk_handler, &
+           verbose = .false.)
+        if (.not. manfile_complete) then
+          write(*,*) 'Simulation run file incomplete'
+          call exit(1)
+        end if
+        return
+
+      else
+        rewind(luimandate) 
+   10   read(luimandate, '(a)', end=20) line
       select case (line(1:1))
       case ('V')  ! first line begins with word "Version: "
         goto 15
@@ -380,7 +410,7 @@ module manage_mod
    40 continue
       goto 906
    41 mcur(sr) = linidx
-!   
+
 ! Used for debugging purposes
 !       Output info about each subregion's management cycle
 !        print *, 'Management filename is: ', fname
@@ -400,9 +430,11 @@ module manage_mod
 !      write(*,*) 'end of dump'
 !      write(*,*) 'leaving mfinit'
       return
-!      
+
+      end if
+
 ! Error stops
-!
+
   901 write(0,*) 'Error reading start param ', line(8:10)
       call exit (1)
   902 write(0,*) 'Duplicate *END statements in ', fname
@@ -417,7 +449,6 @@ module manage_mod
       call exit (1)
 
     end subroutine mfinit
-
 
 end module manage_mod
 
