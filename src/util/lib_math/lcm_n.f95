@@ -22,11 +22,8 @@ module lcm_mod
 
     n = size(input)
 
-    write(*,*) 'LCM_N:', n, input(1)
-
     if( n .eq. 1 ) then
         lcm_n = input(1)
-        write(*,*) 'LCM_N:', lcm_n
     else
         idx = 2
         lcm_n = lcm( input(idx-1), input(idx) )

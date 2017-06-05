@@ -7,6 +7,7 @@
       use file_io_mod, only: luostir
       use sci_report_mod, only: scisum
       use stir_report_mod, only: stircum
+      use manage_data_struct_defs, only: mperod
 
 !     + + + ARGUMENT VARIABLES + + +
       integer isr
@@ -17,7 +18,6 @@
 !     + + + INCLUDE + + +
       include 'p1werm.inc'
       include 'command.inc'
-      include 'manage/man.inc'
 
 !     + + + PURPOSE + + +
 !     each time it is called, it adds a value to the total biomass increments

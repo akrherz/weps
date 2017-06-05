@@ -30,7 +30,7 @@ module manage_mod
       use biomaterial, only: biomatter, biototal, bio_prevday
       use mandate_mod, only: opercrop_date
       use stir_report_mod, only: stir_report
-      use manage_data_struct_defs, only: am0tfl, lastoper
+      use manage_data_struct_defs, only: am0tfl, lastoper, mperod
       use hydro_data_struct_defs, only: hydro_derived_et
 
 !     + + + PARAMETERS AND COMMON BLOCKS + + +
@@ -190,7 +190,7 @@ module manage_mod
 
       use weps_interface_defs
       use file_io_mod, only: fopenk
-      use manage_data_struct_defs, only: lastoper
+      use manage_data_struct_defs, only: lastoper, mperod
       use flib_sax
       use manage_xml_mod, only: init_man_xml
       use manage_xml_mod, only: manfile_complete

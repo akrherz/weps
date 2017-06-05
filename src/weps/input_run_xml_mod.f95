@@ -22,7 +22,7 @@ module input_run_xml_mod
   use hydro_data_struct_defs, only: am0hfl, am0hdb
   use soil_data_struct_defs, only: am0sfl, am0sdb
 
-  use manage_data_struct_defs, only: am0tfl, am0tdb, tinfil
+  use manage_data_struct_defs, only: am0tfl, am0tdb, tinfil, mperod
   use crop_data_struct_defs, only: am0cfl, am0cdb
   use decomp_data_struct_defs, only: am0dfl, am0ddb
   use input_soil_mod, only: soil_def, soil_in
@@ -294,6 +294,8 @@ contains
           allocate(soil_in(nsubr), stat=alloc_stat)
           sum_stat = sum_stat + alloc_stat
           allocate(tinfil(nsubr), stat=alloc_stat)
+          sum_stat = sum_stat + alloc_stat
+          allocate(mperod(nsubr), stat=alloc_stat)
           sum_stat = sum_stat + alloc_stat
           allocate(subregion_complete(nsubr), stat=alloc_stat)
           sum_stat = sum_stat + alloc_stat

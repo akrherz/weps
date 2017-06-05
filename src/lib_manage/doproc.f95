@@ -21,7 +21,7 @@
       use biomaterial, only: biomatter, biototal, bio_prevday
       use mandate_mod, only: opercrop_date
       use p1unconv_mod, only: mmtom
-      use manage_data_struct_defs, only: am0tfl, am0tdb, lastoper, asdhflag, wchflag
+      use manage_data_struct_defs, only: am0tfl, am0tdb, lastoper, asdhflag, wchflag, mperod
       use crop_data_struct_defs, only: am0cfl
       use soilden_mod, only: setbdproc_wc
       use hydro_data_struct_defs, only: hydro_derived_et

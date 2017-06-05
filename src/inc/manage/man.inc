@@ -26,7 +26,7 @@
 ! *** the following variables are deleted asap
       integer          mstart(mnsub)
       integer          mcurnt(mnsub)
-      integer          mperod(mnsub)
+!      integer          mperod(mnsub)
       character*80     manlin(mnsub)
       character*80     mline
       character        aline (80)*1
@@ -41,7 +41,8 @@
 
       logical          harv_calib_not_selected(mnsub)
 
-      common / man1 / mstart, mperod, istack, nstack
+!      common / man1 / mstart, mperod, istack, nstack
+      common / man1 / mstart, istack, nstack
       common / man2 / manlin, mline, cstack
       common / man3 / mcurnt,  mlpos, mrecnum, mrcl, meor
       common / man4 / harv_calib_not_selected

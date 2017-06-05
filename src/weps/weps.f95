@@ -55,7 +55,7 @@
       use biomaterial
       use debug_mod
       use mandate_mod
-      use manage_data_struct_defs, only: lastoper, tinfil
+      use manage_data_struct_defs, only: lastoper, tinfil, mperod
       use manage_mod, only: mfinit
       use erosion_mod, only: erosion, erodinit
       use erosion_data_struct_defs, only: create_subregionsoillayers, create_subregionsurfacewet, &
