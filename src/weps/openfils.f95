@@ -17,7 +17,7 @@
       use barriers_mod, only: barseas, output_done
       use hydro_data_struct_defs, only: am0hfl, am0hdb
       use soil_data_struct_defs, only: am0sfl, am0sdb
-      use manage_data_struct_defs, only: manFile, am0tdb
+      use manage_data_struct_defs, only: manFile
       use crop_data_struct_defs, only: am0cfl, am0cdb
       use decomp_data_struct_defs, only: am0dfl, am0ddb
       use input_run_mod, only: old_run_file, rootp
@@ -36,7 +36,8 @@
       character*30, dimension(:), allocatable :: subr_text ! subregion subdirectory text string
       character*30 :: dec_text ! decomposition detail age pool output file name text string
       logical :: flag_set
-      integer :: tmax
+      integer :: tflmax
+      integer :: tdbmax
 
       ! use allocation of residue array for number of subregions
       nsubr = size(residue,2)
@@ -126,11 +127,11 @@
       endif
 
 !     open plot data file
-      tmax = 0
+      tflmax = 0
       do idx = 1, nsubr
-         tmax = max(tmax, manFile(idx)%am0tfl)
+         tflmax = max(tflmax, manFile(idx)%am0tfl)
       end do
-      if(     (maxval(am0hfl).gt.0) .or. (maxval(am0sfl).gt.0) .or. (tmax.gt.0) &
+      if(     (maxval(am0hfl).gt.0) .or. (maxval(am0sfl).gt.0) .or. (tflmax.gt.0) &
          .or. (maxval(am0cfl).gt.0) .or. (maxval(am0dfl).gt.0) .or. (am0efl.gt.0)) then
          allocate( luoplt(nsubr), stat=alloc_stat )
          if( alloc_stat .gt. 0 ) then
@@ -334,7 +335,7 @@
          end do
       endif
 
-      if (tmax .ge. 1) then
+      if (tflmax .ge. 1) then
          allocate( luomanage(nsubr), stat=alloc_stat )
          if( alloc_stat .gt. 0 ) then
             Write(*,*) 'ERROR: unable to allocate luomanage array'
@@ -390,13 +391,17 @@
          end do
       end if
 
-      if (maxval(am0tdb) .eq. 1) then
+      tdbmax = 0
+      do idx = 1, nsubr
+         tdbmax = max(tdbmax, manFile(idx)%am0tdb)
+      end do
+      if (tdbmax .eq. 1) then
          allocate( luotdb(nsubr), stat=alloc_stat )
          if( alloc_stat .gt. 0 ) then
             Write(*,*) 'ERROR: unable to allocate luotdb array'
          end if
          do idx = 1, nsubr
-            if (am0tdb(idx) .eq. 1) then
+            if (manFile(idx)%am0tdb .eq. 1) then
                call fopenk (luotdb(idx), trim(rootp) // trim(subr_text(idx)) // 'tdbug.out', 'unknown')
             end if
          end do

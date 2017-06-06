@@ -11,7 +11,7 @@
       use barriers_mod, only: barseas
       use hydro_data_struct_defs, only: am0hfl, am0hdb
       use soil_data_struct_defs, only: am0sfl, am0sdb
-      use manage_data_struct_defs, only: manFile, am0tdb
+      use manage_data_struct_defs, only: manFile
       use crop_data_struct_defs, only: am0cfl, am0cdb
       use decomp_data_struct_defs, only: am0dfl, am0ddb
       use input_run_mod, only: old_run_file
@@ -34,7 +34,7 @@
       do idx = 1, nsubr
          if (am0hdb(idx) .eq. 1) close(luohdb(idx))
          if (am0sdb(idx) .eq. 1) close(luosdb(idx))
-         if (am0tdb(idx) .eq. 1) close(luotdb(idx))
+         if (manFile(idx)%am0tdb .eq. 1) close(luotdb(idx))
          if (am0cdb(idx) .eq. 1) close(luocdb(idx))
          if (am0ddb(idx) .eq. 1) close(luoddb(idx))
       end do

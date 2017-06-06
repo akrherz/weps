@@ -12,6 +12,9 @@ module manage_data_struct_defs
                            ! 0 = no output
                            ! 1 = detailed output file created
                            ! 2 = ASD output file(s) created
+      integer :: am0tdb    ! flag to print MANAGEment variables before and after the call to MANAGE
+                           ! 0 = no output
+                           ! 1 = output
    end type man_file_struct
 
    type(man_file_struct), dimension(:), allocatable :: manFile
@@ -24,7 +27,7 @@ module manage_data_struct_defs
                                                      ! 0 = no output
                                                      ! 1 = detailed output file created
                                                      ! 2 = ASD output file(s) created
-   integer, dimension(:), allocatable :: am0tdb    ! flag to print MANAGEment variables before and after the call to MANAGE
+   !integer, dimension(:), allocatable :: am0tdb    ! flag to print MANAGEment variables before and after the call to MANAGE
                                                      ! 0 = no output
                                                      ! 1 = output
    integer, dimension(:), allocatable :: asdhflag    ! flag to control printing ASD header info

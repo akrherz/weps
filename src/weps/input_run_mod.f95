@@ -90,7 +90,7 @@ contains
       use grid_mod, only: amasim, amxsim, sim_area, xgdpt, ygdpt
       use hydro_data_struct_defs, only: am0hfl, am0hdb
       use soil_data_struct_defs, only: am0sfl, am0sdb
-      use manage_data_struct_defs, only: am0tdb, manFile
+      use manage_data_struct_defs, only: manFile
       use crop_data_struct_defs, only: am0cfl, am0cdb
       use decomp_data_struct_defs, only: am0dfl, am0ddb
       use climate_input_mod, only: cli_gen_fmt_flag, wind_gen_fmt_flag, cligen_sname
@@ -378,8 +378,6 @@ contains
             sum_stat = sum_stat + alloc_stat
             allocate(am0sdb(nsubr), stat=alloc_stat)
             sum_stat = sum_stat + alloc_stat
-            allocate(am0tdb(nsubr), stat=alloc_stat)
-            sum_stat = sum_stat + alloc_stat
             allocate(am0cdb(nsubr), stat=alloc_stat)
             sum_stat = sum_stat + alloc_stat
             allocate(am0ddb(nsubr), stat=alloc_stat)
@@ -448,7 +446,7 @@ contains
             ! Now should set six.
             ! this is not needed now, am0edb is deprecated
             ! line = line(1:len_trim(line)) // ' 0'
-            read (line,*,err=80) am0hdb(isr),am0sdb(isr),am0tdb(isr), am0cdb(isr),am0ddb(isr)
+            read (line,*,err=80) am0hdb(isr),am0sdb(isr),manFile(isr)%am0tdb, am0cdb(isr),am0ddb(isr)
 
          case (22)
             read (line,*,err=80) amasim
@@ -965,8 +963,6 @@ contains
             sum_stat = sum_stat + alloc_stat
             allocate(am0sdb(nsubr), stat=alloc_stat)
             sum_stat = sum_stat + alloc_stat
-            allocate(am0tdb(nsubr), stat=alloc_stat)
-            sum_stat = sum_stat + alloc_stat
             allocate(am0cdb(nsubr), stat=alloc_stat)
             sum_stat = sum_stat + alloc_stat
             allocate(am0ddb(nsubr), stat=alloc_stat)
@@ -1006,7 +1002,7 @@ contains
             ! debug flag line.
 
          case (26)
-            read (line,*,err=80) am0hdb(isr),am0sdb(isr),am0tdb(isr), am0cdb(isr),am0ddb(isr)
+            read (line,*,err=80) am0hdb(isr),am0sdb(isr),manFile(isr)%am0tdb, am0cdb(isr),am0ddb(isr)
 
          case (27)
             ! read subregion polygon point count
@@ -1281,7 +1277,7 @@ contains
       use grid_mod, only: amasim, amxsim, sim_area
       use hydro_data_struct_defs, only: am0hfl, am0hdb
       use soil_data_struct_defs, only: am0sfl, am0sdb
-      use manage_data_struct_defs, only: am0tdb, manFile
+      use manage_data_struct_defs, only: manFile
       use crop_data_struct_defs, only: am0cfl, am0cdb
       use decomp_data_struct_defs, only: am0dfl, am0ddb
       use climate_input_mod, only: cli_gen_fmt_flag, wind_gen_fmt_flag
@@ -1347,7 +1343,7 @@ contains
       write(*,*) 'INVALS', am0efl
       write(*,*) 'INVALS', am0hdb(isr)
       write(*,*) 'INVALS', am0sdb(isr)
-      write(*,*) 'INVALS', am0tdb(isr)
+      write(*,*) 'INVALS', manFile(isr)%am0tdb
       write(*,*) 'INVALS', am0cdb(isr)
       write(*,*) 'INVALS', am0ddb(isr)
       write(*,*) 'INVALS', amasim
