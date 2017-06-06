@@ -17,7 +17,7 @@
       use barriers_mod, only: barseas, output_done
       use hydro_data_struct_defs, only: am0hfl, am0hdb
       use soil_data_struct_defs, only: am0sfl, am0sdb
-      use manage_data_struct_defs, only: am0tfl, am0tdb
+      use manage_data_struct_defs, only: manFile, am0tdb
       use crop_data_struct_defs, only: am0cfl, am0cdb
       use decomp_data_struct_defs, only: am0dfl, am0ddb
       use input_run_mod, only: old_run_file, rootp
@@ -36,6 +36,7 @@
       character*30, dimension(:), allocatable :: subr_text ! subregion subdirectory text string
       character*30 :: dec_text ! decomposition detail age pool output file name text string
       logical :: flag_set
+      integer :: tmax
 
       ! use allocation of residue array for number of subregions
       nsubr = size(residue,2)
@@ -125,14 +126,18 @@
       endif
 
 !     open plot data file
-      if(     (maxval(am0hfl).gt.0) .or. (maxval(am0sfl).gt.0) .or. (maxval(am0tfl).gt.0) &
+      tmax = 0
+      do idx = 1, nsubr
+         tmax = max(tmax, manFile(idx)%am0tfl)
+      end do
+      if(     (maxval(am0hfl).gt.0) .or. (maxval(am0sfl).gt.0) .or. (tmax.gt.0) &
          .or. (maxval(am0cfl).gt.0) .or. (maxval(am0dfl).gt.0) .or. (am0efl.gt.0)) then
          allocate( luoplt(nsubr), stat=alloc_stat )
          if( alloc_stat .gt. 0 ) then
             Write(*,*) 'ERROR: unable to allocate luoplt array'
          end if
          do idx = 1, nsubr
-            if(     (am0hfl(idx).gt.0) .or. (am0sfl(idx).gt.0) .or. (am0tfl(idx).gt.0) &
+            if(     (am0hfl(idx).gt.0) .or. (am0sfl(idx).gt.0) .or. (manFile(idx)%am0tfl.gt.0) &
                .or. (am0cfl(idx).gt.0) .or. (am0dfl(idx).gt.0) .or. (am0efl.gt.0)) then
                call fopenk (luoplt(idx), trim(rootp) // trim(subr_text(idx)) // 'plot.out', 'unknown')
             end if
@@ -329,7 +334,7 @@
          end do
       endif
 
-      if (maxval(am0tfl) .ge. 1) then
+      if (tmax .ge. 1) then
          allocate( luomanage(nsubr), stat=alloc_stat )
          if( alloc_stat .gt. 0 ) then
             Write(*,*) 'ERROR: unable to allocate luomanage array'
@@ -343,13 +348,13 @@
             Write(*,*) 'ERROR: unable to allocate luowc array'
          end if
          do idx = 1, nsubr
-            if (BTEST(am0tfl(idx),0)) then
+            if (BTEST(manFile(idx)%am0tfl,0)) then
                call fopenk (luomanage(idx), trim(rootp) // trim(subr_text(idx)) // 'manage.out', 'unknown')
             end if
-            if (BTEST(am0tfl(idx),0)) then
+            if (BTEST(manFile(idx)%am0tfl,0)) then
                call fopenk (luoasd(idx), trim(rootp) // trim(subr_text(idx)) // 'asd.out', 'unknown')
             end if
-            if (BTEST(am0tfl(idx),1)) then
+            if (BTEST(manFile(idx)%am0tfl,1)) then
                call fopenk (luowc(idx), trim(rootp) // trim(subr_text(idx)) // 'wc.out', 'unknown')
             end if
          end do

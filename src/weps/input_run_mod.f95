@@ -90,7 +90,7 @@ contains
       use grid_mod, only: amasim, amxsim, sim_area, xgdpt, ygdpt
       use hydro_data_struct_defs, only: am0hfl, am0hdb
       use soil_data_struct_defs, only: am0sfl, am0sdb
-      use manage_data_struct_defs, only: am0tfl, am0tdb, manFile
+      use manage_data_struct_defs, only: am0tdb, manFile
       use crop_data_struct_defs, only: am0cfl, am0cdb
       use decomp_data_struct_defs, only: am0dfl, am0ddb
       use climate_input_mod, only: cli_gen_fmt_flag, wind_gen_fmt_flag, cligen_sname
@@ -364,8 +364,6 @@ contains
             sum_stat = sum_stat + alloc_stat
             allocate(am0sfl(nsubr), stat=alloc_stat)
             sum_stat = sum_stat + alloc_stat
-            allocate(am0tfl(nsubr), stat=alloc_stat)
-            sum_stat = sum_stat + alloc_stat
             allocate(am0cfl(nsubr), stat=alloc_stat)
             sum_stat = sum_stat + alloc_stat
             allocate(am0dfl(nsubr), stat=alloc_stat)
@@ -442,7 +440,7 @@ contains
             ! read (line,*,err=80) erosrpt
 
          case (20)
-            read (line,*,err=80) am0hfl(isr),am0sfl(isr),am0tfl(isr), am0cfl(isr),am0dfl(isr),am0efl
+            read (line,*,err=80) am0hfl(isr),am0sfl(isr),manFile(isr)%am0tfl, am0cfl(isr),am0dfl(isr),am0efl
 
          case (21)
             ! debug flag line. Add zero integer to end to make sure six values
@@ -953,8 +951,6 @@ contains
             sum_stat = sum_stat + alloc_stat
             allocate(am0sfl(nsubr), stat=alloc_stat)
             sum_stat = sum_stat + alloc_stat
-            allocate(am0tfl(nsubr), stat=alloc_stat)
-            sum_stat = sum_stat + alloc_stat
             allocate(am0cfl(nsubr), stat=alloc_stat)
             sum_stat = sum_stat + alloc_stat
             allocate(am0dfl(nsubr), stat=alloc_stat)
@@ -1006,7 +1002,7 @@ contains
             end if
 
          case (25)
-            read (line,*,err=80) am0hfl(isr),am0sfl(isr),am0tfl(isr), am0cfl(isr),am0dfl(isr)
+            read (line,*,err=80) am0hfl(isr),am0sfl(isr),manFile(isr)%am0tfl, am0cfl(isr),am0dfl(isr)
             ! debug flag line.
 
          case (26)
@@ -1285,7 +1281,7 @@ contains
       use grid_mod, only: amasim, amxsim, sim_area
       use hydro_data_struct_defs, only: am0hfl, am0hdb
       use soil_data_struct_defs, only: am0sfl, am0sdb
-      use manage_data_struct_defs, only: am0tfl, am0tdb, manFile
+      use manage_data_struct_defs, only: am0tdb, manFile
       use crop_data_struct_defs, only: am0cfl, am0cdb
       use decomp_data_struct_defs, only: am0dfl, am0ddb
       use climate_input_mod, only: cli_gen_fmt_flag, wind_gen_fmt_flag
@@ -1345,7 +1341,7 @@ contains
       write(*,*) 'INVALS', trim(manFile(isr)%tinfil)
       write(*,*) 'INVALS', am0hfl(isr)
       write(*,*) 'INVALS', am0sfl(isr)
-      write(*,*) 'INVALS', am0tfl(isr)
+      write(*,*) 'INVALS', manFile(isr)%am0tfl
       write(*,*) 'INVALS', am0cfl(isr)
       write(*,*) 'INVALS', am0dfl(isr)
       write(*,*) 'INVALS', am0efl

@@ -21,7 +21,7 @@
       use biomaterial, only: biomatter, biototal, bio_prevday
       use mandate_mod, only: opercrop_date
       use p1unconv_mod, only: mmtom
-      use manage_data_struct_defs, only: am0tfl, am0tdb, lastoper, asdhflag, wchflag, man_file_struct
+      use manage_data_struct_defs, only: am0tdb, lastoper, asdhflag, wchflag, man_file_struct
       use crop_data_struct_defs, only: am0cfl
       use soilden_mod, only: setbdproc_wc
       use hydro_data_struct_defs, only: hydro_derived_et
@@ -80,9 +80,6 @@
 !     am0tdb    - flag for outputing debug information to a file
 !                 0 - no output
 !                 1 - output to file ../out/tdbug.out
-!     am0tfl    - flag for outputing management operations to a file
-!                 0 - no output
-!                 1 - output to file ../out/manage.out
 !     as0ags    - aggr. size geom. mean std. dev.
 !     as0ph     - soil Ph
 !     asargo    - ridge orientation (clockwise from true North) (degrees)
@@ -322,7 +319,7 @@
       read(line, 1001, err=901) prdumy, prcode, prname
  1001 format(a1,1x,i2,1x,a)
 
-      if (BTEST(am0tfl(sr),0)) write (luomanage(sr),2015) prcode,prname
+      if (BTEST(manFile%am0tfl,0)) write (luomanage(sr),2015) prcode,prname
 
 !     process calls follow
       select case (prcode)
@@ -2490,12 +2487,12 @@
        asdlayer = tillay(asddepth, soil%aszlyt, soil%nslay)
 
 !+++++++++++++++++++++++++++++++++++++++++++++++
-       if (BTEST(am0tfl(sr),0) .and. asdhflag(sr) .eq. 0) then
+       if (BTEST(manFile%am0tfl,0) .and. asdhflag(sr) .eq. 0) then
          write(luoasd(sr),"(3(A5))",ADVANCE="NO") '# day', 'mon', 'year'
          write(luoasd(sr),"(6(A10))", ADVANCE="YES") 'layer(s)', 'depth(mm)', 'GMDx', 'GSDx', 'm_not', 'm_inf'
          asdhflag(sr) = 1
        end if
-       if (BTEST(am0tfl(sr),0)) then
+       if (BTEST(manFile%am0tfl,0)) then
          call get_simdate(cd, cm, cy)
 !         write(luoasd(sr),"(3(i5))",ADVANCE='NO') lastoper(sr)%day, lastoper(sr)%mon, lastoper(sr)%yr
          write(luoasd(sr),"(3(i5))",ADVANCE='NO') cd, cm, cy
@@ -2662,7 +2659,7 @@
           call tdbug(sr, prcode, soil, crop, residue)
         end if
 
-        if (BTEST(am0tfl(sr),0)) then
+        if (BTEST(manFile%am0tfl,0)) then
          write(luoasd(sr),"(3(i5))",ADVANCE='NO') cd, cm, cy
          write(luoasd(sr),"(i10,5(f10.4),A)",ADVANCE="YES") 1, soil%aszlyt(1), &
             soil%aslagm(1), soil%as0ags(1), soil%aslagn(1), soil%aslagx(1),   &
@@ -2700,12 +2697,12 @@
        wclayer = tillay(wcdepth, soil%aszlyt, soil%nslay)
 
 !+++++++++++++++++++++++++++++++++++++++++++++++
-       if (BTEST(am0tfl(sr),1) .and. wchflag(sr) .eq. 0) then
+       if (BTEST(manFile%am0tfl,1) .and. wchflag(sr) .eq. 0) then
          write(luowc(sr),"(3(A5))",ADVANCE="NO") '# day', 'mon', 'year'
          write(luowc(sr),"(3(A10))", ADVANCE="YES") 'layer(s)', 'depth(mm)', 'wc (Mg/Mg)'
          wchflag(sr) = 1
        end if
-       if (BTEST(am0tfl(sr),1)) then
+       if (BTEST(manFile%am0tfl,1)) then
          call get_simdate(cd, cm, cy)
 !         write(luowc(sr),"(3(i5))",ADVANCE='NO') lastoper(sr)%day, lastoper(sr)%mon, lastoper(sr)%yr
          write(luowc(sr),"(3(i5))",ADVANCE='NO') cd, cm, cy
@@ -2759,7 +2756,7 @@
           call tdbug(sr, prcode, soil, crop, residue)
         end if
 
-        if (BTEST(am0tfl(sr),1)) then
+        if (BTEST(manFile%am0tfl,1)) then
          write(luowc(sr),"(3(i5))",ADVANCE='NO') cd, cm, cy
          write(luowc(sr),"(i10,2(f10.4),A)",ADVANCE="YES") 1, soil%aszlyt(1), &
             soil%ahrwc(1),   &

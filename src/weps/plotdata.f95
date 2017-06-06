@@ -3,7 +3,7 @@
 !$Revision$
 !$HeadURL$
 
-      subroutine plotdata(sr, soil, crop, restot, croptot, biotot, noerod, cellstate)
+      subroutine plotdata(sr, soil, crop, restot, croptot, biotot, noerod, manFile, cellstate)
 
       use weps_main_mod, only: daysim
       use datetime_mod, only: get_simdate, get_simdate_doy
@@ -17,7 +17,7 @@
       use grid_mod, only: imax, jmax
       use hydro_data_struct_defs, only: am0hfl
       use soil_data_struct_defs, only: am0sfl
-      use manage_data_struct_defs, only: am0tfl, lastoper
+      use manage_data_struct_defs, only: man_file_struct, lastoper
       use crop_data_struct_defs, only: am0cfl
       use decomp_data_struct_defs, only: am0dfl
       use climate_input_mod, only: cli_today
@@ -30,6 +30,7 @@
       type(biototal), intent(in) :: croptot
       type(biototal), intent(in) :: biotot
       type(threshold), intent(in) :: noerod
+      type(man_file_struct), intent(in) :: manFile
       type(cellsurfacestate), dimension(0:,0:), intent(in) :: cellstate     ! initialized grid cell state values
  
 !       Edit History
@@ -86,7 +87,7 @@
 !     + + + END SPECIFICATIONS + + +
 
       ! Don't print plotdata "plot.out" file unless a debug flag is set
-      if((am0hfl(sr).gt.0).or.(am0sfl(sr).gt.0).or.(am0tfl(sr).gt.0)                &
+      if((am0hfl(sr).gt.0).or.(am0sfl(sr).gt.0).or.(manFile%am0tfl.gt.0) &
      &  .or.(am0cfl(sr).gt.0).or.(am0dfl(sr).gt.0).or.(am0efl.gt.0)) then
 
         ! write file header if still initializing

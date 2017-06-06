@@ -662,11 +662,12 @@
       type(biomatter), dimension(:,:), intent(in) :: residue
       end subroutine closefils
 !--------------------------------
-      subroutine plotdata(sr, soil, crop, restot, croptot, biotot, noerod, cellstate)
+      subroutine plotdata(sr, soil, crop, restot, croptot, biotot, noerod, manFile, cellstate)
       use soil_data_struct_defs, only: soil_def
       use biomaterial, only: biomatter, biototal
       use erosion_data_struct_defs, only: threshold
       use erosion_data_struct_defs, only: cellsurfacestate
+      use manage_data_struct_defs, only: man_file_struct
       integer, intent(in) :: sr
       type(soil_def), intent(in) :: soil  ! soil for this subregion
       type(biomatter), intent(in) :: crop
@@ -674,6 +675,7 @@
       type(biototal), intent(in) :: croptot
       type(biototal), intent(in) :: biotot
       type(threshold), intent(in) :: noerod
+      type(man_file_struct), intent(in) :: manFile
       type(cellsurfacestate), dimension(0:,0:), intent(in) :: cellstate     ! initialized grid cell state values
       end subroutine plotdata
 !--------------------------------
@@ -776,7 +778,7 @@
       use soil_data_struct_defs, only: soil_def
       use biomaterial, only: biomatter, biototal, bio_prevday
       use mandate_mod, only: opercrop_date
-      use manage_data_struct_defs, only: am0tfl, am0tdb, lastoper, asdhflag, wchflag, man_file_struct
+      use manage_data_struct_defs, only: am0tdb, lastoper, asdhflag, wchflag, man_file_struct
       use hydro_data_struct_defs, only: hydro_derived_et
       integer sr, bmrotation
       type(soil_def), intent(inout) :: soil  ! soil for this subregion

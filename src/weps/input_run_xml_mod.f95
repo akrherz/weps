@@ -22,7 +22,7 @@ module input_run_xml_mod
   use hydro_data_struct_defs, only: am0hfl, am0hdb
   use soil_data_struct_defs, only: am0sfl, am0sdb
 
-  use manage_data_struct_defs, only: am0tfl, am0tdb, manFile
+  use manage_data_struct_defs, only: am0tdb, manFile
   use crop_data_struct_defs, only: am0cfl, am0cdb
   use decomp_data_struct_defs, only: am0dfl, am0ddb
   use input_soil_mod, only: soil_def, soil_in
@@ -273,8 +273,6 @@ contains
           allocate(am0hfl(nsubr), stat=alloc_stat)
           sum_stat = sum_stat + alloc_stat
           allocate(am0sfl(nsubr), stat=alloc_stat)
-          sum_stat = sum_stat + alloc_stat
-          allocate(am0tfl(nsubr), stat=alloc_stat)
           sum_stat = sum_stat + alloc_stat
           allocate(am0cfl(nsubr), stat=alloc_stat)
           sum_stat = sum_stat + alloc_stat
@@ -1284,7 +1282,7 @@ contains
               call read_param(run_tag(SCI_soil)%name, param_value, am0sfl(isr))
               run_tag(SCI_soil)%acquired = .true.
             else if (run_tag(SCI_man)%in_tag) then
-              call read_param(run_tag(SCI_man)%name, param_value, am0tfl(isr))
+              call read_param(run_tag(SCI_man)%name, param_value, manFile(isr)%am0tfl)
               run_tag(SCI_man)%acquired = .true.
             else if (run_tag(SCI_crop)%in_tag) then
               call read_param(run_tag(SCI_crop)%name, param_value, am0cfl(isr))

@@ -6,8 +6,12 @@
 module manage_data_struct_defs
 
    type man_file_struct
-      character(len=512) :: tinfil    ! management file name
-      integer :: mperod               ! length of management of rotation
+      character(len=512) :: tinfil  ! management file name
+      integer :: mperod    ! length of management of rotation
+      integer :: am0tfl    ! flag to print MANAGEment (TILLAGE) output
+                           ! 0 = no output
+                           ! 1 = detailed output file created
+                           ! 2 = ASD output file(s) created
    end type man_file_struct
 
    type(man_file_struct), dimension(:), allocatable :: manFile
@@ -16,7 +20,7 @@ module manage_data_struct_defs
 
    !integer, dimension(:), allocatable :: mperod
 
-   integer, dimension(:), allocatable :: am0tfl    ! flag to print MANAGEment (TILLAGE) output
+   !integer, dimension(:), allocatable :: am0tfl    ! flag to print MANAGEment (TILLAGE) output
                                                      ! 0 = no output
                                                      ! 1 = detailed output file created
                                                      ! 2 = ASD output file(s) created

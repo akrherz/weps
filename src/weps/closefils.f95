@@ -11,7 +11,7 @@
       use barriers_mod, only: barseas
       use hydro_data_struct_defs, only: am0hfl, am0hdb
       use soil_data_struct_defs, only: am0sfl, am0sdb
-      use manage_data_struct_defs, only: am0tfl, am0tdb
+      use manage_data_struct_defs, only: manFile, am0tdb
       use crop_data_struct_defs, only: am0cfl, am0cdb
       use decomp_data_struct_defs, only: am0dfl, am0ddb
       use input_run_mod, only: old_run_file
@@ -82,7 +82,7 @@
 
 !     plot data file
       do idx = 1, nsubr
-         if(    (am0hfl(idx).gt.0) .or. (am0sfl(idx).gt.0) .or. (am0tfl(idx).gt.0) &
+         if(    (am0hfl(idx).gt.0) .or. (am0sfl(idx).gt.0) .or. (manFile(idx)%am0tfl.gt.0) &
            .or. (am0cfl(idx).gt.0) .or. (am0dfl(idx).gt.0) .or. (am0efl.gt.0)      ) then
            close(luoplt(idx))
          endif
@@ -112,9 +112,9 @@
 
       ! detailed output files for management (& asd)
       do idx = 1, nsubr
-         if (BTEST(am0tfl(idx),0)) close(luomanage(idx)) ! manage.out
-         if (BTEST(am0tfl(idx),0)) close(luoasd(idx))    ! asd.out - LEW
-         if (BTEST(am0tfl(idx),0)) close(luowc(idx))     ! wc.out - LEW
+         if (BTEST(manFile(idx)%am0tfl,0)) close(luomanage(idx)) ! manage.out
+         if (BTEST(manFile(idx)%am0tfl,0)) close(luoasd(idx))    ! asd.out - LEW
+         if (BTEST(manFile(idx)%am0tfl,0)) close(luowc(idx))     ! wc.out - LEW
       end do
 
       ! files for outputing the crop and decomp biomass variables - LEW
