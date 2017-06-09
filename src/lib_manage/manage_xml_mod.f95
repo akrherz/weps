@@ -36,6 +36,7 @@ module manage_xml_mod
 
   integer :: int_cnt     ! count of integer values to be read into an operation, group or process, for allocation
   integer :: real_cnt    ! count of real values to be read into an operation, group or process, for allocation
+  integer :: str_cnt    ! count of string values to be read into an operation, group or process, for allocation
 
   integer :: isub ! current subregion number used in a routines in this module
   type(operation_date) :: t_operDate
@@ -321,29 +322,143 @@ contains
                   write(*,*) 'Unknown Identity code: "', trim(t_code), '" found in ', trim(manFile(isub)%tinfil)
                 end if
               else if (man_tag(id)%in_tag ) then
-                call read_param(man_tag(id)%name, param_value, t_id)
                 man_tag(id)%acquired = .true.
                 select case (t_code)
                 case ('O')
                   operID = trim(param_value)
+                  int_cnt = 0
+                  str_cnt = 0
+                  real_cnt = 0
                   select case (operID)
                   case ('01')
                     real_cnt = 5
                   case ('03')
                     real_cnt = 7
+                    str_cnt = 1
                   case ('04')
                     real_cnt = 2
-                  case default
-                    real_cnt = 0
+                    str_cnt = 1
                   end select
                   if ( .not. associated(manFile(isub)%operFirst) ) then
-                    manFile(isub)%operFirst => elemCreate( manFile(isub)%operFirst, operID, real_cnt )
+                    manFile(isub)%operFirst => elemCreate( manFile(isub)%operFirst, operID, int_cnt, real_cnt, str_cnt )
+                    manFile(isub)%oper => manFile(isub)%operFirst
                   else
+                    manFile(isub)%oper%operNext => elemCreate( manFile(isub)%oper%operNext, operID, int_cnt, real_cnt, str_cnt )
+                    manFile(isub)%oper => manFile(isub)%oper%operNext
                   end if
                 case ('G')
                   grpID = trim(param_value)
+                  int_cnt = 0
+                  real_cnt = 0
+                  str_cnt = 0
+                  select case (grpID)
+                  case ('01')
+                    real_cnt = 6
+                  case ('02')
+                    real_cnt = 1
+                  case ('03')
+                    str_cnt = 1
+                  case ('04')
+                    str_cnt = 1
+                  end select
+                  if ( .not. associated(manFile(isub)%oper%grpFirst) ) then
+                    manFile(isub)%oper%grpFirst => elemCreate( manFile(isub)%oper%grpFirst, grpID, int_cnt, real_cnt, str_cnt )
+                    manFile(isub)%grp => manFile(isub)%oper%grpFirst
+                  else
+                    manFile(isub)%grp%grpNext => elemCreate( manFile(isub)%grp%grpNext, grpID, int_cnt, real_cnt, str_cnt )
+                    manFile(isub)%grp => manFile(isub)%grp%grpNext
+                  end if
                 case ('P')
                   procID = trim(param_value)
+                  int_cnt = 0
+                  real_cnt = 0
+                  str_cnt = 0
+                  select case (procID)
+                  case ('02')
+                    int_cnt = 1
+                    real_cnt = 1
+                  case ('05')
+                    int_cnt = 1
+                    real_cnt = 5
+                  case ('11')
+                    real_cnt = 2
+                  case ('12')
+                    real_cnt = 1
+                  case ('13')
+                    real_cnt = 1
+                  case ('24')
+                    int_cnt = 1
+                    real_cnt = 5
+                  case ('25')
+                    int_cnt = 1
+                    real_cnt = 5
+                  case ('26')
+                    real_cnt = 5
+                  case ('30')
+                    int_cnt = 1
+                  case ('31')
+                    int_cnt = 1
+                  case ('32')
+                    int_cnt = 1
+                    real_cnt = 4
+                  case ('33')
+                    real_cnt = 4
+                  case ('34')
+                    int_cnt = 1
+                    real_cnt = 10
+                  case ('37')
+                    real_cnt = 4
+                  case ('38')
+                    real_cnt = 4
+                  case ('42')
+                    int_cnt = 5
+                    real_cnt = 4
+                  case ('43')
+                    int_cnt = 4
+                    real_cnt = 4
+                  case ('47')
+                    int_cnt = 4
+                    real_cnt = 4
+                  case ('48')
+                    int_cnt = 4
+                    real_cnt = 4
+                  case ('50')
+                    int_cnt = 1
+                    real_cnt = 18
+                  case ('51')
+                    int_cnt = 9
+                    real_cnt = 61
+                    str_cnt = 1
+                  case ('61')
+                    int_cnt = 2
+                    real_cnt = 5
+                  case ('62')
+                    int_cnt = 7
+                    real_cnt = 5
+                  case ('65')
+                    int_cnt = 1
+                    real_cnt = 18
+                  case ('66')
+                    int_cnt = 1
+                    real_cnt = 20
+                  case ('71')
+                    int_cnt = 1
+                    real_cnt = 1
+                  case ('72')
+                    int_cnt = 1
+                    real_cnt = 7
+                  case ('73')
+                    real_cnt = 4
+                  case ('91')
+                    real_cnt = 5
+                  end select
+                  if ( .not. associated(manFile(isub)%grp%procFirst) ) then
+                    manFile(isub)%grp%procFirst => elemCreate( manFile(isub)%grp%procFirst, procID, int_cnt, real_cnt, str_cnt )
+                    manFile(isub)%proc => manFile(isub)%grp%procFirst
+                  else
+                    manFile(isub)%proc%procNext => elemCreate( manFile(isub)%proc%procNext, procID, int_cnt, real_cnt, str_cnt )
+                    manFile(isub)%proc => manFile(isub)%proc%procNext
+                  end if
                 end select
               end if
             else if (man_tag(param)%in_tag ) then
@@ -355,109 +470,6 @@ contains
             end if
           end if
         end if
-
-
-        select case (grpID)
-        case ('01')
-          real_cnt = 6
-        case ('02')
-          real_cnt = 1
-        case default
-          real_cnt = 0
-        end select
-
-        select case (procID)
-        case ('02')
-          int_cnt = 1
-          real_cnt = 1
-        case ('05')
-          int_cnt = 1
-          real_cnt = 5
-        case ('11')
-          int_cnt = 0
-          real_cnt = 2
-        case ('12')
-          int_cnt = 0
-          real_cnt = 1
-        case ('13')
-          int_cnt = 0
-          real_cnt = 1
-        case ('24')
-          int_cnt = 1
-          real_cnt = 5
-        case ('25')
-          int_cnt = 1
-          real_cnt = 5
-        case ('26')
-          int_cnt = 0
-          real_cnt = 5
-        case ('30')
-          int_cnt = 1
-          real_cnt = 0
-        case ('31')
-          int_cnt = 1
-          real_cnt = 0
-        case ('32')
-          int_cnt = 1
-          real_cnt = 4
-        case ('33')
-          int_cnt = 0
-          real_cnt = 4
-        case ('34')
-          int_cnt = 1
-          real_cnt = 10
-        case ('37')
-          int_cnt = 0
-          real_cnt = 4
-        case ('38')
-          int_cnt = 0
-          real_cnt = 4
-        case ('42')
-          int_cnt = 5
-          real_cnt = 4
-        case ('43')
-          int_cnt = 4
-          real_cnt = 4
-        case ('47')
-          int_cnt = 4
-          real_cnt = 4
-        case ('48')
-          int_cnt = 4
-          real_cnt = 4
-        case ('50')
-          int_cnt = 1
-          real_cnt = 18
-        case ('51')
-          int_cnt = 9
-          real_cnt = 61
-        case ('61')
-          int_cnt = 2
-          real_cnt = 5
-        case ('62')
-          int_cnt = 7
-          real_cnt = 5
-        case ('65')
-          int_cnt = 1
-          real_cnt = 18
-        case ('66')
-          int_cnt = 1
-          real_cnt = 20
-        case ('71')
-          int_cnt = 1
-          real_cnt = 1
-        case ('72')
-          int_cnt = 1
-          real_cnt = 7
-        case ('73')
-          int_cnt = 0
-          real_cnt = 4
-        case ('91')
-          int_cnt = 0
-          real_cnt = 5
-        case default
-          int_cnt = 0
-          real_cnt = 0
-        end select
 
       end if
     end if

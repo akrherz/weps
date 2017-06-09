@@ -11,13 +11,28 @@ module manage_data_struct_defs
     integer :: year
   end type operation_date
 
+  type integer_param
+    character(len=40) :: tag_name
+    integer :: tag_value
+  end type integer_param
+
+  type real_param
+    character(len=40) :: tag_name
+    real :: tag_value
+  end type real_param
+
+  type string_param
+    character(len=40) :: tag_name
+    character(len=80) :: tag_value
+  end type string_param
+
   type process
     character(len=3) :: procID
     integer :: procType
     type(process), pointer :: procNext
-    integer, dimension(:), allocatable :: i_params
-    real, dimension(:), allocatable :: r_params
-    character(len=80) :: s_param
+    type(integer_param), dimension(:), allocatable :: i_params
+    type(real_param), dimension(:), allocatable :: r_params
+    type(string_param), dimension(:), allocatable :: s_params
   end type process
 
   type group
@@ -25,8 +40,9 @@ module manage_data_struct_defs
     integer :: grpType
     type(group), pointer :: grpNext
     type(process), pointer :: procFirst
-    real, dimension(:), allocatable :: r_params
-    character(len=80) :: s_param
+    type(integer_param), dimension(:), allocatable :: i_params
+    type(real_param), dimension(:), allocatable :: r_params
+    type(string_param), dimension(:), allocatable :: s_params
   end type group
 
   type operation
@@ -36,8 +52,9 @@ module manage_data_struct_defs
     integer :: operType
     type(operation), pointer :: operNext
     type(group), pointer :: grpFirst
-    real, dimension(:), allocatable :: r_params
-    character(len=80) :: s_param
+    type(integer_param), dimension(:), allocatable :: i_params
+    type(real_param), dimension(:), allocatable :: r_params
+    type(string_param), dimension(:), allocatable :: s_params
   end type operation
 
   type man_file_struct
@@ -129,13 +146,15 @@ contains
     end do
   end subroutine manFileAlloc
 
-  function operCreate(operPntr, operID, real_cnt) result(operNew)
+  function operCreate(operPntr, operID, int_cnt, real_cnt, str_cnt) result(operNew)
     type(operation), pointer :: operPntr
     character(len=*), intent(in) :: operID
+    integer, intent(in) :: int_cnt
     integer, intent(in) :: real_cnt
+    integer, intent(in) :: str_cnt
     type(operation), pointer :: operNew
 
-    integer :: alloc_stat
+    integer :: alloc_stat, sum_stat
 
     allocate(operPntr, stat=alloc_stat)
     if( alloc_stat .gt. 0 ) then
@@ -143,21 +162,31 @@ contains
     end if
     operPntr%operID = operID
     read(operID, *) operPntr%operType
+    sum_stat = 0
+    allocate(operPntr%i_params(int_cnt), stat=alloc_stat)
+    sum_stat = sum_stat + alloc_stat
     allocate(operPntr%r_params(real_cnt), stat=alloc_stat)
-    if( alloc_stat .gt. 0 ) then
+    sum_stat = sum_stat + alloc_stat
+    allocate(operPntr%s_params(str_cnt), stat=alloc_stat)
+    sum_stat = sum_stat + alloc_stat
+    if( sum_stat .gt. 0 ) then
       write(*,'(a,i0)') 'Unable to allocate Operation params: P ', operID
     end if
+    nullify(operPntr%operNext)
+    nullify(operPntr%grpFirst)
     operNew =>operPntr
         
   end function operCreate
 
-  function grpCreate(grpPntr, grpID, real_cnt) result(grpNew)
+  function grpCreate(grpPntr, grpID, int_cnt, real_cnt, str_cnt) result(grpNew)
     type(group), pointer :: grpPntr
     character(len=*), intent(in) :: grpID
+    integer, intent(in) :: int_cnt
     integer, intent(in) :: real_cnt
+    integer, intent(in) :: str_cnt
     type(group), pointer :: grpNew
 
-    integer :: alloc_stat
+    integer :: alloc_stat, sum_stat
 
     allocate(grpPntr, stat=alloc_stat)
     if( alloc_stat .gt. 0 ) then
@@ -165,19 +194,28 @@ contains
     end if
     grpPntr%grpID = grpID
     read(grpID, *) grpPntr%grpType
+    sum_stat = 0
+    allocate(grpPntr%i_params(int_cnt), stat=alloc_stat)
+    sum_stat = sum_stat + alloc_stat
     allocate(grpPntr%r_params(real_cnt), stat=alloc_stat)
-    if( alloc_stat .gt. 0 ) then
+    sum_stat = sum_stat + alloc_stat
+    allocate(grpPntr%s_params(str_cnt), stat=alloc_stat)
+    sum_stat = sum_stat + alloc_stat
+    if( sum_stat .gt. 0 ) then
       write(*,'(a,i0)') 'Unable to allocate Group params: G ', grpID
     end if
+    nullify(grpPntr%grpNext)
+    nullify(grpPntr%procFirst)
     grpNew =>grpPntr
         
   end function grpCreate
 
-  function procCreate(procPntr, procID, int_cnt, real_cnt) result(procNew)
+  function procCreate(procPntr, procID, int_cnt, real_cnt, str_cnt) result(procNew)
     type(process), pointer :: procPntr
     character(len=*), intent(in) :: procID
     integer, intent(in) :: int_cnt
     integer, intent(in) :: real_cnt
+    integer, intent(in) :: str_cnt
     type(process), pointer :: procNew
 
     integer :: alloc_stat
@@ -194,9 +232,12 @@ contains
     sum_stat = sum_stat + alloc_stat
     allocate(procPntr%r_params(real_cnt), stat=alloc_stat)
     sum_stat = sum_stat + alloc_stat
+    allocate(procPntr%s_params(str_cnt), stat=alloc_stat)
+    sum_stat = sum_stat + alloc_stat
     if( sum_stat .gt. 0 ) then
       write(*,'(a,i0)') 'Unable to allocate Process params: P ', procID
     end if
+    nullify(procPntr%procNext)
     procNew =>procPntr
         
   end function procCreate
