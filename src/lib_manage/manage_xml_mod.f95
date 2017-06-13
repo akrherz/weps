@@ -21,12 +21,15 @@ module manage_xml_mod
   integer :: max_tags
 
   type :: name_type
-    character(len=MAX_NAME_LEN)  :: p_name   ! parameter name
-    character(len=MAX_TYPE_LEN)  :: p_type   ! parameter type
+    character(len=1) :: ogp  ! identifies whether this is and operation, group or process parameter list
+    character(len=3) :: id   ! the id "number" of the operation, group or process
+    character(len=MAX_NAME_LEN), dimension(:), allocatable  :: i_name   ! integer parameter names
+    character(len=MAX_NAME_LEN), dimension(:), allocatable  :: r_name   ! real parameter names
+    character(len=MAX_NAME_LEN), dimension(:), allocatable  :: s_name   ! string parameter names
   end type name_type
 
-  integer :: max_p_names
-  type(name_type), dimension(:), allocatable :: param_nt
+  integer :: max_ogp   ! the total number of operations, groups, and processes
+  type(name_type), dimension(:), allocatable :: param_nt ! array of the list of operations, groups, processes
 
   integer, parameter, public :: rotationyears = 1
   integer, parameter, public :: wepsmanvalue = 2
@@ -56,6 +59,13 @@ module manage_xml_mod
   character(len=80) :: t_operName
   character(len=3) :: t_code
   integer :: t_id
+  integer :: ogp_id_idx
+  character(len=4) :: p_type
+  integer :: p_idx
+
+  character(len=3) :: operID
+  character(len=3) :: grpID
+  character(len=3) :: procID
 
   logical :: all_wepsmanvalues
   logical :: all_operationDBs
@@ -63,12 +73,19 @@ module manage_xml_mod
   logical :: all_params
   logical :: manfile_complete ! indicator that a complete manfile was read
 
+  interface check_params
+    module procedure oper_check_params
+    module procedure grp_check_params
+    module procedure proc_check_params
+  end interface check_params
+
 contains
 
   subroutine init_man_xml( isubr )
     integer, intent(in) :: isubr
 
     integer :: idx
+    integer :: sum_stat
     integer :: alloc_stat
 
     ! set subregion index used with manFile
@@ -102,396 +119,634 @@ contains
     man_tag(13)%name = "version"
     man_tag(14)%name = "wepsmanDB"
 
-    max_p_names = 192   ! count of unique paramnames operation definitions
-    allocate( param_nt(max_p_names), stat=alloc_stat)
+    max_ogp = 42   ! count of total number of operations, groups, and processes
+    sum_stat = 0
+    allocate( param_nt(max_ogp), stat=alloc_stat)
+    sum_stat = sum_stat + alloc_stat
+    param_nt(1)%ogp="O"
+    param_nt(1)%id="00"
+    allocate( param_nt(1)%i_name(0), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    allocate( param_nt(1)%r_name(0), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    allocate( param_nt(1)%s_name(0), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    param_nt(2)%ogp="O"
+    param_nt(2)%id="01"
+    allocate( param_nt(2)%i_name(0), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    allocate( param_nt(2)%r_name(5), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    allocate( param_nt(2)%s_name(0), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    param_nt(2)%r_name(1)="ospeed"
+    param_nt(2)%r_name(2)="odirect"
+    param_nt(2)%r_name(3)="ostdspeed"
+    param_nt(2)%r_name(4)="ominspeed"
+    param_nt(2)%r_name(5)="omaxspeed"
+    param_nt(3)%ogp="O"
+    param_nt(3)%id="02"
+    allocate( param_nt(3)%i_name(0), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    allocate( param_nt(3)%r_name(0), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    allocate( param_nt(3)%s_name(0), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    param_nt(4)%ogp="O"
+    param_nt(4)%id="03"
+    allocate( param_nt(4)%i_name(0), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    allocate( param_nt(4)%r_name(7), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    allocate( param_nt(4)%s_name(1), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    param_nt(4)%r_name(1)="oenergyarea"
+    param_nt(4)%r_name(2)="ostir"
+    param_nt(4)%r_name(3)="ospeed"
+    param_nt(4)%r_name(4)="odirect"
+    param_nt(4)%r_name(5)="ostdspeed"
+    param_nt(4)%r_name(6)="ominspeed"
+    param_nt(4)%r_name(7)="omaxspeed"
+    param_nt(4)%s_name(1)="ofuel"
+    param_nt(5)%ogp="O"
+    param_nt(5)%id="04"
+    allocate( param_nt(5)%i_name(0), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    allocate( param_nt(5)%r_name(2), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    allocate( param_nt(5)%s_name(1), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    param_nt(5)%r_name(1)="oenergyarea"
+    param_nt(5)%r_name(2)="ostir"
+    param_nt(5)%s_name(1)="ofuel"
+    param_nt(6)%ogp="G"
+    param_nt(6)%id="01"
+    allocate( param_nt(6)%i_name(0), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    allocate( param_nt(6)%r_name(6), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    allocate( param_nt(6)%s_name(0), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    param_nt(6)%r_name(1)="gtdepth"
+    param_nt(6)%r_name(2)="gtilint"
+    param_nt(6)%r_name(3)="gtilArea"
+    param_nt(6)%r_name(4)="gtstddepth"
+    param_nt(6)%r_name(5)="gtmindepth"
+    param_nt(6)%r_name(6)="gtmaxdepth"
+    param_nt(7)%ogp="G"
+    param_nt(7)%id="02"
+    allocate( param_nt(7)%i_name(0), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    allocate( param_nt(7)%r_name(1), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    allocate( param_nt(7)%s_name(0), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    param_nt(7)%r_name(1)="gbioarea"
+    param_nt(8)%ogp="G"
+    param_nt(8)%id="03"
+    allocate( param_nt(8)%i_name(0), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    allocate( param_nt(8)%r_name(0), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    allocate( param_nt(8)%s_name(1), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    param_nt(8)%s_name(1)="gcropname"
+    param_nt(9)%ogp="G"
+    param_nt(9)%id="04"
+    allocate( param_nt(9)%i_name(0), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    allocate( param_nt(9)%r_name(0), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    allocate( param_nt(9)%s_name(1), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    param_nt(9)%s_name(1)="gamdname"
+    param_nt(10)%ogp="P"
+    param_nt(10)%id="01"
+    allocate( param_nt(10)%i_name(0), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    allocate( param_nt(10)%r_name(0), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    allocate( param_nt(10)%s_name(0), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    param_nt(11)%ogp="P"
+    param_nt(11)%id="02"
+    allocate( param_nt(11)%i_name(1), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    allocate( param_nt(11)%r_name(1), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    allocate( param_nt(11)%s_name(0), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    param_nt(11)%i_name(1)="rroughflag"
+    param_nt(11)%r_name(1)="rrough"
+    param_nt(12)%ogp="P"
+    param_nt(12)%id="05"
+    allocate( param_nt(12)%i_name(1), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    allocate( param_nt(12)%r_name(5), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    allocate( param_nt(12)%s_name(0), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    param_nt(12)%i_name(1)="rdgflag"
+    param_nt(12)%r_name(1)="rdghit"
+    param_nt(12)%r_name(2)="rdgspac"
+    param_nt(12)%r_name(3)="rdgwidth"
+    param_nt(12)%r_name(4)="dkhit"
+    param_nt(12)%r_name(5)="dkspac"
+    param_nt(13)%ogp="P"
+    param_nt(13)%id="11"
+    allocate( param_nt(13)%i_name(0), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    allocate( param_nt(13)%r_name(2), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    allocate( param_nt(13)%s_name(0), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    param_nt(13)%r_name(1)="asdf"
+    param_nt(13)%r_name(2)="crif"
+    param_nt(14)%ogp="P"
+    param_nt(14)%id="12"
+    allocate( param_nt(14)%i_name(0), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    allocate( param_nt(14)%r_name(1), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    allocate( param_nt(14)%s_name(0), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    param_nt(14)%r_name(1)="soilos"
+    param_nt(15)%ogp="P"
+    param_nt(15)%id="13"
+    allocate( param_nt(15)%i_name(0), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    allocate( param_nt(15)%r_name(1), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    allocate( param_nt(15)%s_name(0), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    param_nt(15)%r_name(1)="laymix"
+    param_nt(16)%ogp="P"
+    param_nt(16)%id="14"
+    allocate( param_nt(16)%i_name(1), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    allocate( param_nt(16)%r_name(5), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    allocate( param_nt(16)%s_name(0), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    param_nt(17)%ogp="P"
+    param_nt(17)%id="24"
+    allocate( param_nt(17)%i_name(1), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    allocate( param_nt(17)%r_name(5), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    allocate( param_nt(17)%s_name(0), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    param_nt(17)%i_name(1)="fbioflagvt"
+    param_nt(17)%r_name(1)="massflatvt1"
+    param_nt(17)%r_name(2)="massflatvt2"
+    param_nt(17)%r_name(3)="massflatvt3"
+    param_nt(17)%r_name(4)="massflatvt4"
+    param_nt(17)%r_name(5)="massflatvt5"
+    param_nt(18)%ogp="P"
+    param_nt(18)%id="25"
+    allocate( param_nt(18)%i_name(1), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    allocate( param_nt(18)%r_name(5), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    allocate( param_nt(18)%s_name(0), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    param_nt(18)%i_name(1)="burydist"
+    param_nt(18)%r_name(1)="massburyvt1"
+    param_nt(18)%r_name(2)="massburyvt2"
+    param_nt(18)%r_name(3)="massburyvt3"
+    param_nt(18)%r_name(4)="massburyvt4"
+    param_nt(18)%r_name(5)="massburyvt5"
+    param_nt(19)%ogp="P"
+    param_nt(19)%id="26"
+    allocate( param_nt(19)%i_name(0), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    allocate( param_nt(19)%r_name(5), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    allocate( param_nt(19)%s_name(0), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    param_nt(19)%r_name(1)="massresurvt1"
+    param_nt(19)%r_name(2)="massresurvt2"
+    param_nt(19)%r_name(3)="massresurvt3"
+    param_nt(19)%r_name(4)="massresurvt4"
+    param_nt(19)%r_name(5)="massresurvt5"
+    param_nt(20)%ogp="P"
+    param_nt(20)%id="30"
+    allocate( param_nt(20)%i_name(1), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    allocate( param_nt(20)%r_name(0), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    allocate( param_nt(20)%s_name(0), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    param_nt(20)%i_name(1)="defoliateflag"
+    param_nt(21)%ogp="P"
+    param_nt(21)%id="31"
+    allocate( param_nt(21)%i_name(1), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    allocate( param_nt(21)%r_name(0), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    allocate( param_nt(21)%s_name(0), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    param_nt(21)%i_name(1)="kilflag"
+    param_nt(22)%ogp="P"
+    param_nt(22)%id="32"
+    allocate( param_nt(22)%i_name(1), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    allocate( param_nt(22)%r_name(4), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    allocate( param_nt(22)%s_name(0), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    param_nt(22)%i_name(1)="cutflag"
+    param_nt(22)%r_name(1)="cutvalh"
+    param_nt(22)%r_name(2)="cyldrmh"
+    param_nt(22)%r_name(3)="cplrmh"
+    param_nt(22)%r_name(4)="cstrmh"
+    param_nt(23)%ogp="P"
+    param_nt(23)%id="33"
+    allocate( param_nt(23)%i_name(0), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    allocate( param_nt(23)%r_name(4), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    allocate( param_nt(23)%s_name(0), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    param_nt(23)%r_name(1)="cutvalf"
+    param_nt(23)%r_name(2)="cyldrmf"
+    param_nt(23)%r_name(3)="cplrmf"
+    param_nt(23)%r_name(4)="cstrmf"
+    param_nt(24)%ogp="P"
+    param_nt(24)%id="34"
+    allocate( param_nt(24)%i_name(1), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    allocate( param_nt(24)%r_name(10), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    allocate( param_nt(24)%s_name(0), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    param_nt(24)%i_name(1)="frselpool"
+    param_nt(24)%r_name(1)="ratemultvt1"
+    param_nt(24)%r_name(2)="ratemultvt2"
+    param_nt(24)%r_name(3)="ratemultvt3"
+    param_nt(24)%r_name(4)="ratemultvt4"
+    param_nt(24)%r_name(5)="ratemultvt5"
+    param_nt(24)%r_name(6)="threshmultvt1"
+    param_nt(24)%r_name(7)="threshmultvt2"
+    param_nt(24)%r_name(8)="threshmultvt3"
+    param_nt(24)%r_name(9)="threshmultvt4"
+    param_nt(24)%r_name(10)="threshmultvt5"
+    param_nt(25)%ogp="P"
+    param_nt(25)%id="37"
+    allocate( param_nt(25)%i_name(0), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    allocate( param_nt(25)%r_name(4), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    allocate( param_nt(25)%s_name(0), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    param_nt(25)%r_name(1)="thinvalp"
+    param_nt(25)%r_name(2)="tyldrmp"
+    param_nt(25)%r_name(3)="tplrmp"
+    param_nt(25)%r_name(4)="tstrmp"
+    param_nt(26)%ogp="P"
+    param_nt(26)%id="38"
+    allocate( param_nt(26)%i_name(0), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    allocate( param_nt(26)%r_name(4), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    allocate( param_nt(26)%s_name(0), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    param_nt(26)%r_name(1)="thinvalf"
+    param_nt(26)%r_name(2)="tyldrmf"
+    param_nt(26)%r_name(3)="tplrmf"
+    param_nt(26)%r_name(4)="tstrmf"
+    param_nt(27)%ogp="P"
+    param_nt(27)%id="40"
+    allocate( param_nt(27)%i_name(0), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    allocate( param_nt(27)%r_name(0), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    allocate( param_nt(27)%s_name(0), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    param_nt(28)%ogp="P"
+    param_nt(28)%id="42"
+    allocate( param_nt(28)%i_name(5), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    allocate( param_nt(28)%r_name(4), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    allocate( param_nt(28)%s_name(0), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    param_nt(28)%i_name(1)="harv_report_flg"
+    param_nt(28)%i_name(2)="harv_calib_flg"
+    param_nt(28)%i_name(3)="harv_unit_flg"
+    param_nt(28)%i_name(4)="mature_warn_flg"
+    param_nt(28)%i_name(5)="cutflag"
+    param_nt(28)%r_name(1)="cutvalh"
+    param_nt(28)%r_name(2)="cyldrmh"
+    param_nt(28)%r_name(3)="cplrmh"
+    param_nt(28)%r_name(4)="cstrmh"
+    param_nt(29)%ogp="P"
+    param_nt(29)%id="43"
+    allocate( param_nt(29)%i_name(4), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    allocate( param_nt(29)%r_name(4), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    allocate( param_nt(29)%s_name(0), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    param_nt(29)%i_name(1)="harv_report_flg"
+    param_nt(29)%i_name(2)="harv_calib_flg"
+    param_nt(29)%i_name(3)="harv_unit_flg"
+    param_nt(29)%i_name(4)="mature_warn_flg"
+    param_nt(29)%r_name(1)="cutvalf"
+    param_nt(29)%r_name(2)="cyldrmf"
+    param_nt(29)%r_name(3)="cplrmf"
+    param_nt(29)%r_name(4)="cstrmf"
+    param_nt(30)%ogp="P"
+    param_nt(30)%id="47"
+    allocate( param_nt(30)%i_name(4), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    allocate( param_nt(30)%r_name(4), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    allocate( param_nt(30)%s_name(0), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    param_nt(30)%i_name(1)="harv_report_flg"
+    param_nt(30)%i_name(2)="harv_calib_flg"
+    param_nt(30)%i_name(3)="harv_unit_flg"
+    param_nt(30)%i_name(4)="mature_warn_flg"
+    param_nt(30)%r_name(1)="thinvalp"
+    param_nt(30)%r_name(2)="tyldrmp"
+    param_nt(30)%r_name(3)="tplrmp"
+    param_nt(30)%r_name(4)="tstrmp"
+    param_nt(31)%ogp="P"
+    param_nt(31)%id="48"
+    allocate( param_nt(31)%i_name(4), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    allocate( param_nt(31)%r_name(4), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    allocate( param_nt(31)%s_name(0), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    param_nt(31)%i_name(1)="harv_report_flg"
+    param_nt(31)%i_name(2)="harv_calib_flg"
+    param_nt(31)%i_name(3)="harv_unit_flg"
+    param_nt(31)%i_name(4)="mature_warn_flg"
+    param_nt(31)%r_name(1)="thinvalf"
+    param_nt(31)%r_name(2)="tyldrmf"
+    param_nt(31)%r_name(3)="tplrmf"
+    param_nt(31)%r_name(4)="tstrmf"
+    param_nt(32)%ogp="P"
+    param_nt(32)%id="50"
+    allocate( param_nt(32)%i_name(1), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    allocate( param_nt(32)%r_name(18), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    allocate( param_nt(32)%s_name(0), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    param_nt(32)%r_name(1)="numst"
+    param_nt(32)%r_name(2)="rstandht"
+    param_nt(32)%r_name(3)="rstandmass"
+    param_nt(32)%r_name(4)="rflatmass"
+    param_nt(32)%i_name(1)="rbc"
+    param_nt(32)%r_name(5)="rburiedmass"
+    param_nt(32)%r_name(6)="rburieddepth"
+    param_nt(32)%r_name(7)="rrootmass"
+    param_nt(32)%r_name(8)="rrootdepth"
+    param_nt(32)%r_name(9)="standdk"
+    param_nt(32)%r_name(10)="surfdk"
+    param_nt(32)%r_name(11)="burieddk"
+    param_nt(32)%r_name(12)="rootdk"
+    param_nt(32)%r_name(13)="stemnodk"
+    param_nt(32)%r_name(14)="stemdia"
+    param_nt(32)%r_name(15)="thrddys"
+    param_nt(32)%r_name(16)="covfact"
+    param_nt(32)%r_name(17)="resevapa"
+    param_nt(32)%r_name(18)="resevapb"
+    param_nt(33)%ogp="P"
+    param_nt(33)%id="51"
+    allocate( param_nt(33)%i_name(9), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    allocate( param_nt(33)%r_name(61), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    allocate( param_nt(33)%s_name(1), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    param_nt(33)%i_name(1)="rowflag"
+    param_nt(33)%r_name(1)="rowspac"
+    param_nt(33)%i_name(2)="rowridge"
+    param_nt(33)%r_name(2)="plantpop"
+    param_nt(33)%r_name(3)="dmaxshoot"
+    param_nt(33)%i_name(3)="cbaflag"
+    param_nt(33)%r_name(4)="tgtyield"
+    param_nt(33)%r_name(5)="cbafact"
+    param_nt(33)%r_name(6)="cyrafact"
+    param_nt(33)%i_name(4)="hyldflag"
+    param_nt(33)%s_name(1)="hyldunits"
+    param_nt(33)%r_name(7)="hyldwater"
+    param_nt(33)%r_name(8)="hyconfact"
+    param_nt(33)%i_name(5)="idc"
+    param_nt(33)%r_name(9)="grf"
+    param_nt(33)%r_name(10)="ck"
+    param_nt(33)%r_name(11)="hui0"
+    param_nt(33)%r_name(12)="hmx"
+    param_nt(33)%r_name(13)="growdepth"
+    param_nt(33)%r_name(14)="rdmx"
+    param_nt(33)%r_name(15)="tbas"
+    param_nt(33)%r_name(16)="topt"
+    param_nt(33)%i_name(6)="thudf"
+    param_nt(33)%i_name(7)="dtm"
+    param_nt(33)%r_name(17)="thum"
+    param_nt(33)%r_name(18)="frsx1"
+    param_nt(33)%r_name(19)="frsx2"
+    param_nt(33)%r_name(20)="frsy1"
+    param_nt(33)%r_name(21)="frsy2"
+    param_nt(33)%r_name(22)="verndel"
+    param_nt(33)%r_name(23)="bceff"
+    param_nt(33)%r_name(24)="a_lf"
+    param_nt(33)%r_name(25)="b_lf"
+    param_nt(33)%r_name(26)="c_lf"
+    param_nt(33)%r_name(27)="d_lf"
+    param_nt(33)%r_name(28)="a_rp"
+    param_nt(33)%r_name(29)="b_rp"
+    param_nt(33)%r_name(30)="c_rp"
+    param_nt(33)%r_name(31)="d_rp"
+    param_nt(33)%r_name(32)="a_ht"
+    param_nt(33)%r_name(33)="b_ht"
+    param_nt(33)%r_name(34)="ssaa"
+    param_nt(33)%r_name(35)="ssab"
+    param_nt(33)%r_name(36)="sla"
+    param_nt(33)%r_name(37)="huie"
+    param_nt(33)%i_name(8)="transf"
+    param_nt(33)%r_name(38)="diammax"
+    param_nt(33)%r_name(39)="storeinit"
+    param_nt(33)%r_name(40)="mshoot"
+    param_nt(33)%r_name(41)="leafstem"
+    param_nt(33)%r_name(42)="fshoot"
+    param_nt(33)%r_name(43)="leaf2stor"
+    param_nt(33)%r_name(44)="stem2stor"
+    param_nt(33)%r_name(45)="stor2stor"
+    param_nt(33)%i_name(9)="rbc"
+    param_nt(33)%r_name(46)="standdk"
+    param_nt(33)%r_name(47)="surfdk"
+    param_nt(33)%r_name(48)="burieddk"
+    param_nt(33)%r_name(49)="rootdk"
+    param_nt(33)%r_name(50)="stemnodk"
+    param_nt(33)%r_name(51)="stemdia"
+    param_nt(33)%r_name(52)="thrddys"
+    param_nt(33)%r_name(53)="covfact"
+    param_nt(33)%r_name(54)="resevapa"
+    param_nt(33)%r_name(55)="resevapb"
+    param_nt(33)%r_name(56)="yield_coefficient"
+    param_nt(33)%r_name(57)="residue_intercept"
+    param_nt(33)%r_name(58)="regrow_location"
+    param_nt(33)%r_name(59)="noparam3"
+    param_nt(33)%r_name(60)="noparam2"
+    param_nt(33)%r_name(61)="noparam1"
+    param_nt(34)%ogp="P"
+    param_nt(34)%id="61"
+    allocate( param_nt(34)%i_name(2), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    allocate( param_nt(34)%r_name(5), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    allocate( param_nt(34)%s_name(0), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    param_nt(34)%i_name(1)="selpos"
+    param_nt(34)%i_name(2)="selpool"
+    param_nt(34)%r_name(1)="rstore"
+    param_nt(34)%r_name(2)="rleaf"
+    param_nt(34)%r_name(3)="rstem"
+    param_nt(34)%r_name(4)="rrootstore"
+    param_nt(34)%r_name(5)="rrootfiber"
+    param_nt(35)%ogp="P"
+    param_nt(35)%id="62"
+    allocate( param_nt(35)%i_name(7), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    allocate( param_nt(35)%r_name(5), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    allocate( param_nt(35)%s_name(0), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    param_nt(35)%i_name(1)="harv_report_flg"
+    param_nt(35)%i_name(2)="harv_calib_flg"
+    param_nt(35)%i_name(3)="harv_unit_flg"
+    param_nt(35)%i_name(4)="mature_warn_flg"
+    param_nt(35)%i_name(5)="selpos"
+    param_nt(35)%i_name(6)="selpool"
+    param_nt(35)%i_name(7)="selagepool"
+    param_nt(35)%r_name(1)="rstore"
+    param_nt(35)%r_name(2)="rleaf"
+    param_nt(35)%r_name(3)="rstem"
+    param_nt(35)%r_name(4)="rrootstore"
+    param_nt(35)%r_name(5)="rrootfiber"
+    param_nt(36)%ogp="P"
+    param_nt(36)%id="65"
+    allocate( param_nt(36)%i_name(1), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    allocate( param_nt(36)%r_name(18), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    allocate( param_nt(36)%s_name(0), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    param_nt(36)%r_name(1)="numst"
+    param_nt(36)%r_name(2)="rstandht"
+    param_nt(36)%r_name(3)="rstandmass"
+    param_nt(36)%r_name(4)="rflatmass"
+    param_nt(36)%i_name(1)="rbc"
+    param_nt(36)%r_name(5)="rburiedmass"
+    param_nt(36)%r_name(6)="rburieddepth"
+    param_nt(36)%r_name(7)="rrootmass"
+    param_nt(36)%r_name(8)="rrootdepth"
+    param_nt(36)%r_name(9)="standdk"
+    param_nt(36)%r_name(10)="surfdk"
+    param_nt(36)%r_name(11)="burieddk"
+    param_nt(36)%r_name(12)="rootdk"
+    param_nt(36)%r_name(13)="stemnodk"
+    param_nt(36)%r_name(14)="stemdia"
+    param_nt(36)%r_name(15)="thrddys"
+    param_nt(36)%r_name(16)="covfact"
+    param_nt(36)%r_name(17)="resevapa"
+    param_nt(36)%r_name(18)="resevapb"
+    param_nt(37)%ogp="P"
+    param_nt(37)%id="66"
+    allocate( param_nt(37)%i_name(1), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    allocate( param_nt(37)%r_name(20), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    allocate( param_nt(37)%s_name(0), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    param_nt(37)%r_name(1)="M_numst"
+    param_nt(37)%r_name(2)="M_rstandht"
+    param_nt(37)%r_name(3)="M_rstandmass"
+    param_nt(37)%r_name(4)="M_rflatmass"
+    param_nt(37)%i_name(1)="rbc"
+    param_nt(37)%r_name(5)="M_rburiedmass"
+    param_nt(37)%r_name(6)="M_rburieddepth"
+    param_nt(37)%r_name(7)="M_rrootmass"
+    param_nt(37)%r_name(8)="M_rrootdepth"
+    param_nt(37)%r_name(9)="manure_total_mass"
+    param_nt(37)%r_name(10)="manure_buried_ratio"
+    param_nt(37)%r_name(11)="standdk"
+    param_nt(37)%r_name(12)="surfdk"
+    param_nt(37)%r_name(13)="burieddk"
+    param_nt(37)%r_name(14)="rootdk"
+    param_nt(37)%r_name(15)="stemnodk"
+    param_nt(37)%r_name(16)="stemdia"
+    param_nt(37)%r_name(17)="thrddys"
+    param_nt(37)%r_name(18)="covfact"
+    param_nt(37)%r_name(19)="resevapa"
+    param_nt(37)%r_name(20)="resevapb"
+    param_nt(38)%ogp="P"
+    param_nt(38)%id="71"
+    allocate( param_nt(38)%i_name(1), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    allocate( param_nt(38)%r_name(1), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    allocate( param_nt(38)%s_name(0), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    param_nt(38)%i_name(1)="irrtype"
+    param_nt(38)%r_name(1)="irrdepth"
+    param_nt(39)%ogp="P"
+    param_nt(39)%id="72"
+    allocate( param_nt(39)%i_name(1), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    allocate( param_nt(39)%r_name(7), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    allocate( param_nt(39)%s_name(0), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    param_nt(39)%i_name(1)="irrmonflag"
+    param_nt(39)%r_name(1)="irrmaxapp"
+    param_nt(39)%r_name(2)="irrrate"
+    param_nt(39)%r_name(3)="irrduration"
+    param_nt(39)%r_name(4)="irrapploc"
+    param_nt(39)%r_name(5)="irrminapp"
+    param_nt(39)%r_name(6)="irrmad"
+    param_nt(39)%r_name(7)="irrminint"
+    param_nt(40)%ogp="P"
+    param_nt(40)%id="73"
+    allocate( param_nt(40)%i_name(0), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    allocate( param_nt(40)%r_name(4), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    allocate( param_nt(40)%s_name(0), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    param_nt(40)%r_name(1)="irrdepth"
+    param_nt(40)%r_name(2)="irrrate"
+    param_nt(40)%r_name(3)="irrduration"
+    param_nt(40)%r_name(4)="irrapploc"
+    param_nt(41)%ogp="P"
+    param_nt(41)%id="74"
+    allocate( param_nt(41)%i_name(0), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    allocate( param_nt(41)%r_name(0), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    allocate( param_nt(41)%s_name(0), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    param_nt(42)%ogp="P"
+    param_nt(42)%id="91"
+    allocate( param_nt(42)%i_name(0), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    allocate( param_nt(42)%r_name(5), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    allocate( param_nt(42)%s_name(0), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    param_nt(42)%r_name(1)="asddepth"
+    param_nt(42)%r_name(2)="gmdx"
+    param_nt(42)%r_name(3)="gsdx"
+    param_nt(42)%r_name(4)="mnot"
+    param_nt(42)%r_name(5)="minf"
     if( alloc_stat .gt. 0 ) then
-      write(*,*) 'ERROR: memory alloc., input_tag'
+      write(*,*) 'ERROR: memory alloc., parameter names reference'
     end if
-
-    param_nt(1)%p_name = 'a_ht'
-    param_nt(1)%p_type = 'float'
-    param_nt(2)%p_name = 'a_lf'
-    param_nt(2)%p_type = 'float'
-    param_nt(3)%p_name = 'a_rp'
-    param_nt(3)%p_type = 'float'
-    param_nt(4)%p_name = 'asddepth'
-    param_nt(4)%p_type = 'float'
-    param_nt(5)%p_name = 'asdf'
-    param_nt(5)%p_type = 'float'
-    param_nt(6)%p_name = 'bceff'
-    param_nt(6)%p_type = 'float'
-    param_nt(7)%p_name = 'b_ht'
-    param_nt(7)%p_type = 'float'
-    param_nt(8)%p_name = 'b_lf'
-    param_nt(8)%p_type = 'float'
-    param_nt(9)%p_name = 'b_rp'
-    param_nt(9)%p_type = 'float'
-    param_nt(10)%p_name = 'burieddk'
-    param_nt(10)%p_type = 'float'
-    param_nt(11)%p_name = 'burydist'
-    param_nt(11)%p_type = 'int'
-    param_nt(12)%p_name = 'cbafact'
-    param_nt(12)%p_type = 'float'
-    param_nt(13)%p_name = 'cbaflag'
-    param_nt(13)%p_type = 'int'
-    param_nt(14)%p_name = 'ck'
-    param_nt(14)%p_type = 'float'
-    param_nt(15)%p_name = 'c_lf'
-    param_nt(15)%p_type = 'float'
-    param_nt(16)%p_name = 'covfact'
-    param_nt(16)%p_type = 'float'
-    param_nt(17)%p_name = 'cplrmf'
-    param_nt(17)%p_type = 'float'
-    param_nt(18)%p_name = 'cplrmh'
-    param_nt(18)%p_type = 'float'
-    param_nt(19)%p_name = 'crif'
-    param_nt(19)%p_type = 'float'
-    param_nt(20)%p_name = 'c_rp'
-    param_nt(20)%p_type = 'float'
-    param_nt(21)%p_name = 'cstrmf'
-    param_nt(21)%p_type = 'float'
-    param_nt(22)%p_name = 'cstrmh'
-    param_nt(22)%p_type = 'float'
-    param_nt(23)%p_name = 'cutflag'
-    param_nt(23)%p_type = 'int'
-    param_nt(24)%p_name = 'cutvalf'
-    param_nt(24)%p_type = 'float'
-    param_nt(25)%p_name = 'cutvalh'
-    param_nt(25)%p_type = 'float'
-    param_nt(26)%p_name = 'cyldrmf'
-    param_nt(26)%p_type = 'float'
-    param_nt(27)%p_name = 'cyldrmh'
-    param_nt(27)%p_type = 'float'
-    param_nt(28)%p_name = 'cyrafact'
-    param_nt(28)%p_type = 'float'
-    param_nt(29)%p_name = 'defoliateflag'
-    param_nt(29)%p_type = 'int'
-    param_nt(30)%p_name = 'diammax'
-    param_nt(30)%p_type = 'float'
-    param_nt(31)%p_name = 'dkhit'
-    param_nt(31)%p_type = 'float'
-    param_nt(32)%p_name = 'dkspac'
-    param_nt(32)%p_type = 'float'
-    param_nt(33)%p_name = 'd_lf'
-    param_nt(33)%p_type = 'float'
-    param_nt(34)%p_name = 'dmaxshoot'
-    param_nt(34)%p_type = 'float'
-    param_nt(35)%p_name = 'd_rp'
-    param_nt(35)%p_type = 'float'
-    param_nt(36)%p_name = 'dtm'
-    param_nt(36)%p_type = 'int'
-    param_nt(37)%p_name = 'fbioflagvt'
-    param_nt(37)%p_type = 'int'
-    param_nt(38)%p_name = 'frselpool'
-    param_nt(38)%p_type = 'int'
-    param_nt(39)%p_name = 'frsx1'
-    param_nt(39)%p_type = 'float'
-    param_nt(40)%p_name = 'frsx2'
-    param_nt(40)%p_type = 'float'
-    param_nt(41)%p_name = 'frsy1'
-    param_nt(41)%p_type = 'float'
-    param_nt(42)%p_name = 'frsy2'
-    param_nt(42)%p_type = 'float'
-    param_nt(43)%p_name = 'fshoot'
-    param_nt(43)%p_type = 'float'
-    param_nt(44)%p_name = 'gamdname'
-    param_nt(44)%p_type = 'string'
-    param_nt(45)%p_name = 'gbioarea'
-    param_nt(45)%p_type = 'float'
-    param_nt(46)%p_name = 'gcropname'
-    param_nt(46)%p_type = 'string'
-    param_nt(47)%p_name = 'gmdx'
-    param_nt(47)%p_type = 'float'
-    param_nt(48)%p_name = 'grf'
-    param_nt(48)%p_type = 'float'
-    param_nt(49)%p_name = 'growdepth'
-    param_nt(49)%p_type = 'float'
-    param_nt(50)%p_name = 'gsdx'
-    param_nt(50)%p_type = 'float'
-    param_nt(51)%p_name = 'gtdepth'
-    param_nt(51)%p_type = 'float'
-    param_nt(52)%p_name = 'gtilArea'
-    param_nt(52)%p_type = 'float'
-    param_nt(53)%p_name = 'gtilint'
-    param_nt(53)%p_type = 'float'
-    param_nt(54)%p_name = 'gtmaxdepth'
-    param_nt(54)%p_type = 'float'
-    param_nt(55)%p_name = 'gtmindepth'
-    param_nt(55)%p_type = 'float'
-    param_nt(56)%p_name = 'gtstddepth'
-    param_nt(56)%p_type = 'float'
-    param_nt(57)%p_name = 'harv_calib_flg'
-    param_nt(57)%p_type = 'int'
-    param_nt(58)%p_name = 'harv_report_flg'
-    param_nt(58)%p_type = 'int'
-    param_nt(59)%p_name = 'harv_unit_flg'
-    param_nt(59)%p_type = 'int'
-    param_nt(60)%p_name = 'hmx'
-    param_nt(60)%p_type = 'float'
-    param_nt(61)%p_name = 'hui0'
-    param_nt(61)%p_type = 'float'
-    param_nt(62)%p_name = 'huie'
-    param_nt(62)%p_type = 'float'
-    param_nt(63)%p_name = 'hyconfact'
-    param_nt(63)%p_type = 'float'
-    param_nt(64)%p_name = 'hyldflag'
-    param_nt(64)%p_type = 'int'
-    param_nt(65)%p_name = 'hyldunits'
-    param_nt(65)%p_type = 'string'
-    param_nt(66)%p_name = 'hyldwater'
-    param_nt(66)%p_type = 'float'
-    param_nt(67)%p_name = 'idc'
-    param_nt(67)%p_type = 'int'
-    param_nt(68)%p_name = 'irrapploc'
-    param_nt(68)%p_type = 'float'
-    param_nt(69)%p_name = 'irrdepth'
-    param_nt(69)%p_type = 'float'
-    param_nt(70)%p_name = 'irrduration'
-    param_nt(70)%p_type = 'float'
-    param_nt(71)%p_name = 'irrmad'
-    param_nt(71)%p_type = 'float'
-    param_nt(72)%p_name = 'irrmaxapp'
-    param_nt(72)%p_type = 'float'
-    param_nt(73)%p_name = 'irrminapp'
-    param_nt(73)%p_type = 'float'
-    param_nt(74)%p_name = 'irrminint'
-    param_nt(74)%p_type = 'float'
-    param_nt(75)%p_name = 'irrmonflag'
-    param_nt(75)%p_type = 'int'
-    param_nt(76)%p_name = 'irrrate'
-    param_nt(76)%p_type = 'float'
-    param_nt(77)%p_name = 'irrtype'
-    param_nt(77)%p_type = 'int'
-    param_nt(78)%p_name = 'kilflag'
-    param_nt(78)%p_type = 'int'
-    param_nt(79)%p_name = 'laymix'
-    param_nt(79)%p_type = 'float'
-    param_nt(80)%p_name = 'leaf2stor'
-    param_nt(80)%p_type = 'float'
-    param_nt(81)%p_name = 'leafstem'
-    param_nt(81)%p_type = 'float'
-    param_nt(82)%p_name = 'manure_buried_ratio'
-    param_nt(82)%p_type = 'float'
-    param_nt(83)%p_name = 'manure_total_mass'
-    param_nt(83)%p_type = 'float'
-    param_nt(84)%p_name = 'massburyvt1'
-    param_nt(84)%p_type = 'float'
-    param_nt(85)%p_name = 'massburyvt2'
-    param_nt(85)%p_type = 'float'
-    param_nt(86)%p_name = 'massburyvt3'
-    param_nt(86)%p_type = 'float'
-    param_nt(87)%p_name = 'massburyvt4'
-    param_nt(87)%p_type = 'float'
-    param_nt(88)%p_name = 'massburyvt5'
-    param_nt(88)%p_type = 'float'
-    param_nt(89)%p_name = 'massflatvt1'
-    param_nt(89)%p_type = 'float'
-    param_nt(90)%p_name = 'massflatvt2'
-    param_nt(90)%p_type = 'float'
-    param_nt(91)%p_name = 'massflatvt3'
-    param_nt(91)%p_type = 'float'
-    param_nt(92)%p_name = 'massflatvt4'
-    param_nt(92)%p_type = 'float'
-    param_nt(93)%p_name = 'massflatvt5'
-    param_nt(93)%p_type = 'float'
-    param_nt(94)%p_name = 'massresurvt1'
-    param_nt(94)%p_type = 'float'
-    param_nt(95)%p_name = 'massresurvt2'
-    param_nt(95)%p_type = 'float'
-    param_nt(96)%p_name = 'massresurvt3'
-    param_nt(96)%p_type = 'float'
-    param_nt(97)%p_name = 'massresurvt4'
-    param_nt(97)%p_type = 'float'
-    param_nt(98)%p_name = 'massresurvt5'
-    param_nt(98)%p_type = 'float'
-    param_nt(99)%p_name = 'mature_warn_flg'
-    param_nt(99)%p_type = 'int'
-    param_nt(100)%p_name = 'minf'
-    param_nt(100)%p_type = 'float'
-    param_nt(101)%p_name = 'mnot'
-    param_nt(101)%p_type = 'float'
-    param_nt(102)%p_name = 'M_numst'
-    param_nt(102)%p_type = 'float'
-    param_nt(103)%p_name = 'M_rburieddepth'
-    param_nt(103)%p_type = 'float'
-    param_nt(104)%p_name = 'M_rburiedmass'
-    param_nt(104)%p_type = 'float'
-    param_nt(105)%p_name = 'M_rflatmass'
-    param_nt(105)%p_type = 'float'
-    param_nt(106)%p_name = 'M_rrootdepth'
-    param_nt(106)%p_type = 'float'
-    param_nt(107)%p_name = 'M_rrootmass'
-    param_nt(107)%p_type = 'float'
-    param_nt(108)%p_name = 'M_rstandht'
-    param_nt(108)%p_type = 'float'
-    param_nt(109)%p_name = 'M_rstandmass'
-    param_nt(109)%p_type = 'float'
-    param_nt(110)%p_name = 'mshoot'
-    param_nt(110)%p_type = 'float'
-    param_nt(111)%p_name = 'noparam1'
-    param_nt(111)%p_type = 'float'
-    param_nt(112)%p_name = 'noparam2'
-    param_nt(112)%p_type = 'float'
-    param_nt(113)%p_name = 'noparam3'
-    param_nt(113)%p_type = 'float'
-    param_nt(114)%p_name = 'numst'
-    param_nt(114)%p_type = 'float'
-    param_nt(115)%p_name = 'odirect'
-    param_nt(115)%p_type = 'float'
-    param_nt(116)%p_name = 'oenergyarea'
-    param_nt(116)%p_type = 'float'
-    param_nt(117)%p_name = 'ofuel'
-    param_nt(117)%p_type = 'string'
-    param_nt(118)%p_name = 'omaxspeed'
-    param_nt(118)%p_type = 'float'
-    param_nt(119)%p_name = 'ominspeed'
-    param_nt(119)%p_type = 'float'
-    param_nt(120)%p_name = 'ospeed'
-    param_nt(120)%p_type = 'float'
-    param_nt(121)%p_name = 'ostdspeed'
-    param_nt(121)%p_type = 'float'
-    param_nt(122)%p_name = 'ostir'
-    param_nt(122)%p_type = 'float'
-    param_nt(123)%p_name = 'plantpop'
-    param_nt(123)%p_type = 'float'
-    param_nt(124)%p_name = 'ratemultvt1'
-    param_nt(124)%p_type = 'float'
-    param_nt(125)%p_name = 'ratemultvt2'
-    param_nt(125)%p_type = 'float'
-    param_nt(126)%p_name = 'ratemultvt3'
-    param_nt(126)%p_type = 'float'
-    param_nt(127)%p_name = 'ratemultvt4'
-    param_nt(127)%p_type = 'float'
-    param_nt(128)%p_name = 'ratemultvt5'
-    param_nt(128)%p_type = 'float'
-    param_nt(129)%p_name = 'rbc'
-    param_nt(129)%p_type = 'int'
-    param_nt(130)%p_name = 'rburieddepth'
-    param_nt(130)%p_type = 'float'
-    param_nt(131)%p_name = 'rburiedmass'
-    param_nt(131)%p_type = 'float'
-    param_nt(132)%p_name = 'rdgflag'
-    param_nt(132)%p_type = 'int'
-    param_nt(133)%p_name = 'rdghit'
-    param_nt(133)%p_type = 'float'
-    param_nt(134)%p_name = 'rdgspac'
-    param_nt(134)%p_type = 'float'
-    param_nt(135)%p_name = 'rdgwidth'
-    param_nt(135)%p_type = 'float'
-    param_nt(136)%p_name = 'rdmx'
-    param_nt(136)%p_type = 'float'
-    param_nt(137)%p_name = 'regrow_location'
-    param_nt(137)%p_type = 'float'
-    param_nt(138)%p_name = 'resevapa'
-    param_nt(138)%p_type = 'float'
-    param_nt(139)%p_name = 'resevapb'
-    param_nt(139)%p_type = 'float'
-    param_nt(140)%p_name = 'residue_intercept'
-    param_nt(140)%p_type = 'float'
-    param_nt(141)%p_name = 'rflatmass'
-    param_nt(141)%p_type = 'float'
-    param_nt(142)%p_name = 'rleaf'
-    param_nt(142)%p_type = 'float'
-    param_nt(143)%p_name = 'rootdk'
-    param_nt(143)%p_type = 'float'
-    param_nt(144)%p_name = 'rowflag'
-    param_nt(144)%p_type = 'int'
-    param_nt(145)%p_name = 'rowridge'
-    param_nt(145)%p_type = 'int'
-    param_nt(146)%p_name = 'rowspac'
-    param_nt(146)%p_type = 'float'
-    param_nt(147)%p_name = 'rrootdepth'
-    param_nt(147)%p_type = 'float'
-    param_nt(148)%p_name = 'rrootfiber'
-    param_nt(148)%p_type = 'float'
-    param_nt(149)%p_name = 'rrootmass'
-    param_nt(149)%p_type = 'float'
-    param_nt(150)%p_name = 'rrootstore'
-    param_nt(150)%p_type = 'float'
-    param_nt(151)%p_name = 'rroughflag'
-    param_nt(151)%p_type = 'int'
-    param_nt(152)%p_name = 'rrough'
-    param_nt(152)%p_type = 'float'
-    param_nt(153)%p_name = 'rstandht'
-    param_nt(153)%p_type = 'float'
-    param_nt(154)%p_name = 'rstandmass'
-    param_nt(154)%p_type = 'float'
-    param_nt(155)%p_name = 'rstem'
-    param_nt(155)%p_type = 'float'
-    param_nt(156)%p_name = 'rstore'
-    param_nt(156)%p_type = 'float'
-    param_nt(157)%p_name = 'selagepool'
-    param_nt(157)%p_type = 'int'
-    param_nt(158)%p_name = 'selpool'
-    param_nt(158)%p_type = 'int'
-    param_nt(159)%p_name = 'selpos'
-    param_nt(159)%p_type = 'int'
-    param_nt(160)%p_name = 'sla'
-    param_nt(160)%p_type = 'float'
-    param_nt(161)%p_name = 'soilos'
-    param_nt(161)%p_type = 'float'
-    param_nt(162)%p_name = 'ssaa'
-    param_nt(162)%p_type = 'float'
-    param_nt(163)%p_name = 'ssab'
-    param_nt(163)%p_type = 'float'
-    param_nt(164)%p_name = 'standdk'
-    param_nt(164)%p_type = 'float'
-    param_nt(165)%p_name = 'stem2stor'
-    param_nt(165)%p_type = 'float'
-    param_nt(166)%p_name = 'stemdia'
-    param_nt(166)%p_type = 'float'
-    param_nt(167)%p_name = 'stemnodk'
-    param_nt(167)%p_type = 'float'
-    param_nt(168)%p_name = 'stor2stor'
-    param_nt(168)%p_type = 'float'
-    param_nt(169)%p_name = 'storeinit'
-    param_nt(169)%p_type = 'float'
-    param_nt(170)%p_name = 'surfdk'
-    param_nt(170)%p_type = 'float'
-    param_nt(171)%p_name = 'tbas'
-    param_nt(171)%p_type = 'float'
-    param_nt(172)%p_name = 'tgtyield'
-    param_nt(172)%p_type = 'float'
-    param_nt(173)%p_name = 'thinvalf'
-    param_nt(173)%p_type = 'float'
-    param_nt(174)%p_name = 'thinvalp'
-    param_nt(174)%p_type = 'float'
-    param_nt(175)%p_name = 'thrddys'
-    param_nt(175)%p_type = 'float'
-    param_nt(176)%p_name = 'threshmultvt1'
-    param_nt(176)%p_type = 'float'
-    param_nt(177)%p_name = 'threshmultvt2'
-    param_nt(177)%p_type = 'float'
-    param_nt(178)%p_name = 'threshmultvt3'
-    param_nt(178)%p_type = 'float'
-    param_nt(179)%p_name = 'threshmultvt4'
-    param_nt(179)%p_type = 'float'
-    param_nt(180)%p_name = 'threshmultvt5'
-    param_nt(180)%p_type = 'float'
-    param_nt(181)%p_name = 'thudf'
-    param_nt(181)%p_type = 'int'
-    param_nt(182)%p_name = 'thum'
-    param_nt(182)%p_type = 'float'
-    param_nt(183)%p_name = 'topt'
-    param_nt(183)%p_type = 'float'
-    param_nt(184)%p_name = 'tplrmf'
-    param_nt(184)%p_type = 'float'
-    param_nt(185)%p_name = 'tplrmp'
-    param_nt(185)%p_type = 'float'
-    param_nt(186)%p_name = 'transf'
-    param_nt(186)%p_type = 'int'
-    param_nt(187)%p_name = 'tstrmf'
-    param_nt(187)%p_type = 'float'
-    param_nt(188)%p_name = 'tstrmp'
-    param_nt(188)%p_type = 'float'
-    param_nt(189)%p_name = 'tyldrmf'
-    param_nt(189)%p_type = 'float'
-    param_nt(190)%p_name = 'tyldrmp'
-    param_nt(190)%p_type = 'float'
-    param_nt(191)%p_name = 'verndel'
-    param_nt(191)%p_type = 'float'
-    param_nt(192)%p_name = 'yield_coefficient'
-    param_nt(192)%p_type = 'float'
 
     all_wepsmanvalues = .true.  ! .true. indicates that no values are required
     all_operationDBs = .true.  ! .false. indicates that a value is required
@@ -499,6 +754,208 @@ contains
     all_params = .true.
 
   end subroutine init_man_xml
+
+  subroutine get_value_cnts ( OGP, ID, int_cnt, real_cnt, str_cnt, code_id_index )
+    character(len=*), intent(in) :: OGP
+    character(len=*), intent(in) :: ID
+    integer, intent(out) :: int_cnt
+    integer, intent(out) :: real_cnt
+    integer, intent(out) :: str_cnt
+    integer, intent(out) :: code_id_index
+
+    integer :: idx
+
+    do idx = 1, max_ogp
+      if (    OGP .eq. param_nt(idx)%ogp &
+        .and. ID .eq. param_nt(idx)%id ) then
+        int_cnt = size(param_nt(idx)%i_name)
+        real_cnt = size(param_nt(idx)%r_name)
+        str_cnt = size(param_nt(idx)%s_name)
+        exit   ! found so exit and return index number
+      end if
+    end do
+    code_id_index = idx
+  end subroutine get_value_cnts
+
+  subroutine get_value_type_index ( code_id_index, val_name, val_type, val_index )
+    integer, intent(in) :: code_id_index
+    character(len=*), intent(in) :: val_name
+    character(len=4), intent(out) :: val_type
+    integer , intent(out) :: val_index
+
+    integer idx
+
+    do idx = 1, size(param_nt(code_id_index)%i_name)
+      if ( val_name .eq. param_nt(code_id_index)%i_name(idx) ) then
+        val_type = 'int'
+        exit  ! found the name
+      end if
+    end do
+    if ( idx .gt. size(param_nt(code_id_index)%i_name) ) then
+      val_index = 0
+    else
+      val_index = idx
+      return  ! found the name
+    end if
+
+    do idx = 1, size(param_nt(code_id_index)%r_name)
+      if ( val_name .eq. param_nt(code_id_index)%r_name(idx) ) then
+        val_type = 'real'
+        exit  ! found the name
+      end if
+    end do
+    if ( idx .gt. size(param_nt(code_id_index)%r_name) ) then
+      val_index = 0
+    else
+      val_index = idx
+      return  ! found the name
+    end if
+
+    do idx = 1, size(param_nt(code_id_index)%s_name)
+      if ( val_name .eq. param_nt(code_id_index)%s_name(idx) ) then
+        val_type = 'str'
+        exit  ! found the name
+      end if
+    end do
+    if ( idx .gt. size(param_nt(code_id_index)%s_name) ) then
+      val_index = 0
+    else
+      val_index = idx
+      return  ! found the name
+    end if
+
+  end subroutine get_value_type_index
+
+  function oper_check_params( operPtr ) result(acquired)
+    use manage_data_struct_defs, only: operation
+    type(operation), intent(in) :: operPtr
+    logical :: acquired
+
+    integer :: idx
+    character(len=10) :: date_str
+
+    ! set as default in case of no parameter action
+    acquired = .true.
+
+    do idx = 1, size(operPtr%i_param)
+      if ( operPtr%i_param(idx)%p_acquired ) then
+        acquired = acquired .and. .true.
+      else
+        acquired = acquired .and. .false.
+        write(date_str, '(2(i2,"/"),i4)') operPtr%operDate%day, operPtr%operDate%month, operPtr%operDate%year
+        write(*,*) 'Missing value for: ', trim(param_nt(ogp_id_idx)%i_name(idx)), ' Parameter in: O ', trim(operPtr%operID), &
+                   ' of Operation: ', trim(operPtr%operName), ' on date: ', date_str
+      end if
+    end do
+    do idx = 1, size(operPtr%r_param)
+      if ( operPtr%r_param(idx)%p_acquired ) then
+        acquired = acquired .and. .true.
+      else
+        acquired = acquired .and. .false.
+        write(date_str, '(2(i2,"/"),i4)') operPtr%operDate%day, operPtr%operDate%month, operPtr%operDate%year
+        write(*,*) 'Missing value for: ', trim(param_nt(ogp_id_idx)%r_name(idx)), ' Parameter in: O ', trim(operPtr%operID), &
+                   ' of Operation: ', trim(operPtr%operName), ' on date: ', date_str
+      end if
+    end do
+    do idx = 1, size(operPtr%s_param)
+      if ( operPtr%s_param(idx)%p_acquired ) then
+        acquired = acquired .and. .true.
+      else
+        acquired = acquired .and. .false.
+        write(date_str, '(2(i2,"/"),i4)') operPtr%operDate%day, operPtr%operDate%month, operPtr%operDate%year
+        write(*,*) 'Missing value for: ', trim(param_nt(ogp_id_idx)%s_name(idx)), ' Parameter in: O ', trim(operPtr%operID), &
+                   ' of Operation: ', trim(operPtr%operName), ' on date: ', date_str
+      end if
+    end do
+  end function oper_check_params
+
+  function grp_check_params( operPtr, grpPtr ) result(acquired)
+    use manage_data_struct_defs, only: operation, group
+    type(operation), intent(in) :: operPtr
+    type(group), intent(in) :: grpPtr
+    logical :: acquired
+
+    integer :: idx
+    character(len=10) :: date_str
+
+    ! set as default in case of no parameter action
+    acquired = .true.
+
+    do idx = 1, size(grpPtr%i_param)
+      if ( grpPtr%i_param(idx)%p_acquired ) then
+        acquired = acquired .and. .true.
+      else
+        acquired = acquired .and. .false.
+        write(date_str, '(2(i2,"/"),i4)') operPtr%operDate%day, operPtr%operDate%month, operPtr%operDate%year
+        write(*,*) 'Missing value for: ', trim(param_nt(ogp_id_idx)%i_name(idx)), ' Parameter in: G ', trim(grpPtr%grpID), &
+                   ' of Operation: ', trim(operPtr%operName), ' on date: ', date_str
+      end if
+    end do
+    do idx = 1, size(grpPtr%r_param)
+      if ( grpPtr%r_param(idx)%p_acquired ) then
+        acquired = acquired .and. .true.
+      else
+        acquired = acquired .and. .false.
+        write(date_str, '(2(i2,"/"),i4)') operPtr%operDate%day, operPtr%operDate%month, operPtr%operDate%year
+        write(*,*) 'Missing value for: ', trim(param_nt(ogp_id_idx)%r_name(idx)), ' Parameter in: G ', trim(grpPtr%grpID), &
+                   ' of Operation: ', trim(operPtr%operName), ' on date: ', date_str
+      end if
+    end do
+    do idx = 1, size(grpPtr%s_param)
+      if ( grpPtr%s_param(idx)%p_acquired ) then
+        acquired = acquired .and. .true.
+      else
+        acquired = acquired .and. .false.
+        write(date_str, '(2(i2,"/"),i4)') operPtr%operDate%day, operPtr%operDate%month, operPtr%operDate%year
+        write(*,*) 'Missing value for: ', trim(param_nt(ogp_id_idx)%s_name(idx)), ' Parameter in: G ', trim(grpPtr%grpID), &
+                   ' of Operation: ', trim(operPtr%operName), ' on date: ', date_str
+      end if
+    end do
+  end function grp_check_params
+
+  function proc_check_params( operPtr, procPtr ) result(acquired)
+    use manage_data_struct_defs, only: operation, process
+    type(operation), intent(in) :: operPtr
+    type(process), intent(in) :: procPtr
+    logical :: acquired
+
+    integer :: idx
+    character(len=10) :: date_str
+
+    ! set as default in case of no parameter action
+    acquired = .true.
+
+    do idx = 1, size(procPtr%i_param)
+      if ( procPtr%i_param(idx)%p_acquired ) then
+        acquired = .true.
+      else
+        acquired = .false.
+        write(date_str, '(2(i2,"/"),i4)') operPtr%operDate%day, operPtr%operDate%month, operPtr%operDate%year
+        write(*,*) 'Missing value for: ', trim(param_nt(ogp_id_idx)%i_name(idx)), ' Parameter in: P ', trim(procPtr%procID), &
+                   ' of Operation: ', trim(operPtr%operName), ' on date: ', date_str
+      end if
+    end do
+    do idx = 1, size(procPtr%r_param)
+      if ( procPtr%r_param(idx)%p_acquired ) then
+        acquired = .true.
+      else
+        acquired = .false.
+        write(date_str, '(2(i2,"/"),i4)') operPtr%operDate%day, operPtr%operDate%month, operPtr%operDate%year
+        write(*,*) 'Missing value for: ', trim(param_nt(ogp_id_idx)%r_name(idx)), ' Parameter in: P ', trim(procPtr%procID), &
+                   ' of Operation: ', trim(operPtr%operName), ' on date: ', date_str
+      end if
+    end do
+    do idx = 1, size(procPtr%s_param)
+      if ( procPtr%s_param(idx)%p_acquired ) then
+        acquired = .true.
+      else
+        acquired = .false.
+        write(date_str, '(2(i2,"/"),i4)') operPtr%operDate%day, operPtr%operDate%month, operPtr%operDate%year
+        write(*,*) 'Missing value for: ', trim(param_nt(ogp_id_idx)%s_name(idx)), ' Parameter in: P ', trim(procPtr%procID), &
+                   ' of Operation: ', trim(operPtr%operName), ' on date: ', date_str
+      end if
+    end do
+  end function proc_check_params
 
 !  subroutine read_manage_xml()
 
@@ -626,6 +1083,9 @@ contains
         all_wepsmanvalues = (all_wepsmanvalues .and. .true. )
       else
         all_wepsmanvalues = .false.
+        if ( .not. man_tag(date)%acquired ) then
+          write(*,'(3a)') 'Tag ', trim(man_tag(date)%name), ' is missing from Management file.'
+        end if
       end if
 
     else if (idx .eq. date) then
@@ -638,9 +1098,20 @@ contains
         all_operationDBs = (all_operationDBs .and. .true. )
       else
         all_operationDBs = .false.
+        if ( .not. man_tag(operationname)%acquired ) then
+          write(*,'(3a)') 'Tag ', trim(man_tag(operationname)%name), ' is missing from Management file.'
+        end if
       end if
 
     else if (idx .eq. actionvalue) then
+      ! check if all parameters acquired for this action value
+      if ( operID .ne. '' ) then
+        all_params = check_params( manFile(isub)%oper )
+      else if ( grpID .ne. '' ) then
+        all_params = check_params( manFile(isub)%oper, manFile(isub)%grp )
+      else if ( procID .ne. '' ) then
+        all_params = check_params( manFile(isub)%oper, manFile(isub)%proc )
+      end if
       if( man_tag(identity)%acquired &
         .and. all_params &
         ) then
@@ -650,7 +1121,11 @@ contains
         all_actionvalues = (all_actionvalues .and. .true. )
       else
         all_actionvalues = .false.
+        if ( .not. man_tag(identity)%acquired ) then
+          write(*,'(3a)') 'Tag ', trim(man_tag(identity)%name), ' is missing from Management file.'
+        end if
       end if
+      ! write(*,*) 'ALLACTIONVALUES', all_actionvalues
 
     else if (idx .eq. identity) then
       if( man_tag(code)%acquired &
@@ -659,6 +1134,12 @@ contains
         man_tag(code)%acquired = .false.
         man_tag(id)%acquired = .false.
         man_tag(identity)%acquired = .true.
+      else
+        if ( .not. man_tag(code)%acquired ) then
+          write(*,'(3a)') 'Tag ', trim(man_tag(code)%name), ' is missing from Management file.'
+        else if ( .not. man_tag(id)%acquired ) then
+          write(*,'(3a)') 'Tag ', trim(man_tag(id)%name), ' is missing from Management file.'
+        end if
       end if
 
     else if (idx .eq. param) then
@@ -668,23 +1149,15 @@ contains
         man_tag(p_name)%acquired = .false.
         man_tag(value)%acquired = .false.
         man_tag(param)%acquired = .true.
-        if (    (i_cnt .eq. int_cnt) &
-          .and. (r_cnt .eq. real_cnt) &
-          .and. (s_cnt .eq. str_cnt) &
-          ) then
-          all_params = .true.
-        else
-          all_params = .false.
-        end if
       end if
 
     end if
 
-    if ( idx .le. size(man_tag) ) then
-      if ( man_tag(idx)%acquired ) then
-        write(*,*) 'ACQUIRED: ', man_tag(idx)%name!, man_tag(idx)%acquired
-      end if
-    end if
+    !if ( idx .le. size(man_tag) ) then
+    !  if ( man_tag(idx)%acquired ) then
+    !    write(*,*) 'ACQUIRED: ', man_tag(idx)%name!, man_tag(idx)%acquired
+    !  end if
+    !end if
 
   end subroutine end_man_element_handler
 
@@ -692,12 +1165,7 @@ contains
     use read_write_xml_mod, only: read_param
     character(len=*), intent(in) :: chunk
 
-    integer :: idx
     character(len=80) :: param_value
-
-    character(len=3) :: operID
-    character(len=3) :: grpID
-    character(len=3) :: procID
 
     param_value = trim(chunk)
 
@@ -736,25 +1204,13 @@ contains
                 end if
               else if (man_tag(id)%in_tag ) then
                 man_tag(id)%acquired = .true.
-                int_cnt = 0
-                real_cnt = 0
-                str_cnt = 0
                 i_cnt = 0
                 r_cnt = 0
                 s_cnt = 0
                 select case (t_code)
                 case ('O')
                   operID = trim(param_value)
-                  select case (operID)
-                  case ('01')
-                    real_cnt = 5
-                  case ('03')
-                    real_cnt = 7
-                    str_cnt = 1
-                  case ('04')
-                    real_cnt = 2
-                    str_cnt = 1
-                  end select
+                  call get_value_cnts ( t_code, operID, int_cnt, real_cnt, str_cnt, ogp_id_idx )
                   if ( .not. associated(manFile(isub)%operFirst) ) then
                     manFile(isub)%operFirst => elemCreate( manFile(isub)%operFirst, operID, int_cnt, real_cnt, str_cnt )
                     manFile(isub)%oper => manFile(isub)%operFirst
@@ -762,21 +1218,14 @@ contains
                     manFile(isub)%oper%operNext => elemCreate( manFile(isub)%oper%operNext, operID, int_cnt, real_cnt, str_cnt )
                     manFile(isub)%oper => manFile(isub)%oper%operNext
                   end if
+                  manFile(isub)%oper%operDate = t_operDate
+                  manFile(isub)%oper%operName = trim(t_operName)
                   ! new operation, so nullify current group and process
                   nullify(manFile(isub)%grp)
                   nullify(manFile(isub)%proc)
                 case ('G')
                   grpID = trim(param_value)
-                  select case (grpID)
-                  case ('01')
-                    real_cnt = 6
-                  case ('02')
-                    real_cnt = 1
-                  case ('03')
-                    str_cnt = 1
-                  case ('04')
-                    str_cnt = 1
-                  end select
+                  call get_value_cnts ( t_code, grpID, int_cnt, real_cnt, str_cnt, ogp_id_idx )
                   if ( .not. associated(manFile(isub)%oper) ) then
                     write(*,*) 'Group appears before Operation in Management File: ', trim(manFile(isub)%tinfil)
                     call exit(1)
@@ -789,85 +1238,7 @@ contains
                   end if
                 case ('P')
                   procID = trim(param_value)
-                  select case (procID)
-                  case ('02')
-                    int_cnt = 1
-                    real_cnt = 1
-                  case ('05')
-                    int_cnt = 1
-                    real_cnt = 5
-                  case ('11')
-                    real_cnt = 2
-                  case ('12')
-                    real_cnt = 1
-                  case ('13')
-                    real_cnt = 1
-                  case ('24')
-                    int_cnt = 1
-                    real_cnt = 5
-                  case ('25')
-                    int_cnt = 1
-                    real_cnt = 5
-                  case ('26')
-                    real_cnt = 5
-                  case ('30')
-                    int_cnt = 1
-                  case ('31')
-                    int_cnt = 1
-                  case ('32')
-                    int_cnt = 1
-                    real_cnt = 4
-                  case ('33')
-                    real_cnt = 4
-                  case ('34')
-                    int_cnt = 1
-                    real_cnt = 10
-                  case ('37')
-                    real_cnt = 4
-                  case ('38')
-                    real_cnt = 4
-                  case ('42')
-                    int_cnt = 5
-                    real_cnt = 4
-                  case ('43')
-                    int_cnt = 4
-                    real_cnt = 4
-                  case ('47')
-                    int_cnt = 4
-                    real_cnt = 4
-                  case ('48')
-                    int_cnt = 4
-                    real_cnt = 4
-                  case ('50')
-                    int_cnt = 1
-                    real_cnt = 18
-                  case ('51')
-                    int_cnt = 9
-                    real_cnt = 61
-                    str_cnt = 1
-                  case ('61')
-                    int_cnt = 2
-                    real_cnt = 5
-                  case ('62')
-                    int_cnt = 7
-                    real_cnt = 5
-                  case ('65')
-                    int_cnt = 1
-                    real_cnt = 18
-                  case ('66')
-                    int_cnt = 1
-                    real_cnt = 20
-                  case ('71')
-                    int_cnt = 1
-                    real_cnt = 1
-                  case ('72')
-                    int_cnt = 1
-                    real_cnt = 7
-                  case ('73')
-                    real_cnt = 4
-                  case ('91')
-                    real_cnt = 5
-                  end select
+                  call get_value_cnts ( t_code, procID, int_cnt, real_cnt, str_cnt, ogp_id_idx )
                   if ( .not. associated(manFile(isub)%grp) ) then
                     ! Operation has process without group preceeding, create null group to support structure.
                     manFile(isub)%oper%grpFirst => elemCreate( manFile(isub)%oper%grpFirst, '00', 0, 0, 0 )
@@ -884,79 +1255,46 @@ contains
               end if
             else if (man_tag(param)%in_tag ) then
               if (man_tag(p_name)%in_tag ) then
-                do idx = 1, max_p_names
-                  if ( param_nt(idx)%p_name .eq. param_value ) then
-                    man_tag(p_name)%acquired = .true.
-                    select case (param_nt(idx)%p_type)
-                    case ('int')
-                      i_cnt = i_cnt + 1
-                      if ( i_cnt .le. int_cnt ) then
-                        if ( operID .ne. '' ) then
-                          manFile(isub)%oper%i_params(i_cnt)%p_name = trim(param_value)
-                        else if ( grpID .ne. '' ) then
-                          manFile(isub)%grp%i_params(i_cnt)%p_name = trim(param_value)
-                        else if ( procID .ne. '' ) then
-                          manFile(isub)%proc%i_params(i_cnt)%p_name = trim(param_value)
-                        end if
-                      else
-                        write(*,*) 'Too many integer parameter values for: ',trim(t_code)//trim(operID)//trim(grpID)//trim(procID)
-                      end if
-                    case ('float')
-                      r_cnt = r_cnt + 1
-                      if ( r_cnt .le. real_cnt ) then
-                        if ( operID .ne. '' ) then
-                          manFile(isub)%oper%r_params(r_cnt)%p_name = trim(param_value)
-                        else if ( grpID .ne. '' ) then
-                          manFile(isub)%grp%r_params(r_cnt)%p_name = trim(param_value)
-                        else if ( procID .ne. '' ) then
-                          manFile(isub)%proc%r_params(r_cnt)%p_name = trim(param_value)
-                        end if
-                      else
-                        write(*,*) 'Too many float parameter values for: ',trim(t_code)//trim(operID)//trim(grpID)//trim(procID)
-                      end if
-                    case ('string')
-                      s_cnt = s_cnt + 1
-                      if ( s_cnt .le. str_cnt ) then
-                        if ( operID .ne. '' ) then
-                          manFile(isub)%oper%s_params(s_cnt)%p_name = trim(param_value)
-                        else if ( grpID .ne. '' ) then
-                          manFile(isub)%grp%s_params(s_cnt)%p_name = trim(param_value)
-                        else if ( procID .ne. '' ) then
-                          manFile(isub)%proc%s_params(s_cnt)%p_name = trim(param_value)
-                        end if
-                      else
-                        write(*,*) 'Too many string parameter values for: ',trim(t_code)//trim(operID)//trim(grpID)//trim(procID)
-                      end if
-                    end select
-                    exit  ! found name in list, look no further
-                  end if
-                end do
+                ! sets index for placement of value into type array
+                call get_value_type_index ( ogp_id_idx, param_value, p_type, p_idx)
+                if ( p_idx .gt. 0 ) then
+                  man_tag(p_name)%acquired = .true.
+                end if
               else if (man_tag(value)%in_tag ) then
-                if ( idx .le. max_p_names ) then
-                  select case (param_nt(idx)%p_type)
+                if ( man_tag(p_name)%acquired ) then
+                  select case (p_type)
                   case ('int')
                     if ( operID .ne. '' ) then
-                      call read_param(man_tag(p_name)%name, param_value, manFile(isub)%oper%i_params(i_cnt)%p_value )
+                      call read_param(man_tag(p_name)%name, param_value, manFile(isub)%oper%i_param(p_idx)%p_value )
+                      manFile(isub)%oper%i_param(p_idx)%p_acquired = .true.
                     else if ( grpID .ne. '' ) then
-                      call read_param(man_tag(p_name)%name, param_value, manFile(isub)%grp%i_params(i_cnt)%p_value )
+                      call read_param(man_tag(p_name)%name, param_value, manFile(isub)%grp%i_param(p_idx)%p_value )
+                      manFile(isub)%grp%i_param(p_idx)%p_acquired = .true.
                     else if ( procID .ne. '' ) then
-                      call read_param(man_tag(p_name)%name, param_value, manFile(isub)%proc%i_params(i_cnt)%p_value )
+                      call read_param(man_tag(p_name)%name, param_value, manFile(isub)%proc%i_param(p_idx)%p_value )
+                      manFile(isub)%proc%i_param(p_idx)%p_acquired = .true.
                     end if
-                  case ('float')
+                  case ('real')
                     if ( operID .ne. '' ) then
-                      call read_param(man_tag(p_name)%name, param_value, manFile(isub)%oper%r_params(r_cnt)%p_value )
+                      call read_param(man_tag(p_name)%name, param_value, manFile(isub)%oper%r_param(p_idx)%p_value )
+                      manFile(isub)%oper%r_param(p_idx)%p_acquired = .true.
                     else if ( grpID .ne. '' ) then
-                      call read_param(man_tag(p_name)%name, param_value, manFile(isub)%grp%r_params(r_cnt)%p_value )
+                      call read_param(man_tag(p_name)%name, param_value, manFile(isub)%grp%r_param(p_idx)%p_value )
+                      manFile(isub)%grp%r_param(p_idx)%p_acquired = .true.
                     else if ( procID .ne. '' ) then
-                      call read_param(man_tag(p_name)%name, param_value, manFile(isub)%proc%r_params(r_cnt)%p_value )
+                      call read_param(man_tag(p_name)%name, param_value, manFile(isub)%proc%r_param(p_idx)%p_value )
+                      manFile(isub)%proc%r_param(p_idx)%p_acquired = .true.
                     end if
-                  case ('string')
+                  case ('str')
                     if ( operID .ne. '' ) then
-                      manFile(isub)%oper%s_params(s_cnt)%p_value = trim(param_value)
+                      manFile(isub)%oper%s_param(p_idx)%p_value = trim(param_value)
+                      manFile(isub)%oper%s_param(p_idx)%p_acquired = .true.
                     else if ( grpID .ne. '' ) then
-                      manFile(isub)%grp%s_params(s_cnt)%p_value = trim(param_value)
+                      manFile(isub)%grp%s_param(p_idx)%p_value = trim(param_value)
+                      manFile(isub)%grp%s_param(p_idx)%p_acquired = .true.
                     else if ( procID .ne. '' ) then
-                      manFile(isub)%proc%s_params(s_cnt)%p_value = trim(param_value)
+                      manFile(isub)%proc%s_param(p_idx)%p_value = trim(param_value)
+                      manFile(isub)%proc%s_param(p_idx)%p_acquired = .true.
                     end if
                   end select
                   man_tag(value)%acquired = .true.

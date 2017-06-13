@@ -19,7 +19,7 @@ module read_write_xml_mod
     module procedure read_param_int_1
     module procedure read_param_int_2
     module procedure read_param_int_3
-    module procedure read_param_dateymd
+    module procedure read_param_datedmy
   end interface
 
   interface w_begin_tag
@@ -105,11 +105,11 @@ contains
     end if
   end subroutine read_param_int_3
 
-  subroutine read_param_dateymd(tag_name, param_string, dateymd)
+  subroutine read_param_datedmy(tag_name, param_string, datedmy)
     use manage_data_struct_defs, only: operation_date
     character(len=*), intent(in) :: tag_name
     character(len=*), intent(in) :: param_string
-    type(operation_date), intent(inout) :: dateymd
+    type(operation_date), intent(inout) :: datedmy
 
     integer :: slash1  ! location of first / in date string
     integer :: slash2  ! location of second / in date string
@@ -120,18 +120,18 @@ contains
     slash2 = index( param_string(slash1+1:), '/' ) + slash1
 
     sum_stat = 0
-    read(param_string(:slash1-1),*,iostat=read_stat) dateymd%year
+    read(param_string(:slash1-1),*,iostat=read_stat) datedmy%day
     sum_stat = sum_stat + read_stat
-    read(param_string(slash1+1:slash2-1),*,iostat=read_stat) dateymd%month
+    read(param_string(slash1+1:slash2-1),*,iostat=read_stat) datedmy%month
     sum_stat = sum_stat + read_stat
-    read(param_string(slash2+1:),*,iostat=read_stat) dateymd%day
+    read(param_string(slash2+1:),*,iostat=read_stat) datedmy%year
     sum_stat = sum_stat + read_stat
     if (sum_stat .gt. 0) then
       write(*,*) 'Error reading ', trim(tag_name), ' Value: ', param_string
       call exit(1)
     end if
 
-  end subroutine read_param_dateymd
+  end subroutine read_param_datedmy
 
   subroutine w_spaces( luo_saeinp )
     integer, intent(in) :: luo_saeinp      ! output unit number
