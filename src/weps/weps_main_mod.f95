@@ -48,17 +48,12 @@ module weps_main_mod
       include 'p1werm.inc'
       include 'm1flag.inc'
       include 'm1subr.inc'
-      include 'manage/man.inc'
 
       integer idx
 
       ! main/weps.for
       do idx = 1, mnsub
-          mcur(idx) = 0          ! manage/man.inc
           amnryr(idx) = 1        ! m1subr.inc
-      end do
-      do idx = 1, mnsub+1
-          mbeg(idx) = 0          ! manage/man.inc
       end do
       daysim = 0
       maxper = 1
@@ -79,11 +74,6 @@ module weps_main_mod
       init_loop = .false.        ! m1flag.inc
       calib_loop = .false.       ! m1flag.inc
       report_loop = .false.      ! m1flag.inc
-
-      ! init flag calibration of crops with multiple harvests.
-      do idx = 1, mnsub
-          harv_calib_not_selected(idx) = .true.
-      end do
 
       return
     end subroutine wepsinit

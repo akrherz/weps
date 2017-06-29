@@ -3,7 +3,7 @@
 !$Revision$
 !$HeadURL$
 
-      subroutine   dooper (sr, manFile)
+      subroutine   dooper (manFile)
 
 !     + + + PURPOSE + + +
 !     Dooper reads in any coefficients associated with the
@@ -18,28 +18,19 @@
 
 !     + + + PARAMETERS AND COMMON BLOCKS + + +
       include 'p1werm.inc'
-      include 'manage/man.inc'
       include 'manage/mproc.inc'
 
 !     + + + ARGUMENT DECLARATIONS + + +
-      integer sr
       type(man_file_struct), intent(in) :: manFile
 
-!     + + + ARGUMENT DEFINITIONS + + +
-!     sr - the subregion number
-
-!     + + + ACCESSED COMMON BLOCK VARIABLE DEFINITIONS + + +
-!     odir - operation direction (degrees from NORTH)
-!     ospeed - operation speed 
-
 !     + + + LOCAL VARIABLES + + +
-!      character*256   line
-!      character*1 opdumy
-!
+      integer :: sr  ! the subregion being processed
+
 !     + + + SUBROUTINES CALLED + + +
 !     + + + FUNCTIONS CALLED + + +
 
 !     + + + DATA INITIALIZATIONS + + +
+      sr = manFile%isub
 
 !     + + + END SPECIFICATIONS + + +
 
@@ -48,7 +39,7 @@
 ! 1001 format(a1,1x,i2,1x,a)
       lastoper(sr)%code = manFile%oper%operType
       lastoper(sr)%name = manFile%oper%operName
-      if( (lastoper(sr)%code.eq.0).and.(mcount(sr).gt.0) ) then
+      if( (lastoper(sr)%code.eq.0).and.(manFile%mcount.gt.0) ) then
           lastoper(sr)%skip = 1
           print*, 'SR',sr,' Skip operation', lastoper(sr)%code,' ', trim(lastoper(sr)%name)
       else

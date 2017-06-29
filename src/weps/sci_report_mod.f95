@@ -41,7 +41,6 @@ module sci_report_mod
 !     + + + INCLUDE + + +
       include 'p1werm.inc'
       include 'command.inc'
-      include 'manage/man.inc'
 
 !     + + + LOCAL VARIABLES + + +
       integer idx, jdy

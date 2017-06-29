@@ -3,7 +3,7 @@
 !$Revision$
 !$HeadURL$
 
-      subroutine   doproc (sr, bmrotation, soil, crop, cropprev, residue, biotot, mandate, h1et, manFile)
+      subroutine   doproc (soil, crop, cropprev, residue, biotot, mandate, h1et, manFile)
 
 !     + + + PURPOSE + + +
 !     Doproc is called when a processline is found in the management file
@@ -39,14 +39,12 @@
       include 'h1hydro.inc'
       include 'h1db1.inc'
       include 'manage/asd.inc'
-      include 'manage/man.inc'
       include 'manage/mproc.inc'
 !     rdgflag  - flag indicating whether ridge modifications are needed
 !     imprs  - implement ridge spacing (can be used to set row spacing)
       include 'manage/tcrop.inc'
 
 !     + + + ARGUMENT DECLARATIONS + + +
-      integer sr, bmrotation
       type(soil_def), intent(inout) :: soil  ! soil for this subregion
       type(biomatter), intent(inout) :: crop    ! structure containing full crop description
       type(bio_prevday), intent(inout) :: cropprev    ! structure containing crop previous day values
@@ -55,10 +53,6 @@
       type(opercrop_date), dimension(:), intent(inout) :: mandate
       type(hydro_derived_et), intent(inout) :: h1et
       type(man_file_struct), intent(inout) :: manFile
-
-!     + + + ARGUMENT DEFINITIONS + + +
-!     sr - the subregion being processed
-!     bmrotation - rotation count updated in manage.for
 
 !     + + + ACCESSED COMMON BLOCK VARIABLE DEFINITIONS + + +
 
@@ -109,6 +103,7 @@
 !     prname    - the process name
 
 !     + + + LOCAL VARIABLES + + +
+      integer :: sr  ! the subregion being processed
       integer cutflg
       real    massf (msieve+1,mnsz)
       real    alpha, beta, mu, rho
@@ -280,6 +275,7 @@
       noparam2 = 0.0
       dummy1 = 0.0  ! array, assigns all values
       dummy2 = 0.0  ! array, assigns all values
+      sr = manFile%isub
 
 !     + + + OUTPUT FORMATS + + +
 2015     format (' Process code ',i2,1x,'Process ',1x,a20 )
@@ -1004,10 +1000,10 @@
      &           atzht(sr), atdstm(sr), atxstmrep(sr), atzrtd(sr), &
      &           atgrainf(sr) )
              if( rpt_season_flg(sr) ) then
-               call report_hydrobal( sr, bmrotation, manFile%mperod )
+               call report_hydrobal( sr, manFile%mcount, manFile%mperod )
                ! This may be harvest or non-harvest termination, allow early harvest warnings
                mature_warn_flg = 1
-               call crop_endseason( sr, bmrotation, manFile%mperod, &
+               call crop_endseason( sr, manFile%mcount, manFile%mperod, &
      &         crop%bname, am0cfl(sr), &
      &         soil%nslay, crop%database%idc, crop%growth%dayam, &
      &         crop%database%plant_day, crop%database%plant_month, crop%database%plant_rotyr, &
@@ -1084,18 +1080,18 @@
 !       no harvest report if nothing removed or no crop present
         if( (pyieldf+pstalkf+rstandf.gt.0.0)                            &
      &      .and. ((crop_present.gt.0) .or. (temp_present.gt.0)) ) then
-          if( harv_calib_not_selected(sr) ) then
+          if( manFile%harv_calib_not_selected ) then
             call get_calib_crops(sr, crop)
-            call get_calib_yield(sr, bmrotation, mass_rem, mass_left, crop)
-            call report_calib_harvest( sr, bmrotation, mass_rem, mass_left, crop )
-            harv_calib_not_selected(sr) = .false.
+            call get_calib_yield(sr, manFile%mcount, mass_rem, mass_left, crop)
+            call report_calib_harvest( sr, manFile%mcount, mass_rem, mass_left, crop )
+            manFile%harv_calib_not_selected = .false.
           end if
-          call report_harvest( sr, bmrotation, mass_rem, mass_left, 0,1,&
+          call report_harvest( sr, manFile%mcount, mass_rem, mass_left, 0,1,&
      &           mandate, crop)
           if( rpt_season_flg(sr) ) then
               ! not reported by the kill process in this
-              call report_hydrobal( sr, bmrotation, manFile%mperod )
-              call crop_endseason( sr, bmrotation, manFile%mperod, &
+              call report_hydrobal( sr, manFile%mcount, manFile%mperod )
+              call crop_endseason( sr, manFile%mcount, manFile%mperod, &
      &        crop%bname, am0cfl(sr), &
      &        soil%nslay, crop%database%idc, crop%growth%dayam, &
      &        crop%database%plant_day, crop%database%plant_month, crop%database%plant_rotyr, &
@@ -1153,18 +1149,18 @@
 !       no harvest report if nothing removed or no crop present
         if( (pyieldf+pstalkf+rstandf.gt.0.0)                            &
      &      .and. ((crop_present.gt.0) .or. (temp_present.gt.0)) ) then
-          if( harv_calib_not_selected(sr) ) then
+          if( manFile%harv_calib_not_selected ) then
             call get_calib_crops(sr, crop)
-            call get_calib_yield(sr, bmrotation, mass_rem, mass_left, crop)
-            call report_calib_harvest( sr, bmrotation, mass_rem, mass_left, crop )
-            harv_calib_not_selected(sr) = .false.
+            call get_calib_yield(sr, manFile%mcount, mass_rem, mass_left, crop)
+            call report_calib_harvest( sr, manFile%mcount, mass_rem, mass_left, crop )
+            manFile%harv_calib_not_selected = .false.
           end if
-          call report_harvest( sr, bmrotation, mass_rem, mass_left, 0,1,&
+          call report_harvest( sr, manFile%mcount, mass_rem, mass_left, 0,1,&
      &           mandate, crop)
           if( rpt_season_flg(sr) ) then
               ! not reported by the kill process in this
-              call report_hydrobal( sr, bmrotation, manFile%mperod )
-              call crop_endseason( sr, bmrotation, manFile%mperod, &
+              call report_hydrobal( sr, manFile%mcount, manFile%mperod )
+              call crop_endseason( sr, manFile%mcount, manFile%mperod, &
      &        crop%bname, am0cfl(sr), &
      &        soil%nslay, crop%database%idc, crop%growth%dayam, &
      &        crop%database%plant_day, crop%database%plant_month, crop%database%plant_rotyr, &
@@ -1269,18 +1265,18 @@
 !       no harvest report if nothing removed or no crop present
         if( (pyieldf+pstalkf+rstandf.gt.0.0)                            &
      &      .and. ((crop_present.gt.0) .or. (temp_present.gt.0)) ) then
-          if( harv_calib_not_selected(sr) ) then
+          if( manFile%harv_calib_not_selected ) then
             call get_calib_crops(sr, crop)
-            call get_calib_yield(sr, bmrotation, mass_rem, mass_left, crop)
-            call report_calib_harvest( sr, bmrotation, mass_rem, mass_left, crop )
-            harv_calib_not_selected(sr) = .false.
+            call get_calib_yield(sr, manFile%mcount, mass_rem, mass_left, crop)
+            call report_calib_harvest( sr, manFile%mcount, mass_rem, mass_left, crop )
+            manFile%harv_calib_not_selected = .false.
           end if
-          call report_harvest( sr, bmrotation, mass_rem, mass_left, 0,1,&
+          call report_harvest( sr, manFile%mcount, mass_rem, mass_left, 0,1,&
       &          mandate, crop)
           if( rpt_season_flg(sr) ) then
               ! not reported by the kill process in this
-              call report_hydrobal( sr, bmrotation, manFile%mperod )
-              call crop_endseason( sr, bmrotation, manFile%mperod, &
+              call report_hydrobal( sr, manFile%mcount, manFile%mperod )
+              call crop_endseason( sr, manFile%mcount, manFile%mperod, &
      &        crop%bname, am0cfl(sr), &
      &        soil%nslay, crop%database%idc, crop%growth%dayam, &
      &        crop%database%plant_day, crop%database%plant_month, crop%database%plant_rotyr, &
@@ -1339,14 +1335,14 @@
         if( (pyieldf+pstalkf+rstandf.gt.0.0)                            &
      &      .and. ((crop_present.gt.0) .or. (temp_present.gt.0)) ) then
             call get_calib_crops(sr, crop)
-            call get_calib_yield(sr, bmrotation, mass_rem, mass_left, crop)
-            call report_harvest( sr, bmrotation, mass_rem, mass_left, 0,&
+            call get_calib_yield(sr, manFile%mcount, mass_rem, mass_left, crop)
+            call report_harvest( sr, manFile%mcount, mass_rem, mass_left, 0,&
      &           1, mandate, crop)
-            call report_calib_harvest( sr, bmrotation, mass_rem, mass_left, crop )
+            call report_calib_harvest( sr, manFile%mcount, mass_rem, mass_left, crop )
             if( rpt_season_flg(sr) ) then
               ! not reported by the kill process in this
-              call report_hydrobal( sr, bmrotation, manFile%mperod )
-              call crop_endseason( sr, bmrotation, manFile%mperod, &
+              call report_hydrobal( sr, manFile%mcount, manFile%mperod )
+              call crop_endseason( sr, manFile%mcount, manFile%mperod, &
      &        crop%bname, am0cfl(sr), &
      &        soil%nslay, crop%database%idc, crop%growth%dayam, &
      &        crop%database%plant_day, crop%database%plant_month, crop%database%plant_rotyr, &
@@ -1453,19 +1449,19 @@
         if( (pyieldf+pstalkf+rstandf.gt.0.0)                            &
      &      .and. ((crop_present.gt.0) .or. (temp_present.gt.0)) ) then
           if(      (harv_calib_flg .gt. 0)                              &
-     &       .and. (harv_calib_not_selected(sr)) ) then
+     &       .and. (manFile%harv_calib_not_selected) ) then
             call get_calib_crops(sr, crop)
-            call get_calib_yield(sr, bmrotation, mass_rem, mass_left, crop)
-            call report_calib_harvest( sr, bmrotation, mass_rem, mass_left, crop )
-            harv_calib_not_selected(sr) = .false.
+            call get_calib_yield(sr, manFile%mcount, mass_rem, mass_left, crop)
+            call report_calib_harvest( sr, manFile%mcount, mass_rem, mass_left, crop )
+            manFile%harv_calib_not_selected = .false.
           end if
-          call report_harvest( sr, bmrotation, mass_rem, mass_left,     &
+          call report_harvest( sr, manFile%mcount, mass_rem, mass_left,     &
      &                         harv_unit_flg, harv_report_flg,          &
      &                         mandate, crop )
           if( rpt_season_flg(sr) ) then
               ! not reported by the kill process in this
-              call report_hydrobal( sr, bmrotation, manFile%mperod )
-              call crop_endseason( sr, bmrotation, manFile%mperod, &
+              call report_hydrobal( sr, manFile%mcount, manFile%mperod )
+              call crop_endseason( sr, manFile%mcount, manFile%mperod, &
      &        crop%bname, am0cfl(sr), &
      &        soil%nslay, crop%database%idc, crop%growth%dayam, &
      &        crop%database%plant_day, crop%database%plant_month, crop%database%plant_rotyr, &
@@ -1528,19 +1524,19 @@
         if( (pyieldf+pstalkf+rstandf.gt.0.0)                            &
      &      .and. ((crop_present.gt.0) .or. (temp_present.gt.0)) ) then
           if(      (harv_calib_flg .gt. 0)                              &
-     &       .and. (harv_calib_not_selected(sr)) ) then
+     &       .and. (manFile%harv_calib_not_selected) ) then
             call get_calib_crops(sr, crop)
-            call get_calib_yield(sr, bmrotation, mass_rem, mass_left, crop)
-            call report_calib_harvest( sr, bmrotation, mass_rem, mass_left, crop )
-            harv_calib_not_selected(sr) = .false.
+            call get_calib_yield(sr, manFile%mcount, mass_rem, mass_left, crop)
+            call report_calib_harvest( sr, manFile%mcount, mass_rem, mass_left, crop )
+            manFile%harv_calib_not_selected = .false.
           end if
-          call report_harvest( sr, bmrotation, mass_rem, mass_left,     &
+          call report_harvest( sr, manFile%mcount, mass_rem, mass_left,     &
      &                         harv_unit_flg, harv_report_flg,          &
      &                         mandate, crop )
           if( rpt_season_flg(sr) ) then
               ! not reported by the kill process in this
-              call report_hydrobal( sr, bmrotation, manFile%mperod )
-              call crop_endseason( sr, bmrotation, manFile%mperod, &
+              call report_hydrobal( sr, manFile%mcount, manFile%mperod )
+              call crop_endseason( sr, manFile%mcount, manFile%mperod, &
      &        crop%bname, am0cfl(sr), &
      &        soil%nslay, crop%database%idc, crop%growth%dayam, &
      &        crop%database%plant_day, crop%database%plant_month, crop%database%plant_rotyr, &
@@ -1604,19 +1600,19 @@
         if( (pyieldf+pstalkf+rstandf.gt.0.0)                            &
      &      .and. ((crop_present.gt.0) .or. (temp_present.gt.0)) ) then
           if(      (harv_calib_flg .gt. 0)                              &
-     &       .and. (harv_calib_not_selected(sr)) ) then
+     &       .and. (manFile%harv_calib_not_selected) ) then
             call get_calib_crops(sr, crop)
-            call get_calib_yield(sr, bmrotation, mass_rem, mass_left, crop)
-            call report_calib_harvest( sr, bmrotation, mass_rem, mass_left, crop )
-            harv_calib_not_selected(sr) = .false.
+            call get_calib_yield(sr, manFile%mcount, mass_rem, mass_left, crop)
+            call report_calib_harvest( sr, manFile%mcount, mass_rem, mass_left, crop )
+            manFile%harv_calib_not_selected = .false.
           end if
-          call report_harvest( sr, bmrotation, mass_rem, mass_left,     &
+          call report_harvest( sr, manFile%mcount, mass_rem, mass_left,     &
      &                         harv_unit_flg, harv_report_flg,          &
      &                         mandate, crop )
           if( rpt_season_flg(sr) ) then
               ! not reported by the kill process in this
-              call report_hydrobal( sr, bmrotation, manFile%mperod )
-              call crop_endseason( sr, bmrotation, manFile%mperod, &
+              call report_hydrobal( sr, manFile%mcount, manFile%mperod )
+              call crop_endseason( sr, manFile%mcount, manFile%mperod, &
      &        crop%bname, am0cfl(sr), &
      &        soil%nslay, crop%database%idc, crop%growth%dayam, &
      &        crop%database%plant_day, crop%database%plant_month, crop%database%plant_rotyr, &
@@ -1679,19 +1675,19 @@
         if( (pyieldf+pstalkf+rstandf.gt.0.0)                            &
      &      .and. ((crop_present.gt.0) .or. (temp_present.gt.0)) ) then
           if(      (harv_calib_flg .gt. 0)                              &
-     &       .and. (harv_calib_not_selected(sr)) ) then
+     &       .and. (manFile%harv_calib_not_selected) ) then
             call get_calib_crops(sr, crop)
-            call get_calib_yield(sr, bmrotation, mass_rem, mass_left, crop)
-            call report_calib_harvest( sr, bmrotation, mass_rem, mass_left, crop )
-            harv_calib_not_selected(sr) = .false.
+            call get_calib_yield(sr, manFile%mcount, mass_rem, mass_left, crop)
+            call report_calib_harvest( sr, manFile%mcount, mass_rem, mass_left, crop )
+            manFile%harv_calib_not_selected = .false.
           end if
-          call report_harvest( sr, bmrotation, mass_rem, mass_left,     &
+          call report_harvest( sr, manFile%mcount, mass_rem, mass_left,     &
      &                         harv_unit_flg, harv_report_flg, &
      &                         mandate, crop )
           if( rpt_season_flg(sr) ) then
               ! not reported by the kill process in this
-              call report_hydrobal( sr, bmrotation, manFile%mperod )
-              call crop_endseason( sr, bmrotation, manFile%mperod, &
+              call report_hydrobal( sr, manFile%mcount, manFile%mperod )
+              call crop_endseason( sr, manFile%mcount, manFile%mperod, &
      &        crop%bname, am0cfl(sr), &
      &        soil%nslay, crop%database%idc, crop%growth%dayam, &
      &        crop%database%plant_day, crop%database%plant_month, crop%database%plant_rotyr, &
@@ -1858,7 +1854,7 @@
      &      soil%nslay, residue )
           ! non-harvest termination, suppress early harvest warnings
           mature_warn_flg = 0
-          call crop_endseason( sr, bmrotation, manFile%mperod, &
+          call crop_endseason( sr, manFile%mcount, manFile%mperod, &
      &        crop%bname, am0cfl(sr), &
      &        soil%nslay, crop%database%idc, crop%growth%dayam, &
      &        crop%database%plant_day, crop%database%plant_month, crop%database%plant_rotyr, &
@@ -2054,7 +2050,7 @@
         crop%database%plant_rotyr = lastoper(sr)%yr
 
         ! initialize flag to prevent multiple calibration harvests for single crop
-        harv_calib_not_selected(sr) = .true.
+        manFile%harv_calib_not_selected = .true.
 
         ! initialize transpiration depth parameters
         ahzfurcut(sr) = 0.0
@@ -2103,7 +2099,7 @@
         call set_calib(sr, crop)
         if( rpt_season_flg(sr) ) then
           ! not reported by the kill process in this
-          call report_hydrobal( sr, bmrotation, manFile%mperod )
+          call report_hydrobal( sr, manFile%mcount, manFile%mperod )
         end if
 !-----END planting process (process code 51)
 
@@ -2159,18 +2155,18 @@
 !       no harvest report if nothing removed or no crop present
         if( (storef + leaff + stemf + rootstoref + rootfiberf .gt. 0.0) &
      &      .and. ((crop_present.gt.0) .or. (temp_present.gt.0)) ) then
-          if( harv_calib_not_selected(sr) ) then
+          if( manFile%harv_calib_not_selected ) then
             call get_calib_crops(sr, crop)
-            call get_calib_yield(sr, bmrotation, mass_rem, mass_left, crop)
-            call report_calib_harvest( sr, bmrotation, mass_rem, mass_left, crop )
-            harv_calib_not_selected(sr) = .false.
+            call get_calib_yield(sr, manFile%mcount, mass_rem, mass_left, crop)
+            call report_calib_harvest( sr, manFile%mcount, mass_rem, mass_left, crop )
+            manFile%harv_calib_not_selected = .false.
           end if
-            call report_harvest( sr, bmrotation, mass_rem, mass_left, 0,&
+            call report_harvest( sr, manFile%mcount, mass_rem, mass_left, 0,&
      &           1, mandate, crop)
           if( rpt_season_flg(sr) ) then
               ! not reported by the kill process in this
-              call report_hydrobal( sr, bmrotation, manFile%mperod )
-              call crop_endseason( sr, bmrotation, manFile%mperod, &
+              call report_hydrobal( sr, manFile%mcount, manFile%mperod )
+              call crop_endseason( sr, manFile%mcount, manFile%mperod, &
      &        crop%bname, am0cfl(sr), &
      &        soil%nslay, crop%database%idc, crop%growth%dayam, &
      &        crop%database%plant_day, crop%database%plant_month, crop%database%plant_rotyr, &
@@ -2245,20 +2241,20 @@
      &      .and. ((crop_present.gt.0) .or. (temp_present.gt.0)) ) then
           ! removed mass is used in calibration
           if(      (harv_calib_flg .gt. 0)                              &
-     &       .and. (harv_calib_not_selected(sr)) ) then
+     &       .and. (manFile%harv_calib_not_selected) ) then
             call get_calib_crops(sr, crop)
-            call get_calib_yield(sr, bmrotation, mass_rem, mass_left, crop)
-            call report_calib_harvest( sr, bmrotation, mass_rem, mass_left, crop )
-            harv_calib_not_selected(sr) = .false.
+            call get_calib_yield(sr, manFile%mcount, mass_rem, mass_left, crop)
+            call report_calib_harvest( sr, manFile%mcount, mass_rem, mass_left, crop )
+            manFile%harv_calib_not_selected = .false.
           end if
           ! removed mass appears in crop report
-          call report_harvest( sr, bmrotation, mass_rem, mass_left,     &
+          call report_harvest( sr, manFile%mcount, mass_rem, mass_left,     &
      &                         harv_unit_flg, harv_report_flg,          &
      &                         mandate, crop )
           if( rpt_season_flg(sr) ) then
             ! not reported by the kill process in this
-            call report_hydrobal( sr, bmrotation, manFile%mperod )
-            call crop_endseason( sr, bmrotation, manFile%mperod, &
+            call report_hydrobal( sr, manFile%mcount, manFile%mperod )
+            call crop_endseason( sr, manFile%mcount, manFile%mperod, &
      &        crop%bname, am0cfl(sr), &
      &        soil%nslay, crop%database%idc, crop%growth%dayam, &
      &        crop%database%plant_day, crop%database%plant_month, crop%database%plant_rotyr, &

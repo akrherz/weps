@@ -69,6 +69,7 @@ module manage_data_struct_defs
     integer :: isub      ! subregion index
     character(len=512) :: tinfil  ! management file name
     real :: mversion     ! management version number
+    integer :: mcount    ! number of times managment rotation has been completed
     integer :: mperod    ! length of management of rotation
     integer :: am0tfl    ! flag to print MANAGEment (TILLAGE) output
                          ! 0 = no output
@@ -83,6 +84,8 @@ module manage_data_struct_defs
     integer :: wchflag   ! flag to control printing WC header info
                          ! 0 = WC header line not yet printed
                          ! 1 = WC header (first) line now printed
+    logical :: harv_calib_not_selected ! harv_calib_not_selected - flag indicating that a harvest operation
+                                       ! has not been selected for calibration for that crop.
     type(operation), pointer :: operFirst, oper
     type(group), pointer :: grp
     type(process), pointer :: proc
@@ -129,7 +132,7 @@ module manage_data_struct_defs
                                 ! Converted to distance from ground up in meters by cut.for
   end type last_operation
 
-  type(last_operation), dimension(:), allocatable :: lastoper 
+  type(last_operation), dimension(:), allocatable :: lastoper
 
 contains
 

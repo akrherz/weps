@@ -3,7 +3,7 @@
 !$Revision$
 !$HeadURL$
 
-      subroutine   dogroup (sr, soil, manFile)
+      subroutine   dogroup (soil, manFile)
 
 !     + + + PURPOSE + + +
 !     Dogroup reads in any coefficients associated with the group of
@@ -20,28 +20,14 @@
 !     + + + PARAMETERS AND COMMON BLOCKS + + +
       include 'p1werm.inc'
       include 'm1flag.inc'
-      include 'manage/man.inc'
       include 'manage/mproc.inc'
 
 !     + + + ARGUMENT DECLARATIONS + + +
-      integer sr
       type(soil_def), intent(in) :: soil  ! soil for this subregion
       type(man_file_struct), intent(in) :: manFile
 
-!     + + + ARGUMENT DEFINITIONS + + +
-!     iunit - management file handle 
-!     sr - the subregion number
-
-!     + + + ACCESSED COMMON BLOCK VARIABLE DEFINITIONS + + +
-!     cropno - number that identifies the crop to be sown
-!     tdepth - tillage depth (mm)
-!     ti - tillage intensity (fraction)
-
-!     fracarea - fraction of area affected by process
-
 !     + + + LOCAL VARIABLES + + +
-!      character*256   line
-!      character*1    grdumy
+      integer :: sr  ! the subregion being processed
 
 !     + + + SUBROUTINES CALLED + + +
 
@@ -49,6 +35,7 @@
 !      integer tillay
 
 !     + + + DATA INITIALIZATIONS + + +
+      sr = manFile%isub
 
 !     + + + END SPECIFICATIONS + + +
 

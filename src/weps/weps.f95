@@ -85,9 +85,6 @@
       include 'command.inc'   !declarations for commandline args
       include 'precision.inc' !declaration for portable math range checking
 
-!     + + + LOCAL COMMON BLOCKS + + +
-      include 'manage/man.inc'
-    
 !     + + + LOCAL VARIABLES + + +
       character(len=21) :: rundatetime
 
@@ -154,8 +151,6 @@
 !   ndiy      - The number of days in the year.
 !   ngdpt     - This variable holds the total number of grig points in an
 !               accounting region.
-!   period    - The number of years in a management rotation.  This
-!               variable is defined in (/inc/manage/man.inc)
 !   simyrs    - The number of years in a simulation run excluding the
 !               years for surface initialization.
 !   usrid     - This character variable is an identification string

@@ -35,7 +35,6 @@ module manage_mod
 
 !     + + + PARAMETERS AND COMMON BLOCKS + + +
       include 'p1werm.inc'
-      include 'manage/man.inc'
       include 'manage/asd.inc'
       include 'manage/mproc.inc'
 
@@ -105,16 +104,16 @@ module manage_mod
       ! perform all operations that occur on this date
       do while ( associated(manFile%oper) )
         lastoper(sr)%skip = 0
-        call dooper(sr, manFile)
+        call dooper(manFile)
         ! do groups
         manFile%grp => manFile%oper%grpFirst
         do while ( associated(manFile%grp) )
           if(lastoper(sr)%skip.eq.0) then
-            call dogroup(sr, soil, manFile)
+            call dogroup(soil, manFile)
             ! do processes
             manFile%proc => manFile%grp%procFirst
             do while ( associated(manFile%proc) )
-              call doproc(sr, mcount(sr), soil, crop, cropprev, residue, biotot, mandate, h1et, manFile)
+              call doproc(soil, crop, cropprev, residue, biotot, mandate, h1et, manFile)
               ! next process
               manFile%proc => manFile%proc%procNext
             end do
@@ -135,6 +134,7 @@ module manage_mod
           end if
         else  ! not associated
           ! end of rotation
+          manFile%mcount = manFile%mcount + 1
           manFile%oper => manFile%operFirst
           exit
         end if
@@ -171,7 +171,6 @@ module manage_mod
 
       include 'p1werm.inc'
       include 'm1flag.inc'
-      include 'manage/man.inc'
       include 'manage/asd.inc'
       include 'manage/tcrop.inc'
       include 'manage/mproc.inc'
@@ -250,14 +249,16 @@ module manage_mod
           write(*,*) 'Management file incomplete: ', trim(manFile%tinfil)
           call exit(1)
         end if
-        return
-
       else
-
         call read_old_manfile ( manFile%isub, luimandate )
-        return
-
       end if
+
+      ! init flag calibration of crops with multiple harvests.
+      manFile%harv_calib_not_selected = .true.
+      ! init rotation counter
+      manFile%mcount = 0
+
+      return
 
     end subroutine mfinit
 

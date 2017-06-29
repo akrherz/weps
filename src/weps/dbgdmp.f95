@@ -36,9 +36,6 @@
       include 'h1db1.inc'
       include 'h1temp.inc'
 
-!     + + + LOCAL COMMON BLOCKS + + +
-      include 'manage/man.inc'
-
       integer  idx,jdx
 !
       real     tstmin
