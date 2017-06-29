@@ -646,10 +646,11 @@
         type(opercrop_date), dimension(:), intent(in) :: mandate ! array of mandates from management file
         end function get_nperiods
 !------------------------------      
-      subroutine mandates(sr, mandate)
+      subroutine mandates(mandate, manFile)
       use mandate_mod, only: opercrop_date, create_mandate    ! Load shared mandate() array
-      integer sr
+      use manage_data_struct_defs, only: man_file_struct
       type (opercrop_date), dimension(:), allocatable :: mandate
+      type(man_file_struct), intent(inout) :: manFile
       end subroutine mandates
 !-----------------------------
       subroutine openfils(residue)
@@ -764,10 +765,12 @@
       type(biototal), intent(inout) :: croptot  ! structure containing derived variables
       end subroutine cropupdate
 !----------------------
-      subroutine   dogroup (sr, soil)
+      subroutine   dogroup (sr, soil, manFile)
       use soil_data_struct_defs, only: soil_def
+      use manage_data_struct_defs, only: man_file_struct 
       integer sr
       type(soil_def), intent(in) :: soil
+      type(man_file_struct) :: manFile
       end subroutine dogroup
 !----------------------
       subroutine   dooper (sr, manFile)

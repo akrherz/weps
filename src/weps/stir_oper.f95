@@ -39,7 +39,7 @@
       if( stircum(isr)%oper_cnt .gt. 1 ) then
           ! indicates multiple operations on the same day
           ! calculate stir and reset accumulators for this next operation
-          call stir_report(isr, .false., lastoper(isr)%stir, lastoper(isr)%energyarea)
+          !call stir_report(isr, .false., lastoper(isr)%stir, lastoper(isr)%energyarea)
       end if
 
       stircum(isr)%phop(stircum(isr)%phopidx)%phopday = lastoper(isr)%day

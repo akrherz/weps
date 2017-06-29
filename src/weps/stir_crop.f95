@@ -35,22 +35,22 @@
       if( (soil_cond .eq. 0) .or. stircum(isr)%done_flg ) return
 
    ! debug start
-   !   write(*,'(2(a,io))') 'subregion: ', isr, ' phopidx: ', stircum(isr)%phopidx
-   !   do jdx = 1, stircum(isr)%phopcnt
-   !      write(*,'(6(i0,a),a)') stircum(isr)%phop(jdx)%phopday, '/', stircum(isr)%phop(jdx)%phopmon, '/', &
-   !                           stircum(isr)%phop(jdx)%phopyr, &
-   !                           ' type ', stircum(isr)%phop(jdx)%phop_type, &
-   !                           ' crop_num ', stircum(isr)%phop(jdx)%crop_num, &
-   !                           ' last_harv ', stircum(isr)%phop(jdx)%last_harv, &
-   !                           ' ', trim(stircum(isr)%phop(jdx)%stir_opname)
-   !   end do
+      write(*,'(2(a,i0))') 'subregion: ', isr, ' phopidx: ', stircum(isr)%phopidx
+      do jdx = 1, stircum(isr)%phopcnt
+         write(*,'(6(i0,a),a)') stircum(isr)%phop(jdx)%phopday, '/', stircum(isr)%phop(jdx)%phopmon, '/', &
+                              stircum(isr)%phop(jdx)%phopyr, &
+                              ' type ', stircum(isr)%phop(jdx)%phop_type, &
+                              ' crop_num ', stircum(isr)%phop(jdx)%crop_num, &
+                              ' last_harv ', stircum(isr)%phop(jdx)%last_harv, &
+                              ' ', trim(stircum(isr)%phop(jdx)%stir_opname)
+      end do
    ! debug end
 
       ! start accounting for crops and harvests/terminations
       ! this relies on an initialization cycle and one regular cycle
       if( plant_harv .gt. 0 ) then
          ! this is either a planting or harvest/termination operation.
-         if( stircum(isr)%phopidx+1 .gt. size(stircum(isr)%phop) ) then
+         if( stircum(isr)%phopidx .gt. size(stircum(isr)%phop) ) then
             ! maximum array size exceeded
             write(*,*) 'ERROR: too many planting and harvest Ops'
             write(*,*) ' increase number in WEPS main create_stir_accumulators() call'
@@ -128,7 +128,7 @@
                   end do
                end if
             end if
-            if( report_loop .and. stircum(isr)%man_eof ) then ! man_eof indicates at least one pass completed
+            if( stircum(isr)%man_eof ) then ! man_eof indicates at least one pass completed
                ! All harvest/termination ops should be present, check for last harvest/termination
                if( idx .lt. stircum(isr)%phopcnt ) then
                   ! check operations to end of management file and wrap as needed
@@ -182,7 +182,7 @@
          stircum(isr)%phoplastidx = idx
       end if
 
-      if( report_loop .neqv. .true. ) return
+      if( stircum(isr)%man_eof .neqv. .true. ) return
 
       ! register crop name for this event
       stircum(isr)%phop(stircum(isr)%phopidx)%stir_cropname = bc0nam

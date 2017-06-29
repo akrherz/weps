@@ -92,7 +92,7 @@
       if( soil_cond .gt. 0 ) then
          do idx = 1, nsubr
             close(luosci(idx))
-            close(luostir(idx))
+            ! close(luostir(idx))
          end do
       end if
 

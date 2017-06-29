@@ -3,7 +3,7 @@
 !$Revision$
 !$HeadURL$
 
-      subroutine   dogroup (sr, soil)
+      subroutine   dogroup (sr, soil, manFile)
 
 !     + + + PURPOSE + + +
 !     Dogroup reads in any coefficients associated with the group of
@@ -13,8 +13,9 @@
 !     tillage, operation, management
 
       use weps_interface_defs, ignore_me=>dogroup
-      use manage_data_struct_defs, only: lastoper
+      use manage_data_struct_defs, only: lastoper, man_file_struct
       use soil_data_struct_defs, only: soil_def
+      use manage_data_struct_mod, only: getManVal
 
 !     + + + PARAMETERS AND COMMON BLOCKS + + +
       include 'p1werm.inc'
@@ -25,6 +26,7 @@
 !     + + + ARGUMENT DECLARATIONS + + +
       integer sr
       type(soil_def), intent(in) :: soil  ! soil for this subregion
+      type(man_file_struct), intent(in) :: manFile
 
 !     + + + ARGUMENT DEFINITIONS + + +
 !     iunit - management file handle 
@@ -38,8 +40,8 @@
 !     fracarea - fraction of area affected by process
 
 !     + + + LOCAL VARIABLES + + +
-      character*256   line
-      character*1    grdumy
+!      character*256   line
+!      character*1    grdumy
 
 !     + + + SUBROUTINES CALLED + + +
 
@@ -50,10 +52,12 @@
 
 !     + + + END SPECIFICATIONS + + +
 
-      line = mtbl(mcur(sr))
-      read(line, 1001, err=901) grdumy, lastoper(sr)%grcode,            &
-     &                                  lastoper(sr)%grname
- 1001 format(a1,1x,i2,1x,a)
+!      line = mtbl(mcur(sr))
+!      read(line, 1001, err=901) grdumy, lastoper(sr)%grcode,            &
+!     &                                  lastoper(sr)%grname
+! 1001 format(a1,1x,i2,1x,a)
+      lastoper(sr)%grcode = manFile%grp%grpType
+      lastoper(sr)%grname = manFile%grp%grpName
 !***  print*, 'SR',sr,' Processing process:', lastoper(sr)%grcode,' ',lastoper(sr)%grname
 
       select case (lastoper(sr)%grcode)
@@ -62,12 +66,17 @@
 !-----START tillage process (process code 01)
 !     get process parameters
 !     get additional line of data
-        mcur(sr) = mcur(sr) + 1
-        line = mtbl(mcur(sr))
+!        mcur(sr) = mcur(sr) + 1
+!        line = mtbl(mcur(sr))
 !     read tillage depth, intensity and area
-        read(line(2:len_trim(line)), *, err=901)                        &
-     &   tdepth, ti, fracarea, tstddepth, tmindepth, tmaxdepth
-
+!        read(line(2:len_trim(line)), *, err=901)                        &
+!     &   tdepth, ti, fracarea, tstddepth, tmindepth, tmaxdepth
+        call getManVal(manFile%grp, 'gtdepth', tdepth)
+        call getManVal(manFile%grp, 'gtilint', ti)
+        call getManVal(manFile%grp, 'gtilArea', fracarea)
+        call getManVal(manFile%grp, 'gtstddepth', tstddepth)
+        call getManVal(manFile%grp, 'gtmindepth', tmindepth)
+        call getManVal(manFile%grp, 'gtmaxdepth', tmaxdepth)
 ! ***        if (getr(iunit,sr,fracarea,fracarea,fracarea,1,'r').gt.0) then
 ! ***          print*,'ERROR in doproc ',prcode
 ! ***          stop
@@ -84,10 +93,11 @@
 !        rtn = getr(iunit, sr, bioflg,bioflg,bioflg,1,'i')
 !     expected last parameter for process, thus mlpos==0
 !     get additional line of data
-        mcur(sr) = mcur(sr) + 1
-        line = mtbl(mcur(sr))
+!        mcur(sr) = mcur(sr) + 1
+!        line = mtbl(mcur(sr))
 !     read biomass area affected
-        read(line(2:len_trim(line)), *, err=901) fracarea
+!        read(line(2:len_trim(line)), *, err=901) fracarea
+        call getManVal(manFile%grp, 'gbioarea', fracarea)
 ! ***        if (getr(iunit,sr,fracarea,fracarea,fracarea,1,'r').gt.0) then
 ! ***          print*,'ERROR in doproc ',prcode
 ! ***          stop
@@ -102,11 +112,12 @@
 !     get process parameters
 !     expected last parameter for process, thus mlpos==0
 !     get additional line of data
-        mcur(sr) = mcur(sr) + 1
-        line = mtbl(mcur(sr))
+!        mcur(sr) = mcur(sr) + 1
+!        line = mtbl(mcur(sr))
 !       read crop name
-        cropname = line(2:71)   !at present, line ends with < symbol at 72
-        call stir_crop(sr, cropname, 0)
+!        cropname = line(2:71)   !at present, line ends with < symbol at 72
+        call getManVal(manFile%grp, 'gcropname', cropname)
+        ! call stir_crop(sr, cropname, 0)
 !        read(line(2:len_trim(line)),*, err=901) cropname
 ! ***        if (getr(iunit, sr, cropname,cropname,cropname,1,'c').gt.0) then
 ! ***          print*,'ERROR in doproc ',prcode
@@ -123,10 +134,11 @@
 !     get process parameters
 !       expected last parameter for process, thus mlpos==0
 !     get additional line of data
-        mcur(sr) = mcur(sr) + 1
-        line = mtbl(mcur(sr))
+!        mcur(sr) = mcur(sr) + 1
+!        line = mtbl(mcur(sr))
 !       read amendment name
-        amdname = line(2:71)   !at present, line ends with < symbol at 72
+!        amdname = line(2:71)   !at present, line ends with < symbol at 72
+        call getManVal(manFile%grp, 'gamdname', amdname)
 !        read(line(2:len_trim(line)),*, err=901) amdname
 ! ***        if (getr(iunit, sr, amdname,amdname,amdname,1,'c').gt.0) then
 ! ***          print*,'ERROR in doproc ',prcode
@@ -136,17 +148,17 @@
 !     do process (could include a tillage operation)
 !     post-process stuff
 !-----END ammend process (process code 04)
-      case default
-        goto 902
+!      case default
+!        goto 902
       end select
       return
 
 ! Error stops
       
-  901 write(0, 9901) line
- 9901 format('Error in procedure line ', a)
-      call exit (1)
-  902 write(0, 9902) line
- 9902 format('Bad procedure type ', a)
-      call exit (1)
+!  901 write(0, 9901) line
+! 9901 format('Error in procedure line ', a)
+!      call exit (1)
+!  902 write(0, 9902) line
+! 9902 format('Bad procedure type ', a)
+!      call exit (1)
       end

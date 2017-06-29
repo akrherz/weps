@@ -56,16 +56,13 @@ module manage_mod
 
 !     + + + LOCAL VARIABLES + + +
 
-      integer simdd, simmm, simyr, mansimyr, manmon, manday, manyr
+      integer simdd, simmm, simyr, mansimyr
       character*256   line
 
 !        simdd - current simulation day
 !        simmm - current simulation month
 !        simyr - current simulation year
 !     mansimyr - the simulation year which corresponds to the year from the management file
-!       manmon - month from the management file
-!       manday - day from the management file
-!        manyr - year from the management file
 
 !     + + + SUBROUTINES CALLED + + +
 !     dooper - DO OPERation is called when dates match
@@ -78,12 +75,6 @@ module manage_mod
 
 !     + + + END SPECIFICATIONS + + +
 
-!     Don't do anything if the subregion isn't in the data file.
-      if (mbeg(sr).eq.mbeg(sr+1)) then
-        write(*,*) 'Sub-region not in data file', sr
-        return
-      endif
-
       ! get current simulation day, month, year
       call get_simdate( simdd, simmm, simyr )
 
@@ -91,85 +82,66 @@ module manage_mod
       ! for one day
       call mgdreset(h1et%zirr)
 
-      line = mtbl(mcur(sr))
-
-!     If we aren't pointing at a date, we have a problem
-      
-      if (line(1:1).ne.'D') goto 901
-
-!     Must be a space between 'D' and date in dd/mm/yyyy format
-      read (line (3:12),'(i2,1x,i2,1x,i4)', err=902) manday,manmon,manyr
-
       ! find simulation year to which management year corresponds
-      mansimyr = simyr - mod (simyr-startyr, manFile%mperod) + manyr - 1
-
-      if (difdat (simdd,simmm,simyr,manday,manmon,mansimyr).ne.0) then
-        ! management date does not match simulation date
+      mansimyr = simyr - mod (simyr-startyr, manFile%mperod) + manFile%oper%operDate%year - 1
+      if (difdat (simdd,simmm,simyr,manFile%oper%operDate%day,manFile%oper%operDate%month,mansimyr).ne.0) then
+        ! simulation date precedes management date 
         return
       end if
 
       if (manFile%am0tfl .eq. 1) then
         write (luomanage(sr),*)
-        write (luomanage(sr),2015) simdd,simmm,simyr,manyr,sr
+        write (luomanage(sr),2015) simdd,simmm,simyr,manFile%oper%operDate%year,sr
       endif
 
-!     pass date of operation to MAIN for output purposes, used by STIR also
-      lastoper(0)%day = manday
-      lastoper(0)%mon = manmon
-      lastoper(0)%yr = manyr
-      lastoper(sr)%day = manday
-      lastoper(sr)%mon = manmon
-      lastoper(sr)%yr = manyr
+      ! pass date of operation to MAIN for output purposes, used by STIR also
+      lastoper(0)%day = manFile%oper%operDate%day
+      lastoper(0)%mon = manFile%oper%operDate%month
+      lastoper(0)%yr = manFile%oper%operDate%year
+      lastoper(sr)%day = manFile%oper%operDate%day
+      lastoper(sr)%mon = manFile%oper%operDate%month
+      lastoper(sr)%yr = manFile%oper%operDate%year
 
-!     Move the tbl ptr to the first operation after the date
-
-  10  mcur(sr) = mcur(sr) + 1
-      line = mtbl(mcur(sr))
-      select case (line(1:1))
-      case ('O')
+      ! perform all operations that occur on this date
+      do while ( associated(manFile%oper) )
         lastoper(sr)%skip = 0
         call dooper(sr, manFile)
-      case ('G')
-        if(lastoper(sr)%skip.eq.0) call dogroup(sr, soil)
-      case ('P')
-        if(lastoper(sr)%skip.eq.0) then
-
-           call doproc(sr, mcount(sr), soil, crop, cropprev, residue, biotot, mandate, h1et, manFile)
-        endif
-      case ('D')
-        call stir_report(sr, .false., lastoper(sr)%stir, lastoper(sr)%energyarea)
-        read (line (3:12),'(i2,1x,i2,1x,i4)', err=902) manday,manmon,manyr
-        ! find simulation year to which management year corresponds
-        mansimyr = simyr - mod (simyr-startyr, manFile%mperod) + manyr - 1
-        if( difdat (simdd,simmm,simyr,manday,manmon,mansimyr).ne.0) then
-           ! initialize end of season / hydrobal reporting flag to true to generate a report
-           rpt_season_flg(sr) = .true.
-           return
+        ! do groups
+        manFile%grp => manFile%oper%grpFirst
+        do while ( associated(manFile%grp) )
+          if(lastoper(sr)%skip.eq.0) then
+            call dogroup(sr, soil, manFile)
+            ! do processes
+            manFile%proc => manFile%grp%procFirst
+            do while ( associated(manFile%proc) )
+              call doproc(sr, mcount(sr), soil, crop, cropprev, residue, biotot, mandate, h1et, manFile)
+              ! next process
+              manFile%proc => manFile%proc%procNext
+            end do
+            ! next group
+            manFile%grp => manFile%grp%grpNext
+          end if
+        end do
+        ! next operation
+        manFile%oper => manFile%oper%operNext
+        if( associated(manFile%oper) ) then
+          ! find simulation year to which management year corresponds
+          mansimyr = simyr - mod (simyr-startyr, manFile%mperod) + manFile%oper%operDate%year - 1
+          if( difdat (simdd,simmm,simyr,manFile%oper%operDate%day,manFile%oper%operDate%month,mansimyr) .ne. 0) then
+            ! this is a future operation
+            ! initialize end of season / hydrobal reporting flag to true to generate a report
+            rpt_season_flg(sr) = .true.
+            exit
+          end if
+        else  ! not associated
+          ! end of rotation
+          manFile%oper => manFile%operFirst
+          exit
         end if
-      case ('*')
-        call stir_report(sr, .true., lastoper(sr)%stir, lastoper(sr)%energyarea)
-        mcount(sr) = mcount(sr) + 1
-        mcur(sr) = mbeg(sr)
-  101   mcur(sr) = mcur(sr) + 1
-        line = mtbl(mcur(sr))
-        if (line(1:1).ne.'D') goto 101
-        return
-      case ('+')
-        continue
-      case default
-        goto 903
-      end select
-      goto 10
+      end do
 
-! Error stops
-      
-901   write(0,*) 'Enter manage not pointing at date'
-      call exit (1)
-902   write(0, 9902) line, sr
-9902  format('Bad date format ',a,' in region ',i2)
-      call exit (1)
-903   write(0,*) 'Invalid management code -', line (1:1)      
-      call exit (1)
+      return
+
     end subroutine manage
 
     subroutine mfinit (sr, manFile)
@@ -191,9 +163,9 @@ module manage_mod
 
       use weps_interface_defs
       use file_io_mod, only: fopenk
-      use manage_data_struct_defs, only: lastoper, man_file_struct
+      use manage_data_struct_defs, only: lastoper, man_file_struct, operation_date
       use flib_sax
-      use manage_xml_mod, only: init_man_xml
+      use manage_xml_mod, only: init_man_xml, read_old_manfile
       use manage_xml_mod, only: manfile_complete
       use manage_xml_mod, only: begin_man_element_handler, end_man_element_handler, pcdata_man_chunk_handler
 
@@ -209,25 +181,14 @@ module manage_mod
       type(man_file_struct) :: manFile  ! management file data structure
 
 !     + + + LOCAL VARIABLES + + +
-      integer           linidx, eofidx, endidx
-      character*256      line
-      integer           idx
-      integer           luimandate   ! unit number for reading in management file
+      integer :: idx
+      integer :: luimandate   ! unit number for reading in management file
+      character*256 :: line
 
       type(xml_t) :: fxml   ! xml file handle structure
       integer :: read_stat  ! reading file status
 
-!     + + + SUBROUTINES CALLED + + +
-
-!     + + + FUNCTION DECLARATONS + + +
-
 !     + + + DATA INITIALIZATIONS + + +
-
-      linidx=1
-      mbeg(1)=1
-      if (sr.ne.1) linidx = mbeg(sr)
-      mcur(sr) = 0
-      mcount(sr) = 0
 
       ! initialize values for crop effect flags
       am0kilfl = 0
@@ -261,10 +222,6 @@ module manage_mod
          atmbgrootstorez(idx,sr) = 0.0
          atmbgrootfiberz(idx,sr) = 0.0
       end do
-      lastoper(sr)%day = 0
-      lastoper(sr)%mon = 0
-      lastoper(sr)%yr = 0
-
       rpt_season_flg(sr) = .true.
 
 !     + + + END SPECIFICATIONS + + +
@@ -273,14 +230,17 @@ module manage_mod
 
       call fopenk(luimandate, trim(manFile%tinfil), 'old')
       read(luimandate, '(a)', iostat=read_stat) line
-      if (read_stat /= 0) stop "Cannot read input file"
+      if (read_stat /= 0) then
+        stop "Cannot read input file"
+      end if
+
+      call init_man_xml( manFile%isub )
       if ( (line (1:8).ne.'Version: ') .and. (index(line, 'xml') .gt. 0) ) then
         close(luimandate)
         ! open input file
         call open_xmlfile(trim(manFile%tinfil),fxml,read_stat)
         if (read_stat /= 0) stop "Cannot open xml input file"
         ! read in xml based input file
-        call init_man_xml( manFile%isub )
         call xml_parse(fxml, &
            begin_element_handler = begin_man_element_handler, &
            end_element_handler = end_man_element_handler, &
@@ -293,157 +253,11 @@ module manage_mod
         return
 
       else
-        rewind(luimandate) 
-   10   read(luimandate, '(a)', end=20) line
-      select case (line(1:1))
-      case ('V')  ! first line begins with word "Version: "
-        goto 15
-      case ('O')
-        goto 15
-      case ('G')
-        goto 15
-      case ('P')
-        goto 15
-      case ('D')
-        goto 15
-      case ('*')
-        goto 15
-      case ('+')
-        goto 15
-      case default
-        goto 10
-      end select
-   15 mtbl(linidx) = line    !Actually add the line to the management table      
-      linidx = linidx + 1
-! ***      write (*,*) ' man fil: ',linidx, line
-      if (linidx.le.mxtbln) goto 10
-      write (0,*) 'Management table too long - ', trim(manFile%tinfil)
-      call exit (1)
-   20 mbeg(sr+1) = linidx
-      close(luimandate)
-! ***
-!     debugging code to dump table
-!
-! ***      write(*,*) 'start dump of management file ', trim(manFile%tinfil)
-! ***      do 111 linidx = mbeg(sr), mbeg(sr+1)
-! ***        write(*,*) linidx, mtbl(linidx)
-! ***  111 continue
-! ***      write(*,*) 'end of dump'
-! ***
-!   
-!     First need to find the version of the management file we are
-!     going to read.  All files should now have a version #. ANH
-      line = mtbl(mbeg(sr))
 
-      if (line (1:8).eq.'Version: ') then
-!       We have found the version # of the management file
-!       Read the version into the common block variable
-        read(line (10:13), *) manFile%mversion
-
-!       Report the version to stdout
-        write (6, *) 'Management file version: ', manFile%mversion
-
-!       Test if the version is at least 1.4.  Version 1.5 adds the ability to test 
-!       mversion within the operations, groups and procs so that graceful upgrades 
-!       are possible.  This test version should not need to be updated as the format
-!       changes.  Upgrades can be handled within the dooper, dogroup and doproc subroutines.
-        if (manFile%mversion .lt. 1.40) then
-!        if (line(10:13).ne.'1.40') then
-           write(0,*) 'Management file version: ', manFile%mversion
-           write(0,*) 'Version >= 1.40 is required for this release.'
-           write(0,*) 'You need to convert ', trim(manFile%tinfil)
-           write(0,*) ' to the correct format.'
-           call exit (1)
-        endif
-      else
-        write(0,*) 'Version not found in management file ', trim(manFile%tinfil)
-        call exit (1)
-      endif
-!
-      line = mtbl(mbeg(sr) + 1)
-!     "*START" position found?
-      if (line (1:6).eq.'*START') then
-
-!       Obtain the number of years for the subregion's management cycle
-        read (line (8:10), '(i3)', err=901) manFile%mperod
-
-      else 
-        write(0,*) '*START not second non-comment line in ', trim(manFile%tinfil)
-        call exit (1)
-      endif
-!
-! Find end and eof statements
-!
-      eofidx = 0
-      endidx = 0
-      do 30 linidx=mbeg(sr),mbeg(sr+1)-1
-        line = mtbl(linidx)
-        if (line (1:4).eq.'*END') then
-          if (endidx.ne.0) goto 902
-          endidx = linidx
-        endif
-        if (line (1:4).eq.'*EOF') then
-          if (eofidx.ne.0) goto 903
-          eofidx = linidx
-        endif
-   30 continue
-! 
-! Make sure that eof is last & end next to last
-!   
-      mbeg(sr+1) = eofidx+1
-      line = mtbl(mbeg(sr+1) - 2)
-!     "*END" position found?
-      if (line (1:4).ne.'*END') goto 904
-
-      line = mtbl(mbeg(sr+1) - 1)
-!     "*EOF" position found?
-      if (line (1:4).ne.'*EOF') goto 905
-!
-! Leave current pointer for region at first date
-!
-      do 40 linidx = mbeg(sr), mbeg(sr+1) - 1
-        line = mtbl(linidx)
-        if (line(1:1).eq.'D') goto 41
-   40 continue
-      goto 906
-   41 mcur(sr) = linidx
-
-! Used for debugging purposes
-!       Output info about each subregion's management cycle
-!        print *, 'Management filename is: ', trim(manFile%tinfil)
-!        print *, 'Management cycle is ', manFile%mperod,
-!     &         ' years for Subregion ', sr
-!        print *, 'The *START line is: ', start(sr)
-!     &         ' first operation line is: ', curnt(sr)
-
-! *** return before dump
-      return
-!     debugging code to dump table
-!
-!      write(*,*) 'start dump of management file ', trim(manFile%tinfil)
-!      do 111 linidx = mbeg(sr), mbeg(sr+1)
-!        write(*,*) linidx, mtbl(linidx)
-!  111 continue
-!      write(*,*) 'end of dump'
-!      write(*,*) 'leaving mfinit'
-      return
+        call read_old_manfile ( manFile%isub, luimandate )
+        return
 
       end if
-
-! Error stops
-
-  901 write(0,*) 'Error reading start param ', line(8:10)
-      call exit (1)
-  902 write(0,*) 'Duplicate *END statements in ', trim(manFile%tinfil)
-      call exit (1)
-  903 write(0,*) 'Duplicate *EOF statements in ', trim(manFile%tinfil)
-      call exit (1)
-  904 write(0,*) '*END not penultimate line in ', trim(manFile%tinfil)
-      call exit (1)
-  905 write(0,*) '*EOF not last line in ', trim(manFile%tinfil)
-      call exit (1)
-  906 write(0,*) 'No starting date specified in ', trim(manFile%tinfil)
-      call exit (1)
 
     end subroutine mfinit
 

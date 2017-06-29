@@ -66,7 +66,7 @@
       use sae_in_out_mod, only: mksaeinp, mksaeout, in_weps
       use stir_soil_texture_mod, only: create_stir_soil_multiplier, destroy_stir_soil_multiplier
       use sci_soil_texture_mod, only: create_sci_soil_multiplier, destroy_sci_soil_multiplier
-      use stir_report_mod, only: create_stir_accumulator, destroy_stir_accumulator
+      use stir_report_mod, only: alloc_stir_accumulators, destroy_stir_accumulators, stir_report
       use sci_report_mod
       use hydro_data_struct_defs, only: hydro_derived_et
       use report_hydrobal_mod, only: h1bal
@@ -256,10 +256,10 @@
       ! set total number of subregions from size of allocated subr_poly array
       nsubr = size(subr_poly)
      
-      ! create sci and stir arrays (before input_ifc which needs them)
+      ! create sci and stir soil multiplier arrays (before input_ifc which needs them)
       call create_sci_soil_multiplier(nsubr)
       call create_stir_soil_multiplier(nsubr)
-      call create_stir_accumulator(nsubr, 4000)   ! note, conceivably, the operation count could be tallied in advance, 4000 for now.
+      call alloc_stir_accumulators(nsubr)
 
       ! erosion subregion surface values array
       sum_stat = 0
@@ -400,10 +400,11 @@
          calibrate_rotcycles = run_rot_cycles
       endif
 
-!     This is all the initialization for the new output reporting code
+      ! This is all the initialization for the new output reporting code
+      ! Note: this also resets manFile%oper to manFile%operFirst
       do isr = 1, nsubr
           mandatbs(isr)%mperod = manFile(isr)%mperod
-          call mandates(isr, mandatbs(isr)%mandate)  !Get man dates, op names, and crop names
+          call mandates(mandatbs(isr)%mandate, manFile(isr))  !Get man dates, op names, and crop names
       end do
       ! initialize full mandate series for all subregions for full maxper length.
       mandatbs(0)%mperod = maxper
@@ -463,7 +464,6 @@
          call cropinit(isr, crop(isr))
          ! initialize all dependent variables
          call updres(soil(isr), residue(1:size(residue,1), isr), restot(isr))
-         call sci_stir_init(isr)
          ! Initialize the water holding capacity variable
          call hydrinit(isr, soil(isr), h1et(isr), h1bal(isr), wp(isr))
          ! initialize soil depth to bottom of layers (mm) from layer thickness (mm)
@@ -481,11 +481,13 @@
             call init_wepp(isr, 0, soil(isr))        ! specific wepp initializations
          end if
       end do
-! Subregion running loop
-! move the subregion loop into dailly loop by JG
-!      do isr=1,nsubr   ! do multiple subregion      
       call cliginit     ! read "yearly average info" from cligen header
       call windinit     ! allocate memory for reading subdaily wind velocities from windgen format input file
+
+      ! Everything required for stir_report is available
+      do isr=1,nsubr
+        call stir_report( manFile(isr) )
+      end do
 
 !     calculate first and last Julian dates for simulation
       ijday = julday(id, im, iy)
@@ -506,41 +508,39 @@
         end do
       endif
 
-! begin initialization simulation phase
+      ! begin initialization simulation phase
       init_loop = .true. ! Signifies that we are in the "initialization" loop
       do am0jd = ijday, end_init_jday   !will not enter if end before beginning
 
-         ! store day for use in simulation date routines
-         call update_simulation_date( am0jd )
-         call get_simdate( cd, cm, cy )
+        ! store day for use in simulation date routines
+        call update_simulation_date( am0jd )
+        call get_simdate( cd, cm, cy )
 
-         ! determine number of days in the year
-         ndiy = 365; if (isleap(cy) .eqv. .true.) ndiy = 366
-         call getcli(cd, cm, cy); call getwin(cd, cm, cy)
-         ! print current day of simulation to screen periodically
-         daysim = daysim + 1
-         if ((cm .eq. 1) .and. (cd .eq. 1)) then
+        ! determine number of days in the year
+        ndiy = 365; if (isleap(cy) .eqv. .true.) ndiy = 366
+        call getcli(cd, cm, cy); call getwin(cd, cm, cy)
+        ! print current day of simulation to screen periodically
+        daysim = daysim + 1
+        if ((cm .eq. 1) .and. (cd .eq. 1)) then
             yrsim = yrsim + 1
             simyrs = (end_init_y - iy + 1)
             write(6,*) 'Year', yrsim, ' of', simyrs, '(initialization)'
             call flush(6)
-         end if
-         do isr=1,nsubr
+        end if
+        do isr=1,nsubr
           ! do multiple subregion      
           call submodels(isr, soil(isr), crop(isr), cropprev(isr), residue(1:size(residue,1),isr), restot(isr), croptot(isr),  &
-     &                   biotot(isr), decompfac(isr), mandatbs(isr)%mandate, h1et(isr), h1bal(isr), wp(isr), manFile(isr))
+               biotot(isr), decompfac(isr), mandatbs(isr)%mandate, h1et(isr), h1bal(isr), wp(isr), manFile(isr))
           ! set initialization flag to .false. after first day
           if (am0ifl) am0ifl = .false.
-
-          call plotdata( isr, soil(isr), crop(isr), restot(isr), croptot(isr), biotot(isr), noerod(isr), manFile(isr), cellstate )  ! print to plot data file
+          ! print to plot data file
+          call plotdata(isr, soil(isr), crop(isr), restot(isr), croptot(isr), biotot(isr), noerod(isr), manFile(isr), cellstate)
 
           ! write decomposition biomass pool amounts to files
           call bpools(isr, residue(1:size(residue,1),isr), restot(isr), biotot(isr), decompfac(isr))
-!        write(*,*) 'weps:yrsim cd,cm,cy am0jd,daysim',                 &
-!     &              yrsim," ",cd,cm,cy," ",am0jd,daysim
 
-         ! if last day of year, check for end of rotation
-         if (get_simdate_doy() .eq. ndiy) then
+          ! if last day of year, check for end of rotation
+          if (get_simdate_doy() .eq. ndiy) then
             ! check if at end of subregion's rotation cycle
             if (mod(amnryr(isr),manFile(isr)%mperod) == 0) then
                amnryr(isr) = 1
@@ -549,17 +549,16 @@
                amnryr(isr) = amnryr(isr) + 1
                lastoper(isr)%yr = amnryr(isr)
             end if
-         end if
+          end if
        end do  ! end for subregion loop
       end do    ! end loop of multiple years
       init_loop = .false.
       ! set initialization flag to .false. if initialization was skipped
       if (am0ifl) am0ifl = .false.
       write(6,*) "Finished initialization stage"
-!     End of "initialization" section
-! Do all resetting of variables necessary for "calibrate" and "report"
-! portions of the simulation
+      ! End of "initialization" section
 
+      ! Do all resetting of variables necessary for "calibrate" and "report" portions of the simulation
       am0jd = ijday           ! Reset loop counter to first day of simulation
       call update_simulation_date( am0jd ) ! store for use by simulation day routines
       daysim = 0              ! Reset to zero (blkdat.for)
@@ -567,12 +566,11 @@
       call getcli(0, cm, cy)  ! Reset cligen file (day == 0)
       call getwin(0, cm, cy)  ! Reset windgen file (day == 0)
 
-!     Start of "calibrate" section
+      ! Start of "calibrate" section
       do isr=1,nsubr   ! do multiple subregion     
           keep(isr) = amnryr(isr)
       end do
-      if ((calibrate_crops > 0) .and. (.not. calib_done) .and.          &
-     &    (calib_cycle < max_calib_cycles))                         then
+      if ((calibrate_crops > 0) .and. (.not. calib_done) .and. (calib_cycle < max_calib_cycles)) then
          calib_cycle = calib_cycle + 1
          write(6,*) "Starting calibrate phase"
          calib_loop = .true. ! Signifies that we are in the calibration loop
@@ -589,43 +587,37 @@
 
          do am0jd = ijday,lcaljday
 
-            ! store day for use in simulation date routines
-            call update_simulation_date( am0jd )
-            call get_simdate (cd, cm, cy)
+           ! store day for use in simulation date routines
+           call update_simulation_date( am0jd )
+           call get_simdate (cd, cm, cy)
 
-            ! determine number of days in the year
-            ndiy = 365; if (isleap(cy) .eqv. .true.) ndiy = 366
-            call getcli(cd, cm, cy); call getwin(cd, cm, cy)
-!           print current day of simulation to screen periodically
-            daysim = daysim + 1
-            if ((cm .eq. 1) .and. (cd .eq. 1)) then
-               yrsim = yrsim + 1
-               simyrs = (ly - iy + 1)
-!               write(6,*) 'Year', yrsim, ' of', simyrs,                 &
-!     &                    '(calibrating',calib_cycle,'/',               &
-!     &                                              max_calib_cycles,')'
-               write(6,*) 'Year', yrsim, ' of',                         &
-     &                      maxper*calibrate_rotcycles,                 &
-     &                    '(calibrating',calib_cycle,'/',               &
-     &                                              max_calib_cycles,')'
-                call flush(6)
-            end if
+           ! determine number of days in the year
+           ndiy = 365; if (isleap(cy) .eqv. .true.) ndiy = 366
+           call getcli(cd, cm, cy); call getwin(cd, cm, cy)
+           ! print current day of simulation to screen periodically
+           daysim = daysim + 1
+           if ((cm .eq. 1) .and. (cd .eq. 1)) then
+              yrsim = yrsim + 1
+              simyrs = (ly - iy + 1)
+              write(6,*) 'Year', yrsim, ' of', maxper*calibrate_rotcycles, &
+                        '(calibrating',calib_cycle,'/', max_calib_cycles,')'
+              call flush(6)
+           end if
 
-!            isr = 1 !Note: we are no longer dealing with multiple subregions here
-            do isr=1,nsubr   ! do multiple subregion     
-            call submodels(isr, soil(isr), crop(isr), cropprev(isr), residue(1:size(residue,1),isr), restot(isr), croptot(isr), &
-     &                     biotot(isr), decompfac(isr), mandatbs(isr)%mandate, h1et(isr), h1bal(isr), wp(isr), manFile(isr))
+           do isr=1,nsubr   ! do multiple subregion     
+             call submodels(isr, soil(isr), crop(isr), cropprev(isr), residue(1:size(residue,1),isr), restot(isr), croptot(isr), &
+                 biotot(isr), decompfac(isr), mandatbs(isr)%mandate, h1et(isr), h1bal(isr), wp(isr), manFile(isr))
+             ! print to plot data file
+             call plotdata(isr, soil(isr), crop(isr), restot(isr), croptot(isr), biotot(isr), noerod(isr), manFile(isr), cellstate)
 
-            call plotdata( isr, soil(isr), crop(isr), restot(isr), croptot(isr), biotot(isr), noerod(isr), manFile(isr), cellstate )  ! print to plot data file
+             ! write decomposition biomass pool amounts to files
+             call bpools(isr, residue(1:size(residue,1),isr), restot(isr), biotot(isr), decompfac(isr))
 
-            ! write decomposition biomass pool amounts to files
-            call bpools(isr, residue(1:size(residue,1),isr), restot(isr), biotot(isr), decompfac(isr))
+             ! set initialization flag to .false. after first day
+             if (am0ifl) am0ifl = .false.
 
-            ! set initialization flag to .false. after first day
-            if (am0ifl) am0ifl = .false.
-
-            ! if last day of year, check for end of rotation
-            if (get_simdate_doy() .eq. ndiy) then
+             ! if last day of year, check for end of rotation
+             if (get_simdate_doy() .eq. ndiy) then
                ! check if at end of subregion's rotation cycle
                if (mod(amnryr(isr),manFile(isr)%mperod) == 0) then
                   amnryr(isr) = 1
@@ -634,7 +626,7 @@
                   amnryr(isr) = amnryr(isr) + 1
                   lastoper(isr)%yr = amnryr(isr)
                end if
-            end if
+             end if
            end do  ! end subregion
          end do   ! "calibration" phase
          do isr=1,nsubr   ! do multiple subregion     
@@ -1035,7 +1027,7 @@
       ! remove sci and stir arrays
       call destroy_sci_soil_multiplier
       call destroy_stir_soil_multiplier
-      call destroy_stir_accumulator(nsubr)
+      call destroy_stir_accumulators(nsubr)
 
       write (*,*) 'The WEPS simulation run is finished'
 

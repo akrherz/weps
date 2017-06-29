@@ -14,6 +14,7 @@
 
       use weps_interface_defs, ignore_me=>dooper
       use manage_data_struct_defs, only: lastoper, man_file_struct 
+      use manage_data_struct_mod, only: getManVal
 
 !     + + + PARAMETERS AND COMMON BLOCKS + + +
       include 'p1werm.inc'
@@ -32,8 +33,8 @@
 !     ospeed - operation speed 
 
 !     + + + LOCAL VARIABLES + + +
-      character*256   line
-      character*1 opdumy
+!      character*256   line
+!      character*1 opdumy
 !
 !     + + + SUBROUTINES CALLED + + +
 !     + + + FUNCTIONS CALLED + + +
@@ -43,8 +44,10 @@
 !     + + + END SPECIFICATIONS + + +
 
 !      write(*,*) '*>dooper line |', mtbl(mcur(sr)), '|'
-      read(mtbl(mcur(sr)), 1001) opdumy, lastoper(sr)%code, lastoper(sr)%name
- 1001 format(a1,1x,i2,1x,a)
+!      read(mtbl(mcur(sr)), 1001) opdumy, lastoper(sr)%code, lastoper(sr)%name
+! 1001 format(a1,1x,i2,1x,a)
+      lastoper(sr)%code = manFile%oper%operType
+      lastoper(sr)%name = manFile%oper%operName
       if( (lastoper(sr)%code.eq.0).and.(mcount(sr).gt.0) ) then
           lastoper(sr)%skip = 1
           print*, 'SR',sr,' Skip operation', lastoper(sr)%code,' ', trim(lastoper(sr)%name)
@@ -65,46 +68,60 @@
           lastoper(sr)%energyarea = -1
           lastoper(sr)%stir = -1
 !         get additional line of data
-          mcur(sr) = mcur(sr) + 1
-          line = mtbl(mcur(sr))
+!          mcur(sr) = mcur(sr) + 1
+!          line = mtbl(mcur(sr))
 !         read tillage speed and direction
-          read(line(2:len_trim(line)), *, err=901) ospeed, odir,        &
-     &                             ostdspeed, ominspeed, omaxspeed
+!          read(line(2:len_trim(line)), *, err=901) ospeed, odir,        &
+!     &                             ostdspeed, ominspeed, omaxspeed
+          call getManVal(manFile%oper, 'ospeed', ospeed)
+          call getManVal(manFile%oper, 'odirect', odir)
+          call getManVal(manFile%oper, 'ostdspeed', ostdspeed)
+          call getManVal(manFile%oper, 'ominspeed', ominspeed)
+          call getManVal(manFile%oper, 'omaxspeed', omaxspeed)
       case (3) ! added energy and stir to O1
 !         get additional line of data
-          mcur(sr) = mcur(sr) + 1
-          line = mtbl(mcur(sr))
+!          mcur(sr) = mcur(sr) + 1
+!          line = mtbl(mcur(sr))
 !         read tillage speed and direction
-          read(line(2:len_trim(line)), *, err=901) lastoper(sr)%energyarea, lastoper(sr)%stir,  &
-     &                  ospeed, odir, ostdspeed, ominspeed, omaxspeed
-
+!          read(line(2:len_trim(line)), *, err=901) lastoper(sr)%energyarea, lastoper(sr)%stir,  &
+!     &                  ospeed, odir, ostdspeed, ominspeed, omaxspeed
+          call getManVal(manFile%oper, 'oenergyarea', lastoper(sr)%energyarea)
+          call getManVal(manFile%oper, 'ostir', lastoper(sr)%stir)
+          call getManVal(manFile%oper, 'ospeed', ospeed)
+          call getManVal(manFile%oper, 'odirect', odir)
+          call getManVal(manFile%oper, 'ostdspeed', ostdspeed)
+          call getManVal(manFile%oper, 'ominspeed', ominspeed)
+          call getManVal(manFile%oper, 'omaxspeed', omaxspeed)
 !         Version 1.5 added ofuel
           if (manFile%mversion .ge. 1.50) then
               ! get fuel line
-              mcur(sr) = mcur(sr) + 1
-              line = mtbl(mcur(sr))
-              if(len_trim(line) .gt. 1) then !only read a line if it has characters after the +
-                  read(line(2:len_trim(line)), *) lastoper(sr)%fuel
-              end if
+!              mcur(sr) = mcur(sr) + 1
+!              line = mtbl(mcur(sr))
+!              if(len_trim(line) .gt. 1) then !only read a line if it has characters after the +
+!                  read(line(2:len_trim(line)), *) lastoper(sr)%fuel
+!              end if
+            call getManVal(manFile%oper, 'ofuel', lastoper(sr)%fuel)
           end if
           !write(6,*) 'opname: ', lastoper(sr)%name
           !write(6,*) 'ofuel: ', lastoper(sr)%fuel
 
       case (4) ! added energy and stir to O2
 !         get additional line of data
-          mcur(sr) = mcur(sr) + 1
-          line = mtbl(mcur(sr))
+!          mcur(sr) = mcur(sr) + 1
+!          line = mtbl(mcur(sr))
 !         read tillage speed and direction
-          read(line(2:len_trim(line)), *, err=901) lastoper(sr)%energyarea, lastoper(sr)%stir
-
+!          read(line(2:len_trim(line)), *, err=901) lastoper(sr)%energyarea, lastoper(sr)%stir
+          call getManVal(manFile%oper, 'oenergyarea', lastoper(sr)%energyarea)
+          call getManVal(manFile%oper, 'ostir', lastoper(sr)%stir)
 !         Version 1.5 added ofuel
           if (manFile%mversion .ge. 1.50) then
               ! get fuel line
-              mcur(sr) = mcur(sr) + 1
-              line = mtbl(mcur(sr))
-              if(len_trim(line) .gt. 1) then !only read a line if it has characters after the +
-                  read(line(2:len_trim(line)), *) lastoper(sr)%fuel
-              end if
+!              mcur(sr) = mcur(sr) + 1
+!              line = mtbl(mcur(sr))
+!              if(len_trim(line) .gt. 1) then !only read a line if it has characters after the +
+!                  read(line(2:len_trim(line)), *) lastoper(sr)%fuel
+!              end if
+            call getManVal(manFile%oper, 'ofuel', lastoper(sr)%fuel)
           end if
           !write(6,*) 'opname: ', lastoper(sr)%name
           !write(6,*) 'ofuel: ', lastoper(sr)%fuel
@@ -118,7 +135,7 @@
       end select
 
       ! set up stir accounting.  Must be after op case so that fuel is correct.
-      call stir_oper(sr)
+      ! call stir_oper(sr)
 
       ! initialize row spacing and ridge flag to zero. They are needed
       ! by P51, (set in P3 or P5) but may be set and not cleared by a previous operation.
@@ -127,8 +144,8 @@
 
       return
 ! Error stops
-  901 write(0,9901) mtbl(mcur(sr))
- 9901 format ('DOOPER: Error reading line ->', a)
-      call exit (1)
+!  901 write(0,9901) mtbl(mcur(sr))
+! 9901 format ('DOOPER: Error reading line ->', a)
+!      call exit (1)
       end
 

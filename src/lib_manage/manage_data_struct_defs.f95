@@ -5,6 +5,9 @@
 
 module manage_data_struct_defs
 
+  integer, parameter :: MAX_NAME_LEN = 40
+  integer, parameter :: MAX_TYPE_LEN = 10
+
   type operation_date
     integer :: day
     integer :: month
@@ -29,6 +32,8 @@ module manage_data_struct_defs
   type process
     character(len=3) :: procID
     integer :: procType
+    integer :: OGPidx
+    character(len=80) :: procName
     type(process), pointer :: procNext
     type(integer_param), dimension(:), allocatable :: i_param
     type(real_param), dimension(:), allocatable :: r_param
@@ -38,6 +43,8 @@ module manage_data_struct_defs
   type group
     character(len=3) :: grpID
     integer :: grpType
+    integer :: OGPidx
+    character(len=80) :: grpName
     type(group), pointer :: grpNext
     type(process), pointer :: procFirst
     type(integer_param), dimension(:), allocatable :: i_param
@@ -50,6 +57,7 @@ module manage_data_struct_defs
     character(len=80) :: operName
     character(len=3) :: operID
     integer :: operType
+    integer :: OGPidx
     type(operation), pointer :: operNext
     type(group), pointer :: grpFirst
     type(integer_param), dimension(:), allocatable :: i_param
@@ -82,6 +90,17 @@ module manage_data_struct_defs
 
   type(man_file_struct), dimension(:), allocatable :: manFile
 
+  type :: name_type
+    character(len=1) :: ogp  ! identifies whether this is and operation, group or process parameter list
+    character(len=3) :: id   ! the id "number" of the operation, group or process
+    character(len=MAX_NAME_LEN), dimension(:), allocatable  :: i_name   ! integer parameter names
+    character(len=MAX_NAME_LEN), dimension(:), allocatable  :: r_name   ! real parameter names
+    character(len=MAX_NAME_LEN), dimension(:), allocatable  :: s_name   ! string parameter names
+  end type name_type
+
+  integer :: max_ogp   ! the total number of operations, groups, and processes
+  type(name_type), dimension(:), allocatable :: param_nt ! array of the list of operations, groups, processes
+
   type last_operation
     integer  ::    day       ! The day of the last operation.
     integer  ::    mon       ! The month, and year of the last operation.
@@ -112,12 +131,6 @@ module manage_data_struct_defs
 
   type(last_operation), dimension(:), allocatable :: lastoper 
 
-  interface elemCreate
-    module procedure operCreate
-    module procedure grpCreate
-    module procedure procCreate
-  end interface elemCreate
-
 contains
 
   subroutine manFileAlloc( nsubr )
@@ -145,149 +158,6 @@ contains
       nullify(manFile(idx)%proc)
     end do
   end subroutine manFileAlloc
-
-  function operCreate(operPntr, operID, int_cnt, real_cnt, str_cnt) result(operNew)
-    type(operation), pointer :: operPntr
-    character(len=*), intent(in) :: operID
-    integer, intent(in) :: int_cnt
-    integer, intent(in) :: real_cnt
-    integer, intent(in) :: str_cnt
-    type(operation), pointer :: operNew
-
-    integer :: alloc_stat
-    integer :: sum_stat
-    integer :: idx
-
-    allocate(operPntr, stat=alloc_stat)
-    if( alloc_stat .gt. 0 ) then
-      write(*,'(a,i0)') 'Unable to allocate Operation pointer: P ', operID
-    end if
-    operPntr%operID = operID
-    read(operID, *) operPntr%operType
-    sum_stat = 0
-    allocate(operPntr%i_param(int_cnt), stat=alloc_stat)
-    sum_stat = sum_stat + alloc_stat
-    allocate(operPntr%r_param(real_cnt), stat=alloc_stat)
-    sum_stat = sum_stat + alloc_stat
-    allocate(operPntr%s_param(str_cnt), stat=alloc_stat)
-    sum_stat = sum_stat + alloc_stat
-    if( sum_stat .gt. 0 ) then
-      write(*,'(a,i0)') 'Unable to allocate Operation params: P ', operID
-    end if
-
-    ! initialize pointers to NULL
-    nullify(operPntr%operNext)
-    nullify(operPntr%grpFirst)
-
-    ! initialize acquisition flags to .false.
-    do idx = 1, size(operPntr%i_param)
-      operPntr%i_param(idx)%p_acquired = .false.
-    end do
-    do idx = 1, size(operPntr%r_param)
-      operPntr%r_param(idx)%p_acquired = .false.
-    end do
-    do idx = 1, size(operPntr%s_param)
-      operPntr%s_param(idx)%p_acquired = .false.
-    end do
-
-    operNew =>operPntr
-        
-  end function operCreate
-
-  function grpCreate(grpPntr, grpID, int_cnt, real_cnt, str_cnt) result(grpNew)
-    type(group), pointer :: grpPntr
-    character(len=*), intent(in) :: grpID
-    integer, intent(in) :: int_cnt
-    integer, intent(in) :: real_cnt
-    integer, intent(in) :: str_cnt
-    type(group), pointer :: grpNew
-
-    integer :: alloc_stat
-    integer :: sum_stat
-    integer :: idx
-
-    allocate(grpPntr, stat=alloc_stat)
-    if( alloc_stat .gt. 0 ) then
-      write(*,'(a,i0)') 'Unable to allocate Group pointer: G ', grpID
-    end if
-    grpPntr%grpID = grpID
-    read(grpID, *) grpPntr%grpType
-    sum_stat = 0
-    allocate(grpPntr%i_param(int_cnt), stat=alloc_stat)
-    sum_stat = sum_stat + alloc_stat
-    allocate(grpPntr%r_param(real_cnt), stat=alloc_stat)
-    sum_stat = sum_stat + alloc_stat
-    allocate(grpPntr%s_param(str_cnt), stat=alloc_stat)
-    sum_stat = sum_stat + alloc_stat
-    if( sum_stat .gt. 0 ) then
-      write(*,'(a,i0)') 'Unable to allocate Group params: G ', grpID
-    end if
-
-    ! initialize pointers to NULL
-    nullify(grpPntr%grpNext)
-    nullify(grpPntr%procFirst)
-
-    ! initialize acquisition flags to .false.
-    do idx = 1, size(grpPntr%i_param)
-      grpPntr%i_param(idx)%p_acquired = .false.
-    end do
-    do idx = 1, size(grpPntr%r_param)
-      grpPntr%r_param(idx)%p_acquired = .false.
-    end do
-    do idx = 1, size(grpPntr%s_param)
-      grpPntr%s_param(idx)%p_acquired = .false.
-    end do
-
-    grpNew =>grpPntr
-        
-  end function grpCreate
-
-  function procCreate(procPntr, procID, int_cnt, real_cnt, str_cnt) result(procNew)
-    type(process), pointer :: procPntr
-    character(len=*), intent(in) :: procID
-    integer, intent(in) :: int_cnt
-    integer, intent(in) :: real_cnt
-    integer, intent(in) :: str_cnt
-    type(process), pointer :: procNew
-
-    integer :: alloc_stat
-    integer :: sum_stat
-    integer :: idx
-
-    allocate(procPntr, stat=alloc_stat)
-    if( alloc_stat .gt. 0 ) then
-      write(*,'(a,i0)') 'Unable to allocate Process pointer: P ', procID
-    end if
-    procPntr%procID = procID
-    read(procID, *) procPntr%procType
-    sum_stat = 0
-    allocate(procPntr%i_param(int_cnt), stat=alloc_stat)
-    sum_stat = sum_stat + alloc_stat
-    allocate(procPntr%r_param(real_cnt), stat=alloc_stat)
-    sum_stat = sum_stat + alloc_stat
-    allocate(procPntr%s_param(str_cnt), stat=alloc_stat)
-    sum_stat = sum_stat + alloc_stat
-    if( sum_stat .gt. 0 ) then
-      write(*,'(a,i0)') 'Unable to allocate Process params: P ', procID
-    end if
-
-    ! initialize pointer to NULL
-    nullify(procPntr%procNext)
-
-    ! initialize acquisition flags to .false.
-    do idx = 1, size(procPntr%i_param)
-      procPntr%i_param(idx)%p_acquired = .false.
-    end do
-    do idx = 1, size(procPntr%r_param)
-      procPntr%r_param(idx)%p_acquired = .false.
-    end do
-    do idx = 1, size(procPntr%s_param)
-      procPntr%s_param(idx)%p_acquired = .false.
-    end do
-
-    procNew =>procPntr
-        
-  end function procCreate
 
 end module manage_data_struct_defs
 

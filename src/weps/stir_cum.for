@@ -49,8 +49,7 @@
       parameter (mmtoin = 0.03937)
 
       ! only do if flag is set 
-      if( (soil_cond .eq. 0) .or. (report_loop .neqv. .true.)             &
-     &  .or. stircum(isr)%done_flg ) return
+      if( soil_cond .eq. 0 ) return
 
       select case (tilltype)
       case (1)  ! Mixing, some inversion

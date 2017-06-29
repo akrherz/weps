@@ -30,6 +30,7 @@
       use report_harvest_mod, only: report_harvest, report_calib_harvest
       use report_hydrobal_mod, only: report_hydrobal
       use datetime_mod, only: get_simdate, get_simdate_jday, get_simdate_doy
+      use manage_data_struct_mod, only: getManVal
 
 !     + + + PARAMETERS AND COMMON BLOCKS + + +
       include 'command.inc'
@@ -128,7 +129,7 @@
       integer burydistflg
       real    irrig
       real    rdght1
-      character*1 prdumy
+!      character*1 prdumy
       character*256  line
       integer  idx, thinflg
       real    dmassres, zmassres, dmassrot, zmassrot
@@ -311,10 +312,12 @@
           temp_present = 0
       end if
 
-      line = mtbl(mcur(sr))
+!      line = mtbl(mcur(sr))
 
-      read(line, 1001, err=901) prdumy, prcode, prname
- 1001 format(a1,1x,i2,1x,a)
+!      read(line, 1001, err=901) prdumy, prcode, prname
+! 1001 format(a1,1x,i2,1x,a)
+      prcode = manFile%proc%procType
+      prname = trim(manFile%proc%procName)
 
       if (BTEST(manFile%am0tfl,0)) write (luomanage(sr),2015) prcode,prname
 
@@ -358,9 +361,11 @@
 !     read the random roughness for the implement. tillage intensity
 !     factor, and the fraction of the surface tilled come in as group parameter
 !     get additional line of data
-        mcur(sr) = mcur(sr) + 1
-        line = mtbl(mcur(sr))
-        read(line(2:len_trim(line)),* , err=901) roughflg, rrimpl
+!        mcur(sr) = mcur(sr) + 1
+!        line = mtbl(mcur(sr))
+!        read(line(2:len_trim(line)),* , err=901) roughflg, rrimpl
+        call getManVal(manFile%proc, 'rroughflag', roughflg)
+        call getManVal(manFile%proc, 'rrough', rrimpl)
 
         am0til = .true.  !set flag for surface modification
 !     do process
@@ -379,67 +384,67 @@
         end if
 !-----END random roughness process (process code 02)
 
-      case (3)
+!      case (3)
 !-----START oriented roughness ridge only process (process code 03)
 !     pre-process stuff
-        if (manFile%am0tdb .eq. 1) then
-          write (luotdb(sr),*)
-          write (luotdb(sr),*) '//Before oriented roughness1 process//'
-          call tdbug(sr, prcode, soil, crop, residue)
-        end if
+!        if (manFile%am0tdb .eq. 1) then
+!          write (luotdb(sr),*)
+!          write (luotdb(sr),*) '//Before oriented roughness1 process//'
+!          call tdbug(sr, prcode, soil, crop, residue)
+!        end if
 
 !     read the oriented roughness (ridge) parameters for the implement
 !     get additional line of data
-        mcur(sr) = mcur(sr) + 1
-        line = mtbl(mcur(sr))
-        read(line(2:len_trim(line)),* , err=901)                        &
-     &    rdgflag, rdght, imprs, rdgwt
+!        mcur(sr) = mcur(sr) + 1
+!        line = mtbl(mcur(sr))
+!        read(line(2:len_trim(line)),* , err=901)                        &
+!     &    rdgflag, rdght, imprs, rdgwt
 
-        rdght1 = soil%aszrgh !keep initial ridge height value
-        am0til = .true.  !set flag for surface modification
+!        rdght1 = soil%aszrgh !keep initial ridge height value
+!        am0til = .true.  !set flag for surface modification
 !     do process
-        call orient1(soil%aszrgh,soil%asxrgw,soil%asxrgs,soil%asargo, &
-     &               rdght,rdgwt,imprs,odir,tdepth,rdgflag)
+!        call orient1(soil%aszrgh,soil%asxrgw,soil%asxrgs,soil%asargo, &
+!     &               rdght,rdgwt,imprs,odir,tdepth,rdgflag)
 
 !     post-process stuff
         !if the ridge height changed or is very small,
         !then assume any dikes got destroyed
-        if (rdght1 .ne. soil%aszrgh .or. (soil%aszrgh .le. 0.1)) then
-          soil%asxdkh = 0.0
-          soil%asxdks = 0.0
-        end if
+!        if (rdght1 .ne. soil%aszrgh .or. (soil%aszrgh .le. 0.1)) then
+!          soil%asxdkh = 0.0
+!          soil%asxdks = 0.0
+!        end if
 
-        if (manFile%am0tdb .eq. 1) then
-          write (luotdb(sr),*) '//After oriented roughness process//'
-          call tdbug(sr, prcode, soil, crop, residue)
-        end if
+!        if (manFile%am0tdb .eq. 1) then
+!          write (luotdb(sr),*) '//After oriented roughness process//'
+!          call tdbug(sr, prcode, soil, crop, residue)
+!        end if
 !-----END oriented roughness process (process code 03)
 
-      case (4)
+!      case (4)
 !-----START oriented roughness process dike only (process code 04)
 !     pre-process stuff
-        if (manFile%am0tdb .eq. 1) then
-          write (luotdb(sr),*)
-          write (luotdb(sr),*) '//Before oriented roughness2 process//'
-          call tdbug(sr, prcode, soil, crop, residue)
-        end if
+!        if (manFile%am0tdb .eq. 1) then
+!          write (luotdb(sr),*)
+!          write (luotdb(sr),*) '//Before oriented roughness2 process//'
+!          call tdbug(sr, prcode, soil, crop, residue)
+!        end if
 
 !     read the oriented roughness (dike) parameters for the implement
-        mcur(sr) = mcur(sr) + 1
-        line = mtbl(mcur(sr))
-        read(line(2:len_trim(line)),* , err=901)                        &
-     &    rdgflag, dikeht, dikespac
+!        mcur(sr) = mcur(sr) + 1
+!        line = mtbl(mcur(sr))
+!        read(line(2:len_trim(line)),* , err=901)                        &
+!     &    rdgflag, dikeht, dikespac
 ! NOTE: we don't need rdgflag anymore - LEW
 
-        am0til = .true.  !set flag for surface modification
+!        am0til = .true.  !set flag for surface modification
 !     do process
-        call orient2(soil%asxdkh,soil%asxdks,dikeht,dikespac)
+!        call orient2(soil%asxdkh,soil%asxdks,dikeht,dikespac)
 
 !     post-process stuff
-        if (manFile%am0tdb .eq. 1) then
-          write (luotdb(sr),*) '//After oriented roughness process//'
-          call tdbug(sr, prcode, soil, crop, residue)
-        end if
+!        if (manFile%am0tdb .eq. 1) then
+!          write (luotdb(sr),*) '//After oriented roughness process//'
+!          call tdbug(sr, prcode, soil, crop, residue)
+!        end if
 !-----END oriented roughness dike only process (process code 04)
 
       case (5)
@@ -452,10 +457,16 @@
         end if
 
 !     read the oriented roughness parameters for the implement
-        mcur(sr) = mcur(sr) + 1
-        line = mtbl(mcur(sr))
-        read(line(2:len_trim(line)),* , err=901)                        &
-     &    rdgflag, rdght, imprs, rdgwt, dikeht, dikespac
+!        mcur(sr) = mcur(sr) + 1
+!        line = mtbl(mcur(sr))
+!        read(line(2:len_trim(line)),* , err=901)                        &
+!     &    rdgflag, rdght, imprs, rdgwt, dikeht, dikespac
+        call getManVal(manFile%proc, 'rdgflag', rdgflag)
+        call getManVal(manFile%proc, 'rdghit', rdght)
+        call getManVal(manFile%proc, 'rdgspac', imprs)
+        call getManVal(manFile%proc, 'rdgwidth', rdgwt)
+        call getManVal(manFile%proc, 'dkhit', dikeht)
+        call getManVal(manFile%proc, 'dkspac', dikespac)
 
         am0til = .true.  !set flag for surface modification
 !     do process
@@ -491,9 +502,11 @@
 !
 !
 !       read the crushing parameters for the implement
-        mcur(sr) = mcur(sr) + 1
-        line = mtbl(mcur(sr))
-        read(line(2:len_trim(line)),* , err=901) alpha, beta
+!        mcur(sr) = mcur(sr) + 1
+!        line = mtbl(mcur(sr))
+!        read(line(2:len_trim(line)),* , err=901) alpha, beta
+        call getManVal(manFile%proc, 'asdf', alpha)
+        call getManVal(manFile%proc, 'crif', beta)
 
 !       check for valid crushing parameters
         if( alpha.lt.beta) then
@@ -538,10 +551,10 @@
 
 
 !       read the loosening parameter for the implement
-        mcur(sr) = mcur(sr) + 1
-        line = mtbl(mcur(sr))
-        read(line(2:len_trim(line)),* , err=901) mu
-
+!        mcur(sr) = mcur(sr) + 1
+!        line = mtbl(mcur(sr))
+!        read(line(2:len_trim(line)),* , err=901) mu
+        call getManVal(manFile%proc, 'soilos', mu)
 !        if( sr .eq. 3 ) then
 !          write(*,*) mu,fracarea,tlayer,                                &
 !     &    soil%asdblk(1),soil%asdsblk(1),soil%aszlyt(1)
@@ -601,10 +614,10 @@
 !        write (*,*) 'dia,sd',soil%aslagm(1),soil%as0ags(1)
 
 !       read the mixing coefficient from the data file
-        mcur(sr) = mcur(sr) + 1
-        line = mtbl(mcur(sr))
-        read(line(2:len_trim(line)),* , err=901) rho
-
+!        mcur(sr) = mcur(sr) + 1
+!        line = mtbl(mcur(sr))
+!        read(line(2:len_trim(line)),* , err=901) rho
+        call getManVal(manFile%proc, 'laymix', rho)
 !       Convert ASD from modified log-normal to sieve classes
         call asd2m(soil%aslagn, soil%aslagx, soil%aslagm, soil%as0ags, soil%nslay, massf)
 
@@ -719,10 +732,11 @@
         end if
 
         ! read the compaction parameter for the implement
-        mcur(sr) = mcur(sr) + 1
-        line = mtbl(mcur(sr))
-        read(line(2:len_trim(line)),* , err=901) mu, compact_load
-
+!        mcur(sr) = mcur(sr) + 1
+!        line = mtbl(mcur(sr))
+!        read(line(2:len_trim(line)),* , err=901) mu, compact_load
+        call getManVal(manFile%proc, 'mu', mu)
+        call getManVal(manFile%proc, 'compact_load', compact_load)
         ! do process
         ! compaction occurs below the tlayer depth
         ! find maximum bulk density (soil water content)
@@ -771,11 +785,16 @@
           call tdbug(sr, prcode, soil, crop, residue)
         end if
 
-        mcur(sr) = mcur(sr) + 1
-        line = mtbl(mcur(sr))
-        read(line(2:len_trim(line)),* , err=901) bioflg, afvt(1), &
-     &                      afvt(2), afvt(3), afvt(4), afvt(5)
-
+!        mcur(sr) = mcur(sr) + 1
+!        line = mtbl(mcur(sr))
+!        read(line(2:len_trim(line)),* , err=901) bioflg, afvt(1), &
+!     &                      afvt(2), afvt(3), afvt(4), afvt(5)
+        call getManVal(manFile%proc, 'fbioflagvt', bioflg)
+        call getManVal(manFile%proc, 'massflatvt1', afvt(1))
+        call getManVal(manFile%proc, 'massflatvt2', afvt(2))
+        call getManVal(manFile%proc, 'massflatvt3', afvt(3))
+        call getManVal(manFile%proc, 'massflatvt4', afvt(4))
+        call getManVal(manFile%proc, 'massflatvt5', afvt(5))
 !     do process
         call flatvt(afvt, fracarea, crop%database%rbc, &
      &       crop%mass%standstem, crop%mass%standleaf, crop%mass%standstore,     &
@@ -801,13 +820,18 @@
           call tdbug(sr, prcode, soil, crop, residue)
         end if
 
-        mcur(sr) = mcur(sr) + 1
-        line = mtbl(mcur(sr))
-        read(line(2:len_trim(line)),* , err=901) burydistflg,           &
-     &              mfvt(1), mfvt(2), mfvt(3), mfvt(4), mfvt(5)
-
+!        mcur(sr) = mcur(sr) + 1
+!        line = mtbl(mcur(sr))
+!        read(line(2:len_trim(line)),* , err=901) burydistflg,           &
+!     &              mfvt(1), mfvt(2), mfvt(3), mfvt(4), mfvt(5)
+        call getManVal(manFile%proc, 'burydist', burydistflg)
+        call getManVal(manFile%proc, 'massburyvt1', mfvt(1))
+        call getManVal(manFile%proc, 'massburyvt2', mfvt(2))
+        call getManVal(manFile%proc, 'massburyvt3', mfvt(3))
+        call getManVal(manFile%proc, 'massburyvt4', mfvt(4))
+        call getManVal(manFile%proc, 'massburyvt5', mfvt(5))
         ! accumulation of STIR values
-        call stir_cum(sr, ospeed, tdepth, burydistflg, fracarea)
+        ! call stir_cum(sr, ospeed, tdepth, burydistflg, fracarea)
 
 !     Default all bury processes to "all" biomass for now.
       bioflg = 0
@@ -844,11 +868,15 @@
           call tdbug(sr, prcode, soil, crop, residue)
         end if
 
-        mcur(sr) = mcur(sr) + 1
-        line = mtbl(mcur(sr))
-        read(line(2:len_trim(line)),* , err=901) mfvt(1), mfvt(2), &
-     &                                mfvt(3), mfvt(4), mfvt(5)
-
+!        mcur(sr) = mcur(sr) + 1
+!        line = mtbl(mcur(sr))
+!        read(line(2:len_trim(line)),* , err=901) mfvt(1), mfvt(2), &
+!     &                                mfvt(3), mfvt(4), mfvt(5)
+        call getManVal(manFile%proc, 'massresurvt1', mfvt(1))
+        call getManVal(manFile%proc, 'massresurvt2', mfvt(2))
+        call getManVal(manFile%proc, 'massresurvt3', mfvt(3))
+        call getManVal(manFile%proc, 'massresurvt4', mfvt(4))
+        call getManVal(manFile%proc, 'massresurvt5', mfvt(5))
       ! Lift processes only sees the decomp biomass pools. This default gets them all.
       bioflg = 0
 
@@ -864,7 +892,7 @@
         end if
 !-----END re-surface process variable toughness (process code 26)
 
-      case (30)
+!      case (30)
 !-----START defoliate process (process code 30)
 
 !     Derived from process 31 (kill) - LEW
@@ -875,11 +903,11 @@
 !     pools where they can now begin to decay.
 
 !     pre-process stuff
-        if (manFile%am0tdb .eq. 1) then
-          write (luotdb(sr),*)
-          write (luotdb(sr),*) '//Before defoliate process//'
-          call tdbug(sr, prcode, soil, crop, residue)
-        end if
+!        if (manFile%am0tdb .eq. 1) then
+!          write (luotdb(sr),*)
+!          write (luotdb(sr),*) '//Before defoliate process//'
+!          call tdbug(sr, prcode, soil, crop, residue)
+!        end if
 
 !       Some operations will not kill certain types of crops,
 !       ie., a mowing operation usually will not kill a perennial
@@ -894,30 +922,30 @@
 !      set am0defoliatefl
 !                 1 - defoliation triggered
 
-        mcur(sr) = mcur(sr) + 1
-        line = mtbl(mcur(sr))
-        read(line(2:len_trim(line)),* , err=901) am0defoliatefl
+!        mcur(sr) = mcur(sr) + 1
+!        line = mtbl(mcur(sr))
+!        read(line(2:len_trim(line)),* , err=901) am0defoliatefl
 
-        if( crop%growth%am0cgf .and. .not. crop%growth%am0cif ) then
+!        if( crop%growth%am0cgf .and. .not. crop%growth%am0cif ) then
           ! crop growth flag on and not on initialization cycle
-          if( am0defoliatefl .eq. 1 ) then
+!          if( am0defoliatefl .eq. 1 ) then
              ! defoliate by dropping all crop leaf mass into crop flat pool
-             crop%mass%flatleaf = crop%mass%flatleaf + crop%mass%standleaf
-             crop%mass%standleaf = 0.0
-          end if
+!             crop%mass%flatleaf = crop%mass%flatleaf + crop%mass%standleaf
+!             crop%mass%standleaf = 0.0
+!          end if
           ! crop pool state has been changed, force dependent variable update  
-          am0cropupfl = 1
-        else
+!          am0cropupfl = 1
+!        else
             ! if no crop growing "defoliation" is not necessary and no biomass is
             ! present to transfer. Reset kill flag to zero, no report
-            am0defoliatefl = 0
-        end if
+!            am0defoliatefl = 0
+!        end if
 
 !     post-process stuff
-        if (manFile%am0tdb .eq. 1) then
-          write (luotdb(sr),*) '//After defoliate process//'
-          call tdbug(sr, prcode, soil, crop, residue)
-        end if
+!        if (manFile%am0tdb .eq. 1) then
+!          write (luotdb(sr),*) '//After defoliate process//'
+!          call tdbug(sr, prcode, soil, crop, residue)
+!        end if
 !-----END defoliate process (process code 30)
 
       case (31)
@@ -952,9 +980,10 @@
 !                 2 - annual or perennial crop is killed
 !                 3 - defoliation triggered
 
-        mcur(sr) = mcur(sr) + 1
-        line = mtbl(mcur(sr))
-        read(line(2:len_trim(line)),* , err=901) am0kilfl
+!        mcur(sr) = mcur(sr) + 1
+!        line = mtbl(mcur(sr))
+!        read(line(2:len_trim(line)),* , err=901) am0kilfl
+        call getManVal(manFile%proc, 'kilflag', am0kilfl)
 
         if( crop%growth%am0cgf .and. .not. crop%growth%am0cif ) then
           ! crop growth flag on and not on initialization cycle
@@ -977,7 +1006,7 @@
      &           atzht(sr), atdstm(sr), atxstmrep(sr), atzrtd(sr), &
      &           atgrainf(sr) )
              ! attach a crop name to non-harvest termination in stir report
-             call stir_crop(sr, crop%bname, 2)
+             ! call stir_crop(sr, crop%bname, 2)
              if( rpt_season_flg(sr) ) then
                call report_hydrobal( sr, bmrotation, manFile%mperod )
                ! This may be harvest or non-harvest termination, allow early harvest warnings
@@ -1028,10 +1057,15 @@
         end if
 
         ! set process parameters
-        mcur(sr) = mcur(sr) + 1
-        line = mtbl(mcur(sr))
-        read(line(2:len_trim(line)),* , err=901)                        &
-     &    cutflg, lastoper(sr)%cutht, pyieldf, pstalkf, rstandf
+!        mcur(sr) = mcur(sr) + 1
+!        line = mtbl(mcur(sr))
+!        read(line(2:len_trim(line)),* , err=901)                        &
+!     &    cutflg, lastoper(sr)%cutht, pyieldf, pstalkf, rstandf
+        call getManVal(manFile%proc, 'cutflag', cutflg)
+        call getManVal(manFile%proc, 'cutvalh', lastoper(sr)%cutht)
+        call getManVal(manFile%proc, 'cyldrmh', pyieldf)
+        call getManVal(manFile%proc, 'cplrmh', pstalkf)
+        call getManVal(manFile%proc, 'cstrmh', rstandf)
 
 !     do process
         call cut(cutflg, lastoper(sr)%cutht, pyieldf, pstalkf, rstandf, &
@@ -1063,7 +1097,7 @@
           call report_harvest( sr, bmrotation, mass_rem, mass_left, 0,1,&
      &           mandate, crop)
           ! attach a crop name to the harvest operation in stir report
-          call stir_crop(sr, crop%bname, 2)
+          ! call stir_crop(sr, crop%bname, 2)
           if( rpt_season_flg(sr) ) then
               ! not reported by the kill process in this
               call report_hydrobal( sr, bmrotation, manFile%mperod )
@@ -1095,10 +1129,15 @@
           call tdbug(sr, prcode, soil, crop, residue)
         end if
 
-        mcur(sr) = mcur(sr) + 1
-        line = mtbl(mcur(sr))
-        read(line(2:len_trim(line)),* , err=901)                        &
-     &    lastoper(sr)%cutht, pyieldf, pstalkf, rstandf
+!        mcur(sr) = mcur(sr) + 1
+!        line = mtbl(mcur(sr))
+!        read(line(2:len_trim(line)),* , err=901)                        &
+!     &    lastoper(sr)%cutht, pyieldf, pstalkf, rstandf
+        call getManVal(manFile%proc, 'cutvalf', lastoper(sr)%cutht)
+        call getManVal(manFile%proc, 'cyldrmf', pyieldf)
+        call getManVal(manFile%proc, 'cplrmf', pstalkf)
+        call getManVal(manFile%proc, 'cstrmf', rstandf)
+
 !     do process
         cutflg = 2
         call cut(cutflg, lastoper(sr)%cutht, pyieldf, pstalkf, rstandf, &
@@ -1129,7 +1168,7 @@
           call report_harvest( sr, bmrotation, mass_rem, mass_left, 0,1,&
      &           mandate, crop)
           ! attach a crop name to the harvest operation in stir report
-          call stir_crop(sr, crop%bname, 2)
+          ! call stir_crop(sr, crop%bname, 2)
           if( rpt_season_flg(sr) ) then
               ! not reported by the kill process in this
               call report_hydrobal( sr, bmrotation, manFile%mperod )
@@ -1161,17 +1200,29 @@
           call tdbug(sr, prcode, soil, crop, residue)
         end if
 
-        mcur(sr) = mcur(sr) + 1
-        line = mtbl(mcur(sr))
-        read(line(2:len_trim(line)),* , err=901) sel_pool,              &
-     &      rate_mult_vt(1), rate_mult_vt(2), rate_mult_vt(3),          &
-     &      rate_mult_vt(4), rate_mult_vt(5)
+!        mcur(sr) = mcur(sr) + 1
+!        line = mtbl(mcur(sr))
+!        read(line(2:len_trim(line)),* , err=901) sel_pool,              &
+!     &      rate_mult_vt(1), rate_mult_vt(2), rate_mult_vt(3),          &
+!     &      rate_mult_vt(4), rate_mult_vt(5)
+        call getManVal(manFile%proc, 'frselpool', sel_pool)
+        call getManVal(manFile%proc, 'ratemultvt1', rate_mult_vt(1))
+        call getManVal(manFile%proc, 'ratemultvt2', rate_mult_vt(2))
+        call getManVal(manFile%proc, 'ratemultvt3', rate_mult_vt(3))
+        call getManVal(manFile%proc, 'ratemultvt4', rate_mult_vt(4))
+        call getManVal(manFile%proc, 'ratemultvt5', rate_mult_vt(5))
+
         ! get additional line of data
-        mcur(sr) = mcur(sr) + 1
-        line = mtbl(mcur(sr))
-        read(line(2:len_trim(line)),* , err=901)                        &
-     &      thresh_mult_vt(1), thresh_mult_vt(2), thresh_mult_vt(3),    &
-     &      thresh_mult_vt(4), thresh_mult_vt(5)
+!        mcur(sr) = mcur(sr) + 1
+!        line = mtbl(mcur(sr))
+!        read(line(2:len_trim(line)),* , err=901)                        &
+!     &      thresh_mult_vt(1), thresh_mult_vt(2), thresh_mult_vt(3),    &
+!     &      thresh_mult_vt(4), thresh_mult_vt(5)
+        call getManVal(manFile%proc, 'threshmultvt1', thresh_mult_vt(1))
+        call getManVal(manFile%proc, 'threshmultvt2', thresh_mult_vt(2))
+        call getManVal(manFile%proc, 'threshmultvt3', thresh_mult_vt(3))
+        call getManVal(manFile%proc, 'threshmultvt4', thresh_mult_vt(4))
+        call getManVal(manFile%proc, 'threshmultvt5', thresh_mult_vt(5))
 
 !     do process
         call fall_mod_vt( rate_mult_vt, thresh_mult_vt,                 &
@@ -1195,10 +1246,15 @@
           call tdbug(sr, prcode, soil, crop, residue)
         end if
 
-        mcur(sr) = mcur(sr) + 1
-        line = mtbl(mcur(sr))
-        read(line(2:len_trim(line)),* , err=901)                        &
-     &    thinval, pyieldf, pstalkf, rstandf
+!        mcur(sr) = mcur(sr) + 1
+!        line = mtbl(mcur(sr))
+!        read(line(2:len_trim(line)),* , err=901)                        &
+!     &    thinval, pyieldf, pstalkf, rstandf
+        call getManVal(manFile%proc, 'thinvalp', thinval)
+        call getManVal(manFile%proc, 'tyldrmp', pyieldf)
+        call getManVal(manFile%proc, 'tplrmp', pstalkf)
+        call getManVal(manFile%proc, 'tstrmp', rstandf)
+
 !     do process
         thinflg = 1
         call thin(thinflg, thinval, pyieldf, pstalkf, rstandf, &
@@ -1230,7 +1286,7 @@
           call report_harvest( sr, bmrotation, mass_rem, mass_left, 0,1,&
       &          mandate, crop)
           ! attach a crop name to the harvest operation in stir report
-          call stir_crop(sr, crop%bname, 2)
+          ! call stir_crop(sr, crop%bname, 2)
           if( rpt_season_flg(sr) ) then
               ! not reported by the kill process in this
               call report_hydrobal( sr, bmrotation, manFile%mperod )
@@ -1262,10 +1318,15 @@
           call tdbug(sr, prcode, soil, crop, residue)
         end if
 
-        mcur(sr) = mcur(sr) + 1
-        line = mtbl(mcur(sr))
-        read(line(2:len_trim(line)),* , err=901)                        &
-     &    thinval, pyieldf, pstalkf, rstandf
+!        mcur(sr) = mcur(sr) + 1
+!        line = mtbl(mcur(sr))
+!        read(line(2:len_trim(line)),* , err=901)                        &
+!     &    thinval, pyieldf, pstalkf, rstandf
+        call getManVal(manFile%proc, 'thinvalf', thinval)
+        call getManVal(manFile%proc, 'tyldrmf', pyieldf)
+        call getManVal(manFile%proc, 'tplrmf', pstalkf)
+        call getManVal(manFile%proc, 'tstrmf', rstandf)
+
 !     do process
         thinflg = 0
         call thin(thinflg, thinval, pyieldf, pstalkf, rstandf, &
@@ -1293,7 +1354,7 @@
      &           1, mandate, crop)
             call report_calib_harvest( sr, bmrotation, mass_rem, mass_left, crop )
           ! attach a crop name to the harvest operation in stir report
-          call stir_crop(sr, crop%bname, 2)
+          ! call stir_crop(sr, crop%bname, 2)
             if( rpt_season_flg(sr) ) then
               ! not reported by the kill process in this
               call report_hydrobal( sr, bmrotation, manFile%mperod )
@@ -1368,11 +1429,20 @@
         end if
 
         ! set process parameters
-        mcur(sr) = mcur(sr) + 1
-        line = mtbl(mcur(sr))
-        read(line(2:len_trim(line)),* , err=901)                        &
-     &      harv_report_flg, harv_calib_flg, harv_unit_flg,             &
-     &      mature_warn_flg, cutflg, lastoper(sr)%cutht, pyieldf, pstalkf, rstandf
+!        mcur(sr) = mcur(sr) + 1
+!        line = mtbl(mcur(sr))
+!        read(line(2:len_trim(line)),* , err=901)                        &
+!     &      harv_report_flg, harv_calib_flg, harv_unit_flg,             &
+!     &      mature_warn_flg, cutflg, lastoper(sr)%cutht, pyieldf, pstalkf, rstandf
+        call getManVal(manFile%proc, 'harv_report_flg', harv_report_flg)
+        call getManVal(manFile%proc, 'harv_calib_flg', harv_calib_flg)
+        call getManVal(manFile%proc, 'harv_unit_flg', harv_unit_flg)
+        call getManVal(manFile%proc, 'mature_warn_flg', mature_warn_flg)
+        call getManVal(manFile%proc, 'cutflag', cutflg)
+        call getManVal(manFile%proc, 'cutvalh', lastoper(sr)%cutht)
+        call getManVal(manFile%proc, 'cyldrmh', pyieldf)
+        call getManVal(manFile%proc, 'cplrmh', pstalkf)
+        call getManVal(manFile%proc, 'cstrmh', rstandf)
 
 !     do process
         call cut(cutflg, lastoper(sr)%cutht, pyieldf, pstalkf, rstandf, &
@@ -1405,7 +1475,7 @@
      &                         harv_unit_flg, harv_report_flg,          &
      &                         mandate, crop )
           ! attach a crop name to the harvest operation in stir report
-          call stir_crop(sr, crop%bname, 2)
+          ! call stir_crop(sr, crop%bname, 2)
           if( rpt_season_flg(sr) ) then
               ! not reported by the kill process in this
               call report_hydrobal( sr, bmrotation, manFile%mperod )
@@ -1437,11 +1507,20 @@
           call tdbug(sr, prcode, soil, crop, residue)
         end if
 
-        mcur(sr) = mcur(sr) + 1
-        line = mtbl(mcur(sr))
-        read(line(2:len_trim(line)),* , err=901)                        &
-     &      harv_report_flg, harv_calib_flg, harv_unit_flg,             &
-     &      mature_warn_flg, lastoper(sr)%cutht, pyieldf, pstalkf, rstandf
+!        mcur(sr) = mcur(sr) + 1
+!        line = mtbl(mcur(sr))
+!        read(line(2:len_trim(line)),* , err=901)                        &
+!     &      harv_report_flg, harv_calib_flg, harv_unit_flg,             &
+!     &      mature_warn_flg, lastoper(sr)%cutht, pyieldf, pstalkf, rstandf
+        call getManVal(manFile%proc, 'harv_report_flg', harv_report_flg)
+        call getManVal(manFile%proc, 'harv_calib_flg', harv_calib_flg)
+        call getManVal(manFile%proc, 'harv_unit_flg', harv_unit_flg)
+        call getManVal(manFile%proc, 'mature_warn_flg', mature_warn_flg)
+        call getManVal(manFile%proc, 'cutvalf', lastoper(sr)%cutht)
+        call getManVal(manFile%proc, 'cyldrmf', pyieldf)
+        call getManVal(manFile%proc, 'cplrmf', pstalkf)
+        call getManVal(manFile%proc, 'cstrmf', rstandf)
+
 !     do process
         cutflg = 2
         call cut(cutflg, lastoper(sr)%cutht, pyieldf, pstalkf, rstandf,              &
@@ -1473,7 +1552,7 @@
      &                         harv_unit_flg, harv_report_flg,          &
      &                         mandate, crop )
           ! attach a crop name to the harvest operation in stir report
-          call stir_crop(sr, crop%bname, 2)
+          ! call stir_crop(sr, crop%bname, 2)
           if( rpt_season_flg(sr) ) then
               ! not reported by the kill process in this
               call report_hydrobal( sr, bmrotation, manFile%mperod )
@@ -1505,11 +1584,20 @@
           call tdbug(sr, prcode, soil, crop, residue)
         end if
 
-        mcur(sr) = mcur(sr) + 1
-        line = mtbl(mcur(sr))
-        read(line(2:len_trim(line)),* , err=901)                        &
-     &      harv_report_flg, harv_calib_flg, harv_unit_flg,             &
-     &      mature_warn_flg, thinval, pyieldf, pstalkf, rstandf
+!        mcur(sr) = mcur(sr) + 1
+!        line = mtbl(mcur(sr))
+!        read(line(2:len_trim(line)),* , err=901)                        &
+!     &      harv_report_flg, harv_calib_flg, harv_unit_flg,             &
+!     &      mature_warn_flg, thinval, pyieldf, pstalkf, rstandf
+        call getManVal(manFile%proc, 'harv_report_flg', harv_report_flg)
+        call getManVal(manFile%proc, 'harv_calib_flg', harv_calib_flg)
+        call getManVal(manFile%proc, 'harv_unit_flg', harv_unit_flg)
+        call getManVal(manFile%proc, 'mature_warn_flg', mature_warn_flg)
+        call getManVal(manFile%proc, 'thinvalp', thinval)
+        call getManVal(manFile%proc, 'tyldrmp', pyieldf)
+        call getManVal(manFile%proc, 'tplrmp', pstalkf)
+        call getManVal(manFile%proc, 'tstrmp', rstandf)
+
 !     do process
         thinflg = 1
         call thin(thinflg, thinval, pyieldf, pstalkf, rstandf, &
@@ -1542,7 +1630,7 @@
      &                         harv_unit_flg, harv_report_flg,          &
      &                         mandate, crop )
           ! attach a crop name to the harvest operation in stir report
-          call stir_crop(sr, crop%bname, 2)
+          ! call stir_crop(sr, crop%bname, 2)
           if( rpt_season_flg(sr) ) then
               ! not reported by the kill process in this
               call report_hydrobal( sr, bmrotation, manFile%mperod )
@@ -1574,11 +1662,20 @@
           call tdbug(sr, prcode, soil, crop, residue)
         end if
 
-        mcur(sr) = mcur(sr) + 1
-        line = mtbl(mcur(sr))
-        read(line(2:len_trim(line)),* , err=901) &
-     &      harv_report_flg, harv_calib_flg, harv_unit_flg, &
-     &      mature_warn_flg, thinval, pyieldf, pstalkf, rstandf
+!        mcur(sr) = mcur(sr) + 1
+!        line = mtbl(mcur(sr))
+!        read(line(2:len_trim(line)),* , err=901) &
+!     &      harv_report_flg, harv_calib_flg, harv_unit_flg, &
+!     &      mature_warn_flg, thinval, pyieldf, pstalkf, rstandf
+        call getManVal(manFile%proc, 'harv_report_flg', harv_report_flg)
+        call getManVal(manFile%proc, 'harv_calib_flg', harv_calib_flg)
+        call getManVal(manFile%proc, 'harv_unit_flg', harv_unit_flg)
+        call getManVal(manFile%proc, 'mature_warn_flg', mature_warn_flg)
+        call getManVal(manFile%proc, 'thinvalf', thinval)
+        call getManVal(manFile%proc, 'tyldrmf', pyieldf)
+        call getManVal(manFile%proc, 'tplrmf', pstalkf)
+        call getManVal(manFile%proc, 'tstrmf', rstandf)
+
 !     do process
         thinflg = 0
         call thin(thinflg, thinval, pyieldf, pstalkf, rstandf, &
@@ -1610,7 +1707,7 @@
      &                         harv_unit_flg, harv_report_flg, &
      &                         mandate, crop )
           ! attach a crop name to the harvest operation in stir report
-          call stir_crop(sr, crop%bname, 2)
+          ! call stir_crop(sr, crop%bname, 2)
           if( rpt_season_flg(sr) ) then
               ! not reported by the kill process in this
               call report_hydrobal( sr, bmrotation, manFile%mperod )
@@ -1646,32 +1743,54 @@
 
         ! do process
         ! Read surface residue counts and amount
-        mcur(sr) = mcur(sr) + 1
-        line = mtbl(mcur(sr))
-        read(line(2:len_trim(line)),* , err=901)                        &
-     &    residue(1)%geometry%dstm, residue(1)%geometry%zht, residue(1)%mass%standstem, &
-     &    residue(1)%mass%flatstem, residue(1)%database%rbc
+!        mcur(sr) = mcur(sr) + 1
+!        line = mtbl(mcur(sr))
+!        read(line(2:len_trim(line)),* , err=901)                        &
+!     &    residue(1)%geometry%dstm, residue(1)%geometry%zht, residue(1)%mass%standstem, &
+!     &    residue(1)%mass%flatstem, residue(1)%database%rbc
+        call getManVal(manFile%proc, 'numst', residue(1)%geometry%dstm)
+        call getManVal(manFile%proc, 'rstandht', residue(1)%geometry%zht)
+        call getManVal(manFile%proc, 'rstandmass', residue(1)%mass%standstem)
+        call getManVal(manFile%proc, 'rflatmass', residue(1)%mass%flatstem)
+        call getManVal(manFile%proc, 'rbc', residue(1)%database%rbc)
 
         ! get additional line of data
-        mcur(sr) = mcur(sr) + 1
-        line = mtbl(mcur(sr))
+!        mcur(sr) = mcur(sr) + 1
+!        line = mtbl(mcur(sr))
         ! read buried residue amounts
-        read(line(2:len_trim(line)), *, err=901) dmassres, zmassres, dmassrot, zmassrot
+!        read(line(2:len_trim(line)), *, err=901) dmassres, zmassres, dmassrot, zmassrot
+        call getManVal(manFile%proc, 'rburiedmass', dmassres)
+        call getManVal(manFile%proc, 'rburieddepth', zmassres)
+        call getManVal(manFile%proc, 'rrootmass', dmassrot)
+        call getManVal(manFile%proc, 'rrootdepth', zmassrot)
+
         ! place buried residue in pools by layer
         call resinit(dmassrot, zmassrot, soil%nslay, residue(1)%mass%rootfiberz, soil%aszlyt)
         call resinit(dmassres,zmassres,soil%nslay, residue(1)%mass%stemz, soil%aszlyt)
         ! get additional line of data
-        mcur(sr) = mcur(sr) + 1
-        line = mtbl(mcur(sr))
+!        mcur(sr) = mcur(sr) + 1
+!        line = mtbl(mcur(sr))
         ! read decomposition parameters for type of residue buried
-        read(line(2:len_trim(line)), *, err=901) residue(1)%database%dkrate(1), residue(1)%database%dkrate(2), &
-             residue(1)%database%dkrate(3), residue(1)%database%dkrate(4), residue(1)%database%dkrate(5), &
-             residue(1)%database%xstm, residue(1)%database%ddsthrsh, residue(1)%database%covfact
+!        read(line(2:len_trim(line)), *, err=901) residue(1)%database%dkrate(1), residue(1)%database%dkrate(2), &
+!             residue(1)%database%dkrate(3), residue(1)%database%dkrate(4), residue(1)%database%dkrate(5), &
+!             residue(1)%database%xstm, residue(1)%database%ddsthrsh, residue(1)%database%covfact
+        call getManVal(manFile%proc, 'standdk', residue(1)%database%dkrate(1))
+        call getManVal(manFile%proc, 'surfdk', residue(1)%database%dkrate(2))
+        call getManVal(manFile%proc, 'burieddk', residue(1)%database%dkrate(3))
+        call getManVal(manFile%proc, 'rootdk', residue(1)%database%dkrate(4))
+        call getManVal(manFile%proc, 'stemnodk', residue(1)%database%dkrate(5))
+        call getManVal(manFile%proc, 'stemdia', residue(1)%database%xstm)
+        call getManVal(manFile%proc, 'thrddys', residue(1)%database%ddsthrsh)
+        call getManVal(manFile%proc, 'covfact', residue(1)%database%covfact)
+
         ! get additional line of data
-        mcur(sr) = mcur(sr) + 1
-        line = mtbl(mcur(sr))
+!        mcur(sr) = mcur(sr) + 1
+!        line = mtbl(mcur(sr))
         ! read decomposition parameters for type of residue buried
-        read(line(2:len_trim(line)), *, err=901)  residue(1)%database%resevapa, residue(1)%database%resevapa
+!        read(line(2:len_trim(line)), *, err=901)  residue(1)%database%resevapa, residue(1)%database%resevapa
+        call getManVal(manFile%proc, 'resevapa', residue(1)%database%resevapa)
+        call getManVal(manFile%proc, 'resevapb', residue(1)%database%resevapa)
+
         ! give residue the proper name
         residue(1)%bname = cropname
         ! post-process stuff
@@ -1760,7 +1879,7 @@
           ! non-harvest termination, suppress early harvest warnings
           mature_warn_flg = 0
           ! attach a crop name to the non-harvest terminiation in stir report
-          call stir_crop(sr, crop%bname, 2)
+          ! call stir_crop(sr, crop%bname, 2)
           call crop_endseason( sr, bmrotation, manFile%mperod, &
      &        crop%bname, am0cfl(sr), &
      &        soil%nslay, crop%database%idc, crop%growth%dayam, &
@@ -1781,72 +1900,143 @@
       am0cropupfl = 1
 
 !     read population, spacing and yield flags
-        mcur(sr) = mcur(sr) + 1
-        line = mtbl(mcur(sr))
-        read(line(2:len_trim(line)),* , err=901)                        &
-     &    crop%geometry%rsfg, crop%geometry%xrow, crop%geometry%rg
+!        mcur(sr) = mcur(sr) + 1
+!        line = mtbl(mcur(sr))
+!        read(line(2:len_trim(line)),* , err=901)                        &
+!     &    crop%geometry%rsfg, crop%geometry%xrow, crop%geometry%rg
+        call getManVal(manFile%proc, 'rowflag', crop%geometry%rsfg)
+        call getManVal(manFile%proc, 'rowspac', crop%geometry%xrow)
+        call getManVal(manFile%proc, 'rowridge', crop%geometry%rg)
 
-        mcur(sr) = mcur(sr) + 1
-        line = mtbl(mcur(sr))
-        read(line(2:len_trim(line)),* , err=901)                        &
-     &    crop%geometry%dpop, crop%database%dmaxshoot, crop%database%baflg, crop%database%ytgt, &
-     &    crop%database%baf, crop%database%yraf, crop%geometry%hyfg
+!        mcur(sr) = mcur(sr) + 1
+!        line = mtbl(mcur(sr))
+!        read(line(2:len_trim(line)),* , err=901)                        &
+!     &    crop%geometry%dpop, crop%database%dmaxshoot, crop%database%baflg, crop%database%ytgt, &
+!     &    crop%database%baf, crop%database%yraf, crop%geometry%hyfg
+        call getManVal(manFile%proc, 'plantpop', crop%geometry%dpop)
+        call getManVal(manFile%proc, 'dmaxshoot', crop%database%dmaxshoot)
+        call getManVal(manFile%proc, 'cbaflag', crop%database%baflg)
+        call getManVal(manFile%proc, 'tgtyield', crop%database%ytgt)
+        call getManVal(manFile%proc, 'cbafact', crop%database%baf)
+        call getManVal(manFile%proc, 'cyrafact', crop%database%yraf)
+        call getManVal(manFile%proc, 'hyldflag', crop%geometry%hyfg)
 
 !     get additional line of data
-        mcur(sr) = mcur(sr) + 1
-        line = mtbl(mcur(sr))
+!        mcur(sr) = mcur(sr) + 1
+!        line = mtbl(mcur(sr))
 !     read yield reporting name
-          crop%database%ynmu = line(2:71)   !at present, line ends with < symbol at 72
+!          crop%database%ynmu = line(2:71)   !at present, line ends with < symbol at 72
+        call getManVal(manFile%proc, 'hyldunits', crop%database%ynmu)
 
-        mcur(sr) = mcur(sr) + 1
-        line = mtbl(mcur(sr))
+!        mcur(sr) = mcur(sr) + 1
+!        line = mtbl(mcur(sr))
 !     read yield reporting values and growth characteristics
-        read(line(2:len_trim(line)), *, err=901)                        &
-     &    crop%database%ywct, crop%database%ycon, crop%database%idc, crop%database%grf, &
-     &    crop%database%ck, crop%database%ehu0
+!        read(line(2:len_trim(line)), *, err=901)                        &
+!     &    crop%database%ywct, crop%database%ycon, crop%database%idc, crop%database%grf, &
+!     &    crop%database%ck, crop%database%ehu0
+        call getManVal(manFile%proc, 'hyldwater', crop%database%ywct)
+        call getManVal(manFile%proc, 'hyconfact', crop%database%ycon)
+        call getManVal(manFile%proc, 'idc', crop%database%idc)
+        call getManVal(manFile%proc, 'grf', crop%database%grf)
+        call getManVal(manFile%proc, 'ck', crop%database%ck)
+        call getManVal(manFile%proc, 'hui0', crop%database%ehu0)
 
-        mcur(sr) = mcur(sr) + 1
-        line = mtbl(mcur(sr))
+!        mcur(sr) = mcur(sr) + 1
+!        line = mtbl(mcur(sr))
 !     read crop growth parameters
-        read(line(2:len_trim(line)), *, err=901)                        &
-     &    crop%database%zmxc, crop%database%growdepth, crop%database%zmrt, crop%database%tmin, &
-     &    crop%database%topt, crop%database%thudf, crop%database%tdtm, crop%database%thum
+!        read(line(2:len_trim(line)), *, err=901)                        &
+!     &    crop%database%zmxc, crop%database%growdepth, crop%database%zmrt, crop%database%tmin, &
+!     &    crop%database%topt, crop%database%thudf, crop%database%tdtm, crop%database%thum
+        call getManVal(manFile%proc, 'hmx', crop%database%zmxc)
+        call getManVal(manFile%proc, 'growdepth', crop%database%growdepth)
+        call getManVal(manFile%proc, 'rdmx', crop%database%zmrt)
+        call getManVal(manFile%proc, 'tbas', crop%database%tmin)
+        call getManVal(manFile%proc, 'topt', crop%database%topt)
+        call getManVal(manFile%proc, 'thudf', crop%database%thudf)
+        call getManVal(manFile%proc, 'dtm', crop%database%tdtm)
+        call getManVal(manFile%proc, 'thum', crop%database%thum)
 
-        mcur(sr) = mcur(sr) + 1
-        line = mtbl(mcur(sr))
-        read(line(2:len_trim(line)), *, err=901)                        &
-     &    crop%database%fd1(1), crop%database%fd2(1), crop%database%fd1(2), crop%database%fd2(2), &
-     &    crop%database%tverndel, crop%database%bceff
+!        mcur(sr) = mcur(sr) + 1
+!        line = mtbl(mcur(sr))
+!        read(line(2:len_trim(line)), *, err=901)                        &
+!     &    crop%database%fd1(1), crop%database%fd2(1), crop%database%fd1(2), crop%database%fd2(2), &
+!     &    crop%database%tverndel, crop%database%bceff
+        call getManVal(manFile%proc, 'frsx1', crop%database%fd1(1))
+        call getManVal(manFile%proc, 'frsx2', crop%database%fd2(1))
+        call getManVal(manFile%proc, 'frsy1', crop%database%fd1(2))
+        call getManVal(manFile%proc, 'frsy2', crop%database%fd2(2))
+        call getManVal(manFile%proc, 'verndel', crop%database%tverndel)
+        call getManVal(manFile%proc, 'bceff', crop%database%bceff)
 
-        mcur(sr) = mcur(sr) + 1
-        line = mtbl(mcur(sr))
-        read(line(2:len_trim(line)), *, err=901)                        &
-     &    crop%database%alf, crop%database%blf, crop%database%clf, crop%database%dlf, &
-     &    crop%database%arp, crop%database%brp, crop%database%crp, crop%database%drp
+!        mcur(sr) = mcur(sr) + 1
+!        line = mtbl(mcur(sr))
+!        read(line(2:len_trim(line)), *, err=901)                        &
+!     &    crop%database%alf, crop%database%blf, crop%database%clf, crop%database%dlf, &
+!     &    crop%database%arp, crop%database%brp, crop%database%crp, crop%database%drp
+        call getManVal(manFile%proc, 'a_lf', crop%database%alf)
+        call getManVal(manFile%proc, 'b_lf', crop%database%blf)
+        call getManVal(manFile%proc, 'c_lf', crop%database%clf)
+        call getManVal(manFile%proc, 'd_lf', crop%database%dlf)
+        call getManVal(manFile%proc, 'a_rp', crop%database%arp)
+        call getManVal(manFile%proc, 'b_rp', crop%database%brp)
+        call getManVal(manFile%proc, 'c_rp', crop%database%crp)
+        call getManVal(manFile%proc, 'd_rp', crop%database%drp)
 
-        mcur(sr) = mcur(sr) + 1
-        line = mtbl(mcur(sr))
-        read(line(2:len_trim(line)), *, err=901)                        &
-     &    crop%database%aht, crop%database%bht, crop%database%ssa, crop%database%ssb, &
-     &    crop%database%sla, crop%database%hue, crop%database%transf, crop%database%diammax
+!        mcur(sr) = mcur(sr) + 1
+!        line = mtbl(mcur(sr))
+!        read(line(2:len_trim(line)), *, err=901)                        &
+!     &    crop%database%aht, crop%database%bht, crop%database%ssa, crop%database%ssb, &
+!     &    crop%database%sla, crop%database%hue, crop%database%transf, crop%database%diammax
+        call getManVal(manFile%proc, 'a_ht', crop%database%aht)
+        call getManVal(manFile%proc, 'b_ht', crop%database%bht)
+        call getManVal(manFile%proc, 'ssaa', crop%database%ssa)
+        call getManVal(manFile%proc, 'ssab', crop%database%ssb)
+        call getManVal(manFile%proc, 'sla', crop%database%sla)
+        call getManVal(manFile%proc, 'huie', crop%database%hue)
+        call getManVal(manFile%proc, 'transf', crop%database%transf)
+        call getManVal(manFile%proc, 'diammax', crop%database%diammax)
 
-        mcur(sr) = mcur(sr) + 1
-        line = mtbl(mcur(sr))
-        read(line(2:len_trim(line)), *, err=901)                        &
-     &    crop%database%storeinit, crop%database%shoot, crop%database%fleafstem, crop%database%fshoot, &
-     &    crop%database%fleaf2stor, crop%database%fstem2stor, crop%database%fstor2stor,crop%database%rbc
+!        mcur(sr) = mcur(sr) + 1
+!        line = mtbl(mcur(sr))
+!        read(line(2:len_trim(line)), *, err=901)                        &
+!     &    crop%database%storeinit, crop%database%shoot, crop%database%fleafstem, crop%database%fshoot, &
+!     &    crop%database%fleaf2stor, crop%database%fstem2stor, crop%database%fstor2stor,crop%database%rbc
+        call getManVal(manFile%proc, 'storeinit', crop%database%storeinit)
+        call getManVal(manFile%proc, 'mshoot', crop%database%shoot)
+        call getManVal(manFile%proc, 'leafstem', crop%database%fleafstem)
+        call getManVal(manFile%proc, 'fshoot', crop%database%fshoot)
+        call getManVal(manFile%proc, 'leaf2stor', crop%database%fleaf2stor)
+        call getManVal(manFile%proc, 'stem2stor', crop%database%fstem2stor)
+        call getManVal(manFile%proc, 'stor2stor', crop%database%fstor2stor)
+        call getManVal(manFile%proc, 'rbc',crop%database%rbc)
 
-        mcur(sr) = mcur(sr) + 1
-        line = mtbl(mcur(sr))
-        read(line(2:len_trim(line)), *, err=901) &
-          crop%database%dkrate(1),crop%database%dkrate(2),crop%database%dkrate(3),crop%database%dkrate(4), &
-          crop%database%dkrate(5), crop%database%xstm, crop%database%ddsthrsh, crop%database%covfact
+!        mcur(sr) = mcur(sr) + 1
+!        line = mtbl(mcur(sr))
+!        read(line(2:len_trim(line)), *, err=901) &
+!          crop%database%dkrate(1),crop%database%dkrate(2),crop%database%dkrate(3),crop%database%dkrate(4), &
+!          crop%database%dkrate(5), crop%database%xstm, crop%database%ddsthrsh, crop%database%covfact
+        call getManVal(manFile%proc, 'standdk', crop%database%dkrate(1))
+        call getManVal(manFile%proc, 'surfdk', crop%database%dkrate(2))
+        call getManVal(manFile%proc, 'burieddk', crop%database%dkrate(3))
+        call getManVal(manFile%proc, 'rootdk', crop%database%dkrate(4))
+        call getManVal(manFile%proc, 'stemnodk', crop%database%dkrate(5))
+        call getManVal(manFile%proc, 'stemdia', crop%database%xstm)
+        call getManVal(manFile%proc, 'thrddys', crop%database%ddsthrsh)
+        call getManVal(manFile%proc, 'covfact', crop%database%covfact)
 
-        mcur(sr) = mcur(sr) + 1
-        line = mtbl(mcur(sr))
-        read(line(2:len_trim(line)), *, err=901)                        &
-     &    crop%database%resevapa, crop%database%resevapb, crop%database%yld_coef, crop%database%resid_int, &
-     &    crop%database%zloc_regrow, noparam3, noparam2, noparam1
+!        mcur(sr) = mcur(sr) + 1
+!        line = mtbl(mcur(sr))
+!        read(line(2:len_trim(line)), *, err=901)                        &
+!     &    crop%database%resevapa, crop%database%resevapb, crop%database%yld_coef, crop%database%resid_int, &
+!     &    crop%database%zloc_regrow, noparam3, noparam2, noparam1
+        call getManVal(manFile%proc, 'resevapa', crop%database%resevapa)
+        call getManVal(manFile%proc, 'resevapb', crop%database%resevapb)
+        call getManVal(manFile%proc, 'yield_coefficient', crop%database%yld_coef)
+        call getManVal(manFile%proc, 'residue_intercept', crop%database%resid_int)
+        call getManVal(manFile%proc, 'regrow_location', crop%database%zloc_regrow)
+        call getManVal(manFile%proc, 'noparam3', noparam3)
+        call getManVal(manFile%proc, 'noparam2', noparam2)
+        call getManVal(manFile%proc, 'noparam1', noparam1)
 
         ! reading of process parameters complete
 
@@ -1926,7 +2116,7 @@
           crop%growth%am0cgf = .true.
 !         give crop the proper name
           crop%bname = cropname
-          call stir_crop(sr, cropname, 1)
+          ! call stir_crop(sr, cropname, 1)
         endif
 !       post-process stuff
         if (manFile%am0tdb .eq. 1) then
@@ -1949,11 +2139,18 @@
           call tdbug(sr, prcode, soil, crop, residue)
         end if
 
-        mcur(sr) = mcur(sr) + 1
-        line = mtbl(mcur(sr))
-        read(line(2:len_trim(line)),* , err=901)                        &
-     &           sel_position, sel_pool,                                &
-     &           storef, leaff, stemf, rootstoref, rootfiberf
+!        mcur(sr) = mcur(sr) + 1
+!        line = mtbl(mcur(sr))
+!        read(line(2:len_trim(line)),* , err=901)                        &
+!     &           sel_position, sel_pool,                                &
+!     &           storef, leaff, stemf, rootstoref, rootfiberf
+        call getManVal(manFile%proc, 'selpos', sel_position)
+        call getManVal(manFile%proc, 'selpool', sel_pool)
+        call getManVal(manFile%proc, 'rstore', storef)
+        call getManVal(manFile%proc, 'rleaf', leaff)
+        call getManVal(manFile%proc, 'rstem', stemf)
+        call getManVal(manFile%proc, 'rrootstore', rootstoref)
+        call getManVal(manFile%proc, 'rrootfiber', rootfiberf)
 
         ! Set bioflg to look at all pools
         bioflg = 0
@@ -1994,7 +2191,7 @@
             call report_harvest( sr, bmrotation, mass_rem, mass_left, 0,&
      &           1, mandate, crop)
           ! attach a crop name to the harvest operation in stir report
-          call stir_crop(sr, crop%bname, 2)
+          ! call stir_crop(sr, crop%bname, 2)
           if( rpt_season_flg(sr) ) then
               ! not reported by the kill process in this
               call report_hydrobal( sr, bmrotation, manFile%mperod )
@@ -2026,12 +2223,24 @@
           call tdbug(sr, prcode, soil, crop, residue)
         end if
 
-        mcur(sr) = mcur(sr) + 1
-        line = mtbl(mcur(sr))
-        read(line(2:len_trim(line)),* , err=901)                        &
-     &      harv_report_flg, harv_calib_flg, harv_unit_flg,             &
-     &      mature_warn_flg, sel_position, sel_pool, bioflg,            &
-     &      storef, leaff, stemf, rootstoref, rootfiberf
+!        mcur(sr) = mcur(sr) + 1
+!        line = mtbl(mcur(sr))
+!        read(line(2:len_trim(line)),* , err=901)                        &
+!     &      harv_report_flg, harv_calib_flg, harv_unit_flg,             &
+!     &      mature_warn_flg, sel_position, sel_pool, bioflg,            &
+!     &      storef, leaff, stemf, rootstoref, rootfiberf
+        call getManVal(manFile%proc, 'harv_report_flg', harv_report_flg)
+        call getManVal(manFile%proc, 'harv_calib_flg', harv_calib_flg)
+        call getManVal(manFile%proc, 'harv_unit_flg', harv_unit_flg)
+        call getManVal(manFile%proc, 'mature_warn_flg', mature_warn_flg)
+        call getManVal(manFile%proc, 'selpos', sel_position)
+        call getManVal(manFile%proc, 'selpool', sel_pool)
+        call getManVal(manFile%proc, 'selagepool', bioflg)
+        call getManVal(manFile%proc, 'rstore', storef)
+        call getManVal(manFile%proc, 'rleaf', leaff)
+        call getManVal(manFile%proc, 'rstem', stemf)
+        call getManVal(manFile%proc, 'rrootstore', rootstoref)
+        call getManVal(manFile%proc, 'rrootfiber', rootfiberf)
 
         ! do process
         call remove( sel_position, sel_pool, bioflg, &
@@ -2072,7 +2281,7 @@
      &                         harv_unit_flg, harv_report_flg,          &
      &                         mandate, crop )
           ! attach a crop name to the harvest operation in stir report
-          call stir_crop(sr, crop%bname, 2)
+          ! call stir_crop(sr, crop%bname, 2)
           if( rpt_season_flg(sr) ) then
             ! not reported by the kill process in this
             call report_hydrobal( sr, bmrotation, manFile%mperod )
@@ -2112,35 +2321,57 @@
           call tdbug(sr, prcode, soil, crop, residue)
         end if
 
-        mcur(sr) = mcur(sr) + 1
-        line = mtbl(mcur(sr))
-        read(line(2:len_trim(line)),* , err=901)                        &
-     &    atdstm(sr), atzht(sr), atmstandstem(sr),                      &
-     &    atmflatstem(sr), trbc
+!        mcur(sr) = mcur(sr) + 1
+!        line = mtbl(mcur(sr))
+!        read(line(2:len_trim(line)),* , err=901)                        &
+!     &    atdstm(sr), atzht(sr), atmstandstem(sr),                      &
+!     &    atmflatstem(sr), trbc
+        call getManVal(manFile%proc, 'numst', atdstm(sr))
+        call getManVal(manFile%proc, 'rstandht', atzht(sr))
+        call getManVal(manFile%proc, 'rstandmass', atmstandstem(sr))
+        call getManVal(manFile%proc, 'rflatmass', atmflatstem(sr))
+        call getManVal(manFile%proc, 'rbc', trbc)
+
         ! get additional line of data
-        mcur(sr) = mcur(sr) + 1
-        line = mtbl(mcur(sr))
+!        mcur(sr) = mcur(sr) + 1
+!        line = mtbl(mcur(sr))
         ! read buried residue amounts
-        read(line(2:len_trim(line)), *, err=901)                        &
-     &    dmassres, zmassres, dmassrot, zmassrot
+!        read(line(2:len_trim(line)), *, err=901)                        &
+!     &    dmassres, zmassres, dmassrot, zmassrot
+        call getManVal(manFile%proc, 'rburiedmass', dmassres)
+        call getManVal(manFile%proc, 'rburieddepth', zmassres)
+        call getManVal(manFile%proc, 'rrootmass', dmassrot)
+        call getManVal(manFile%proc, 'rrootdepth', zmassrot)
+
         ! place buried residue in pools by layer
         call resinit(dmassrot, zmassrot, soil%nslay,                     &
      &               atmbgrootfiberz(1,sr), soil%aszlyt)
         call resinit(dmassres,zmassres,soil%nslay,                       &
      &               atmbgstemz(1,sr), soil%aszlyt)
         ! get additional line of data
-        mcur(sr) = mcur(sr) + 1
-        line = mtbl(mcur(sr))
+!        mcur(sr) = mcur(sr) + 1
+!        line = mtbl(mcur(sr))
         ! read decomposition parameters
-        read(line(2:len_trim(line)), *, err=901)                        &
-     &    tdkrate(1), tdkrate(2), tdkrate(3), tdkrate(4), tdkrate(5),   &
-     &    txstm, tddsthrsh, tcovfact
+!        read(line(2:len_trim(line)), *, err=901)                        &
+!     &    tdkrate(1), tdkrate(2), tdkrate(3), tdkrate(4), tdkrate(5),   &
+!     &    txstm, tddsthrsh, tcovfact
+        call getManVal(manFile%proc, 'standdk', tdkrate(1))
+        call getManVal(manFile%proc, 'surfdk', tdkrate(2))
+        call getManVal(manFile%proc, 'burieddk', tdkrate(3))
+        call getManVal(manFile%proc, 'rootdk', tdkrate(4))
+        call getManVal(manFile%proc, 'stemnodk', tdkrate(5))
+        call getManVal(manFile%proc, 'stemdia', txstm)
+        call getManVal(manFile%proc, 'thrddys', tddsthrsh)
+        call getManVal(manFile%proc, 'covfact', tcovfact)
+
         ! get additional line of data
-        mcur(sr) = mcur(sr) + 1
-        line = mtbl(mcur(sr))
+!        mcur(sr) = mcur(sr) + 1
+!        line = mtbl(mcur(sr))
         ! read parameters for residue suppression of evaporation
-        read(line(2:len_trim(line)), *, err=901)                        &
-     &    tresevapa, tresevapb
+!        read(line(2:len_trim(line)), *, err=901)                        &
+!     &    tresevapa, tresevapb
+        call getManVal(manFile%proc, 'resevapa', tresevapa)
+        call getManVal(manFile%proc, 'resevapb', tresevapb)
 
         !Set to 0
         !above ground
@@ -2224,25 +2455,37 @@
         end if
 
         ! get additional line of data
-        mcur(sr) = mcur(sr) + 1
-        line = mtbl(mcur(sr))
-        read(line(2:len_trim(line)),* , err=901)                        &
-     &    atdstm(sr), atzht(sr), atmstandstem(sr),                      &
-     &    atmflatstem(sr), trbc
+!        mcur(sr) = mcur(sr) + 1
+!        line = mtbl(mcur(sr))
+!        read(line(2:len_trim(line)),* , err=901)                        &
+!     &    atdstm(sr), atzht(sr), atmstandstem(sr),                      &
+!     &    atmflatstem(sr), trbc
+        call getManVal(manFile%proc, 'M_numst', atdstm(sr))
+        call getManVal(manFile%proc, 'M_rstandht', atzht(sr))
+        call getManVal(manFile%proc, 'M_rstandmass', atmstandstem(sr))
+        call getManVal(manFile%proc, 'M_rflatmass', atmflatstem(sr))
+        call getManVal(manFile%proc, 'rbc', trbc)
 
         ! get additional line of data
-        mcur(sr) = mcur(sr) + 1
-        line = mtbl(mcur(sr))
+!        mcur(sr) = mcur(sr) + 1
+!        line = mtbl(mcur(sr))
         ! read buried residue amounts
-        read(line(2:len_trim(line)), *, err=901)                        &
-     &    dmassres, zmassres, dmassrot, zmassrot
+!        read(line(2:len_trim(line)), *, err=901)                        &
+!     &    dmassres, zmassres, dmassrot, zmassrot
+        call getManVal(manFile%proc, 'M_rburiedmass', dmassres)
+        call getManVal(manFile%proc, 'M_rburieddepth', zmassres)
+        call getManVal(manFile%proc, 'M_rrootmass', dmassrot)
+        call getManVal(manFile%proc, 'M_rrootdepth', zmassrot)
 
         ! get additional line of data
-        mcur(sr) = mcur(sr) + 1
-        line = mtbl(mcur(sr))
+!        mcur(sr) = mcur(sr) + 1
+!        line = mtbl(mcur(sr))
         ! read total manure mass amount and buried fraction
-        read(line(2:len_trim(line)), *, err=901)                        &
-     &    manure_total_mass, manure_buried_fraction
+!        read(line(2:len_trim(line)), *, err=901)                        &
+!     &    manure_total_mass, manure_buried_fraction
+        call getManVal(manFile%proc, 'manure_total_mass', manure_total_mass)
+        call getManVal(manFile%proc, 'manure_buried_ratio', manure_buried_fraction)
+
        ! Now we add the "flat and buried" manure to the generic residue
        ! flat and buried quantities
         atmflatstem(sr) = atmflatstem(sr) +                             &      
@@ -2257,19 +2500,29 @@
      &               atmbgstemz(1,sr), soil%aszlyt)
 
         ! get additional line of data
-        mcur(sr) = mcur(sr) + 1
-        line = mtbl(mcur(sr))
+!        mcur(sr) = mcur(sr) + 1
+!        line = mtbl(mcur(sr))
         ! read decomposition parameters
-        read(line(2:len_trim(line)), *, err=901)                        &
-     &    tdkrate(1), tdkrate(2), tdkrate(3), tdkrate(4), tdkrate(5),   &
-     &    txstm, tddsthrsh, tcovfact
+!        read(line(2:len_trim(line)), *, err=901)                        &
+!     &    tdkrate(1), tdkrate(2), tdkrate(3), tdkrate(4), tdkrate(5),   &
+!     &    txstm, tddsthrsh, tcovfact
+        call getManVal(manFile%proc, 'standdk', tdkrate(1))
+        call getManVal(manFile%proc, 'surfdk', tdkrate(2))
+        call getManVal(manFile%proc, 'burieddk', tdkrate(3))
+        call getManVal(manFile%proc, 'rootdk', tdkrate(4))
+        call getManVal(manFile%proc, 'stemnodk', tdkrate(5))
+        call getManVal(manFile%proc, 'stemdia', txstm)
+        call getManVal(manFile%proc, 'thrddys', tddsthrsh)
+        call getManVal(manFile%proc, 'covfact', tcovfact)
 
         ! get additional line of data
-        mcur(sr) = mcur(sr) + 1
-        line = mtbl(mcur(sr))
+!        mcur(sr) = mcur(sr) + 1
+!        line = mtbl(mcur(sr))
         ! read parameters for residue suppression of evaporation
-        read(line(2:len_trim(line)), *, err=901)                        &
-     &    tresevapa, tresevapb
+!        read(line(2:len_trim(line)), *, err=901)                        &
+!     &    tresevapa, tresevapb
+        call getManVal(manFile%proc, 'resevapa', tresevapa)
+        call getManVal(manFile%proc, 'resevapb', tresevapb)
 
         !Set to 0
         !above ground
@@ -2337,9 +2590,11 @@
           call tdbug(sr, prcode, soil, crop, residue)
         end if
 
-        mcur(sr) = mcur(sr) + 1
-        line = mtbl(mcur(sr))
-        read(line(2:len_trim(line)),* , err=901) roughflg, irrig
+!        mcur(sr) = mcur(sr) + 1
+!        line = mtbl(mcur(sr))
+!        read(line(2:len_trim(line)),* , err=901) roughflg, irrig
+        call getManVal(manFile%proc, 'irrtype', roughflg)
+        call getManVal(manFile%proc, 'irrdepth', irrig)
 
 !     do process
         ! replaced am0irr (1 - sprinkler, 2 furrow) with ahlocirr
@@ -2370,11 +2625,20 @@
           call tdbug(sr, prcode, soil, crop, residue)
         end if
 
-        mcur(sr) = mcur(sr) + 1
-        line = mtbl(mcur(sr))
-        read(line(2:len_trim(line)),* , err=901)                        &
-     &    am0monirr(sr), ahzdmaxirr(sr), ahratirr(sr), ahdurirr(sr),    &
-     &    ahlocirr(sr), ahminirr(sr), ahmadirr(sr), ahmintirr(sr)
+!        mcur(sr) = mcur(sr) + 1
+!        line = mtbl(mcur(sr))
+!        read(line(2:len_trim(line)),* , err=901)                        &
+!     &    am0monirr(sr), ahzdmaxirr(sr), ahratirr(sr), ahdurirr(sr),    &
+!     &    ahlocirr(sr), ahminirr(sr), ahmadirr(sr), ahmintirr(sr)
+        call getManVal(manFile%proc, 'irrmonflag', am0monirr(sr))
+        call getManVal(manFile%proc, 'irrmaxapp', ahzdmaxirr(sr))
+        call getManVal(manFile%proc, 'irrrate', ahratirr(sr))
+        call getManVal(manFile%proc, 'irrduration', ahdurirr(sr))
+        call getManVal(manFile%proc, 'irrapploc', ahlocirr(sr))
+        call getManVal(manFile%proc, 'irrminapp', ahminirr(sr))
+        call getManVal(manFile%proc, 'irrmad', ahmadirr(sr))
+        call getManVal(manFile%proc, 'irrminint', ahmintirr(sr))
+
 !     do process
         ! set next irrigation day to zero so irrigations will trigger
         ahndayirr(sr) = 0
@@ -2396,10 +2660,15 @@
           call tdbug(sr, prcode, soil, crop, residue)
         end if
 
-        mcur(sr) = mcur(sr) + 1
-        line = mtbl(mcur(sr))
-        read(line(2:len_trim(line)),* , err=901)                        &
-     &    irrig, ahratirr(sr), ahdurirr(sr), ahlocirr(sr)
+!        mcur(sr) = mcur(sr) + 1
+!        line = mtbl(mcur(sr))
+!        read(line(2:len_trim(line)),* , err=901)                        &
+!     &    irrig, ahratirr(sr), ahdurirr(sr), ahlocirr(sr)
+        call getManVal(manFile%proc, 'irrdepth', irrig)
+        call getManVal(manFile%proc, 'irrrate', ahratirr(sr))
+        call getManVal(manFile%proc, 'irrduration', ahdurirr(sr))
+        call getManVal(manFile%proc, 'irrapploc', ahlocirr(sr))
+
 !     do process
         ! add this irrigation event to any previous event on this same day
         h1et%zirr = h1et%zirr + irrig
@@ -2472,9 +2741,15 @@
        write(0,*) ""
 
  !     read in asd variables here
-       mcur(sr) = mcur(sr) + 1
-        line = mtbl(mcur(sr))
-        read(line(2:len_trim(line)),* , err=901) asddepth, gmdx, gsdx, mnot, minf
+!       mcur(sr) = mcur(sr) + 1
+!        line = mtbl(mcur(sr))
+!        read(line(2:len_trim(line)),* , err=901) asddepth, gmdx, gsdx, mnot, minf
+        call getManVal(manFile%proc, 'asddepth', asddepth)
+        call getManVal(manFile%proc, 'gmdx', gmdx)
+        call getManVal(manFile%proc, 'gsdx', gsdx)
+        call getManVal(manFile%proc, 'mnot', mnot)
+        call getManVal(manFile%proc, 'minf', minf)
+
        !New parameters for set_asd initialization process
        write(UNIT=0,FMT="(5(f10.4))") asddepth, gmdx, gsdx, mnot, minf
        write(0,*)
@@ -2682,9 +2957,12 @@
        write(0,*) ""
 
  !     read in wc variables here
-       mcur(sr) = mcur(sr) + 1
-        line = mtbl(mcur(sr))
-        read(line(2:len_trim(line)),* , err=901) wcdepth, wc
+!       mcur(sr) = mcur(sr) + 1
+!        line = mtbl(mcur(sr))
+!        read(line(2:len_trim(line)),* , err=901) wcdepth, wc
+        call getManVal(manFile%proc, 'wcdepth', wcdepth)
+        call getManVal(manFile%proc, 'wc', wc)
+
        !New parameters for set_water content initialization process
        write(UNIT=0,FMT="(5(f10.4))") wcdepth, wc
        write(0,*)
@@ -2772,8 +3050,8 @@
 
 ! Error stops
 
-  901 write(0,*) 'Error reading parameter ', line
-      call exit (1)
+!  901 write(0,*) 'Error reading parameter ', line
+!      call exit (1)
   902 write(0,*) 'Invalid process ', prname, ' ', prcode
       call exit (1)
       end
