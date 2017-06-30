@@ -2220,338 +2220,294 @@
           call tdbug(sr, prcode, soil, crop, residue)
         end if
 
- !***************************************************************************************************************
+      case (91)  ! initialize (set) soil layer asd
+        ! pre-process stuff
+        if (manFile%am0tdb .eq. 1) then
+          write (luotdb(sr),*)
+          write (luotdb(sr),*) '//Before initialize soil layer asd conditions//'
+          call tdbug(sr, prcode, soil, crop, residue)
+        end if
 
-      case (91)
-!-----START initialize (set) soil layer asd (process code 91)
-!     pre-process stuff
-       if (manFile%am0tdb .eq. 1) then
-         write (luotdb(sr),*)
-         write (luotdb(sr),*) '//Before initialize soil layer asd conditions//'
-         call tdbug(sr, prcode, soil, crop, residue)
-       end if
+        write(0,*) 'prior to set_asd() call: ', 'msieve: ', msieve, 'nsieve: ', nsieve
 
-       write(0,*) 'prior to set_asd() call: ', 'msieve: ', msieve, 'nsieve: ', nsieve
+        if (manFile%am0tdb .eq. 2) then  !Debug info printouts
+          ! print out the sdia() array
+          write(UNIT=0, FMT="('           ')",ADVANCE="NO")
+          do j=1, nsieve
+            write(UNIT=0, FMT="(27(i9))",ADVANCE="NO") j
+            if (j == nsieve) write(0,*) ''
+          end do
+          write(UNIT=0, FMT="('sdia(',i2,':',i2,')')",ADVANCE="NO") 1,nsieve
+          do j=1, nsieve
+            write(UNIT=0, FMT="(27(f9.4))",ADVANCE="NO") sdia(j)
+            if (j == nsieve) write(0,*) ""
+          end do
+          write(0,*) ""
+          ! print out the mdia() array
+          write(UNIT=0, FMT="('           ')",ADVANCE="NO")
+          do j=1, msieve
+            write(UNIT=0, FMT="(27(i9))",ADVANCE="NO") j
+            if (j == msieve) write(0,*) ''
+          end do
+          write(UNIT=0, FMT="('mdia(',i2,':',i2,')')",ADVANCE="NO") 1,msieve
+          do j=1, msieve
+            write(UNIT=0, FMT="(27(f9.4))",ADVANCE="NO") mdia(j)
+            if (j == msieve) write(0,*) ""
+          end do
+          write(0,*) ""
+        end if
 
-       if (manFile%am0tdb .eq. 2) then  !Debug info printouts
-         ! print out the sdia() array
-         write(UNIT=0, FMT="('           ')",ADVANCE="NO")
-         do j=1, nsieve
-           write(UNIT=0, FMT="(27(i9))",ADVANCE="NO") j
-           if (j == nsieve) write(0,*) ''
-         end do
-         write(UNIT=0, FMT="('sdia(',i2,':',i2,')')",ADVANCE="NO") 1,nsieve
-         do j=1, nsieve
-           write(UNIT=0, FMT="(27(f9.4))",ADVANCE="NO") sdia(j)
-           if (j == nsieve) write(0,*) ""
-         end do
-         write(0,*) ""
-         ! print out the mdia() array
-         write(UNIT=0, FMT="('           ')",ADVANCE="NO")
-         do j=1, msieve
-           write(UNIT=0, FMT="(27(i9))",ADVANCE="NO") j
-           if (j == msieve) write(0,*) ''
-         end do
-         write(UNIT=0, FMT="('mdia(',i2,':',i2,')')",ADVANCE="NO") 1,msieve
-         do j=1, msieve
-           write(UNIT=0, FMT="(27(f9.4))",ADVANCE="NO") mdia(j)
-           if (j == msieve) write(0,*) ""
-         end do
-         write(0,*) ""
-       end if
-
- !     read in asd variables here
-!       mcur(sr) = mcur(sr) + 1
-!        line = mtbl(mcur(sr))
-!        read(line(2:len_trim(line)),* , err=901) asddepth, gmdx, gsdx, mnot, minf
         call getManVal(manFile%proc, 'asddepth', asddepth)
         call getManVal(manFile%proc, 'gmdx', gmdx)
         call getManVal(manFile%proc, 'gsdx', gsdx)
         call getManVal(manFile%proc, 'mnot', mnot)
         call getManVal(manFile%proc, 'minf', minf)
 
-       !New parameters for set_asd initialization process
-       write(UNIT=0,FMT="(5(f10.4))") asddepth, gmdx, gsdx, mnot, minf
-       write(0,*)
+        ! New parameters for set_asd initialization process
+        write(UNIT=0,FMT="(5(f10.4))") asddepth, gmdx, gsdx, mnot, minf
+        write(0,*)
 
-       ! Obtain the number of layers the ASD values will be set to,
-       ! based upon the specified depth and the individual layer thicknesses
-       asdlayer = tillay(asddepth, soil%aszlyt, soil%nslay)
+        ! Obtain the number of layers the ASD values will be set to,
+        ! based upon the specified depth and the individual layer thicknesses
+        asdlayer = tillay(asddepth, soil%aszlyt, soil%nslay)
 
-!+++++++++++++++++++++++++++++++++++++++++++++++
-       if (BTEST(manFile%am0tfl,0) .and. manFile%asdhflag .eq. 0) then
-         write(luoasd(sr),"(3(A5))",ADVANCE="NO") '# day', 'mon', 'year'
-         write(luoasd(sr),"(6(A10))", ADVANCE="YES") 'layer(s)', 'depth(mm)', 'GMDx', 'GSDx', 'm_not', 'm_inf'
-         manFile%asdhflag = 1
-       end if
-       if (BTEST(manFile%am0tfl,0)) then
-         call get_simdate(cd, cm, cy)
-!         write(luoasd(sr),"(3(i5))",ADVANCE='NO') lastoper(sr)%day, lastoper(sr)%mon, lastoper(sr)%yr
-         write(luoasd(sr),"(3(i5))",ADVANCE='NO') cd, cm, cy
-         write(luoasd(sr),"(i10,5(f10.4),A)",ADVANCE='YES') asdlayer, asddepth,  &
-           gmdx, gsdx, mnot, minf,' New initialization values'
+        if (BTEST(manFile%am0tfl,0) .and. manFile%asdhflag .eq. 0) then
+          write(luoasd(sr),"(3(A5))",ADVANCE="NO") '# day', 'mon', 'year'
+          write(luoasd(sr),"(6(A10))", ADVANCE="YES") 'layer(s)', 'depth(mm)', 'GMDx', 'GSDx', 'm_not', 'm_inf'
+          manFile%asdhflag = 1
+        end if
+        if (BTEST(manFile%am0tfl,0)) then
+          call get_simdate(cd, cm, cy)
+          ! write(luoasd(sr),"(3(i5))",ADVANCE='NO') lastoper(sr)%day, lastoper(sr)%mon, lastoper(sr)%yr
+          write(luoasd(sr),"(3(i5))",ADVANCE='NO') cd, cm, cy
+          write(luoasd(sr),"(i10,5(f10.4),A)",ADVANCE='YES') asdlayer, asddepth,  &
+            gmdx, gsdx, mnot, minf,' New initialization values'
 
-         asd_tdepth = 0.0
-         do i=1, asdlayer
+          asd_tdepth = 0.0
+          do i=1, asdlayer
             asd_tdepth = asd_tdepth + soil%aszlyt(i)
-         end do
-         write(luoasd(sr),"(3(i5))",ADVANCE='NO') cd, cm, cy
-         write(luoasd(sr),"(i10,5(f10.4),A)",ADVANCE="YES") asdlayer, asd_tdepth, &
+          end do
+          write(luoasd(sr),"(3(i5))",ADVANCE='NO') cd, cm, cy
+          write(luoasd(sr),"(i10,5(f10.4),A)",ADVANCE="YES") asdlayer, asd_tdepth, &
             soil%aslagm(1), soil%as0ags(1), soil%aslagn(1), soil%aslagx(1), ' Original values'
-       end if
-!+++++++++++++++++++++++++++++++++++++++++++++++
-       if (manFile%am0tdb .eq. 2) then  !Debug info printouts
-         write (UNIT=0,FMT="(A)",ADVANCE="NO") '//Before set_asd process// '
-         write(0,*) 'No. of soil layers to modify/total and depth are: ', asdlayer, soil%nslay, asddepth
-         write(UNIT=0,FMT="(A3,5(A10))") 'lay', 'depth', 'GMDx', 'GSDx', 'm_not', 'm_inf'
-         do i=1, asdlayer
-           write (UNIT=0,FMT="(i3,5(f10.4))",ADVANCE="YES")                                        &
-      &        i, soil%aszlyt(i), soil%aslagm(i), soil%as0ags(i), soil%aslagn(i), soil%aslagx(i)
-         end do
-         write(0,*) "layers below asdlayer"
-         do i=asdlayer+1, soil%nslay
-           write (UNIT=0,FMT="(i3,5(f10.4))",ADVANCE="YES")                                        &
-      &        i, soil%aszlyt(i), soil%aslagm(i), soil%as0ags(i), soil%aslagn(i), soil%aslagx(i)
-         end do
+        end if
 
-       !Convert ASD from modified log-normal to sieve classes
-         call asd2m(soil%aslagn, soil%aslagx, soil%aslagm, soil%as0ags, soil%nslay, massf)
-
-         write(0,*) 'after asd2m() call: ', 'msieve: ', msieve, 'nsieve: ', nsieve
-
-         do i=1, asdlayer
-           write(UNIT=0, FMT="('massf(',A,',',i2,')')",ADVANCE="NO") 'x', i
-           do j=1, msieve+1
-            if (j < msieve+1) then
-              write(UNIT=0,FMT="(f9.4)",ADVANCE="NO") massf(j,i)
-            else
-              write(UNIT=0,FMT="(A)",ADVANCE="YES") ""
-            endif
+        if (manFile%am0tdb .eq. 2) then  !Debug info printouts
+          write (UNIT=0,FMT="(A)",ADVANCE="NO") '//Before set_asd process// '
+          write(0,*) 'No. of soil layers to modify/total and depth are: ', asdlayer, soil%nslay, asddepth
+          write(UNIT=0,FMT="(A3,5(A10))") 'lay', 'depth', 'GMDx', 'GSDx', 'm_not', 'm_inf'
+          do i=1, asdlayer
+            write (UNIT=0,FMT="(i3,5(f10.4))",ADVANCE="YES")                                        &
+               i, soil%aszlyt(i), soil%aslagm(i), soil%as0ags(i), soil%aslagn(i), soil%aslagx(i)
           end do
-         end do
-         write(0,*) "layers below asdlayer"
-         do i=asdlayer+1, soil%nslay
-           write(UNIT=0, FMT="('massf(',A,',',i2,')')",ADVANCE="NO") 'x', i
-           do j=1, msieve+1
-            if (j < msieve+1) then
-              write(UNIT=0,FMT="(f9.4)",ADVANCE="NO") massf(j,i)
-            else
-              write(UNIT=0,FMT="(A)",ADVANCE="YES") ""
-            endif
+          write(0,*) "layers below asdlayer"
+          do i=asdlayer+1, soil%nslay
+            write (UNIT=0,FMT="(i3,5(f10.4))",ADVANCE="YES")                                        &
+               i, soil%aszlyt(i), soil%aslagm(i), soil%as0ags(i), soil%aslagn(i), soil%aslagx(i)
           end do
-         end do
-       end if
-!+++++++++++++++++++++++++++++++++++++++++++++++
 
-!      do process
-       call set_asd(gmdx, gsdx, mnot, minf, asdlayer, soil)
+          ! Convert ASD from modified log-normal to sieve classes
+          call asd2m(soil%aslagn, soil%aslagx, soil%aslagm, soil%as0ags, soil%nslay, massf)
 
+          write(0,*) 'after asd2m() call: ', 'msieve: ', msieve, 'nsieve: ', nsieve
 
-       write (UNIT=0,FMT="(A)",ADVANCE="NO") '//After set_asd process// '
-       write(0,*) 'no. of soil layers to modify/total and depth are: ', asdlayer, soil%nslay, asddepth
-       write(UNIT=0,FMT="(A3,5(A10))") 'lay', 'depth', 'GMDx', 'GSDx', 'm_not', 'm_inf'
-       do i=1, asdlayer
-         write (UNIT=0,FMT="(i3,5(f10.4))",ADVANCE="YES")                                        &
-      &      i, soil%aszlyt(i), soil%aslagm(i), soil%as0ags(i), soil%aslagn(i), soil%aslagx(i)
-       end do
-       write(0,*) "layers below asdlayer"
-       do i=asdlayer+1, soil%nslay
-         write (UNIT=0,FMT="(i3,5(f10.4))",ADVANCE="YES")                                        &
-      &      i, soil%aszlyt(i), soil%aslagm(i), soil%as0ags(i), soil%aslagn(i), soil%aslagx(i)
-       end do
-
-!+++++++++++++++++++++++++++++++++++++++++++++++
-       if (manFile%am0tdb .eq. 2) then  !Debug info printouts
-         ! Convert ASD from modified log-normal to sieve classes
-         call asd2m(soil%aslagn, soil%aslagx, soil%aslagm, soil%as0ags, soil%nslay, massf)
-
-         do i=1, asdlayer
-           write(UNIT=0, FMT="('massf(',A,',',i2,')')",ADVANCE="NO") 'x', i
-           do j=1, msieve+1
-            if (j < msieve+1) then
-              write(UNIT=0,FMT="(f9.4)",ADVANCE="NO") massf(j,i)
-            else
-              write(UNIT=0,FMT="(A)",ADVANCE="YES") ""
-            endif
+          do i=1, asdlayer
+            write(UNIT=0, FMT="('massf(',A,',',i2,')')",ADVANCE="NO") 'x', i
+            do j=1, msieve+1
+              if (j < msieve+1) then
+                write(UNIT=0,FMT="(f9.4)",ADVANCE="NO") massf(j,i)
+              else
+                write(UNIT=0,FMT="(A)",ADVANCE="YES") ""
+              endif
+            end do
           end do
-         end do
-
-         ! Convert ASD from modified log-normal to sieve classes
-         call asd2m(soil%aslagn, soil%aslagx, soil%aslagm, soil%as0ags, soil%nslay, massf)
-
-         write(0,*) 'after 2nd asd2m() call: ', 'msieve: ', msieve, 'nsieve: ', nsieve
-
-         do i=1, asdlayer
-           write(UNIT=0, FMT="('massf(',A,',',i2,')')",ADVANCE="NO") 'x', i
-           do j=1, msieve+1
-            if (j < msieve+1) then
-              write(UNIT=0,FMT="(f9.4)",ADVANCE="NO") massf(j,i)
-            else
-              write(UNIT=0,FMT="(A)",ADVANCE="YES") ""
-            endif
+          write(0,*) "layers below asdlayer"
+          do i=asdlayer+1, soil%nslay
+            write(UNIT=0, FMT="('massf(',A,',',i2,')')",ADVANCE="NO") 'x', i
+            do j=1, msieve+1
+              if (j < msieve+1) then
+                write(UNIT=0,FMT="(f9.4)",ADVANCE="NO") massf(j,i)
+              else
+                write(UNIT=0,FMT="(A)",ADVANCE="YES") ""
+              endif
+            end do
           end do
-         end do
-         write(0,*) "layers below asdlayer"
-         do i=asdlayer+1, soil%nslay
-           write(UNIT=0, FMT="('massf(',A,',',i2,')')",ADVANCE="NO") 'x', i
-           do j=1, msieve+1
-            if (j < msieve+1) then
-              write(UNIT=0,FMT="(f9.4)",ADVANCE="NO") massf(j,i)
-            else
-             write(UNIT=0,FMT="(A)",ADVANCE="YES") ""
-           endif
-          end do
-         end do
+        end if
 
-! print out the massf(x,y) values
-!        write(UNIT=0, FMT="('           ')",ADVANCE="NO")
-!        do j=1, msieve+1
-!          write(UNIT=0, FMT="(27(i9))",ADVANCE="NO") j
-!          if (j == msieve+1) write(0,*) ''
-!        end do
-!        do i=1, tlayer
-!          write(UNIT=0, FMT="('massf(',A,',',i2,')')",ADVANCE="NO") 'x', i
-!          do j=1, msieve+1
-!           write(UNIT=0,FMT="(f9.4)",ADVANCE="NO") massf(j,i)
-!           if (j == msieve+1) write(0,*) ""
-!          end do
-!        end do
+        ! do process
+        call set_asd(gmdx, gsdx, mnot, minf, asdlayer, soil)
 
-         ! Convert ASD back from sieve classes to modified log-normal
-         call m2asd(massf, soil%nslay, soil%aslagn, soil%aslagx, soil%aslagm, soil%as0ags)
-
-         write(0,*) 'after m2asd: ','no. of modified soil layers/total are: ', asdlayer, soil%nslay
-         do i=1, asdlayer
-           write (UNIT=0,FMT="(i10,5(f10.4))",ADVANCE="YES")                                       &
+        write (UNIT=0,FMT="(A)",ADVANCE="NO") '//After set_asd process// '
+        write(0,*) 'no. of soil layers to modify/total and depth are: ', asdlayer, soil%nslay, asddepth
+        write(UNIT=0,FMT="(A3,5(A10))") 'lay', 'depth', 'GMDx', 'GSDx', 'm_not', 'm_inf'
+        do i=1, asdlayer
+          write (UNIT=0,FMT="(i3,5(f10.4))",ADVANCE="YES")                                        &
               i, soil%aszlyt(i), soil%aslagm(i), soil%as0ags(i), soil%aslagn(i), soil%aslagx(i)
-         end do
-         write(0,*) "layers below asdlayer"
-         do i=asdlayer+1, soil%nslay
-           write (UNIT=0,FMT="(i3,5(f10.4))",ADVANCE="YES")                                        &
+        end do
+        write(0,*) "layers below asdlayer"
+        do i=asdlayer+1, soil%nslay
+          write (UNIT=0,FMT="(i3,5(f10.4))",ADVANCE="YES")                                        &
               i, soil%aszlyt(i), soil%aslagm(i), soil%as0ags(i), soil%aslagn(i), soil%aslagx(i)
-         end do
-       end if
-!+++++++++++++++++++++++++++++++++++++++++++++++
+        end do
 
-!     post-process stuff
+        if (manFile%am0tdb .eq. 2) then  !Debug info printouts
+          ! Convert ASD from modified log-normal to sieve classes
+          call asd2m(soil%aslagn, soil%aslagx, soil%aslagm, soil%as0ags, soil%nslay, massf)
+
+          do i=1, asdlayer
+            write(UNIT=0, FMT="('massf(',A,',',i2,')')",ADVANCE="NO") 'x', i
+            do j=1, msieve+1
+              if (j < msieve+1) then
+                write(UNIT=0,FMT="(f9.4)",ADVANCE="NO") massf(j,i)
+              else
+                write(UNIT=0,FMT="(A)",ADVANCE="YES") ""
+              endif
+            end do
+          end do
+
+          ! Convert ASD from modified log-normal to sieve classes
+          call asd2m(soil%aslagn, soil%aslagx, soil%aslagm, soil%as0ags, soil%nslay, massf)
+
+          write(0,*) 'after 2nd asd2m() call: ', 'msieve: ', msieve, 'nsieve: ', nsieve
+
+          do i=1, asdlayer
+            write(UNIT=0, FMT="('massf(',A,',',i2,')')",ADVANCE="NO") 'x', i
+            do j=1, msieve+1
+              if (j < msieve+1) then
+                write(UNIT=0,FMT="(f9.4)",ADVANCE="NO") massf(j,i)
+              else
+                write(UNIT=0,FMT="(A)",ADVANCE="YES") ""
+              endif
+            end do
+          end do
+          write(0,*) "layers below asdlayer"
+          do i=asdlayer+1, soil%nslay
+            write(UNIT=0, FMT="('massf(',A,',',i2,')')",ADVANCE="NO") 'x', i
+            do j=1, msieve+1
+              if (j < msieve+1) then
+                write(UNIT=0,FMT="(f9.4)",ADVANCE="NO") massf(j,i)
+              else
+                write(UNIT=0,FMT="(A)",ADVANCE="YES") ""
+              endif
+            end do
+          end do
+
+          ! Convert ASD back from sieve classes to modified log-normal
+          call m2asd(massf, soil%nslay, soil%aslagn, soil%aslagx, soil%aslagm, soil%as0ags)
+
+          write(0,*) 'after m2asd: ','no. of modified soil layers/total are: ', asdlayer, soil%nslay
+          do i=1, asdlayer
+            write (UNIT=0,FMT="(i10,5(f10.4))",ADVANCE="YES")                                       &
+              i, soil%aszlyt(i), soil%aslagm(i), soil%as0ags(i), soil%aslagn(i), soil%aslagx(i)
+          end do
+          write(0,*) "layers below asdlayer"
+          do i=asdlayer+1, soil%nslay
+            write (UNIT=0,FMT="(i3,5(f10.4))",ADVANCE="YES")                                        &
+              i, soil%aszlyt(i), soil%aslagm(i), soil%as0ags(i), soil%aslagn(i), soil%aslagx(i)
+          end do
+        end if
+
+        ! post-process stuff
         if (manFile%am0tdb .eq. 1) then
           write (luotdb(sr),*) '//After initialize soil layer asd conditions//'
           call tdbug(sr, prcode, soil, crop, residue)
         end if
 
         if (BTEST(manFile%am0tfl,0)) then
-         write(luoasd(sr),"(3(i5))",ADVANCE='NO') cd, cm, cy
-         write(luoasd(sr),"(i10,5(f10.4),A)",ADVANCE="YES") 1, soil%aszlyt(1), &
-            soil%aslagm(1), soil%as0ags(1), soil%aslagn(1), soil%aslagx(1),   &
-            ' New values - After initialized soil layer asd conditions'
-!         write(luoasd(sr),"(i10,4(i5))",ADVANCE="YES") get_simdate_jday(), cd, cm, cy, get_simdate_doy()
+          write(luoasd(sr),"(3(i5))",ADVANCE='NO') cd, cm, cy
+          write(luoasd(sr),"(i10,5(f10.4),A)",ADVANCE="YES") 1, soil%aszlyt(1), &
+             soil%aslagm(1), soil%as0ags(1), soil%aslagn(1), soil%aslagx(1),   &
+             ' New values - After initialized soil layer asd conditions'
+          ! write(luoasd(sr),"(i10,4(i5))",ADVANCE="YES") get_simdate_jday(), cd, cm, cy, get_simdate_doy()
         end if
 
-!-----END terminate initialize (set) soil layer asd process (process code 91)
+      case (92)  ! initialize (set) soil layer water content value
+        ! pre-process stuff
+        if (manFile%am0tdb .eq. 1) then
+          write (luotdb(sr),*)
+          write (luotdb(sr),*) '//Before initialize soil layer water content conditions//'
+          call tdbug(sr, prcode, soil, crop, residue)
+        end if
 
-!***************************************************************************************************************
+        write(0,*) 'prior to set_wc() call: ', ''
+        write(0,*) ""
 
-      case (92)
-!-----START initialize (set) soil layer water content value (process code 92)
-!     pre-process stuff
-       if (manFile%am0tdb .eq. 1) then
-         write (luotdb(sr),*)
-         write (luotdb(sr),*) '//Before initialize soil layer water content conditions//'
-         call tdbug(sr, prcode, soil, crop, residue)
-       end if
-
-       write(0,*) 'prior to set_wc() call: ', ''
-       write(0,*) ""
-
- !     read in wc variables here
-!       mcur(sr) = mcur(sr) + 1
-!        line = mtbl(mcur(sr))
-!        read(line(2:len_trim(line)),* , err=901) wcdepth, wc
         call getManVal(manFile%proc, 'wcdepth', wcdepth)
         call getManVal(manFile%proc, 'wc', wc)
 
-       !New parameters for set_water content initialization process
-       write(UNIT=0,FMT="(5(f10.4))") wcdepth, wc
-       write(0,*)
+        ! New parameters for set_water content initialization process
+        write(UNIT=0,FMT="(5(f10.4))") wcdepth, wc
+        write(0,*)
 
-       ! Obtain the number of layers the water content values will be set to,
-       ! based upon the specified depth and the individual layer thicknesses
-       wclayer = tillay(wcdepth, soil%aszlyt, soil%nslay)
+        ! Obtain the number of layers the water content values will be set to,
+        ! based upon the specified depth and the individual layer thicknesses
+        wclayer = tillay(wcdepth, soil%aszlyt, soil%nslay)
 
-!+++++++++++++++++++++++++++++++++++++++++++++++
-       if (BTEST(manFile%am0tfl,1) .and. manFile%wchflag .eq. 0) then
-         write(luowc(sr),"(3(A5))",ADVANCE="NO") '# day', 'mon', 'year'
-         write(luowc(sr),"(3(A10))", ADVANCE="YES") 'layer(s)', 'depth(mm)', 'wc (Mg/Mg)'
-         manFile%wchflag = 1
-       end if
-       if (BTEST(manFile%am0tfl,1)) then
-         call get_simdate(cd, cm, cy)
-!         write(luowc(sr),"(3(i5))",ADVANCE='NO') lastoper(sr)%day, lastoper(sr)%mon, lastoper(sr)%yr
-         write(luowc(sr),"(3(i5))",ADVANCE='NO') cd, cm, cy
-         write(luowc(sr),"(i10,2(f10.4),A)",ADVANCE='YES') wclayer, wcdepth, wc, &
-           ' New initialization values'
+        if (BTEST(manFile%am0tfl,1) .and. manFile%wchflag .eq. 0) then
+          write(luowc(sr),"(3(A5))",ADVANCE="NO") '# day', 'mon', 'year'
+          write(luowc(sr),"(3(A10))", ADVANCE="YES") 'layer(s)', 'depth(mm)', 'wc (Mg/Mg)'
+          manFile%wchflag = 1
+        end if
+        if (BTEST(manFile%am0tfl,1)) then
+          call get_simdate(cd, cm, cy)
+          ! write(luowc(sr),"(3(i5))",ADVANCE='NO') lastoper(sr)%day, lastoper(sr)%mon, lastoper(sr)%yr
+          write(luowc(sr),"(3(i5))",ADVANCE='NO') cd, cm, cy
+          write(luowc(sr),"(i10,2(f10.4),A)",ADVANCE='YES') wclayer, wcdepth, wc, &
+            ' New initialization values'
 
-         wc_tdepth = 0.0
-         do i=1, wclayer
+          wc_tdepth = 0.0
+          do i=1, wclayer
             wc_tdepth = wc_tdepth + soil%aszlyt(i)
-         end do
-         write(luowc(sr),"(3(i5))",ADVANCE='NO') cd, cm, cy
-         write(luowc(sr),"(i10,1(f10.4),A)",ADVANCE="YES") wclayer, wc_tdepth, wc, &
-            ' Original values'
-       end if
-!+++++++++++++++++++++++++++++++++++++++++++++++
-       if (manFile%am0tdb .eq. 2) then  !Debug info printouts
-         write (UNIT=0,FMT="(A)",ADVANCE="NO") '//Before set_asd process// '
-         write(0,*) 'No. of soil layers to modify/total and depth are: ', wclayer, soil%nslay, wcdepth
-         write(UNIT=0,FMT="(A3,1(A10))") 'lay', 'depth'
-         do i=1, asdlayer
-           write (UNIT=0,FMT="(i3,2(f10.4))",ADVANCE="YES")                                        &
-      &        i, soil%aszlyt(i), soil%ahrwc(i)
-         end do
-         write(0,*) "layers below wclayer"
-         do i=wclayer+1, soil%nslay
-           write (UNIT=0,FMT="(i3,2(f10.4))",ADVANCE="YES")                                        &
-      &        i, soil%aszlyt(i), soil%ahrwc(i)
-         end do
-       end if
-!+++++++++++++++++++++++++++++++++++++++++++++++
+          end do
+          write(luowc(sr),"(3(i5))",ADVANCE='NO') cd, cm, cy
+          write(luowc(sr),"(i10,1(f10.4),A)",ADVANCE="YES") wclayer, wc_tdepth, wc, &
+             ' Original values'
+        end if
 
-!      do process
-       call set_wc(wc, wclayer, soil)
+        if (manFile%am0tdb .eq. 2) then  !Debug info printouts
+          write (UNIT=0,FMT="(A)",ADVANCE="NO") '//Before set_asd process// '
+          write(0,*) 'No. of soil layers to modify/total and depth are: ', wclayer, soil%nslay, wcdepth
+          write(UNIT=0,FMT="(A3,1(A10))") 'lay', 'depth'
+          do i=1, asdlayer
+            write (UNIT=0,FMT="(i3,2(f10.4))",ADVANCE="YES")                                        &
+                i, soil%aszlyt(i), soil%ahrwc(i)
+          end do
+          write(0,*) "layers below wclayer"
+          do i=wclayer+1, soil%nslay
+            write (UNIT=0,FMT="(i3,2(f10.4))",ADVANCE="YES")                                        &
+                i, soil%aszlyt(i), soil%ahrwc(i)
+          end do
+        end if
 
+        ! do process
+        call set_wc(wc, wclayer, soil)
 
-       write (UNIT=0,FMT="(A)",ADVANCE="NO") '//After set_wc process// '
-       write(0,*) 'no. of soil layers to modify/total and depth are: ', asdlayer, soil%nslay, wcdepth
-       write(UNIT=0,FMT="(A3,2(A10))") 'lay', 'depth', 'wc'
-       do i=1, wclayer
-         write (UNIT=0,FMT="(i3,2(f10.4))",ADVANCE="YES")                                        &
-      &      i, soil%aszlyt(i), soil%ahrwc(i)
-       end do
-       write(0,*) "layers below asdlayer"
-       do i=wclayer+1, soil%nslay
-         write (UNIT=0,FMT="(i3,2(f10.4))",ADVANCE="YES")                                        &
-      &      i, soil%aszlyt(i), soil%ahrwc(i)
-       end do
+        write (UNIT=0,FMT="(A)",ADVANCE="NO") '//After set_wc process// '
+        write(0,*) 'no. of soil layers to modify/total and depth are: ', asdlayer, soil%nslay, wcdepth
+        write(UNIT=0,FMT="(A3,2(A10))") 'lay', 'depth', 'wc'
+        do i=1, wclayer
+          write (UNIT=0,FMT="(i3,2(f10.4))",ADVANCE="YES")                                        &
+              i, soil%aszlyt(i), soil%ahrwc(i)
+        end do
+        write(0,*) "layers below asdlayer"
+        do i=wclayer+1, soil%nslay
+          write (UNIT=0,FMT="(i3,2(f10.4))",ADVANCE="YES")                                        &
+              i, soil%aszlyt(i), soil%ahrwc(i)
+        end do
 
-!+++++++++++++++++++++++++++++++++++++++++++++++
-
-!     post-process stuff
+        ! post-process stuff
         if (manFile%am0tdb .eq. 1) then
           write (luotdb(sr),*) '//After initialize soil layer wc conditions//'
           call tdbug(sr, prcode, soil, crop, residue)
         end if
 
         if (BTEST(manFile%am0tfl,1)) then
-         write(luowc(sr),"(3(i5))",ADVANCE='NO') cd, cm, cy
-         write(luowc(sr),"(i10,2(f10.4),A)",ADVANCE="YES") 1, soil%aszlyt(1), &
-            soil%ahrwc(1),   &
+          write(luowc(sr),"(3(i5))",ADVANCE='NO') cd, cm, cy
+          write(luowc(sr),"(i10,2(f10.4),A)",ADVANCE="YES") 1, soil%aszlyt(1), &
+             soil%ahrwc(1),   &
             ' New values - After initialized soil layer water content conditions'
-!         write(luowc(sr),"(i10,4(i5))",ADVANCE="YES") get_simdate_jday(), cd, cm, cy, get_simdate_doy()
+          ! write(luowc(sr),"(i10,4(i5))",ADVANCE="YES") get_simdate_jday(), cd, cm, cy, get_simdate_doy()
         end if
-
-!-----END terminate initialize (set) soil layer wc process (process code 92)
-
-!***************************************************************************************************************
 
       case default
         write(0,*) 'Invalid process: ', prname, ' ', prcode
