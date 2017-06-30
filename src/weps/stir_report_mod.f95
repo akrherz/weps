@@ -326,7 +326,11 @@ module stir_report_mod
           stircum(isr)%phop(stircum(isr)%phopidx)%phop_stir = stir_op_avg
         end if
 
-        stircum(isr)%phop(stircum(isr)%phopidx)%phop_energy = oenergyarea * get_stir_soil_multiplier(isr)
+        if ( oenergyarea .ge. 0.0 ) then
+          stircum(isr)%phop(stircum(isr)%phopidx)%phop_energy = oenergyarea * get_stir_soil_multiplier(isr)
+        else
+          stircum(isr)%phop(stircum(isr)%phopidx)%phop_energy = oenergyarea
+        end if 
         if( oenergyarea .ge. 0.0 ) then
           ! set energy value for each operation
           scisum(isr)%energy = scisum(isr)%energy + stircum(isr)%phop(stircum(isr)%phopidx)%phop_energy
