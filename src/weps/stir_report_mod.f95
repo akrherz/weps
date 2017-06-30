@@ -187,6 +187,11 @@ module stir_report_mod
           stircum(isr)%phop(stircum(isr)%phopidx)%stir_opname = manFile%oper%operName
           call getManVal(manFile%oper, 'ofuel', stircum(isr)%phop(stircum(isr)%phopidx)%stir_fuelname)
           stircum(isr)%phop(stircum(isr)%phopidx)%phop_skip = lastoperskip
+          if ( stircum(isr)%phopidx .eq. 1 ) then
+            stircum(isr)%phop(stircum(isr)%phopidx)%crop_num = stircum(isr)%phop(stircum(isr)%phopcnt)%crop_num
+          else
+            stircum(isr)%phop(stircum(isr)%phopidx)%crop_num = stircum(isr)%phop(stircum(isr)%phopidx-1)%crop_num
+          end if
           select case ( manFile%oper%operType )
           case (1,3)
             call getManVal(manFile%oper, 'ospeed', ospeed)
@@ -226,11 +231,6 @@ module stir_report_mod
                 else
                   stircum(isr)%phop(stircum(isr)%phopidx)%phop_type = 0
                 end if
-                if ( stircum(isr)%phopidx .eq. 1 ) then
-                  stircum(isr)%phop(stircum(isr)%phopidx)%crop_num = stircum(isr)%phop(stircum(isr)%phopcnt)%crop_num
-                else
-                  stircum(isr)%phop(stircum(isr)%phopidx)%crop_num = stircum(isr)%phop(stircum(isr)%phopidx-1)%crop_num
-                end if
               case (40)
                 temp_present = .false.
               case (32, 42)
@@ -246,7 +246,6 @@ module stir_report_mod
                 else
                   stircum(isr)%phop(stircum(isr)%phopidx)%phop_type = 0
                 end if
-                stircum(isr)%phop(stircum(isr)%phopidx)%crop_num = stircum(isr)%phop(stircum(isr)%phopidx-1)%crop_num
               case (33, 43)
                 call getManVal(manFile%proc, 'cyldrmf', pyieldf)
                 call getManVal(manFile%proc, 'cplrmf', pstalkf)
@@ -260,7 +259,6 @@ module stir_report_mod
                 else
                   stircum(isr)%phop(stircum(isr)%phopidx)%phop_type = 0
                 end if
-                stircum(isr)%phop(stircum(isr)%phopidx)%crop_num = stircum(isr)%phop(stircum(isr)%phopidx-1)%crop_num
               case (37, 38, 47, 48)
                 call getManVal(manFile%proc, 'tyldrmp', pyieldf)
                 call getManVal(manFile%proc, 'tplrmp', pstalkf)
@@ -274,7 +272,6 @@ module stir_report_mod
                 else
                   stircum(isr)%phop(stircum(isr)%phopidx)%phop_type = 0
                 end if
-                stircum(isr)%phop(stircum(isr)%phopidx)%crop_num = stircum(isr)%phop(stircum(isr)%phopidx-1)%crop_num
               case (61, 62)
                 call getManVal(manFile%proc, 'rstore', storef)
                 call getManVal(manFile%proc, 'rleaf', leaff)
@@ -290,7 +287,6 @@ module stir_report_mod
                 else
                   stircum(isr)%phop(stircum(isr)%phopidx)%phop_type = 0
                 end if
-                stircum(isr)%phop(stircum(isr)%phopidx)%crop_num = stircum(isr)%phop(stircum(isr)%phopidx-1)%crop_num
               case (51)
                 call getManVal(manFile%proc, 'idc', croptype)
                 call getManVal(manFile%proc, 'plantpop', plantpop)
@@ -298,14 +294,9 @@ module stir_report_mod
                   stircum(isr)%phop(stircum(isr)%phopidx)%phop_type = 1
                   stircum(isr)%phop(stircum(isr)%phopidx)%stir_cropname = cropname
                   crop_present = .true.
-                  if( stircum(isr)%phopidx .gt. 1 ) then
-                    stircum(isr)%phop(stircum(isr)%phopidx)%crop_num = stircum(isr)%phop(stircum(isr)%phopidx-1)%crop_num + 1
-                  else
-                    stircum(isr)%phop(stircum(isr)%phopidx)%crop_num = 1
-                  end if
+                  stircum(isr)%phop(stircum(isr)%phopidx)%crop_num = stircum(isr)%phop(stircum(isr)%phopidx)%crop_num + 1
                 else
                   stircum(isr)%phop(stircum(isr)%phopidx)%phop_type = 0
-                  stircum(isr)%phop(stircum(isr)%phopidx)%crop_num = stircum(isr)%phop(stircum(isr)%phopidx-1)%crop_num
                 end if
               end select
               ! next process
