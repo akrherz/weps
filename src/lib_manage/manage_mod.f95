@@ -136,6 +136,9 @@ module manage_mod
           ! end of rotation
           manFile%mcount = manFile%mcount + 1
           manFile%oper => manFile%operFirst
+          ! this is a future operation
+          ! initialize end of season / hydrobal reporting flag to true to generate a report
+          rpt_season_flg(sr) = .true.
           exit
         end if
       end do
