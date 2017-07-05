@@ -36,7 +36,6 @@ module manage_mod
 !     + + + PARAMETERS AND COMMON BLOCKS + + +
       include 'p1werm.inc'
       include 'manage/asd.inc'
-      include 'manage/mproc.inc'
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer sr, startyr
@@ -129,7 +128,7 @@ module manage_mod
           if( difdat (simdd,simmm,simyr,manFile%oper%operDate%day,manFile%oper%operDate%month,mansimyr) .ne. 0) then
             ! this is a future operation
             ! initialize end of season / hydrobal reporting flag to true to generate a report
-            rpt_season_flg(sr) = .true.
+            manFile%rpt_season_flg = .true.
             exit
           end if
         else  ! not associated
@@ -138,7 +137,7 @@ module manage_mod
           manFile%oper => manFile%operFirst
           ! this is a future operation
           ! initialize end of season / hydrobal reporting flag to true to generate a report
-          rpt_season_flg(sr) = .true.
+          manFile%rpt_season_flg = .true.
           exit
         end if
       end do
@@ -176,7 +175,6 @@ module manage_mod
       include 'm1flag.inc'
       include 'manage/asd.inc'
       include 'manage/tcrop.inc'
-      include 'manage/mproc.inc'
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer sr                        ! current subregion
@@ -224,7 +222,7 @@ module manage_mod
          atmbgrootstorez(idx,sr) = 0.0
          atmbgrootfiberz(idx,sr) = 0.0
       end do
-      rpt_season_flg(sr) = .true.
+      manFile%rpt_season_flg = .true.
 
 !     + + + END SPECIFICATIONS + + +
 

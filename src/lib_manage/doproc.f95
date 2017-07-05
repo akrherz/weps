@@ -798,7 +798,7 @@
                  atmbgstemz(1,sr), &
                  atzht(sr), atdstm(sr), atxstmrep(sr), atzrtd(sr), &
                  atgrainf(sr) )
-             if( rpt_season_flg(sr) ) then
+             if( manFile%rpt_season_flg ) then
                call report_hydrobal( sr, manFile%mcount, manFile%mperod )
                ! This may be harvest or non-harvest termination, allow early harvest warnings
                mature_warn_flg = 1
@@ -816,7 +816,7 @@
                cropprev%grainf, cropprev%chillucum, cropprev%liveleaf, &
                cropprev%cancov, cropprev%dayspring, mature_warn_flg )
                ! set to stop additional report in this operation
-               rpt_season_flg(sr) = .false.
+               manFile%rpt_season_flg = .false.
              end if
           else if( am0kilfl .eq. 3 ) then
              ! defoliate by dropping all crop leaf mass into crop flat pool
@@ -881,7 +881,7 @@
           end if
           call report_harvest( sr, manFile%mcount, mass_rem, mass_left, 0,1,&
                  mandate, crop)
-          if( rpt_season_flg(sr) ) then
+          if( manFile%rpt_season_flg ) then
               ! not reported by the kill process in this
               call report_hydrobal( sr, manFile%mcount, manFile%mperod )
               call crop_endseason( sr, manFile%mcount, manFile%mperod, &
@@ -898,7 +898,7 @@
               cropprev%grainf, cropprev%chillucum, cropprev%liveleaf, &
               cropprev%cancov, cropprev%dayspring, mature_warn_flg )
               ! set to stop additional report in this operation
-              rpt_season_flg(sr) = .false.
+              manFile%rpt_season_flg = .false.
           end if
         endif
 
@@ -944,7 +944,7 @@
           end if
           call report_harvest( sr, manFile%mcount, mass_rem, mass_left, 0,1,&
                  mandate, crop)
-          if( rpt_season_flg(sr) ) then
+          if( manFile%rpt_season_flg ) then
               ! not reported by the kill process in this
               call report_hydrobal( sr, manFile%mcount, manFile%mperod )
               call crop_endseason( sr, manFile%mcount, manFile%mperod, &
@@ -961,7 +961,7 @@
               cropprev%grainf, cropprev%chillucum, cropprev%liveleaf, &
               cropprev%cancov, cropprev%dayspring, mature_warn_flg )
               ! set to stop additional report in this operation
-              rpt_season_flg(sr) = .false.
+              manFile%rpt_season_flg = .false.
           end if
         end if
 
@@ -1040,7 +1040,7 @@
           end if
           call report_harvest( sr, manFile%mcount, mass_rem, mass_left, 0,1,&
       &          mandate, crop)
-          if( rpt_season_flg(sr) ) then
+          if( manFile%rpt_season_flg ) then
               ! not reported by the kill process in this
               call report_hydrobal( sr, manFile%mcount, manFile%mperod )
               call crop_endseason( sr, manFile%mcount, manFile%mperod, &
@@ -1057,7 +1057,7 @@
               cropprev%grainf, cropprev%chillucum, cropprev%liveleaf, &
               cropprev%cancov, cropprev%dayspring, mature_warn_flg )
               ! set to stop additional report in this operation
-              rpt_season_flg(sr) = .false.
+              manFile%rpt_season_flg = .false.
           end if
         end if
 
@@ -1100,7 +1100,7 @@
             call report_harvest( sr, manFile%mcount, mass_rem, mass_left, 0,&
                  1, mandate, crop)
             call report_calib_harvest( sr, manFile%mcount, mass_rem, mass_left, crop )
-            if( rpt_season_flg(sr) ) then
+            if( manFile%rpt_season_flg ) then
               ! not reported by the kill process in this
               call report_hydrobal( sr, manFile%mcount, manFile%mperod )
               call crop_endseason( sr, manFile%mcount, manFile%mperod, &
@@ -1117,7 +1117,7 @@
               cropprev%grainf, cropprev%chillucum, cropprev%liveleaf, &
               cropprev%cancov, cropprev%dayspring, mature_warn_flg )
               ! set to stop additional report in this operation
-              rpt_season_flg(sr) = .false.
+              manFile%rpt_season_flg = .false.
             end if
         end if
 
@@ -1209,7 +1209,7 @@
           call report_harvest( sr, manFile%mcount, mass_rem, mass_left, &
                                harv_unit_flg, harv_report_flg, &
                                mandate, crop )
-          if( rpt_season_flg(sr) ) then
+          if( manFile%rpt_season_flg ) then
               ! not reported by the kill process in this
               call report_hydrobal( sr, manFile%mcount, manFile%mperod )
               call crop_endseason( sr, manFile%mcount, manFile%mperod, &
@@ -1226,7 +1226,7 @@
               cropprev%grainf, cropprev%chillucum, cropprev%liveleaf, &
               cropprev%cancov, cropprev%dayspring, mature_warn_flg )
               ! set to stop additional report in this operation
-              rpt_season_flg(sr) = .false.
+              manFile%rpt_season_flg = .false.
           end if
         endif
 
@@ -1277,7 +1277,7 @@
           call report_harvest( sr, manFile%mcount, mass_rem, mass_left, &
                                harv_unit_flg, harv_report_flg, &
                                mandate, crop )
-          if( rpt_season_flg(sr) ) then
+          if( manFile%rpt_season_flg ) then
               ! not reported by the kill process in this
               call report_hydrobal( sr, manFile%mcount, manFile%mperod )
               call crop_endseason( sr, manFile%mcount, manFile%mperod, &
@@ -1294,7 +1294,7 @@
               cropprev%grainf, cropprev%chillucum, cropprev%liveleaf, &
               cropprev%cancov, cropprev%dayspring, mature_warn_flg )
               ! set to stop additional report in this operation
-              rpt_season_flg(sr) = .false.
+              manFile%rpt_season_flg = .false.
           end if
         end if
 
@@ -1346,7 +1346,7 @@
           call report_harvest( sr, manFile%mcount, mass_rem, mass_left, &
                                harv_unit_flg, harv_report_flg, &
                                mandate, crop )
-          if( rpt_season_flg(sr) ) then
+          if( manFile%rpt_season_flg ) then
               ! not reported by the kill process in this
               call report_hydrobal( sr, manFile%mcount, manFile%mperod )
               call crop_endseason( sr, manFile%mcount, manFile%mperod, &
@@ -1363,7 +1363,7 @@
               cropprev%grainf, cropprev%chillucum, cropprev%liveleaf, &
               cropprev%cancov, cropprev%dayspring, mature_warn_flg )
               ! set to stop additional report in this operation
-              rpt_season_flg(sr) = .false.
+              manFile%rpt_season_flg = .false.
           end if
         end if
 
@@ -1414,7 +1414,7 @@
           call report_harvest( sr, manFile%mcount, mass_rem, mass_left, &
                                harv_unit_flg, harv_report_flg, &
                                mandate, crop )
-          if( rpt_season_flg(sr) ) then
+          if( manFile%rpt_season_flg ) then
               ! not reported by the kill process in this
               call report_hydrobal( sr, manFile%mcount, manFile%mperod )
               call crop_endseason( sr, manFile%mcount, manFile%mperod, &
@@ -1431,7 +1431,7 @@
               cropprev%grainf, cropprev%chillucum, cropprev%liveleaf, &
               cropprev%cancov, cropprev%dayspring, mature_warn_flg )
               ! set to stop additional report in this operation
-              rpt_season_flg(sr) = .false.
+              manFile%rpt_season_flg = .false.
           end if
         end if
 
@@ -1571,7 +1571,7 @@
               cropprev%grainf, cropprev%chillucum, cropprev%liveleaf, &
               cropprev%cancov, cropprev%dayspring, mature_warn_flg )
           ! set to guarantee corresponding report hydrolbal at end of planting
-          rpt_season_flg(sr) = .true.
+          manFile%rpt_season_flg = .true.
         endif
         ! crop pool state has been changed, force dependent variable update  
         am0cropupfl = 1
@@ -1737,7 +1737,7 @@
           call tdbug(sr, prcode, soil, crop, residue)
         end if
         call set_calib(sr, crop)
-        if( rpt_season_flg(sr) ) then
+        if( manFile%rpt_season_flg ) then
           ! not reported by the kill process in this
           call report_hydrobal( sr, manFile%mcount, manFile%mperod )
         end if
@@ -1796,7 +1796,7 @@
           end if
             call report_harvest( sr, manFile%mcount, mass_rem, mass_left, 0,&
                  1, mandate, crop)
-          if( rpt_season_flg(sr) ) then
+          if( manFile%rpt_season_flg ) then
               ! not reported by the kill process in this
               call report_hydrobal( sr, manFile%mcount, manFile%mperod )
               call crop_endseason( sr, manFile%mcount, manFile%mperod, &
@@ -1813,7 +1813,7 @@
               cropprev%grainf, cropprev%chillucum, cropprev%liveleaf, &
               cropprev%cancov, cropprev%dayspring, mature_warn_flg )
               ! set to stop additional report in this operation
-              rpt_season_flg(sr) = .false.
+              manFile%rpt_season_flg = .false.
           end if
         end if
 
@@ -1876,7 +1876,7 @@
           call report_harvest( sr, manFile%mcount, mass_rem, mass_left, &
                                harv_unit_flg, harv_report_flg, &
                                mandate, crop )
-          if( rpt_season_flg(sr) ) then
+          if( manFile%rpt_season_flg ) then
             ! not reported by the kill process in this
             call report_hydrobal( sr, manFile%mcount, manFile%mperod )
             call crop_endseason( sr, manFile%mcount, manFile%mperod, &
@@ -1893,7 +1893,7 @@
               cropprev%grainf, cropprev%chillucum, cropprev%liveleaf, &
               cropprev%cancov, cropprev%dayspring, mature_warn_flg )
               ! set to stop additional report in this operation
-            rpt_season_flg(sr) = .false.
+            manFile%rpt_season_flg = .false.
           end if
         end if
 

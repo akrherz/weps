@@ -86,6 +86,9 @@ module manage_data_struct_defs
                          ! 1 = WC header (first) line now printed
     logical :: harv_calib_not_selected ! harv_calib_not_selected - flag indicating that a harvest operation
                                        ! has not been selected for calibration for that crop.
+    logical :: rpt_season_flg ! flag to limit end of season / hydrobal reporting to once per day
+                              ! true  - generate report in this day
+                              ! false - report has already been generated in this day
     type(operation), pointer :: operFirst, oper
     type(group), pointer :: grp
     type(process), pointer :: proc
