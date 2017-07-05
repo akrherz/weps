@@ -765,35 +765,6 @@
       type(biototal), intent(inout) :: croptot  ! structure containing derived variables
       end subroutine cropupdate
 !----------------------
-      subroutine   dogroup (soil, manFile)
-      use soil_data_struct_defs, only: soil_def
-      use manage_data_struct_defs, only: man_file_struct 
-      integer sr
-      type(soil_def), intent(in) :: soil
-      type(man_file_struct) :: manFile
-      end subroutine dogroup
-!----------------------
-      subroutine   dooper (manFile)
-      use manage_data_struct_defs, only: man_file_struct 
-      type(man_file_struct) :: manFile
-      end subroutine dooper
-!---------------------------
-      subroutine   doproc (soil, crop, cropprev, residue, biotot, mandate, h1et, manFile)
-      use soil_data_struct_defs, only: soil_def
-      use biomaterial, only: biomatter, biototal, bio_prevday
-      use mandate_mod, only: opercrop_date
-      use manage_data_struct_defs, only: lastoper, man_file_struct
-      use hydro_data_struct_defs, only: hydro_derived_et
-      type(soil_def), intent(inout) :: soil  ! soil for this subregion
-      type(biomatter), intent(inout) :: crop    ! structure containing full crop description
-      type(bio_prevday), intent(inout) :: cropprev    ! structure containing crop previous day values
-      type(biomatter), dimension(:), intent(inout) :: residue
-      type(biototal), intent(in) :: biotot
-      type(opercrop_date), dimension(:), intent(inout) :: mandate
-      type(hydro_derived_et), intent(inout) :: h1et
-      type(man_file_struct), intent(inout) :: manFile
-      end subroutine doproc
-!--------------------------
     SUBROUTINE get_calib_crops(sr, crop)
     use biomaterial, only: biomatter
     INTEGER :: sr
