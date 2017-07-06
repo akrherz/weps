@@ -366,7 +366,7 @@
           ! each management file (one for each subregion).
 
           ! Initialize the management file and rotation counters
-          call mfinit(isr, manFile(isr))
+          call mfinit(manFile(isr))
           t_mperod(isr) = manFile(isr)%mperod
       end do
 

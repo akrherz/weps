@@ -28,7 +28,7 @@ module manage_mod
 
   contains
 
-    subroutine mfinit (sr, manFile)
+    subroutine mfinit (manFile)
 !
 !     + + + PURPOSE + + +
 !     Mfinit should be called during the initialization stage of the the
@@ -47,7 +47,7 @@ module manage_mod
 
       use weps_interface_defs
       use file_io_mod, only: fopenk
-      use manage_data_struct_defs, only: lastoper, man_file_struct, operation_date
+      use manage_data_struct_defs, only: man_file_struct, operation_date
       use flib_sax
       use manage_xml_mod, only: init_man_xml, read_old_manfile
       use manage_xml_mod, only: manfile_complete
@@ -55,14 +55,11 @@ module manage_mod
 
       include 'p1werm.inc'
       include 'm1flag.inc'
-      include 'manage/asd.inc'
 
 !     + + + ARGUMENT DECLARATIONS + + +
-      integer sr                        ! current subregion
       type(man_file_struct) :: manFile  ! management file data structure
 
 !     + + + LOCAL VARIABLES + + +
-      integer :: idx
       integer :: luimandate   ! unit number for reading in management file
       character*256 :: line
 
@@ -648,23 +645,17 @@ module manage_mod
       real    alpha, beta, mu, rho
       integer roughflg
       real    rrimpl
-!     real    intens, rrimpl
       real    kappa
       real    thinval
-      real :: start_depth ! depth in soil at which tillage loosening/compaction begins (mm)
       real    pyieldf, pstalkf, rstandf
       integer harv_report_flg, harv_calib_flg, harv_unit_flg
       integer mature_warn_flg
       integer sel_position, sel_pool
       real    stemf, leaff, storef, rootstoref, rootfiberf
       real    rdght,rdgwt,dikeht,dikespac
-!      real    af,cf,mf  ! used with disabled routines
       real    afvt(mnrbc), mfvt(mnrbc)
       integer burydistflg
       real    irrig
-      real    rdght1
-!      character*1 prdumy
-      character*256  line
       integer  idx, thinflg
       real    dmassres, zmassres, dmassrot, zmassrot
       real    mass_rem, mass_left
@@ -767,10 +758,8 @@ module manage_mod
 !     massf    - mass fractions of aggregrates within sieve cuts
 !                 (sum of all the mass fractions are expected to be 1.0)
 !     rdght    - ridge height (mm)
-!     rdght1   - tmp variable - ridge height (mm)
 !     rdgwt    - ridge top width (mm)
 !     rrimpl   - assigned nominal RR value for the tillage operation (mm)
-!     start_depth - depth in soil at which tillage loosening/compaction begins (mm)
 !     mu       - loosening coefficient (0 <= mu <= 1)
 !     rho      - mixing coefficient (0 <= rho <= 1)
 !     irrig    - irrigation quantity for a day (mm)
@@ -3093,12 +3082,9 @@ module manage_mod
       use hydro_data_struct_defs, only: hydro_derived_et
       use manage_data_struct_defs, only: man_file_struct, lastoper
 
-!     + + + PARAMETERS AND COMMON BLOCKS + + +
-      include 'p1werm.inc'
-      include 'manage/asd.inc'
-
 !     + + + ARGUMENT DECLARATIONS + + +
-      integer sr, startyr
+      integer :: sr       ! the subregion number
+      integer :: startyr  ! starting year of the simulation run
       type(soil_def), intent(inout) :: soil  ! soil for this subregion
       type(biomatter), intent(inout) :: crop    ! structure containing full crop description
       type(bio_prevday), intent(inout) :: cropprev    ! structure containing crop previous day values
@@ -3108,19 +3094,11 @@ module manage_mod
       type(hydro_derived_et), intent(inout) :: h1et
       type(man_file_struct), intent(inout) :: manFile
 
-!     + + + ARGUMENT DEFINITIONS + + +
-!        sr - the subregion number
-!     startyr - starting year of the simulation run
-
 !     + + + LOCAL VARIABLES + + +
-
-      integer simdd, simmm, simyr, mansimyr
-      character*256   line
-
-!        simdd - current simulation day
-!        simmm - current simulation month
-!        simyr - current simulation year
-!     mansimyr - the simulation year which corresponds to the year from the management file
+      integer :: simdd    ! current simulation day
+      integer :: simmm    ! current simulation month
+      integer :: simyr    ! current simulation year
+      integer :: mansimyr ! the simulation year which corresponds to the year from the management file
 
 !     + + + SUBROUTINES CALLED + + +
 !     dooper - DO OPERation is called when dates match
