@@ -98,11 +98,6 @@
 !     + + +  END SPECIFICATIONS + + +
       if (dbgflg) write(*,*) 'decomp 1a'
 
-!   call initilization
-!     if (am0dif .eqv. .true.) then
-!         call decini (isr)
-!     end if
-!     am0dif = .false.
 !  Calculation of water coefficent for decomp days
 ! Standing residues water factor  ( 0. to 1. )
 ! Steiner et al. 1994 Agronomy Journal  Jan-Feb issue

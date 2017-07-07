@@ -33,7 +33,7 @@
 !     external common_handler
 !     + + + GLOBAL COMMON BLOCKS + + +
 
-      use weps_main_mod, only: daysim, ijday, ljday, maxper, ncycles, wepsinit
+      use weps_main_mod, only: daysim, ijday, ljday, maxper, ncycles, wepsinit, in_report_loop
       use weps_interface_defs
       use wepp_interface_defs
       use timer_mod, only: timer, TIMWEPS, TIMSTART, TIMSTOP, TIMPRINT
@@ -648,12 +648,7 @@
 ! Go back to "initialization" and restart after resetting the appropriate variables here
          daysim = 0
          amnryr = 1
-         !mnsize = 0.09
-         !mxsize = 601.2
-         !ahzpta = 0
-         am0dif = .true.
          am0eif = .true.
-         am0sif = .true.
          am0ifl = .false.
          am0jd = ijday           ! Reset loop counter to first day of simulation
          ! store day for use in simulation date routines
@@ -677,7 +672,7 @@
          end if
 
          ncycles = 1   ! set here for use in confidence interval calculation (no other use?)
-         am0sif = .false.  ! Done with all initialization and calibration phases
+         in_report_loop = .true.  ! Done with all initialization and calibration phases
          ci_year = 0  ! nothing has yet been printed into ci.out
 
          ! settings for creation of erosion submodel detailed outputs
