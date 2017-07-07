@@ -22,34 +22,6 @@
 
        interface
 
-!---------------------- ASD Routines ----------------------------      
-!-----------------------
-      subroutine asd2m (mnot, minf, gmd, gsd, nlay, mf)
-      real, intent(in) :: mnot(*), minf(*)
-      real, intent(in) :: gmd(*), gsd(*)
-      integer, intent(in) :: nlay
-      real, intent(out) :: mf(26+1,*)
-      end subroutine asd2m
-!----------------------
-!      subroutine asd2m1 (nsieve, sdiam, mfr, mnot, minf, gmd_p, gsd_p)
-!      integer, intent(in) :: nsieve
-!      real, intent(in) :: sdiam(*)
-!      real, intent(out) :: mfr(26+1)
-!      real, intent(in) :: mnot, minf
-!      real, intent(in) :: gmd_p, gsd
-!      integer, intent(in) :: nlay
-!      end subroutine asd2m1
-!----------------------
-      subroutine asdini()
-      end subroutine asdini
-!------------------------  
-      subroutine m2asd (mf, nlay, mnot, minf, gmd, gsd)
-      real, intent(in) :: mf(26+1, *)
-      integer, intent(in) :: nlay
-      real, intent(in) ::  mnot(*), minf(*)
-      real, intent(out) :: gmd(*), gsd(*)
-      end subroutine m2asd
-!-------------------------------------
 !-------------- DECOMP Routines ------------------------------
 !-----------------------
       subroutine  ddbug(isr, slay, residue)

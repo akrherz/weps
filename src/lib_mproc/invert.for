@@ -1,11 +1,8 @@
-!
 !$Author$
 !$Date$
 !$Revision$
 !$HeadURL$
-!
-!
-!
+
       subroutine invert                                                 &
      &              (nlay,density,laythk,                               &
      &               sand,silt,clay, rock_vol,                          &
@@ -30,32 +27,28 @@
 !     + + + KEYWORDS + + +
 !     inversion, tillage 
 
+      use asd_mod, only: msieve
       use weps_interface_defs, ignore_me=>invert
       use biomaterial, only: biomatter
 
-      include 'p1werm.inc'
-      include 'manage/asd.inc'
-
-!
 !     + + + ARGUMENT DECLARATIONS + + +
       integer nlay
-      real density(mnsz),laythk(mnsz)
-      real sand(mnsz),silt(mnsz),clay(mnsz), rock_vol(mnsz)
-      real c_sand(mnsz), m_sand(mnsz), f_sand(mnsz), vf_sand(mnsz)
-      real w_bd(mnsz)
-      real organic(mnsz), ph(mnsz), calcarb(mnsz), cation(mnsz)
-      real lin_ext(mnsz)
-      real aggden(mnsz), drystab(mnsz)
-      real soilwatr(mnsz)
-      real satwatr(mnsz), thrdbar(mnsz), ftnbar(mnsz)
-      real avawatr(mnsz)
-      real soilcb(mnsz), soilair(mnsz), satcond(mnsz)
+      real density(*),laythk(*)
+      real sand(*),silt(*),clay(*), rock_vol(*)
+      real c_sand(*), m_sand(*), f_sand(*), vf_sand(*)
+      real w_bd(*)
+      real organic(*), ph(*), calcarb(*), cation(*)
+      real lin_ext(*)
+      real aggden(*), drystab(*)
+      real soilwatr(*)
+      real satwatr(*), thrdbar(*), ftnbar(*)
+      real avawatr(*)
+      real soilcb(*), soilair(*), satcond(*)
       type(biomatter), dimension(:), intent(inout) :: residue
-      real massf(msieve+1,mnsz)
-!
-!
+      real, dimension(msieve+1,*) :: massf
+
 !     + + + ARGUMENT DEFINITIONS + + +
-!
+
 !     density     - soil density 
 !     laythk      - layer thickness
 
@@ -98,27 +91,23 @@
 !     + + + ACCESSED COMMON BLOCK VARIABLE DEFINITIONS + + +
 !     
 !     mnsz	- max number of soil layers
-!
-!     + + + PARAMETERS + + +
-!
+
 !     + + + LOCAL VARIABLES + + +
-!
       integer i,j,k
-      real dum2(mnsz)
-!
+      real dum2(nlay)
+
 !     + + + LOCAL VARIABLE DEFINITIONS + + +
-!
 !     dum2    - dummy variable containing a variable array to
 !               be passed to the inversion process routine
 !     i       - loop variable on decomposition pools
 !     j       - loop variable on asd sieves 
 !     k       - loop variable on the number of layers 
-!
+
 !     + + + END SPECIFICATIONS + + + 
 
 !  Make calls to the inversion process for all variables that need 
 !  to be inverted. 
-!
+
 !************************SOIL VARIABLES********************	
       call invproc(nlay,laythk,sand)
       call invproc(nlay,laythk,silt)
@@ -172,7 +161,7 @@
 !************************DECOMPOSITION VARIABLES********************	
 !   need to invert each pool for these
 
-      do i=1,mnbpls
+      do i=1,size(residue)
 
          do k=1,nlay
             dum2(k) = residue(i)%mass%stemz(k)

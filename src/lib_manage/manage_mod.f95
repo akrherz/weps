@@ -573,6 +573,7 @@ module manage_mod
       use report_hydrobal_mod, only: report_hydrobal
       use datetime_mod, only: get_simdate, get_simdate_jday, get_simdate_doy
       use manage_data_struct_mod, only: getManVal
+      use asd_mod, only: msieve, nsieve, sdia, mdia, asd2m, m2asd
 
 !     + + + PARAMETERS AND COMMON BLOCKS + + +
       include 'command.inc'
@@ -580,7 +581,6 @@ module manage_mod
       include 'm1flag.inc'
       include 'h1hydro.inc'
       include 'h1db1.inc'
-      include 'manage/asd.inc'
 
 !     + + + ARGUMENT DECLARATIONS + + +
       type(soil_def), intent(inout) :: soil  ! soil for this subregion
@@ -641,7 +641,6 @@ module manage_mod
 !     + + + LOCAL VARIABLES + + +
       integer :: sr  ! the subregion being processed
       integer cutflg
-      real    massf (msieve+1,mnsz)
       real    alpha, beta, mu, rho
       integer roughflg
       real    rrimpl
@@ -696,6 +695,8 @@ module manage_mod
                           ! 4 - 2'nd residue pool
                           ! ....
                           ! 2**n - nth residue pool
+      real, dimension (:,:), allocatable :: massf ! (msieve+1,mnsz)
+      integer :: alloc_stat  ! return status of memory allocation, deallocation
 
 !     + + + LOCAL VARIABLE DEFINITIONS + + +
 
@@ -818,6 +819,13 @@ module manage_mod
 2015  format (' Process code ',i2,1x,'Process ',1x,a20 )
 
 !     + + + END SPECIFICATIONS + + +
+
+      ! allocate massf array
+      allocate( massf(msieve+1, soil%nslay), stat=alloc_stat)
+      if ( alloc_stat .gt. 0 ) then
+        write(*,*) 'Unable to allocate memory for P 11'
+        call exit(1)
+      end if
 
       ! set local flag to indicate whether a crop is growing or not
       ! this is used to eliminate spurious harvest reports from residue removal
@@ -3051,6 +3059,13 @@ module manage_mod
         call exit (1)
 
       end select
+
+      ! deallocate massf array
+      deallocate( massf, stat=alloc_stat)
+      if ( alloc_stat .gt. 0 ) then
+        write(*,*) 'Unable to deallocate memory for P 11'
+        call exit(1)
+      end if
 
       return
 

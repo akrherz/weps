@@ -31,29 +31,25 @@
 !     + + + KEYWORDS + + +
 !     mixing 
 
+      use asd_mod, only: msieve
       use weps_interface_defs, ignore_me=>mix
       use biomaterial, only: biomatter
 
-      include 'p1werm.inc'
-      include 'manage/asd.inc'
-
 !     + + + ARGUMENT DECLARATIONS + + +
       integer nlay
-      real u,tillf,density(mnsz),laythk(mnsz)
-      real sand(mnsz),silt(mnsz),clay(mnsz), rock_vol(mnsz)
-      real c_sand(mnsz), m_sand(mnsz), f_sand(mnsz), vf_sand(mnsz)
-      real w_bd(mnsz)
-      real organic(mnsz), ph(mnsz), calcarb(mnsz), cation(mnsz)
-      real lin_ext(mnsz)
-      real aggden(mnsz), drystab(mnsz)
-      real soilwatr(mnsz)
-      real satwatr(mnsz), thrdbar(mnsz), ftnbar(mnsz)
-      real avawatr(mnsz)
-      real soilcb(mnsz), soilair(mnsz), satcond(mnsz)
+      real u,tillf,density(*),laythk(*)
+      real sand(*),silt(*),clay(*), rock_vol(*)
+      real c_sand(*), m_sand(*), f_sand(*), vf_sand(*)
+      real w_bd(*)
+      real organic(*), ph(*), calcarb(*), cation(*)
+      real lin_ext(*)
+      real aggden(*), drystab(*)
+      real soilwatr(*)
+      real satwatr(*), thrdbar(*), ftnbar(*)
+      real avawatr(*)
+      real soilcb(*), soilair(*), satcond(*)
       type(biomatter), dimension(:), intent(inout) :: residue
-      real massf(msieve+1,mnsz)
-
-
+      real, dimension(msieve+1,*) :: massf
 
 !     + + + ARGUMENT DEFINITIONS + + +
 !     u           - mixing coefficient
@@ -104,7 +100,7 @@
 !     + + + PARAMETERS + + +
 
 !     + + + LOCAL VARIABLES + + +
-      real tillmix,dum(mnsz), dum1(mnsz), dum2(mnsz), mass, cmass
+      real tillmix,dum(nlay), dum1(nlay), dum2(nlay), mass, cmass
       integer  i,j
 
 !     + + + LOCAL VARIABLE DEFINITIONS + + +
@@ -321,7 +317,7 @@
 !
 !********************DECOMPOSITION VARIABLES********************	
 !   need to mix both pools and layers for these next two variables 
-      do j=1,mnbpls
+      do j=1,size(residue)
 
          cmass = 0.0
          do i=1,nlay

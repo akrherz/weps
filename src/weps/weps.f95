@@ -75,6 +75,7 @@
       use climate_input_mod, only: cliginit, getcli, windinit, getwin
       use input_run_mod, only: old_run_file, input, run_rot_cycles, id, im, iy, ld, lm, ly, rootp
       use lcm_mod, only: lcm_n
+      use asd_mod, only: asdini
 
 ! build and release info, fpp created by cook
       include 'build.inc'
@@ -445,7 +446,7 @@
       call cliginit     ! read "yearly average info" from cligen header
       call windinit     ! allocate memory for reading subdaily wind velocities from windgen format input file
 
-      call asdini()     ! calculates sieve cut paramters, does not set values
+      call asdini()     ! calculates sieve cut parameters, does not set values
 
       ! Everything required for stir_report is available
       do isr=1,nsubr

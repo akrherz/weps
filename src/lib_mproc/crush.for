@@ -5,10 +5,8 @@
 
       subroutine crush (alpha, beta,nlay,mf)
 
+      use asd_mod, only: msieve, nsieve, mdia
       use weps_interface_defs, ignore_me=>crush
-
-      include 'p1werm.inc'
-      include 'manage/asd.inc'
 
 !     + + + PURPOSE + + +
 !     This subroutine  performs the crushing or breaking down of
@@ -23,7 +21,7 @@
 !     + + + ARGUMENT DECLARATIONS + + +
       real    alpha, beta
       integer nlay
-      real    mf(msieve+1,mnsz)
+      real, dimension(msieve+1,*) :: mf
 !
 !
 !     + + + ARGUMENT DEFINITIONS + + +
