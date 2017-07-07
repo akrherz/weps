@@ -3054,6 +3054,26 @@ module manage_mod
 
     end subroutine doproc
 
+    subroutine mgdreset (bhzirr)
+
+!     + + + PURPOSE + + +
+!     mgdreset is called before any management operations for the day are 
+!     executed. It resets global variables that are set in management
+!     that should only apply for a single day. Resetting them here makes
+!     sure that any submodel that needs to use them will have access to
+!     them for exactly one day.
+
+!     + + + ARGUMENT DECLARATIONS + + +
+      real :: bhzirr   ! daily irrigation amount
+
+!     + + + END SPECIFICATIONS + + +
+
+      am0til = .false.
+      bhzirr = 0.0   ! zero out irrig amount from previous day
+
+      return
+    end subroutine mgdreset
+
     subroutine manage( sr, startyr, soil, crop, cropprev, residue, biotot, mandate, h1et, manFile)
 
 !     + + + PURPOSE + + +

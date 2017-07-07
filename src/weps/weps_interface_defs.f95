@@ -752,10 +752,6 @@
     type(biomatter), intent(inout) :: crop    ! structure containing full crop description
     end subroutine get_calib_yield
 !--------------------------
-      subroutine mgdreset (bhzirr)
-      real :: bhzirr   ! daily irrigation amount
-      end subroutine mgdreset
-!---------------------------
       real function poolmass( nslay,                                    &
      &           mstandstem, mstandleaf, mstandstore,                   &
      &           mflatstem, mflatleaf, mflatstore,                      &
