@@ -58,15 +58,6 @@ module weps_main_mod
 
       use erosion_data_struct_defs, only: am0eif
 
-      include 'p1werm.inc'
-      include 'm1subr.inc'
-
-      integer idx
-
-      ! main/weps.for
-      do idx = 1, mnsub
-          amnryr(idx) = 1        ! m1subr.inc
-      end do
       daysim = 0
       maxper = 1
 

@@ -365,7 +365,7 @@
       return
       end
 
-      subroutine   statt (tsoil, bhtsmx, bhtsmn, k, mnsz, hrday)
+      subroutine   statt (tsoil, bhtsmx, bhtsmn, k, nlay, hrday)
 
 !     This subroutine uses the simulated hourly soil temperature
 !     values to calculate the daily maximum, and minimum soil
@@ -374,8 +374,8 @@
 !     + + + COMMON BLOCKS + + +
 
 !     + + + ARGUMENT DECLARATIONS + + +
-      integer k, j, mnsz, hrday
-      real tsoil(mnsz, hrday)
+      integer k, j, nlay, hrday
+      real tsoil(nlay, hrday)
       real bhtsmn
       real bhtsmx
 

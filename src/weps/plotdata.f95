@@ -39,7 +39,6 @@
       include 'p1werm.inc'
       include 'h1db1.inc'
       include 'h1hydro.inc'
-      include 'm1subr.inc'
       include 'main/plot.inc'
 
       integer day, month, year, doy
@@ -132,8 +131,8 @@
         doy = get_simdate_doy()
 
         ! make operation name available for this day
-        if ((lastoper(sr)%day .eq. day) .and. (lastoper(sr)%mon .eq. month) .and. &
-     &      (lastoper(sr)%yr .eq. amnryr(sr))) then
+        if ( (lastoper(sr)%day .eq. day) .and. (lastoper(sr)%mon .eq. month) .and. &
+             (lastoper(sr)%yr .eq. manfile%mnryr) ) then
            operat = lastoper(sr)%name
            crname = crop%bname
         else

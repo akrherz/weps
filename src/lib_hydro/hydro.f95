@@ -228,7 +228,7 @@
       parameter   (met_height = 2.0)
 
       real standevapredu, totalevapredu, accheck
-      real temp, airentry(mnsz), lambda(mnsz), theta80rh(mnsz)
+      real temp, airentry(layrsn), lambda(layrsn), theta80rh(layrsn)
       real cropdp
 
 !     + + + LOCAL DEFINITIONS + + +

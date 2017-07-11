@@ -30,8 +30,8 @@
       type(wepp_param), intent(inout) :: wp
 
       integer idx
-      real ltheta(mnsz)
-      real sand(mnsz),clay(mnsz),orgmat(mnsz)
+      real ltheta(soil%nslay)
+      real sand(soil%nslay),clay(soil%nslay),orgmat(soil%nslay)
 
       do idx = 1, soil%nslay
         ! Initialize the water holding capacity variable

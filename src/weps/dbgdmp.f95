@@ -30,7 +30,6 @@
 !     + + + GLOBAL COMMON BLOCKS + + +
 
       include 'p1werm.inc'
-      include 'm1subr.inc'
       include 'h1hydro.inc'
       include 'h1db1.inc'
       include 'h1temp.inc'
@@ -368,9 +367,6 @@
 ! m1subr
 !
       if (dmpflg) write(*,*) 'm1subr'
-!
-       if (amnryr(sr).lt.1.or.amnryr(sr).gt.10)                          &
-     &  write(*,*) 'day ',day,' amnryr ', amnryr(sr)
 !
       if (soil%amrslp.lt.0.0.or.soil%amrslp.gt.1.0)                       &
      &  write(*,*) 'day ',day,' amrslp ', soil%amrslp

@@ -83,7 +83,6 @@
 ! build and release info, fpp created by cook
       include 'build.inc'
       include 'p1werm.inc'
-      include 'm1subr.inc'
       include 'h1hydro.inc'
       include 'command.inc'   !declarations for commandline args
       include 'precision.inc' !declaration for portable math range checking
@@ -541,12 +540,12 @@
           ! if last day of year, check for end of rotation
           if (get_simdate_doy() .eq. ndiy) then
             ! check if at end of subregion's rotation cycle
-            if (mod(amnryr(isr),manFile(isr)%mperod) == 0) then
-               amnryr(isr) = 1
-               lastoper(isr)%yr = amnryr(isr)
+            if (mod(manfile(isr)%mnryr,manFile(isr)%mperod) == 0) then
+               manfile(isr)%mnryr = 1
+               lastoper(isr)%yr = manfile(isr)%mnryr
             else
-               amnryr(isr) = amnryr(isr) + 1
-               lastoper(isr)%yr = amnryr(isr)
+               manfile(isr)%mnryr = manfile(isr)%mnryr + 1
+               lastoper(isr)%yr = manfile(isr)%mnryr
             end if
           end if
        end do  ! end for subregion loop
@@ -567,7 +566,7 @@
 
       ! Start of "calibrate" section
       do isr=1,nsubr   ! do multiple subregion     
-          keep(isr) = amnryr(isr)
+          keep(isr) = manfile(isr)%mnryr
       end do
       if ((calibrate_crops > 0) .and. (.not. calib_done) .and. (calib_cycle < max_calib_cycles)) then
          calib_cycle = calib_cycle + 1
@@ -618,18 +617,18 @@
              ! if last day of year, check for end of rotation
              if (get_simdate_doy() .eq. ndiy) then
                ! check if at end of subregion's rotation cycle
-               if (mod(amnryr(isr),manFile(isr)%mperod) == 0) then
-                  amnryr(isr) = 1
-                  lastoper(isr)%yr = amnryr(isr)
+               if (mod(manfile(isr)%mnryr,manFile(isr)%mperod) == 0) then
+                  manfile(isr)%mnryr = 1
+                  lastoper(isr)%yr = manfile(isr)%mnryr
                else
-                  amnryr(isr) = amnryr(isr) + 1
-                  lastoper(isr)%yr = amnryr(isr)
+                  manfile(isr)%mnryr = manfile(isr)%mnryr + 1
+                  lastoper(isr)%yr = manfile(isr)%mnryr
                end if
              end if
            end do  ! end subregion
          end do   ! "calibration" phase
          do isr=1,nsubr   ! do multiple subregion     
-             amnryr(isr) = keep(isr)
+             manfile(isr)%mnryr = keep(isr)
              ! at end of managment file, reset mcount
              manFile(isr)%mcount = 0
          end do
@@ -648,7 +647,9 @@
 !        end if
 ! Go back to "initialization" and restart after resetting the appropriate variables here
          daysim = 0
-         amnryr = 1
+         do isr = 1, nsubr
+            manfile(isr)%mnryr = 1
+         end do
          am0eif = .true.
          am0ifl = .false.
          am0jd = ijday           ! Reset loop counter to first day of simulation
@@ -790,14 +791,14 @@
                ! if last day of year, check for end of rotation
                if (get_simdate_doy() .eq. ndiy) then
                   ! check if at end of subregion's rotation cycle
-                  if (mod(amnryr(isr),manFile(isr)%mperod) == 0) then
+                  if (mod(manfile(isr)%mnryr,manFile(isr)%mperod) == 0) then
                      ! end of management rotation cycle
-                     amnryr(isr) = 1
-                     lastoper(isr)%yr = amnryr(isr)
+                     manfile(isr)%mnryr = 1
+                     lastoper(isr)%yr = manfile(isr)%mnryr
                   else
                      ! continue through rotation cycle
-                     amnryr(isr) = amnryr(isr) + 1
-                     lastoper(isr)%yr = amnryr(isr)
+                     manfile(isr)%mnryr = manfile(isr)%mnryr + 1
+                     lastoper(isr)%yr = manfile(isr)%mnryr
                   end if
                end if
             end do

@@ -61,7 +61,7 @@ module manage_mod
       use manage_xml_mod, only: begin_man_element_handler, end_man_element_handler, pcdata_man_chunk_handler
 
 !     + + + ARGUMENT DECLARATIONS + + +
-      type(man_file_struct) :: manFile  ! management file data structure
+      type(man_file_struct), intent(inout) :: manFile  ! management file data structure
 
 !     + + + LOCAL VARIABLES + + +
       integer :: luimandate   ! unit number for reading in management file
@@ -111,6 +111,8 @@ module manage_mod
       manFile%harv_calib_not_selected = .true.
       ! init rotation counter
       manFile%mcount = 0
+      ! init rotation year counter
+      manfile%mnryr = 1
 
       return
 

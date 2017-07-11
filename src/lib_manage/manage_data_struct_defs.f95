@@ -69,6 +69,7 @@ module manage_data_struct_defs
     integer :: isub      ! subregion index
     character(len=512) :: tinfil  ! management file name
     real :: mversion     ! management version number
+    integer :: mnryr    ! Counter for current rotation year
     integer :: mcount    ! number of times managment rotation has been completed
     integer :: mperod    ! length of management of rotation
     integer :: am0tfl    ! flag to print MANAGEment (TILLAGE) output
