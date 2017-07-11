@@ -1,7 +1,6 @@
 MODULE asd_vars
 
   IMPLICIT NONE
-  include "dummy.inc"
 
   INTEGER :: alloc_asd_vars            ! Allocate status return
   INTEGER :: asd_flg = 0               ! Initialize asd debug flag level (higher "bit" numbers means more detailed info)
@@ -23,9 +22,8 @@ MODULE asd_vars
   REAL :: m_not                        ! Minimum sized diameter aggregate (mm)
   REAL :: m_inf                        ! Maximum sized diamater aggregate (mm)
 
-
-
 contains
+
   FUNCTION asd_init_vars(ns, minsize, maxsize, mnot, minf) result (ret_status)
 
     INTEGER, INTENT (IN) :: ns          ! Number of sieves to use 0<ns<=msieves

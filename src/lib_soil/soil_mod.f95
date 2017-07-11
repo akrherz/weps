@@ -5,6 +5,11 @@
 
 module soil_mod
 
+    integer :: tday      ! The last accessed day of simulation month.
+    integer :: tmo       ! The last accessed month of simulation year.
+    integer :: tyr       ! The last accessed year of simulation run.
+    integer :: tisr      ! The last accessed subregion index.
+
   contains
 
     subroutine callsoil(daysim, isr, soil, croptot, biotot, h1et)
@@ -615,9 +620,6 @@ module soil_mod
       include 'h1hydro.inc'
       include 'h1db1.inc'
       include 'h1temp.inc'
-
-!     + + + LOCAL COMMON BLOCKS + + +
-      include 'soil/tsdbug.inc'
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer isr

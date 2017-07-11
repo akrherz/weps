@@ -39,12 +39,17 @@
       include 'p1werm.inc'
       include 'h1db1.inc'
       include 'h1hydro.inc'
-      include 'main/plot.inc'
 
       integer day, month, year, doy
 
       integer ngdpt  !number of grid cells within field
       integer idx, jdy   !local loop vars
+
+      real :: total
+      real :: suspen
+      real :: pmten
+      character*80     operat
+      character*80     crname
 
 !     + + + OUTPUT FORMATS + + +
 !     format for header of plot file

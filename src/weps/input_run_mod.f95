@@ -120,7 +120,6 @@ contains
       integer    :: sum_stat, alloc_stat
       character*80     awwisn   ! made local since not used anywhere else
       integer, parameter :: max_simyear = 100000  ! value used to test simulation year input range
-      integer    :: i
 
 !     + + + Local Variable Definitions + + +
 !     isr - subregion index counter

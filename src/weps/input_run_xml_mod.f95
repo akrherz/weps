@@ -232,7 +232,7 @@ contains
     character(len=*), intent(in)   :: name
     type(dictionary_t), intent(in) :: attributes
 
-    integer :: idx, jdx
+    integer :: idx
     character(len=80) :: param_value
     integer :: ret_stat
     integer :: alloc_stat
