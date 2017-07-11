@@ -20,7 +20,7 @@
       include 'p1werm.inc'
 !
 !     + + + ARGUMENT DECLARATIONS + + +
-      real    liftf(mnrbc)
+      real    liftf(*)
       real    tillf
       integer nlay
       type(biomatter), dimension(:), intent(inout) :: residue
@@ -45,21 +45,12 @@
 !       Note that any combination of pools or crop may be used
 !       A bit test is done on the binary number to see what to modify
 
-!     + + + ACCESSED COMMON BLOCK VARIABLE DEFINITIONS + + +
-!
-!     mnrbc         - max number of residue burial classes
-!     mnbpls        - max number of biomass pools
-!     mnsz          - max number of soil layers
-!
-!     + + + PARAMETERS + + +
-!
 !     + + + LOCAL VARIABLES + + +
-!
       integer  lay, idy, tflg
-      real     liftlay(mnsz), lifttot
-!
+      real     liftlay(nlay), lifttot
+      integer :: npools  ! number of residue pools found from argument residue array size
+
 !     + + + LOCAL VARIABLE DEFINITIONS + + +
-!
 !     idy       - biomass pools (1-3)
 !     lay       - number of layers in a specified subregion
 !     liftlay   - buried material lifted to the surface in each layer
@@ -67,10 +58,12 @@
 !
 !     + + + END SPECIFICATIONS + + +
 
+      npools = size(residue)
+
       !set tflg bits correctly for "all" pools if bflg=0
       if (bflg .eq. 0) then
          tflg = 1                   ! crop pool
-         do 10 idy = 1,mnbpls
+         do 10 idy = 1,npools
             tflg = tflg + 2**idy    ! decomp pools
 10        continue
       else
@@ -78,7 +71,7 @@
       endif
 
 !     perform the lifting of biomass
-      do idy = 1,mnbpls
+      do idy = 1,npools
 !         check for proper indexes in bdrbc
           if( (residue(idy)%database%rbc .ge. 1) .and. (residue(idy)%database%rbc .le. mnrbc) ) then
 !             lift it if biomass flag right

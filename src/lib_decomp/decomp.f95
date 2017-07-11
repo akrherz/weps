@@ -50,15 +50,16 @@
 !
 !         dweti(mnsub)
 !         diwcsy(mnsub)
-!         cumdds(mnbpls,mnsub)
-!         cumddf(mnbpls,mnsub)
-!         cumddg(mnsz,mnbpls,mnsub)
+!         cumdds(npools,mnsub)
+!         cumddf(npools,mnsub)
+!         cumddg(bnslay,npools,mnsub)
 
 !     + + + VARIABLE DECLARATIONS + + +
 
       integer :: iage    ! residue pool age index
       integer :: isz     ! soil layer indexing variable
       integer :: nslay   ! maximum number of soil layers
+      integer :: npools  ! maximum number of residue pools
 
 ! + + +  ADDITIONAL LOCAL VARIABLES NOT IN DECOMP.KOM + + +
 !     These are used in tc function.
@@ -90,6 +91,8 @@
 
       ! set the number of soil layers from previously allocated structure
       nslay = size(decompfac%iwcg)
+      ! set number of residue pools from previously allocated structure
+      npools = size(residue)
 
       if (am0ddb(isr) .eq. 1) call ddbug(isr, nslay, residue)
 
@@ -206,7 +209,7 @@
 ! this is indexed based on the number of residue age pools
 
 ! all, standing, flat and below ground
-      do iage = 1,mnbpls
+      do iage = 1,npools
          ! calendar days
          residue(iage)%decomp%resday = residue(iage)%decomp%resday + 1
          ! decomposition days
@@ -229,7 +232,7 @@
           crop%mass%flatleaf = crop%mass%flatleaf * dec_fac
       end if
 
-      do iage = 1,mnbpls
+      do iage = 1,npools
         !standing residue mass
         dec_fac = max(0.0, 1.0 - residue(iage)%database%dkrate(1)*decompfac%idds)
         residue(iage)%mass%standstem = residue(iage)%mass%standstem * dec_fac
@@ -272,7 +275,7 @@
 
       if (dbgflg) write(*,*) 'decomp 5'
 
-      do iage = 1,mnbpls
+      do iage = 1,npools
          ! check for threshold ddays value before allowing stems to decline
          if (residue(iage)%decomp%cumdds .gt. residue(iage)%database%ddsthrsh) then
             if (residue(iage)%geometry%dstm .gt. 0.0) then

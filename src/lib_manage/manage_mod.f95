@@ -647,7 +647,7 @@ module manage_mod
       integer crop_present, temp_present
       real    noparam1, noparam2, noparam3
       real    rate_mult_vt(mnrbc), thresh_mult_vt(mnrbc)
-      real    dummy1(mnsz), dummy2(mnsz)
+      real    dummy1(soil%nslay), dummy2(soil%nslay)
       ! temporary crop parameter values for process 65 and 66
       integer trbc, thyfg
       real    tdkrate(5), txstm, tddsthrsh, tcovfact
@@ -681,7 +681,7 @@ module manage_mod
                           ! 4 - 2'nd residue pool
                           ! ....
                           ! 2**n - nth residue pool
-      real, dimension (:,:), allocatable :: massf ! (msieve+1,mnsz)
+      real, dimension (:,:), allocatable :: massf ! (msieve+1,soil%nslay)
       integer :: alloc_stat  ! return status of memory allocation, deallocation
       integer :: am0kilfl  ! flag to determine if an operation is killing a perennial
                            ! or annual crop. Also used to indicate leaf removal (defoliation) as of 8/23/00.
@@ -771,7 +771,7 @@ module manage_mod
 !     noparam1-6   - variaable to allow reading in six non-used crop parameters in single read statement
 !     rate_mult_vt - array of multipliers for modifying standing stem fall rate
 !     thresh_mult_vt - array of multipliers for modifying standing stem fall threshold
-!     dummy1(mnsz), dummy2(mnsz) - place holder variables (set to zero)
+!     dummy1(soil%nslay), dummy2(soil%nslay) - place holder variables (set to zero)
 !                                  for call to poolmass
 
 !     manure_total_mass - total mass of manure added to field (dry weight)
@@ -783,9 +783,6 @@ module manage_mod
 !     + + + SUBROUTINES CALLED + + +
 !
 !     asd2m     - aggregate size distribution to mass fraction converter
-!     burylift  - performs the biomass transfer either into the soil
-!                 or from the soil to the surface (deals with decomp
-!                 pools only
 !     crush     - the crushing process
 !     crust     - destroys a crusted surface depending on the operation that
 !                 is performed

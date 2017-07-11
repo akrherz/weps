@@ -817,15 +817,6 @@
       integer nlay      
       end function burydist
 !-----------------------------
-      subroutine burylift                                               &
-     &              (nlay,dflat,dstand,droot,                           &
-     &               dblwgnd,buryf,liftf,fltcoef) 
-      integer nlay
-      real    buryf,liftf,fltcoef 
-      real    dflat(*),dstand(*)
-      real   dblwgnd(3,*), droot(3,*)  
-      end subroutine burylift
-!-------------------------------
       subroutine crush (alpha, beta,nlay,mf)
       real    alpha, beta
       integer nlay

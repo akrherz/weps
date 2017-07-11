@@ -27,10 +27,8 @@
 !     + + + KEYWORDS + + +
 !     kill, transfer, biomass manipulation
 
-      include 'p1werm.inc'
-!
 !     + + + ARGUMENT DECLARATIONS + + +
-!
+
       logical am0cgf
       integer nlay
 
@@ -42,10 +40,10 @@
       real    bcmflatleaf
       real    bcmflatstore
 
-      real    bcmrootstorez(mnsz)
-      real    bcmrootfiberz(mnsz)
+      real    bcmrootstorez(*)
+      real    bcmrootfiberz(*)
 
-      real    bcmbgstemz(mnsz)
+      real    bcmbgstemz(*)
 
       real    bczht
       real    bcdstm
@@ -58,14 +56,14 @@
       real    btmstandleaf
       real    btmstandstore
 
-      real    btmbgstemz(mnsz)
+      real    btmbgstemz(*)
 
       real    btmflatstem
       real    btmflatleaf
       real    btmflatstore
 
-      real    btmbgrootstorez(mnsz)
-      real    btmbgrootfiberz(mnsz)
+      real    btmbgrootstorez(*)
+      real    btmbgrootfiberz(*)
 
       real    btzht
       real    btdstm
@@ -127,10 +125,6 @@
 !     btzrtd  - Crop root depth (m)
 
 !     btgrainf - internally computed grain fraction of reproductive mass
-
-!     + + + ACCESSED COMMON BLOCK VARIABLE DEFINITIONS + + +
-
-!     mnsz          - max number of soil layers
 
 !     + + + PARAMETERS + + +
 

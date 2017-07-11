@@ -8,8 +8,6 @@
 !
       subroutine invproc(nlay,thick,xcomp) 
 
-      include 'p1werm.inc'
-
 !     + + + PURPOSE + + +
 !     
 !	  Invert the component passed to xcomp 
@@ -19,7 +17,7 @@
 !
 !     + + + ARGUMENT DECLARATIONS + + +
 
-      real xcomp(mnsz), thick(mnsz)
+      real xcomp(*), thick(*)
       integer nlay
 !
 !     + + + ARGUMENT DEFINITIONS + + +
@@ -32,8 +30,8 @@
 !     + + + LOCAL VARIABLES + + +
 
       integer   idx, odx
-      real      ithick(mnsz), ixcomp(mnsz)
-      real      othick(mnsz)
+      real      ithick(nlay), ixcomp(nlay)
+      real      othick(nlay)
       real      dthick
 
 !     + + + LOCAL VARIABLE DEFINITIONS + + +

@@ -1241,8 +1241,8 @@ module crop_growth_mod
       real wffiber, wfstore
       integer irfiber, irstore
       real temp_fiber, temp_store, temp_stem
-      real wfl(mnsz) !  and weight fraction by layer used to distribute root mass into the soil layers
-      real za(mnsz)
+      real wfl(bnslay) !  and weight fraction by layer used to distribute root mass into the soil layers
+      real za(bnslay)
 !      real ppx,ppveg,pprpd ! used with plant population adjustment
       real bhfwsf_adj
       real temp_sai, temp_stmrep
@@ -1315,8 +1315,8 @@ module crop_growth_mod
 !     wfstore - total of weight fractions for storage roots (normalization)
 !     irfiber - index of deepest soil layer for fibrous roots
 !     irstore - index of deepest soil layer for storage roots
-!     wfl(mnsz) - weight fraction by layer (distribute root mass into the soil layers)
-!     za(mnsz) - soil layer representative depth
+!     wfl(bnslay) - weight fraction by layer (distribute root mass into the soil layers)
+!     za(bnslay) - soil layer representative depth
 
 !     adjleaf2stor, adjstem2stor, adjstor2stor - adjusted value of bomass diversion
 !         to root/crown storage. Factor considered are:

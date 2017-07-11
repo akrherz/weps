@@ -14,13 +14,11 @@
 
       real function burydist( lay, burydistflg, lthick, ldepth, nlay)
 
-      include 'p1werm.inc'
-
 !     argument declarations
       integer lay
       integer burydistflg
-      real    lthick(mnsz)
-      real    ldepth(mnsz)
+      real    lthick(*)
+      real    ldepth(*)
       integer nlay
 
 !     argument definitions

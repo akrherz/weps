@@ -87,10 +87,6 @@
 !     massf       - mass fractions for sieve cuts
 
 !     nlay        - number of soil layers used
-!
-!     + + + ACCESSED COMMON BLOCK VARIABLE DEFINITIONS + + +
-!     
-!     mnsz	- max number of soil layers
 
 !     + + + LOCAL VARIABLES + + +
       integer i,j,k

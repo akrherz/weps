@@ -82,7 +82,7 @@
 
 !     + + + LOCAL VARIABLES + + +
       integer k
-      real potes(mnsz), temp
+      real potes(layrsn), temp
 !     real temp1, temp2, temp3
 
 !     + + + LOCAL DEFINITION + + +

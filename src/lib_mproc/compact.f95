@@ -12,8 +12,7 @@ subroutine compact( u, load, tillf, tlay, nlay, density, settled_bd, proc_bd_wc,
   ! + + + KEYWORDS + + +
   ! compaction 
 
-  include 'p1werm.inc'
-  include 'p1unconv.inc'  ! definition of pi
+  use p1unconv_mod, only: pi, MgtoN, mmtom
 
   ! + + + ARGUMENT DECLARATIONS + + +
   integer :: tlay       ! starting soil layer for compaction
@@ -27,18 +26,15 @@ subroutine compact( u, load, tillf, tlay, nlay, density, settled_bd, proc_bd_wc,
   real :: proc_bd(*) ! proctor soil bulk density (maximum dry density) (Mg/m^3)
   real :: laythk(*)  ! layer thickness (mm)
 
-  ! + + + ACCESSED COMMON BLOCK VARIABLE DEFINITIONS + + +
-  ! mnsz        - max number of soil layers
-
   ! + + + LOCAL VARIABLES + + +
   integer :: blay       ! bottom soil layer to be compacted
   integer :: i          ! loop variable on layers 
   integer :: concfactor_harder  ! concentration factor for the harder soil condition
   integer :: concfactor_softer  ! concentration factor for the softer soil condition
   real :: concfactor_interp     ! interpolated concentration factor
-  real :: eff_depth(mnsz)! effective depth to bottom of soil layer accounting for stress propagation in upper layers (m)
+  real :: eff_depth(nlay)! effective depth to bottom of soil layer accounting for stress propagation in upper layers (m)
   real :: force         ! load converted to force (N, newtons)
-  real :: dum(mnsz)     ! dummy variable used in calculating the adjusted density
+  real :: dum(nlay)     ! dummy variable used in calculating the adjusted density
   real :: interpfactor  ! interpolation factor in proportion to present bulk density
   real :: lay_stress_top  ! stress at top of soil layer (Pa, pascals)
   real :: lay_stress_bot  ! stress at bottom of soil layer (Pa, pascals)
