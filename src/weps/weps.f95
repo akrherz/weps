@@ -95,13 +95,15 @@
       integer, dimension(:), allocatable :: n_rot_cycles   ! actual number of rotation cycles simulated
       integer, dimension(:), allocatable :: t_mperod       ! temporary array for management years
 
+      integer, dimension(:), allocatable :: keep  ! in calibration, reset mnryr to precalibration loop value (why?)
+
       integer cd, cm, cy,                                               &
      &        end_init_jday, end_init_d, end_init_m, end_init_y,        &
      &        ndiy,                                                     &
      &        isr, ipl,                                                 &
      &        simyrs,                                                   &
      &        yrsim
-      integer lcaljday, keep(mnsub)
+      integer lcaljday
       integer ci_flag, ci_year
       real    ci
 
@@ -248,6 +250,10 @@
 
       ! set total number of subregions from size of allocated subr_poly array
       nsubr = size(subr_poly)
+
+      ! keep
+      allocate(keep(nsubr), stat=alloc_stat)
+      sum_stat = sum_stat + alloc_stat
      
       ! create sci and stir soil multiplier arrays (before input_ifc which needs them)
       call create_sci_soil_multiplier(nsubr)
@@ -663,6 +669,9 @@
 
       else
 
+         ! keep no longer needed
+         deallocate(keep)
+     
          if ((run_erosion.eq.2).or.(run_erosion.eq.3)) then
             do isr = 1, nsubr
                call init_wepp(isr, 1, soil(isr))        ! specific wepp initializations
