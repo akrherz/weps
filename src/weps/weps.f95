@@ -202,6 +202,8 @@
       write(6,*) 'Built on: ', trim(build_date)
       write(6,*) 'Compiled with: ', trim(build_compiler)
       write(6,*) 'Compiled flags: ', trim(build_compiler_options)
+      write(6,*) 'SVN Revision: ', trim(build_svn_revision)
+      write(6,*) 'Count Modfied Files: ', trim(build_cnt_mods)
       write(6,*)
 
       ! Determine date of Run

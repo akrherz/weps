@@ -365,6 +365,8 @@ show:{
 	function print "Dependencies:" [dep.dir]/;
 	function print "Build Artifacts:" [build.dir]/;
 	function print "Distributables:" [dist.dir]/;
+        function print "SVN Revision:" [collect svn info | grep "Revision:" | sed "s/Revision://"];
+        function print "Local Mods:" [collect svn status -q | wc -l];
 
 }
 
