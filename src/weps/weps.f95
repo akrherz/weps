@@ -398,12 +398,14 @@
          calibrate_rotcycles = run_rot_cycles
       endif
 
+      ! Everything required for stir_report is available
       ! This is all the initialization for the new output reporting code
       ! Note: this also resets manFile%oper to manFile%operFirst
-      do isr = 1, nsubr
-          mandatbs(isr)%mperod = manFile(isr)%mperod
-          call mandates(mandatbs(isr)%mandate, manFile(isr))  !Get man dates, op names, and crop names
+      do isr=1,nsubr
+        mandatbs(isr)%mperod = manFile(isr)%mperod
+        call stir_report( mandatbs(isr)%mandate, manFile(isr) )
       end do
+
       ! initialize full mandate series for all subregions for full maxper length.
       mandatbs(0)%mperod = maxper
       call allmandates( mandatbs )  ! examine dates for all subregions and put composite list into 0 array
@@ -454,11 +456,6 @@
       call windinit     ! allocate memory for reading subdaily wind velocities from windgen format input file
 
       call asdini()     ! calculates sieve cut parameters, does not set values
-
-      ! Everything required for stir_report is available
-      do isr=1,nsubr
-        call stir_report( manFile(isr) )
-      end do
 
 9898  continue    !Start of initialization section (calibration)
 

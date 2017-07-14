@@ -98,16 +98,19 @@ module stir_report_mod
         end if
     end subroutine destroy_stir_accumulators
 
-    subroutine stir_report( manFile )
+    subroutine stir_report( mandate, manFile )
 
 !     + + + MODULES + + +
+      use weps_main_mod, only: report_debug
       use stir_soil_texture_mod, only : get_stir_soil_multiplier
       use file_io_mod, only: luostir
       use sci_report_mod, only: scisum
       use manage_data_struct_defs, only: man_file_struct
       use manage_data_struct_mod, only: getManVal
+      use mandate_mod, only: opercrop_date, create_mandate    ! Load shared mandate() array
 
 !     + + + ARGUMENT DECLARATIONS + + +
+      type (opercrop_date), dimension(:), allocatable :: mandate
       type(man_file_struct) :: manFile
 
 !     + + + ARGUMENT DEFINITIONS + + +
@@ -159,6 +162,9 @@ module stir_report_mod
         end if
         manFile%oper => manFile%oper%operNext
       end do
+
+      ! create mandate array
+      call create_mandate( idx, mandate )
 
       ! allocate tracking array for stir report info
       call create_stir_accumulator(isr, idx)
@@ -421,15 +427,34 @@ module stir_report_mod
              
         if( stircum(isr)%phop(idx)%phop_skip .eq. 0 ) then
           ! print this line
-          write(luostir(isr),1000) stircum(isr)%phop(idx)%phopday, stircum(isr)%phop(idx)%phopmon, &
+          write(luostir(isr),"(i2,'/',i2,'/',i4,3(' | ',a),2(' | ',f8.2),2(' | ',i1) )") &
+                        stircum(isr)%phop(idx)%phopday, stircum(isr)%phop(idx)%phopmon, &
                         stircum(isr)%phop(idx)%phopyr, &
                         trim(stircum(isr)%phop(idx)%stir_opname), &
                         trim(stircum(isr)%phop(idx)%stir_cropname), &
                         trim(stircum(isr)%phop(idx)%stir_fuelname), &
                         stircum(isr)%phop(idx)%phop_stir, stircum(isr)%phop(idx)%phop_energy, &
                         stircum(isr)%phop(idx)%crop_num, stircum(isr)%phop(idx)%last_harv
+          ! populate mandate arrays
+          mandate(idx)%sr = manFile%isub
+          ! assign operation dates
+          mandate(idx)%d = stircum(isr)%phop(idx)%phopday
+          mandate(idx)%m = stircum(isr)%phop(idx)%phopmon
+          mandate(idx)%y = stircum(isr)%phop(idx)%phopyr
+          mandate(idx)%opname = stircum(isr)%phop(idx)%stir_opname
+          mandate(idx)%cropname = stircum(isr)%phop(idx)%stir_cropname
+
+          if( report_debug >= 1 ) then
+              print *, idx, mandate(idx)%d, mandate(idx)%m, mandate(idx)%y, &
+                trim(mandate(idx)%opname)," | ",trim(mandate(idx)%cropname)
+          end if
+
         end if
       end do
+
+      if( report_debug >= 1 ) then
+        print *, 'size of mandate', size(mandate)
+      end if
 
       ! close file
       close(luostir(isr))
@@ -438,8 +463,6 @@ module stir_report_mod
       manFile%oper => manFile%operFirst
 
       return
-
-1000  format (i2,'/',i2,'/',i4,3(' | ',a),2(' | ',f8.2),2(' | ',i1) )
 
     end subroutine stir_report
 
