@@ -172,6 +172,7 @@ module stir_report_mod
 
       ! go through management file and populate STIR operation array with names, types, stir and energy values
       cropname = ''
+      lastoperskip = 0
       manFile%oper => manFile%operFirst
       do while( associated(manFile%oper) )
         if ( manFile%oper%operType .eq. 0 ) then

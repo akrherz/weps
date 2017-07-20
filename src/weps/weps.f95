@@ -257,6 +257,7 @@
       nsubr = size(subr_poly)
 
       ! keep
+      sum_stat = 0
       allocate(keep(nsubr), stat=alloc_stat)
       sum_stat = sum_stat + alloc_stat
      
@@ -266,7 +267,6 @@
       call alloc_stir_accumulators(nsubr)
 
       ! erosion subregion surface values array
-      sum_stat = 0
       allocate(subrsurf(0:nsubr), stat=alloc_stat)
       sum_stat = sum_stat + alloc_stat
       allocate(noerod(nsubr), stat=alloc_stat)
