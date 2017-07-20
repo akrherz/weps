@@ -446,8 +446,12 @@
       endif
 
       do isr = 1, nsubr
+         ! intialize for use in plotdata, -1 indicates it has not been set yet in management
+         lastoper(isr)%yr = -1
+         lastoper(isr)%mon = -1
+         lastoper(isr)%day = -1
          ! this prints header to plot.out file
-         call plotdata( isr, soil(isr), crop(isr), restot(isr), croptot(isr), biotot(isr), noerod(isr), manFile(isr), cellstate )  ! print to plot data file
+         call plotdata( isr, soil(isr), crop(isr), restot(isr), croptot(isr), biotot(isr), noerod(isr), manFile(isr), cellstate )
          ! this prints header to decomp.out file
          call bpools( isr, residue(1:size(residue,1),isr), restot(isr), biotot(isr), decompfac(isr) )
       end do
@@ -503,6 +507,7 @@
       if (init_cycle > 0) then   ! to avoid printing it when not being done
           write(6,*) "Starting initialization phase"
       else
+        ! reset year value for next time through
         do isr=1,nsubr   ! do multiple subregion      
           lastoper(isr)%yr = 1
         end do
