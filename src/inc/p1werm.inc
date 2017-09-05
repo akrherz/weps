@@ -13,7 +13,7 @@
       integer          mnarpt
       integer          mnbr
       integer          mnbpt
-      integer          mncz
+!      integer          mncz
       integer          mnspt
       integer          mnsrpt
       integer          mnsub
@@ -38,7 +38,7 @@
       parameter (mnarpt = 2)
       parameter (mnbr = 500)  !increased from 4 for standalone erosion use
       parameter (mnbpt = 2)
-      parameter (mncz = 5)
+!      parameter (mncz = 5)
       parameter (mnspt = 2)
       parameter (mnsrpt = 2)
       parameter (mnsub = 14)

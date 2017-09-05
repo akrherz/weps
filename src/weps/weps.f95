@@ -110,7 +110,9 @@
       integer :: SURF_UPD_FLG              ! erosion surface updating (0 - disabled, 1 - enabled)
       integer :: nsubr                     ! total number of subregions (read in inprun, derived from allocated subr_poly)
 
-      type(soil_def), dimension(:), allocatable :: soil             ! structure with soil state and parameters as updated suring simulation
+      type(soil_def), dimension(:), allocatable :: soil             ! structure with soil state and parameters as updated during simulation
+      type(plants_pointer), dimension(:), allocatable :: plants     ! array of pointers to structure for all biomaterial
+                                                                    ! structure also references older biomaterial
       type(biomatter), dimension(:), allocatable :: crop            ! structure with crop state and parameters
       type(biototal), dimension(:), allocatable :: croptot          ! structure with totalized values of crop state
       type(bio_prevday), dimension(:), allocatable :: cropprev      ! structure with crop values from the previous day
@@ -283,6 +285,8 @@
       end do
 
       ! allocate subregion crop and residue pool arrays
+      allocate(plants(nsubr), stat=alloc_stat)
+      sum_stat = sum_stat + alloc_stat
       allocate(crop(nsubr), stat=alloc_stat)
       sum_stat = sum_stat + alloc_stat
       allocate(cropprev(nsubr), stat=alloc_stat)
@@ -342,16 +346,18 @@
       end if
 
       do isr = 1, nsubr
+         ! no plants yet
+         nullify(plants(isr)%plant)
          ! complete allocation of layers
-         crop(isr) = create_biomatter(soil_in(isr)%nslay, mncz)
+         crop(isr) = create_biomatter(soil_in(isr)%nslay)
          cropprev(isr) = create_bio_prevday(soil_in(isr)%nslay)
-         croptot(isr) = create_biototal(soil_in(isr)%nslay, mncz)
+         croptot(isr) = create_biototal(soil_in(isr)%nslay)
          do ipl = 1, mnbpls
-            residue(ipl,isr) = create_biomatter(soil_in(isr)%nslay, mncz)
+            residue(ipl,isr) = create_biomatter(soil_in(isr)%nslay)
          end do
          ! allocate layer arrays in totaling structures
-         restot(isr) = create_biototal(soil_in(isr)%nslay, mncz)
-         biotot(isr) = create_biototal(soil_in(isr)%nslay, mncz)
+         restot(isr) = create_biototal(soil_in(isr)%nslay)
+         biotot(isr) = create_biototal(soil_in(isr)%nslay)
          decompfac(isr) = create_decomp_factors(soil_in(isr)%nslay)
          ! allocate layer and per/day in subregion surface state passed to erosion
          call create_subregionsoillayers(soil_in(isr)%nslay, subrsurf(isr))
@@ -451,7 +457,8 @@
          lastoper(isr)%mon = -1
          lastoper(isr)%day = -1
          ! this prints header to plot.out file
-         call plotdata( isr, soil(isr), crop(isr), restot(isr), croptot(isr), biotot(isr), noerod(isr), manFile(isr), cellstate )
+         call plotdata( isr, soil(isr), plants(isr)%plant, restot(isr), croptot(isr), biotot(isr), noerod(isr), &
+                             manFile(isr), cellstate )
          ! this prints header to decomp.out file
          call bpools( isr, residue(1:size(residue,1),isr), restot(isr), biotot(isr), decompfac(isr) )
       end do
@@ -474,14 +481,14 @@
             call decoinit(residue(ipl, isr), decompfac(isr))
          end do
          call decopen(isr) ! prints headers in above.out and below.out
-         call cropinit(isr, crop(isr))
+         ! eliminate here as soon as all crop usages are removed
+         call cropinit(isr, crop(isr)) ! no longer needed since plant created and initialized from P51
          ! initialize all dependent variables
          call updres(soil(isr), residue(1:size(residue,1), isr), restot(isr))
          ! Initialize the water holding capacity variable
          call hydrinit(isr, soil(isr), h1et(isr), h1bal(isr), wp(isr))
          ! initialize croptot variables
-         call cropupdate( soil(isr)%aszrgh, soil(isr)%aszlyd, crop(isr)%geometry%rg, crop(isr)%geometry%xrow, soil(isr)%nslay, &
-                          crop(isr)%database%ssa, crop(isr)%database%hue, crop(isr)%geometry%dpop, &
+         call cropupdate( soil(isr)%aszrgh, soil(isr)%aszlyd, soil(isr)%nslay, &
                           ahztranspdepth(isr), ahzfurcut(isr), ahztransprtmin(isr), ahztransprtmax(isr), &
                           crop(isr), croptot(isr) )
          call sumbio(soil(isr), crop(isr), residue(1:size(residue,1), isr), restot(isr), croptot(isr), biotot(isr))
@@ -539,7 +546,8 @@
           ! set initialization flag to .false. after first day
           if (am0ifl) am0ifl = .false.
           ! print to plot data file
-          call plotdata(isr, soil(isr), crop(isr), restot(isr), croptot(isr), biotot(isr), noerod(isr), manFile(isr), cellstate)
+          call plotdata(isr, soil(isr), plants(isr)%plant, restot(isr), croptot(isr), biotot(isr), noerod(isr), &
+                             manFile(isr), cellstate)
 
           ! write decomposition biomass pool amounts to files
           call bpools(isr, residue(1:size(residue,1),isr), restot(isr), biotot(isr), decompfac(isr))
@@ -613,7 +621,8 @@
              call submodels(isr, soil(isr), crop(isr), cropprev(isr), residue(1:size(residue,1),isr), restot(isr), croptot(isr), &
                  biotot(isr), decompfac(isr), mandatbs(isr)%mandate, h1et(isr), h1bal(isr), wp(isr), manFile(isr))
              ! print to plot data file
-             call plotdata(isr, soil(isr), crop(isr), restot(isr), croptot(isr), biotot(isr), noerod(isr), manFile(isr), cellstate)
+             call plotdata(isr, soil(isr), plants(isr)%plant, restot(isr), croptot(isr), biotot(isr), noerod(isr), &
+                                manFile(isr), cellstate)
 
              ! write decomposition biomass pool amounts to files
              call bpools(isr, residue(1:size(residue,1),isr), restot(isr), biotot(isr), decompfac(isr))
@@ -791,7 +800,8 @@
                end if
 
                call sci_cum( isr, restot(isr), cellstate )   ! Keep running total for soil conditioning index (SCI)
-               call plotdata( isr, soil(isr), crop(isr), restot(isr), croptot(isr), biotot(isr), noerod(isr),manFIle(isr),cellstate)  ! print to plot data file
+               call plotdata( isr, soil(isr), plants(isr)%plant, restot(isr), croptot(isr), biotot(isr), noerod(isr), &
+                                   manFIle(isr),cellstate)  ! print to plot data file
                ! write decomposition biomass pool amounts to files
                call bpools(isr, residue(1:size(residue,1),isr), restot(isr), biotot(isr), decompfac(isr))
 

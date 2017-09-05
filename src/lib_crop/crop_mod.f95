@@ -243,9 +243,7 @@ module crop_mod
       ! update all derived globals for crop global variables
       call cropupdate(                                                  &
             soil%aszrgh, soil%aszlyd, &
-     &      crop%geometry%rg, crop%geometry%xrow, &
-     &      soil%nslay, crop%database%ssa, crop%database%ssb, &
-     &      crop%geometry%dpop, &
+     &      soil%nslay, &
      &      ahztranspdepth(sr), ahzfurcut(sr),                          &
      &      ahztransprtmin(sr), ahztransprtmax(sr), crop, croptot  )
 

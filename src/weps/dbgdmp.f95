@@ -11,7 +11,7 @@
 !       01-Mar-99       wjr     original coding
 
       use soil_data_struct_defs, only: soil_def
-      use biomaterial, only: biomatter, biototal
+      use biomaterial, only: biomatter, biototal, ncanlay
       use erosion_data_struct_defs, only: awdair, awadir, awhrmx, awudmx, awudmn, awudav, subday, ntstep
       use climate_input_mod, only: cli_today, cli_tyav, amalat, amalon, amzele
       use hydro_data_struct_defs, only: hydro_derived_et
@@ -166,7 +166,7 @@
       if (biotot%rlaitot .lt. 0.0 .or. biotot%rlaitot .gt. 1.0) &
      &  write(*,*) 'day ',day,' biotot%rlaitot ', biotot%rlaitot
 !
-      do 20 idx=1,mncz
+      do 20 idx=1,ncanlay
 !      
 ! wjr,  test values based on definition
       if (biotot%rsaz(idx) .lt. 0.0 .or. biotot%rsaz(idx) .gt. tstmax) &
@@ -533,7 +533,7 @@
       if (croptot%rlaitot.lt.0.0.or.croptot%rlaitot.gt.tstmax) &
           write(*,*) 'day ',day,' croptot%rlaitot ', croptot%rlaitot
 !
-      do 191 idx=1,mncz
+      do 191 idx=1,ncanlay
       if (croptot%rsaz(idx).lt.0.0.or.croptot%rsaz(idx).gt.tstmax) &
          write(*,*) 'day ',day,' croptot%rsaz(',idx,') ', croptot%rsaz(idx)
 !
@@ -577,7 +577,7 @@
       if (croptot%rlaitot.lt.0.0.or.croptot%rlaitot.gt.tstmax) &
          write(*,*) 'day ',day,' croptot%rlaitot ', croptot%rlaitot
 !
-      do 2100 idx = 1, mncz 
+      do 2100 idx = 1, ncanlay 
         if (croptot%rsaz(idx).lt.0.0.or.croptot%rsaz(idx).gt.tstmax) &
            write(*,*) 'day ',day,' croptot%rsaz ', croptot%rsaz(idx)
         if (croptot%rlaz(idx).lt.0.0.or.croptot%rlaz(idx).gt.tstmax) &

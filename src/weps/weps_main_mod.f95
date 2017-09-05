@@ -265,7 +265,7 @@ module weps_main_mod
       if (numarg .gt. 0) then
         do 09 i = 1, numarg
           call GET_COMMAND_ARGUMENT(i,argv,ll,ss)  !Fortran 2k compatible call
-!         write(6,*) 'argv ',i,' is: ', trim(argv)
+          !write(6,*) 'argv ',i,' is: ', trim(argv)
 
           if(argv(1:1) .ne. '-') then   !make sure all options start with '-'
 

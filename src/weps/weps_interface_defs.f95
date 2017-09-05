@@ -620,15 +620,15 @@
       type(biomatter), dimension(:,:), intent(in) :: residue
       end subroutine closefils
 !--------------------------------
-      subroutine plotdata(sr, soil, crop, restot, croptot, biotot, noerod, manFile, cellstate)
+      subroutine plotdata(sr, soil, plant, restot, croptot, biotot, noerod, manFile, cellstate)
       use soil_data_struct_defs, only: soil_def
-      use biomaterial, only: biomatter, biototal
+      use biomaterial, only: biomatter, biototal, plant_pointer
       use erosion_data_struct_defs, only: threshold
       use erosion_data_struct_defs, only: cellsurfacestate
       use manage_data_struct_defs, only: man_file_struct
       integer, intent(in) :: sr
       type(soil_def), intent(in) :: soil  ! soil for this subregion
-      type(biomatter), intent(in) :: crop
+      type(plant_pointer), pointer, intent(in) :: plant
       type(biototal), intent(in) :: restot
       type(biototal), intent(in) :: croptot
       type(biototal), intent(in) :: biotot
@@ -702,20 +702,14 @@
 !--------------- MANAGE Subroutines --------------------------
       subroutine cropupdate(                                            &
      &      bszrgh, bszlyd,                                             &
-     &      bc0rg, bcxrow,                                              &
-     &      bnslay, bc0ssa, bc0ssb,                                     &
-     &      bcdpop,                                                     &
+     &      bnslay,                                                     &
      &      bhztranspdepth, bhzfurcut,                                  &
      &      bhztransprtmin, bhztransprtmax, crop, croptot )
       use biomaterial, only: biomatter, biototal
       use p1unconv_mod, only: pi
       use wind_mod, only: biodrag
       real bszrgh, bszlyd(*)
-      integer bc0rg
-      real bcxrow
       integer bnslay
-      real bc0ssa, bc0ssb
-      real bcdpop
       real bhztranspdepth, bhzfurcut
       real bhztransprtmin, bhztransprtmax
       type(biomatter), intent(inout) :: crop    ! structure containing full crop description

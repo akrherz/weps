@@ -5,11 +5,14 @@
 
       subroutine cropupdate(                                            &
      &      bszrgh, bszlyd,                                             &
-     &      bc0rg, bcxrow,                                              &
-     &      bnslay, bc0ssa, bc0ssb,                                     &
-     &      bcdpop,                                                     &
+     &      bnslay,                                                     &
      &      bhztranspdepth, bhzfurcut,                                  &
      &      bhztransprtmin, bhztransprtmax, crop, croptot )
+
+!     + + + PURPOSE + + +
+      ! calculates values of derived variables based on the present values
+      ! or the state variables. The derived variables are commonly used
+      ! where residue totals are required.
 
       use weps_interface_defs, ignore_me=>cropupdate
       use biomaterial, only: biomatter, biototal
@@ -26,9 +29,10 @@
 !     + + + ARGUMENT DECLARATIONS + + +
 
       ! state variables
-      real bszrgh, bszlyd(*)
-      integer bc0rg
-      real bcxrow
+      real :: bszrgh    ! ridge height
+      real :: bszlyd(*) ! Depth to bottom of each soil layer(mm)
+      ! database variables
+      integer :: bnslay ! number of soil layers
 
       ! derived variables
       real bhztranspdepth, bhzfurcut
@@ -36,23 +40,7 @@
       type(biomatter), intent(inout) :: crop    ! structure containing full crop description
       type(biototal), intent(inout) :: croptot  ! structure containing derived variables
 
-      ! database variables
-      integer bnslay
-      real bc0ssa, bc0ssb
-      real bcdpop
-
-!     + + + PURPOSE + + +
-      ! calculates values of derived variables based on the present values
-      ! or the state variables. The derived variables are commonly used
-      ! where residue totals are required.
-
 !     + + + VARIABLE DEFINITIONS + + +
-
-!     bszrgh - ridge height
-!     bszlyd - Depth to bottom of each soil layer(mm)
-!     bc0rg - crop seeding location flag (0 - in furrow, 1 - on ridge)
-!     bcxrow - crop row spacing
-
 !     bhztranspdepth - depth in soil from which transpiration is extracted (m)
 !                     when crop is furrow planted, this is deeper than root depth
 !                     and is used in place of it when calling transp subroutine
@@ -60,15 +48,12 @@
 !     bhztransprtmin - root depth where transpiration depth reduction begins (m)
 !     bhztransprtmax - root depth where transpiration depth equals root depth (m)
 
-!     bnslay - number of soil layers
-!     bmncz - number of standing crop height divisions
-!     bc0ssa - stem area to mass ratio coefficient a
-!     bc0ssb - stem area to mass ratio coefficient b
-!     bcdpop - Number of plants (with single or multple stems) per unit area (#/m^2)
-
 !     LOCAL VARIABLES
       integer idx
       real temp1, temp2
+
+      integer :: ncanlay  ! number of standing crop height divisions
+
       ! parameter to control depth of slice
       real scidepth
       parameter( scidepth = 101.6 ) ! mm 101.6 = 4 inches for SCI
@@ -99,8 +84,8 @@
       end do
 
       ! calculate new stem area index and representative stem diameter
-      call ht_dia_sai( bcdpop, crop%mass%standstem, temp1, &
-     &                 bc0ssa, bc0ssb, crop%geometry%dstm, &
+      call ht_dia_sai( crop%geometry%dpop, crop%mass%standstem, temp1, &
+     &                 crop%database%ssa, crop%database%ssb, crop%geometry%dstm, &
      &                 crop%geometry%zht, temp2, crop%geometry%xstmrep, crop%deriv%rsai )
 
       ! leaf area index for standing material
@@ -109,14 +94,15 @@
 
       ! set stem and leaf area by plant height increments
       ! these are divided equally for a first approximation
-      do idx = 1, mncz
-          crop%deriv%rsaz(idx) = crop%deriv%rsai / mncz
-          crop%deriv%rlaz(idx) = crop%deriv%rlai / mncz
+      ncanlay = size(crop%deriv%rsaz)
+      do idx = 1, ncanlay
+          crop%deriv%rsaz(idx) = crop%deriv%rsai / ncanlay
+          crop%deriv%rlaz(idx) = crop%deriv%rlai / ncanlay
       end do
 
       ! effective silhouette
       crop%deriv%rcd = biodrag(0.0, 0.0, crop%deriv%rlai, crop%deriv%rsai, &
-     &                bc0rg, bcxrow, crop%geometry%zht, bszrgh)
+     &                crop%geometry%rg, crop%geometry%xrow, crop%geometry%zht, bszrgh)
 
       crop%deriv%fcancov = 1.0 - exp( - crop%database%ck * crop%deriv%rlai)  !crop leaf interception area (canopy cover)
       crop%deriv%ffcv = 1.0 - exp( -crop%database%covfact * crop%deriv%mf )
@@ -158,13 +144,14 @@
       croptot%rsaitot = crop%deriv%rsai      ! total of stem area index across pools (m^2/m^2)
       croptot%rlaitot = crop%deriv%rlai      ! total of leaf area index across pools (m^2/m^2)
 
-      do idx = 1, mncz
-          croptot%rsaz(idx) = crop%deriv%rsai / mncz           ! stem area index by height (1/m)
-          croptot%rlaz(idx) = crop%deriv%rlai / mncz           ! leaf area index by height (1/m)
+      do idx = 1, ncanlay
+          croptot%rsaz(idx) = crop%deriv%rsai / ncanlay           ! stem area index by height (1/m)
+          croptot%rlaz(idx) = crop%deriv%rlai / ncanlay           ! leaf area index by height (1/m)
       end do
 
       ! effective Biomass silhouette area across pools (SAI+LAI) (m^2/m^2) (combination of leaf area and stem area indices)
-      croptot%rcdtot = biodrag(0.0,0.0,croptot%rlaitot,croptot%rsaitot, bc0rg, bcxrow, croptot%zht_ave, bszrgh) 
+      croptot%rcdtot = biodrag(0.0,0.0,croptot%rlaitot,croptot%rsaitot, crop%geometry%rg, crop%geometry%xrow, &
+                               croptot%zht_ave, bszrgh) 
 
       croptot%ffcvtot = crop%deriv%ffcv      ! biomass cover across pools - flat (m^2/m^2)
       croptot%fscvtot = crop%deriv%fscv      ! biomass cover across pools - standing (m^2/m^2)

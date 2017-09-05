@@ -120,6 +120,8 @@
       real bdmrtto4(size(residue)), bdmbgto4(size(residue)), bdmto4(size(residue))
       real bdmrtto15(size(residue)), bdmbgto15(size(residue))
 
+      integer :: ncanlay  ! number of standing crop height divisions
+
 !     LOCAL VARIABLE DEFINITIONS
 !     idx - indexing variable
 !     idy - indexing variable
@@ -248,10 +250,10 @@
 
           ! set stem and leaf area by plant height increments
           ! these are divided equally for a first approximation
-          !mncz = size(residue(idy)%deriv%rsaz)
-          do idx = 1, mncz
-              residue(idy)%deriv%rsaz(idx) = residue(idy)%deriv%rsai / mncz
-              residue(idy)%deriv%rlaz(idx) = residue(idy)%deriv%rlai / mncz
+          ncanlay = size(residue(idy)%deriv%rsaz)
+          do idx = 1, ncanlay
+              residue(idy)%deriv%rsaz(idx) = residue(idy)%deriv%rsai / ncanlay
+              residue(idy)%deriv%rlaz(idx) = residue(idy)%deriv%rlai / ncanlay
           end do
 
           ! Residue cover calculations.
@@ -287,7 +289,7 @@
       restot%rcdtot = biodrag(restot%rlaitot, restot%rsaitot, 0.0, 0.0, 0, 0.0, 0.0, 0.0)
 
       ! sum area indexes by layer across pools
-      do idx = 1, mncz
+      do idx = 1, ncanlay
          restot%rsaz(idx) = 0.0
          restot%rlaz(idx) = 0.0
          do idy = 1, size(residue)

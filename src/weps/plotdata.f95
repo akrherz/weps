@@ -3,13 +3,13 @@
 !$Revision$
 !$HeadURL$
 
-      subroutine plotdata(sr, soil, crop, restot, croptot, biotot, noerod, manFile, cellstate)
+      subroutine plotdata(sr, soil, plant, restot, croptot, biotot, noerod, manFile, cellstate)
 
       use weps_main_mod, only: daysim, report_loop, am0ifl
       use datetime_mod, only: get_simdate, get_simdate_doy
       use file_io_mod, only: luoplt
       use soil_data_struct_defs, only: soil_def
-      use biomaterial, only: biomatter, biototal
+      use biomaterial, only: biomatter, biototal, plant_pointer
       use erosion_data_struct_defs, only: threshold
       use erosion_data_struct_defs, only: cellsurfacestate
       use erosion_data_struct_defs, only: awadir, awudmx
@@ -25,7 +25,7 @@
 !     + + + ARGUMENT DECLARATIONS + + +
       integer, intent(in) :: sr
       type(soil_def), intent(in) :: soil  ! soil for this subregion
-      type(biomatter), intent(in) :: crop
+      type(plant_pointer), pointer, intent(in) :: plant
       type(biototal), intent(in) :: restot
       type(biototal), intent(in) :: croptot
       type(biototal), intent(in) :: biotot
@@ -85,7 +85,7 @@
  2056 format ('|','ne_sf84','|',' ne_rock',                             &
      &        '|','ne_wzzo','|','ne_sfcv ')
 !     operation name(s) at end of line
- 2057 format ('|',' operation    ','|','    crop  ')
+ 2057 format ('|',' operation    ','|',' new_crop ')
 
 !     + + + END SPECIFICATIONS + + +
 
@@ -139,7 +139,12 @@
         if ( (lastoper(sr)%day .eq. day) .and. (lastoper(sr)%mon .eq. month) .and. &
              (lastoper(sr)%yr .eq. manfile%mnryr) ) then
            operat = lastoper(sr)%name
-           crname = crop%bname
+           if( associated(plant) ) then
+             ! name of most recently planted plant
+             crname = plant%bname
+           else
+             crname = '                                               '
+           end if
         else
            operat = '                                               '
            crname = '                                               '
