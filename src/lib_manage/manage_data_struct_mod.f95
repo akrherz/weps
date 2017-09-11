@@ -183,6 +183,10 @@ contains
 
     integer :: idx
 
+    ! set default values (covers dummy Group 0)
+    int_cnt = 0
+    real_cnt = 0
+    str_cnt = 0
     do idx = 1, max_ogp
       if (    OGP .eq. param_nt(idx)%ogp &
         .and. ID .eq. param_nt(idx)%id ) then
