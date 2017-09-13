@@ -9,20 +9,27 @@
 	INITILIZE IFORT ENVIRONMENT
  **********************************/
 
-/*if not set inspect the environment variable IFORT_HOME*/
-if [and [not [defined ifort_home]] [strlen [getenv IFORT_HOME]]] then{
-	ifort_home	= [getenv IFORT_HOME];
-}
+if [is_windows] then {
+	if [and [not [defined ifort_arch]] [strlen [getenv TARGET_ARCH]]] then{
+		ifort_arch	= [getenv TARGET_ARCH];
+	}
+} else {
 
-if [not [defined ifort_home]] then{
-	function print ****************************************************;
-	function print "INVALID INTEL COMPILER CONFIGURATION";
-	function print "ifort_home not defined in a config file or IFORT_HOME enviroment variable not set:";
-	function print [config];
-	function print [config-system];
-	function print [config-node];
-	function print ****************************************************;
-	fail;	
+	/*if not set inspect the environment variable IFORT_HOME*/
+	if [and [not [defined ifort_home]] [strlen [getenv IFORT_HOME]]] then{
+		ifort_home	= [getenv IFORT_HOME];
+	}
+
+	if [not [defined ifort_home]] then{
+		function print ****************************************************;
+		function print "INVALID INTEL COMPILER CONFIGURATION";
+		function print "ifort_home not defined in a config file or IFORT_HOME enviroment variable not set:";
+		function print [config];
+		function print [config-system];
+		function print [config-node];
+		function print ****************************************************;
+		fail;	
+	}
 }
 
 /*if the target platform for ifort has not been set then figure it out*/
@@ -52,11 +59,25 @@ else if [not [in [ifort_arch] ia32 intel64]] then{
 
 /*init different variables if windows or unix*/
 if [is_windows] then {
-	fail "ifort not yet implemented on windows.";
+	/*if [exists [ifort_home]/bin/compilervars.bat] then{
+		function print "Calling reentry";
+		function print "ifort_arch="[ifort_arch];
+		function enqueue-reentry-win \"[ifort_home]/bin/compilervars.bat\" \"[ifort_arch]\";
+	}
+	else{
+		function print ****************************************************;
+		function print "INVALID INTEL COMPILER CONFIGURATION";
+		function print "Valid ifort installation not found.";
+		function print "WINDOWS: ifort_home="[ifort_home];
+		function print ****************************************************;
+		fail;	
+	}*/
 }
 else{
 /*unix ifort*/
 	if [exists [ifort_home]/bin/compilervars.sh] then{
+		function print "Calling reentry";
+		function print "ifort_arch="[ifort_arch];
 		function enqueue-reentry [ifort_home]/bin/compilervars.sh [ifort_arch];
 	}
 	else{
@@ -74,30 +95,64 @@ else{
  **********************************/
 
 fc				= ifort;
-fc_version 		= [collect [fc] --version | head -1];
 
-fc_compile_flag	= "-c -Tf";
-fc_out_flag		= "-o ";
+fc_compile_flag			= "-c -Tf";
+fc_out_flag			= "-o ";
 
-fc_flags		="-nologo";
+fc_flags			="-nologo";
+fc_flags = "";
 
+if [is_windows] then {
+	fc_version 		= [collect_lines [fc] -what |& head -1];
+}
+else {
+	fc_version 		= [collect_lines [fc] --version | head -1];
+}
 
-fc_fixed		=;
+if [is_windows] then { /* setup for specifying linker to use within ifort */
+	if [and [not [defined vcinstalldir]] [strlen [getenv VCINSTALLDIR]]] then {
+		vcinstalldir = [getenv VCINSTALLDIR];
+		function print "vcinstalldir: " [vcinstalldir];
+		vcinstalld = [shell cygpath -ams '"`echo -n $VCINSTALLDIR`"'];
+		function print "vcinstalld: " [vcinstalld];
+		Cvcinstalld = [shell cygpath -ams '"`echo -n $VCINSTALLDIR`"' | cygpath -uf -];
+		function print "Cvcinstalld: " [Cvcinstalld];
+
+		fc_flags	+=-Qlocation,link,[vcinstalld]/bin;
+		function print "fc_flags: " [fc_flags];
+	}
+	else {
+		fail "Cannot find VCINSTALLDIR env variable or doesn't have a valid path.";
+	}
+}
+
+fc_fixed		="";
 fc_free			= "-free";
 
-
 /* default mode flags */
-fc_default		="-O0";
+if [is_windows] then {
+	fc_default	="-Od";
+	fc_mod_out_flag	= "-module:";
+}
+else { /* Linux */
+	fc_default	="-O0";
+	fc_mod_out_flag	= "-module ";
+}
 
 /* debug flags */
-fc_debug		="-g";
+if [is_windows] then {
+	fc_debug		="/debug /warn:all /gen-interfaces";
+}
+else { /* Linux */
+	fc_debug		="-g";
+}
+
 
 /* optimization flags */
-fc_optimize		="-O3";
+fc_optimize		="-O2";
 
 /*release flags	*/
 fc_release		= [fc_optimize];
-
 
 /* includes */
 fc_inc_flag		= "-I ";
@@ -105,7 +160,6 @@ fc_inc_join		= [false];		/*if true, the includes are joined into a single argume
 fc_inc_sep		= ;
 
 fc_mod_inc_flag		= "-I ";			
-fc_mod_out_flag		= "-module ";
 
 /* Case of the module names: lower, upper or mixed*/
 fc_mod_case	= lower;;
@@ -113,31 +167,69 @@ fc_mod_case	= lower;;
 /**********************************
 	    	  LINKER
  **********************************/
-ld				= [fc];
-ld_version		= [fc_version];
+if [is_windows] then {
+	/* The following 3 lines aren't "linking" the executable weps.exe */
+	ld			= [fc];
+	ld_version		= [fc_version];
+	ld_flags		=-Qlocation,link,[vcinstalld]/Bin; 
 
-ld_link_flag	=;
-ld_out_flag		= "-o ";
+	/* This fixes the issue with the linker not running with the correct args from ifort. */
+	/*ld			= [Cvcinstalld]/Bin/link.exe;
+	ld_version 		= [collect [ld] | head -1];
+	ld_flags		="";*/
 
-/* debug flags */
-ld_debug		=;
 
-/* optimization flags */
-ld_optimize		="-fast";
+	ld_out_flag		= "-o ";
 
-/* includes */
-ld_inc_flag		= [fc_inc_flag];
-ld_inc_join		= [fc_inc_join];		/*if true, the includes are joined into a single argument with the separator */
-ld_inc_sep		= [fc_inc_sep];
+	/* debug flags */
+	ld_debug		=;
 
-ld_lib_prefix	= "-Xlinker --start-group ";
-ld_lib_suffix	= " -Xlinker --end-group";
+	/* optimization flags */
+	ld_optimize		=;
 
+	/* includes */
+	ld_inc_flag		= [fc_inc_flag];
+	ld_inc_join		= [fc_inc_join];		/*if true, the includes are joined into a single argument with the separator */
+	ld_inc_sep		= [fc_inc_sep];
+
+	ld_lib_prefix	= "";
+	ld_lib_suffix	= "";
+}
+else {
+	ld				= [fc];
+	ld_version		= [fc_version];
+
+	ld_link_flag	=;
+	ld_out_flag		= "-o ";
+
+	/* debug flags */
+	ld_debug		=;
+
+	/* optimization flags */
+	ld_optimize		="-fast";
+
+	/* includes */
+	ld_inc_flag		= [fc_inc_flag];
+	ld_inc_join		= [fc_inc_join];		/*if true, the includes are joined into a single argument with the separator */
+	ld_inc_sep		= [fc_inc_sep];
+
+	ld_lib_prefix	= "-Xlinker --start-group ";
+	ld_lib_suffix	= " -Xlinker --end-group";
+}
 
 /**********************************
 	    	  ARCHIVER
  **********************************/
-ar			= xiar;
-ar_version	= ?;
+if [is_windows] then {
+	ar		= lib;
 
-ar_flags	= "-cq ";
+	ar_flags	= "-nologo";
+	ar_flags	+= "-out:";
+
+	ar_version	= [collect [ar] -verbose | head -1];
+}
+else { /* Linux */
+	ar		= xiar;
+	ar_version	= ?;
+	ar_flags	= "-cq ";
+}
