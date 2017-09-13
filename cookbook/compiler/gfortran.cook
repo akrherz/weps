@@ -44,9 +44,6 @@ function print "gfortran_arch:" [gfortran_arch];
 fc				= gfortran;
 fc_version 		= [collect [fc] --version | head -1];
 
-fc_compile_flag	= "-c ";
-fc_out_flag		= "-o ";
-
 /* Setup the correct default architecture configuration based upon the system the compiler is running on. */
 if [ matches [gfortran_arch] 32 ] then {
 	fc_flags = "-m32";
@@ -58,6 +55,8 @@ else {
 	fc_flags = ;
 }
 
+fc_compile_flag	= "-c ";
+fc_out_flag		= "-o ";
 
 fc_fixed		= "-ffixed-form";
 fc_free			= "-ffree-form";
