@@ -114,7 +114,41 @@ else {
 }
 
 if [is_windows] then { /* setup for specifying linker to use within ifort */
-	if [and [not [defined vcinstalldir]] [strlen [getenv VCINSTALLDIR]]] then {
+
+	/* Determine which version of MS Visual Studio is being used */
+	if [and [not [defined target_vs]] [strlen [getenv TARGET_VS]]] then {
+		target_vs = [getenv TARGET_VS];
+		function print "target_vs: " [target_vs];
+	}
+
+	/* Test for MS Visual Studio 2017 */
+	if [matches "vs2017" [target_vs]] then {
+
+		if [and [not [defined vctoolsinstalldir]] [strlen [getenv VCToolsInstallDir]]] then {
+			vctoolsinstalldir = [getenv VCToolsInstallDir];
+			function print "vctoolsinstalldir: " [vctoolsinstalldir];
+			vctoolsinstalld = [shell cygpath -ams '"`echo -n $VCToolsInstallDir`"'];
+			function print "vctoolsinstalld: " [vctoolsinstalld];
+			Cvctoolsinstalld = [shell cygpath -ams '"`echo -n $VCToolsInstallDir`"' | cygpath -uf -];
+			function print "Cvctoolsinstalld: " [Cvctoolsinstalld];
+
+			if [and [not [defined target_vs_arch]] [strlen [getenv TARGET_VS_ARCH]]] then {
+				target_vs_arch = [getenv TARGET_VS_ARCH];
+				function print "target_vs_arch: " [target_vs_arch];
+				if [matches "amd64" [target_vs_arch]] then {
+					HostX = "HostX64";
+				}
+				else {
+					HostX = "HostX86";
+				}
+				function print "HostX: " [HostX];
+				vs_linkdir = [vctoolsinstalld]/bin/[HostX]/x64;
+				function print "vs_linkdir: " [vs_linkdir];
+			}
+		}
+	}
+	/* Test for earlier versions of MS Visual Studio (2013 tested) */
+	else if [and [not [defined vcinstalldir]] [strlen [getenv VCINSTALLDIR]]] then {
 		vcinstalldir = [getenv VCINSTALLDIR];
 		function print "vcinstalldir: " [vcinstalldir];
 		vcinstalld = [shell cygpath -ams '"`echo -n $VCINSTALLDIR`"'];
@@ -122,12 +156,23 @@ if [is_windows] then { /* setup for specifying linker to use within ifort */
 		Cvcinstalld = [shell cygpath -ams '"`echo -n $VCINSTALLDIR`"' | cygpath -uf -];
 		function print "Cvcinstalld: " [Cvcinstalld];
 
-		fc_flags	+=-Qlocation,link,[vcinstalld]/bin;
-		function print "fc_flags: " [fc_flags];
+		vs_linkdir = [vcinstalld]/Bin;
+		function print "vs_linkdir: " [vs_linkdir];
 	}
 	else {
-		fail "Cannot find VCINSTALLDIR env variable or doesn't have a valid path.";
+		fail "Cannot find valid linker path.";
 	}
+
+	/* Checks to see if "link.exe" is actually in the discovered directory (tested with VS 2017 and VS 2013)*/
+	if [exists [vs_linkdir]] then {
+		function print "link.exe file exists here: " [vs_linkdir];
+        }
+	else {
+		fail "link.exe file doesn't exist here: " [vs_linkdir];
+	}
+
+	fc_flags	+=-Qlocation,link,[vs_linkdir];
+	function print "fc_flags: " [fc_flags];
 }
 
 fc_fixed		="";
@@ -175,10 +220,10 @@ if [is_windows] then {
 	/* The following 3 lines aren't "linking" the executable weps.exe */
 	ld			= [fc];
 	ld_version		= [fc_version];
-	ld_flags		=-Qlocation,link,[vcinstalld]/Bin; 
+	ld_flags		=-Qlocation,link,[vs_linkdir]; 
 
 	/* This fixes the issue with the linker not running with the correct args from ifort. */
-	/*ld			= [Cvcinstalld]/Bin/link.exe;
+	/*ld			= [vs_linkdir]/link.exe;
 	ld_version 		= [collect [ld] | head -1];
 	ld_flags		="";*/
 
@@ -200,7 +245,7 @@ if [is_windows] then {
 	ld_lib_suffix	= "";
 }
 else {
-	ld				= [fc];
+	ld			= [fc];
 	ld_version		= [fc_version];
 
 	ld_link_flag	=;
@@ -226,6 +271,7 @@ else {
  **********************************/
 if [is_windows] then {
 	ar		= lib;
+	/* ar		= [vs_linkdir]/lib.exe; */
 
 	ar_flags	= "-nologo";
 	ar_flags	+= "-out:";
