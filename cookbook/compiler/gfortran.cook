@@ -113,7 +113,7 @@ else {
 /*	ld_flags		+= ; */	/* Windows PC's (Cygwin) won't link with the "-static" option for some reason - LEW */
 /* #endif							*/
 /* works fine in TDM-GCC-64 version of gcc/gfortran (it is not a cygwin install) */
-/* ld_flags		+= "-static"; */
+ld_flags		+= "-static";
 
 
 ld_out_flag		= "-o ";
