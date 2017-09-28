@@ -315,7 +315,10 @@ contains
      sum_stat = sum_stat + dealloc_stat
      deallocate(soil%as0ags, stat=dealloc_stat)
      sum_stat = sum_stat + dealloc_stat
-
+     deallocate(soil%aslagn, stat=dealloc_stat)
+     sum_stat = sum_stat + dealloc_stat
+     deallocate(soil%aslagx, stat=dealloc_stat)
+     sum_stat = sum_stat + dealloc_stat
      ! derived
      deallocate(soil%asdpart, stat=dealloc_stat)
      sum_stat = sum_stat + dealloc_stat
