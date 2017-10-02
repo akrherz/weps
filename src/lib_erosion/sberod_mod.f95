@@ -216,35 +216,9 @@ module sberod_mod
 
 !     + + + END SPECIFICATION + + +
 
-      ! calculate abrasion and pm10 parameters    edit LH 3-4-05
+      ! set abrasion and particle size parameters
       do icsr = 1, size(subrsurf)-1
-         call sbpm10( subrsurf(icsr)%bsl(1)%aseags, subrsurf(icsr)%asecr, subrsurf(icsr)%bsl(1)%asfcla, &
-              subrsurf(icsr)%bsl(1)%asfsan, awzypt, subrsurf(icsr)%acanag, subrsurf(icsr)%acancr, &
-              subrsurf(icsr)%asf10an, subrsurf(icsr)%asf10en, subrsurf(icsr)%asf10bk )
-
-         ! calculate fraction less than diameter from asd
-         call sbsfdi( subrsurf(icsr)%bsl(1)%aslagm, subrsurf(icsr)%bsl(1)%as0ags, &
-              subrsurf(icsr)%bsl(1)%aslagn, subrsurf(icsr)%bsl(1)%aslagx, 0.01, subrsurf(icsr)%sfd1 )
-         ! store initial sf1
-         subrsurf(icsr)%sf1ic = subrsurf(icsr)%sfd1
-
-         call sbsfdi( subrsurf(icsr)%bsl(1)%aslagm, subrsurf(icsr)%bsl(1)%as0ags, &
-              subrsurf(icsr)%bsl(1)%aslagn, subrsurf(icsr)%bsl(1)%aslagx, 0.1, subrsurf(icsr)%sfd10 )
-         ! store initial sf10
-         subrsurf(icsr)%sf10ic = subrsurf(icsr)%sfd10
-
-         call sbsfdi( subrsurf(icsr)%bsl(1)%aslagm, subrsurf(icsr)%bsl(1)%as0ags, &
-              subrsurf(icsr)%bsl(1)%aslagn, subrsurf(icsr)%bsl(1)%aslagx, 0.84, subrsurf(icsr)%sfd84 )
-         ! store initial sf84
-         subrsurf(icsr)%sf84ic = subrsurf(icsr)%sfd84
-         subrsurf(icsr)%sf84ic = min(0.9999, max(subrsurf(icsr)%sf84ic,0.0001))            !set limits
-
-         call sbsfdi( subrsurf(icsr)%bsl(1)%aslagm, subrsurf(icsr)%bsl(1)%as0ags, &
-              subrsurf(icsr)%bsl(1)%aslagn, subrsurf(icsr)%bsl(1)%aslagx, 2.0, subrsurf(icsr)%sfd200 )
-         ! store initial sf200
-         subrsurf(icsr)%sf200ic = subrsurf(icsr)%sfd200
-         subrsurf(icsr)%sf200ic = min(0.9999, max(subrsurf(icsr)%sf200ic,0.0001))            !set limits
-
+         call sbsfdall( subrsurf(icsr) )
       end do
 
       do j = 1, jmax-1
@@ -376,6 +350,48 @@ module sberod_mod
       end do
 
     end subroutine sbwind
+
+    subroutine sbsfdall( subrsurf )
+
+      ! Set the subregion values of dependent variables for abrasion and particle sizess
+
+      use erosion_data_struct_defs, only: subregionsurfacestate, awzypt
+      use process_mod, only: sbpm10, sbsfdi
+
+!     + + + ARGUEMENT DECLARATIONS + + +
+      type(subregionsurfacestate), intent(inout) :: subrsurf  ! subregion surface conditions (erosion specific set)
+
+!     + + + END SPECIFICATION + + +
+
+      ! calculate abrasion and pm10 parameters    edit LH 3-4-05
+      call sbpm10( subrsurf%bsl(1)%aseags, subrsurf%asecr, subrsurf%bsl(1)%asfcla, &
+           subrsurf%bsl(1)%asfsan, awzypt, subrsurf%acanag, subrsurf%acancr, &
+           subrsurf%asf10an, subrsurf%asf10en, subrsurf%asf10bk )
+
+      ! calculate fraction less than diameter from asd
+      call sbsfdi( subrsurf%bsl(1)%aslagm, subrsurf%bsl(1)%as0ags, &
+           subrsurf%bsl(1)%aslagn, subrsurf%bsl(1)%aslagx, 0.01, subrsurf%sfd1 )
+      ! store initial sf1
+      subrsurf%sf1ic = subrsurf%sfd1
+
+      call sbsfdi( subrsurf%bsl(1)%aslagm, subrsurf%bsl(1)%as0ags, &
+           subrsurf%bsl(1)%aslagn, subrsurf%bsl(1)%aslagx, 0.1, subrsurf%sfd10 )
+      ! store initial sf10
+      subrsurf%sf10ic = subrsurf%sfd10
+
+      call sbsfdi( subrsurf%bsl(1)%aslagm, subrsurf%bsl(1)%as0ags, &
+           subrsurf%bsl(1)%aslagn, subrsurf%bsl(1)%aslagx, 0.84, subrsurf%sfd84 )
+      ! store initial sf84
+      subrsurf%sf84ic = subrsurf%sfd84
+      subrsurf%sf84ic = min(0.9999, max(subrsurf%sf84ic,0.0001))            !set limits
+
+      call sbsfdi( subrsurf%bsl(1)%aslagm, subrsurf%bsl(1)%as0ags, &
+           subrsurf%bsl(1)%aslagn, subrsurf%bsl(1)%aslagx, 2.0, subrsurf%sfd200 )
+      ! store initial sf200
+      subrsurf%sf200ic = subrsurf%sfd200
+      subrsurf%sf200ic = min(0.9999, max(subrsurf%sf200ic,0.0001))            !set limits
+
+    end subroutine sbsfdall
 
 end module sberod_mod
 

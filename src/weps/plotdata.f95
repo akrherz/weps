@@ -253,9 +253,6 @@
         write (luoplt(sr), 2090, ADVANCE="NO") operat
         write (luoplt(sr), 2091, ADVANCE="YES") crname
 
-        write(*,*) 'PLOTDATA: ', sr, subrsurf%sf1ic, subrsurf%sf10ic, subrsurf%sf84ic, subrsurf%sf200ic
-
-
  2080   format (' ',i6,' ',i3,' ',i2,' ',i2,' ',i4,' ',                 &
      &            42(f10.3,' '))
 

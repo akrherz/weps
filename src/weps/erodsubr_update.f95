@@ -13,8 +13,8 @@ subroutine erodsubr_update( sr, soil, crop, restot, croptot, biotot, h1et, subrs
     use soil_data_struct_defs, only: soil_def
     use biomaterial, only: biototal, biomatter
     use hydro_data_struct_defs, only: hydro_derived_et
-    use erosion_data_struct_defs, only: subregionsurfacestate, awzypt
-    use process_mod, only: sbpm10, sbsfdi
+    use erosion_data_struct_defs, only: subregionsurfacestate
+    use sberod_mod, only: sbsfdall
 
 !     +++ ARGUMENT DECLARATIONS +++
     integer sr                               ! subregion index (eventually obsolete)
@@ -99,42 +99,10 @@ subroutine erodsubr_update( sr, soil, crop, restot, croptot, biotot, h1et, subrs
     subrsurf%abzht = biotot%zht_ave
 !     real :: sxprg      ! sxprg  - ridge spacing parallel the wind direction(mm)
 
-!     real :: acanag     ! acanag - coefficient of abrasion for aggregates (1/m)
-!     real :: acancr     ! acancr - coefficient of abrasion for crust (1/m)
-!     real :: asf10an    ! asf10an - soil fraction pm10 in abraded suspension
-!     real :: asf10en    ! asf10en - soil fraction pm10 in emitted suspension
-!     real :: asf10bk    ! asf10bk - soil fraction pm10 in saltation breakage suspension
-    call sbpm10( subrsurf%bsl(1)%aseags, subrsurf%asecr, subrsurf%bsl(1)%asfcla, &
-              subrsurf%bsl(1)%asfsan, awzypt, subrsurf%acanag, subrsurf%acancr, &
-              subrsurf%asf10an, subrsurf%asf10en, subrsurf%asf10bk )
-
-    ! calculate fraction less than 10 microns diameter from asd
-    call sbsfdi( subrsurf%bsl(1)%aslagm, subrsurf%bsl(1)%as0ags, &
-              subrsurf%bsl(1)%aslagn, subrsurf%bsl(1)%aslagx, 0.01, subrsurf%sfd1 )
-    ! store initial sf1
-    subrsurf%sf1ic = subrsurf%sfd1
-
-    ! calculate fraction less than 100 microns diameter from asd
-    call sbsfdi( subrsurf%bsl(1)%aslagm, subrsurf%bsl(1)%as0ags, &
-              subrsurf%bsl(1)%aslagn, subrsurf%bsl(1)%aslagx, 0.1, subrsurf%sfd10 )
-    ! store initial sf10
-    subrsurf%sf10ic = subrsurf%sfd10
-
-    ! calculate fraction less than 0.84 mm diameter from asd
-    call sbsfdi( subrsurf%bsl(1)%aslagm, subrsurf%bsl(1)%as0ags, &
-              subrsurf%bsl(1)%aslagn, subrsurf%bsl(1)%aslagx, 0.84, subrsurf%sfd84 )
-    ! store initial sf84
-    subrsurf%sf84ic = subrsurf%sfd84
-    subrsurf%sf84ic = min(0.9999, max(subrsurf%sf84ic,0.0001))            !set limits
-
-    ! calculate fraction less than 2 mm diameter from asd
-    call sbsfdi( subrsurf%bsl(1)%aslagm, subrsurf%bsl(1)%as0ags, &
-             subrsurf%bsl(1)%aslagn, subrsurf%bsl(1)%aslagx, 2.0, subrsurf%sfd200 )
-    ! store initial sf200
-    subrsurf%sf200ic = subrsurf%sfd200
-    subrsurf%sf200ic = min(0.9999, max(subrsurf%sf200ic,0.0001))            !set limits
-
-    write(*,*) 'SUBRUPDATE: ', sr, subrsurf%sf1ic, subrsurf%sf10ic, subrsurf%sf84ic, subrsurf%sf200ic
+    ! updates acanag, acancr, asf10an, asf10en, asf10bk, 
+    ! sfd1, sfd10, sfd84, sfd200, sf1ic, sf10ic, sf84ic, sf200ic
+    ! for reporting in plot.out
+    call sbsfdall( subrsurf )
 
     return
     end

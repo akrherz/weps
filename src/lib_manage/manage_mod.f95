@@ -2625,7 +2625,7 @@ module manage_mod
           call tdbug(sr, prcode, soil, crop, residue)
         end if
 
-        write(0,*) 'prior to set_asd() call: ', 'msieve: ', msieve, 'nsieve: ', nsieve
+        !write(0,*) 'prior to set_asd() call: ', 'msieve: ', msieve, 'nsieve: ', nsieve
 
         if (manFile%am0tdb .eq. 2) then  !Debug info printouts
           ! print out the sdia() array
@@ -2734,18 +2734,18 @@ module manage_mod
         ! do process
         call set_asd(gmdx, gsdx, mnot, minf, asdlayer, soil)
 
-        write (UNIT=0,FMT="(A)",ADVANCE="NO") '//After set_asd process// '
-        write(0,*) 'no. of soil layers to modify/total and depth are: ', asdlayer, soil%nslay, asddepth
-        write(UNIT=0,FMT="(A3,5(A10))") 'lay', 'depth', 'GMDx', 'GSDx', 'm_not', 'm_inf'
-        do i=1, asdlayer
-          write (UNIT=0,FMT="(i3,5(f10.4))",ADVANCE="YES") &
-              i, soil%aszlyt(i), soil%aslagm(i), soil%as0ags(i), soil%aslagn(i), soil%aslagx(i)
-        end do
-        write(0,*) "layers below asdlayer"
-        do i=asdlayer+1, soil%nslay
-          write (UNIT=0,FMT="(i3,5(f10.4))",ADVANCE="YES") &
-              i, soil%aszlyt(i), soil%aslagm(i), soil%as0ags(i), soil%aslagn(i), soil%aslagx(i)
-        end do
+        !write (UNIT=0,FMT="(A)",ADVANCE="NO") '//After set_asd process// '
+        !write(0,*) 'no. of soil layers to modify/total and depth are: ', asdlayer, soil%nslay, asddepth
+        !write(UNIT=0,FMT="(A3,5(A10))") 'lay', 'depth', 'GMDx', 'GSDx', 'm_not', 'm_inf'
+        !do i=1, asdlayer
+        !  write (UNIT=0,FMT="(i3,5(f10.4))",ADVANCE="YES") &
+        !      i, soil%aszlyt(i), soil%aslagm(i), soil%as0ags(i), soil%aslagn(i), soil%aslagx(i)
+        !end do
+        !write(0,*) "layers below asdlayer"
+        !do i=asdlayer+1, soil%nslay
+        !  write (UNIT=0,FMT="(i3,5(f10.4))",ADVANCE="YES") &
+        !      i, soil%aszlyt(i), soil%aslagm(i), soil%as0ags(i), soil%aslagn(i), soil%aslagx(i)
+        !end do
 
         if (manFile%am0tdb .eq. 2) then  !Debug info printouts
           ! Convert ASD from modified log-normal to sieve classes
@@ -2826,15 +2826,15 @@ module manage_mod
           call tdbug(sr, prcode, soil, crop, residue)
         end if
 
-        write(0,*) 'prior to set_wc() call: ', ''
-        write(0,*) ""
+        !write(0,*) 'prior to set_wc() call: ', ''
+        !write(0,*) ""
 
         call getManVal(manFile%proc, 'wcdepth', wcdepth)
         call getManVal(manFile%proc, 'wc', wc)
 
         ! New parameters for set_water content initialization process
-        write(UNIT=0,FMT="(5(f10.4))") wcdepth, wc
-        write(0,*)
+        !write(UNIT=0,FMT="(5(f10.4))") wcdepth, wc
+        !write(0,*)
 
         ! Obtain the number of layers the water content values will be set to,
         ! based upon the specified depth and the individual layer thicknesses
@@ -2879,18 +2879,18 @@ module manage_mod
         ! do process
         call set_wc(wc, wclayer, soil)
 
-        write (UNIT=0,FMT="(A)",ADVANCE="NO") '//After set_wc process// '
-        write(0,*) 'no. of soil layers to modify/total and depth are: ', asdlayer, soil%nslay, wcdepth
-        write(UNIT=0,FMT="(A3,2(A10))") 'lay', 'depth', 'wc'
-        do i=1, wclayer
-          write (UNIT=0,FMT="(i3,2(f10.4))",ADVANCE="YES") &
-              i, soil%aszlyt(i), soil%ahrwc(i)
-        end do
-        write(0,*) "layers below asdlayer"
-        do i=wclayer+1, soil%nslay
-          write (UNIT=0,FMT="(i3,2(f10.4))",ADVANCE="YES") &
-              i, soil%aszlyt(i), soil%ahrwc(i)
-        end do
+        !write (UNIT=0,FMT="(A)",ADVANCE="NO") '//After set_wc process// '
+        !write(0,*) 'no. of soil layers to modify/total and depth are: ', asdlayer, soil%nslay, wcdepth
+        !write(UNIT=0,FMT="(A3,2(A10))") 'lay', 'depth', 'wc'
+        !do i=1, wclayer
+        !  write (UNIT=0,FMT="(i3,2(f10.4))",ADVANCE="YES") &
+        !      i, soil%aszlyt(i), soil%ahrwc(i)
+        !end do
+        !write(0,*) "layers below asdlayer"
+        !do i=wclayer+1, soil%nslay
+        !  write (UNIT=0,FMT="(i3,2(f10.4))",ADVANCE="YES") &
+        !      i, soil%aszlyt(i), soil%ahrwc(i)
+        !end do
 
         ! post-process stuff
         if (manFile%am0tdb .eq. 1) then
