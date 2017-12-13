@@ -45,6 +45,15 @@ module erosion_data_struct_defs
      real :: wusp         ! Soil surface threshold friction velocity for transport capacity (m/s)
   end type cellsurfacestate
 
+  type biodrag_input_pointer
+     type(biodrag_input_pointer), pointer :: olderBrcdInput
+     real :: rlai     ! leaf area index (m^2/m^2)
+     real :: rsai     ! stem area index (m^2/m^2)
+     integer :: rg    ! seed placement (0 - furrow, 1 - ridge)
+     real :: xrow     ! row spacing (m)
+     real :: zht      ! height (m)
+  end type biodrag_input_pointer
+
   type by_soil_layer
      real :: aszlyt    ! Soil layer thickness (mm)
      real :: asdblk    ! asdblk(l,s), R, Soil layer bulk density (Mg/m^3)
@@ -64,6 +73,7 @@ module erosion_data_struct_defs
   end type by_soil_layer
 
   type subregionsurfacestate
+     type(biodrag_input_pointer), pointer :: brcdInput
      ! ERODIN inputs
      real :: adzht_ave  ! Average residue height (m)
      real :: aczht      ! Crop height (m)
@@ -190,7 +200,6 @@ contains
      sum_stat = 0
      allocate(cellstate(0:xdim,0:ydim), stat=alloc_stat)
      sum_stat = sum_stat + alloc_stat
-     ! allocate soil layer arrays
 
      if( sum_stat .gt. 0 ) then
         write(*,*) 'ERROR: unable to allocate memory for cellstate'
@@ -225,6 +234,9 @@ contains
 
      subrsurf%nslay = nslay
 
+     ! set pointer to null
+     nullify( subrsurf%brcdInput )
+
      ! allocate soil layer array
      allocate(subrsurf%bsl(1:nslay), stat=alloc_stat)
      if( alloc_stat .gt. 0 ) then
@@ -232,19 +244,6 @@ contains
         stop 1
      end if
   end subroutine create_subregionsoillayers
-
-  subroutine destroy_subregionsoillayers(subrsurf)
-     type(subregionsurfacestate), intent(inout) :: subrsurf
-
-     ! local variable
-     integer :: dealloc_stat
-
-     ! deallocate arrays
-     deallocate(subrsurf%bsl, stat=dealloc_stat)
-     if( dealloc_stat .gt. 0 ) then
-        write(*,*) 'ERROR: unable to deallocate memory for soil layers'
-     end if
-  end subroutine destroy_subregionsoillayers
 
   subroutine create_subregionsurfacewet(nswet, subrsurf)
      integer, intent(in) :: nswet             ! number of surface wetness values
@@ -255,7 +254,10 @@ contains
 
      subrsurf%nswet = nswet
 
-     ! allocate soil layer array
+     ! set pointer to null
+     nullify( subrsurf%brcdInput )
+
+     ! allocate surface wetness array
      allocate(subrsurf%ahrwc0(1:nswet), stat=alloc_stat)
      if( alloc_stat .gt. 0 ) then
         write(*,*) 'ERROR: unable to allocate memory for subdaily surface wetness'
@@ -263,18 +265,82 @@ contains
      end if
   end subroutine create_subregionsurfacewet
 
-  subroutine destroy_subregionsurfacewet(subrsurf)
+  subroutine destroy_subregion_alloc(subrsurf)
      type(subregionsurfacestate), intent(inout) :: subrsurf
 
      ! local variable
-     integer :: dealloc_stat
+     integer :: alloc_stat
+     integer :: sum_stat    ! accumlated status return
 
-     ! deallocate arrays
-     deallocate(subrsurf%ahrwc0, stat=dealloc_stat)
-     if( dealloc_stat .gt. 0 ) then
-        write(*,*) 'ERROR: unable to deallocate memory for subdaily surface wetness'
+     do while( associated( subrsurf%brcdInput ) )
+        call brcdInputDestroy(subrsurf%brcdInput)
+     end do
+
+     ! deallocate soil layer arrays
+     deallocate(subrsurf%bsl, stat=alloc_stat)
+     sum_stat = sum_stat + alloc_stat
+     ! deallocate surface wetness arrays
+     deallocate(subrsurf%ahrwc0, stat=alloc_stat)
+     sum_stat = sum_stat + alloc_stat
+     if( sum_stat .gt. 0 ) then
+        write(*,*) 'ERROR: unable to deallocate subrsurf memory'
      end if
-  end subroutine destroy_subregionsurfacewet
+  end subroutine destroy_subregion_alloc
+
+  function brcdInputAdd( brcdInput ) result( brcdInputNew )
+     type(biodrag_input_pointer), pointer :: brcdInput
+     type(biodrag_input_pointer), pointer :: brcdInputNew
+
+     ! local variable
+     integer :: alloc_stat  ! allocation status return
+
+     allocate(brcdInputNew, stat=alloc_stat)
+     if( alloc_stat .gt. 0 ) then
+        write(*,'(a,i0)') 'Unable to allocate new Plant pointer.'
+     end if
+
+     if( associated(brcdInput) ) then
+        ! point to previous plant
+        brcdInputNew%olderbrcdInput => brcdInput
+     else
+        nullify(brcdInputNew%olderbrcdInput)
+     end if
+
+  end function brcdInputAdd
+
+  subroutine brcdInputDestroy(brcdInput)
+     ! destroys a brcdInput from within the brcdInput pointer chain
+     ! while preserving the chain
+     type(biodrag_input_pointer), pointer :: brcdInput
+
+     ! local variable
+     integer :: alloc_stat  ! allocation status return
+     type(biodrag_input_pointer), pointer :: olderBrcdInput
+
+     ! check for older brcdInput
+     if( associated(brcdInput%olderbrcdInput) ) then
+        ! preserve pointer to olderPlant
+        olderBrcdInput => brcdInput%olderBrcdInput
+     else
+        ! no olderPlant
+        nullify(olderBrcdInput)
+     end if
+
+     ! delete memory and nullify
+     deallocate(brcdInput, stat=alloc_stat)
+     if( alloc_stat .gt. 0 ) then
+        write(*,'(a,i0)') 'Unable to deallocate brcdInput pointer.'
+     end if
+
+     if( associated(olderBrcdInput) ) then
+       ! older plant now in this spot
+       brcdInput => olderBrcdInput
+     else
+       ! no older plants
+       nullify(brcdInput)
+     end if
+
+  end subroutine brcdInputDestroy
 
   function create_threshold(nsubr) result(noerod)
      integer, intent(in) :: nsubr

@@ -2,14 +2,20 @@
 !$Date$
 !$Revision$
 !$HeadURL$
-      subroutine decomp(isr, soil, crop, residue, decompfac, h1et)
 
-      use weps_interface_defs, ignore_me=>decomp
+module decomp_process_mod
+
+  contains
+
+    subroutine decomp(isr, soil, plant, decompfac, h1et)
+
+      use weps_interface_defs
       use soil_data_struct_defs, only: soil_def
-      use biomaterial, only: biomatter, decomp_factors
+      use biomaterial, only: plant_pointer, residue_pointer, decomp_factors
       use decomp_data_struct_defs, only: am0dfl, am0ddb
       use climate_input_mod, only: cli_today
       use hydro_data_struct_defs, only: hydro_derived_et
+      use decomp_out_mod, only: ddbug, decout
 
 !     +++ PURPOSE + + +
 
@@ -41,18 +47,9 @@
 !     + + +   ARGUMENT DECLARATIONS + + +
       integer, intent(in) :: isr                               ! current subregion
       type(soil_def), intent(in) :: soil  ! soil for this subregion
-      type(biomatter), intent(inout) :: crop  ! structure containing biomatter state and parameters
-      type(biomatter), dimension(:), intent(inout) :: residue  ! structure containing biomatter state and parameters
+      type(plant_pointer), pointer :: plant     ! pointer to youngest plant data, which chains to older plant data
       type(decomp_factors), intent(inout) :: decompfac
       type(hydro_derived_et), intent(in) :: h1et
-
-!     + + +  VARIABLES MAINTAINED BY SUBREGION + + +
-!
-!         dweti(mnsub)
-!         diwcsy(mnsub)
-!         cumdds(npools,mnsub)
-!         cumddf(npools,mnsub)
-!         cumddg(bnslay,npools,mnsub)
 
 !     + + + VARIABLE DECLARATIONS + + +
 
@@ -78,10 +75,13 @@
 !     + + +   FUNCTION CALLS +++
 !
 !     tc - Calculates temperature based scaling factor
-      real  tc
+!      real  tc
       
       logical dbgflg
-!
+
+      type(plant_pointer), pointer :: thisPlant
+      type(residue_pointer), pointer :: thisResidue
+
 !     + + +   DATA INITIALIZATIONS + + +
 !  These data initializations are being done every day.  Need to make
 !  sure that when a harvest takes place that all the decomp pools are
@@ -91,10 +91,8 @@
 
       ! set the number of soil layers from previously allocated structure
       nslay = size(decompfac%iwcg)
-      ! set number of residue pools from previously allocated structure
-      npools = size(residue)
 
-      if (am0ddb(isr) .eq. 1) call ddbug(isr, nslay, residue)
+      if (am0ddb(isr) .eq. 1) call ddbug(isr, nslay, plant)
 
       if (dbgflg) write(*,*) 'decomp 1'
 
@@ -205,114 +203,119 @@
          decompfac%iddg(isz) = min(decompfac%iwcg(isz),decompfac%itcg(isz)) !buried
       end do
 
-! Summation of DECOMPOSITION days for graphing
-! this is indexed based on the number of residue age pools
-
-! all, standing, flat and below ground
-      do iage = 1,npools
-         ! calendar days
-         residue(iage)%decomp%resday = residue(iage)%decomp%resday + 1
-         ! decomposition days
-         residue(iage)%decomp%cumdds = residue(iage)%decomp%cumdds + decompfac%idds
-         residue(iage)%decomp%cumddf = residue(iage)%decomp%cumddf + decompfac%iddf
-         do isz = 1, nslay
-            residue(iage)%decomp%cumddg(isz) = residue(iage)%decomp%cumddg(isz) + decompfac%iddg(isz)
-         end do
-      end do
-
       if (dbgflg) write(*,*) 'decomp 4'
 
 ! Decompose each age pool of residue based on decomp days accumulated in
 ! the present 24 hr using the numerical formula for exponential decay
 !      Mass(t) = mass(t-1) * (1 - k * dday)
 
-      ! crop flat leaves are dead and assumed to start decomposing
-      if( crop%mass%flatleaf .gt. 0.0 ) then
-          dec_fac = max(0.0, 1.0 - leaf_fac*crop%database%dkrate(2)*decompfac%iddf)
-          crop%mass%flatleaf = crop%mass%flatleaf * dec_fac
-      end if
+      thisPlant => plant
+      do while( associated(thisPlant) )
+        ! plant exists
+        ! all plant biomass is living, not decomposing.
 
-      do iage = 1,npools
-        !standing residue mass
-        dec_fac = max(0.0, 1.0 - residue(iage)%database%dkrate(1)*decompfac%idds)
-        residue(iage)%mass%standstem = residue(iage)%mass%standstem * dec_fac
-        dec_fac = max(0.0, 1.0 - leaf_fac*residue(iage)%database%dkrate(1)*decompfac%idds)
-        residue(iage)%mass%standleaf = residue(iage)%mass%standleaf * dec_fac
-        dec_fac = max(0.0, 1.0 - store_fac*residue(iage)%database%dkrate(1)*decompfac%idds)
-        residue(iage)%mass%standstore = residue(iage)%mass%standstore * dec_fac
+        ! decompose all residues in this plant
+        thisResidue => thisPlant%residue
+        do while( associated(thisResidue) )
 
-        !flat residue mass
-        dec_fac = max(0.0, 1.0 - residue(iage)%database%dkrate(2)*decompfac%iddf)
-        residue(iage)%mass%flatstem = residue(iage)%mass%flatstem * dec_fac
-        dec_fac = max(0.0, 1.0 - leaf_fac*residue(iage)%database%dkrate(2)*decompfac%iddf)
-        residue(iage)%mass%flatleaf = residue(iage)%mass%flatleaf * dec_fac
-        dec_fac = max(0.0, 1.0 - store_fac*residue(iage)%database%dkrate(2)*decompfac%iddf)
-        residue(iage)%mass%flatstore = residue(iage)%mass%flatstore * dec_fac
+          ! update decomposition ages for this pool
+          ! calendar days
+          thisResidue%resday = thisResidue%resday + 1
+          ! decomposition days
+          thisResidue%cumdds = thisResidue%cumdds + decompfac%idds
+          thisResidue%cumddf = thisResidue%cumddf + decompfac%iddf
+          do isz = 1, nslay
+            thisResidue%cumddg(isz) = thisResidue%cumddg(isz) + decompfac%iddg(isz)
+          end do
 
-        ! unburied root mass
-        dec_fac = max(0.0, 1.0 - residue(iage)%database%dkrate(2)*decompfac%iddf)
-        residue(iage)%mass%flatrootstore = residue(iage)%mass%flatrootstore * dec_fac
-        residue(iage)%mass%flatrootfiber = residue(iage)%mass%flatrootfiber * dec_fac
+          ! decompose
+          !standing residue mass
+          dec_fac = max(0.0, 1.0 - thisPlant%database%dkrate(1)*decompfac%idds)
+          thisResidue%standstem = thisResidue%standstem * dec_fac
+          dec_fac = max(0.0, 1.0 - leaf_fac*thisPlant%database%dkrate(1)*decompfac%idds)
+          thisResidue%standleaf = thisResidue%standleaf * dec_fac
+          dec_fac = max(0.0, 1.0 - store_fac*thisPlant%database%dkrate(1)*decompfac%idds)
+          thisResidue%standstore = thisResidue%standstore * dec_fac
 
-        do isz = 1, nslay
-          ! buried surface biomass
-          dec_fac = max(0.0, 1.0-residue(iage)%database%dkrate(3)*decompfac%iddg(isz))
-          residue(iage)%mass%stemz(isz) = residue(iage)%mass%stemz(isz) * dec_fac
-          dec_fac = max(0.0, 1.0-leaf_fac*residue(iage)%database%dkrate(3)*decompfac%iddg(isz))
-          residue(iage)%mass%leafz(isz) = residue(iage)%mass%leafz(isz) * dec_fac
-          dec_fac = max(0.0,1.0-store_fac*residue(iage)%database%dkrate(3)*decompfac%iddg(isz))
-          residue(iage)%mass%storez(isz) = residue(iage)%mass%storez(isz) * dec_fac
+          !flat residue mass
+          dec_fac = max(0.0, 1.0 - thisPlant%database%dkrate(2)*decompfac%iddf)
+          thisResidue%flatstem = thisResidue%flatstem * dec_fac
+          dec_fac = max(0.0, 1.0 - leaf_fac*thisPlant%database%dkrate(2)*decompfac%iddf)
+          thisResidue%flatleaf = thisResidue%flatleaf * dec_fac
+          dec_fac = max(0.0, 1.0 - store_fac*thisPlant%database%dkrate(2)*decompfac%iddf)
+          thisResidue%flatstore = thisResidue%flatstore * dec_fac
 
-          ! buried root biomass
-          dec_fac = max(0.0, 1.0 - residue(iage)%database%dkrate(4)*decompfac%iddg(isz))
-          residue(iage)%mass%rootstorez(isz) = residue(iage)%mass%rootstorez(isz) * dec_fac
-          residue(iage)%mass%rootfiberz(isz) = residue(iage)%mass%rootfiberz(isz) * dec_fac
-        end do
-      end do
+          ! unburied root mass
+          dec_fac = max(0.0, 1.0 - thisPlant%database%dkrate(2)*decompfac%iddf)
+          thisResidue%flatrootstore = thisResidue%flatrootstore * dec_fac
+          thisResidue%flatrootfiber = thisResidue%flatrootfiber * dec_fac
 
-! Change standing stem number and adjust the mass for standing
-! and surface biomass Steiner et al., 1994 Agronomy Journal
+          do isz = 1, nslay
+            ! buried surface biomass
+            dec_fac = max(0.0, 1.0-thisPlant%database%dkrate(3)*decompfac%iddg(isz))
+            thisResidue%stemz(isz) = thisResidue%stemz(isz) * dec_fac
+            dec_fac = max(0.0, 1.0-leaf_fac*thisPlant%database%dkrate(3)*decompfac%iddg(isz))
+            thisResidue%leafz(isz) = thisResidue%leafz(isz) * dec_fac
+            dec_fac = max(0.0,1.0-store_fac*thisPlant%database%dkrate(3)*decompfac%iddg(isz))
+            thisResidue%storez(isz) = thisResidue%storez(isz) * dec_fac
 
-      if (dbgflg) write(*,*) 'decomp 5'
+            ! buried root biomass
+            dec_fac = max(0.0, 1.0 - thisPlant%database%dkrate(4)*decompfac%iddg(isz))
+            thisResidue%rootstorez(isz) = thisResidue%rootstorez(isz) * dec_fac
+            thisResidue%rootfiberz(isz) = thisResidue%rootfiberz(isz) * dec_fac
+          end do
 
-      do iage = 1,npools
-         ! check for threshold ddays value before allowing stems to decline
-         if (residue(iage)%decomp%cumdds .gt. residue(iage)%database%ddsthrsh) then
-            if (residue(iage)%geometry%dstm .gt. 0.0) then
+
+          ! Change standing stem number and adjust the mass for standing
+          ! and surface biomass Steiner et al., 1994 Agronomy Journal
+
+          if (dbgflg) write(*,*) 'decomp 5'
+
+          ! check for threshold ddays value before allowing stems to decline
+          if (thisResidue%cumdds .gt. thisPlant%database%ddsthrsh) then
+            if (thisResidue%dstm .gt. 0.0) then
                ! Calculate stem fall and new stem number. This stem fall
                ! ratio is then applied to the standing pools since their 
                ! mass is transferred to flat in the same proportion
-               dec_fac = max(0.0, 1.0 - residue(iage)%database%dkrate(5)* decompfac%idds)
-               residue(iage)%geometry%dstm = residue(iage)%geometry%dstm * dec_fac
+               dec_fac = max(0.0, 1.0 - thisPlant%database%dkrate(5)* decompfac%idds)
+               thisResidue%dstm = thisResidue%dstm * dec_fac
 
                ! Move corresponding standing stem mass to flat stem mass
-               prev_mass = residue(iage)%mass%standstem
-               residue(iage)%mass%standstem = residue(iage)%mass%standstem * dec_fac
-               residue(iage)%mass%flatstem = residue(iage)%mass%flatstem + (prev_mass - residue(iage)%mass%standstem)
+               prev_mass = thisResidue%standstem
+               thisResidue%standstem = thisResidue%standstem * dec_fac
+               thisResidue%flatstem = thisResidue%flatstem + (prev_mass - thisResidue%standstem)
 
                ! Move corresponding standing leaf mass to flat leaf mass
-               prev_mass = residue(iage)%mass%standleaf
-               residue(iage)%mass%standleaf = residue(iage)%mass%standleaf * dec_fac
-               residue(iage)%mass%flatleaf = residue(iage)%mass%flatleaf + (prev_mass - residue(iage)%mass%standleaf)
+               prev_mass = thisResidue%standleaf
+               thisResidue%standleaf = thisResidue%standleaf * dec_fac
+               thisResidue%flatleaf = thisResidue%flatleaf + (prev_mass - thisResidue%standleaf)
 
                ! Move corresponding standing store mass to flat store mass
-               prev_mass = residue(iage)%mass%standstore
-               residue(iage)%mass%standstore = residue(iage)%mass%standstore * dec_fac
-               residue(iage)%mass%flatstore = residue(iage)%mass%flatstore + (prev_mass - residue(iage)%mass%standstore)
+               prev_mass = thisResidue%standstore
+               thisResidue%standstore = thisResidue%standstore * dec_fac
+               thisResidue%flatstore = thisResidue%flatstore + (prev_mass - thisResidue%standstore)
             end if
-         end if
+          end if
+
+          ! go to next older residue in thisPlant
+          thisResidue => thisResidue%olderResidue
+        end do
+
+        ! go to next older plant
+        thisPlant => thisPlant%olderPlant
       end do
 
+      ! for debug and out, no derived values are updated at this point
       if (dbgflg) write(*,*) 'decomp 10'
-      if (am0ddb(isr) .eq. 1) call ddbug(isr, nslay, residue)
-      if ((am0dfl(isr) .eq. 1).or.(am0dfl(isr) .eq. 2).or.(am0dfl(isr) .eq.3)) call decout(isr, residue)
+      if (am0ddb(isr) .eq. 1) call ddbug(isr, nslay, plant)
+      if ((am0dfl(isr) .eq. 1).or.(am0dfl(isr) .eq. 2).or.(am0dfl(isr) .eq.3)) call decout(isr, plant)
 
       return
-      end
+    end subroutine decomp
 
 ! + + +  Function tc
 
-      real function tc (temp)
+    real function tc (temp)
 
 ! + + +  PURPOSE + + +
 !
@@ -356,5 +359,7 @@
       if (tc .lt. 0.0) tc = 0.0 !this prevents tc from becoming less than 0 at high temperatures! SVD
 
       return
-      end
+    end function tc
+
+end module decomp_process_mod
 

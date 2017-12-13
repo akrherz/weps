@@ -22,7 +22,7 @@
       integer          mnbpls
       integer          mndk
       integer          mngdpt
-      integer          mnrbc
+!      integer          mnrbc
 
       integer          mnhhrs
 
@@ -47,7 +47,7 @@
       parameter (mnbpls = 5)   ! present decomp output maxes at 30 (see openfils.for, file.inc, FAF)
       parameter (mndk = 5)
       parameter (mngdpt = 501) !increased from 60 for standalone erosion testing
-      parameter (mnrbc = 5)
+!      parameter (mnrbc = 5)
 
       parameter (mnhhrs = 24)
 

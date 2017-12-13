@@ -24,6 +24,7 @@ module stir_report_mod
       real phop_energy           ! energy value for that operation
       integer crop_num           ! number of crop in the crop rotation cycle, 0 = not yet initialized, 1-n = number of crop
       integer last_harv          ! is this the last harvest in a crop rotation cycle, 0 = not the last harvest, 1 = this is the last harvest (ie. end of the cycle)
+                                 ! For rotations without any harvests (just consecutive plantings), set this to 1 when next planting occurs indicating termination
    end type stir_operation_vars
 
    type stir_accumulators
@@ -145,7 +146,11 @@ module stir_report_mod
       real :: rootstoref
       real :: rootfiberf
       logical :: crop_present
+      logical :: crop_present_today
       logical :: temp_present
+      integer :: prev_day
+      integer :: prev_mon
+      integer :: prev_yr
 
 !     + + + LOCAL DEFINITIONS + + +
 !     stir_op_avg - average over all burial processes of stir value
@@ -175,9 +180,21 @@ module stir_report_mod
       lastoperskip = 0
       croptype = 0
       crop_present = .false.
+      crop_present_today = .false.
       temp_present = .false.
+      prev_day = 0
+      prev_mon = 0
+      prev_yr = 0
       manFile%oper => manFile%operFirst
       do while( associated(manFile%oper) )
+
+        if(     (manFile%oper%operDate%day .ne. prev_day) &
+          .or. (manFile%oper%operDate%month .ne. prev_mon) &
+          .or. (manFile%oper%operDate%year .ne. prev_yr) ) then
+          ! new day
+          crop_present = crop_present_today
+        end if
+
         if ( manFile%oper%operType .eq. 0 ) then
           lastoperskip = 1
         else if ( manFile%oper%operType .ne. 0 ) then
@@ -239,9 +256,10 @@ module stir_report_mod
                        ) &
                    .or. (killflag .eq. 2) &
                     ) then
-                   stircum(isr)%phop(stircum(isr)%phopidx)%phop_type = 3
                    if ( crop_present ) then
+                     stircum(isr)%phop(stircum(isr)%phopidx)%phop_type = 3
                      crop_present = .false.
+                     crop_present_today = .false.
                      temp_present = .true.
                    end if
                 else
@@ -309,7 +327,7 @@ module stir_report_mod
                 if ( plantpop .gt. 0.0 ) then
                   stircum(isr)%phop(stircum(isr)%phopidx)%phop_type = 1
                   stircum(isr)%phop(stircum(isr)%phopidx)%stir_cropname = cropname
-                  crop_present = .true.
+                  crop_present_today = .true.
                   stircum(isr)%phop(stircum(isr)%phopidx)%crop_num = stircum(isr)%phop(stircum(isr)%phopidx)%crop_num + 1
                 else
                   stircum(isr)%phop(stircum(isr)%phopidx)%phop_type = 0
@@ -350,6 +368,10 @@ module stir_report_mod
         end if
 
         ! reset values for next operation
+        prev_day = manFile%oper%operDate%day
+        prev_mon = manFile%oper%operDate%month
+        prev_yr = manFile%oper%operDate%year
+
         stircum(isr)%stir_op_sum = 0
         stircum(isr)%oper_cnt = 0
         stircum(isr)%proc_cnt = 0
@@ -397,7 +419,11 @@ module stir_report_mod
             jdx = stircum(isr)%phopcnt
           end if
           do while (stircum(isr)%phop(jdx)%last_harv .ne. 1)
-            stircum(isr)%phop(jdx)%crop_num = stircum(isr)%phop(idx)%crop_num
+            if( stircum(isr)%phop(jdx)%phop_type .eq. 1 ) then
+              exit
+            else
+              stircum(isr)%phop(jdx)%crop_num = stircum(isr)%phop(idx)%crop_num
+            end if
             jdx = jdx - 1
             if ( jdx .lt. 1 ) then
               jdx = stircum(isr)%phopcnt
@@ -409,7 +435,6 @@ module stir_report_mod
           exit
         end if
       end do
-
 
       ! create and print STIR report (2nd time through complete, info complete)
       do idx = 1, stircum(isr)%phopcnt

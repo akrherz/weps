@@ -375,6 +375,21 @@ module split_layers_mod
       ! before the layers are split
       call move_ave_val( soil%nslay, soil%aszlyd, soil%ahfredsat, soil_split%nslay, soil_split%aszlyd, soil_split%ahfredsat )
 
+      ! value that are not read in ifc, initialize here
+      call move_ave_val( soil%nslay, soil%aszlyd, soil%asfwdc, soil_split%nslay, soil_split%aszlyd, soil_split%asfwdc )
+      call move_ave_val( soil%nslay, soil%aszlyd, soil%ahrwc1, soil_split%nslay, soil_split%aszlyd, soil_split%ahrwc1 )
+
+      ! values set later in soil_mod, initialize here
+      call move_ave_val( soil%nslay, soil%aszlyd, soil%aseagm, soil_split%nslay, soil_split%aszlyd, soil_split%aseagm )
+      call move_ave_val( soil%nslay, soil%aszlyd, soil%aseagm, soil_split%nslay, soil_split%aszlyd, soil_split%aseagm )
+      call move_ave_val( soil%nslay, soil%aszlyd, soil%aseagmn, soil_split%nslay, soil_split%aszlyd, soil_split%aseagmn )
+      call move_ave_val( soil%nslay, soil%aszlyd, soil%aseagmx, soil_split%nslay, soil_split%aszlyd, soil_split%aseagmx )
+      call move_ave_val( soil%nslay, soil%aszlyd, soil%aslmin, soil_split%nslay, soil_split%aszlyd, soil_split%aslmin )
+      call move_ave_val( soil%nslay, soil%aszlyd, soil%aslmax, soil_split%nslay, soil_split%aszlyd, soil_split%aslmax )
+      call move_ave_val( soil%nslay, soil%aszlyd, soil%bhtmx0, soil_split%nslay, soil_split%aszlyd, soil_split%bhtmx0 )
+      call move_ave_val( soil%nslay, soil%aszlyd, soil%bhrwc0, soil_split%nslay, soil_split%aszlyd, soil_split%bhrwc0 )
+      call move_ave_val( soil%nslay, soil%aszlyd, soil%ahrwcdmx, soil_split%nslay, soil_split%aszlyd, soil_split%ahrwcdmx )
+
       ! return new layer split array
       soil = soil_split
 
@@ -471,6 +486,17 @@ module split_layers_mod
       ! but is calculated with the -w4 cmdline option wc_type == 4
       ! before the layers are split
       call move_ave_val( soil%nslay, soil%aszlyd, soil%ahfredsat, soil_split%nslay, soil_split%aszlyd, soil_split%ahfredsat )
+
+      ! values set later in soil_mod, initialize here
+      call move_ave_val( soil%nslay, soil%aszlyd, soil%aseagm, soil_split%nslay, soil_split%aszlyd, soil_split%aseagm )
+      call move_ave_val( soil%nslay, soil%aszlyd, soil%aseagm, soil_split%nslay, soil_split%aszlyd, soil_split%aseagm )
+      call move_ave_val( soil%nslay, soil%aszlyd, soil%aseagmn, soil_split%nslay, soil_split%aszlyd, soil_split%aseagmn )
+      call move_ave_val( soil%nslay, soil%aszlyd, soil%aseagmx, soil_split%nslay, soil_split%aszlyd, soil_split%aseagmx )
+      call move_ave_val( soil%nslay, soil%aszlyd, soil%aslmin, soil_split%nslay, soil_split%aszlyd, soil_split%aslmin )
+      call move_ave_val( soil%nslay, soil%aszlyd, soil%aslmax, soil_split%nslay, soil_split%aszlyd, soil_split%aslmax )
+      call move_ave_val( soil%nslay, soil%aszlyd, soil%bhtmx0, soil_split%nslay, soil_split%aszlyd, soil_split%bhtmx0 )
+      call move_ave_val( soil%nslay, soil%aszlyd, soil%bhrwc0, soil_split%nslay, soil_split%aszlyd, soil_split%bhrwc0 )
+      call move_ave_val( soil%nslay, soil%aszlyd, soil%ahrwcdmx, soil_split%nslay, soil_split%aszlyd, soil_split%ahrwcdmx )
 
       ! return new layer split array
       soil = soil_split

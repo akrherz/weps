@@ -186,6 +186,7 @@ module soil_mod
         call  cru(soil%aszcr, cumpa, soil%asfcla(1), dcump, &
           soil%asfcr, bhzsmt, soil%asmlos, soil%asfom(1), soil%asfcce(1), &
           soil%asfsan(1), bsmls0, soil%aszrgh, soil%aslrr, soil%asflos)
+
       endif
 
 !  skip layer update on first simulation day
@@ -199,7 +200,7 @@ module soil_mod
      &  soil%aslagm, &
      &  soil%as0ags, soil%aslagn, soil%aslagx, soil%asdblk, &
      &  soil%aszlyt, soil%asdagd, bslay, &
-     &  soil%asdsblk, bhzinf, bhzwid, trigger, isr)
+     &  soil%asdsblk, soil%asvroc, bhzinf, bhzwid, trigger, isr)
 
         ! update surface properties based on surface layer properties
         ! crust stability
@@ -654,9 +655,8 @@ module soil_mod
  2038 format (f7.2,9f8.2)
  2050 format ('amrslp(',i2,') croptot%ftcvtot(',i2,') croptot%rlaitot(',&
      &  i2,')',                                                         &
-     &      ' croptot%zrtd(',i2,') biotot%mftot(',i2,') ahfwsf(',i2,')',&
-     &      ' ahzper(',i2,')')
- 2051 format (2f10.2,2f10.5,2x,f10.2,f10.2,f12.2)
+     &      ' biotot%mftot(',i2,') ahzper(',i2,')')
+ 2051 format (2f10.2,2f10.5,2x,f10.2,f12.2)
  2052 format ('ahzrun(',i2,') h1et%zirr(',i2,') ahzsno(',i2,')',           &
      &        ' ahzsmt(',i2,') asxrgs(',i2,') aszrgh(',i2,')',          &
      &        ' aslrr(',i2,')')
@@ -688,7 +688,7 @@ module soil_mod
 
       write(luosdb(isr),2051) soil%amrslp, croptot%ftcvtot,             &
      &              croptot%rlaitot,                                    &
-     &              croptot%zrtd, biotot%mftot, ahfwsf(isr), h1et%zper
+     &              biotot%mftot, h1et%zper
       write(luosdb(isr),2052) isr,isr,isr,isr,isr,isr,isr
       write(luosdb(isr),2053) h1et%zrun,h1et%zirr,ahzsno(isr), &
                      ahzsmt(isr), soil%asxrgs,soil%aszrgh,soil%aslrr

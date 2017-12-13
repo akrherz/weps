@@ -34,7 +34,7 @@
 !     layrsn - Number of soil layers used in simulation
 !     actflg - flag to trigger removal of soil water
 !              0 no soil water removal
-!              1 soil water is acturally removed 
+!              1 soil water is actually removed 
 !     bszlyd  - Depth to bottom of soil layer from surface (mm)
 !     bszlyt - Layer thickness (mm)
 !     rootd   - Plant root depth (converted to mm)

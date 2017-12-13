@@ -86,7 +86,6 @@
 
       h1et%zrun = 0.0
       ahzsmt(isr) = 0.0
-      ahfwsf(isr) = 1.0
       h1et%zper = 0.0
 
       do idx = 1, soil%nslay
@@ -116,10 +115,6 @@
       wp%prev_crust_frac = -1.0
       wp%rkecum = 0.0
       ! End WEPP addition      
-
-      ahzfurcut(isr) = 0.0
-      ahztransprtmin(isr) = 0.0
-      ahztransprtmax(isr) = 0.0
 
       ! initializing a previously un-init'd variable
       h1et%zea = 0.0

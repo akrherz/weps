@@ -266,7 +266,7 @@ contains
             ! read 1st line of CLIGEN file
 
             read(luicli,fmt="(a)",err=190) line
-            write(6,*) '1st cligen output line is: ', line
+            write(6,"(2a)") '1st cligen output line is: ', trim(line)
 
             ! I think this is pretty messy.  It was working with the Lahey compiler
             ! with a "73x,f" format but the Sun F95 compiler didn't like that, so
@@ -275,13 +275,13 @@ contains
             ! "f" to "f6.3" for the Sun compiler on the second read of the line string.
 
             ! Probably not a very robust way to do this
-            read(line,fmt="(73x,f6.3)",err=190) cligen_version
+            read(line,fmt="(73x,f8.5)",err=190) cligen_version
             if (cligen_version <= 5.1) then   ! assume new version of cligen
-               read(line,fmt="(f6.3)",err=190) cligen_version
+               read(line,fmt="(f8.5)",err=190) cligen_version
             end if
 
-            write(luolog,*) 'cligen version: ', cligen_version
-            write(6,*) 'cligen version: ', cligen_version
+            write(luolog,"(a,f8.5)") 'cligen version: ', cligen_version
+            write(6,"(a,f8.5)") 'cligen version: ', cligen_version
 
             ! I assume this is where I read the old cligen's version info
             ! read(luicli,fmt="(73x,f)",err=190) cligen_version
@@ -433,7 +433,6 @@ contains
             read (line,*,err=80) amxsim(2)%x, amxsim(2)%y
             ! compute the simulation area
             sim_area = (amxsim(2)%x - amxsim(1)%x) * (amxsim(2)%y - amxsim(1)%y)
-            write(6,*) "Simulation area (m^2)", sim_area
 
          case (25)
             ! These values are scaling factors for interface, not used in WEPS

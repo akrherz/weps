@@ -16,8 +16,8 @@ module sweep_io_xml_mod
   use Points_Mod, only: point
   use subregions_mod, only: acct_poly, subr_poly
   use erosion_data_struct_defs, only: subregionsurfacestate, create_subregionsoillayers, create_subregionsurfacewet, &
-                                          awzypt, awdair, anemht, awzzo, wzoflg, &
-                                          ntstep, awadir, awudmx, subday, am0eif, subrsurf
+                                      brcdInputAdd, awzypt, awdair, anemht, awzzo, wzoflg, &
+                                      ntstep, awadir, awudmx, subday, am0eif, subrsurf
   use p1erode_def, only: SLRR_MIN, SLRR_MAX, WZZO_MIN, WZZO_MAX
   use barriers_mod, only: create_barrier, barrier, barseas
   use barriers_mod, only: barrier_day_state, barrier_params, barrier_climate
@@ -861,6 +861,34 @@ contains
             end do
           end if
 
+        else if (idx .eq. SCI_brcdInput) then
+          if (    input_tag(SCI_brcdRlai)%acquired &
+            .and. input_tag(SCI_brcdRsai)%acquired &
+            .and. input_tag(SCI_brcdRg)%acquired &
+            .and. input_tag(SCI_brcdXrow)%acquired &
+            .and. input_tag(SCI_brcdZht)%acquired &
+            ) then
+            input_tag(SCI_brcdRlai)%acquired = .false.
+            input_tag(SCI_brcdRsai)%acquired = .false.
+            input_tag(SCI_brcdRg)%acquired = .false.
+            input_tag(SCI_brcdXrow)%acquired = .false.
+            input_tag(SCI_brcdZht)%acquired = .false.
+          else
+            do jdx = 1, size(input_tag)
+              select case (jdx)
+              case (SCI_brcdRlai, &
+                    SCI_brcdRsai, &
+                    SCI_brcdRg, &
+                    SCI_brcdXrow, &
+                    SCI_brcdZht)
+                if( .not. input_tag(jdx)%acquired ) then
+                  write(*,'(3a)') 'Tag ', trim(input_tag(jdx)%name), ' is missing from input file.'
+                end if
+              end select
+            end do
+          end if
+
+
         end if
 
         exit  ! found tag, no need to look further
@@ -1042,6 +1070,27 @@ contains
           else if (input_tag(SCI_SnowDepth)%in_tag) then
             call read_param(input_tag(SCI_SnowDepth)%name, param_value, subrsurf(isr)%ahzsnd)
             input_tag(SCI_SnowDepth)%acquired = .true.
+
+          else if (input_tag(SCI_brcdInput)%in_tag) then
+            ! allocate storage for brcdInput
+            subrsurf(isr)%brcdInput => brcdInputAdd( subrsurf(isr)%brcdInput )
+            ! read in data
+            if (input_tag(SCI_brcdRlai)%in_tag) then
+              call read_param(input_tag(SCI_brcdRlai)%name, param_value, subrsurf(isr)%brcdInput%rlai)
+              input_tag(SCI_brcdRlai)%acquired = .true.
+            else if (input_tag(SCI_brcdRsai)%in_tag) then
+              call read_param(input_tag(SCI_brcdRsai)%name, param_value, subrsurf(isr)%brcdInput%rsai)
+              input_tag(SCI_brcdRsai)%acquired = .true.
+            else if (input_tag(SCI_brcdRg)%in_tag) then
+              call read_param(input_tag(SCI_brcdRg)%name, param_value, subrsurf(isr)%brcdInput%rg)
+              input_tag(SCI_brcdRg)%acquired = .true.
+            else if (input_tag(SCI_brcdXrow)%in_tag) then
+              call read_param(input_tag(SCI_brcdXrow)%name, param_value, subrsurf(isr)%brcdInput%xrow)
+              input_tag(SCI_brcdXrow)%acquired = .true.
+            else if (input_tag(SCI_brcdZht)%in_tag) then
+              call read_param(input_tag(SCI_brcdZht)%name, param_value, subrsurf(isr)%brcdInput%zht)
+              input_tag(SCI_brcdZht)%acquired = .true.
+            end if
 
           else if (input_tag(SCI_SoilLays)%in_tag) then
             if (input_tag(SCI_SoilLay)%in_tag) then

@@ -39,7 +39,7 @@
       include 'hydro/vapprop.inc'
 
 !*** Local variable declarations ***
-      real*4  satrat
+      real  satrat
 !     satrat     - conductivity relative saturation ratio
 
       if( theta .ge. thetaw ) then

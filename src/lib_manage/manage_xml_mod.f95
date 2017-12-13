@@ -1103,6 +1103,8 @@ contains
       if (man_tag(version)%in_tag) then
         call read_param(man_tag(version)%name, param_value, manFile(isub)%mversion)
         man_tag(version)%acquired = .true.
+        ! Report the version to stdout
+        write (6,"(a,f11.5)") 'Management file version: ', manFile(isub)%mversion
       else if (man_tag(rotationyears)%in_tag) then
         call read_param(man_tag(rotationyears)%name, param_value, manFile(isub)%mperod)
         man_tag(rotationyears)%acquired = .true.
@@ -1265,21 +1267,21 @@ contains
           read(line (10:13), *) manFile(isub)%mversion
 
           ! Report the version to stdout
-          write (6, *) 'Management file version: ', manFile(isub)%mversion
+          write (6,"(a,f4.2)") 'Management file version: ', manFile(isub)%mversion
 
           ! Test if the version is at least 1.4.  Version 1.5 adds the ability to test
           !       mversion within the operations, groups and procs so that graceful upgrades
           !       are possible.  This test version should not need to be updated as the format
           !       changes.  Upgrades can be handled within the dooper, dogroup and doproc subroutines.
           if (manFile(isub)%mversion .lt. 1.40) then
-            write(0,*) 'Management file version: ', manFile(isub)%mversion
-            write(0,*) 'Version >= 1.40 is required for this release.'
-            write(0,*) 'You need to convert ', trim(manFile(isub)%tinfil)
-            write(0,*) ' to the correct format.'
+            write(0,"(a,f4.2)") 'Management file version: ', manFile(isub)%mversion
+            write(0,"(a)") 'Version >= 1.40 is required for this release.'
+            write(0,"(2a)") 'You need to convert ', trim(manFile(isub)%tinfil)
+            write(0,"(a)") ' to the correct format.'
             call exit (1)
           end if
         else
-          write(0,*) 'Version not found in management file ', trim(manFile(isub)%tinfil)
+          write(0,"(2a)") 'Version not found in management file ', trim(manFile(isub)%tinfil)
           call exit (1)
         endif
 

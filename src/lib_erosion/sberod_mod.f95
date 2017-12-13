@@ -271,7 +271,8 @@ module sberod_mod
 !     To calculate max ratios of friction velocity to threshold
 !     friction velocity
 
-      use erosion_data_struct_defs, only: subregionsurfacestate, cellsurfacestate, anemht, awzzo, wzoflg
+      use erosion_data_struct_defs, only: subregionsurfacestate, cellsurfacestate, anemht, awzzo, wzoflg, &
+                                          biodrag_input_pointer
       use grid_mod, only: imax, jmax
       use barriers_mod, only: barrier
       use wind_mod, only: biodrag, sbzo, sbwus
@@ -292,6 +293,7 @@ module sberod_mod
       real wzorg, wzorr, wzzo, wzzov
       real at, rintstep, brcd
       real wubsts, wucsts, wucwts, wucdts, sfcv ! these are placeholders in call to sbwust are are not used anywhere else.
+      type(biodrag_input_pointer), pointer :: thisBrcdInput
 
 !     + + + END SPECIFICATIONS + + +
 
@@ -304,9 +306,16 @@ module sberod_mod
           ! assign subregion index for grid point
           icsr = cellstate(i,j)%csr
 
-          ! calculate "effective" biomass drag coefficient
-          brcd = biodrag( subrsurf(icsr)%adrlaitot, subrsurf(icsr)%adrsaitot, subrsurf(icsr)%acrlai, subrsurf(icsr)%acrsai, &
-                          subrsurf(icsr)%ac0rg, subrsurf(icsr)%acxrow, subrsurf(icsr)%aczht, cellstate(i,j)%szrgh )
+          ! accumulate biodrag components
+          brcd = 0.0
+          thisBrcdInput => subrsurf(icsr)%brcdInput
+          do while( associated(thisBrcdInput) )
+            ! calculate "effective" biomass drag coefficient
+            brcd = brcd + biodrag( 0.0, 0.0, thisBrcdInput%rlai, thisBrcdInput%rsai, &
+                                   thisBrcdInput%rg, thisBrcdInput%xrow, thisBrcdInput%zht, cellstate(i,j)%szrgh )
+            ! set to next pool
+            thisBrcdInput => thisBrcdInput%olderBrcdInput
+          end do
 
           call sbzo( subrsurf(icsr)%sxprg, cellstate(i,j)%szrgh, cellstate(i,j)%slrr, subrsurf(icsr)%abzht, brcd, &
                      wzoflg, wzorg, wzorr, wzzo, wzzov, awzzo )

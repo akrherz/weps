@@ -38,7 +38,7 @@ module sweep_io_mod
       use subregions_mod, only: subr_poly, acct_poly
       use erosion_data_struct_defs, only: subregionsurfacestate, &
                                           create_subregionsoillayers, create_subregionsurfacewet, &
-                                          awzypt, awdair, anemht, awzzo, wzoflg, &
+                                          brcdInputAdd, awzypt, awdair, anemht, awzzo, wzoflg, &
                                           ntstep, awadir, awudmx, subday, am0eif
       use p1erode_def, only: SLRR_MIN, SLRR_MAX, WZZO_MIN, WZZO_MAX
       use barriers_mod, only: create_barrier, barrier, barseas
@@ -288,6 +288,28 @@ module sweep_io_mod
         ! crop row spacing and seed location
         line = getline(i_unit)
         read (line,*) subrsurf(sr)%acxrow, subrsurf(sr)%ac0rg
+
+        ! Place old values for lai, sai into brcdInput
+        nullify( subrsurf(sr)%brcdInput )
+        if( (subrsurf(sr)%acrlai .gt. 0.0) .or. (subrsurf(sr)%acrlai .gt. 0.0) ) then
+          ! biodrag elements exist, add brcdInput
+          subrsurf(sr)%brcdInput => brcdInputAdd( subrsurf(sr)%brcdInput )
+          subrsurf(sr)%brcdInput%rlai = subrsurf(sr)%acrlai
+          subrsurf(sr)%brcdInput%rsai = subrsurf(sr)%acrlai
+          subrsurf(sr)%brcdInput%rg = subrsurf(sr)%ac0rg
+          subrsurf(sr)%brcdInput%xrow = subrsurf(sr)%acxrow
+          subrsurf(sr)%brcdInput%zht = subrsurf(sr)%aczht
+        end if
+
+        if( (subrsurf(sr)%adrlaitot .gt. 0.0) .or. (subrsurf(sr)%adrsaitot .gt. 0.0) ) then
+          ! biodrag elements exist, add brcdInput
+          subrsurf(sr)%brcdInput => brcdInputAdd( subrsurf(sr)%brcdInput )
+          subrsurf(sr)%brcdInput%rlai = subrsurf(sr)%adrlaitot
+          subrsurf(sr)%brcdInput%rsai = subrsurf(sr)%adrsaitot
+          subrsurf(sr)%brcdInput%rg = 0
+          subrsurf(sr)%brcdInput%xrow = 0.0
+          subrsurf(sr)%brcdInput%zht = subrsurf(sr)%adzht_ave
+        end if
 
         ! These aren't used in EROSION yet
         ! Biomass stem area index by height
@@ -550,7 +572,7 @@ module sweep_io_mod
       use subregions_mod, only: subr_poly, acct_poly
       use erosion_data_struct_defs, only: subregionsurfacestate, &
                                           create_subregionsoillayers, create_subregionsurfacewet, &
-                                          awzypt, awdair, anemht, awzzo, wzoflg, &
+                                          brcdInputAdd, awzypt, awdair, anemht, awzzo, wzoflg, &
                                           ntstep, awadir, awudmx, subday, am0eif
       use p1erode_def, only: SLRR_MIN, SLRR_MAX, WZZO_MIN, WZZO_MAX
       use barriers_mod, only: create_barrier, barrier, barseas
@@ -797,6 +819,28 @@ module sweep_io_mod
         ! crop row spacing and seed location
         line = getline(i_unit)
         read (line,*) subrsurf(sr)%acxrow, subrsurf(sr)%ac0rg
+
+        ! Place old values for lai, sai into brcdInput
+        nullify( subrsurf(sr)%brcdInput )
+        if( (subrsurf(sr)%acrlai .gt. 0.0) .or. (subrsurf(sr)%acrlai .gt. 0.0) ) then
+          ! biodrag elements exist, add brcdInput
+          subrsurf(sr)%brcdInput => brcdInputAdd( subrsurf(sr)%brcdInput )
+          subrsurf(sr)%brcdInput%rlai = subrsurf(sr)%acrlai
+          subrsurf(sr)%brcdInput%rsai = subrsurf(sr)%acrlai
+          subrsurf(sr)%brcdInput%rg = subrsurf(sr)%ac0rg
+          subrsurf(sr)%brcdInput%xrow = subrsurf(sr)%acxrow
+          subrsurf(sr)%brcdInput%zht = subrsurf(sr)%aczht
+        end if
+
+        if( (subrsurf(sr)%adrlaitot .gt. 0.0) .or. (subrsurf(sr)%adrsaitot .gt. 0.0) ) then
+          ! biodrag elements exist, add brcdInput
+          subrsurf(sr)%brcdInput => brcdInputAdd( subrsurf(sr)%brcdInput )
+          subrsurf(sr)%brcdInput%rlai = subrsurf(sr)%adrlaitot
+          subrsurf(sr)%brcdInput%rsai = subrsurf(sr)%adrsaitot
+          subrsurf(sr)%brcdInput%rg = 0
+          subrsurf(sr)%brcdInput%xrow = 0.0
+          subrsurf(sr)%brcdInput%zht = subrsurf(sr)%adzht_ave
+        end if
 
         ! These aren't used in EROSION yet
         ! Biomass stem area index by height

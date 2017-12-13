@@ -1,0 +1,1143 @@
+!$Author$
+!$Date$
+!$Revision$
+!$HeadURL$
+
+module weps_output_mod
+
+  contains
+
+    subroutine bpools( isr, plant, restot, biotot, decompfac )
+
+      ! print out many of the biomass pool components (used for debugging purposes)
+      ! These files use the following columnar format.  Some are filled with zeros
+      ! to make it easier to select specific columns for comparisons between the
+      ! crop and individual biomass pools (not all pools have the same variables)
+
+      use weps_main_mod, only: daysim, am0ifl
+      use datetime_mod, only: get_simdate_doy, get_simdate_year
+      use biomaterial, only: plant_pointer, residue_pointer, biototal, decomp_factors
+      use file_io_mod, only: luocrp1, luobio1, makenamnum, makedir, fopenk
+      use decomp_data_struct_defs, only: am0dfl
+      use climate_input_mod, only: cli_today
+      use input_run_mod, only: old_run_file, rootp
+
+!     + + + ARGUMENT DECLARATIONS + + +
+      integer isr
+      type(plant_pointer), pointer :: plant     ! pointer to youngest plant data, which chains to older plant data
+      type(biototal), intent(in) :: restot
+      type(biototal), intent(in) :: biotot
+      type(decomp_factors), intent(in) :: decompfac
+
+!     + + + LOCAL VARIABLES + + +
+      integer doy, cy
+      integer :: nsubr
+      real total
+      integer :: ipool   ! index for pool number
+      type(plant_pointer), pointer :: thisPlant       ! pointer used to interate plant pointer chain
+      type(residue_pointer), pointer :: thisResidue   ! pointer used to interate residue pointer chain
+      character*30 :: dec_text ! decomposition detail age pool output file name text string
+      character*30 :: subr_text ! subregion output directory text string
+      real, dimension(3) :: mst
+      real, dimension(3) :: mf
+      real, dimension(3) :: mbg
+      real, dimension(3) :: mrt
+      real, dimension(3) :: fscv
+      real, dimension(3) :: ffcv
+      real, dimension(3) :: ftcv
+      real, dimension(3) :: rsai
+      real, dimension(3) :: rlai
+      real, dimension(3) :: dstm
+      real, dimension(3) :: zht
+
+!     + + + END OF SPECIFICATIONS + + +
+
+      if( .not. am0ifl ) then
+        cy = get_simdate_year()
+        doy = get_simdate_doy()
+      end if
+
+      if ((am0dfl(isr) .eq. 1).or.(am0dfl(isr).eq.3)) then
+
+        ! day, month, year
+        ! flat crop cover, standing crop cover, total crop cover
+        ! crop cover fract, crop SAI, crop LAI
+        ! total crop biomass, 0.0, standing crop mass
+        ! (no "flat crop biomass")
+        ! crop root mass, 0.0, crop yield mass
+        ! (no "buried crop biomass")
+        ! qty crop stems per area, crop height, crop root depth, repr stem dia
+
+        ! Dead Crop Biomass Pool
+        ! write file header if still initializing
+        if (am0ifl .eqv. .true.) then
+          write(luocrp1(isr),*) '#daysim doy yy Tmin Tmax Tavg', &
+              ' Tfacabove', &
+              ' Water Wfacstand Wfacflat Ddaystand Ddayflat Mstand1', &
+              ' Mstand2 Mstand3 MstandAll Mflat1 Mflat2 Mflat3', &
+              ' MflatAll MaboveAll Mburied1 Mburied2 Mburied3', &
+              ' MburiedAll Mroot1 Mroot2 Mroot3 MrootAll Cstand1', &
+              ' Cstand2 Cstand3 CstandAll Cflat1 Cflat2 Cflat3', &
+              ' CflatAll Cstand+flat1 Cstand+flat2 Cstand+flat3', &
+              ' Cstand+flatAll SAI1 SAI2 SAI3 SAIAll LAI1 LAI2 LAI3', &
+              ' LAIAll Biodrag #stem1 #stem2 #stem3 #stemAll Hstem1', &
+              ' Hstem2 Hstem3 HstemAll Mrt4all'
+
+        else
+
+          total = restot%msttot + restot%mftot   !sum of standing and flat residue mass, all pools
+
+          ipool = 0
+          ! point to youngest living plant
+          thisPlant => plant
+          ! interate to get first three resiude pools
+          do while ( associated(thisPlant) )
+            thisResidue => thisPlant%residue
+            ! interate over all residue
+            do while (associated(thisResidue))
+              ipool = ipool + 1
+
+              ! assign temporary residue pool values
+              mst(ipool) = thisResidue%deriv%mst
+              mf(ipool) = thisResidue%deriv%mf
+              mbg(ipool) = thisResidue%deriv%mbg
+              mrt(ipool) = thisResidue%deriv%mrt
+              fscv(ipool) = thisResidue%deriv%fscv
+              ffcv(ipool) = thisResidue%deriv%ffcv
+              ftcv(ipool) = thisResidue%deriv%ftcv
+              rsai(ipool) = thisResidue%deriv%rsai
+              rlai(ipool) = thisResidue%deriv%rlai
+              dstm(ipool) = thisResidue%dstm
+              zht(ipool) = thisResidue%zht
+
+              if( ipool .ge. 3 ) then
+                exit
+              else
+                ! set to next older residue
+                thisResidue => thisResidue%olderResidue
+              end if
+            end do
+            if( ipool .ge. 3 ) then
+              exit
+            else
+              ! point to next older plant
+              thisPlant => thisPlant%olderPlant
+            end if
+          end do
+
+          ! insert double blank lines to demarcate years
+          if( doy .eq. 1 ) then
+              write (luocrp1(isr),*)
+              write (luocrp1(isr),*)
+          end if
+
+          ! NOTE: tf=temperature factor, wf=water factor, dd=decomposition day
+          write(luocrp1(isr),2222) daysim, doy, cy, & ! simulation day, day of year, year
+          cli_today%tdmn, cli_today%tdmx, cli_today%tdav, decompfac%itcs, & ! tmin, tmax, tavg, tf  
+          decompfac%aqua, decompfac%iwcs, decompfac%iwcf, & ! precip, wf standing, wf flat
+          decompfac%idds, decompfac%iddf, &                 ! dd standing, dd flat
+          mst(1), mst(2), mst(3), restot%msttot, & ! mass, standing
+          mf(1), mf(2), mf(3), restot%mftot, &     ! mass, flat
+          total, &                                 ! sum of standing and flat residue mass, all pools
+          mbg(1), mbg(2), mbg(3), restot%mbgtot, & ! mass, below ground
+          mrt(1), mrt(2), mrt(3), restot%mrttot, & ! mass, roots
+          fscv(1), fscv(2), fscv(3), restot%fscvtot, & ! cover provided by standing residue (fraction)
+          ffcv(1), ffcv(2), ffcv(3), restot%ffcvtot, & ! cover provided by flat residue (fraction)
+          ftcv(1), ftcv(2), ftcv(3), restot%ftcvtot, & ! cover provided by standing+flat residue (fraction)
+          rsai(1), rsai(2), rsai(3), restot%rsaitot, & ! stem area index 
+          rlai(1), rlai(2), rlai(3), restot%rlaitot, & ! leaf area index
+          restot%rcdtot, &                             ! biodrag
+          dstm(1), dstm(2), dstm(3), restot%dstmtot, & ! stems (no/m2) 
+          zht(1), zht(2), zht(3), restot%zht_ave, & ! stem height for each residue pool
+          restot%mrttotto4                          ! root mass to 4 inches
+
+   
+2222     format (' ',i6,' ',i3,' ',i4,' ', 3f7.1, f7.3, f7.2, 4f7.3, 17(1x,f8.4), 21f7.4, 4(1x,f7.2), 4(1x,f7.3), f8.4)
+
+          ! day, month, year
+          ! flat residue cover, standing residue cover, total residue cover
+          ! residue cover fract, residue SAI, residue LAI
+          ! total residue biomass, flat residue mass, standing residue mass
+          ! residue root mass, below gnd residue mass
+          ! qty residue stems per area, "ave" residue height, 0.0, 0.0
+          ! (no "ave" root depth or stem dia computed across residue pools)
+
+2345     format (i6,i4,i5,3f10.5,13f10.3)
+
+          ! All Residue Pools Combined
+          write(luobio1(isr),2345) daysim, doy, cy, &
+          biotot%ffcvtot, biotot%fscvtot, biotot%ftcvtot, &
+          0.0, biotot%rsaitot, biotot%rlaitot, &
+          biotot%mtot, biotot%mftot, biotot%msttot, &
+          biotot%mrttot, biotot%mbgtot, &
+          biotot%dstmtot, biotot%zht_ave, 0.0, 0.0
+        endif
+      endif
+
+      if ((am0dfl(isr) .eq. 2).or.(am0dfl(isr).eq.3)) then
+
+        ! find total number of subregions from flag array size
+        nsubr = size(am0dfl)
+
+          ! day, month, year
+          ! flat residue cover, standing residue cover, total residue cover
+          ! residue cover fract, residue SAI, residue LAI
+          ! total residue biomass, flat residue mass, standing residue mass
+          ! residue root mass, below gnd residue mass, 0.0
+          ! (no residue yield mass)
+          ! qty residue stems per area, residue height, 0.0, rep stem dia
+          ! (no root depth for residue pools)
+
+        ! point to youngest living plant
+        thisPlant => plant
+        ! interate to get first three resiude pools
+        do while ( associated(thisPlant) )
+          thisResidue => thisPlant%residue
+          ! interate over all residue
+          do while (associated(thisResidue))
+
+            if( thisResidue%bout%luo .lt. 0 ) then
+              ! output unit not yet opened, open it
+              if( old_run_file .and. (nsubr .eq. 1) ) then
+                ! create the name
+                subr_text = ''
+              else
+                ! create subregion name
+                subr_text = makenamnum( 'subregion', isr, nsubr, '/' )
+              end if
+
+              ! create subdirectory for detailed decomp ouput (does nothing if exists)
+              call makedir(trim(rootp)//trim(subr_text)//'decomp/' )
+              ! create the name (6 digits for plant, 6 digits for residue)
+              dec_text = makenamnum('decomp/dec', thisPlant%bout%num, 654321, '_', thisResidue%bout%num, 654321, '.btmp')
+
+              ! assign logical unit number of opening file to array
+              call fopenk (thisResidue%bout%luo, trim(rootp) // trim(subr_text) // trim(dec_text), 'unknown')
+              ! write header to this new file
+              write(thisResidue%bout%luo,*) '#daysim resday resyear doy yy pool#', &
+                ' cumddysta cumddyflat cumddybg10 flatcov standcov', &
+                ' totalcov covfact silhoutte leafarea totalmass', &
+                ' flatmass standmass bgrootmass bgshootmass stemnumb', &
+                ' height repstemdia stemstandm leafstandm storstandm', &
+                ' stemflatm leafflatm storflatm rstorflatm rfiberflatm',&
+                ' stembgm leafbgm storbgm rstorgbm rfibergbm name'
+              write(thisResidue%bout%luo,*) ''
+              write(thisResidue%bout%luo,*) ''
+            end if
+
+2355        format (i6,1x,i5,1x,i4,1x,i3,1x,i4,1x,i2,30(1x,f10.5),1x,a30)
+
+            ! Residue Pool
+            write(thisResidue%bout%luo,2355) daysim, &
+                thisResidue%resday, thisResidue%resyear, doy, cy, thisResidue%bout%num, &
+                thisResidue%cumdds, thisResidue%cumddf, thisResidue%cumddg(10), &
+                thisResidue%deriv%ffcv, thisResidue%deriv%fscv, thisResidue%deriv%ftcv, &
+                thisPlant%database%covfact, thisResidue%deriv%rsai, thisResidue%deriv%rlai, &
+                thisResidue%deriv%m, thisResidue%deriv%mf, thisResidue%deriv%mst, &
+                thisResidue%deriv%mrt, thisResidue%deriv%mbg, &
+                thisResidue%dstm, thisResidue%zht, thisResidue%xstmrep, &
+                thisResidue%standstem, thisResidue%standleaf, &
+                thisResidue%standstore, thisResidue%flatstem, &
+                thisResidue%flatleaf, thisResidue%flatstore, &
+                thisResidue%flatrootstore, thisResidue%flatrootfiber, &
+                thisResidue%deriv%mbgstem, thisResidue%deriv%mbgleaf, &
+                thisResidue%deriv%mbgstore, thisResidue%deriv%mbgrootstore, &
+                thisResidue%deriv%mbgrootfiber, &
+                thisPlant%bname
+
+            ! set to next older residue
+            thisResidue => thisResidue%olderResidue
+          end do
+          ! point to next older plant
+          thisPlant => thisPlant%olderPlant
+        end do
+
+      endif
+
+    end subroutine bpools
+
+    subroutine plotdata(sr, soil, plant, restot, croptot, biotot, noerod, manFile, subrsurf, cellstate)
+
+      use weps_main_mod, only: daysim, report_loop, am0ifl
+      use datetime_mod, only: get_simdate, get_simdate_doy
+      use file_io_mod, only: luoplt
+      use soil_data_struct_defs, only: soil_def
+      use biomaterial, only: biototal, plant_pointer
+      use erosion_data_struct_defs, only: threshold
+      use erosion_data_struct_defs, only: cellsurfacestate
+      use erosion_data_struct_defs, only: awadir, awudmx
+      use erosion_data_struct_defs, only: am0efl
+      use erosion_data_struct_defs, only: subregionsurfacestate
+      use grid_mod, only: imax, jmax
+      use hydro_data_struct_defs, only: am0hfl
+      use soil_data_struct_defs, only: am0sfl
+      use manage_data_struct_defs, only: man_file_struct, lastoper
+      use crop_data_struct_defs, only: am0cfl
+      use decomp_data_struct_defs, only: am0dfl
+      use climate_input_mod, only: cli_today
+
+!     + + + ARGUMENT DECLARATIONS + + +
+      integer, intent(in) :: sr
+      type(soil_def), intent(in) :: soil  ! soil for this subregion
+      type(plant_pointer), pointer :: plant
+      type(biototal), intent(in) :: restot
+      type(biototal), intent(in) :: croptot
+      type(biototal), intent(in) :: biotot
+      type(threshold), intent(in) :: noerod
+      type(man_file_struct), intent(in) :: manFile
+      type(subregionsurfacestate), intent(in) :: subrsurf  ! subregion surface conditions (erosion specific set)
+      type(cellsurfacestate), dimension(0:,0:), intent(in) :: cellstate     ! initialized grid cell state values
+ 
+!       Edit History
+!       04-Mar-99       wjr     created
+
+      include 'p1werm.inc'
+      include 'h1db1.inc'
+      include 'h1hydro.inc'
+
+      integer day, month, year, doy
+
+      integer ngdpt  !number of grid cells within field
+      integer idx, jdy   !local loop vars
+
+      real :: total
+      real :: suspen
+      real :: pmten
+      character*80     operat
+      character*80     crname
+
+!     + + + OUTPUT FORMATS + + +
+!     format for header of plot file
+!2050 format (1x,'#daysim','|','doy','|','day','|','mon','|',' yr ',    &
+!    &     '|',' tot_loss ',                                            &
+!    &     '|','  suspen  ','|','  pm10 ','|',' max_wind ',             &
+!    &     '|',' dir_wind ','|','  precip  ','|',' Surf_H2O',           &
+!    &     '|','  ridge_ht ','|',' ridge_or ','|','  r_rough ',         &
+!    &     '|','   gmd    ','|',' ag_stab  ','|',' cr_fract ',          &
+!    &     '|','loose_mass','|','loose_frac','|',' bulk_den',           &
+!    &     '|','   fl_cov%','|','  st_cov% ','|',' crop_lai ',          &
+!    &     '|',' crop_sai ','|','crop_st_mass','|','can_cov ')
+
+ 2040 format (1x,'#daysim','|','doy','|','day','|','mon','|',' yr ')
+ 2041 format ('|',' tot_loss ','|','  suspen  ','|','  pm10   ')
+ 2042 format ('|',' max_wind ','|',' dir_wind ','|','  precip  ')
+ 2043 format ('|',' Surf_H2O ','|',' ridg_ht  ')
+ 2044 format ('|',' ridg_wid ','|',' ridg_sp  ','|',' ridg_or  ')
+ 2045 format ('|',' dike_ht  ','|',' dike_wid ','|',' dike_sp  ')
+ 2046 format ('|',' r_rough  ')
+ 2047 format ('|','  gmd_p   ','|','  gsd_p   ','|','  mnot    ')
+ 2048 format ('|','   minf   ')
+ 2050 format ('|',' ag_stab  ','|',' cr_fract ',                        &
+     &        '|','loose_mass','|','loose_frac','|',' bulk_den ',       &
+     &        '|','   fl_cov%','|','  st_cov% ','|',' crop_lai ',       &
+     &        '|',' crop_sai ','|','crop_st_mass','|','can_cov ')
+
+!     header of plot file (daily crop values derived from mass, column headers)
+ 2051 format ('|',' crop_ht ','|','crp_rep_stm_dia',                    &
+     &        '|','crop_drag','|','crp_soil_cov')
+!     header of plot file (daily decomp values derived from mass, column headers)
+ 2052 format ('|','res_av_ht','|','res_sai','|','res_lai',              &
+     &        '|',' res_drag ','|','res_can_cov','|','res_soil_cov')
+!     header of plot file (friction velocity and threshold values)
+ 2053 format ('|','  eros   ','|','   snow   ',                              &
+     &        '|','wus_anemom','|','wus_random','|','wus_ridge',        &
+     &        '|','wus_biodrag','|',' ne_wus ','|','t_ne_bare',         &
+     &        '|',' t_flat_cov','|','t_surf_wet','|','t_ag_den ',       &
+     &        '|',' t_wust    ')
+!     header of plot file (friction velocity ratios)
+ 2054 format ('|','rwus_anemom','|','rwus_random',                      &
+     &        '|','rwus_ridge','|','rwus_biodrag')
+!     header of plot file (velocity threshold ratios)
+ 2055 format ('|','r_ne_bare','|',' r_flat_cov',                        &
+     &        '|','r_surf_wet','|',' r_ag_den ')
+!     header of plot file (velocity threshold ratios)
+ 2056 format ('|','ne_sf84 ','|',' ne_rock',                            &
+     &        '|','ne_wzzo ','|',' ne_sfcv  ')
+ 2057 format ('|','   sf1ic','|','   sf10ic ',                          &
+     &        '|','  sf84ic','|','  sf200ic ')
+ 2058 format ('|','   sf1  ','|','   sf10   ',                          &
+     &        '|','  sf84  ','|','  sf200   ')
+!     operation name(s) at end of line
+ 2059 format ('|',' operation    ','|',' new_crop ')
+
+!     + + + END SPECIFICATIONS + + +
+
+      ! Don't print plotdata "plot.out" file unless a debug flag is set
+      if((am0hfl(sr).gt.0).or.(am0sfl(sr).gt.0).or.(manFile%am0tfl.gt.0) &
+     &  .or.(am0cfl(sr).gt.0).or.(am0dfl(sr).gt.0).or.(am0efl.gt.0)) then
+
+        ! write file header if still initializing
+        if (am0ifl .eqv. .true.) then
+           write (luoplt(sr), 2040, ADVANCE="NO")
+           write (luoplt(sr), 2041, ADVANCE="NO")
+           write (luoplt(sr), 2042, ADVANCE="NO")
+           write (luoplt(sr), 2043, ADVANCE="NO")
+           write (luoplt(sr), 2044, ADVANCE="NO")
+           write (luoplt(sr), 2045, ADVANCE="NO")
+           write (luoplt(sr), 2046, ADVANCE="NO")
+           write (luoplt(sr), 2047, ADVANCE="NO")
+           write (luoplt(sr), 2048, ADVANCE="NO")
+           write (luoplt(sr), 2050, ADVANCE="NO")
+           write (luoplt(sr), 2051, ADVANCE="NO")
+           write (luoplt(sr), 2052, ADVANCE="NO")
+           write (luoplt(sr), 2053, ADVANCE="NO")
+           write (luoplt(sr), 2054, ADVANCE="NO")
+           write (luoplt(sr), 2055, ADVANCE="NO")
+           write (luoplt(sr), 2056, ADVANCE="NO")
+           write (luoplt(sr), 2057, ADVANCE="NO")
+           write (luoplt(sr), 2058, ADVANCE="NO")
+           write (luoplt(sr), 2059, ADVANCE="YES")
+           return
+        endif
+
+        ! initialize erosion totals
+        total = 0.0
+        suspen = 0.0
+        pmten = 0.0
+
+        if( report_loop ) then
+           ngdpt = 0     ! (imax-1) * (jmax-1)  !Number of grid cells
+           do idx = 1, imax-1
+              do jdy = 1, jmax-1
+                 if( (sr .eq. 0) .or. (sr .eq. cellstate(idx,jdy)%csr) ) then
+                    total = total + cellstate(idx,jdy)%egt
+                    !salt = salt + (cellstate(idx,jdy)%egt - cellstate(idx,jdy)%egtss
+                    suspen = suspen + cellstate(idx,jdy)%egtss
+                    pmten = pmten + cellstate(idx,jdy)%egt10
+                    ngdpt = ngdpt + 1
+                 end if
+              end do
+           end do
+           if( ngdpt .gt. 0 ) then
+              total = total/ngdpt
+              suspen = suspen/ngdpt
+              pmten = pmten/ngdpt
+           !else no points totals will still be 0.0
+           end if
+        end if
+
+        call get_simdate(day,month,year)
+        doy = get_simdate_doy()
+
+        ! make operation name available for this day
+        if ( (lastoper(sr)%day .eq. day) .and. (lastoper(sr)%mon .eq. month) .and. &
+             (lastoper(sr)%yr .eq. manfile%mnryr) ) then
+           operat = lastoper(sr)%name
+           if( associated(plant) ) then
+             ! name of most recently planted plant
+             crname = plant%bname
+           else
+             crname = '                                               '
+           end if
+        else
+           operat = '                                               '
+           crname = '                                               '
+        end if
+
+        ! insert double blank lines to demarcate years
+        if( doy .eq. 1 ) then
+            write (luoplt(sr),*)
+            write (luoplt(sr),*)
+        end if
+
+        write (luoplt(sr), 2080, ADVANCE="NO")  &
+     &                    daysim, doy,                                  &
+     &                    day, month, year,                             &
+     &                    total, suspen, pmten,                         &
+     &                    awudmx, awadir, cli_today%zdpt, ahrwc0(12, sr),&
+     &                    soil%aszrgh, soil%asxrgw,                     &
+     &                    soil%asxrgs, soil%asargo,                     &
+     &                    soil%asxdkh, soil%asxrgw, soil%asxdks,        &
+     &                    soil%aslrr,                                   &
+     &                    soil%aslagm(1), soil%as0ags(1),               &
+     &                    soil%aslagn(1), soil%aslagx(1),               &
+     &                    soil%aseags(1), soil%asfcr,                   &
+     &                    soil%asmlos, soil%asflos, soil%asdblk(1),     &
+     &                    biotot%ffcvtot, biotot%fscvtot,               &
+     &                    croptot%rlaitot, croptot%rsaitot,             &
+     &                    croptot%msttot, croptot%ftcancov
+
+        write (luoplt(sr), 2081, ADVANCE="NO")                              &
+     &   croptot%zht_ave, croptot%xstmrep, croptot%rcdtot, croptot%ftcvtot
+
+        write (luoplt(sr), 2082, ADVANCE="NO")                              &
+     &       restot%zht_ave, restot%rsaitot, restot%rlaitot,            &
+     &       restot%rcdtot, restot%ftcancov, restot%ftcvtot
+
+        ! additional friction velocity and threshold outputs
+        write (luoplt(sr), 2085, ADVANCE="NO")                              &
+     &       noerod%erosion, noerod%snowdepth,                          &
+     &       noerod%wus_anemom, noerod%wus_random, noerod%wus_ridge,    &
+     &       noerod%wus_biodrag, noerod%wus, noerod%bare,               &
+     &       noerod%flat_cov, noerod%surf_wet, noerod%ag_den,           &
+     &       noerod%wust
+
+        ! guard against underflow, division fails
+        if( noerod%wus .gt. tiny(noerod%wus) ) then
+          ! ratios of friction velocity outputs
+          write (luoplt(sr), 2086, ADVANCE="NO")                            &
+     &       noerod%wus_anemom/noerod%wus, noerod%wus_random/noerod%wus,&
+     &       noerod%wus_ridge/noerod%wus, noerod%wus_biodrag/noerod%wus
+        else
+          ! zero denominator, write zero values
+          write (luoplt(sr), 2086, ADVANCE="NO") 0.0, 0.0, 0.0, 0.0
+        end if
+
+        if( noerod%wust .gt. tiny(noerod%wust) ) then
+          ! ratios of friction velocity threshold outputs
+          write (luoplt(sr), 2086, ADVANCE="NO")                            &
+     &       noerod%bare/noerod%wust, noerod%flat_cov/noerod%wust,      &
+     &       noerod%surf_wet/noerod%wust, noerod%ag_den/noerod%wust
+        else
+          ! zero denominator, write zero values
+          write (luoplt(sr), 2086, ADVANCE="NO") 0.0, 0.0, 0.0, 0.0
+        end if
+
+        ! soil related threshold values
+        write (luoplt(sr), 2086, ADVANCE="NO") noerod%sfd84, noerod%asvroc, &
+     &    noerod%wzzo, noerod%sfcv
+
+        write (luoplt(sr), 2086, ADVANCE="NO") subrsurf%sf1ic, subrsurf%sf10ic, &
+     &                    subrsurf%sf84ic, subrsurf%sf200ic
+
+        write (luoplt(sr), 2086, ADVANCE="NO") subrsurf%sfd1, subrsurf%sfd10, &
+     &                    subrsurf%sfd84, subrsurf%sfd200
+
+        write (luoplt(sr), 2090, ADVANCE="NO") operat
+        write (luoplt(sr), 2091, ADVANCE="YES") crname
+
+ 2080   format (' ',i6,' ',i3,' ',i2,' ',i2,' ',i4,' ',                 &
+     &            42(f10.3,' '))
+
+ 2081   format ( 4(f10.4,' ') )
+ 2082   format ( 6(f10.4,' ') )
+ 2085   format ( 2('  ',i1,'  '),10(f10.4,' ') )
+ 2086   format ( 4(f10.4,' ') )
+ 2090   format ( a35,' ' )
+ 2091   format ( a35,' ' )
+
+      endif
+
+      return
+    end subroutine plotdata
+
+    subroutine openfils()
+! ***************************************************************** wjr
+! Contains init code from main
+!
+!       Edit History
+!       10-Mar-99       wjr     created
+
+      use weps_interface_defs
+      use weps_main_mod, only: calc_confidence, calibrate_crops, run_erosion, soil_cond, wepp_hydro
+      use file_io_mod
+      use erosion_data_struct_defs, only: am0efl
+      use barriers_mod, only: barseas, output_done
+      use hydro_data_struct_defs, only: am0hfl, am0hdb
+      use soil_data_struct_defs, only: am0sfl, am0sdb
+      use manage_data_struct_defs, only: manFile
+      use crop_data_struct_defs, only: am0cfl, am0cdb
+      use decomp_data_struct_defs, only: am0dfl, am0ddb
+      use input_run_mod, only: old_run_file, rootp
+      use crop_mod, only: cpout
+
+      include 'p1werm.inc'
+
+!     + + +   LOCAL VARIABLES + + +
+      integer idx, alloc_stat, sum_stat
+      character*30, dimension(:), allocatable :: subr_text ! subregion subdirectory text string
+      logical :: flag_set
+      integer :: tflmax
+      integer :: tdbmax
+      integer ::  nsubr  ! number of subregion (found from size of array always allocated, not with zero element)
+
+      nsubr = size(am0cfl)
+
+      ! allocate the subregion name, number combination text for subregions
+      allocate( subr_text(nsubr), stat=alloc_stat)
+      if( alloc_stat .gt. 0 ) then
+         Write(*,*) 'ERROR: unable to allocate subr_text array'
+      end if
+
+      ! create subregion directory names
+      do idx = 1, nsubr
+         if( old_run_file .and. (nsubr .eq. 1) ) then
+            ! create the name
+            subr_text(idx) = ''
+         else
+            ! create the name
+            subr_text(idx) = makenamnum( 'subregion', idx, nsubr, '/' )
+            ! create the subdirectory
+            call makedir(trim(rootp)//trim(subr_text(idx)) )
+         end if
+      end do
+
+!     these files are opened at all times
+
+      sum_stat = 0
+      allocate( luogui1(0:nsubr), stat=alloc_stat )
+      sum_stat = sum_stat + alloc_stat
+      allocate( luomandate(0:nsubr), stat=alloc_stat )
+      sum_stat = sum_stat + alloc_stat
+      allocate( luoharvest_si(nsubr), stat=alloc_stat )
+      sum_stat = sum_stat + alloc_stat
+      allocate( luoharvest_en(nsubr), stat=alloc_stat )
+      sum_stat = sum_stat + alloc_stat
+      allocate( luohydrobal(nsubr), stat=alloc_stat )
+      sum_stat = sum_stat + alloc_stat
+      allocate( luoseason(nsubr), stat=alloc_stat )
+      sum_stat = sum_stat + alloc_stat
+      if( sum_stat .gt. 0 ) then
+         Write(*,*) 'ERROR: unable to allocate luomandate, luoharvest_, luohydrobal, luoseason arrays'
+      end if
+      if( .not. old_run_file .or. (nsubr .gt. 1) ) then
+         call fopenk (luogui1(0), trim(rootp) // 'gui1_data.out', 'unknown')
+         call fopenk (luomandate(0), trim(rootp) // 'mandate.out', 'unknown')
+      end if
+      do idx = 1, nsubr
+         call fopenk (luogui1(idx), trim(rootp) // trim(subr_text(idx)) // 'gui1_data.out', 'unknown')
+         call fopenk (luomandate(idx), trim(rootp) // trim(subr_text(idx)) // 'mandate.out', 'unknown')
+         call fopenk (luoharvest_si(idx), trim(rootp) // trim(subr_text(idx)) // 'harvest_si.out', 'unknown')
+         call fopenk (luoharvest_en(idx), trim(rootp) // trim(subr_text(idx)) // 'harvest_en.out', 'unknown')
+         call fopenk (luohydrobal(idx), trim(rootp) // trim(subr_text(idx)) // 'hydrobal.out', 'unknown')
+         call fopenk (luoseason(idx), trim(rootp) // trim(subr_text(idx)) // 'season.out', 'unknown')
+      end do
+
+      if (calibrate_crops .gt. 0) then
+         sum_stat = 0
+         allocate( luoharvest_calib(nsubr), stat=alloc_stat )
+         sum_stat = sum_stat + alloc_stat
+         allocate( luoharvest_calib_parm(nsubr), stat=alloc_stat )
+         sum_stat = sum_stat + alloc_stat
+         if( sum_stat .gt. 0 ) then
+            Write(*,*) 'ERROR: unable to allocate luoharvest_calib, luoharvest_calib_parm arrays'
+         end if
+         do idx = 1, nsubr
+            ! calibration harvest output file
+            call fopenk (luoharvest_calib(idx), trim(rootp) // trim(subr_text(idx)) // 'harvest_calib.out', 'unknown')
+            ! calibration harvest output file for GUI
+            call fopenk (luoharvest_calib_parm(idx), trim(rootp) // trim(subr_text(idx)) // 'harvest_calib_parm.out', 'unknown')
+         end do
+      endif
+
+      ! open barrier output file
+      if( size(barseas) .gt. 0 ) then
+          call fopenk (luo_barr, rootp(1:len_trim(rootp)) // 'barriers.out', 'unknown')
+          output_done = .false.
+      else
+          output_done = .true.
+      end if
+
+!     open erosion output files
+      if (am0efl.gt.0) then
+          call fopenk (luo_subday, rootp(1:len_trim(rootp)) // 'subday.out', 'unknown')
+      endif
+
+      if (btest(am0efl,0)) then
+       call fopenk (luo_erod, rootp(1:len_trim(rootp)) // 'daily_out.erod', 'unknown')
+      endif
+
+!     open plot data file
+      tflmax = 0
+      do idx = 1, nsubr
+         tflmax = max(tflmax, manFile(idx)%am0tfl)
+      end do
+      if(     (maxval(am0hfl).gt.0) .or. (maxval(am0sfl).gt.0) .or. (tflmax.gt.0) &
+         .or. (maxval(am0cfl).gt.0) .or. (maxval(am0dfl).gt.0) .or. (am0efl.gt.0)) then
+         allocate( luoplt(nsubr), stat=alloc_stat )
+         if( alloc_stat .gt. 0 ) then
+            Write(*,*) 'ERROR: unable to allocate luoplt array'
+         end if
+         do idx = 1, nsubr
+            if(     (am0hfl(idx).gt.0) .or. (am0sfl(idx).gt.0) .or. (manFile(idx)%am0tfl.gt.0) &
+               .or. (am0cfl(idx).gt.0) .or. (am0dfl(idx).gt.0) .or. (am0efl.gt.0)) then
+               call fopenk (luoplt(idx), trim(rootp) // trim(subr_text(idx)) // 'plot.out', 'unknown')
+            end if
+         end do
+      endif
+
+!     open output file for soil conditioning index
+      if( soil_cond .gt. 0 ) then
+         sum_stat = 0
+         allocate( luosci(0:nsubr), stat=alloc_stat )
+         sum_stat = sum_stat + alloc_stat
+         allocate( luostir(nsubr), stat=alloc_stat )
+         sum_stat = sum_stat + alloc_stat
+         if( sum_stat .gt. 0 ) then
+            Write(*,*) 'ERROR: unable to allocate luosci, luostir arrays'
+         end if
+         if( .not. old_run_file .or. (nsubr .gt. 1) ) then
+            call fopenk (luosci(0), trim(rootp) // 'sci_energy.out', 'unknown')
+         end if
+         do idx = 1, nsubr
+            call fopenk (luosci(idx), trim(rootp) // trim(subr_text(idx)) // 'sci_energy.out', 'unknown')
+            call fopenk (luostir(idx), trim(rootp) // trim(subr_text(idx)) // 'stir_energy.out', 'unknown')
+         end do
+      end if
+
+!     open detailed output files for hydro
+      flag_set = .false.
+      do idx = 1, nsubr
+         if ((am0hfl(idx) .eq. 1) .or. (am0hfl(idx) .eq. 3) .or. (am0hfl(idx) .eq. 5) .or. (am0hfl(idx) .eq. 7)) then
+            flag_set = .true.
+         end if
+      end do
+      if( flag_set ) then
+         sum_stat = 0
+         allocate( luohydro(nsubr), stat=alloc_stat )
+         sum_stat = sum_stat + alloc_stat
+         allocate( luohlayers(nsubr), stat=alloc_stat )
+         sum_stat = sum_stat + alloc_stat
+         if( sum_stat .gt. 0 ) then
+            Write(*,*) 'ERROR: unable to allocate luohydro, luohlayers arrays'
+         end if
+         do idx = 1, nsubr
+            if ((am0hfl(idx) .eq. 1) .or. (am0hfl(idx) .eq. 3) .or. (am0hfl(idx) .eq. 5) .or. (am0hfl(idx) .eq. 7)) then
+               call fopenk (luohydro(idx), trim(rootp) // trim(subr_text(idx)) // 'hydro.out', 'unknown')
+               call fopenk (luohlayers(idx), trim(rootp) // trim(subr_text(idx)) // 'hlayers.out', 'unknown')
+            end if
+         end do
+      endif
+
+      flag_set = .false.
+      do idx = 1, nsubr
+         if ((am0hfl(idx) .eq. 2) .or. (am0hfl(idx) .eq. 6) .or. (am0hfl(idx) .eq. 3) .or. (am0hfl(idx) .eq. 7)) then
+            flag_set = .true.
+         end if
+      end do
+      if( flag_set ) then
+         allocate( luowater(nsubr), stat=alloc_stat )
+         allocate( luosurfwat(nsubr), stat=alloc_stat )
+         allocate( luoweather(nsubr), stat=alloc_stat )
+         if( alloc_stat .gt. 0 ) then
+            Write(*,*) 'ERROR: unable to allocate luowater array'
+         end if
+         do idx = 1, nsubr
+            if ((am0hfl(idx) .eq. 2) .or. (am0hfl(idx) .eq. 6) .or. (am0hfl(idx) .eq. 3) .or. (am0hfl(idx) .eq. 7)) then
+               call fopenk (luowater(idx), trim(rootp) // trim(subr_text(idx)) // 'water.out', 'unknown')
+               call fopenk (luosurfwat(idx), trim(rootp) // trim(subr_text(idx)) // 'surfwat.out', 'unknown')
+               call fopenk (luoweather(idx), trim(rootp) // trim(subr_text(idx)) // 'weather.out', 'unknown')
+            end if
+         end do
+      end if
+
+      flag_set = .false.
+      do idx = 1, nsubr
+         if ((am0hfl(idx) .eq. 4) .or. (am0hfl(idx) .eq. 5) .or. (am0hfl(idx) .eq. 6) .or. (am0hfl(idx) .eq. 7)) then
+            flag_set = .true.
+         end if
+      end do
+      if( flag_set ) then
+         allocate( luotempsoil(nsubr), stat=alloc_stat )
+         if( alloc_stat .gt. 0 ) then
+            Write(*,*) 'ERROR: unable to allocate luotempsoil array'
+         end if
+         do idx = 1, nsubr
+            if ((am0hfl(idx) .eq. 4) .or. (am0hfl(idx) .eq. 5) .or. (am0hfl(idx) .eq. 6) .or. (am0hfl(idx) .eq. 7)) then
+               call fopenk (luotempsoil(idx), trim(rootp) // trim(subr_text(idx)) // 'temp.out', 'unknown')
+            end if
+         end do
+      end if
+
+! open files for outputing the crop and decomp biomass variables - LEW
+      flag_set = .false.
+      do idx = 1, nsubr
+         if ((am0dfl(idx) .eq. 1).or.(am0dfl(idx).eq.3)) then
+            flag_set = .true.
+         end if
+      end do
+      if( flag_set ) then
+         sum_stat = 0
+         allocate( luocrp1(nsubr), stat=alloc_stat )
+         sum_stat = sum_stat + alloc_stat
+         allocate( luobio1(nsubr), stat=alloc_stat )
+         sum_stat = sum_stat + alloc_stat
+         allocate( luod_above(nsubr), stat=alloc_stat )
+         sum_stat = sum_stat + alloc_stat
+         if( sum_stat .gt. 0 ) then
+            Write(*,*) 'ERROR: unable to allocate luod_above, luocrp1 or luobio1 array'
+         end if
+
+         do idx = 1, nsubr
+            if ((am0dfl(idx) .eq. 1).or.(am0dfl(idx).eq.3)) then
+               call fopenk (luocrp1(idx), trim(rootp) // trim(subr_text(idx)) // 'decomp.out', 'unknown')
+               call fopenk (luobio1(idx), trim(rootp) // trim(subr_text(idx)) // 'bio1.btmp', 'unknown')
+               call fopenk (luod_above(idx), trim(rootp) // trim(subr_text(idx)) // 'dabove.out', 'unknown')
+            end if
+         end do
+      endif
+
+      flag_set = .false.
+      do idx = 1, nsubr
+         if ((am0dfl(idx) .eq. 2).or.(am0dfl(idx).eq.3)) then
+            flag_set = .true.
+         end if
+      end do
+      if( flag_set ) then
+         ! create dbelow.out unit number array for subregions
+         allocate( luod_below(nsubr), stat=alloc_stat )
+         if( alloc_stat .gt. 0 ) then
+            write(*,*) 'ERROR: unable to allocate luod_below array'
+         end if
+         do idx = 1, nsubr
+            if ((am0dfl(idx) .eq. 2).or.(am0dfl(idx).eq.3)) then
+               ! open dbelow.out in each subregion
+               call fopenk (luod_below(idx), trim(rootp) // trim(subr_text(idx)) // 'dbelow.out', 'unknown')
+            end if
+         end do
+      endif
+
+      if( maxval(am0cfl) .gt. 0) then
+         sum_stat = 0
+         allocate( luocrop(nsubr), stat=alloc_stat )
+         sum_stat = sum_stat + alloc_stat
+         allocate( luoshoot(nsubr), stat=alloc_stat )
+         sum_stat = sum_stat + alloc_stat
+         allocate( luoinpt(nsubr), stat=alloc_stat )
+         sum_stat = sum_stat + alloc_stat
+         if( sum_stat .gt. 0 ) then
+            Write(*,*) 'ERROR: unable to allocate luocrop, luoshoot, luoinpt arrays'
+         end if
+
+         do idx = 1, nsubr
+            if (am0cfl(idx) .gt. 0) then
+               ! daily crop output of most state variables 
+               call fopenk (luocrop(idx), trim(rootp) // trim(subr_text(idx)) // 'crop.out', 'unknown')
+               call fopenk (luoshoot(idx), trim(rootp) // trim(subr_text(idx)) // 'shoot.out', 'unknown')
+               ! echo crop input data - AR
+               call fopenk (luoinpt(idx), trim(rootp) // trim(subr_text(idx)) // 'inpt.out', 'unknown')
+            end if
+         end do
+      endif
+
+        ! print headings for crop output files
+        ! season.out, crop.out, shoot.out, inpt.out
+      do idx = 1, nsubr
+        call cpout(idx)
+      end do
+
+      if( maxval(am0sfl) .eq. 1 ) then
+         ! soil detail output files
+         sum_stat = 0
+         allocate( luosoilsurf(nsubr), stat=alloc_stat )
+         sum_stat = sum_stat + alloc_stat
+         allocate( luosoillay(nsubr), stat=alloc_stat )
+         sum_stat = sum_stat + alloc_stat
+         if( sum_stat .gt. 0 ) then
+            Write(*,*) 'ERROR: unable to allocate luosoilsurf, luosoillay arrays'
+         end if
+         do idx = 1, nsubr
+            if( am0sfl(idx) .eq. 1 ) then
+               ! soil surface
+               call fopenk(luosoilsurf(idx), trim(rootp) // trim(subr_text(idx)) // 'soilsurf.out', 'unknown')
+               ! soil layers
+               call fopenk(luosoillay(idx), trim(rootp) // trim(subr_text(idx)) // 'soillay.out', 'unknown')
+            end if
+         end do
+      endif
+
+      if (tflmax .ge. 1) then
+         allocate( luomanage(nsubr), stat=alloc_stat )
+         if( alloc_stat .gt. 0 ) then
+            Write(*,*) 'ERROR: unable to allocate luomanage array'
+         end if
+        allocate( luoasd(nsubr), stat=alloc_stat )
+         if( alloc_stat .gt. 0 ) then
+            Write(*,*) 'ERROR: unable to allocate luoasd array'
+         end if
+        allocate( luowc(nsubr), stat=alloc_stat )
+         if( alloc_stat .gt. 0 ) then
+            Write(*,*) 'ERROR: unable to allocate luowc array'
+         end if
+         do idx = 1, nsubr
+            if (BTEST(manFile(idx)%am0tfl,0)) then
+               call fopenk (luomanage(idx), trim(rootp) // trim(subr_text(idx)) // 'manage.out', 'unknown')
+            end if
+            if (BTEST(manFile(idx)%am0tfl,0)) then
+               call fopenk (luoasd(idx), trim(rootp) // trim(subr_text(idx)) // 'asd.out', 'unknown')
+            end if
+            if (BTEST(manFile(idx)%am0tfl,1)) then
+               call fopenk (luowc(idx), trim(rootp) // trim(subr_text(idx)) // 'wc.out', 'unknown')
+            end if
+         end do
+      end if
+
+      if ((calc_confidence .gt. 0)) then
+         ! Confidence Interval output file
+         call fopenk(luoci, rootp(1:len_trim(rootp)) // 'ci.out', 'unknown')
+      endif
+
+         ! create arrays for subregion debug output files
+      if (maxval(am0hdb) .eq. 1) then
+         allocate( luohdb(nsubr), stat=alloc_stat )
+         if( alloc_stat .gt. 0 ) then
+            Write(*,*) 'ERROR: unable to allocate luohdb array'
+         end if
+         do idx = 1, nsubr
+            if (am0hdb(idx) .eq. 1) then
+               call fopenk (luohdb(idx), trim(rootp) // trim(subr_text(idx)) // 'hdbug.out', 'unknown')
+            end if
+         end do
+      end if
+
+      if (maxval(am0sdb) .eq. 1) then
+         allocate( luosdb(nsubr), stat=alloc_stat )
+         if( alloc_stat .gt. 0 ) then
+            Write(*,*) 'ERROR: unable to allocate luosdb array'
+         end if
+         do idx = 1, nsubr
+            if (am0sdb(idx) .eq. 1) then
+               call fopenk (luosdb(idx), trim(rootp) // trim(subr_text(idx)) // 'sdbug.out', 'unknown')
+            end if
+         end do
+      end if
+
+      tdbmax = 0
+      do idx = 1, nsubr
+         tdbmax = max(tdbmax, manFile(idx)%am0tdb)
+      end do
+      if (tdbmax .eq. 1) then
+         allocate( luotdb(nsubr), stat=alloc_stat )
+         if( alloc_stat .gt. 0 ) then
+            Write(*,*) 'ERROR: unable to allocate luotdb array'
+         end if
+         do idx = 1, nsubr
+            if (manFile(idx)%am0tdb .eq. 1) then
+               call fopenk (luotdb(idx), trim(rootp) // trim(subr_text(idx)) // 'tdbug.out', 'unknown')
+            end if
+         end do
+      end if
+
+      if (maxval(am0cdb) .eq. 1) then
+         allocate( luocdb(nsubr), stat=alloc_stat )
+         if( alloc_stat .gt. 0 ) then
+            Write(*,*) 'ERROR: unable to allocate luocdb array'
+         end if
+         do idx = 1, nsubr
+            if (am0cdb(idx) .eq. 1) then
+               call fopenk (luocdb(idx), trim(rootp) // trim(subr_text(idx)) // 'cdbug.out', 'unknown')
+            end if
+         end do
+      end if
+
+      if (maxval(am0ddb) .eq. 1) then
+         allocate( luoddb(nsubr), stat=alloc_stat )
+         if( alloc_stat .gt. 0 ) then
+            Write(*,*) 'ERROR: unable to allocate luoddb array'
+         end if
+         do idx = 1, nsubr
+            if (am0ddb(idx) .eq. 1) then
+               call fopenk (luoddb(idx), trim(rootp) // trim(subr_text(idx)) // 'ddbug.out', 'unknown')
+            end if
+         end do
+      end if
+
+!   WEPP Related files
+!
+       if (wepp_hydro .gt. 1) then
+         allocate( luowepphdrive(nsubr), stat=alloc_stat )
+         if( alloc_stat .gt. 0 ) then
+            Write(*,*) 'ERROR: unable to allocate luowepphdrive array'
+         end if
+         do idx = 1, nsubr
+            call fopenk (luowepphdrive(idx), trim(rootp) // trim(subr_text(idx)) // 'wepp_runoff.out', 'unknown')
+            write(luowepphdrive(idx),*) ' WEPP Flow Routing Output'
+            write(luowepphdrive(idx),*) ' # day   mon  yr     precip  runoff    peakro  effdrn    effint   effdrr/rainfall excess'
+            write(luowepphdrive(idx),*) '                      (mm)   (mm)     (mm/hr)  (min)    (mm/hr)     (min)'
+         end do
+       endif
+
+       if ((run_erosion.eq.2).or.(run_erosion.eq.3)) then
+         sum_stat = 0
+         allocate( luowepperod(nsubr), stat=alloc_stat )
+         sum_stat = sum_stat + alloc_stat
+         allocate( luoweppplot(nsubr), stat=alloc_stat )
+         sum_stat = sum_stat + alloc_stat
+         allocate( luoweppsum(nsubr), stat=alloc_stat )
+         sum_stat = sum_stat + alloc_stat
+         if( sum_stat .gt. 0 ) then
+            Write(*,*) 'ERROR: unable to allocate luowepperod, luoweppplot, luoweppsum arrays'
+         end if
+         do idx = 1, nsubr
+            call fopenk(luowepperod(idx), trim(rootp) // trim(subr_text(idx)) // 'wepp_eroevents.out','unknown')
+            write(luowepperod(idx),*) 'WEPP Erosion Events Output'
+            write(luowepperod(idx),*) &
+            'day mo  year    Precp  Runoff  IR-det Av-det Mx-det  Point  Av-dep Max-dep  Point Sed.Del    ER'
+            write(luowepperod(idx),*) &
+            '--- --  ----     (mm)    (mm)  kg/m^2 kg/m^2 kg/m^2    (m)  kg/m^2  kg/m^2    (m)  (kg/m)  ----'
+
+            call fopenk(luoweppplot(idx), trim(rootp) // trim(subr_text(idx)) // 'wepp_eroplot.out','unknown')
+     
+            call fopenk(luoweppsum(idx), trim(rootp) // trim(subr_text(idx)) // 'wepp_summary.out','unknown')
+            write(luoweppsum(idx),*) 'WEPS/WEPP Common Model'
+            write(luoweppsum(idx),*) 'March 3, 2009  (2009.3)'
+            write(luoweppsum(idx),*) '---------------------------------------'
+         end do
+       endif
+
+      ! free memory from local subregion text strings
+      deallocate( subr_text, stat=alloc_stat)
+      if( alloc_stat .gt. 0 ) then
+         Write(*,*) 'ERROR: unable to deallocate subr_text array'
+      end if
+
+    end subroutine openfils
+
+    subroutine closefils()
+
+      use weps_main_mod, only: calc_confidence, calibrate_crops, run_erosion, soil_cond, wepp_hydro
+      use file_io_mod
+      use erosion_data_struct_defs, only: am0efl
+      use barriers_mod, only: barseas
+      use hydro_data_struct_defs, only: am0hfl, am0hdb
+      use soil_data_struct_defs, only: am0sfl, am0sdb
+      use manage_data_struct_defs, only: manFile
+      use crop_data_struct_defs, only: am0cfl, am0cdb
+      use decomp_data_struct_defs, only: am0dfl, am0ddb
+      use input_run_mod, only: old_run_file
+
+      ! local variables
+      integer idx
+      integer ::  nsubr  ! number of subregion (found from size of array always allocated, not with zero element)
+
+      nsubr = size(am0cfl)
+
+      ! files opened in inprun.for
+      close(luicli)
+      close(luiwin)
+      do idx = 1, nsubr
+         if (am0hdb(idx) .eq. 1) close(luohdb(idx))
+         if (am0sdb(idx) .eq. 1) close(luosdb(idx))
+         if (manFile(idx)%am0tdb .eq. 1) close(luotdb(idx))
+         if (am0cdb(idx) .eq. 1) close(luocdb(idx))
+         if (am0ddb(idx) .eq. 1) close(luoddb(idx))
+      end do
+
+      ! files opened in cmdline.for
+      close(luolog)
+
+!     these files are opened at all times
+
+      if( .not. old_run_file .or. (nsubr .gt. 1) ) then
+         close(luogui1(0))
+         close(luomandate(0))
+      end if
+      do idx = 1, nsubr
+         close(luogui1(idx))
+         close(luomandate(idx))
+         close(luoharvest_si(idx))
+         close(luoharvest_en(idx))
+         close(luohydrobal(idx))
+         close(luoseason(idx))
+      end do
+
+      if (calibrate_crops .gt. 0) then
+         do idx = 1, nsubr
+            ! calibration harvest output file
+            close(luoharvest_calib(idx))
+            ! calibration harvest output file for GUI
+            close(luoharvest_calib_parm(idx))
+         end do
+      endif
+
+      ! barrier output file
+      if( size(barseas) .gt. 0 ) then
+          close(luo_barr)
+      end if
+
+!     erosion output files
+      if (am0efl.gt.0) then
+          close(luo_subday)
+      endif
+
+      if (btest(am0efl,0)) then
+       close(luo_erod)
+      endif
+
+!     plot data file
+      do idx = 1, nsubr
+         if(    (am0hfl(idx).gt.0) .or. (am0sfl(idx).gt.0) .or. (manFile(idx)%am0tfl.gt.0) &
+           .or. (am0cfl(idx).gt.0) .or. (am0dfl(idx).gt.0) .or. (am0efl.gt.0)      ) then
+           close(luoplt(idx))
+         endif
+      end do
+
+      ! output file for soil conditioning index
+      if( soil_cond .gt. 0 ) then
+         do idx = 1, nsubr
+            close(luosci(idx))
+            ! close(luostir(idx))
+         end do
+      end if
+
+      ! detailed output files for hydro
+      do idx = 1, nsubr
+         if ((am0hfl(idx) .eq. 1) .or. (am0hfl(idx) .eq. 3) .or. (am0hfl(idx) .eq. 5) .or. (am0hfl(idx) .eq. 7)) then
+            close(luohydro(idx))
+            close(luohlayers(idx))
+         endif
+         if ((am0hfl(idx) .eq. 2) .or. (am0hfl(idx) .eq. 6) .or. (am0hfl(idx) .eq. 3) .or. (am0hfl(idx) .eq. 7)) then
+            close(luowater(idx))
+         end if
+         if ((am0hfl(idx) .eq. 4) .or. (am0hfl(idx) .eq. 5) .or. (am0hfl(idx) .eq. 6) .or. (am0hfl(idx) .eq. 7)) then
+            close(luotempsoil(idx))
+         end if
+      end do
+
+      ! detailed output files for management (& asd)
+      do idx = 1, nsubr
+         if (BTEST(manFile(idx)%am0tfl,0)) close(luomanage(idx)) ! manage.out
+         if (BTEST(manFile(idx)%am0tfl,0)) close(luoasd(idx))    ! asd.out - LEW
+         if (BTEST(manFile(idx)%am0tfl,0)) close(luowc(idx))     ! wc.out - LEW
+      end do
+
+      ! files for outputing the crop and decomp biomass variables - LEW
+      do idx = 1, nsubr
+         if ((am0dfl(idx) .eq. 1).or.(am0dfl(idx).eq.3)) then
+            close(luocrp1(idx))
+            close(luobio1(idx))
+            close(luod_above(idx))
+         endif
+         if ((am0dfl(idx) .eq. 2).or.(am0dfl(idx).eq.3)) then
+           ! files to match number of biomass pools
+
+           close(luod_below(idx))
+         endif
+
+         if (am0cfl(idx) .gt. 0) then
+            ! daily crop output of most state variables 
+            close(luocrop(idx))
+            close(luoshoot(idx))
+            ! echo crop input data - AR
+            close(luoinpt(idx))
+         endif
+
+         if ((am0sfl(idx) .eq. 1)) then
+            ! soil detail output files
+            ! soil surface
+            close(luosoilsurf(idx))
+            ! soil layers
+            close(luosoillay(idx))
+         endif
+      end do
+
+      if ((calc_confidence .gt. 0)) then
+         ! Confidence Interval output file
+         close(luoci)
+      endif
+
+      do idx = 1, nsubr
+         if (wepp_hydro .gt. 1) then
+            close (luowepphdrive(idx))
+         endif
+  
+         if ((run_erosion.eq.2).or.(run_erosion.eq.3)) then
+            close (luowepperod(idx))
+            close (luoweppplot(idx))
+            close (luoweppsum(idx))
+         endif
+      end do
+
+    end subroutine closefils
+
+end module weps_output_mod

@@ -47,6 +47,7 @@
 !     + + + END SPECIFICATIONS + + + 
 
       do lay=1,nlay
+
           ! settled bulk density
           settled_bulkden(lay) = setbds( clayf(lay), sandf(lay),        &
      &                                   organf(lay))
@@ -69,16 +70,22 @@
      &                         / (partden(lay) - wet_bulkden(lay))
               if( wet_set_rat(lay) .gt. 1.0 ) then
                   ! wet bulk density is greater than settled bulk density, adjust
-                  write(*,*)'WARNING: settled bd(',settled_bulkden(lay),&  ! NOTE:  Changed to "WARNING" so message
-     &                    ') < wet bd (',bulkden(lay),'), wbd = sbd'   !wouldn't display in GUI popup Warning dialog box
+                  write(*,"(a,f9.7,a,f9.7,a)") 'WARNING: settled bd(',  &
+     &                                          settled_bulkden(lay),   &  ! NOTE:  Changed to "WARNING" so message
+     &                                         ') < wet bd (',          &
+     &                                          bulkden(lay),           &
+     &                                         '), wbd = sbd'   !wouldn't display in GUI popup Warning dialog box
                   wet_set_rat(lay) = 1.0
                   wet_bulkden(lay) = settled_bulkden(lay)
               end if
               if( bulkden(lay) .gt. settled_bulkden(lay) ) then
                   ! do not start simulation in compacted state
+                  write(*,"(a,f9.7,a,f9.7,a)") 'WARNING: settled bd(',  &
+     &                                          settled_bulkden(lay),   &  ! NOTE:  Changed to "WARNING" so message
+     &                                         ') < initial bd(',       &
+     &                                          bulkden(lay),           &
+     &                                         '), bd = sbd'   !wouldn't display in GUI popup Warning dialog box
                   bulkden(lay) = settled_bulkden(lay)
-                  write(*,*)'WARNING: settled bd(',settled_bulkden(lay),&  ! NOTE:  Changed to "WARNING" so message
-     &                    ') < initial bd(',bulkden(lay),'), bd = sbd'   !wouldn't display in GUI popup Warning dialog box
               end if
 
           else

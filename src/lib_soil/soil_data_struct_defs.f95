@@ -358,5 +358,117 @@ contains
      end if
   end subroutine deallocate_soil
 
+  subroutine print_soil( luo, soil )
+     integer, intent(in) :: luo            ! logical unit for output
+     type(soil_def), intent(inout) :: soil ! soil data structure
+
+     integer :: lay   ! loop variable
+
+     write(luo, '(a)') trim(soil%sinfil)
+     write(luo, '(a)') trim(soil%am0sid)
+     write(luo, '(a)') trim(soil%am0tax)
+     write(luo, '(a)') trim(soil%am0localphase)
+     write(luo, '(a)') trim(soil%SoilLossTol)
+
+     write(luo, '(i0)') soil%nslay
+
+     write(luo, '(a)') 'intrinsic'
+     write(luo, '(e15.7)') soil%asfald
+     write(luo, '(e15.7)') soil%asfalw
+     write(luo, '(e15.7)') soil%restrict_depth
+     write(luo, '(e15.7)') soil%bedrock_depth
+     write(luo, '(e15.7)') soil%amrslp
+     write(luo, '(e15.7)') soil%SFCov
+     write(luo, '(e15.7)') soil%SoilRockFragments
+     do lay = 1, soil%nslay
+        write(luo, '(a,i0)') 'Layer: ', lay
+        write(luo, '(e15.7)') soil%asvroc(lay)
+        write(luo, '(e15.7)') soil%asfsan(lay)
+        write(luo, '(e15.7)') soil%asfsil(lay)
+        write(luo, '(e15.7)') soil%asfcla(lay)
+        write(luo, '(e15.7)') soil%as0ph(lay)
+        write(luo, '(e15.7)') soil%asfcce(lay)
+        write(luo, '(e15.7)') soil%asfcec(lay)
+        write(luo, '(e15.7)') soil%asfom(lay)
+        write(luo, '(e15.7)') soil%asdwblk(lay)
+        write(luo, '(e15.7)') soil%asdsblk(lay)
+        write(luo, '(e15.7)') soil%asdprocblk(lay)
+        write(luo, '(e15.7)') soil%aseagm(lay)
+        write(luo, '(e15.7)') soil%aseagmn(lay)
+        write(luo, '(e15.7)') soil%aseagmx(lay)
+        write(luo, '(e15.7)') soil%aslmin(lay)
+        write(luo, '(e15.7)') soil%aslmax(lay)
+        write(luo, '(e15.7)') soil%asfcle(lay)
+        write(luo, '(e15.7)') soil%asfvcs(lay)
+        write(luo, '(e15.7)') soil%asfcs(lay)
+        write(luo, '(e15.7)') soil%asfms(lay)
+        write(luo, '(e15.7)') soil%asffs(lay)
+        write(luo, '(e15.7)') soil%asfvfs(lay)
+        write(luo, '(e15.7)') soil%asfwdc(lay)
+     end do
+
+     write(luo, '(a)') 'state'
+     write(luo, '(e15.7)') soil%aszrgh
+     write(luo, '(e15.7)') soil%aszrho
+     write(luo, '(e15.7)') soil%asxrgw
+     write(luo, '(e15.7)') soil%asxrgs
+     write(luo, '(e15.7)') soil%asargo
+     write(luo, '(e15.7)') soil%asxdks
+     write(luo, '(e15.7)') soil%asxdkh
+     write(luo, '(e15.7)') soil%aslrr
+     write(luo, '(e15.7)') soil%aslrro
+     write(luo, '(e15.7)') soil%asfcr
+     write(luo, '(e15.7)') soil%aszcr
+     write(luo, '(e15.7)') soil%asflos
+     write(luo, '(e15.7)') soil%asmlos
+     write(luo, '(e15.7)') soil%asdcr
+     write(luo, '(e15.7)') soil%asecr
+     write(luo, '(e15.7)') soil%watertable_depth
+     write(luo, '(e15.7)') soil%WaterErosion
+     write(luo, '(e15.7)') soil%cump
+     write(luo, '(e15.7)') soil%bszrh0
+     write(luo, '(e15.7)') soil%bszrr0
+     do lay = 1, soil%nslay
+        write(luo, '(a,i0)') 'Layer: ', lay
+        write(luo, '(e15.7)') soil%bhtmx0(lay)
+        write(luo, '(e15.7)') soil%bhrwc0(lay)
+        write(luo, '(e15.7)') soil%aszlyt(lay)
+        write(luo, '(e15.7)') soil%asdblk(lay)
+        write(luo, '(e15.7)') soil%asdagd(lay)
+        write(luo, '(e15.7)') soil%aseags(lay)
+        write(luo, '(e15.7)') soil%aslagm(lay)
+        write(luo, '(e15.7)') soil%as0ags(lay)
+        write(luo, '(e15.7)') soil%aslagn(lay)
+        write(luo, '(e15.7)') soil%aslagx(lay)
+     end do
+
+     write(luo, '(a)') 'derived'
+     write(luo, '(e15.7)') soil%acanag     ! coefficient of abrasion for aggregates (1/m)
+     write(luo, '(e15.7)') soil%acancr     ! coefficient of abrasion for crust (1/m)
+     write(luo, '(e15.7)') soil%asf10an    ! soil fraction pm10 in abraded suspension
+     write(luo, '(e15.7)') soil%asf10en    ! soil fraction pm10 in emitted suspension
+     write(luo, '(e15.7)') soil%asf10bk    ! soil fraction pm10 in saltation breakage suspension
+     do lay = 1, soil%nslay
+        write(luo, '(a,i0)') 'Layer: ', lay
+        write(luo, '(e15.7)') soil%asdpart(lay)
+        write(luo, '(e15.7)') soil%aszlyd(lay)
+        write(luo, '(e15.7)') soil%asdwsrat(lay)
+        write(luo, '(e15.7)') soil%asdblk0(lay)
+        write(luo, '(e15.7)') soil%ahrwc(lay)
+        write(luo, '(e15.7)') soil%ahrwcdmx(lay)
+        write(luo, '(e15.7)') soil%aheaep(lay)
+        write(luo, '(e15.7)') soil%ah0cb(lay)
+        write(luo, '(e15.7)') soil%ahrsk(lay)
+        write(luo, '(e15.7)') soil%ahrwcr(lay)
+        write(luo, '(e15.7)') soil%ahrwcw(lay)
+        write(luo, '(e15.7)') soil%ahrwcf(lay)
+        write(luo, '(e15.7)') soil%ahrwcs(lay)
+        write(luo, '(e15.7)') soil%ahrwca(lay)
+        write(luo, '(e15.7)') soil%ahrwc1(lay)
+        write(luo, '(e15.7)') soil%ahfredsat(lay)
+     end do
+
+  end subroutine print_soil
+
 end module soil_data_struct_defs
 

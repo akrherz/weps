@@ -310,7 +310,7 @@
 !     dummy jacobian matrix
       subroutine jac (neq, t, y, ml, mu, pd, nrowpd)
       integer neq, ml, mu, nrowpd
-      real*4 t, y, pd
+      real t, y, pd
       dimension y(*), pd(nrowpd,*)
 !     the full matrix case (jt = 1), ml and mu are ignored,
 !     and the jacobian is to be loaded into pd in columnwise manner,
@@ -320,14 +320,14 @@
       end
 
 ! table lookup function archived here for reference
-!      real*4 function afgen(numpts, table, xval)
+!      real function afgen(numpts, table, xval)
 !     Finds two entries in table( ,1) which bracket the value of the independent
 !     variable, xval, and then linearly interpolates between the two corresponding
 !     entries in Table( ,2) to find the corresponding value of the dependent
 !     variable.
 !
 !      integer   numpts
-!      real*4    table(numpts,2), xval
+!      real    table(numpts,2), xval
 !
 !      integer maxindex, minindex, midindex
 !

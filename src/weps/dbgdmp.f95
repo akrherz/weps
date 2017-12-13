@@ -3,7 +3,7 @@
 !$Revision$
 !$HeadURL$
 
-      subroutine dbgdmp(day, sr, soil, crop, residue, croptot, biotot, h1et)
+      subroutine dbgdmp(day, sr, soil, croptot, biotot, h1et)
 ! ****************************************************************** wjr
 !     The dumps variables that have gone out of range
 
@@ -11,7 +11,7 @@
 !       01-Mar-99       wjr     original coding
 
       use soil_data_struct_defs, only: soil_def
-      use biomaterial, only: biomatter, biototal, ncanlay
+      use biomaterial, only: biototal, ncanlay
       use erosion_data_struct_defs, only: awdair, awadir, awhrmx, awudmx, awudmn, awudav, subday, ntstep
       use climate_input_mod, only: cli_today, cli_tyav, amalat, amalon, amzele
       use hydro_data_struct_defs, only: hydro_derived_et
@@ -21,8 +21,6 @@
       integer, intent(in) :: day
       integer, intent(in) :: sr
       type(soil_def), intent(in) :: soil  ! soil for this subregion
-      type(biomatter), intent(in) :: crop
-      type(biomatter), dimension(:), intent(in) :: residue
       type(biototal), intent(in) :: croptot
       type(biototal), intent(in) :: biotot
       type(hydro_derived_et), intent(inout) :: h1et
@@ -426,10 +424,10 @@
       if (soil%ah0cb(idx).lt.0.917.or.soil%ah0cb(idx).gt.27.927)          &
      &  write(*,*) 'day ',day,' ah0cb(',idx,') ', soil%ah0cb(idx)
   120 continue
-!
-      if (ahfwsf(sr).lt.tstmin.or.ahfwsf(sr).gt.tstmax)                 &
-     &  write(*,*) 'day ',day,' ahfwsf ', ahfwsf(sr)
-!
+
+!      if (ahfwsf(sr).lt.tstmin.or.ahfwsf(sr).gt.tstmax)                 &
+!     &  write(*,*) 'day ',day,' ahfwsf ', ahfwsf(sr)
+
       if (ahzsno(sr).lt.0.0.or.ahzsno(sr).gt.tstmax)                    &
      &  write(*,*) 'day ',day,' ahzsno ', ahzsno(sr)
 !
@@ -474,58 +472,58 @@
 
 ! p1werm
 
-   do idx=1,mnbpls
-      if (residue(idx)%deriv%mf .lt. 0.0 .or. residue(idx)%deriv%mf .gt. tstmax) &
-         write(*,*) 'day ',day,' residue(',idx,')%deriv%mf', residue(idx)%deriv%mf
-   end do
+!   do idx=1,mnbpls
+!      if (residue(idx)%deriv%mf .lt. 0.0 .or. residue(idx)%deriv%mf .gt. tstmax) &
+!         write(*,*) 'day ',day,' residue(',idx,')%deriv%mf', residue(idx)%deriv%mf
+!   end do
 
-   do idx=1, soil%nslay
-      do jdx=1,mnbpls
-         if (residue(jdx)%deriv%mbgz(idx) .lt. 0.0 .or. residue(jdx)%deriv%mbgz(idx) .gt. tstmax) &
-            write(*,*) 'day ',day,' residue(',jdx,')%deriv%mbgz(',idx,') ', residue(jdx)%deriv%mbgz(idx)
-!
-         if (residue(jdx)%deriv%mrtz(idx) .lt. 0.0 .or. residue(jdx)%deriv%mrtz(idx) .gt. tstmax) &
-     &  write(*,*) 'day ',day,' residue(',jdx,')%deriv%mrtz(',idx,') ', residue(jdx)%deriv%mrtz(idx)
-      end do
-   end do
+!   do idx=1, soil%nslay
+!      do jdx=1,mnbpls
+!         if (residue(jdx)%deriv%mbgz(idx) .lt. 0.0 .or. residue(jdx)%deriv%mbgz(idx) .gt. tstmax) &
+!            write(*,*) 'day ',day,' residue(',jdx,')%deriv%mbgz(',idx,') ', residue(jdx)%deriv%mbgz(idx)
+
+!         if (residue(jdx)%deriv%mrtz(idx) .lt. 0.0 .or. residue(jdx)%deriv%mrtz(idx) .gt. tstmax) &
+!     &  write(*,*) 'day ',day,' residue(',jdx,')%deriv%mrtz(',idx,') ', residue(jdx)%deriv%mrtz(idx)
+!      end do
+!   end do
 
 ! d1glob
 
       if (dmpflg) write(*,*) 'd1glob'
 !      
-   do idx=1,mnbpls
-      if (residue(idx)%geometry%zht .lt. tstmin .or. residue(idx)%geometry%zht .gt. tstmax) &
-     &  write(*,*) 'day ',day,' residue(',idx,')%geometry%zht ', residue(idx)%geometry%zht
+!   do idx=1,mnbpls
+!      if (residue(idx)%geometry%zht .lt. tstmin .or. residue(idx)%geometry%zht .gt. tstmax) &
+!     &  write(*,*) 'day ',day,' residue(',idx,')%geometry%zht ', residue(idx)%geometry%zht
 
-      if (residue(idx)%deriv%m .lt. 0.0 .or. residue(idx)%deriv%m .gt. tstmax) &
-     &  write(*,*) 'day ',day,' residue(',idx,')%deriv%m ', residue(idx)%deriv%m
+!      if (residue(idx)%deriv%m .lt. 0.0 .or. residue(idx)%deriv%m .gt. tstmax) &
+!     &  write(*,*) 'day ',day,' residue(',idx,')%deriv%m ', residue(idx)%deriv%m
 
-      if (residue(idx)%deriv%mst .lt. 0.0 .or. residue(idx)%deriv%mst .gt. tstmax) &
-     &  write(*,*) 'day ',day,' residue(',idx,')%deriv%mst ', residue(idx)%deriv%mst
+!      if (residue(idx)%deriv%mst .lt. 0.0 .or. residue(idx)%deriv%mst .gt. tstmax) &
+!     &  write(*,*) 'day ',day,' residue(',idx,')%deriv%mst ', residue(idx)%deriv%mst
 
-      if (residue(idx)%deriv%mf .lt. 0.0 .or. residue(idx)%deriv%mf .gt. tstmax) &
-     &  write(*,*) 'day ',day,' residue(',idx,')%deriv%mf ', residue(idx)%deriv%mf
+!      if (residue(idx)%deriv%mf .lt. 0.0 .or. residue(idx)%deriv%mf .gt. tstmax) &
+!     &  write(*,*) 'day ',day,' residue(',idx,')%deriv%mf ', residue(idx)%deriv%mf
 
-      if (residue(idx)%deriv%mbg .lt. 0.0 .or. residue(idx)%deriv%mbg .gt. tstmax) &
-     &  write(*,*) 'day ',day,' residue(',idx,')%deriv%mbg ', residue(idx)%deriv%mbg
+!      if (residue(idx)%deriv%mbg .lt. 0.0 .or. residue(idx)%deriv%mbg .gt. tstmax) &
+!     &  write(*,*) 'day ',day,' residue(',idx,')%deriv%mbg ', residue(idx)%deriv%mbg
 
-      if (residue(idx)%deriv%mrt .lt. 0.0 .or. residue(idx)%deriv%mrt .gt. tstmax) &
-     &  write(*,*) 'day ',day,' residue(',idx,')%deriv%mrt ', residue(idx)%deriv%mrt
+!      if (residue(idx)%deriv%mrt .lt. 0.0 .or. residue(idx)%deriv%mrt .gt. tstmax) &
+!     &  write(*,*) 'day ',day,' residue(',idx,')%deriv%mrt ', residue(idx)%deriv%mrt
 
-      if (residue(idx)%geometry%dstm .lt. 0.0 .or. residue(idx)%geometry%dstm .gt. tstmax) &
-     &  write(*,*) 'day ',day,' residue(',idx,')%geometry%dstm ', residue(idx)%geometry%dstm
-   end do
+!      if (residue(idx)%geometry%dstm .lt. 0.0 .or. residue(idx)%geometry%dstm .gt. tstmax) &
+!     &  write(*,*) 'day ',day,' residue(',idx,')%geometry%dstm ', residue(idx)%geometry%dstm
+!   end do
 
       if (dmpflg) write(*,*) 'c1gen'
 !      
-      if (crop%geometry%rg.lt.0.or.crop%geometry%rg.gt.1)                             &
-     &  write(*,*) 'day ',day,' ac0rg ', crop%geometry%rg
+!      if (crop%geometry%rg.lt.0.or.crop%geometry%rg.gt.1)                             &
+!     &  write(*,*) 'day ',day,' ac0rg ', crop%geometry%rg
 !
-      if (crop%geometry%dpop.lt.0.0.or.crop%geometry%dpop.gt.tstmax)                    &
-     &  write(*,*) 'day ',day,' acdpop ', crop%geometry%dpop
+!      if (crop%geometry%dpop.lt.0.0.or.crop%geometry%dpop.gt.tstmax)                    &
+!     &  write(*,*) 'day ',day,' acdpop ', crop%geometry%dpop
 !
-      if (crop%geometry%xrow.lt.0.0.or.crop%geometry%xrow.gt.1.0)                       &
-     &  write(*,*) 'day ',day,' acxrow ', crop%geometry%xrow
+!      if (crop%geometry%xrow.lt.0.0.or.crop%geometry%xrow.gt.1.0)                       &
+!     &  write(*,*) 'day ',day,' acxrow ', crop%geometry%xrow
 
       if (croptot%rsaitot.lt.0.0.or.croptot%rsaitot.gt.tstmax) &
           write(*,*) 'day ',day,' croptot%rsaitot ', croptot%rsaitot
@@ -598,84 +596,84 @@
 
 ! cldb2
 
-      if (dmpflg) write(*,*) 'c1db2'
+!      if (dmpflg) write(*,*) 'c1db2'
       
-      if (crop%database%topt.lt.0.0.or.crop%database%topt.gt.40.0) &
-     &  write(*,*) 'day ',day,' actopt ', crop%database%topt
+!      if (crop%database%topt.lt.0.0.or.crop%database%topt.gt.40.0) &
+!     &  write(*,*) 'day ',day,' actopt ', crop%database%topt
 
-      if (crop%database%tmin.lt.0.0.or.crop%database%tmin.gt.20.0) &
-     &  write(*,*) 'day ',day,' actmin ', crop%database%tmin
+!      if (crop%database%tmin.lt.0.0.or.crop%database%tmin.gt.20.0) &
+!     &  write(*,*) 'day ',day,' actmin ', crop%database%tmin
 
-      do 200 idx=1,2
+!      do 200 idx=1,2
 
-      if (crop%database%fd1(idx).lt.0.0.or.crop%database%fd1(idx).gt.tstmax) &
-     &  write(*,*) 'day ',day,' ac0fd1(',idx,') ', crop%database%fd1(idx)
+!      if (crop%database%fd1(idx).lt.0.0.or.crop%database%fd1(idx).gt.tstmax) &
+!     &  write(*,*) 'day ',day,' ac0fd1(',idx,') ', crop%database%fd1(idx)
 
-      if (crop%database%fd2(idx).lt.0.0.or.crop%database%fd2(idx).gt.1.0) &
-     &  write(*,*) 'day ',day,' ac0fd2(',idx,') ', crop%database%fd2(idx)
-  200 continue     
+!      if (crop%database%fd2(idx).lt.0.0.or.crop%database%fd2(idx).gt.1.0) &
+!     &  write(*,*) 'day ',day,' ac0fd2(',idx,') ', crop%database%fd2(idx)
+!  200 continue     
 
-      if (crop%database%ck.lt.0.0.or.crop%database%ck.gt.1.0)                         &
-     &  write(*,*) 'day ',day,' ac0ck ', crop%database%ck
+!      if (crop%database%ck.lt.0.0.or.crop%database%ck.gt.1.0)                         &
+!     &  write(*,*) 'day ',day,' ac0ck ', crop%database%ck
 
 ! c1db1
 
-      if (dmpflg) write(*,*) 'c1db1'
+!      if (dmpflg) write(*,*) 'c1db1'
       
-      if (crop%database%tdtm.lt.0.0.or.crop%database%tdtm.gt.tstmax) &
-     &  write(*,*) 'day ',day,' actdtm ', crop%database%tdtm
-!
-      if (crop%database%zmrt.lt.0.0.or.crop%database%zmrt.gt.tstmax) &
-     &  write(*,*) 'day ',day,' aczmrt ', crop%database%zmrt
-!
-      if (crop%database%zmxc.lt.0.0.or.crop%database%zmxc.gt.tstmax) &
-     &  write(*,*) 'day ',day,' aczmxc ', crop%database%zmxc
-!
-      if (crop%database%ehu0.lt.0.0.or.crop%database%ehu0.gt.tstmax) &
-     &  write(*,*) 'day ',day,' acehu0 ', crop%database%ehu0
-!
-      if (crop%database%alf.lt.0.0.or.crop%database%alf.gt.tstmax) &
-     &  write(*,*) 'day ',day,' ac0alf ', crop%database%alf
-!
-      if (crop%database%blf.lt.0.0.or.crop%database%blf.gt.tstmax) &
-     &  write(*,*) 'day ',day,' ac0blf ', crop%database%blf
-!
-      if (crop%database%clf.lt.0.0.or.crop%database%clf.gt.tstmax) &
-     &  write(*,*) 'day ',day,' ac0clf ', crop%database%clf
-!
-      if (crop%database%dlf.lt.0.0.or.crop%database%dlf.gt.tstmax) &
-     &  write(*,*) 'day ',day,' ac0dlf ', crop%database%dlf
-!
-      if (crop%database%arp.lt.0.0.or.crop%database%arp.gt.tstmax) &
-     &  write(*,*) 'day ',day,' ac0arp ', crop%database%arp
-!
-      if (crop%database%brp.lt.0.0.or.crop%database%brp.gt.tstmax) &
-     &  write(*,*) 'day ',day,' ac0brp ', crop%database%brp
-!
-      if (crop%database%crp.lt.0.0.or.crop%database%crp.gt.tstmax) &
-     &  write(*,*) 'day ',day,' ac0crp ', crop%database%crp
-!
-      if (crop%database%drp.lt.0.0.or.crop%database%drp.gt.tstmax) &
-     &  write(*,*) 'day ',day,' ac0drp ', crop%database%drp
-!
-      if (crop%database%aht.lt.0.0.or.crop%database%aht.gt.tstmax) &
-     &  write(*,*) 'day ',day,' ac0aht ', crop%database%aht
-!
-      if (crop%database%bht.lt.0.0.or.crop%database%bht.gt.tstmax) &
-     &  write(*,*) 'day ',day,' ac0bht ', crop%database%bht
-!
-      if (crop%database%ssa.lt.0.0.or.crop%database%ssa.gt.tstmax) &
-     &  write(*,*) 'day ',day,' ac0ssa ', crop%database%ssa
-!
-      if (crop%database%ssb.lt.0.0.or.crop%database%ssb.gt.tstmax) &
-     &  write(*,*) 'day ',day,' ac0ssb ', crop%database%ssb
+!      if (crop%database%tdtm.lt.0.0.or.crop%database%tdtm.gt.tstmax) &
+!     &  write(*,*) 'day ',day,' actdtm ', crop%database%tdtm
 
-      if (crop%database%sla.lt.0.0.or.crop%database%sla.gt.tstmax) &
-        write(*,*) 'day ',day,' ac0sla ', crop%database%sla
+!      if (crop%database%zmrt.lt.0.0.or.crop%database%zmrt.gt.tstmax) &
+!     &  write(*,*) 'day ',day,' aczmrt ', crop%database%zmrt
 
-      if (crop%database%hue.lt.0.0.or.crop%database%hue.gt.tstmax) &
-     &  write(*,*) 'day ',day,' ac0hue ', crop%database%hue
-!
+!      if (crop%database%zmxc.lt.0.0.or.crop%database%zmxc.gt.tstmax) &
+!     &  write(*,*) 'day ',day,' aczmxc ', crop%database%zmxc
+
+!      if (crop%database%ehu0.lt.0.0.or.crop%database%ehu0.gt.tstmax) &
+!     &  write(*,*) 'day ',day,' acehu0 ', crop%database%ehu0
+
+!      if (crop%database%alf.lt.0.0.or.crop%database%alf.gt.tstmax) &
+!     &  write(*,*) 'day ',day,' ac0alf ', crop%database%alf
+
+!      if (crop%database%blf.lt.0.0.or.crop%database%blf.gt.tstmax) &
+!     &  write(*,*) 'day ',day,' ac0blf ', crop%database%blf
+
+!      if (crop%database%clf.lt.0.0.or.crop%database%clf.gt.tstmax) &
+!     &  write(*,*) 'day ',day,' ac0clf ', crop%database%clf
+
+!      if (crop%database%dlf.lt.0.0.or.crop%database%dlf.gt.tstmax) &
+!     &  write(*,*) 'day ',day,' ac0dlf ', crop%database%dlf
+
+!      if (crop%database%arp.lt.0.0.or.crop%database%arp.gt.tstmax) &
+!     &  write(*,*) 'day ',day,' ac0arp ', crop%database%arp
+
+!      if (crop%database%brp.lt.0.0.or.crop%database%brp.gt.tstmax) &
+!     &  write(*,*) 'day ',day,' ac0brp ', crop%database%brp
+
+!      if (crop%database%crp.lt.0.0.or.crop%database%crp.gt.tstmax) &
+!     &  write(*,*) 'day ',day,' ac0crp ', crop%database%crp
+
+!      if (crop%database%drp.lt.0.0.or.crop%database%drp.gt.tstmax) &
+!     &  write(*,*) 'day ',day,' ac0drp ', crop%database%drp
+
+!      if (crop%database%aht.lt.0.0.or.crop%database%aht.gt.tstmax) &
+!     &  write(*,*) 'day ',day,' ac0aht ', crop%database%aht
+
+!      if (crop%database%bht.lt.0.0.or.crop%database%bht.gt.tstmax) &
+!     &  write(*,*) 'day ',day,' ac0bht ', crop%database%bht
+
+!      if (crop%database%ssa.lt.0.0.or.crop%database%ssa.gt.tstmax) &
+!     &  write(*,*) 'day ',day,' ac0ssa ', crop%database%ssa
+
+!      if (crop%database%ssb.lt.0.0.or.crop%database%ssb.gt.tstmax) &
+!     &  write(*,*) 'day ',day,' ac0ssb ', crop%database%ssb
+
+!      if (crop%database%sla.lt.0.0.or.crop%database%sla.gt.tstmax) &
+!        write(*,*) 'day ',day,' ac0sla ', crop%database%sla
+
+!      if (crop%database%hue.lt.0.0.or.crop%database%hue.gt.tstmax) &
+!     &  write(*,*) 'day ',day,' ac0hue ', crop%database%hue
+
       if (dmpflg) write(*,*) 'end dbgdmp'
-!      
+      
       end

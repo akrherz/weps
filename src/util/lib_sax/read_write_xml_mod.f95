@@ -149,7 +149,7 @@ contains
     character(len=*), intent(in) :: tag_name
 
     call w_spaces( luo_saeinp )
-    write(luo_saeinp,*) '<', trim(tag_name), '>'
+    write(luo_saeinp,"(3a)") '<', trim(tag_name), '>'
 
     indent = indent + INDENT_SPACES
   end subroutine w_begin_tag_a0
@@ -165,8 +165,8 @@ contains
 
     write(attr1_str, '(i0)') attr1_value
     call w_spaces( luo_saeinp )
-    write(luo_saeinp,*) '<', trim(tag_name), &
-                        ' ', trim(attrib1), '="', adjustl(trim(attr1_str)), '">'
+    write(luo_saeinp,"(7a)") '<', trim(tag_name), &
+                        ' ', trim(attrib1), '="', trim(adjustl(attr1_str)), '">'
 
     indent = indent + INDENT_SPACES
   end subroutine w_begin_tag_a1
@@ -186,9 +186,9 @@ contains
     write(attr1_str, '(i0)') attr1_value
     write(attr2_str, '(i0)') attr2_value
     call w_spaces( luo_saeinp )
-    write(luo_saeinp,*) '<', trim(tag_name), &
-                        ' ', trim(attrib1), '="', adjustl(trim(attr1_str)), '">', &
-                        ' ', trim(attrib2), '="', adjustl(trim(attr2_str)), '">'
+    write(luo_saeinp,"(12a)") '<', trim(tag_name), &
+                        ' ', trim(attrib1), '="', trim(adjustl(attr1_str)), '"', &
+                        ' ', trim(attrib2), '="', trim(adjustl(attr2_str)), '">'
 
     indent = indent + INDENT_SPACES
   end subroutine w_begin_tag_a2
@@ -201,7 +201,7 @@ contains
     indent = indent - INDENT_SPACES
 
     call w_spaces( luo_saeinp )
-    write(luo_saeinp,*) '</', trim(tag_name), '>'
+    write(luo_saeinp,"(3a)") '</', trim(tag_name), '>'
   end subroutine w_end_tag
 
   ! write whole tag with zero attributes and real number value
@@ -214,8 +214,8 @@ contains
 
     write(real_str, '(g39.15)') value
     call w_spaces( luo_saeinp )
-    write(luo_saeinp,*) '<', trim(tag_name), '>', &
-                         adjustl(trim(real_str)), &
+    write(luo_saeinp,"(7a)") '<', trim(tag_name), '>', &
+                         trim(adjustl(real_str)), &
                         '</', trim(tag_name), '>'
   end subroutine w_whole_tag_a0_real
 
@@ -229,8 +229,8 @@ contains
 
     write(integer_str, '(i0)') value
     call w_spaces( luo_saeinp )
-    write(luo_saeinp,*) '<', trim(tag_name), '>', &
-                         adjustl(trim(integer_str)), &
+    write(luo_saeinp,"(7a)") '<', trim(tag_name), '>', &
+                         trim(adjustl(integer_str)), &
                         '</', trim(tag_name), '>'
   end subroutine w_whole_tag_a0_integer
 
@@ -249,9 +249,9 @@ contains
     write(real_str, '(g39.15)') value
 
     call w_spaces( luo_saeinp )
-    write(luo_saeinp,*) '<', trim(tag_name), &
-                        ' ', trim(attrib1), '="', adjustl(trim(attr1_str)), '">', &
-                        adjustl(trim(real_str)), &
+    write(luo_saeinp,"(11a)") '<', trim(tag_name), &
+                        ' ', trim(attrib1), '="', trim(adjustl(attr1_str)), '">', &
+                        trim(adjustl(real_str)), &
                         '</', trim(tag_name), '>'
   end subroutine w_whole_tag_a1
 

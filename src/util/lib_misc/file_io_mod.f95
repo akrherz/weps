@@ -6,7 +6,7 @@
 module file_io_mod
 
     ! unit number for file input (lui) / output (luo)
-! global in scope, so only one unit required
+    ! global in scope, so only one unit required
     integer :: luicli          ! reading cligen input
     integer :: luiwin          ! reading windgen input
 
@@ -74,6 +74,11 @@ module file_io_mod
     integer, dimension(:), allocatable :: luotdb          ! write tdbug.out
     integer, dimension(:), allocatable :: luocdb          ! write cdbug.out
     integer, dimension(:), allocatable :: luoddb          ! write ddbug.out
+
+    interface makenamnum
+      module procedure makenamnum_1
+      module procedure makenamnum_2
+    end interface makenamnum
 
 contains
 
@@ -170,7 +175,48 @@ contains
         !goto 10
     end subroutine makedir
 
-    function makenamnum( prename, innumber, maxnumber, postname ) result(namnum)
+    function makenamnum_2( prename, innum_1, maxnum_1, separator, innum_2, maxnum_2, postname ) result(namnum)
+        character(LEN = *), intent(in) :: prename
+        integer, intent(in) :: innum_1
+        integer, intent(in) :: maxnum_1
+        character(LEN = *), intent(in) :: separator
+        integer, intent(in) :: innum_2
+        integer, intent(in) :: maxnum_2
+        character(LEN = *), intent(in) :: postname
+
+        character*40 :: namnum         ! the name/number combination created
+        character*30 :: namnum_format  ! format string for creating the name/number combination
+        character*10 :: num_1_format   ! format string for creating first number
+        character*10 :: num_2_format   ! format string for creating second number
+        integer :: numlen_1            ! maximum length of the first number part of the name
+        integer :: numlen_2            ! maximum length of the second number part of the name
+        integer :: prelen              ! length of the prefix name portion
+        integer :: seplen              ! length of the separator name portion
+        integer :: postlen             ! length of the postfix name portion
+
+        write( num_1_format, '(i0)' ) maxnum_1
+        numlen_1 = len_trim(num_1_format)
+        write( num_2_format, '(i0)' ) maxnum_2
+        numlen_2 = len_trim(num_1_format)
+        prelen = len_trim(prename)
+        seplen = len_trim(separator)
+        postlen = len_trim(postname)
+
+        if( prelen + numlen_1 + seplen + numlen_2 + postlen .gt. 40 ) then
+            write(*,*) 'Name plus numbers combination is too long. Cannot create.'
+            write(*,*) 'Name: ', prename, ' Number 1: ', innum_1, &
+                 'Separator:', separator, ' Number 2: ', innum_2, 'Extension: ', postname
+            stop 1
+        end if
+        write( namnum_format, '(a2, i0, a5, i0, a3, i0, a5, i0, a3, i0, a1)' )  &
+                              '(a', prelen, ', i0.', numlen_1, ', a', seplen, ', i0.', numlen_2, ', a', postlen, ')'
+
+        ! create the name
+        write( namnum, namnum_format) trim(prename), innum_1, separator, innum_2, trim(postname)
+
+    end function makenamnum_2
+
+    function makenamnum_1( prename, innumber, maxnumber, postname ) result(namnum)
         character(LEN = *), intent(in) :: prename
         integer, intent(in) :: innumber
         integer, intent(in) :: maxnumber
@@ -197,7 +243,7 @@ contains
         ! create the name
         write( namnum, namnum_format) trim(prename), innumber, trim(postname)
 
-    end function makenamnum
+    end function makenamnum_1
 
 end module file_io_mod
 

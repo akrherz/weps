@@ -196,6 +196,7 @@ else { /* Linux */
 /* debug flags */
 if [is_windows] then {
 	fc_debug		="/debug /warn:all /gen-interfaces";
+	/*fc_debug		="/debug /warn:all /gen-interfaces /r8";*/
 }
 else { /* Linux */
 	fc_debug		="-g";

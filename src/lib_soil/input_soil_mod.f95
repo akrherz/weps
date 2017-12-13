@@ -66,7 +66,7 @@ module input_soil_mod
 
       ! initialize new variables not read in from ifc file 
       do lay = 1, soil%nslay
-          soil%ahfredsat(lay) = 0.0
+          soil%ahfredsat(lay) = 0.0d0
           soil%asdwsrat(lay) = -1.0
       end do
 
@@ -160,7 +160,7 @@ module input_soil_mod
       end if
 
       ! Check if override of rock fragments are specified
-      if (soil%SoilRockFragments .ge. 0.0) then
+      if (soil%SoilRockFragments .ge. 0.0d0) then
         do lay = 1, soil%nslay
           soil%asvroc(lay) = soil%SoilRockFragments
         end do
@@ -233,18 +233,18 @@ module input_soil_mod
           read(line,*,err=902) soil%asfald
         case (6)                                                      ! Slope gradient (m/m)
           ! set default outflow height to zero (minimum depression storage)
-          ahzoutflow(isr) = 0.0
+          ahzoutflow(isr) = 0.0d0
           ! check value read in from weps.run
           if( soil%amrslp .lt. -1.5 ) then
              ! weps.run specifies a level basin with no runoff
-             soil%amrslp = 0.0
+             soil%amrslp = 0.0d0
              ! set outflow height of 1/2 meter (minimum depression storage)
              ahzoutflow(isr) = 0.5
-          else if( soil%amrslp .lt. 0.0 ) then
+          else if( soil%amrslp .lt. 0.0d0 ) then
              ! no value entered by user (from weps.run)
              read(line,*,err=902) soil%amrslp
              ! check subregion slope value for validity
-             if( soil%amrslp .lt. 0.0 ) then
+             if( soil%amrslp .lt. 0.0d0 ) then
                 ! no valid value found in IFC file either, set default value of 1%
                 soil%amrslp = 0.01
              end if
@@ -346,8 +346,8 @@ module input_soil_mod
         ! this is where dike height and spacing should be read in.
         ! they are not, but need to be initialized.
         ! case (??)
-          soil%asxdks = 0.0
-          soil%asxdkh = 0.0
+          soil%asxdks = 0.0d0
+          soil%asxdkh = 0.0d0
 
 !     read IC soil hydrologic properties
         ! All SWC values are converted to mass basis as they are the "independent variables" in WEPS
@@ -395,6 +395,21 @@ module input_soil_mod
 
       ! reading of subregion IFC elements complete
   200 continue 
+
+      ! assign values to uninitialized variables
+      do lay=1, soil%nslay
+        ! these are set later in soil_mod
+        soil%aseagm(lay) = 0.0d0
+        soil%aseagmn(lay) = 0.0d0
+        soil%aseagmx(lay) = 0.0d0
+        soil%aslmin(lay) = 0.0d0
+        soil%aslmax(lay) = 0.0d0
+        soil%asfwdc(lay) = 0.0d0
+        soil%bhtmx0(lay) = 0.0d0
+        soil%bhrwc0(lay) = soil%ahrwc(lay)
+        soil%ahrwcdmx(lay) = soil%ahrwc(lay)
+        soil%ahrwc1(lay) = soil%ahrwcf(lay)
+      end do
 
       return
 
@@ -475,18 +490,18 @@ module input_soil_mod
           read(line,*,err=902) soil%asfald
         case (8)                                                      ! Slope gradient (m/m)
           ! set default outflow height to zero (minimum depression storage)
-          ahzoutflow(isr) = 0.0
+          ahzoutflow(isr) = 0.0d0
           ! check value read in from weps.run
           if( soil%amrslp .lt. -1.5 ) then
              ! weps.run specifies a level basin with no runoff
-             soil%amrslp = 0.0
+             soil%amrslp = 0.0d0
              ! set outflow height of 1/2 meter (minimum depression storage)
              ahzoutflow(isr) = 0.5
-          else if( soil%amrslp .lt. 0.0 ) then
+          else if( soil%amrslp .lt. 0.0d0 ) then
              ! no value entered by user (from weps.run)
              read(line,*,err=902) soil%amrslp
              ! check subregion slope value for validity
-             if( soil%amrslp .lt. 0.0 ) then
+             if( soil%amrslp .lt. 0.0d0 ) then
                 ! no valid value found in IFC file either, set default value of 1%
                 soil%amrslp = 0.01
              end if
@@ -638,6 +653,21 @@ module input_soil_mod
       ! reading of subregion IFC elements complete
   200 continue 
 
+      ! assign values to uninitialized variables
+      do lay=1, soil%nslay
+        ! these are set later in soil_mod
+        soil%aseagm(lay) = 0.0d0
+        soil%aseagmn(lay) = 0.0d0
+        soil%aseagmx(lay) = 0.0d0
+        soil%aslmin(lay) = 0.0d0
+        soil%aslmax(lay) = 0.0d0
+        soil%asfwdc(lay) = 0.0d0
+        soil%bhtmx0(lay) = 0.0d0
+        soil%bhrwc0(lay) = soil%ahrwc(lay)
+        soil%ahrwcdmx(lay) = soil%ahrwc(lay)
+        soil%ahrwc1(lay) = soil%ahrwcf(lay)
+      end do
+
       return
 
  901  write(*,9001) trim(soil%sinfil), linnum, trim(line)
@@ -749,7 +779,7 @@ module input_soil_mod
           read(line,*,err=82) (soil%asdblk(lay), lay=1,soil%nslay)
           ! initialize coefficient of linear expansion, even though it isn't used with these IFC files
           do lay=1,soil%nslay
-             soil%asfcle(lay) = 0.0 
+             soil%asfcle(lay) = 0.0d0 
           end do
         case (15)
           read(line,*,err=82) (soil%asdwblk(lay), lay=1,soil%nslay)
@@ -795,8 +825,8 @@ module input_soil_mod
         ! this is where dike height and spacing should be read in.
         ! they are not, but need to be initialized.
         ! case (??)
-          soil%asxdks = 0.0
-          soil%asxdkh = 0.0
+          soil%asxdks = 0.0d0
+          soil%asxdkh = 0.0d0
 
         case (33)
 !     read soil hydrologic properties
@@ -824,15 +854,15 @@ module input_soil_mod
 
 !         Code added to "skip" extra parameter not available in "old" ifc files
           ! set default outflow height to zero (minimum depression storage)
-          ahzoutflow(isr) = 0.0
+          ahzoutflow(isr) = 0.0d0
           if (ifc_format .eq. 1) then !old ifc format (skip next typidx line)
              typidx = typidx + 1
              if( soil%amrslp .lt. -1.5 ) then
                 ! weps.run specifies a level basin with no runoff
-                soil%amrslp = 0.0
+                soil%amrslp = 0.0d0
                 ! set outflow height of 1/2 meter (minimum depression storage)
                 ahzoutflow(isr) = 0.5
-             else if( soil%amrslp .lt. 0.0 ) then
+             else if( soil%amrslp .lt. 0.0d0 ) then
                 ! no value entered by user (from weps.run)
                 ! no valid value found in IFC file either, set default value of 1%
                 soil%amrslp = 0.01
@@ -843,14 +873,14 @@ module input_soil_mod
           ! check value read in from weps.run
           if( soil%amrslp .lt. -1.5 ) then
              ! weps.run specifies a level basin with no runoff
-             soil%amrslp = 0.0
+             soil%amrslp = 0.0d0
              ! set outflow height of 1/2 meter (minimum depression storage)
              ahzoutflow(isr) = 0.5
-          else if( soil%amrslp .lt. 0.0 ) then
+          else if( soil%amrslp .lt. 0.0d0 ) then
              ! no value entered by user (from weps.run)
              read(line,*,err=82) soil%amrslp
              ! check subregion slope value for validity
-             if( soil%amrslp .lt. 0.0 ) then
+             if( soil%amrslp .lt. 0.0d0 ) then
                 ! no valid value found in IFC file either, set default value of 1%
                 soil%amrslp = 0.01
              end if
@@ -899,8 +929,8 @@ module input_soil_mod
       soil%bedrock_depth = 99990.0
       soil%restrict_depth = 99990.0
       do lay = 1, soil%nslay
-        soil%asfvcs(lay) = 0.0
-        soil%ahfredsat(lay) = 0.0
+        soil%asfvcs(lay) = 0.0d0
+        soil%ahfredsat(lay) = 0.0d0
         soil%asdwsrat(lay) = -1.0
       end do
 
@@ -1000,6 +1030,19 @@ module input_soil_mod
       end if
 
       close (lui1)
+
+      ! assign values to uninitialized variables
+      do lay=1, soil%nslay
+        ! these are set later in soil_mod
+        soil%aseagm(lay) = 0.0d0
+        soil%aseagmn(lay) = 0.0d0
+        soil%aseagmx(lay) = 0.0d0
+        soil%aslmin(lay) = 0.0d0
+        soil%aslmax(lay) = 0.0d0
+        soil%bhtmx0(lay) = 0.0d0
+        soil%bhrwc0(lay) = soil%ahrwc(lay)
+        soil%ahrwcdmx(lay) = soil%ahrwc(lay)
+      end do
 
       return
    81 write(*,9001) trim(soil%sinfil), linnum, trim(line)

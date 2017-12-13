@@ -3,19 +3,225 @@
 !$Revision$
 !$HeadURL$
 
-SUBROUTINE get_calib_yield(sr,rotation_no,mass_removed, mass_left, crop)
+MODULE calib_plant_mod
+
+  USE generic_list , ONLY : Link_Ptr_Type, Link_Type, List_Type
+
+  IMPLICIT NONE
+
+  LOGICAL :: got_all_calib_crops = .FALSE.    ! Set .TRUE. once we find all crops to calibrate
+
+  LOGICAL, ALLOCATABLE, DIMENSION (:) :: first_full_cycle   ! Array of flags - set .TRUE once we have gotten
+                                                            ! a full cycle's worth of estimated yields
+
+  INTEGER :: calib_crop_cnt = 0               ! Count number of crops to calibrate
+
+  REAL, TARGET, ALLOCATABLE, DIMENSION (:,:) :: est_yield          ! estimated yield for each crop (by calib_cycle)
+  REAL, TARGET, ALLOCATABLE, DIMENSION (:,:) :: est_adj    ! estimated biomass adjustment for each crop (by calib_cycle)
+  REAL, ALLOCATABLE, DIMENSION (:) :: new_adj              ! storage for new biomass adjustment value for each crop
+
+  TYPE :: Array_Ptrs
+     REAL, POINTER :: low_ptr
+     REAL, POINTER :: high_ptr
+  END TYPE Array_Ptrs
+
+  TYPE (Array_Ptrs), ALLOCATABLE, DIMENSION (:) :: bracket_adj   ! bracket structure to hold lower/upper ptrs to adj values
+  TYPE (Array_Ptrs), ALLOCATABLE, DIMENSION (:) :: bracket_yield ! bracket structure to hold lower/upper ptrs to yield values
+
+! REAL, POINTER :: low_ptr(10)         ! Keeps track of lower bracketed bio_adj values for each calib crop
+! REAL, POINTER :: high_ptr(10)        ! Keeps track of upper bracketed bio_adj values for each calib crop
+
+  TYPE :: calib_crop_type
+    CHARACTER(len=80) :: crop_name = ""
+    INTEGER   :: idx = 0
+    INTEGER   :: plant_day = -1
+    INTEGER   :: plant_month = -1
+    INTEGER   :: plant_rotyear = -1
+    INTEGER   :: harv_day = -2
+    INTEGER   :: harv_month = -2
+    INTEGER   :: harv_rotyear = -2
+    REAL      :: bio_adj_val = -1.0
+    REAL      :: target_yield = -2.0 ! dry wt in WEPS metric units (kg/m^2)
+  END TYPE calib_crop_type
+
+  TYPE :: calib_yield_type
+    INTEGER   :: rot_no = 0
+    INTEGER   :: cycle_no = 0
+    REAL      :: bio_adj_val = -1.0
+    REAL      :: harv_yield = -2.0 ! dry wt in WEPS metric units (kg/m^2)
+    TYPE (calib_crop_type), POINTER :: crop_ptr => NULL() 
+  END TYPE calib_yield_type
+  !not used? 
+ !TYPE (calib_yield_type), Dimension (:), TARGET, ALLOCATABLE :: ydata
+
+!-------------------------------
+    ! My-defined list element
+    ! The Link_Type field MUST be the FIRST in the my-defined list element
+    ! Note pointer to data so as to easily create sublists
+    TYPE My_Type
+      TYPE (Link_Type) :: CLink
+      TYPE (My_Data_Type), POINTER :: CData
+    END TYPE My_Type
+
+    TYPE My_Data_Type
+      INTEGER :: Index
+      TYPE (calib_crop_type) calib_crop_info
+    END TYPE My_Data_Type
+
+    ! Auxilliary data type required for the transfer function
+    TYPE My_Ptr_Type
+      TYPE (My_Type), POINTER :: CP
+    END TYPE My_Ptr_Type
+
+    TYPE (List_Type)           :: Calib_Crop_List
+    TYPE (Link_Ptr_Type)       :: CLink
+    TYPE (My_Ptr_Type), TARGET :: Calib_Crop
+
+!-------------------------------
+    TYPE My_Type2
+      TYPE (Link_Type) :: YLink
+      TYPE (My_Data_Type2), POINTER :: YData
+    END TYPE My_Type2
+
+    TYPE My_Data_Type2
+      INTEGER :: Index
+      TYPE (calib_yield_type) calib_yield_info
+    END TYPE My_Data_Type2
+
+    ! Auxilliary data type required for the transfer function
+    TYPE My_Ptr_Type2
+      TYPE (My_Type2), POINTER :: YP
+    END TYPE My_Ptr_Type2
+
+    TYPE (List_Type)      :: Calib_Yield_List, Sub_Calib_Yield_List
+    TYPE (Link_Ptr_Type)  :: YLink, Sub_YLink
+    TYPE (My_Ptr_Type2)   :: Calib_Yield, Sub_Calib_Yield
+!-------------------------------
+
+  CONTAINS
+
+    SUBROUTINE print_calib_crop (unit, var)
+      INTEGER,intent(in) :: unit
+      TYPE (calib_crop_type),intent(in) :: var
+
+      WRITE(unit,*)                                        &
+        var%idx, var%crop_name(1:len_trim(var%crop_name)), &
+        " plant(d/m/ry) ",                                 &
+        var%plant_day, var%plant_month, var%plant_rotyear, &
+        " harv(d/m/ry) ",                                  &
+        var%harv_day, var%harv_month, var%harv_rotyear,    &
+        var%bio_adj_val, var%target_yield
+      RETURN
+    END SUBROUTINE print_calib_crop
+
+    SUBROUTINE print_calib_yield (unit, var)
+      INTEGER,intent(in) :: unit
+      TYPE (calib_yield_type),intent(in) :: var
+
+      WRITE(unit,fmt='(2(1x,i4),2(1x,f10.6))',ADVANCE='NO')&
+        var%rot_no, var%cycle_no,                          &
+        var%bio_adj_val, var%harv_yield
+      CALL print_calib_crop(unit,var%crop_ptr)
+      RETURN
+    END SUBROUTINE print_calib_yield
+
+  ! Must be called before calibration reports
+  SUBROUTINE get_calib_crops(sr, plant)
+
+    USE generic_list , ONLY : LI_Init_List, LI_Add_To_Head
+    USE generic_list , ONLY : LI_Get_Head, LI_Remove_Head
+    USE generic_list , ONLY : LI_Get_Next, LI_Associated
+    USE generic_list , ONLY : LI_Get_Len
+
+    use weps_main_mod, only: calibrate_crops
+    use biomaterial, only: plant_pointer
+    use manage_data_struct_defs, only: lastoper
+
+    IMPLICIT NONE
+
+
+!   + + + ARGUMENT DECLARATIONS + + +
+    INTEGER :: sr
+    type(plant_pointer), pointer :: plant     ! pointer to youngest plant data, which chains to older plant data
+
+!   + + + ARGUMENT DEFINITIONS + + +
+!   sr    - subregion number
+
+!   + + + LOCAL DECLARATIONS + + +
+
+    LOGICAL, save :: firstime = .TRUE.  ! Initialize linked list only once
+
+    IF (calibrate_crops == 0) RETURN  ! Calibration is not being done.
+
+    IF (got_all_calib_crops) RETURN   ! No need to find the crops if we already have them
+
+    IF (plant%database%baflg == 0) RETURN       ! crop not flagged for calibration
+
+    IF (firstime) THEN
+        CALL LI_Init_List(Calib_Crop_List)
+        firstime = .FALSE.
+    END IF
+
+    ! Check to see if we already have this crop
+    ! If so, stop looking for crops to add to calibration list (set "got_all_calib_crops" flag)
+    CLink = LI_Get_Head(Calib_Crop_List)
+    DO WHILE (LI_Associated(CLink))
+       Calib_Crop = TRANSFER(CLink, Calib_Crop)
+       IF (Calib_Crop%CP%CData%calib_crop_info%crop_name == trim(plant%bname) .and. &
+           Calib_Crop%CP%CData%calib_crop_info%harv_day == lastoper(sr)%day .and.  &
+           Calib_Crop%CP%CData%calib_crop_info%harv_month == lastoper(sr)%mon .and. &
+           Calib_Crop%CP%CData%calib_crop_info%harv_rotyear == lastoper(sr)%yr ) THEN
+
+             ! Print out complete list of crops to be calibrated
+             CLink = LI_Get_Head(Calib_Crop_List)
+             DO WHILE (LI_Associated(CLink))
+                Calib_Crop = TRANSFER(CLink, Calib_Crop)
+                WRITE (6,fmt='(a4,i3)',ADVANCE='no') " idx", Calib_Crop%CP%CData%Index
+                CALL print_calib_crop(6,Calib_Crop%CP%CData%calib_crop_info)
+                CLink = LI_Get_Next(CLink)
+             END DO
+
+             got_all_calib_crops = .TRUE.  ! Set flag to signify that we have found all crops requiring calibration
+             print *, "Got all calibration crops identified (flag,cnt)", got_all_calib_crops, calib_crop_cnt
+             RETURN
+       END IF
+       CLink = LI_Get_Next(CLink)
+    END DO
+
+    calib_crop_cnt = calib_crop_cnt + 1                  ! Must have another crop flagged for calibration
+
+    ALLOCATE (Calib_Crop%CP); ALLOCATE (Calib_Crop%CP%CData)
+    Calib_Crop%CP%CData%Index = calib_crop_cnt
+    Calib_Crop%CP%CData%calib_crop_info%idx = calib_crop_cnt
+    Calib_Crop%CP%CData%calib_crop_info%crop_name = trim(plant%bname)
+    Calib_Crop%CP%CData%calib_crop_info%plant_day = plant%database%plant_day
+    Calib_Crop%CP%CData%calib_crop_info%plant_month = plant%database%plant_month
+    Calib_Crop%CP%CData%calib_crop_info%plant_rotyear = plant%database%plant_rotyr
+    Calib_Crop%CP%CData%calib_crop_info%harv_day = lastoper(sr)%day
+    Calib_Crop%CP%CData%calib_crop_info%harv_month = lastoper(sr)%mon
+    Calib_Crop%CP%CData%calib_crop_info%harv_rotyear = lastoper(sr)%yr
+    Calib_Crop%CP%CData%calib_crop_info%bio_adj_val = plant%database%baf
+    Calib_Crop%CP%CData%calib_crop_info%target_yield = (plant%database%ytgt/plant%database%ycon) * (1.0-(plant%database%ywct/100.0))
+    CLink = TRANSFER (Calib_Crop, CLink)
+    CALL LI_Add_To_Head (CLink, Calib_Crop_List)
+
+    ! CALL print_calib_crop(6,Calib_Crop%CP%CData%calib_crop_info)
+
+    print *, "Found another crop to calibrate, total so far is: ", calib_crop_cnt
+
+    RETURN
+  END SUBROUTINE get_calib_crops
+
+  SUBROUTINE get_calib_yield(sr,rotation_no,mass_removed, mass_left, plant)
 
     use weps_main_mod, only: init_loop, report_loop, max_calib_cycles, calib_cycle, calib_done
-    use weps_interface_defs, ignore_me=>get_calib_yield
-    USE generic_list , ONLY : Link_Ptr_Type, Link_Type, List_Type
     USE generic_list , ONLY : LI_Init_List, LI_Add_To_Head
     USE generic_list , ONLY : LI_Get_Head, LI_Remove_Head
     USE generic_list , ONLY : LI_Get_Next, LI_Associated
     USE generic_list , ONLY : LI_Get_Len
 
     use weps_main_mod, only: calibrate_rotcycles
-    USE calib_crop_m
-    use biomaterial, only: biomatter
+    use biomaterial, only: plant_pointer
     use manage_data_struct_defs, only: lastoper
 
     IMPLICIT NONE
@@ -26,7 +232,7 @@ SUBROUTINE get_calib_yield(sr,rotation_no,mass_removed, mass_left, crop)
     INTEGER :: rotation_no
     REAL    :: mass_removed
     REAL    :: mass_left
-    type(biomatter), intent(inout) :: crop    ! structure containing full crop description
+    type(plant_pointer), pointer :: plant     ! pointer to youngest plant data, which chains to older plant data
 
 !   + + + ARGUMENT DEFINITIONS + + +
 !   sr           - subregion number
@@ -65,7 +271,7 @@ SUBROUTINE get_calib_yield(sr,rotation_no,mass_removed, mass_left, crop)
 
 !!! TYPE (calib_crop_type) :: var
 
-    IF (crop%database%baflg == 0) RETURN           ! crop not flagged for calibration
+    IF (plant%database%baflg == 0) RETURN           ! crop not flagged for calibration
     IF (init_loop .or. report_loop) RETURN ! not a calibrating cycle
 
     no_get_calib_yield_call = no_get_calib_yield_call + 1
@@ -207,7 +413,7 @@ SUBROUTINE get_calib_yield(sr,rotation_no,mass_removed, mass_left, crop)
     Calib_Yield%YP%YData%Index = calib_yield_cnt
     Calib_Yield%YP%YData%calib_yield_info%rot_no = rotation_no
     Calib_Yield%YP%YData%calib_yield_info%cycle_no = calib_cycle
-    Calib_Yield%YP%YData%calib_yield_info%bio_adj_val = crop%database%baf
+    Calib_Yield%YP%YData%calib_yield_info%bio_adj_val = plant%database%baf
     Calib_Yield%YP%YData%calib_yield_info%harv_yield = mass_removed
 
     ! Find "crop calibration info" for "this crop's harvest"
@@ -215,7 +421,7 @@ SUBROUTINE get_calib_yield(sr,rotation_no,mass_removed, mass_left, crop)
     CLink = LI_Get_Head(Calib_Crop_List)
     DO WHILE (LI_Associated(CLink))
        Calib_Crop = TRANSFER(CLink, Calib_Crop)
-       IF (Calib_Crop%CP%CData%calib_crop_info%crop_name == trim(crop%bname) .and. &
+       IF (Calib_Crop%CP%CData%calib_crop_info%crop_name == trim(plant%bname) .and. &
            Calib_Crop%CP%CData%calib_crop_info%harv_day == lastoper(sr)%day .and. &
            Calib_Crop%CP%CData%calib_crop_info%harv_month == lastoper(sr)%mon .and. &
            Calib_Crop%CP%CData%calib_crop_info%harv_rotyear == lastoper(sr)%yr ) THEN
@@ -340,11 +546,11 @@ SUBROUTINE get_calib_yield(sr,rotation_no,mass_removed, mass_left, crop)
           IF ( (est_yield(c_no,calib_cycle) < t_yld) ) THEN
              new_adj(c_no) = est_adj(c_no,calib_cycle) * FACTOR      ! Initial guess for 2nd calibration cycle run
              print *, "Cycle 1: Crop no: ",c_no,"Est. Yield ", est_yield(c_no,calib_cycle), &
-                      "is low (",t_yld,"), reset acbaf from: ", crop%database%baf,"to: ", new_adj(c_no)
+                      "is low (",t_yld,"), reset acbaf from: ", plant%database%baf,"to: ", new_adj(c_no)
           ELSE
              new_adj(c_no) = est_adj(c_no,calib_cycle) / FACTOR      ! Initial guess for 2nd calibration cycle run
              print *, "Cycle 1: Crop no: ",c_no,"Est. Yield ", est_yield(c_no,calib_cycle), &
-                      "is high (",t_yld,"), reset acbaf from: ", crop%database%baf,"to: ", new_adj(c_no)
+                      "is high (",t_yld,"), reset acbaf from: ", plant%database%baf,"to: ", new_adj(c_no)
           END IF
 
        ELSE IF (.not. yield_bracketed(c_no)) THEN
@@ -372,13 +578,13 @@ SUBROUTINE get_calib_yield(sr,rotation_no,mass_removed, mass_left, crop)
                 print *, "Cycle ",calib_cycle,": Crop no: ", c_no,"Est. Yield (not bracketed)", &
                          est_yield(c_no,calib_cycle), "and ", &
                          est_yield(c_no,calib_cycle-1), "are low (",t_yld,"), ", &
-                         "reset acbaf from: ", crop%database%baf, "to: ", new_adj(c_no)
+                         "reset acbaf from: ", plant%database%baf, "to: ", new_adj(c_no)
              ELSE
                 new_adj(c_no) = est_adj(c_no,calib_cycle-1) * FACTOR
                 print *, "Cycle ",calib_cycle-1,": Crop no: ", c_no,"Est. Yield (not bracketed)", &
                          est_yield(c_no,calib_cycle), "and ", &
                          est_yield(c_no,calib_cycle-1), "are low (",t_yld,"), ", &
-                         "reset acbaf from: ", crop%database%baf, "to: ", new_adj(c_no)
+                         "reset acbaf from: ", plant%database%baf, "to: ", new_adj(c_no)
              END IF
 
           ELSE IF ( (est_yield(c_no,calib_cycle) > t_yld) .and. (est_yield(c_no,calib_cycle-1) > t_yld) ) THEN
@@ -387,13 +593,13 @@ SUBROUTINE get_calib_yield(sr,rotation_no,mass_removed, mass_left, crop)
                 print *, "Cycle ",calib_cycle,": Crop no: ", c_no,"Est. Yield (not bracketed)", &
                          est_yield(c_no,calib_cycle), "and ", &
                          est_yield(c_no,calib_cycle-1), "are high (",t_yld,"), ", &
-                         "reset acbaf from: ", crop%database%baf, "to: ", new_adj(c_no)
+                         "reset acbaf from: ", plant%database%baf, "to: ", new_adj(c_no)
              ELSE
                 new_adj(c_no) = est_adj(c_no,calib_cycle-1) / FACTOR
                 print *, "Cycle ",calib_cycle-1,": Crop no: ", c_no,"Est. Yield (not bracketed)", &
                          est_yield(c_no,calib_cycle), "and ", &
                          est_yield(c_no,calib_cycle-1), "are high (",t_yld,"), ", &
-                         "reset acbaf from: ", crop%database%baf, "to: ", new_adj(c_no)
+                         "reset acbaf from: ", plant%database%baf, "to: ", new_adj(c_no)
              END IF
           END IF
 
@@ -443,13 +649,13 @@ SUBROUTINE get_calib_yield(sr,rotation_no,mass_removed, mass_left, crop)
                    print *, "Cycle ",calib_cycle,": Crop no: ", c_no,"Est. Yield (not bracketed)", &
                          est_yield(c_no,calib_cycle), "and ", &
                          est_yield(c_no,calib_cycle-1), "are low (",t_yld,"), ", &
-                         "reset acbaf from: ", crop%database%baf, "to: ", new_adj(c_no)
+                         "reset acbaf from: ", plant%database%baf, "to: ", new_adj(c_no)
                 ELSE
                    new_adj(c_no) = est_adj(c_no,calib_cycle-1) * (FACTOR-0.55)
                    print *, "Cycle ",calib_cycle-1,": Crop no: ", c_no,"Est. Yield (not bracketed)", &
                          est_yield(c_no,calib_cycle), "and ", &
                          est_yield(c_no,calib_cycle-1), "are low (",t_yld,"), ", &
-                         "reset acbaf from: ", crop%database%baf, "to: ", new_adj(c_no)
+                         "reset acbaf from: ", plant%database%baf, "to: ", new_adj(c_no)
                 END IF
 
              ELSE IF ( (est_yield(c_no,calib_cycle) > t_yld) .and. (est_yield(c_no,calib_cycle-1) > t_yld) ) THEN
@@ -458,13 +664,13 @@ SUBROUTINE get_calib_yield(sr,rotation_no,mass_removed, mass_left, crop)
                    print *, "Cycle ",calib_cycle,": Crop no: ", c_no,"Est. Yield (not bracketed)", &
                          est_yield(c_no,calib_cycle), "and ", &
                          est_yield(c_no,calib_cycle-1), "are high (",t_yld,"), ", &
-                         "reset acbaf from: ", crop%database%baf, "to: ", new_adj(c_no)
+                         "reset acbaf from: ", plant%database%baf, "to: ", new_adj(c_no)
                 ELSE
                    new_adj(c_no) = est_adj(c_no,calib_cycle-1) / (FACTOR-0.55)
                    print *, "Cycle ",calib_cycle-1,": Crop no: ", c_no,"Est. Yield (not bracketed)", &
                          est_yield(c_no,calib_cycle), "and ", &
                          est_yield(c_no,calib_cycle-1), "are high (",t_yld,"), ", &
-                         "reset acbaf from: ", crop%database%baf, "to: ", new_adj(c_no)
+                         "reset acbaf from: ", plant%database%baf, "to: ", new_adj(c_no)
                 END IF
              END IF
              print *, "Cycle ", calib_cycle,": Crop no: ", c_no, ": Yield is still bracketed! [low, target, high, new] yields:", &
@@ -515,4 +721,59 @@ SUBROUTINE get_calib_yield(sr,rotation_no,mass_removed, mass_left, crop)
     END IF
 
     RETURN
-    END
+  END SUBROUTINE get_calib_yield
+
+  SUBROUTINE set_calib(sr, plant)
+
+    USE generic_list , ONLY : LI_Init_List, LI_Add_To_Head
+    USE generic_list , ONLY : LI_Get_Head, LI_Remove_Head
+    USE generic_list , ONLY : LI_Get_Next, LI_Associated
+    USE generic_list , ONLY : LI_Get_Len
+
+    use biomaterial, only: plant_pointer
+    use manage_data_struct_defs, only: lastoper
+
+    IMPLICIT NONE
+
+
+!   + + + ARGUMENT DECLARATIONS + + +
+    INTEGER :: sr
+    type(plant_pointer), pointer :: plant     ! pointer to youngest plant data, which chains to older plant data
+
+!   + + + ARGUMENT DEFINITIONS + + +
+!   sr    - subregion number
+
+!   + + + LOCAL DECLARATIONS + + +
+    INTEGER :: c_no = 0
+
+    IF (.not. got_all_calib_crops) RETURN   ! Don't do anything if all crops not identified
+
+    IF (plant%database%baflg == 0) RETURN       ! crop not flagged for calibration
+
+    ! Check to see if we already have this crop
+    ! If so, stop looking for crops to add to calibration list (set "got_all_calib_crops" flag)
+    CLink = LI_Get_Head(Calib_Crop_List)
+    DO WHILE (LI_Associated(CLink))
+       Calib_Crop = TRANSFER(CLink, Calib_Crop)
+       IF (Calib_Crop%CP%CData%calib_crop_info%crop_name == trim(plant%bname) .and. &
+           Calib_Crop%CP%CData%calib_crop_info%plant_day == lastoper(sr)%day .and. &
+           Calib_Crop%CP%CData%calib_crop_info%plant_month == lastoper(sr)%mon .and. &
+           Calib_Crop%CP%CData%calib_crop_info%plant_rotyear == lastoper(sr)%yr ) THEN
+
+             c_no = Calib_Crop%CP%CData%calib_crop_info%idx
+             IF (.not. ALLOCATED (first_full_cycle)) RETURN  ! Obviously can't be done with cycle 1 yet
+             IF (.not. first_full_cycle(c_no)) RETURN 
+
+             print *, "Found calibration crop to adjust at planting time"
+             print *, "Setting crop no: ",c_no,"bio_adj value from: ",plant%database%baf,"to: ",new_adj(c_no)
+             plant%database%baf = new_adj(c_no)
+             RETURN
+       END IF
+       CLink = LI_Get_Next(CLink)
+    END DO
+
+
+    RETURN
+  END SUBROUTINE set_calib
+
+END MODULE calib_plant_mod

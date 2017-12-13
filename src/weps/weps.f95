@@ -39,6 +39,8 @@
                                calibrate_crops, calibrate_rotcycles, max_calib_cycles, calib_cycle, calib_done, &
                                am0ifl, init_cycle, calc_confidence, report_debug, run_erosion, &
                                saeinp_all, saeinp_daysim, saeinp_jday
+      use weps_submodel_mod, only: submodels, erodsubr_update
+      use weps_output_mod
       use weps_interface_defs
       use wepp_interface_defs
       use timer_mod, only: timer, TIMWEPS, TIMSTART, TIMSTOP, TIMPRINT
@@ -53,8 +55,8 @@
       use barriers_mod, only: barrier, barseas, minht_barriers, destroy_barrier, set_barrier_season
       use file_io_mod, only: luo_egrd, luo_emit, luo_sgrd, luogui1, luomandate, makedir
       use input_soil_mod, only: input_ifc, soil_in
-      use soil_data_struct_defs, only: soil_def, allocate_soil, deallocate_soil
-      use crop_mod, only: cropinit, cprevseasonrotation
+      use soil_data_struct_defs, only: soil_def, allocate_soil, deallocate_soil, print_soil
+      use crop_mod, only: cprevseasonrotation
       use report_harvest_mod, only: cprevrotation, cprevcalibrotation
       use biomaterial
       use update_mod, only: plantupdate
@@ -82,6 +84,7 @@
       use input_run_mod, only: old_run_file, input, run_rot_cycles, id, im, iy, ld, lm, ly, rootp
       use lcm_mod, only: lcm_n
       use asd_mod, only: asdini
+      use decomp_out_mod, only: decopen
 
 ! build and release info, fpp created by cook
       include 'build.inc'
@@ -101,7 +104,7 @@
       integer cd, cm, cy,                                               &
      &        end_init_jday, end_init_d, end_init_m, end_init_y,        &
      &        ndiy,                                                     &
-     &        isr, ipl,                                                 &
+     &        isr,                                                      &
      &        simyrs,                                                   &
      &        yrsim
       integer lcaljday
@@ -114,13 +117,10 @@
       type(soil_def), dimension(:), allocatable :: soil             ! structure with soil state and parameters as updated during simulation
       type(plants_struct), dimension(:), allocatable :: plants      ! array of pointers to structure for all biomaterial
                                                                     ! structure also references older biomaterial
-      type(biomatter), dimension(:), allocatable :: crop            ! structure with crop state and parameters
       type(biototal), dimension(:), allocatable :: croptot          ! structure with totalized values of crop state
-      type(bio_prevday), dimension(:), allocatable :: cropprev      ! structure with crop values from the previous day
-      type(biomatter), dimension(:,:), allocatable :: residue       ! structure with residue state and parameters
       type(biototal), dimension(:), allocatable :: restot           ! structure with totalized values of residue state
       type(biototal), dimension(:), allocatable :: biotot           ! structure with totalized values of all biomass state
-      type(decomp_factors), dimension(:), allocatable :: decompfac  ! structure with decompisition factors
+      type(decomp_factors), dimension(:), allocatable :: decompfac  ! structure with decomposition factors
       type(mandate_array), dimension(:), allocatable :: mandatbs    ! structure with management dates, operation names and crops
 
       type(threshold), dimension(:), allocatable :: noerod                 ! report values to show which factors prevented erosion
@@ -200,26 +200,26 @@
 !     Before anything else is done, have WEPS output to stderr(?)
 !     the build date and release/version information.
 
-      write(6,*)
-      write(6,*) 'WEPS ', trim(build_version)
-      write(6,*) 'Release: ', trim(build_release)
-      write(6,*) 'Built on: ', trim(build_date)
-      write(6,*) 'Compiled with: ', trim(build_compiler)
-      write(6,*) 'Compiled flags: ', trim(build_compiler_options)
-      write(6,*) 'Built by user: ', trim(build_user)
-      write(6,*) 'Reposity URL: ', trim(build_svn_repo_url)
-      write(6,*) 'SVN repository Revision: ', trim(build_svn_repo_revision)
-      write(6,*) 'SVN update Revision: ', trim(build_svn_updt_revision)
-      write(6,*) 'Local and SVN Modfied Files: ', trim(build_cnt_mods)
-      write(6,*)
+      write(6,"(a)")
+      write(6,"(2a)") 'WEPS ', trim(build_version)
+      write(6,"(2a)") 'Release: ', trim(build_release)
+      write(6,"(2a)") 'Built on: ', trim(build_date)
+      write(6,"(2a)") 'Compiled with: ', trim(build_compiler)
+      write(6,"(2a)") 'Compiled flags: ', trim(build_compiler_options)
+      write(6,"(2a)") 'Built by user: ', trim(build_user)
+      write(6,"(2a)") 'Reposity URL: ', trim(build_svn_repo_url)
+      write(6,"(2a)") 'SVN repository Revision: ', trim(build_svn_repo_revision)
+      write(6,"(2a)") 'SVN update Revision: ', trim(build_svn_updt_revision)
+      write(6,"(2a)") 'Local and SVN Modfied Files: ', trim(build_cnt_mods)
+      write(6,"(a)")
 
       ! Determine date of Run
       call update_system_time
 
       ! Print date of Run
       rundatetime = get_systime_string() ! with Lahey f95, had to assign to variable first
-      write(6,"(1x,'Date of WEPS run: ',a21)") rundatetime
-      write(6,*)
+      write(6,"('Date of WEPS run: ',a21)") rundatetime
+      write(6,"(a)")
 
       call timer(0,TIMSTART)
       call timer(TIMWEPS,TIMSTART)
@@ -253,7 +253,7 @@
 
       ! open input files and read run files
       ! The argument soil_in is only accessed when reading the leagacy run file
-      ! When rading the xml input, soil_in is accessed through the soil_def module.
+      ! When reading the xml input, soil_in is accessed through the soil_def module.
       call input(soil_in)
 
       ! set total number of subregions from size of allocated subr_poly array
@@ -274,8 +274,6 @@
       sum_stat = sum_stat + alloc_stat
       allocate(noerod(nsubr), stat=alloc_stat)
       sum_stat = sum_stat + alloc_stat
-!      allocate(soil_in(nsubr), stat=alloc_stat)
-!      sum_stat = sum_stat + alloc_stat
       allocate(soil(0:nsubr), stat=alloc_stat)
       sum_stat = sum_stat + alloc_stat
 
@@ -288,13 +286,7 @@
       ! allocate subregion crop and residue pool arrays
       allocate(plants(nsubr), stat=alloc_stat)
       sum_stat = sum_stat + alloc_stat
-      allocate(crop(nsubr), stat=alloc_stat)
-      sum_stat = sum_stat + alloc_stat
-      allocate(cropprev(nsubr), stat=alloc_stat)
-      sum_stat = sum_stat + alloc_stat
       allocate(croptot(0:nsubr), stat=alloc_stat)
-      sum_stat = sum_stat + alloc_stat
-      allocate(residue(mnbpls, nsubr), stat=alloc_stat)
       sum_stat = sum_stat + alloc_stat
       allocate(decompfac(nsubr), stat=alloc_stat)
       sum_stat = sum_stat + alloc_stat
@@ -349,17 +341,15 @@
       do isr = 1, nsubr
          ! no plants yet
          nullify(plants(isr)%plant)
+         plants(isr)%plantIndex = 0
          ! complete allocation of layers
-         crop(isr) = create_biomatter(soil_in(isr)%nslay)
-         cropprev(isr) = create_bio_prevday(soil_in(isr)%nslay)
          croptot(isr) = create_biototal(soil_in(isr)%nslay)
-         do ipl = 1, mnbpls
-            residue(ipl,isr) = create_biomatter(soil_in(isr)%nslay)
-         end do
          ! allocate layer arrays in totaling structures
          restot(isr) = create_biototal(soil_in(isr)%nslay)
          biotot(isr) = create_biototal(soil_in(isr)%nslay)
          decompfac(isr) = create_decomp_factors(soil_in(isr)%nslay)
+         ! no plants yet for biodrag
+         nullify(subrsurf(isr)%brcdInput)
          ! allocate layer and per/day in subregion surface state passed to erosion
          call create_subregionsoillayers(soil_in(isr)%nslay, subrsurf(isr))
          call create_subregionsurfacewet(24, subrsurf(isr))
@@ -369,7 +359,7 @@
       ! allocate debug local arrays
       call create_decomp_debug(nsubr)
 
-      call openfils(residue)
+      call openfils()
 
       ! allocate soil layer arrays for soil(0)
       soil(0)%nslay = 1 ! only need one for report usage
@@ -384,6 +374,8 @@
           ! Initialize the management file and rotation counters
           call mfinit(manFile(isr))
           t_mperod(isr) = manFile(isr)%mperod
+          ! initializing this to 1 or greater eliminates (random) blank line in season.out
+          cprevseasonrotation(isr) = 1
       end do
 
       ! find maxper, which is the least common multiple of the number of years in each rotation
@@ -461,7 +453,7 @@
          call plotdata( isr, soil(isr), plants(isr)%plant, restot(isr), croptot(isr), biotot(isr), noerod(isr), &
                              manFile(isr), subrsurf(isr), cellstate )
          ! this prints header to decomp.out file
-         call bpools( isr, residue(1:size(residue,1),isr), restot(isr), biotot(isr), decompfac(isr) )
+         call bpools( isr, plants(isr)%plant, restot(isr), biotot(isr), decompfac(isr) )
       end do
 
       call cliginit     ! read "yearly average info" from cligen header
@@ -478,24 +470,12 @@
 
 !     Initializations unique to particular submodels
       do isr=1,nsubr
-         do ipl = 1, mnbpls
-            call decoinit(residue(ipl, isr), decompfac(isr))
-         end do
          call decopen(isr) ! prints headers in above.out and below.out
-         ! eliminate here as soon as all crop usages are removed
-         call cropinit(isr, crop(isr)) ! no longer needed since plant created and initialized from P51
-         ! initialize all dependent variables
-         call updres(soil(isr), residue(1:size(residue,1), isr), restot(isr))
          ! Initialize the water holding capacity variable
          call hydrinit(isr, soil(isr), h1et(isr), h1bal(isr), wp(isr))
-         ! initialize croptot variables
+         ! initialize all dependent variables
          call plantupdate( soil(isr), &
-                           ahzfurcut(isr), ahztransprtmin(isr), ahztransprtmax(isr), &
                            plants(isr)%plant, croptot(isr), restot(isr), biotot(isr) )
-         call cropupdate( soil(isr)%aszrgh, soil(isr)%aszlyd, soil(isr)%nslay, &
-                          ahzfurcut(isr), ahztransprtmin(isr), ahztransprtmax(isr), &
-                          crop(isr), croptot(isr) )
-         call sumbio(soil(isr), crop(isr), residue(1:size(residue,1), isr), restot(isr), croptot(isr), biotot(isr))
 
       !write(*,*) 'biotot, croptot, restot', biotot(isr), croptot(isr), restot(isr)
 
@@ -545,7 +525,7 @@
         end if
         do isr=1,nsubr
           ! do multiple subregion      
-          call submodels(isr, soil(isr), crop(isr), cropprev(isr), residue(1:size(residue,1),isr), restot(isr), croptot(isr),  &
+          call submodels(isr, soil(isr), plants(isr)%plant, plants(isr)%plantIndex, restot(isr), croptot(isr),  &
                biotot(isr), decompfac(isr), mandatbs(isr)%mandate, h1et(isr), h1bal(isr), wp(isr), manFile(isr))
           ! set initialization flag to .false. after first day
           if (am0ifl) am0ifl = .false.
@@ -553,8 +533,10 @@
           call plotdata(isr, soil(isr), plants(isr)%plant, restot(isr), croptot(isr), biotot(isr), noerod(isr), &
                              manFile(isr), subrsurf(isr), cellstate)
 
+          !call print_soil( 6, soil(isr) )
+
           ! write decomposition biomass pool amounts to files
-          call bpools(isr, residue(1:size(residue,1),isr), restot(isr), biotot(isr), decompfac(isr))
+          call bpools(isr, plants(isr)%plant, restot(isr), biotot(isr), decompfac(isr))
 
           ! if last day of year, check for end of rotation
           if (get_simdate_doy() .eq. ndiy) then
@@ -622,14 +604,14 @@
            end if
 
            do isr=1,nsubr   ! do multiple subregion     
-             call submodels(isr, soil(isr), crop(isr), cropprev(isr), residue(1:size(residue,1),isr), restot(isr), croptot(isr), &
+             call submodels(isr, soil(isr), plants(isr)%plant, plants(isr)%plantIndex, restot(isr), croptot(isr), &
                  biotot(isr), decompfac(isr), mandatbs(isr)%mandate, h1et(isr), h1bal(isr), wp(isr), manFile(isr))
              ! print to plot data file
              call plotdata(isr, soil(isr), plants(isr)%plant, restot(isr), croptot(isr), biotot(isr), noerod(isr), &
                                 manFile(isr), subrsurf(isr), cellstate)
 
              ! write decomposition biomass pool amounts to files
-             call bpools(isr, residue(1:size(residue,1),isr), restot(isr), biotot(isr), decompfac(isr))
+             call bpools(isr, plants(isr)%plant, restot(isr), biotot(isr), decompfac(isr))
 
              ! set initialization flag to .false. after first day
              if (am0ifl) am0ifl = .false.
@@ -748,13 +730,13 @@
 
             do isr=1,nsubr   ! do multiple subregion     
                !if (am0jd.eq.ijday+1) then
-               !   call dbgdmp(daysim, isr, soil(isr), crop(isr), residue(1:size(residue,1),isr),croptot(isr),biotot(isr),h1et(isr))
+               !   call dbgdmp(daysim, isr, soil(isr), croptot(isr),biotot(isr),h1et(isr))
                !end if
                !if (am0jd.eq.ljday) then
-               !   call dbgdmp(daysim, isr, soil(isr), crop(isr), residue(1:size(residue,1),isr),croptot(isr),biotot(isr),h1et(isr))
+               !   call dbgdmp(daysim, isr, soil(isr), croptot(isr),biotot(isr),h1et(isr))
                !end if
 
-               call submodels(isr, soil(isr), crop(isr), cropprev(isr), residue(1:size(residue,1),isr), restot(isr), croptot(isr), &
+               call submodels(isr, soil(isr), plants(isr)%plant, plants(isr)%plantIndex, restot(isr), croptot(isr), &
                               biotot(isr), decompfac(isr), mandatbs(isr)%mandate, h1et(isr), h1bal(isr), wp(isr), manFile(isr))
             end do
 
@@ -766,7 +748,7 @@
               ! transfer data values from submodel structures into erosion input structure
               ! some of these values are shown in plot.out, so do every day
                do isr=1,nsubr   ! do multiple subregion
-                  call erodsubr_update( isr, soil(isr), crop(isr), restot(isr), croptot(isr), &
+                  call erodsubr_update( isr, soil(isr), plants(isr)%plant, restot(isr), croptot(isr), &
                                         biotot(isr), h1et(isr), subrsurf(isr) )
                end do
 
@@ -810,7 +792,7 @@
                call plotdata( isr, soil(isr), plants(isr)%plant, restot(isr), croptot(isr), biotot(isr), noerod(isr), &
                                    manFile(isr), subrsurf(isr), cellstate)  ! print to plot data file
                ! write decomposition biomass pool amounts to files
-               call bpools(isr, residue(1:size(residue,1),isr), restot(isr), biotot(isr), decompfac(isr))
+               call bpools(isr, plants(isr)%plant, restot(isr), biotot(isr), decompfac(isr))
 
 !           write(*,*) 'weps:yrsim cd,cm,cy am0jd,daysim',              &
 !    &              yrsim," ",cd,cm,cy," ",am0jd,daysim
@@ -940,7 +922,7 @@
       endif
 
       ! close all open files
-      call closefils(residue)
+      call closefils()
 
       ! deallocate accounting region polygon storage, no longer needed
       do isr = 1, size(acct_poly)
@@ -990,12 +972,8 @@
       ! deallocate subregion crop and residue pool arrays
       ! destroy layers
       do isr = 1, nsubr
-         call destroy_biomatter(crop(isr))
-         call destroy_bio_prevday(cropprev(isr))
+         call plantDestroyAll(plants(isr)%plant)
          call destroy_biototal(croptot(isr))
-         do ipl = 1, mnbpls
-            call destroy_biomatter(residue(ipl,isr))
-         end do
          call destroy_biototal(restot(isr))
          call destroy_biototal(biotot(isr))
          call destroy_decomp_factors(decompfac(isr))
@@ -1009,13 +987,9 @@
       sum_stat = sum_stat + alloc_stat
 
       !remove main arrays
-      deallocate(crop, stat=alloc_stat)
-      sum_stat = sum_stat + alloc_stat
-      deallocate(cropprev, stat=alloc_stat)
+      deallocate(plants, stat=alloc_stat)
       sum_stat = sum_stat + alloc_stat
       deallocate(croptot, stat=alloc_stat)
-      sum_stat = sum_stat + alloc_stat
-      deallocate(residue, stat=alloc_stat)
       sum_stat = sum_stat + alloc_stat
       deallocate(restot, stat=alloc_stat)
       sum_stat = sum_stat + alloc_stat

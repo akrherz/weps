@@ -65,6 +65,13 @@ module climate_input_mod
                                   ! = 1 --> original max/min wind_gen file format
                                   ! = 2 --> new hourly wind_gen file format
 
+    real :: wind_max_value    ! Cap wind speeds to specified value
+                              ! wind_max_value = xx.x   ! specified wind speed
+                              ! wind_max_value > 0.0    ! sets wind_max_flag to 1
+
+    integer :: wind_max_flag  ! flag indicating whether input wind speeds should be capped
+                              ! wind_max_flag = 1 --> cap wind speeds to specified max value
+
     integer :: cwrnflg            ! binary indicator for cligen warnings
                                   ! 0000, 0 - file contains exact dates needed for simulation
                                   ! 0001, 1 - not all years contained in file, rewind and run in day of year mode
@@ -516,7 +523,6 @@ contains
         use file_io_mod, only: luiwin     ! file unit number
         use erosion_data_struct_defs, only: ntstep
         use datetime_mod, only: julday, dayear
-        use weps_main_mod, only: wind_max_flag, wind_max_value
 
         type(windgen_state) :: wind_oneday  ! structure for windgen data line values
         integer :: errflg                 ! returns error result of read
@@ -609,7 +615,6 @@ contains
 
     subroutine getwin(cwd, cwm, cwy)
 
-        use weps_interface_defs
         use datetime_mod, only: isleap
         use file_io_mod, only: luiwin
         use erosion_data_struct_defs, only: awadir, awhrmx, awudmx, awudmn, awudav, subday, ntstep

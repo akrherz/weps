@@ -98,6 +98,13 @@ module sweep_io_xml_defs
   integer, parameter, public :: SCI_YOrigin = 75
   integer, parameter, public :: sweepData = 76
 
+  integer, parameter, public :: SCI_brcdInput = 77
+  integer, parameter, public :: SCI_brcdRlai = 78
+  integer, parameter, public :: SCI_brcdRsai = 79
+  integer, parameter, public :: SCI_brcdRg = 80
+  integer, parameter, public :: SCI_brcdXrow = 81
+  integer, parameter, public :: SCI_brcdZht = 82
+
 contains
 
   subroutine init_input_xml()
@@ -107,7 +114,7 @@ contains
 
     indent = 0
 
-    max_tags = 76   ! count of unique tags needed from all dtd files
+    max_tags = 82   ! count of unique tags needed from all dtd files
     allocate( input_tag(max_tags), stat=alloc_stat)
     if( alloc_stat .gt. 0 ) then
       write(*,*) 'ERROR: memory alloc., input_tag'
@@ -196,6 +203,13 @@ contains
     input_tag(74)%name = "SCI_YLength"
     input_tag(75)%name = "SCI_YOrigin"
     input_tag(76)%name = "sweepData"
+
+    input_tag(77)%name = "SCI_brcdInput"
+    input_tag(78)%name = "SCI_brcdRlai"
+    input_tag(79)%name = "SCI_brcdRsai"
+    input_tag(80)%name = "SCI_brcdRg"
+    input_tag(81)%name = "SCI_brcdXrow"
+    input_tag(82)%name = "SCI_brcdZht"
 
     ! See above:
     ! create integer variable names for tags and assign index number.

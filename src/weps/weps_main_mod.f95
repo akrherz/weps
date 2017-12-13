@@ -109,11 +109,6 @@ module weps_main_mod
     integer :: winter_ann_root ! select root growth option for winter annuals
                                ! 0  ! root depth grows at same rate as height
                                ! 1  ! root depth grows with fall heat units
-    real :: wind_max_value    ! Cap wind speeds to specified value
-                              ! wind_max_value = xx.x   ! specified wind speed
-                              ! wind_max_value > 0.0    ! sets wind_max_flag to 1
-    integer :: wind_max_flag  ! flag indicating whether input wind speeds should be capped
-                              ! wind_max_flag = 1 --> cap wind speeds to specified max value
     integer :: wepp_hydro     ! specifies hydrology calculation method used
                               ! 0 ! darcian flow
                               ! 1 ! Green-Ampt infiltration, simple drainage
@@ -173,6 +168,7 @@ module weps_main_mod
       use datetime_mod, only: julday
       use file_io_mod, only: fopenk, luolog
       use f2kcli, only: COMMAND_ARGUMENT_COUNT, GET_COMMAND_ARGUMENT
+      use climate_input_mod, only: wind_max_value, wind_max_flag
 
 !     + + + LOCAL VARIABLES + + +
       integer       ln

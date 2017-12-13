@@ -15,7 +15,7 @@
 !      real             aheaep(mnsz,mnsub)
 !      real             ah0cb(mnsz,mnsub)
 !      real             ahrsk(mnsz,mnsub)
-      real             ahfwsf(mnsub)
+!      real             ahfwsf(mnsub)
       real             ahzsno(mnsub)
       real             ahtsno(mnsub)
       real             ahfsnfrz(mnsub)
@@ -37,12 +37,12 @@
       real             ahzwid(mnsub)
       real             ahzeasurf(mnsub)
 !      real             ahztranspdepth(mnsub)
-      real             ahzfurcut(mnsub)
-      real             ahztransprtmin(mnsub)
-      real             ahztransprtmax(mnsub)
+!      real             ahzfurcut(mnsub)
+!      real             ahztransprtmin(mnsub)
+!      real             ahztransprtmax(mnsub)
 
       common / h1hydro /                                                &
-     &                  ahfwsf,                                         &
+!     &                  ahfwsf,                                         &
 !     &                  ahrwc, ahrwcdmx, aheaep, ah0cb, ahrsk, ahfwsf,  &
      &                  ahzsno, ahtsno, ahfsnfrz,                       &
      &                  ahzdmaxirr, ahratirr, ahdurirr,                 &
@@ -52,8 +52,9 @@
      &                  ahzinf,                                         &
 !     &                  ahzper, ahzrun, ahzinf,                         &
 !     &                  ahzsmt, ahzwid, ahzeasurf, ahztranspdepth,      &
-     &                  ahzsmt, ahzwid, ahzeasurf,                       &
-     &                  ahzfurcut, ahztransprtmin, ahztransprtmax
+     &                  ahzsmt, ahzwid, ahzeasurf
+!,                       &
+!     &                  ahzfurcut, ahztransprtmin, ahztransprtmax
 
       save :: /h1hydro/
 

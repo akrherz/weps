@@ -49,8 +49,9 @@ module biomaterial
                         ! 2      o Use Existing Ridge Spacing
      real :: xrow       ! row spacing (m)
      real :: dpop       ! Crop seeding density (#/m^2)
-
-
+     real :: zfurcut      ! estimated furrow bottom depth below flat soil surface (mm)
+     real :: ztransprtmin ! root depth where transpiration depth reduction begins (m)
+     real :: ztransprtmax ! root depth where transpiration depth equals root depth (m)
   end type biostate_geometry
 
   type biostate_growth
@@ -82,40 +83,34 @@ module biomaterial
      integer :: dayap       ! number of days of growth completed since crop planted
      integer :: dayam       ! number of days since crop matured
      integer :: dayspring   ! day of year in which a winter annual released stored growth
+
+     real :: ptp            ! plant transpiration potential
+     real :: pta            ! plant transpiration actual
+     real :: fwsf           ! Crop growth water stress factor (unitless) (0.0 - no growth, 1.0 - full growth)
   end type biostate_growth
 
-  type biostate_decomp    ! from decomp/decomp.inc
-     integer :: resday    ! calendar days after residue initiation
-     integer :: resyear   ! index counting each new residue initiation
-     real :: cumdds       ! cumulative decomp days for standing res. by pool (days)
-     real :: cumddf       ! cummlative decomp days for surface res. by pool (days)
-     real, dimension(:), pointer :: cumddg       ! cumm. decomp days below ground res by pool and layer (days)
-  end type biostate_decomp
-
   type bioderived
-     real :: mbgstem      ! buried residue stem mass (kg/m^2)
-     real :: mbgleaf      ! buried residue leaf mass (kg/m^2)
-     real :: mbgstore     ! buried residue storage mass (kg/m^2)
-
+     real :: mbgstem      ! buried stem mass (kg/m^2)
+     real :: mbgleaf      ! buried leaf mass (kg/m^2)
+     real :: mbgstore     ! buried storage mass (kg/m^2)
      real :: mbgrootstore ! buried storage root mass (kg/m^2)
                           ! tubers (potatoes, carrots), extended leaf (onion), seeds (peanuts)
-
      real :: mbgrootfiber ! buried fibrous root mass (kg/m^2)
 
      real :: m            ! Total mass (standing + flat + roots + buried) (kg/m^2)
      real :: mst          ! Standing mass (standstem + standleaf + standstore) (kg/m^2)
-     real :: mf           ! Flat mass (flatstem + flatleaf + flatstore) (kg/m^2)
+     real :: mf           ! Flat mass (flatstem + flatleaf + flatstore + flatrootstore + flatrootfiber) (kg/m^2)
      real :: mrt          ! Buried root mass (rootfiber + rootstore)(kg/m^2)
      real :: mbg          ! Buried mass (kg/m^2) Excludes root mass below the surface.
-     real :: dmrtto4      ! Buried residue root mass (rootfiber + rootstore)(kg/m^2) (in SCI depth)
-     real :: dmbgto4      ! Buried residue mass (kg/m^2) Excludes root mass below the surface. (in SCI depth)
-     real :: dmrtto15     ! Buried residue root mass (rootfiber + rootstore)(kg/m^2) (in WEPP depth)
-     real :: dmbgto15     ! Total residue mass (standing + flat + roots + buried) (kg/m^2) (in WEPP depth)
+     real :: dmrtto4      ! Buried root mass (rootfiber + rootstore)(kg/m^2) (in SCI depth)
+     real :: dmbgto4      ! Buried mass (kg/m^2) Excludes root mass below the surface. (in SCI depth)
+     real :: dmrtto15     ! Buried root mass (rootfiber + rootstore)(kg/m^2) (in WEPP depth)
+     real :: dmbgto15     ! Total mass (standing + flat + roots + buried) (kg/m^2) (in WEPP depth)
      real, dimension(:), pointer :: mrtz           ! Buried root mass by soil layer (kg/m^2)
      real, dimension(:), pointer :: mbgz           ! Buried mass by soil layer (kg/m^2)
 
-     real :: rsai         ! Residue stem area index (m^2/m^2)
-     real :: rlai         ! Residue leaf area index (m^2/m^2)
+     real :: rsai         ! stem area index (m^2/m^2)
+     real :: rlai         ! leaf area index (m^2/m^2)
      real, dimension(:), pointer :: rsaz           ! stem area index by height (1/m)
      real, dimension(:), pointer :: rlaz           ! leaf area index by height (1/m)
 
@@ -222,19 +217,9 @@ module biomaterial
   end type biodatabase
 
   type bio_output_units
-     integer :: dec
+     integer :: num       ! sequence number for pool
+     integer :: luo       ! logical unit output number created when file opened
   end type bio_output_units
-
-  type biomatter
-     character*(80) :: bname       ! the name of the biomaterial
-     type(bio_output_units) :: luo
-     type(biostate_mass) :: mass
-     type(biostate_geometry) :: geometry
-     type(biostate_growth) :: growth
-     type(biostate_decomp) :: decomp
-     type(bioderived) :: deriv
-     type(biodatabase) :: database
-  end type biomatter
 
   type bio_prevday
      real :: standstem    ! crop standing stem mass (kg/m^2)
@@ -266,7 +251,8 @@ module biomaterial
   end type bio_prevday
 
   type residue_pointer
-     type(residue_pointer), pointer :: oldResidue
+     type(residue_pointer), pointer :: olderResidue
+     type(bio_output_units) :: bout
      integer :: resday    ! calendar days after residue initiation
      integer :: resyear   ! index counting each new residue initiation
      real :: cumdds       ! cumulative decomp days for standing res. by pool (days)
@@ -303,9 +289,13 @@ module biomaterial
   end type residue_pointer
 
   type plant_pointer
-     type(plant_pointer), pointer :: oldPlant
-     character*(80) :: bname       ! the name of the biomaterial
-     type(bio_output_units) :: luo
+     type(plant_pointer), pointer :: olderPlant
+     character*(80) :: bname       ! the name of the plant
+     integer :: pday               ! day of month it was planted
+     integer :: pmon               ! month it was planted
+     integer :: psimyr             ! simulation year it was planted
+     integer :: residueIndex     ! index for all residue pools created under this plant
+     type(bio_output_units) :: bout
      type(biostate_mass) :: mass
      type(biostate_geometry) :: geometry
      type(biostate_growth) :: growth
@@ -317,6 +307,7 @@ module biomaterial
 
   type plants_struct
      type(plant_pointer), pointer :: plant
+     integer :: plantIndex ! index used for detailed plant/residue output
   end type plants_struct
 
   type biototal
@@ -324,7 +315,7 @@ module biomaterial
      real :: zht_ave      ! Weighted ave height across pools (m)
      real :: zmht         ! Tallest biomass height across pools (m)
      real :: xstmrep      ! a representative diameter so that dstm*xstmrep*zht=rsai
-     real :: zrtd         ! root depth (m)
+     integer :: dayap     ! most recent planting (days)
 
      real :: mstandstore  ! Total reproductive mass (standing) (kg/m^2)
      real :: mflatstore   ! Total reproductive mass (flat) (kg/m^2)
@@ -343,6 +334,7 @@ module biomaterial
 
      real :: rsaitot      ! total of stem area index across pools (m^2/m^2)
      real :: rlaitot      ! total of leaf area index across pools (m^2/m^2)
+     real :: rlailive     ! living leaf area
      real, dimension(:), pointer :: rsaz           ! stem area index by height (1/m)
      real, dimension(:), pointer :: rlaz           ! leaf area index by height (1/m)
 
@@ -376,110 +368,6 @@ module biomaterial
   integer, parameter :: ncanlay = 5
 
 contains
-
-  subroutine print_biomatter(biomat)
-     type(biomatter), intent(in) :: biomat
-
-     integer :: idx
-
-     write(*,*) 'biomatter name: ', trim(adjustl(biomat%bname))
-     write(*,*) 'output unit:    ', biomat%luo%dec
-     write(*,*) 'mass standing   ', biomat%mass%standstem, biomat%mass%standleaf, biomat%mass%standstore
-     write(*,*) 'mass flat       ', biomat%mass%flatstem, biomat%mass%flatleaf, biomat%mass%flatstore, &
-                                    biomat%mass%flatrootstore, biomat%mass%flatrootfiber
-     do idx = 1, size(biomat%mass%rootstorez)
-        write(*,*) 'mass buried ', idx, biomat%mass%stemz(idx), biomat%mass%leafz(idx), biomat%mass%storez(idx), &
-                                        biomat%mass%rootstorez(idx), biomat%mass%rootfiberz(idx)
-     end do
-     !write(*,*) '', biomat%geometry
-     !write(*,*) '', biomat%growth
-     !write(*,*) '', biomat%decomp
-     !write(*,*) '', biomat%deriv
-     !write(*,*) '', biomat%database
-  end subroutine print_biomatter
-
-  subroutine print_biototal(biotot)
-     type(biomatter), intent(in) :: biotot
-
-  end subroutine print_biototal
-
-  function create_biomatter(nsoillay) result(biomat)
-     integer, intent(in) :: nsoillay
-     type(biomatter) :: biomat
-
-     ! local variable
-     integer :: alloc_stat  ! allocation status return
-     integer :: sum_stat    ! accumulates allocation status results so only one write/exit statement needed
-
-     sum_stat = 0
-     ! allocate below and above ground arrays
-     allocate(biomat%mass%stemz(nsoillay), stat=alloc_stat)
-     sum_stat = sum_stat + alloc_stat
-     allocate(biomat%mass%leafz(nsoillay), stat=alloc_stat)
-     sum_stat = sum_stat + alloc_stat
-     allocate(biomat%mass%storez(nsoillay), stat=alloc_stat)
-     sum_stat = sum_stat + alloc_stat
-     allocate(biomat%mass%rootstorez(nsoillay), stat=alloc_stat)
-     sum_stat = sum_stat + alloc_stat
-     allocate(biomat%mass%rootfiberz(nsoillay), stat=alloc_stat)
-     sum_stat = sum_stat + alloc_stat
-
-     allocate(biomat%decomp%cumddg(nsoillay), stat=alloc_stat)
-     sum_stat = sum_stat + alloc_stat
-
-     allocate(biomat%deriv%mrtz(nsoillay), stat=alloc_stat)
-     sum_stat = sum_stat + alloc_stat
-     allocate(biomat%deriv%mbgz(nsoillay), stat=alloc_stat)
-     sum_stat = sum_stat + alloc_stat
-
-     allocate(biomat%deriv%rsaz(ncanlay), stat=alloc_stat)
-     sum_stat = sum_stat + alloc_stat
-     allocate(biomat%deriv%rlaz(ncanlay), stat=alloc_stat)
-     sum_stat = sum_stat + alloc_stat
-
-     if( sum_stat .gt. 0 ) then
-        write(*,*) 'ERROR: unable to allocate memory for biomatter'
-        stop 1
-     end if
-  end function create_biomatter
-
-  subroutine destroy_biomatter(biomat)
-     type(biomatter), intent(inout) :: biomat
-
-     ! local variable
-     integer :: dealloc_stat
-     integer :: sum_stat    ! accumulates allocation status results so only one write/exit statement needed
-
-     sum_stat = 0
-     ! allocate below and above ground arrays
-     deallocate(biomat%mass%stemz, stat=dealloc_stat)
-     sum_stat = sum_stat + dealloc_stat
-     deallocate(biomat%mass%leafz, stat=dealloc_stat)
-     sum_stat = sum_stat + dealloc_stat
-     deallocate(biomat%mass%storez, stat=dealloc_stat)
-     sum_stat = sum_stat + dealloc_stat
-     deallocate(biomat%mass%rootstorez, stat=dealloc_stat)
-     sum_stat = sum_stat + dealloc_stat
-     deallocate(biomat%mass%rootfiberz, stat=dealloc_stat)
-     sum_stat = sum_stat + dealloc_stat
-
-     deallocate(biomat%decomp%cumddg, stat=dealloc_stat)
-     sum_stat = sum_stat + dealloc_stat
-
-     deallocate(biomat%deriv%mrtz, stat=dealloc_stat)
-     sum_stat = sum_stat + dealloc_stat
-     deallocate(biomat%deriv%mbgz, stat=dealloc_stat)
-     sum_stat = sum_stat + dealloc_stat
-
-     deallocate(biomat%deriv%rsaz, stat=dealloc_stat)
-     sum_stat = sum_stat + dealloc_stat
-     deallocate(biomat%deriv%rlaz, stat=dealloc_stat)
-     sum_stat = sum_stat + dealloc_stat
-
-     if( sum_stat .gt. 0 ) then
-        write(*,*) 'ERROR: unable to deallocate memory for biomatter'
-     end if
-  end subroutine destroy_biomatter
 
   function create_biototal(nsoillay) result(biotot)
      integer, intent(in) :: nsoillay
@@ -531,50 +419,6 @@ contains
      end if
   end subroutine destroy_biototal
 
-  function create_bio_prevday(nsoillay) result(prevday)
-     integer, intent(in) :: nsoillay
-     type(bio_prevday) :: prevday
-
-     ! local variable
-     integer :: alloc_stat  ! allocation status return
-     integer :: sum_stat    ! accumulates allocation status results so only one write/exit statement needed
-
-     sum_stat = 0
-     ! allocate below and above ground arrays
-     allocate(prevday%stemz(nsoillay), stat=alloc_stat)
-     sum_stat = sum_stat + alloc_stat
-     allocate(prevday%rootstorez(nsoillay), stat=alloc_stat)
-     sum_stat = sum_stat + alloc_stat
-     allocate(prevday%rootfiberz(nsoillay), stat=alloc_stat)
-     sum_stat = sum_stat + alloc_stat
-
-     if( sum_stat .gt. 0 ) then
-        write(*,*) 'ERROR: unable to allocate memory for bio_prevday'
-        stop 1
-     end if
-  end function create_bio_prevday
-
-  subroutine destroy_bio_prevday(prevday)
-     type(bio_prevday), intent(inout) :: prevday
-
-     ! local variable
-     integer :: dealloc_stat
-     integer :: sum_stat    ! accumulates allocation status results so only one write/exit statement needed
-
-     sum_stat = 0
-     ! allocate below and above ground arrays
-     deallocate(prevday%stemz, stat=dealloc_stat)
-     sum_stat = sum_stat + dealloc_stat
-     deallocate(prevday%rootstorez, stat=dealloc_stat)
-     sum_stat = sum_stat + dealloc_stat
-     deallocate(prevday%rootfiberz, stat=dealloc_stat)
-     sum_stat = sum_stat + dealloc_stat
-
-     if( sum_stat .gt. 0 ) then
-        write(*,*) 'ERROR: unable to deallocate memory for biomatter'
-     end if
-  end subroutine destroy_bio_prevday
-
   function create_decomp_factors(nsoillay) result(decompfac)
      integer, intent(in) :: nsoillay
      type(decomp_factors) :: decompfac
@@ -582,6 +426,7 @@ contains
      ! local variable
      integer :: alloc_stat  ! allocation status return
      integer :: sum_stat    ! accumulates allocation status results so only one write/exit statement needed
+     integer :: idx         ! soil lyer loop index
 
      sum_stat = 0
      ! allocate below ground arrays
@@ -596,6 +441,24 @@ contains
         write(*,*) 'ERROR: unable to allocate memory for decompfac'
         stop 1
      end if
+
+     ! set intial values
+     decompfac%aqua = 0.0
+     decompfac%weti = 0
+     decompfac%iwcsy = 0.0
+     decompfac%idds = 0.0
+     decompfac%itcs = 0.0
+     decompfac%iwcs = 0.0
+     decompfac%iddf = 0.0
+     decompfac%itcf = 0.0
+     decompfac%iwcf = 0.0
+
+     do idx = 1, nsoillay
+       decompfac%iddg(idx) = 0.0
+       decompfac%itcg(idx) = 0.0
+       decompfac%iwcg(idx) = 0.0
+     end do
+
   end function create_decomp_factors
 
   subroutine destroy_decomp_factors(decompfac)
@@ -620,73 +483,16 @@ contains
      end if
   end subroutine destroy_decomp_factors
 
-  function plantCreate(plantPntr, nsoillay) result(plantNew)
+  function plantAdd(plantPntr, plantIndex, nsoillay) result(plantNew)
      type(plant_pointer), pointer :: plantPntr
+     integer, intent(inout) :: plantIndex      ! index used for detailed plant/residue output
      integer, intent(in) :: nsoillay
      type(plant_pointer), pointer :: plantNew
 
      ! local variable
      integer :: alloc_stat  ! allocation status return
      integer :: sum_stat    ! accumulates allocation status results so only one write/exit statement needed
-
-     allocate(plantPntr, stat=alloc_stat)
-     if( alloc_stat .gt. 0 ) then
-        write(*,'(a,i0)') 'Unable to allocate new Plant pointer.'
-     end if
-
-     ! initialize pointer to NULL
-     nullify(plantPntr%oldPlant)
-
-     sum_stat = 0
-     ! allocate below and above ground arrays
-     allocate(plantPntr%mass%stemz(nsoillay), stat=alloc_stat)
-     sum_stat = sum_stat + alloc_stat
-     allocate(plantPntr%mass%leafz(nsoillay), stat=alloc_stat)
-     sum_stat = sum_stat + alloc_stat
-     allocate(plantPntr%mass%storez(nsoillay), stat=alloc_stat)
-     sum_stat = sum_stat + alloc_stat
-     allocate(plantPntr%mass%rootstorez(nsoillay), stat=alloc_stat)
-     sum_stat = sum_stat + alloc_stat
-     allocate(plantPntr%mass%rootfiberz(nsoillay), stat=alloc_stat)
-     sum_stat = sum_stat + alloc_stat
-
-     allocate(plantPntr%prev%stemz(nsoillay), stat=alloc_stat)
-     sum_stat = sum_stat + alloc_stat
-     allocate(plantPntr%prev%rootstorez(nsoillay), stat=alloc_stat)
-     sum_stat = sum_stat + alloc_stat
-     allocate(plantPntr%prev%rootfiberz(nsoillay), stat=alloc_stat)
-     sum_stat = sum_stat + alloc_stat
-
-     allocate(plantPntr%deriv%mrtz(nsoillay), stat=alloc_stat)
-     sum_stat = sum_stat + alloc_stat
-     allocate(plantPntr%deriv%mbgz(nsoillay), stat=alloc_stat)
-     sum_stat = sum_stat + alloc_stat
-
-     allocate(plantPntr%deriv%rsaz(ncanlay), stat=alloc_stat)
-     sum_stat = sum_stat + alloc_stat
-     allocate(plantPntr%deriv%rlaz(ncanlay), stat=alloc_stat)
-     sum_stat = sum_stat + alloc_stat
-
-     if( sum_stat .gt. 0 ) then
-        write(*,*) 'ERROR: unable to allocate memory for plantPntr'
-        stop 1
-     end if
-
-     ! new plant, no residue yet
-     nullify(plantPntr%residue)
-
-     plantNew => plantPntr
-        
-  end function plantCreate
-
-  function plantAdd(plantPntr, nsoillay) result(plantNew)
-     type(plant_pointer), pointer :: plantPntr
-     integer, intent(in) :: nsoillay
-     type(plant_pointer), pointer :: plantNew
-
-     ! local variable
-     integer :: alloc_stat  ! allocation status return
-     integer :: sum_stat    ! accumulates allocation status results so only one write/exit statement needed
+     integer :: idx
 
      allocate(plantNew, stat=alloc_stat)
      if( alloc_stat .gt. 0 ) then
@@ -731,23 +537,163 @@ contains
      ! new plant, no residue yet
      nullify(plantNew%residue)
 
-     ! point to previous plant
-     plantNew%oldPlant => plantPntr
+     if( associated(plantPntr) ) then
+        ! point to previous plant
+        plantNew%olderPlant => plantPntr
+     else
+        ! this is the first plant
+        nullify(plantNew%olderPlant)
+     end if
+
+     ! increment global plant index
+     plantIndex = plantIndex + 1
+     ! carry index along with plant
+     plantNew%bout%num = plantIndex
+     ! initialize residue index for this plant (this passes the plant number into the file name string)
+     plantNew%residueIndex = 0
+     ! show output unit number as uninitialized
+     plantNew%bout%luo = -1
+
+     ! initialize all values
+     plantNew%mass%standstem = 0.0
+     plantNew%mass%standleaf = 0.0
+     plantNew%mass%standstore = 0.0
+     plantNew%mass%flatstem = 0.0
+     plantNew%mass%flatleaf = 0.0
+     plantNew%mass%flatstore = 0.0
+     plantNew%mass%flatrootstore = 0.0
+     plantNew%mass%flatrootfiber = 0.0
+     do idx = 1, nsoillay
+        plantNew%mass%stemz(idx) = 0.0
+        plantNew%mass%leafz(idx) = 0.0
+        plantNew%mass%storez(idx) = 0.0
+        plantNew%mass%rootstorez(idx) = 0.0
+        plantNew%mass%rootfiberz(idx) = 0.0
+     end do
+
+     plantNew%geometry%xrow = 0.0
+     plantNew%geometry%zht = 0.0
+     plantNew%geometry%dstm = 0.0
+     plantNew%geometry%xstmrep = 0.0
+     plantNew%geometry%zrtd = 0.0
+     plantNew%geometry%grainf = 0.0
+     plantNew%geometry%zfurcut = 0.0
+     plantNew%geometry%ztransprtmin = 0.0
+     plantNew%geometry%ztransprtmax = 0.0
+     ! initialize row placement to be on the ridge
+     plantNew%geometry%rg = 1
+     ! initialize harvestable yield fraction flag
+     plantNew%geometry%hyfg = 0
+
+     ! plant not growing, just created
+     plantNew%growth%am0cgf = .false.
+     plantNew%growth%am0cif = .false.
+     plantNew%growth%thucum = 0.0
+     plantNew%growth%trthucum = 0.0
+     plantNew%growth%zgrowpt = 0.0
+     plantNew%growth%fliveleaf = 0.0
+     plantNew%growth%leafareatrend = 0.0
+     plantNew%growth%stemmasstrend = 0.0
+     plantNew%growth%twarmdays = 0.0
+     plantNew%growth%tchillucum = 0.0
+     plantNew%growth%thardnx = 0.0
+     plantNew%growth%thu_shoot_beg = 0.0
+     plantNew%growth%thu_shoot_end = 0.0
+     plantNew%growth%mshoot = 0.0
+     plantNew%growth%mtotshoot = 0.0
+     plantNew%growth%dayap = 0
+     plantNew%growth%dayam = 0
+     plantNew%growth%dayspring = 0
+     plantNew%growth%ptp = 0.0
+     plantNew%growth%pta = 0.0
+     plantNew%growth%fwsf = 1.0
+
+     plantNew%deriv%mbgstem = 0.0
+     plantNew%deriv%mbgleaf = 0.0
+     plantNew%deriv%mbgstore = 0.0
+     plantNew%deriv%mbgrootstore = 0.0
+     plantNew%deriv%mbgrootfiber = 0.0
+
+     plantNew%deriv%m = 0.0
+     plantNew%deriv%mst = 0.0
+     plantNew%deriv%mf = 0.0
+     plantNew%deriv%mrt = 0.0
+     plantNew%deriv%mbg = 0.0
+     plantNew%deriv%dmrtto4 = 0.0
+     plantNew%deriv%dmbgto4 = 0.0
+     plantNew%deriv%dmrtto15 = 0.0
+     plantNew%deriv%dmbgto15 = 0.0
+     do idx = 1, nsoillay
+        plantNew%deriv%mrtz(idx) = 0.0
+        plantNew%deriv%mbgz(idx) = 0.0
+     end do
+
+     plantNew%deriv%rsai = 0.0
+     plantNew%deriv%rlai = 0.0
+     do idx = 1, ncanlay
+        plantNew%deriv%rsaz(idx) = 0.0
+        plantNew%deriv%rlaz(idx) = 0.0
+     end do
+
+     plantNew%deriv%rcd = 0.0
+     plantNew%deriv%ffcv = 0.0
+     plantNew%deriv%fscv = 0.0
+     plantNew%deriv%ftcv = 0.0
+     plantNew%deriv%fcancov = 0.0
+     plantNew%deriv%ztranspdepth = 0.0
+
+     plantNew%database%xstm = 0.0
+     plantNew%database%rbc = 1
+     plantNew%database%covfact = 0.0
+     plantNew%database%ck = 0.0
+
+     ! initialize crop yield reporting parameters in case harvest call before planting
+     plantNew%bname = ''
+     plantNew%database%ynmu = ''
+     plantNew%database%ycon = 1.0
+     plantNew%database%ywct = 0.0
+
+     ! initialize crop type id to 0 indicating no crop type is growing
+     plantNew%database%idc = 0
+     plantNew%database%sla = 0.0
+     plantNew%geometry%dpop = 0.0
+
+     ! initialize decomp parameters since they are used before a crop is growing
+     do idx = 1, size(plantNew%database%dkrate)
+        plantNew%database%dkrate(idx) = 0.0
+     end do
+     plantNew%database%ddsthrsh = 0.0
+
+     ! values that need initialization for cdbug calls (before initial crop entry)
+     plantNew%database%tdtm = 0
+
+     plantNew%database%shoot = 0.0
 
   end function plantAdd
 
   subroutine plantDestroy(plantPntr)
+     ! destroys a plant from within the plant pointer chain
+     ! while preserving the chain
      type(plant_pointer), pointer :: plantPntr
 
      ! local variable
      integer :: alloc_stat  ! allocation status return
      integer :: sum_stat    ! accumulates allocation status results so only one write/exit statement needed
+     type(plant_pointer), pointer :: olderPlant
      type(residue_pointer), pointer :: residuePntr
 
+     ! close open output file
+     if( plantPntr%bout%luo .gt. 0 ) then
+       close( plantPntr%bout%luo )
+     end if
+
      ! check for older plants
-     if( associated(plantPntr%oldPlant) ) then
-        write(*,*) 'ERROR: older Plant exists, unable to execute plantDestroy'
-        stop 1       
+     if( associated(plantPntr%olderPlant) ) then
+        ! preserve pointer to olderPlant
+        olderPlant => plantPntr%olderPlant
+     else
+        ! no olderPlant
+        nullify(olderPlant)
      end if
 
      sum_stat = 0
@@ -786,76 +732,92 @@ contains
      end if
 
      ! remove all residue mass for this plant
-     do while( associated(plantPntr%residue) )
-        residuePntr => plantPntr%residue
-        do while( associated(residuePntr) )
-           if( associated(residuePntr%oldResidue) ) then
-              ! older residue exists, point to it
-              residuePntr => residuePntr%oldResidue
-           else
-              ! this is the oldest residue, delete it
-              call residueDestroy(residuePntr)
-           end if
-        end do
-     end do
+     call residueDestroyAll(plantPntr%residue)
         
      ! delete memory and nullify
      deallocate(plantPntr, stat=alloc_stat)
      if( alloc_stat .gt. 0 ) then
         write(*,'(a,i0)') 'Unable to deallocate Plant pointer.'
      end if
-     nullify(plantPntr)
+
+     if( associated(olderPlant) ) then
+       ! older plant now in this spot
+       plantPntr => olderPlant
+     else
+       ! no older plants
+       nullify(plantPntr)
+     end if
 
   end subroutine plantDestroy
 
-  function residueCreate(residuePntr, nsoillay) result(residueNew)
-     type(residue_pointer), pointer :: residuePntr
+  subroutine plantDestroyAll(plantPntr)
+     type(plant_pointer), pointer :: plantPntr
+
+     ! remove all plants from this plant and older
+     do while( associated(plantPntr) )
+       call plantDestroy(plantPntr)
+     end do
+        
+  end subroutine plantDestroyAll
+
+  subroutine plantPrint(plantPntr, nsoillay)
+     type(plant_pointer), pointer :: plantPntr
      integer, intent(in) :: nsoillay
+
+     ! local variable
+     type(residue_pointer), pointer :: thisResidue
+     integer :: idx
+     real :: totmass
+
+     ! print mass values
+     if ( associated(plantPntr) ) then
+       totmass = 0.0
+       !write(*,*) 'Plant stand: ', plantPntr%mass%standstem, plantPntr%mass%standleaf, plantPntr%mass%standstore
+       totmass = totmass + plantPntr%mass%standstem + plantPntr%mass%standleaf + plantPntr%mass%standstore
+
+       !write(*,*) 'Plant  flat: ', plantPntr%mass%flatstem, plantPntr%mass%flatleaf, plantPntr%mass%flatstore, &
+       !                            plantPntr%mass%flatrootstore, plantPntr%mass%flatrootfiber
+       totmass = totmass + plantPntr%mass%flatstem + plantPntr%mass%flatleaf + plantPntr%mass%flatstore &
+                         + plantPntr%mass%flatrootstore + plantPntr%mass%flatrootfiber
+
+       do idx = 1, nsoillay
+         !write(*,*) 'Plant below: ', idx, plantPntr%mass%stemz(idx), plantPntr%mass%leafz(idx), plantPntr%mass%storez(idx), &
+         !                                 plantPntr%mass%rootstorez(idx), plantPntr%mass%rootfiberz(idx)
+         totmass = totmass + plantPntr%mass%stemz(idx) + plantPntr%mass%leafz(idx) + plantPntr%mass%storez(idx) &
+                           + plantPntr%mass%rootstorez(idx) + plantPntr%mass%rootfiberz(idx)
+
+       end do
+
+       write(*,*) 'PLANTTOTMASS: ', totmass, plantPntr%deriv%m
+
+       thisResidue => plantPntr%residue
+       do while( associated(thisResidue) )
+         call residuePrint( thisResidue, nsoillay)
+         thisResidue => thisResidue%olderResidue
+       end do
+     else
+       write(*,*) 'No Plant'
+     end if
+        
+  end subroutine plantPrint
+
+  function residueAdd(residuePntr, residueIndex, nslay) result(residueNew)
+
+     type(residue_pointer), pointer :: residuePntr
+     integer, intent(inout) :: residueIndex ! index for all residue pools created under this plant
+     integer, intent(in) :: nslay
      type(residue_pointer), pointer :: residueNew
 
      ! local variable
      integer :: alloc_stat  ! allocation status return
      integer :: sum_stat    ! accumulates allocation status results so only one write/exit statement needed
+     integer :: idx
+     real, dimension(nslay) :: laythk
+     real :: dmassres
+     real :: zmassres
+     real :: dmassrot
+     real :: zmassrot
 
-     allocate(residuePntr, stat=alloc_stat)
-     if( alloc_stat .gt. 0 ) then
-        write(*,'(a,i0)') 'Unable to allocate new Residue pointer.'
-     end if
-
-     ! initialize pointer to NULL
-     nullify(residuePntr%oldResidue)
-
-      sum_stat = 0
-     allocate(residuePntr%cumddg(nsoillay), stat=alloc_stat)
-     sum_stat = sum_stat + alloc_stat
-     allocate(residuePntr%stemz(nsoillay), stat=alloc_stat)
-     sum_stat = sum_stat + alloc_stat
-     allocate(residuePntr%leafz(nsoillay), stat=alloc_stat)
-     sum_stat = sum_stat + alloc_stat
-     allocate(residuePntr%storez(nsoillay), stat=alloc_stat)
-     sum_stat = sum_stat + alloc_stat
-     allocate(residuePntr%rootstorez(nsoillay), stat=alloc_stat)
-     sum_stat = sum_stat + alloc_stat
-     allocate(residuePntr%rootfiberz(nsoillay), stat=alloc_stat)
-     sum_stat = sum_stat + alloc_stat
-
-     if( sum_stat .gt. 0 ) then
-        write(*,*) 'ERROR: unable to allocate memory for residuePntr'
-        stop 1
-     end if
-
-     residueNew => residuePntr
-
-  end function residueCreate
-
-  function residueAdd(residuePntr, nsoillay) result(residueNew)
-     type(residue_pointer), pointer :: residuePntr
-     integer, intent(in) :: nsoillay
-     type(residue_pointer), pointer :: residueNew
-
-     ! local variable
-     integer :: alloc_stat  ! allocation status return
-     integer :: sum_stat    ! accumulates allocation status results so only one write/exit statement needed
 
      allocate(residueNew, stat=alloc_stat)
      if( alloc_stat .gt. 0 ) then
@@ -863,17 +825,27 @@ contains
      end if
 
      sum_stat = 0
-     allocate(residueNew%cumddg(nsoillay), stat=alloc_stat)
+     allocate(residueNew%cumddg(nslay), stat=alloc_stat)
      sum_stat = sum_stat + alloc_stat
-     allocate(residueNew%stemz(nsoillay), stat=alloc_stat)
+     allocate(residueNew%stemz(nslay), stat=alloc_stat)
      sum_stat = sum_stat + alloc_stat
-     allocate(residueNew%leafz(nsoillay), stat=alloc_stat)
+     allocate(residueNew%leafz(nslay), stat=alloc_stat)
      sum_stat = sum_stat + alloc_stat
-     allocate(residueNew%storez(nsoillay), stat=alloc_stat)
+     allocate(residueNew%storez(nslay), stat=alloc_stat)
      sum_stat = sum_stat + alloc_stat
-     allocate(residueNew%rootstorez(nsoillay), stat=alloc_stat)
+     allocate(residueNew%rootstorez(nslay), stat=alloc_stat)
      sum_stat = sum_stat + alloc_stat
-     allocate(residueNew%rootfiberz(nsoillay), stat=alloc_stat)
+     allocate(residueNew%rootfiberz(nslay), stat=alloc_stat)
+     sum_stat = sum_stat + alloc_stat
+
+     allocate(residueNew%deriv%mrtz(nslay), stat=alloc_stat)
+     sum_stat = sum_stat + alloc_stat
+     allocate(residueNew%deriv%mbgz(nslay), stat=alloc_stat)
+     sum_stat = sum_stat + alloc_stat
+
+     allocate(residueNew%deriv%rsaz(ncanlay), stat=alloc_stat)
+     sum_stat = sum_stat + alloc_stat
+     allocate(residueNew%deriv%rlaz(ncanlay), stat=alloc_stat)
      sum_stat = sum_stat + alloc_stat
 
      if( sum_stat .gt. 0 ) then
@@ -881,7 +853,92 @@ contains
         stop 1
      end if
 
-     residueNew%oldResidue => residuePntr
+     if( associated(residuePntr) ) then
+        ! point to previous residue
+        residueNew%olderResidue => residuePntr
+     else
+        nullify(residueNew%olderResidue)
+     end if
+
+     ! increment plant residue index
+     residueIndex = residueIndex + 1
+     ! carry index along with residue
+     residueNew%bout%num = residueIndex
+     ! show residue output unit as uninitialized
+     residueNew%bout%luo = -1
+
+     ! initialize decomp age params
+     residueNew%resday = 0
+     residueNew%resyear = 1
+     residueNew%cumdds = 0.0
+     residueNew%cumddf = 0.0
+     do idx=1,nslay
+       residueNew%cumddg(idx) = 0.0
+     end do
+
+       ! zero all residue amounts
+     residueNew%standstem = 0.0
+     residueNew%standleaf = 0.0
+     residueNew%standstore = 0.0
+     residueNew%flatstem = 0.0
+     residueNew%flatleaf = 0.0
+     residueNew%flatstore = 0.0
+     residueNew%flatrootstore = 0.0
+     residueNew%flatrootfiber = 0.0
+     ! layer thickness can be anything > 0 since setting all values to zero
+     do idx=1,nslay
+       laythk(idx) = 100.0
+     end do
+     dmassres = 0.0
+     zmassres = 0.0
+     dmassrot = 0.0
+     zmassrot = 0.0
+     call resinit(dmassres, zmassres, nslay, residueNew%stemz, laythk)
+     call resinit(dmassres, zmassres, nslay, residueNew%leafz, laythk)
+     call resinit(dmassres, zmassres, nslay, residueNew%storez, laythk)
+     call resinit(dmassrot, zmassrot, nslay, residueNew%rootstorez, laythk)
+     call resinit(dmassrot, zmassrot, nslay, residueNew%rootfiberz, laythk)
+
+     ! set other state variables
+     residueNew%zht = 0.0
+     residueNew%dstm = 0.0
+     residueNew%xstmrep = 0.0
+     residueNew%zrtd = 0.0
+     residueNew%grainf = 0.0
+
+     residueNew%deriv%mbgstem = 0.0
+     residueNew%deriv%mbgleaf = 0.0
+     residueNew%deriv%mbgstore = 0.0
+     residueNew%deriv%mbgrootstore = 0.0
+     residueNew%deriv%mbgrootfiber = 0.0
+
+     residueNew%deriv%m = 0.0
+     residueNew%deriv%mst = 0.0
+     residueNew%deriv%mf = 0.0
+     residueNew%deriv%mbg = 0.0
+     residueNew%deriv%mrt = 0.0
+     residueNew%deriv%dmrtto4 = 0.0
+     residueNew%deriv%dmbgto4 = 0.0
+     residueNew%deriv%dmrtto15 = 0.0
+     residueNew%deriv%dmbgto15 = 0.0
+     do idx = 1, nslay
+        residueNew%deriv%mrtz(idx) = 0.0
+        residueNew%deriv%mbgz(idx) = 0.0
+     end do
+
+     residueNew%deriv%rsai = 0.0
+     residueNew%deriv%rlai = 0.0
+     do idx = 1, ncanlay
+        residueNew%deriv%rsaz(idx) = 0.0
+        residueNew%deriv%rlaz(idx) = 0.0
+     end do
+
+     residueNew%deriv%rcd = 0.0
+     residueNew%deriv%ffcv = 0.0
+     residueNew%deriv%fscv = 0.0
+     residueNew%deriv%ftcv = 0.0
+     residueNew%deriv%fcancov = 0.0
+     residueNew%deriv%ztranspdepth = 0.0
 
   end function residueAdd
 
@@ -891,11 +948,20 @@ contains
      ! local variable
      integer :: alloc_stat  ! allocation status return
      integer :: sum_stat    ! accumulates allocation status results so only one write/exit statement needed
+     type(residue_pointer), pointer :: olderResidue
+
+     ! close open output file
+     if( residuePntr%bout%luo .gt. 0 ) then
+       close( residuePntr%bout%luo )
+     end if
 
      ! check for older residue
-     if( associated(residuePntr%oldResidue) ) then
-        write(*,*) 'ERROR: older Residue exists, unable to execute residueDestroy'
-        stop 1       
+     if( associated(residuePntr%olderResidue) ) then
+        ! preserve pointer to olderResidue
+        olderResidue => residuePntr%olderResidue
+     else
+        ! no olderResidue
+        nullify(olderResidue)
      end if
 
      sum_stat = 0
@@ -912,6 +978,16 @@ contains
      deallocate(residuePntr%rootfiberz, stat=alloc_stat)
      sum_stat = sum_stat + alloc_stat
 
+     deallocate(residuePntr%deriv%mrtz, stat=alloc_stat)
+     sum_stat = sum_stat + alloc_stat
+     deallocate(residuePntr%deriv%mbgz, stat=alloc_stat)
+     sum_stat = sum_stat + alloc_stat
+
+     deallocate(residuePntr%deriv%rsaz, stat=alloc_stat)
+     sum_stat = sum_stat + alloc_stat
+     deallocate(residuePntr%deriv%rlaz, stat=alloc_stat)
+     sum_stat = sum_stat + alloc_stat
+
      if( sum_stat .gt. 0 ) then
         write(*,*) 'ERROR: unable to deallocate memory for residuePntr'
         stop 1
@@ -919,11 +995,63 @@ contains
 
      deallocate(residuePntr, stat=alloc_stat)
      if( alloc_stat .gt. 0 ) then
-        write(*,'(a,i0)') 'Unable to allocate new Residue pointer.'
+        write(*,'(a,i0)') 'Unable to deallocate Residue pointer.'
      end if
-     nullify(residuePntr)
+
+     if( associated(olderResidue) ) then
+       ! older residue now in this spot
+       residuePntr => olderResidue
+     else
+       ! no more old residue
+       nullify(residuePntr)
+     end if
 
   end subroutine residueDestroy
+
+  subroutine residueDestroyAll(residuePntr)
+     type(residue_pointer), pointer :: residuePntr
+
+     ! remove all residue mass from this mass and older
+     do while( associated(residuePntr) )
+       call residueDestroy(residuePntr)
+     end do
+        
+  end subroutine residueDestroyAll
+
+  subroutine residuePrint(residuePntr, nsoillay)
+     type(residue_pointer), pointer :: residuePntr
+     integer, intent(in) :: nsoillay
+
+     ! local variable
+     integer :: idx
+     real :: totmass
+
+     ! print mass values
+     totmass = 0.0
+     if ( associated(residuePntr) ) then
+       !write(*,*) 'Residue stand: ', residuePntr%standstem, residuePntr%standleaf, residuePntr%standstore
+       totmass = totmass + residuePntr%standstem + residuePntr%standleaf + residuePntr%standstore
+
+       !write(*,*) 'Residue  flat: ', residuePntr%flatstem, residuePntr%flatleaf, residuePntr%flatstore, &
+       !                            residuePntr%flatrootstore, residuePntr%flatrootfiber
+       totmass = totmass + residuePntr%flatstem + residuePntr%flatleaf + residuePntr%flatstore &
+                         + residuePntr%flatrootstore + residuePntr%flatrootfiber
+
+       do idx = 1, nsoillay
+         !write(*,*) 'Residue below: ', idx, residuePntr%stemz(idx), residuePntr%leafz(idx), residuePntr%storez(idx), &
+         !                                  residuePntr%rootstorez(idx), residuePntr%rootfiberz(idx)
+         totmass = totmass + residuePntr%stemz(idx) + residuePntr%leafz(idx) + residuePntr%storez(idx) &
+                           + residuePntr%rootstorez(idx) + residuePntr%rootfiberz(idx)
+
+       end do
+
+       write(*,*) 'RESIDUETOTMASS: ', totmass, residuePntr%deriv%m
+
+     else
+       write(*,*) 'No Residue'
+     end if
+        
+  end subroutine residuePrint
 
 end module biomaterial
 

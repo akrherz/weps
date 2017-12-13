@@ -16,7 +16,7 @@ module soil_processes_mod
        bslagm,                                                         &
        bs0ags, bslagn, bslagx, bsdblk,                                 &
        bszlyt, bsdagd, bslay,                                          &
-       bsdsblk,                                                        &
+       bsdsblk, bsvroc, &
        bhzinf, bhzwid, trigger, sr)
 
       use file_io_mod, only: luoasd               ! Only for printing out ASD results
@@ -35,7 +35,7 @@ module soil_processes_mod
       real bs0ags(*), bslagn(*), bslagx(*)
       real bsdblk(*), bhzinf
       real bszlyt(*), bsdagd(*)
-      real bsdsblk(*)
+      real bsdsblk(*), bsvroc(*)
       real bhzwid
       integer bslay, trigger(bslay), sr
 
@@ -102,8 +102,8 @@ module soil_processes_mod
 !+++++++++++++++++++++++++++++++++++++++++++++++
 
          call den(bsdblk(ldx), bsdsblk(ldx), &
-          bszlyt(ldx), bsdagd(ldx), &
-          bhzinf, bhzwid, trigger(ldx))
+          bszlyt(ldx), bsdagd(ldx), bsvroc(ldx), &
+          bhzinf, bhzwid, trigger(ldx) )
    90    continue
 
       end do
@@ -425,13 +425,14 @@ module soil_processes_mod
     end subroutine asd
 !------------------------------------------------------------------------
     subroutine den(                                                   &
-     &  csdblk, csdsblk, cszlyt, csdagd,                       &
+     &  csdblk, csdsblk, cszlyt, csdagd, vfrock, &
      &  bhzinf, chzwid, trigger)
 
-!     + + + ARGUMENT DECLARATIONS + + +
+      use soilden_mod, only: setLayThick
 
+!     + + + ARGUMENT DECLARATIONS + + +
       real csdblk, csdsblk, cszlyt, csdagd
-      real bhzinf, chzwid
+      real bhzinf, chzwid, vfrock
       integer trigger
 
 !     + + + ARGUMENT DEFINITIONS + + +
@@ -500,7 +501,7 @@ module soil_processes_mod
       chzwid = chzwid - wszlyt
    
 !     update layer thickness
-      cszlyt = cszlyt * bsdbk0 / csdblk
+      call setLayThick( cszlyt, vfrock, bsdbk0, csdblk)
       
 !     update aggregate density
       ! After consultation with LH, it was decided that Agg. Density

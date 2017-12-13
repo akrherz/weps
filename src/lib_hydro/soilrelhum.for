@@ -8,7 +8,7 @@
 !     adsorption isotherms on clay minerals by Berge, H.F.M. ten, 1990
 
 !*** Argument declarations ***
-      real*4 theta, thetaw, theta80rh, soiltemp, matricpot
+      real theta, thetaw, theta80rh, soiltemp, matricpot
 !     theta      - present volumetric water content
 !     thetaw     - volumetric water content at wilt (15 bar or 1.5 MPa)
 !     theta80rh  - volumetric water content at %80 relative humidity (300 bar or 30 MPa)

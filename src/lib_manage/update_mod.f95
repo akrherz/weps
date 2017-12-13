@@ -11,41 +11,52 @@ module update_mod
     real :: evapredu_b
   end type evap_redu
 
+  real, parameter :: minimum_res = 0.001 ! (kg/m^2) ie. 0.001 = 1 gram/m^2
+
+  logical :: am0cropupfl  ! flag to determine that the crop state has been changed
+                          ! external to crop and that the crop update process must
+                          ! run to synchronize dependent variable values with state values
+                          ! .true. - update crop dependent
+                          ! .false. - update not necessary due to mangement operations
+
   contains
 
-    subroutine plantupdate( soil, &
-           bhzfurcut, bhztransprtmin, bhztransprtmax, &
-           plant, croptot, restot, biotot )
+    subroutine plantupdate( soil, plant, croptot, restot, biotot )
 
       ! + + + PURPOSE + + +
       ! calculates values of derived variables based on the present values
       ! or the state variables. The derived variables are commonly used
       ! where residue totals are required.
 
-      use biomaterial, only: plant_pointer, residue_pointer, biototal, ncanlay
+      use biomaterial, only: plant_pointer, residue_pointer, biototal, ncanlay, plantDestroy, residueDestroy
       use p1unconv_mod, only: pi
       use wind_mod, only: biodrag
       use crop_growth_mod, only: ht_dia_sai
       use soil_data_struct_defs, only: soil_def
 
+      use weps_main_mod, only: daysim
+
 !     + + +   ARGUMENT DECLARATIONS + + +
       type(soil_def), intent(in) :: soil  ! soil for this subregion
-      real, intent(in) :: bhzfurcut       ! estimated furrow bottom depth below flat soil surface (mm)
-      real, intent(in) :: bhztransprtmin  ! root depth where transpiration depth reduction begins (m)
-      real, intent(in) :: bhztransprtmax  ! root depth where transpiration depth equals root depth (m)
-
       type(plant_pointer), pointer :: plant     ! pointer to youngest plant data, which chains to older plant data
       type(biototal), intent(inout) :: croptot  ! structure containing living crop derived variables
       type(biototal), intent(inout) :: restot   ! structure containing residue derived variables
       type(biototal), intent(inout) :: biotot   ! structure containing all biomass crop derived variables
 
       ! LOCAL VARIABLES
-      type(plant_pointer), pointer :: thisPlant
-      type(residue_pointer), pointer :: thisResidue
+      type(plant_pointer), pointer :: thisPlant       ! pointer used to interate plant pointer chain
+      type(residue_pointer), pointer :: thisResidue   ! pointer used to interate residue pointer chain
+      type(plant_pointer), pointer :: parentPlant     ! retain parent pointer to update on plantDestroy
+      type(residue_pointer), pointer :: parentResidue ! retain parent pointer to update on residueDestroy
       real temp1, temp2
       integer :: idx  ! indexing variable
       integer :: jdx  ! indexing variable
       real :: atotal  ! total used in weighting
+
+      integer :: iplt ! plant index
+      integer :: ires ! residue pool index
+      integer :: iallres ! all residue pools index
+
       integer :: pool_cnt ! total number of biomass pools, crops and residue
       type(evap_redu), dimension(:), allocatable :: evapredu  ! derived total flat mass and evapredu params, pools, 'youngest to oldest'
       integer :: alloc_stat
@@ -62,88 +73,131 @@ module update_mod
 
       temp1 = 0.0
       temp2 = 0.0
-      pool_cnt = 0
+      iplt = 0
+      iallres = 0
 
       ! point to youngest plant
       thisPlant => plant
+      nullify(parentPlant)
 
       ! bring all derived variables up to date
       do while ( associated(thisPlant) )
 
         ! Living plant material section
+        iplt = iplt + 1
 
-        pool_cnt = pool_cnt + 1
+        if( thisPlant%growth%am0cgf .or. am0cropupfl ) then
+          ! plant growing so update derived variables (if not growing should be residue)
+          am0cropupfl = .false.
 
-        ! accumulate layer values into root mass totals
-        thisPlant%deriv%mbgstem = 0.0
-        thisPlant%deriv%mbgrootstore = 0.0
-        thisPlant%deriv%mbgrootfiber = 0.0
-        do idx = 1, soil%nslay
+          ! accumulate layer values into root mass totals
+          ! NOTE: mbgleaf and mbgstore are set to zero and not updated for live plant
+          thisPlant%deriv%mbgstem = 0.0
+          thisPlant%deriv%mbgrootstore = 0.0
+          thisPlant%deriv%mbgrootfiber = 0.0
+          do idx = 1, soil%nslay
             thisPlant%deriv%mbgstem = thisPlant%deriv%mbgstem + thisPlant%mass%stemz(idx)
             thisPlant%deriv%mbgrootstore = thisPlant%deriv%mbgrootstore + thisPlant%mass%rootstorez(idx)
             thisPlant%deriv%mbgrootfiber = thisPlant%deriv%mbgrootfiber + thisPlant%mass%rootfiberz(idx)
-        end do
+          end do
 
-        thisPlant%deriv%mst = thisPlant%mass%standstem + thisPlant%mass%standleaf + thisPlant%mass%standstore
-        thisPlant%deriv%mf = thisPlant%mass%flatstem + thisPlant%mass%flatleaf + thisPlant%mass%flatstore
-        thisPlant%deriv%mrt = thisPlant%deriv%mbgstem + thisPlant%deriv%mbgrootstore + thisPlant%deriv%mbgrootfiber
-        thisPlant%deriv%m = thisPlant%deriv%mst + thisPlant%deriv%mf + thisPlant%deriv%mrt
+          thisPlant%deriv%mst = thisPlant%mass%standstem + thisPlant%mass%standleaf + thisPlant%mass%standstore
+          thisPlant%deriv%mf = thisPlant%mass%flatstem + thisPlant%mass%flatleaf + thisPlant%mass%flatstore
+          thisPlant%deriv%mrt = thisPlant%deriv%mbgstem + thisPlant%deriv%mbgrootstore + thisPlant%deriv%mbgrootfiber
+          thisPlant%deriv%m = thisPlant%deriv%mst + thisPlant%deriv%mf + thisPlant%deriv%mrt
 
-        do idx = 1, soil%nslay
+          do idx = 1, soil%nslay
             thisPlant%deriv%mrtz(idx) = thisPlant%mass%rootstorez(idx) + thisPlant%mass%rootfiberz(idx)
             thisPlant%deriv%mbgz(idx) = thisPlant%mass%stemz(idx) + thisPlant%mass%leafz(idx) + thisPlant%mass%storez(idx)
-        end do
-        ! sum root and below ground from layer values to the SCI depth (4 inches)
-        thisPlant%deriv%dmrtto4 = valbydepth(soil%nslay, soil%aszlyd, thisPlant%deriv%mrtz, 2, 0.0, scidepth)
-        thisPlant%deriv%dmbgto4 = valbydepth(soil%nslay, soil%aszlyd, thisPlant%deriv%mbgz, 2, 0.0, scidepth)
-        ! sum root and below ground from layer values to the WEPP adjustment depth (15 cm)
-        thisPlant%deriv%dmrtto15 = valbydepth(soil%nslay, soil%aszlyd, thisPlant%deriv%mrtz, 2, 0.0, weppdepth)
-        thisPlant%deriv%dmbgto15 = valbydepth(soil%nslay, soil%aszlyd, thisPlant%deriv%mbgz, 2, 0.0, weppdepth)
+          end do
+          ! sum root and below ground from layer values to the SCI depth (4 inches)
+          thisPlant%deriv%dmrtto4 = valbydepth(soil%nslay, soil%aszlyd, thisPlant%deriv%mrtz, 2, 0.0, scidepth)
+          thisPlant%deriv%dmbgto4 = valbydepth(soil%nslay, soil%aszlyd, thisPlant%deriv%mbgz, 2, 0.0, scidepth)
+          ! sum root and below ground from layer values to the WEPP adjustment depth (15 cm)
+          thisPlant%deriv%dmrtto15 = valbydepth(soil%nslay, soil%aszlyd, thisPlant%deriv%mrtz, 2, 0.0, weppdepth)
+          thisPlant%deriv%dmbgto15 = valbydepth(soil%nslay, soil%aszlyd, thisPlant%deriv%mbgz, 2, 0.0, weppdepth)
 
-        ! calculate new stem area index and representative stem diameter
-        call ht_dia_sai( thisPlant%geometry%dpop, thisPlant%mass%standstem, temp1, &
+          ! calculate new stem area index and representative stem diameter
+          call ht_dia_sai( thisPlant%geometry%dpop, thisPlant%mass%standstem, temp1, &
                          thisPlant%database%ssa, thisPlant%database%ssb, thisPlant%geometry%dstm, &
                          thisPlant%geometry%zht, temp2, thisPlant%geometry%xstmrep, thisPlant%deriv%rsai )
 
-        ! leaf area index for standing material
-        ! m^2 leaf/kg * kg/m^2 ground = m^2 leaf/m^2 ground
-        thisPlant%deriv%rlai = thisPlant%database%sla * thisPlant%mass%standleaf
+          ! leaf area index for standing material
+          ! m^2 leaf/kg * kg/m^2 ground = m^2 leaf/m^2 ground
+          thisPlant%deriv%rlai = thisPlant%database%sla * thisPlant%mass%standleaf
 
-        ! set stem and leaf area by plant height increments
-        ! these are divided equally for a first approximation
-        do idx = 1, ncanlay
+          ! set stem and leaf area by plant height increments
+          ! these are divided equally for a first approximation
+          do idx = 1, ncanlay
             thisPlant%deriv%rsaz(idx) = thisPlant%deriv%rsai / ncanlay
             thisPlant%deriv%rlaz(idx) = thisPlant%deriv%rlai / ncanlay
-        end do
+          end do
 
-        ! effective silhouette
-        thisPlant%deriv%rcd = biodrag(0.0, 0.0, thisPlant%deriv%rlai, thisPlant%deriv%rsai, &
+          ! effective silhouette
+          thisPlant%deriv%rcd = biodrag(0.0, 0.0, thisPlant%deriv%rlai, thisPlant%deriv%rsai, &
                      thisPlant%geometry%rg, thisPlant%geometry%xrow, thisPlant%geometry%zht, soil%aszrgh)
-        ! crop leaf interception area (canopy cover)
-        thisPlant%deriv%fcancov = 1.0 - exp( - thisPlant%database%ck * thisPlant%deriv%rlai)
-        ! surface cover
-        thisPlant%deriv%ffcv = 1.0 - exp( -thisPlant%database%covfact * thisPlant%deriv%mf )
-        thisPlant%deriv%fscv = thisPlant%geometry%dstm * pi * (thisPlant%database%xstm/2.0)*(thisPlant%database%xstm/2.0)
-        if (thisPlant%deriv%fscv > 1.0) thisPlant%deriv%fscv = 1.0
-        thisPlant%deriv%ftcv = thisPlant%deriv%fscv + thisPlant%deriv%ffcv !no overlap
-        if (thisPlant%deriv%ftcv > 1.0) thisPlant%deriv%ftcv = 1.0
-
-        ! transpiration depth as a function of furrow cut depth and root depth
-        thisPlant%deriv%ztranspdepth = transpdepth(thisPlant%geometry%zrtd, bhzfurcut, bhztransprtmin, bhztransprtmax)
+          ! surface cover
+          thisPlant%deriv%ffcv = 1.0 - exp( -thisPlant%database%covfact * thisPlant%deriv%mf )
+          thisPlant%deriv%fscv = thisPlant%geometry%dstm * pi * (thisPlant%database%xstm/2.0)*(thisPlant%database%xstm/2.0)
+          if (thisPlant%deriv%fscv > 1.0) thisPlant%deriv%fscv = 1.0
+          thisPlant%deriv%ftcv = thisPlant%deriv%fscv + thisPlant%deriv%ffcv !no overlap
+          if (thisPlant%deriv%ftcv > 1.0) thisPlant%deriv%ftcv = 1.0
+          ! crop leaf interception area (canopy cover)
+          thisPlant%deriv%fcancov = 1.0 - exp( - thisPlant%database%ck * thisPlant%deriv%rlai)
+          ! transpiration depth as a function of furrow cut depth and root depth
+          thisPlant%deriv%ztranspdepth = transpdepth(thisPlant%geometry%zrtd, thisPlant%geometry%zfurcut, &
+                                         thisPlant%geometry%ztransprtmin, thisPlant%geometry%ztransprtmax)
+        end if
 
         ! point to newest residue for thisPlant
+        ires = 0
         thisResidue => thisPlant%residue
+        nullify(parentResidue)
 
         ! Dead plant material section
         do while (associated(thisResidue))
 
-          pool_cnt = pool_cnt + 1
+          ires = ires + 1
+          iallres = iallres + 1
+
+          ! accumulate layer values into pool mass totals
+          thisResidue%deriv%mbgstem = 0.0
+          thisResidue%deriv%mbgleaf = 0.0
+          thisResidue%deriv%mbgstore = 0.0
+          thisResidue%deriv%mbgrootstore = 0.0
+          thisResidue%deriv%mbgrootfiber = 0.0
+          do idx = 1, soil%nslay
+              thisResidue%deriv%mbgstem = thisResidue%deriv%mbgstem + thisResidue%stemz(idx)
+              thisResidue%deriv%mbgleaf = thisResidue%deriv%mbgleaf + thisResidue%leafz(idx)
+              thisResidue%deriv%mbgstore = thisResidue%deriv%mbgstore + thisResidue%storez(idx)
+              thisResidue%deriv%mbgrootstore = thisResidue%deriv%mbgrootstore + thisResidue%rootstorez(idx)
+              thisResidue%deriv%mbgrootfiber = thisResidue%deriv%mbgrootfiber + thisResidue%rootfiberz(idx)
+          end do
+          ! sum buried root and residue masses for each layer and each pool
+          do idx = 1, soil%nslay
+              thisResidue%deriv%mrtz(idx) = thisResidue%rootstorez(idx) + thisResidue%rootfiberz(idx)
+              thisResidue%deriv%mbgz(idx) = thisResidue%stemz(idx) + thisResidue%leafz(idx) + thisResidue%storez(idx)
+          end do
+
+          ! sum root and below ground from layer values for each pool
+          thisResidue%deriv%mrt = 0.0
+          thisResidue%deriv%mbg = 0.0
+          do idx = 1, soil%nslay
+              thisResidue%deriv%mrt = thisResidue%deriv%mrt + thisResidue%deriv%mrtz(idx)
+              thisResidue%deriv%mbg = thisResidue%deriv%mbg + thisResidue%deriv%mbgz(idx)
+          end do
 
           ! sum above ground totals
           thisResidue%deriv%mst = thisResidue%standstem + thisResidue%standleaf + thisResidue%standstore
           thisResidue%deriv%mf = thisResidue%flatstem + thisResidue%flatleaf + thisResidue%flatstore &
                                 + thisResidue%flatrootstore + thisResidue%flatrootfiber
           thisResidue%deriv%m = thisResidue%deriv%mst + thisResidue%deriv%mf + thisResidue%deriv%mrt + thisResidue%deriv%mbg
+          ! sum root and below ground from layer values to the SCI depth (4 inches)
+          thisResidue%deriv%dmrtto4 = valbydepth(soil%nslay, soil%aszlyd, thisResidue%deriv%mrtz, 2, 0.0, scidepth)
+          thisResidue%deriv%dmbgto4 = valbydepth(soil%nslay, soil%aszlyd, thisResidue%deriv%mbgz, 2, 0.0, scidepth)
+          ! sum root and below ground from layer values to the WEPP adjustment depth (15 cm)
+          thisResidue%deriv%dmrtto15 = valbydepth(soil%nslay, soil%aszlyd, thisResidue%deriv%mrtz, 2, 0.0, weppdepth)
+          thisResidue%deriv%dmbgto15 = valbydepth(soil%nslay, soil%aszlyd, thisResidue%deriv%mbgz, 2, 0.0, weppdepth)
 
           ! calculate residue stem area index (plants/m^2 ground) * m * m/plant = m^2 stem / m^2 ground
           thisResidue%deriv%rsai = thisResidue%dstm * thisResidue%zht * thisResidue%xstmrep
@@ -171,50 +225,75 @@ module update_mod
           ! residue leaf interception area (canopy cover)
           thisResidue%deriv%fcancov = 1.0 - exp( - thisPlant%database%ck * thisResidue%deriv%rlai)
 
-          ! accumulate layer values into pool mass totals
-          thisResidue%deriv%mbgstem = 0.0
-          thisResidue%deriv%mbgleaf = 0.0
-          thisResidue%deriv%mbgstore = 0.0
-          thisResidue%deriv%mbgrootstore = 0.0
-          thisResidue%deriv%mbgrootfiber = 0.0
-          do idx = 1, soil%nslay
-              thisResidue%deriv%mbgstem = thisResidue%deriv%mbgstem + thisResidue%stemz(idx)
-              thisResidue%deriv%mbgleaf = thisResidue%deriv%mbgleaf + thisResidue%leafz(idx)
-              thisResidue%deriv%mbgstore = thisResidue%deriv%mbgstore + thisResidue%storez(idx)
-              thisResidue%deriv%mbgrootstore = thisResidue%deriv%mbgrootstore + thisResidue%rootstorez(idx)
-              thisResidue%deriv%mbgrootfiber = thisResidue%deriv%mbgrootfiber + thisResidue%rootfiberz(idx)
-          end do
-          ! sum buried root and residue masses for each layer and each pool
-          do idx = 1, soil%nslay
-              thisResidue%deriv%mrtz(idx) = thisResidue%rootstorez(idx) + thisResidue%rootfiberz(idx)
-              thisResidue%deriv%mbgz(idx) = thisResidue%stemz(idx) + thisResidue%leafz(idx) + thisResidue%storez(idx)
-          end do
-          ! sum root and below ground from layer values for each pool
-          thisResidue%deriv%mrt = 0.0
-          thisResidue%deriv%mbg = 0.0
-          do idx = 1, soil%nslay
-              thisResidue%deriv%mrt = thisResidue%deriv%mrt + thisResidue%deriv%mrtz(idx)
-              thisResidue%deriv%mbg = thisResidue%deriv%mbg + thisResidue%deriv%mbgz(idx)
-          end do
-          ! sum root and below ground from layer values to the SCI depth (4 inches)
-          thisResidue%deriv%dmrtto4 = valbydepth(soil%nslay, soil%aszlyd, thisResidue%deriv%mrtz, 2, 0.0, scidepth)
-          thisResidue%deriv%dmbgto4 = valbydepth(soil%nslay, soil%aszlyd, thisResidue%deriv%mbgz, 2, 0.0, scidepth)
-          ! sum root and below ground from layer values to the WEPP adjustment depth (15 cm)
-          thisResidue%deriv%dmrtto15 = valbydepth(soil%nslay, soil%aszlyd, thisResidue%deriv%mrtz, 2, 0.0, weppdepth)
-          thisResidue%deriv%dmbgto15 = valbydepth(soil%nslay, soil%aszlyd, thisResidue%deriv%mbgz, 2, 0.0, weppdepth)
+          ! header
+          !write(*, &
+          !  "('  #p  #r #ar #STstm mST_ST mST_LF mST_RP cumDDS lay massST massLF massRP massRS massRF cumDDF/G')")
 
-          ! point to next older residue
-          thisResidue => thisResidue%oldResidue
+          ! first line
+          !idx = 0
+          !write(*,"(3(1x,i3),4f7.3,f9.3,1x,i3,5f7.3,f9.3)") iplt, ires, iallres, thisResidue%dstm, &
+          !  thisResidue%standstem, thisResidue%standleaf, thisResidue%standstore, thisResidue%cumdds, &
+          !  idx, thisResidue%flatstem, thisResidue%flatleaf, thisResidue%flatstore, &
+          !  thisResidue%flatrootstore, thisResidue%flatrootfiber, thisResidue%cumddf
+          ! soil layers
+          !do idx = 1, soil%nslay
+          !   write(*,"(50x,i3,5f7.3,f9.3)") idx, &
+          !     thisResidue%stemz(idx), thisResidue%leafz(idx), thisResidue%storez(idx), &
+          !     thisResidue%rootstorez(idx), thisResidue%rootfiberz(idx), thisResidue%cumddg(idx)
+          ! end do
+
+          ! check if residue is gone
+          if( thisResidue%deriv%m .lt. minimum_res ) then
+            ! residue is below some minimum for pool tracking
+            call residueDestroy( thisResidue )
+            if( ires .eq. 1 ) then
+              ! this is the first residue pool, reassociate with plant
+              thisPlant%residue => thisResidue
+            else
+              ! reassociate with parentResidue
+              parentResidue%olderResidue => thisResidue
+            end if
+            ires = ires - 1
+            iallres = iallres - 1
+          else
+            ! has enough residue
+            ! thisResidue becomes parentResidue
+            parentResidue => thisResidue
+            ! point to next older residue
+            thisResidue => thisResidue%olderResidue
+          end if
 
         end do
 
-        ! point to next older plant
-        thisPlant => thisPlant%oldPlant
+        ! check if plant is not growing and has no residue
+        ! NOTE: this assumes no biomass contained in plant pools for a non growing plant
+        if( thisPlant%growth%am0cgf .or. associated(thisPlant%residue) ) then
+          ! plant is growing or has residue
+          parentPlant => thisPlant
+          ! point to next older plant
+          thisPlant => thisPlant%olderPlant
+        else
+          ! no growth and no residue
+          call plantDestroy( thisPlant )
+          if( iplt .eq. 1 ) then
+            ! this is the first plant pool, reassociate with plant
+            plant => thisPlant
+          else
+            ! reassociate with parentPlant
+            parentPlant%olderPlant => thisPlant
+          end if
+          iplt = iplt - 1
+        end if
 
       end do
 
+      pool_cnt = iplt + iallres
+
       ! accumulate all living "crop" values into croptot variables
       ! zero accumulators
+      croptot%dstmtot = 0.0
+      croptot%zmht = 0.0 
+      croptot%dayap = 99999
       croptot%mstandstore = 0.0 
       croptot%mflatstore = 0.0 
       croptot%mtot = 0.0 
@@ -231,22 +310,25 @@ module update_mod
           croptot%mrtz(idx) = 0.0
           croptot%mbgz(idx) = 0.0
       end do
-      croptot%dstmtot = 0.0
-      croptot%rlaitot = 0.0
       croptot%rsaitot = 0.0
-      croptot%ffcvtot = 0.0
-      croptot%fscvtot = 0.0
-      croptot%ftcancov = 0.0
+      croptot%rlaitot = 0.0
+      croptot%rlailive = 0.0
       do idx = 1, ncanlay
           croptot%rsaz(idx) = 0.0
           croptot%rlaz(idx) = 0.0
       end do
-      croptot%zmht = 0.0 
-      croptot%zrtd = 0.0 
+      croptot%rcdtot = 0.0
+      croptot%ffcvtot = 0.0
+      croptot%fscvtot = 0.0
+      croptot%ftcvtot = 0.0
+      croptot%ftcancov = 0.0
       croptot%evapredu = 0.0
 
       ! accumulate all residue values into restot variables
       ! zero accumulators
+      restot%dstmtot = 0.0
+      restot%zmht = 0.0
+      restot%dayap = 99999
       restot%mstandstore = 0.0
       restot%mflatstore = 0.0
       restot%mtot = 0.0
@@ -263,29 +345,39 @@ module update_mod
           restot%mrtz(idx) = 0.0
           restot%mbgz(idx) = 0.0
       end do
-      restot%dstmtot = 0.0
-      restot%rlaitot = 0.0
       restot%rsaitot = 0.0
-      restot%ffcvtot = 0.0
-      restot%fscvtot = 0.0
-      restot%ftcancov = 0.0
+      restot%rlaitot = 0.0
+      restot%rlailive = 0.0
       do idx = 1, ncanlay
          restot%rsaz(idx) = 0.0
          restot%rlaz(idx) = 0.0
       end do
-      restot%zht_ave = 0.0
-      restot%xstmrep = 0.0
-      restot%zmht = 0.0
-      restot%zrtd = 0.0
+      restot%rcdtot = 0.0
+      restot%ffcvtot = 0.0
+      restot%fscvtot = 0.0
+      restot%ftcvtot = 0.0
+      restot%ftcancov = 0.0
+      restot%evapredu = 0.0
 
+      iplt = 0
+      iallres = 0
       ! point to youngest living plant
       thisPlant => plant
 
       ! interate over all plants
       do while ( associated(thisPlant) )
 
+        ! Living plant material section
+        iplt = iplt + 1
+
+        ! write(*,'(a,3(1x,i0),f24.20,l2)') 'RSAI: ', daysim, iplt, 0, thisPlant%deriv%rsai, thisPlant%growth%am0cgf
+
         if( thisPlant%growth%am0cgf ) then
+
           ! this is a living plant, add to croptot
+          croptot%dstmtot = croptot%dstmtot + thisPlant%geometry%dstm   ! total number of stems  per unit area (#/m^2)
+          croptot%zmht = max( croptot%zmht, thisPlant%geometry%zht )    ! Tallest biomass height across pools (m)
+          croptot%dayap = min( croptot%dayap, plant%growth%dayap )      ! most recent planting
 
           croptot%mstandstore = croptot%mstandstore + thisPlant%mass%standstore
           croptot%mflatstore = croptot%mflatstore + thisPlant%mass%flatstore
@@ -317,9 +409,19 @@ module update_mod
               croptot%mbgz(idx) = thisPlant%deriv%mbgz(idx) ! Buried mass by soil layer (kg/m^2)
           end do
 
-          croptot%dstmtot = croptot%dstmtot + thisPlant%geometry%dstm     ! total number of stems  per unit area (#/m^2)
-          croptot%rlaitot = croptot%rlaitot + thisPlant%deriv%rlai      ! total of leaf area index across pools (m^2/m^2)
           croptot%rsaitot = croptot%rsaitot + thisPlant%deriv%rsai      ! total of stem area index across pools (m^2/m^2)
+          croptot%rlaitot = croptot%rlaitot + thisPlant%deriv%rlai      ! total of leaf area index across pools (m^2/m^2)
+          croptot%rlailive = croptot%rlailive + thisPlant%deriv%rlai * plant%growth%fliveleaf  ! living leaf area index total (m^2/m^2)
+          do idx = 1, ncanlay
+              croptot%rsaz(idx) = croptot%rsaz(idx) + thisPlant%deriv%rsai / ncanlay           ! stem area index by height (1/m)
+              croptot%rlaz(idx) = croptot%rlaz(idx) + thisPlant%deriv%rlai / ncanlay           ! leaf area index by height (1/m)
+          end do
+
+          ! biodrag is the sum of discounted lai and sai for each pool
+          croptot%rcdtot = croptot%rcdtot + biodrag(0.0,0.0,thisPlant%deriv%rlai, thisPlant%deriv%rsai, &
+                                                    thisPlant%geometry%rg, thisPlant%geometry%xrow, &
+                                                    thisPlant%geometry%zht, soil%aszrgh) 
+
           ! biomass cover across pools - flat with overlap (m^2/m^2)
           croptot%ffcvtot = croptot%ffcvtot + (1.0 - croptot%ffcvtot) * thisPlant%deriv%ffcv
           croptot%fscvtot = croptot%fscvtot + thisPlant%deriv%fscv      ! biomass cover across pools - standing (m^2/m^2)
@@ -328,25 +430,26 @@ module update_mod
           ! fraction of soil surface covered by canopy across pools (m^2/m^2)
           croptot%ftcancov = croptot%ftcancov + thisPlant%deriv%fcancov
 
-          do idx = 1, ncanlay
-              croptot%rsaz(idx) = croptot%rsaz(idx) + thisPlant%deriv%rsai / ncanlay           ! stem area index by height (1/m)
-              croptot%rlaz(idx) = croptot%rlaz(idx) + thisPlant%deriv%rlai / ncanlay           ! leaf area index by height (1/m)
-          end do
-
-          ! Tallest biomass height across pools (m)
-          croptot%zmht = max( croptot%zmht, thisPlant%geometry%zht )
-          ! maximum root depth of growing crops (m)
-          croptot%zrtd = max(croptot%zrtd, thisPlant%geometry%zrtd)
-
+          ! Note: this is not consistent with including flat living biomass in biotot evapredu totaling
+          ! this should be a composite value for any living plants with flat biomass.
           croptot%evapredu = 0.0     ! composite evaporation reduction from across pools (ea/ep ratio)
         end if
 
-        ! set to newest plant residue
+        ! point to newest residue for thisPlant
+        ires = 0
         thisResidue => thisPlant%residue
 
         ! interate over all residue
         do while (associated(thisResidue))
-          ! this is a plant residue, add to restot
+
+          ires = ires + 1
+          iallres = iallres + 1
+
+          ! write(*,'(a,3(1x,i0),f24.20)') 'RSAI: ', daysim, iplt, ires, thisResidue%deriv%rsai
+
+          ! this is a residue, add to restot
+          restot%dstmtot = restot%dstmtot + thisResidue%dstm   ! total number of stems  per unit area (#/m^2)
+          restot%zmht = max( restot%zmht, thisResidue%zht )    ! Tallest biomass height across pools (m)
 
           ! sum mass across pools
           restot%mstandstore = restot%mstandstore + thisResidue%standstore
@@ -362,17 +465,23 @@ module update_mod
           restot%mrttot = restot%mrttot + thisResidue%deriv%mrt
           restot%mrttotto4 = restot%mrttotto4 + thisResidue%deriv%dmrtto4
           restot%mrttotto15 = restot%mrttotto15 + thisResidue%deriv%dmrtto15
-
           ! sum layer mass across pools
           do idx = 1, soil%nslay
             restot%mrtz(idx) = restot%mrtz(idx) + thisResidue%deriv%mrtz(idx)
             restot%mbgz(idx) = restot%mbgz(idx) + thisResidue%deriv%mbgz(idx)
           end do
 
-          ! total residue stems
-          restot%dstmtot = restot%dstmtot + thisResidue%dstm
           restot%rsaitot = restot%rsaitot + thisResidue%deriv%rsai
           restot%rlaitot = restot%rlaitot + thisResidue%deriv%rlai
+          ! sum area indexes by layer across pools
+          do idx = 1, ncanlay
+            restot%rsaz(idx) = restot%rsaz(idx) + thisResidue%deriv%rsaz(idx)
+            restot%rlaz(idx) = restot%rlaz(idx) + thisResidue%deriv%rlaz(idx)
+          end do
+
+          restot%rcdtot = restot%rcdtot + biodrag(0.0,0.0,thisResidue%deriv%rlai, thisResidue%deriv%rsai, &
+                                                  thisPlant%geometry%rg, thisPlant%geometry%xrow, &
+                                                  thisResidue%zht, soil%aszrgh) 
 
           ! Residue cover calculations.
           ! Overlap only applies when adding flat and flat, not flat and standing, or standing and standing.
@@ -382,20 +491,12 @@ module update_mod
           ! residue leaf interception area (canopy cover)
           restot%ftcancov = restot%ftcancov + thisResidue%deriv%fcancov * (1.0 - restot%ftcancov)
 
-          ! sum area indexes by layer across pools
-          do idx = 1, ncanlay
-            restot%rsaz(idx) = restot%rsaz(idx) + thisResidue%deriv%rsaz(idx)
-            restot%rlaz(idx) = restot%rlaz(idx) + thisResidue%deriv%rlaz(idx)
-          end do
-
-          restot%zmht = max( restot%zmht, thisResidue%zht )
-
-          ! set to nest older residue
-          thisResidue => thisResidue%OldResidue
+          ! set to next older residue
+          thisResidue => thisResidue%olderResidue
         end do
 
         ! point to next older plant
-        thisPlant => thisPlant%oldPlant
+        thisPlant => thisPlant%olderPlant
 
       end do
 
@@ -413,7 +514,7 @@ module update_mod
       restot%zht_ave = 0.0
       restot%xstmrep = 0.0
 
-      ! point to youngest living plant
+      ! point to youngest plant
       thisPlant => plant
 
       ! interate over all plants
@@ -453,15 +554,12 @@ module update_mod
             restot%xstmrep = restot%xstmrep + thisResidue%xstmrep * thisResidue%deriv%rsai / restot%rsaitot
           end if
 
-          ! use buried root massr weighting for average root depth
-          restot%zrtd = restot%zrtd + thisResidue%zrtd * thisResidue%deriv%mrt / restot%mrttot
-
           ! set to next older residue
-          thisResidue => thisResidue%OldResidue
+          thisResidue => thisResidue%olderResidue
         end do
 
         ! point to next older plant
-        thisPlant => thisPlant%oldPlant
+        thisPlant => thisPlant%olderPlant
 
       end do
 
@@ -472,20 +570,8 @@ module update_mod
       croptot%ftcvtot = croptot%ffcvtot + croptot%fscvtot
       if (croptot%ftcvtot > 1.0) croptot%ftcvtot = 1.0
 
-      if( associated(plant) ) then
-        ! effective Biomass silhouette area across pools (SAI+LAI) (m^2/m^2) (combination of leaf area and stem area indices)
-        ! Note: used the ridge and row setting of the most recent plant
-        croptot%rcdtot = biodrag(0.0,0.0,croptot%rlaitot,croptot%rsaitot, plant%geometry%rg, plant%geometry%xrow, &
-                               croptot%zht_ave, soil%aszrgh) 
-      else
-        ! no plant material
-        croptot%rcdtot = 0.0
-      end if
       restot%ftcvtot = restot%ffcvtot + restot%fscvtot !total, no overlap
       if (restot%ftcvtot > 1.0) restot%ftcvtot = 1.0
-
-      ! effective silhouette
-      restot%rcdtot = biodrag(restot%rlaitot, restot%rsaitot, 0.0, 0.0, 0, 0.0, 0.0, 0.0)
 
       ! all biomaterial totals
 
@@ -529,16 +615,8 @@ module update_mod
       ! sum the stem area index and leaf area index values
       biotot%rsaitot = croptot%rsaitot + restot%rsaitot
       biotot%rlaitot = croptot%rlaitot + restot%rlaitot
+      biotot%rlailive = croptot%rlailive + restot%rlailive
 
-      if( associated(plant) ) then
-          ! compute "effective biomass (live and dead) drag coefficient from SAI and LAI values
-          biotot%rcdtot = biodrag( restot%rlaitot, restot%rsaitot, croptot%rlaitot,&
-                  croptot%rsaitot, plant%geometry%rg, plant%geometry%xrow, croptot%zht_ave, &
-                  soil%aszrgh )
-      else
-          ! no plant material
-          biotot%rcdtot = 0.0
-      end if
       ! sum the stem area index and leaf area index values by height
       ! this is based upon the "tallest" biomass pool height value (abzmht) determined previously.
 
@@ -550,6 +628,9 @@ module update_mod
           biotot%rsaz(jdx) = croptot%rsaz(jdx) + restot%rsaz(jdx)
           biotot%rlaz(jdx) = croptot%rlaz(jdx) + restot%rlaz(jdx)
       end do
+
+      ! total biodrag is sum of crop and residue drag
+      biotot%rcdtot = croptot%rcdtot + restot%rcdtot
 
       ! Combine residue cover from crop and decomp. pools.
       ! Overlap only applies when adding flat and flat, not flat and standing, or standing and standing.

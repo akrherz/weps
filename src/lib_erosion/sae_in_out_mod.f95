@@ -37,7 +37,8 @@ module sae_in_out_mod
       use grid_mod, only: amxsim, amasim, xgdpt, ygdpt
       use subregions_mod
       use barriers_mod, only: barrier
-      use erosion_data_struct_defs, only: subregionsurfacestate, awzypt, awdair, anemht, awzzo, wzoflg, awadir, subday, ntstep
+      use erosion_data_struct_defs, only: subregionsurfacestate, awzypt, awdair, anemht, awzzo, wzoflg, &
+                                          awadir, subday, ntstep, biodrag_input_pointer
       use sweep_io_xml_defs
       use read_write_xml_mod, only: w_begin_tag, w_end_tag, w_whole_tag
 
@@ -50,6 +51,7 @@ module sae_in_out_mod
       integer b, nbr, nacctr, nsubr
       integer day, mon, yr
       integer :: dealloc_stat
+      type(biodrag_input_pointer), pointer :: thisBrcdInput
 
 !     + + + LOCAL VARIABLE DEFINITIONS + + +
 !     sr - index used in subregion loop
@@ -62,13 +64,8 @@ module sae_in_out_mod
         call caldat (mksaeinp%jday,day,mon,yr)
         write(*,'(4(a,i0))') 'Made SWEEP input file D/M/Y: ', day,'/', mon,'/', yr,' simulation day: ', mksaeinp%simday
         ! XML header
-        write(luo_saeinp,*) '<?xml version="1.0" encoding="ISO-8859-1"?><!DOCTYPE sweepData SYSTEM "sweep.dtd">'
-        call w_begin_tag( luo_saeinp, 'WEPS_date' )
-        call w_whole_tag( luo_saeinp, 'WEPS_day', day )
-        call w_whole_tag( luo_saeinp, 'WEPS_month', mon )
-        call w_whole_tag( luo_saeinp, 'WEPS_year', yr )
-        call w_whole_tag( luo_saeinp, 'WEPS_SimulationDay', mksaeinp%simday )
-        call w_end_tag( luo_saeinp, 'WEPS_date' )
+        write(luo_saeinp,"(a)") '<?xml version="1.0" encoding="ISO-8859-1"?>'
+        write(luo_saeinp,"(a)") '<!DOCTYPE sweepData SYSTEM "sweep.dtd">'
       else
         write(luo_saeinp,*) '      REPORT OF INPUTS (read by erodin.for) '
       end if
@@ -76,6 +73,12 @@ module sae_in_out_mod
       call init_input_xml()
 
       call w_begin_tag( luo_saeinp, input_tag(sweepData)%name )
+        call w_begin_tag( luo_saeinp, 'WEPS_date' )
+          call w_whole_tag( luo_saeinp, 'WEPS_day', day )
+          call w_whole_tag( luo_saeinp, 'WEPS_month', mon )
+          call w_whole_tag( luo_saeinp, 'WEPS_year', yr )
+          call w_whole_tag( luo_saeinp, 'WEPS_SimulationDay', mksaeinp%simday )
+        call w_end_tag( luo_saeinp, 'WEPS_date' )
         call w_whole_tag( luo_saeinp, input_tag(GUI_lat)%name, amalat )
         call w_whole_tag( luo_saeinp, input_tag(GUI_lon)%name, amalon )
         call w_whole_tag( luo_saeinp, input_tag(SCI_XOrigin)%name, amxsim(1)%x )
@@ -152,6 +155,21 @@ module sae_in_out_mod
             call w_whole_tag( luo_saeinp, input_tag(SCI_RidgeOrientation)%name, subrsurf(sr)%asargo )
             call w_whole_tag( luo_saeinp, input_tag(SCI_DikeSpacing)%name, subrsurf(sr)%asxdks )
             call w_whole_tag( luo_saeinp, input_tag(SCI_SnowDepth)%name, subrsurf(sr)%ahzsnd )
+
+            ! brcd Inputs (biomass by pool)
+            thisBrcdInput => subrsurf(sr)%brcdInput
+            do while( associated(thisBrcdInput) )
+              call w_begin_tag( luo_saeinp, input_tag(SCI_brcdInput)%name )
+                call w_whole_tag( luo_saeinp, input_tag(SCI_brcdRlai)%name, thisBrcdInput%rlai )
+                call w_whole_tag( luo_saeinp, input_tag(SCI_brcdRsai)%name, thisBrcdInput%rsai )
+                call w_whole_tag( luo_saeinp, input_tag(SCI_brcdRg)%name, thisBrcdInput%rg )
+                call w_whole_tag( luo_saeinp, input_tag(SCI_brcdXrow)%name, thisBrcdInput%xrow )
+                call w_whole_tag( luo_saeinp, input_tag(SCI_brcdZht)%name, thisBrcdInput%zht )
+              call w_end_tag( luo_saeinp, input_tag(SCI_brcdInput)%name )
+              ! set to next pool
+              thisBrcdInput => thisBrcdInput%olderBrcdInput
+            end do
+
             ! soil
             call w_begin_tag( luo_saeinp, input_tag(SCI_SoilLays)%name, &
                                           input_tag(SCI_number)%name, subrsurf(sr)%nslay)
@@ -543,7 +561,7 @@ module sae_in_out_mod
 
       if( in_weps ) then
          call caldat (mksaeout%jday,day,mon,yr)
-         write(*,'(4(a,i0))') 'Made Daily Erosion summary file for: ', day,'/', mon,'/', yr,' simulation day: ', mksaeout%simday
+         write(*,'(4(a,i0))') 'Wrote to Daily Erosion summary file: ', day,'/', mon,'/', yr,' simulation day: ', mksaeout%simday
          write (UNIT=o_E_unit,FMT="(5(f12.6),' ')",ADVANCE="NO") -aegt, -(aegt-aegtss), -aegtss, -aegt10, -aegt2_5
          write (UNIT=o_E_unit,FMT="('# WEPS erosion day mon yr',2(1x,i2),2x,i4)",ADVANCE="NO") day, mon, yr
          write (UNIT=o_E_unit,FMT="(A)",ADVANCE="YES") ' (loss values are positive - deposition values are negative)'
