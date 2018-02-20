@@ -30,7 +30,7 @@ module hydro_main_mod
                          daysim, bsfald, bsfalw, bszlyt, &
                          bwudav, bhzwid, &
                          bhzeasurf, &
-                         plant, restot, h1et, h1bal, wp)
+                         plant, h1et, h1bal, wp)
 
       ! This subroutine is the main (supervisory) program for the
       ! HYDROLOGY submodel.  The subroutine controls the calling of the
@@ -90,7 +90,6 @@ module hydro_main_mod
       real bwudav, bhzwid
       real bhzeasurf
       type(plant_pointer), pointer :: plant  ! pointer to youngest plant data, which chains to older plant data
-      type(biototal), intent(in) :: restot   ! structure containing summary residue pool amounts
       type(hydro_derived_et), intent(inout) :: h1et
       type(hydro_balance), intent(inout) :: h1bal
       type(wepp_param), intent(inout) :: wp
@@ -196,7 +195,6 @@ module hydro_main_mod
       !  integer theta_check
       real rise, daylength
       real rn, g_soil
-      real plant_lai
       integer numeq
       real lswc, lsno
       real dprecip, dirrig
@@ -596,6 +594,26 @@ module hydro_main_mod
       ! following darcy, check total et against reduced soil surface ET
       !  h1et%zptp = min(h1et%zptp, h1et%zetp - h1et%zea)
 
+      ! find maximum depth for transpiring plants
+      ! point to youngest plant
+      thisPlant => plant
+      ! zero actual for finding max over plants
+      cropdp_max = 0.0
+      ! interate over all transpiring plants
+      do while ( associated(thisPlant) )
+        if( (thisPlant%growth%fliveleaf .gt. 0.0) .and. thisPlant%growth%am0cgf) then
+          ! check command line transpiration depth flag, set plant depth accordingly
+          if( transpiration_depth .eq. 0 ) then
+            cropdp = thisPlant%geometry%zrtd * mtomm
+          else
+            cropdp = thisPlant%deriv%ztranspdepth * mtomm
+          end if
+          cropdp_max = max(cropdp_max, cropdp)
+        end if
+        ! point to next older plant
+        thisPlant => thisPlant%olderPlant
+      end do
+
       ! Calculate actual plant transpiration using subroutine transp,
       ! remove water from the soil and determine the water stress factor.
       ! NOTE: this gives priority to the youngest plant for soil water.
@@ -613,40 +631,22 @@ module hydro_main_mod
 
         ! point to youngest plant
         thisPlant => plant
-
         ! zero actual for summing over plants
         h1et%zpta = 0.0
-        cropdp_max = 0.0
-
         ! interate over all transpiring plants
         do while ( associated(thisPlant) )
-
           if( (thisPlant%growth%fliveleaf .gt. 0.0) .and. thisPlant%growth%am0cgf) then
-
-            ! check command line transpiration depth flag, set plant depth accordingly
-            if( transpiration_depth .eq. 0 ) then
-              cropdp = thisPlant%geometry%zrtd * mtomm
-            else
-              cropdp = thisPlant%deriv%ztranspdepth * mtomm
-            end if
-            cropdp_max = max(cropdp_max, cropdp)
-
             ! partition potential transpiration based on proportion of living leaf area in canopy leaf area
             thisPlant%growth%ptp = h1et%zptp * ((thisPlant%growth%fliveleaf * thisPlant%deriv%rlai) / bbrlailive)
-
             call transp (layrsn, 1, bszlyd, bszlyt, cropdp, &
                        theta, thetas, thetaf, thetaw, &
                        theta80rh, thetar, airentry, lambda, &
                        bhrsk, bhtsav, thisPlant%growth%ptp, thisPlant%growth%pta, thisPlant%growth%fwsf)
-
             ! sum actual transpiration
             h1et%zpta = h1et%zpta + thisPlant%growth%pta
-
           end if
-
           ! point to next older plant
           thisPlant => thisPlant%olderPlant
-
         end do
 
       else
@@ -728,14 +728,13 @@ module hydro_main_mod
               plant_wat_t(0.0,cropdp_max,theta(1),thetaw,bszlyd,layrsn),&
               plant_wat_t(0.0,cropdp_max,thetaf,thetaw,bszlyd,layrsn)
 
+        ! find weighted average of plant water stress factor
         ! zero out weighted average and counter
         fwsf_wavg = 0.0
         nplant = 0
         fwsf_sumw = 0.0
-
         ! point to youngest plant
         thisPlant => plant
-
         ! interate over all transpiring plants
         do while ( associated(thisPlant) )
 
@@ -749,6 +748,7 @@ module hydro_main_mod
             else
               cropdp = thisPlant%deriv%ztranspdepth * mtomm
             end if
+
             ! weight for this plant
             fwsf_weight = cropdp/cropdp_max
             ! accumulate weighted sums

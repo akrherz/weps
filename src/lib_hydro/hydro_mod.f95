@@ -74,7 +74,7 @@ module hydro_mod
                  soil%asfald, soil%asfalw, soil%aszlyt, &
                  awudav, ahzwid(isr), &
                  ahzeasurf(isr), &
-                 plant, restot, h1et, h1bal, wp )
+                 plant, h1et, h1bal, wp )
 
       if (am0hdb(isr) .eq. 1) then
          call hdbug(isr, soil, croptot, restot, h1et)

@@ -13,11 +13,9 @@ module report_harvest_mod
   contains
 
     subroutine report_harvest( sr, bmrotation, mass_rem, mass_left, &
-                               harv_unit_flg, harv_report_flg, &
-                               mandate, plant )
+                               harv_unit_flg, harv_report_flg, plant )
 
       use weps_main_mod, only: init_loop, calib_loop
-      use mandate_mod, only: opercrop_date
       use file_io_mod, only: luoharvest_si, luoharvest_en
       use p1unconv_mod, only: KG_per_M2_to_LBS_per_ACRE
       use biomaterial, only: plant_pointer
@@ -28,7 +26,6 @@ module report_harvest_mod
       real mass_rem, mass_left
       integer harv_unit_flg
       integer harv_report_flg
-      type(opercrop_date), dimension(:), intent(inout) :: mandate
       type(plant_pointer), pointer :: plant     ! pointer to youngest plant data, which chains to older plant data
 
       ! + + + ARGUMENT DEFINITIONS + + +
@@ -117,34 +114,6 @@ module report_harvest_mod
                 'lb/ac', &
                 thisPlant%database%ywct, 'percent water'
             end if
-
-            ! Update the mandate structure so that 'harvest' operations
-            ! will list the 'crop name' harvested on that date
-            ! If only one cycle is run, without an initialization cylce
-            ! then any harvest done in the first year of a crop planted in the last
-            ! year will not get tagged with the crop to be harvested.
-            ! This scenario shouldn't occur in most situations since an init cycle
-            ! is standard.  The 1st harvest in that scenario doesn't actual "harvest"
-            ! a crop anyway.  Thus, we do 2 cycles just in case we missed it on the
-            ! 1st cycle when no init cycles are run.
-
-            IF (bmrotation .LE. 2) THEN   ! Need 2 cycles to get all crops
-              match = .false.
-              DO i = 1, size(mandate)
-                IF ((mandate(i)%d == lastoper(sr)%day) .and. &
-                    (mandate(i)%m == lastoper(sr)%mon) .and. &
-                    (mandate(i)%y == lastoper(sr)%yr)) THEN
-
-                  IF(trim(mandate(i)%opname)==trim(lastoper(sr)%name)) THEN
-                       mandate(i)%cropname = trim(adjustl(thisPlant%bname))
-                       match = .true.
-                  END IF
-                END IF
-                IF (match) THEN
-                 EXIT  ! leave do loop
-                END IF
-              END DO
-            END IF
 
             ! updated every call to get newline in right place
             cprevrotation(sr) = bmrotation

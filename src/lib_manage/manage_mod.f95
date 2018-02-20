@@ -1351,8 +1351,7 @@ module manage_mod
             call report_calib_harvest( sr, manFile%mcount, mass_rem, mass_left, plant )
             manFile%harv_calib_not_selected = .false.
           end if
-          call report_harvest( sr, manFile%mcount, mass_rem, mass_left, 0,1,&
-                 mandate, plant)
+          call report_harvest( sr, manFile%mcount, mass_rem, mass_left, 0, 1, plant)
           if( manFile%rpt_season_flg ) then
               ! not reported by the kill process in this
               call report_hydrobal( sr, manFile%mcount, manFile%mperod )
@@ -1397,8 +1396,7 @@ module manage_mod
             call report_calib_harvest( sr, manFile%mcount, mass_rem, mass_left, plant )
             manFile%harv_calib_not_selected = .false.
           end if
-          call report_harvest( sr, manFile%mcount, mass_rem, mass_left, 0,1,&
-                 mandate, plant)
+          call report_harvest( sr, manFile%mcount, mass_rem, mass_left, 0, 1, plant)
           if( manFile%rpt_season_flg ) then
               ! not reported by the kill process in this
               call report_hydrobal( sr, manFile%mcount, manFile%mperod )
@@ -1472,8 +1470,7 @@ module manage_mod
             call report_calib_harvest( sr, manFile%mcount, mass_rem, mass_left, plant )
             manFile%harv_calib_not_selected = .false.
           end if
-          call report_harvest( sr, manFile%mcount, mass_rem, mass_left, 0,1,&
-                 mandate, plant)
+          call report_harvest( sr, manFile%mcount, mass_rem, mass_left, 0,1, plant)
           if( manFile%rpt_season_flg ) then
               ! not reported by the kill process in this
               call report_hydrobal( sr, manFile%mcount, manFile%mperod )
@@ -1514,8 +1511,7 @@ module manage_mod
         if( (pyieldf+pstalkf+rstandf.gt.0.0) .and. (crop_present.gt.0) ) then
             call get_calib_crops(sr, plant)
             call get_calib_yield(sr, manFile%mcount, mass_rem, mass_left, plant)
-            call report_harvest( sr, manFile%mcount, mass_rem, mass_left, 0,&
-                 1, mandate, plant)
+            call report_harvest( sr, manFile%mcount, mass_rem, mass_left, 0, 1, plant)
             call report_calib_harvest( sr, manFile%mcount, mass_rem, mass_left, plant )
             if( manFile%rpt_season_flg ) then
               ! not reported by the kill process in this
@@ -1583,8 +1579,7 @@ module manage_mod
             manFile%harv_calib_not_selected = .false.
           end if
           call report_harvest( sr, manFile%mcount, mass_rem, mass_left, &
-                               harv_unit_flg, harv_report_flg, &
-                               mandate, plant )
+                               harv_unit_flg, harv_report_flg, plant )
           if( manFile%rpt_season_flg ) then
               ! not reported by the kill process in this
               call report_hydrobal( sr, manFile%mcount, manFile%mperod )
@@ -1634,8 +1629,7 @@ module manage_mod
             manFile%harv_calib_not_selected = .false.
           end if
           call report_harvest( sr, manFile%mcount, mass_rem, mass_left, &
-                               harv_unit_flg, harv_report_flg, &
-                               mandate, plant )
+                               harv_unit_flg, harv_report_flg, plant )
           if( manFile%rpt_season_flg ) then
               ! not reported by the kill process in this
               call report_hydrobal( sr, manFile%mcount, manFile%mperod )
@@ -1685,8 +1679,7 @@ module manage_mod
             manFile%harv_calib_not_selected = .false.
           end if
           call report_harvest( sr, manFile%mcount, mass_rem, mass_left, &
-                               harv_unit_flg, harv_report_flg, &
-                               mandate, plant )
+                               harv_unit_flg, harv_report_flg, plant )
           if( manFile%rpt_season_flg ) then
               ! not reported by the kill process in this
               call report_hydrobal( sr, manFile%mcount, manFile%mperod )
@@ -1736,8 +1729,7 @@ module manage_mod
             manFile%harv_calib_not_selected = .false.
           end if
           call report_harvest( sr, manFile%mcount, mass_rem, mass_left, &
-                               harv_unit_flg, harv_report_flg, &
-                               mandate, plant )
+                               harv_unit_flg, harv_report_flg, plant )
           if( manFile%rpt_season_flg ) then
               ! not reported by the kill process in this
               call report_hydrobal( sr, manFile%mcount, manFile%mperod )
@@ -2053,8 +2045,7 @@ module manage_mod
             call report_calib_harvest( sr, manFile%mcount, mass_rem, mass_left, plant )
             manFile%harv_calib_not_selected = .false.
           end if
-            call report_harvest( sr, manFile%mcount, mass_rem, mass_left, 0,&
-                 1, mandate, plant)
+            call report_harvest( sr, manFile%mcount, mass_rem, mass_left, 0, 1, plant)
           if( manFile%rpt_season_flg ) then
               ! not reported by the kill process in this
               call report_hydrobal( sr, manFile%mcount, manFile%mperod )
@@ -2111,8 +2102,7 @@ module manage_mod
           end if
           ! removed mass appears in crop report
           call report_harvest( sr, manFile%mcount, mass_rem, mass_left, &
-                               harv_unit_flg, harv_report_flg, &
-                               mandate, plant )
+                               harv_unit_flg, harv_report_flg, plant )
           if( manFile%rpt_season_flg ) then
             ! not reported by the kill process in this
             call report_hydrobal( sr, manFile%mcount, manFile%mperod )

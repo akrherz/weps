@@ -56,8 +56,8 @@
       if (stircum(isr)%header_not_printed) then
           ! write header to stir_energy.out file
           write(luostir(isr), '(5A)') '#dd/mm/yyyy | operation name',   &
-     &       ' | crop name (optional) | fuel | stir',                   &
-     &       ' | energy (L diesel/ha)',                                 &
+     &       ' | crop name (optional) | fuel display name (optional)',  &
+     &       ' | stir | energy (L diesel/ha) (soil texture adjusted)',  &
      &       ' | crop sequence number',                                 &
      &       ' | 1 if last harvest/termination of crop'
           ! write number of years in management rotation
