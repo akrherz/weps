@@ -21,8 +21,7 @@ module erosion_mod
       use file_io_mod, only: fopenk, makenamnum, luo_erod, luo_egrd, luo_emit, luo_sgrd
       use erosion_data_struct_defs, only: subregionsurfacestate, cellsurfacestate, threshold, &
                                           ntstep, erod_interval, anemht, awzzo, &
-                                          wzoflg, awadir, awudmx, subday, am0efl, &
-                                          biodrag_input_pointer
+                                          wzoflg, awadir, awudmx, subday, am0efl
       use sae_in_out_mod, only: mksaeinp, mksaeout, saeinp, daily_erodout, sb1out, sb2out, sbemit
       use p1unconv_mod, only: SEC_PER_DAY, degtorad
       use timer_mod, only: timer, TIMEROS, TIMSBEROD, TIMSBWIND, TIMSTART, TIMSTOP
@@ -49,6 +48,7 @@ module erosion_mod
       integer :: i,j      ! index
       integer :: wustfl   ! flag to update threshold friction velocity
       integer :: icsr     ! index of current subregion (now only one)
+      integer :: ipool    ! index of brcdInput pool
 !      integer :: nhill    ! number of hills
       integer :: n        ! number of ??
       integer :: hidx     ! hour index (for referencing surface water content)
@@ -85,7 +85,6 @@ module erosion_mod
       real :: wucwts     ! surface wetness addition to bare soil threshold friction velocity
       real :: wucdts     ! aggregate density addition to bare soil threshold friction velocity
       real :: sfcv       ! soil fraction clod & crust cover
-      type(biodrag_input_pointer), pointer :: thisBrcdInput
 
 !     +++ END SPECIFICATIONS +++
 
@@ -154,13 +153,11 @@ module erosion_mod
 
           ! accumulate biodrag components
           brcd = 0.0
-          thisBrcdInput => subrsurf(icsr)%brcdInput
-          do while( associated(thisBrcdInput) )
+          do ipool = 1, subrsurf(icsr)%npools
             ! calculate "effective" biomass drag coefficient
-            brcd = brcd + biodrag( 0.0, 0.0, thisBrcdInput%rlai, thisBrcdInput%rsai, &
-                                   thisBrcdInput%rg, thisBrcdInput%xrow, thisBrcdInput%zht, subrsurf(icsr)%aszrgh )
-            ! set to next pool
-            thisBrcdInput => thisBrcdInput%olderBrcdInput
+            brcd = brcd + biodrag( 0.0, 0.0, subrsurf(icsr)%brcdInput(ipool)%rlai, subrsurf(icsr)%brcdInput(ipool)%rsai, &
+                                   subrsurf(icsr)%brcdInput(ipool)%rg, subrsurf(icsr)%brcdInput(ipool)%xrow, &
+                                   subrsurf(icsr)%brcdInput(ipool)%zht, subrsurf(icsr)%aszrgh )
           end do
 
           ! Compute Zo (wzzo) of surface

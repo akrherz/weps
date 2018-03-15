@@ -426,6 +426,9 @@ module stir_report_mod
           if (stircum(isr)%phop(idx)%last_harv .ne. 1) then
             ! search backward for "last Harvest" or termination
             jdx = idx - 1
+            if ( jdx .lt. 1 ) then
+              jdx = stircum(isr)%phopcnt
+            end if
             do while (stircum(isr)%phop(jdx)%last_harv .ne. 1)
               if( stircum(isr)%phop(jdx)%phop_type .eq. 1 ) then
                 exit

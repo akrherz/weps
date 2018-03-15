@@ -61,19 +61,25 @@ module mproc_cut_mod
 
       ! find maximum height of biomass in all plants
       max_zht = 0.0
-      ! Only check most recent plant for height (including all residue)
+      ! check all plants for height (including all residue)
       thisPlant => plant
-      if( associated(thisPlant) ) then
+      do while( associated(thisPlant) )
         ! living height
         max_zht = max(max_zht, thisPlant%geometry%zht)
+        ! check all residue pools for this plant
+        thisResidue => thisPlant%residue
         do while( associated(thisResidue) )
           ! residue height
           max_zht = max(max_zht, thisResidue%zht)
           ! go to next older residue in thisPlant
           thisResidue => thisResidue%olderResidue
         end do
-      else
-        ! no plants, so do not try to cut anything
+        ! go to next older plant
+        thisPlant => thisPlant%olderPlant
+      end do
+
+      if( max_zht .le. 0.0) then
+        ! nothing to cut
         return
       end if
 

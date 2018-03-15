@@ -38,7 +38,7 @@ module sae_in_out_mod
       use subregions_mod
       use barriers_mod, only: barrier
       use erosion_data_struct_defs, only: subregionsurfacestate, awzypt, awdair, anemht, awzzo, wzoflg, &
-                                          awadir, subday, ntstep, biodrag_input_pointer
+                                          awadir, subday, ntstep
       use sweep_io_xml_defs
       use read_write_xml_mod, only: w_begin_tag, w_end_tag, w_whole_tag
 
@@ -51,7 +51,7 @@ module sae_in_out_mod
       integer b, nbr, nacctr, nsubr
       integer day, mon, yr
       integer :: dealloc_stat
-      type(biodrag_input_pointer), pointer :: thisBrcdInput
+      integer :: ipool   ! index of biomass pool tag being written
 
 !     + + + LOCAL VARIABLE DEFINITIONS + + +
 !     sr - index used in subregion loop
@@ -133,14 +133,10 @@ module sae_in_out_mod
               call w_end_tag( luo_saeinp, input_tag(SCI_coord)%name )
             end do
             call w_end_tag( luo_saeinp, input_tag(SCI_coords)%name )
-            call w_whole_tag( luo_saeinp, input_tag(SCI_ResidueHeight)%name, subrsurf(sr)%adzht_ave )
-            call w_whole_tag( luo_saeinp, input_tag(SCI_CropHeight)%name, subrsurf(sr)%aczht )
-            call w_whole_tag( luo_saeinp, input_tag(SCI_CropSAI)%name, subrsurf(sr)%acrsai )
-            call w_whole_tag( luo_saeinp, input_tag(SCI_CropLAI)%name, subrsurf(sr)%acrlai )
-            call w_whole_tag( luo_saeinp, input_tag(SCI_ResidueSAI)%name, subrsurf(sr)%adrsaitot )
-            call w_whole_tag( luo_saeinp, input_tag(SCI_ResidueLAI)%name, subrsurf(sr)%adrlaitot )
-            call w_whole_tag( luo_saeinp, input_tag(SCI_CropRowSpacing)%name, subrsurf(sr)%acxrow )
-            call w_whole_tag( luo_saeinp, input_tag(SCI_CropSeedPlace)%name, subrsurf(sr)%ac0rg )
+
+            call w_whole_tag( luo_saeinp, input_tag(SCI_BiomassRsai)%name, subrsurf(sr)%abrsai )
+            call w_whole_tag( luo_saeinp, input_tag(SCI_BiomassRlai)%name, subrsurf(sr)%abrlai )
+            call w_whole_tag( luo_saeinp, input_tag(SCI_BiomassHeight)%name, subrsurf(sr)%abzht )
             call w_whole_tag( luo_saeinp, input_tag(SCI_BiomassFlatCover)%name, subrsurf(sr)%abffcv )
             call w_whole_tag( luo_saeinp, input_tag(SCI_CrustCover)%name, subrsurf(sr)%asfcr )
             call w_whole_tag( luo_saeinp, input_tag(SCI_CrustThick)%name, subrsurf(sr)%aszcr )
@@ -157,18 +153,19 @@ module sae_in_out_mod
             call w_whole_tag( luo_saeinp, input_tag(SCI_SnowDepth)%name, subrsurf(sr)%ahzsnd )
 
             ! brcd Inputs (biomass by pool)
-            thisBrcdInput => subrsurf(sr)%brcdInput
-            do while( associated(thisBrcdInput) )
-              call w_begin_tag( luo_saeinp, input_tag(SCI_brcdInput)%name )
-                call w_whole_tag( luo_saeinp, input_tag(SCI_brcdRlai)%name, thisBrcdInput%rlai )
-                call w_whole_tag( luo_saeinp, input_tag(SCI_brcdRsai)%name, thisBrcdInput%rsai )
-                call w_whole_tag( luo_saeinp, input_tag(SCI_brcdRg)%name, thisBrcdInput%rg )
-                call w_whole_tag( luo_saeinp, input_tag(SCI_brcdXrow)%name, thisBrcdInput%xrow )
-                call w_whole_tag( luo_saeinp, input_tag(SCI_brcdZht)%name, thisBrcdInput%zht )
-              call w_end_tag( luo_saeinp, input_tag(SCI_brcdInput)%name )
-              ! set to next pool
-              thisBrcdInput => thisBrcdInput%olderBrcdInput
-            end do
+            call w_begin_tag( luo_saeinp, input_tag(SCI_BrcdInputs)%name, &
+                                          input_tag(SCI_number)%name, subrsurf(sr)%npools)
+              do ipool = 1, subrsurf(sr)%npools
+                call w_begin_tag( luo_saeinp, input_tag(SCI_brcdInput)%name, &
+                                            input_tag(SCI_index)%name, ipool-1)
+                  call w_whole_tag( luo_saeinp, input_tag(SCI_brcdRlai)%name, subrsurf(sr)%brcdInput(ipool)%rlai )
+                  call w_whole_tag( luo_saeinp, input_tag(SCI_brcdRsai)%name, subrsurf(sr)%brcdInput(ipool)%rsai )
+                  call w_whole_tag( luo_saeinp, input_tag(SCI_brcdRg)%name, subrsurf(sr)%brcdInput(ipool)%rg )
+                  call w_whole_tag( luo_saeinp, input_tag(SCI_brcdXrow)%name, subrsurf(sr)%brcdInput(ipool)%xrow )
+                  call w_whole_tag( luo_saeinp, input_tag(SCI_brcdZht)%name, subrsurf(sr)%brcdInput(ipool)%zht )
+                call w_end_tag( luo_saeinp, input_tag(SCI_brcdInput)%name )
+              end do
+            call w_end_tag( luo_saeinp, input_tag(SCI_BrcdInputs)%name )
 
             ! soil
             call w_begin_tag( luo_saeinp, input_tag(SCI_SoilLays)%name, &
@@ -691,8 +688,6 @@ module sae_in_out_mod
 
        write (o_unit,*) "Surface properties"
       write (o_unit,fmt="(a,f8.2,a)") "Ridge spacing parallel to wind direction", subrsurf%sxprg, " (mm)"
-      write (o_unit,fmt="(a,f5.2,a)") "Crop row spacing", subrsurf%acxrow, " (mm)"
-      write (o_unit,fmt="(a,i2,a)") "Crop seeding location relative to ridge", subrsurf%ac0rg, " (0 - furrow, 1 - ridge)"
       write (o_unit,fmt="(a,f5.2,a)") "Composite weighted average biomass height", subrsurf%abzht, " (m)"
       write (o_unit,fmt="(a,f5.2,a)") "Biomass leaf area index", subrsurf%abrlai, " (m^2/m^2)"
       write (o_unit,fmt="(a,f5.2,a)") "Biomass stem area index", subrsurf%abrsai, " (m^2/m^2)"

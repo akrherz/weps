@@ -271,8 +271,7 @@ module sberod_mod
 !     To calculate max ratios of friction velocity to threshold
 !     friction velocity
 
-      use erosion_data_struct_defs, only: subregionsurfacestate, cellsurfacestate, anemht, awzzo, wzoflg, &
-                                          biodrag_input_pointer
+      use erosion_data_struct_defs, only: subregionsurfacestate, cellsurfacestate, anemht, awzzo, wzoflg
       use grid_mod, only: imax, jmax
       use barriers_mod, only: barrier
       use wind_mod, only: biodrag, sbzo, sbwus
@@ -290,10 +289,10 @@ module sberod_mod
 !     +++ LOCAL VARIABLES +++
       integer i,j, k
       integer :: icsr     ! index of current subregion.
+      integer :: ipool    ! index of brcdInput pool
       real wzorg, wzorr, wzzo, wzzov
       real at, rintstep, brcd
       real wubsts, wucsts, wucwts, wucdts, sfcv ! these are placeholders in call to sbwust are are not used anywhere else.
-      type(biodrag_input_pointer), pointer :: thisBrcdInput
 
 !     + + + END SPECIFICATIONS + + +
 
@@ -308,13 +307,11 @@ module sberod_mod
 
           ! accumulate biodrag components
           brcd = 0.0
-          thisBrcdInput => subrsurf(icsr)%brcdInput
-          do while( associated(thisBrcdInput) )
+          do ipool = 1, subrsurf(icsr)%npools
             ! calculate "effective" biomass drag coefficient
-            brcd = brcd + biodrag( 0.0, 0.0, thisBrcdInput%rlai, thisBrcdInput%rsai, &
-                                   thisBrcdInput%rg, thisBrcdInput%xrow, thisBrcdInput%zht, cellstate(i,j)%szrgh )
-            ! set to next pool
-            thisBrcdInput => thisBrcdInput%olderBrcdInput
+            brcd = brcd + biodrag( 0.0, 0.0, subrsurf(icsr)%brcdInput(ipool)%rlai, subrsurf(icsr)%brcdInput(ipool)%rsai, &
+                                   subrsurf(icsr)%brcdInput(ipool)%rg, subrsurf(icsr)%brcdInput(ipool)%xrow, &
+                                   subrsurf(icsr)%brcdInput(ipool)%zht, cellstate(i,j)%szrgh )
           end do
 
           call sbzo( subrsurf(icsr)%sxprg, cellstate(i,j)%szrgh, cellstate(i,j)%slrr, subrsurf(icsr)%abzht, brcd, &

@@ -348,8 +348,6 @@
          restot(isr) = create_biototal(soil_in(isr)%nslay)
          biotot(isr) = create_biototal(soil_in(isr)%nslay)
          decompfac(isr) = create_decomp_factors(soil_in(isr)%nslay)
-         ! no plants yet for biodrag
-         nullify(subrsurf(isr)%brcdInput)
          ! allocate layer and per/day in subregion surface state passed to erosion
          call create_subregionsoillayers(soil_in(isr)%nslay, subrsurf(isr))
          call create_subregionsurfacewet(24, subrsurf(isr))
@@ -748,8 +746,7 @@
               ! transfer data values from submodel structures into erosion input structure
               ! some of these values are shown in plot.out, so do every day
                do isr=1,nsubr   ! do multiple subregion
-                  call erodsubr_update( isr, soil(isr), plants(isr)%plant, restot(isr), croptot(isr), &
-                                        biotot(isr), h1et(isr), subrsurf(isr) )
+                  call erodsubr_update( isr, soil(isr), plants(isr)%plant, biotot(isr), h1et(isr), subrsurf(isr) )
                end do
 
                if (awudmx .gt. 8.0) then ! if wind is great enough, call erosion

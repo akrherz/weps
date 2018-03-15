@@ -76,7 +76,7 @@ module weps_submodel_mod
       return
     end subroutine submodels
 
-    subroutine erodsubr_update( sr, soil, plant, restot, croptot, biotot, h1et, subrsurf )
+    subroutine erodsubr_update( sr, soil, plant, biotot, h1et, subrsurf )
 
       ! assign all input data for stand alone erosion to subrsurf structure
 
@@ -84,15 +84,13 @@ module weps_submodel_mod
       use soil_data_struct_defs, only: soil_def
       use biomaterial, only: plant_pointer, residue_pointer, biototal
       use hydro_data_struct_defs, only: hydro_derived_et
-      use erosion_data_struct_defs, only: subregionsurfacestate, brcdInputAdd, brcdInputDestroy
+      use erosion_data_struct_defs, only: subregionsurfacestate, create_brcdinputpools, destroy_brcdinputpools
       use sberod_mod, only: sbsfdall
 
       !     +++ ARGUMENT DECLARATIONS +++
       integer sr                               ! subregion index (eventually obsolete)
       type(soil_def), intent(in) :: soil  ! soil for this subregion
       type(plant_pointer), pointer :: plant     ! pointer to youngest plant data, which chains to older plant data
-      type(biototal), intent(in) :: restot
-      type(biototal), intent(in) :: croptot
       type(biototal), intent(in) :: biotot
       type(hydro_derived_et), intent(in) :: h1et
       type(subregionsurfacestate), intent(inout) :: subrsurf  ! subregion surface conditions (erosion specific set)
@@ -103,42 +101,72 @@ module weps_submodel_mod
 
       !     +++ LOCAL VARIABLES +++
       integer :: idx  ! loop index
+      integer :: npools ! number of brcdInput pools
       type(plant_pointer), pointer :: thisPlant       ! pointer used to interate plant pointer chain
       type(residue_pointer), pointer :: thisResidue   ! pointer used to interate residue pointer chain
 
       !     +++ END SPECIFICATIONS +++
 
       ! clear out brcdInput values
-      do while( associated( subrsurf%brcdInput ) )
-        call brcdInputDestroy(subrsurf%brcdInput)
+      if( allocated( subrsurf%brcdInput ) ) then
+        call destroy_brcdinputpools(subrsurf)
+      end if
+
+      ! count number of pools
+      npools = 0      
+      ! point to youngest plant
+      thisPlant => plant
+      do while ( associated(thisPlant) )
+        if( (thisPlant%geometry%zht .gt. 0.0 ) .and. ((thisPlant%deriv%rlai .gt. 0.0) .or. (thisPlant%deriv%rsai .gt. 0.0)) ) then
+          ! this has biodrag, add to subrsurf
+          npools = npools + 1
+        end if
+        ! point to residue in thisPlant
+        thisResidue => thisPlant%residue
+        do while (associated(thisResidue))
+          if( (thisResidue%zht .gt. 0.0) .and. ((thisResidue%deriv%rlai .gt. 0.0) .or. (thisResidue%deriv%rsai .gt. 0.0)) ) then
+            ! this has biodrag, add to subrsurf
+            npools = npools + 1
+          end if
+          ! point to next older residue
+          thisResidue => thisResidue%olderResidue
+        end do
+        ! point to next older plant
+        thisPlant => thisPlant%olderPlant
       end do
+
+      ! allocate array for pools
+      subrsurf%npools = npools
+      call create_brcdinputpools(npools, subrsurf)
+
       ! insert new values
+      npools = 0
       ! point to youngest plant
       thisPlant => plant
       do while ( associated(thisPlant) )
 
-        if( (thisPlant%deriv%rlai .gt. 0.0) .or. (thisPlant%deriv%rsai .gt. 0.0) ) then
+        if( (thisPlant%geometry%zht .gt. 0.0 ) .and. ((thisPlant%deriv%rlai .gt. 0.0) .or. (thisPlant%deriv%rsai .gt. 0.0)) ) then
           ! this has biodrag, add to subrsurf
-          subrsurf%brcdInput => brcdInputAdd( subrsurf%brcdInput )
-          subrsurf%brcdInput%rlai = thisPlant%deriv%rlai
-          subrsurf%brcdInput%rsai = thisPlant%deriv%rsai
-          subrsurf%brcdInput%rg = thisPlant%geometry%rg
-          subrsurf%brcdInput%xrow = thisPlant%geometry%xrow
-          subrsurf%brcdInput%zht = thisPlant%geometry%zht
+          npools = npools + 1
+          subrsurf%brcdInput(npools)%rlai = thisPlant%deriv%rlai
+          subrsurf%brcdInput(npools)%rsai = thisPlant%deriv%rsai
+          subrsurf%brcdInput(npools)%rg = thisPlant%geometry%rg
+          subrsurf%brcdInput(npools)%xrow = thisPlant%geometry%xrow
+          subrsurf%brcdInput(npools)%zht = thisPlant%geometry%zht
         end if
 
         ! point to residue in thisPlant
         thisResidue => thisPlant%residue
         do while (associated(thisResidue))
 
-          if( (thisResidue%deriv%rlai .gt. 0.0) .or. (thisResidue%deriv%rsai .gt. 0.0) ) then
+          if( (thisResidue%zht .gt. 0.0) .and. ((thisResidue%deriv%rlai .gt. 0.0) .or. (thisResidue%deriv%rsai .gt. 0.0)) ) then
             ! this has biodrag, add to subrsurf
-            subrsurf%brcdInput => brcdInputAdd( subrsurf%brcdInput )
-            subrsurf%brcdInput%rlai = thisResidue%deriv%rlai
-            subrsurf%brcdInput%rsai = thisResidue%deriv%rsai
-            subrsurf%brcdInput%rg = thisPlant%geometry%rg
-            subrsurf%brcdInput%xrow = thisPlant%geometry%xrow
-            subrsurf%brcdInput%zht = thisResidue%zht
+            npools = npools + 1
+            subrsurf%brcdInput(npools)%rlai = thisResidue%deriv%rlai
+            subrsurf%brcdInput(npools)%rsai = thisResidue%deriv%rsai
+            subrsurf%brcdInput(npools)%rg = thisPlant%geometry%rg
+            subrsurf%brcdInput(npools)%xrow = thisPlant%geometry%xrow
+            subrsurf%brcdInput(npools)%zht = thisResidue%zht
           end if
 
           ! point to next older residue
@@ -149,20 +177,7 @@ module weps_submodel_mod
         thisPlant => thisPlant%olderPlant
       end do
 
-      subrsurf%adzht_ave = restot%zht_ave
-      subrsurf%aczht = croptot%zht_ave
-
-      subrsurf%acrsai = croptot%rsaitot
-      subrsurf%acrlai = croptot%rlaitot
-
-      subrsurf%adrsaitot = restot%rsaitot
-      subrsurf%adrlaitot = restot%rlaitot
-
-      subrsurf%acxrow = plant%geometry%xrow
-      subrsurf%ac0rg = plant%geometry%rg
-
       subrsurf%abffcv = biotot%ffcvtot
-
       subrsurf%asfcr = soil%asfcr
       subrsurf%aszcr = soil%aszcr
       subrsurf%asflos = soil%asflos

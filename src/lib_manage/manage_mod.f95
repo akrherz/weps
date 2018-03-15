@@ -663,7 +663,6 @@ module manage_mod
       integer crop_present
       real    noparam1, noparam2, noparam3
       real    rate_mult_vt(mnrbc), thresh_mult_vt(mnrbc)
-      real    dummy1(soil%nslay), dummy2(soil%nslay)
       ! temporary crop parameter values for process 66 only
       real    manure_buried_fraction, manure_total_mass
       real :: compact_load  ! 
@@ -700,7 +699,8 @@ module manage_mod
                            ! 1 - kills annual crop, but not perennial
                            ! 2 - kills annual and perennial crop
                            ! 3 - leaves killed and dropped to ground (defoliation)
-      type(plant_pointer), pointer :: thisPlant
+      type(plant_pointer), pointer :: thisPlant  ! pointer for interating through plant list
+      type(plant_pointer), pointer :: harvPlant  ! pointer to the most recent harvestable plant
 
 !     + + + LOCAL VARIABLE DEFINITIONS + + +
 
@@ -780,8 +780,6 @@ module manage_mod
 !     noparam1-6   - variaable to allow reading in six non-used crop parameters in single read statement
 !     rate_mult_vt - array of multipliers for modifying standing stem fall rate
 !     thresh_mult_vt - array of multipliers for modifying standing stem fall threshold
-!     dummy1(soil%nslay), dummy2(soil%nslay) - place holder variables (set to zero)
-!                                  for call to poolmass
 
 !     manure_total_mass - total mass of manure added to field (dry weight)
 !     manure_buried_fraction - fraction of total manure applied that is buried
@@ -806,8 +804,6 @@ module manage_mod
 !     + + + DATA INITIALIZATIONS + + +
       noparam1 = 0.0
       noparam2 = 0.0
-      dummy1 = 0.0  ! array, assigns all values
-      dummy2 = 0.0  ! array, assigns all values
       sr = manFile%isub
 
 !     + + + OUTPUT FORMATS + + +
@@ -824,11 +820,22 @@ module manage_mod
 
       ! set local flag to indicate whether a crop is growing or not
       ! this is used to eliminate spurious harvest reports from residue removal
-      if( poolmass( soil%nslay, plant ) .gt. 0.0) then
+      ! returns mass if there is a living crop or residue pool which was just killed today
+      ! this logic needs reworked when growing multiple crops, or to allow reporting harvest
+      ! done multiple days after kill.
+      crop_present = 0
+      thisPlant => plant
+      do while( associated(thisPlant) )
+        if( (thisPlant%database%idc .gt. 0) .and. (poolmass( soil%nslay, thisPlant ) .gt. 0.0) ) then
+          ! this is a plant, not some added residue
           crop_present = 1
-      else
-          crop_present = 0
-      end if
+          ! most recent plant, one which is to be harvested
+          harvPlant => thisPlant
+          exit
+        else
+          thisPlant => thisPlant%olderPlant
+        end if
+      end do
 
       prcode = manFile%proc%procType
       prname = trim(manFile%proc%procName)
@@ -1346,17 +1353,17 @@ module manage_mod
         ! no harvest report if nothing removed or no crop present
         if( (pyieldf+pstalkf+rstandf.gt.0.0) .and. (crop_present.gt.0) ) then
           if( manFile%harv_calib_not_selected ) then
-            call get_calib_crops(sr, plant)
-            call get_calib_yield(sr, manFile%mcount, mass_rem, mass_left, plant)
-            call report_calib_harvest( sr, manFile%mcount, mass_rem, mass_left, plant )
+            call get_calib_crops(sr, harvPlant)
+            call get_calib_yield(sr, manFile%mcount, mass_rem, mass_left, harvPlant)
+            call report_calib_harvest( sr, manFile%mcount, mass_rem, mass_left, harvPlant )
             manFile%harv_calib_not_selected = .false.
           end if
-          call report_harvest( sr, manFile%mcount, mass_rem, mass_left, 0, 1, plant)
+          call report_harvest( sr, manFile%mcount, mass_rem, mass_left, 0, 1, harvPlant)
           if( manFile%rpt_season_flg ) then
               ! not reported by the kill process in this
               call report_hydrobal( sr, manFile%mcount, manFile%mperod )
               call plant_endseason( sr, manFile%mcount, manFile%mperod, am0cfl(sr), &
-                                   soil%nslay, mature_warn_flg, plant )
+                                   soil%nslay, mature_warn_flg, harvPlant )
               ! set to stop additional report in this operation
               manFile%rpt_season_flg = .false.
           end if
@@ -1391,17 +1398,17 @@ module manage_mod
         ! no harvest report if nothing removed or no crop present
         if( (pyieldf+pstalkf+rstandf.gt.0.0) .and. (crop_present.gt.0) ) then
           if( manFile%harv_calib_not_selected ) then
-            call get_calib_crops(sr, plant)
-            call get_calib_yield(sr, manFile%mcount, mass_rem, mass_left, plant)
-            call report_calib_harvest( sr, manFile%mcount, mass_rem, mass_left, plant )
+            call get_calib_crops(sr, harvPlant)
+            call get_calib_yield(sr, manFile%mcount, mass_rem, mass_left, harvPlant)
+            call report_calib_harvest( sr, manFile%mcount, mass_rem, mass_left, harvPlant )
             manFile%harv_calib_not_selected = .false.
           end if
-          call report_harvest( sr, manFile%mcount, mass_rem, mass_left, 0, 1, plant)
+          call report_harvest( sr, manFile%mcount, mass_rem, mass_left, 0, 1, harvPlant)
           if( manFile%rpt_season_flg ) then
               ! not reported by the kill process in this
               call report_hydrobal( sr, manFile%mcount, manFile%mperod )
               call plant_endseason( sr, manFile%mcount, manFile%mperod, am0cfl(sr), &
-                                   soil%nslay, mature_warn_flg, plant )
+                                   soil%nslay, mature_warn_flg, harvPlant )
               ! set to stop additional report in this operation
               manFile%rpt_season_flg = .false.
           end if
@@ -1451,7 +1458,7 @@ module manage_mod
 
         ! do process
         thinflg = 1
-        call thin(thinflg, thinval, pyieldf, pstalkf, rstandf, soil%nslay, plant, &
+        call thin(thinflg, thinval, pyieldf, pstalkf, rstandf, soil%nslay, harvPlant, &
              mass_rem, mass_left)
 
         ! post-process stuff
@@ -1465,17 +1472,17 @@ module manage_mod
         ! no harvest report if nothing removed or no crop present
         if( (pyieldf+pstalkf+rstandf.gt.0.0) .and. (crop_present.gt.0) ) then
           if( manFile%harv_calib_not_selected ) then
-            call get_calib_crops(sr, plant)
-            call get_calib_yield(sr, manFile%mcount, mass_rem, mass_left, plant)
-            call report_calib_harvest( sr, manFile%mcount, mass_rem, mass_left, plant )
+            call get_calib_crops(sr, harvPlant)
+            call get_calib_yield(sr, manFile%mcount, mass_rem, mass_left, harvPlant)
+            call report_calib_harvest( sr, manFile%mcount, mass_rem, mass_left, harvPlant )
             manFile%harv_calib_not_selected = .false.
           end if
-          call report_harvest( sr, manFile%mcount, mass_rem, mass_left, 0,1, plant)
+          call report_harvest( sr, manFile%mcount, mass_rem, mass_left, 0,1, harvPlant)
           if( manFile%rpt_season_flg ) then
               ! not reported by the kill process in this
               call report_hydrobal( sr, manFile%mcount, manFile%mperod )
               call plant_endseason( sr, manFile%mcount, manFile%mperod, am0cfl(sr), &
-                                   soil%nslay, mature_warn_flg, plant )
+                                   soil%nslay, mature_warn_flg, harvPlant )
               ! set to stop additional report in this operation
               manFile%rpt_season_flg = .false.
           end if
@@ -1496,7 +1503,7 @@ module manage_mod
 
         ! do process
         thinflg = 0
-        call thin(thinflg, thinval, pyieldf, pstalkf, rstandf, soil%nslay, plant, &
+        call thin(thinflg, thinval, pyieldf, pstalkf, rstandf, soil%nslay, harvPlant, &
              mass_rem, mass_left)
 
         ! post-process stuff
@@ -1509,15 +1516,15 @@ module manage_mod
         mature_warn_flg = 1
         ! no harvest report if nothing removed or no crop present
         if( (pyieldf+pstalkf+rstandf.gt.0.0) .and. (crop_present.gt.0) ) then
-            call get_calib_crops(sr, plant)
-            call get_calib_yield(sr, manFile%mcount, mass_rem, mass_left, plant)
-            call report_harvest( sr, manFile%mcount, mass_rem, mass_left, 0, 1, plant)
-            call report_calib_harvest( sr, manFile%mcount, mass_rem, mass_left, plant )
+            call get_calib_crops(sr, harvPlant)
+            call get_calib_yield(sr, manFile%mcount, mass_rem, mass_left, harvPlant)
+            call report_harvest( sr, manFile%mcount, mass_rem, mass_left, 0, 1, harvPlant)
+            call report_calib_harvest( sr, manFile%mcount, mass_rem, mass_left, harvPlant )
             if( manFile%rpt_season_flg ) then
               ! not reported by the kill process in this
               call report_hydrobal( sr, manFile%mcount, manFile%mperod )
               call plant_endseason( sr, manFile%mcount, manFile%mperod, am0cfl(sr), &
-                                   soil%nslay, mature_warn_flg, plant )
+                                   soil%nslay, mature_warn_flg, harvPlant )
               ! set to stop additional report in this operation
               manFile%rpt_season_flg = .false.
             end if
@@ -1573,18 +1580,18 @@ module manage_mod
         if( (pyieldf+pstalkf+rstandf.gt.0.0) .and. (crop_present.gt.0) ) then
           if(      (harv_calib_flg .gt. 0) &
              .and. (manFile%harv_calib_not_selected) ) then
-            call get_calib_crops(sr, plant)
-            call get_calib_yield(sr, manFile%mcount, mass_rem, mass_left, plant)
-            call report_calib_harvest( sr, manFile%mcount, mass_rem, mass_left, plant )
+            call get_calib_crops(sr, harvPlant)
+            call get_calib_yield(sr, manFile%mcount, mass_rem, mass_left, harvPlant)
+            call report_calib_harvest( sr, manFile%mcount, mass_rem, mass_left, harvPlant )
             manFile%harv_calib_not_selected = .false.
           end if
           call report_harvest( sr, manFile%mcount, mass_rem, mass_left, &
-                               harv_unit_flg, harv_report_flg, plant )
+                               harv_unit_flg, harv_report_flg, harvPlant )
           if( manFile%rpt_season_flg ) then
               ! not reported by the kill process in this
               call report_hydrobal( sr, manFile%mcount, manFile%mperod )
               call plant_endseason( sr, manFile%mcount, manFile%mperod, am0cfl(sr), &
-                                   soil%nslay, mature_warn_flg, plant )
+                                   soil%nslay, mature_warn_flg, harvPlant )
               ! set to stop additional report in this operation
               manFile%rpt_season_flg = .false.
           end if
@@ -1623,18 +1630,18 @@ module manage_mod
         if( (pyieldf+pstalkf+rstandf.gt.0.0) .and. (crop_present.gt.0) ) then
           if(      (harv_calib_flg .gt. 0) &
              .and. (manFile%harv_calib_not_selected) ) then
-            call get_calib_crops(sr, plant)
-            call get_calib_yield(sr, manFile%mcount, mass_rem, mass_left, plant)
-            call report_calib_harvest( sr, manFile%mcount, mass_rem, mass_left, plant )
+            call get_calib_crops(sr, harvPlant)
+            call get_calib_yield(sr, manFile%mcount, mass_rem, mass_left, harvPlant)
+            call report_calib_harvest( sr, manFile%mcount, mass_rem, mass_left, harvPlant )
             manFile%harv_calib_not_selected = .false.
           end if
           call report_harvest( sr, manFile%mcount, mass_rem, mass_left, &
-                               harv_unit_flg, harv_report_flg, plant )
+                               harv_unit_flg, harv_report_flg, harvPlant )
           if( manFile%rpt_season_flg ) then
               ! not reported by the kill process in this
               call report_hydrobal( sr, manFile%mcount, manFile%mperod )
               call plant_endseason( sr, manFile%mcount, manFile%mperod, am0cfl(sr), &
-                                   soil%nslay, mature_warn_flg, plant )
+                                   soil%nslay, mature_warn_flg, harvPlant )
               ! set to stop additional report in this operation
               manFile%rpt_season_flg = .false.
           end if
@@ -1659,7 +1666,7 @@ module manage_mod
 
         ! do process
         thinflg = 1
-        call thin(thinflg, thinval, pyieldf, pstalkf, rstandf, soil%nslay, plant, &
+        call thin(thinflg, thinval, pyieldf, pstalkf, rstandf, soil%nslay, harvPlant, &
              mass_rem, mass_left)
 
         ! post-process stuff
@@ -1673,18 +1680,18 @@ module manage_mod
         if( (pyieldf+pstalkf+rstandf.gt.0.0) .and. (crop_present.gt.0) ) then
           if(      (harv_calib_flg .gt. 0) &
              .and. (manFile%harv_calib_not_selected) ) then
-            call get_calib_crops(sr, plant)
-            call get_calib_yield(sr, manFile%mcount, mass_rem, mass_left, plant)
-            call report_calib_harvest( sr, manFile%mcount, mass_rem, mass_left, plant )
+            call get_calib_crops(sr, harvPlant)
+            call get_calib_yield(sr, manFile%mcount, mass_rem, mass_left, harvPlant)
+            call report_calib_harvest( sr, manFile%mcount, mass_rem, mass_left, harvPlant )
             manFile%harv_calib_not_selected = .false.
           end if
           call report_harvest( sr, manFile%mcount, mass_rem, mass_left, &
-                               harv_unit_flg, harv_report_flg, plant )
+                               harv_unit_flg, harv_report_flg, harvPlant )
           if( manFile%rpt_season_flg ) then
               ! not reported by the kill process in this
               call report_hydrobal( sr, manFile%mcount, manFile%mperod )
               call plant_endseason( sr, manFile%mcount, manFile%mperod, am0cfl(sr), &
-                                   soil%nslay, mature_warn_flg, plant )
+                                   soil%nslay, mature_warn_flg, harvPlant )
               ! set to stop additional report in this operation
               manFile%rpt_season_flg = .false.
           end if
@@ -1709,7 +1716,7 @@ module manage_mod
 
         ! do process
         thinflg = 0
-        call thin(thinflg, thinval, pyieldf, pstalkf, rstandf, soil%nslay, plant, &
+        call thin(thinflg, thinval, pyieldf, pstalkf, rstandf, soil%nslay, harvPlant, &
              mass_rem, mass_left)
 
         ! post-process stuff
@@ -1723,18 +1730,18 @@ module manage_mod
         if( (pyieldf+pstalkf+rstandf.gt.0.0) .and. (crop_present.gt.0) ) then
           if(      (harv_calib_flg .gt. 0) &
              .and. (manFile%harv_calib_not_selected) ) then
-            call get_calib_crops(sr, plant)
-            call get_calib_yield(sr, manFile%mcount, mass_rem, mass_left, plant)
-            call report_calib_harvest( sr, manFile%mcount, mass_rem, mass_left, plant )
+            call get_calib_crops(sr, harvPlant)
+            call get_calib_yield(sr, manFile%mcount, mass_rem, mass_left, harvPlant)
+            call report_calib_harvest( sr, manFile%mcount, mass_rem, mass_left, harvPlant )
             manFile%harv_calib_not_selected = .false.
           end if
           call report_harvest( sr, manFile%mcount, mass_rem, mass_left, &
-                               harv_unit_flg, harv_report_flg, plant )
+                               harv_unit_flg, harv_report_flg, harvPlant )
           if( manFile%rpt_season_flg ) then
               ! not reported by the kill process in this
               call report_hydrobal( sr, manFile%mcount, manFile%mperod )
               call plant_endseason( sr, manFile%mcount, manFile%mperod, am0cfl(sr), &
-                                   soil%nslay, mature_warn_flg, plant )
+                                   soil%nslay, mature_warn_flg, harvPlant )
               ! set to stop additional report in this operation
               manFile%rpt_season_flg = .false.
           end if
@@ -2040,17 +2047,17 @@ module manage_mod
         if( (storef + leaff + stemf + rootstoref + rootfiberf .gt. 0.0) &
             .and. (crop_present.gt.0) ) then
           if( manFile%harv_calib_not_selected ) then
-            call get_calib_crops(sr, plant)
-            call get_calib_yield(sr, manFile%mcount, mass_rem, mass_left, plant)
-            call report_calib_harvest( sr, manFile%mcount, mass_rem, mass_left, plant )
+            call get_calib_crops(sr, harvPlant)
+            call get_calib_yield(sr, manFile%mcount, mass_rem, mass_left, harvPlant)
+            call report_calib_harvest( sr, manFile%mcount, mass_rem, mass_left, harvPlant )
             manFile%harv_calib_not_selected = .false.
           end if
-            call report_harvest( sr, manFile%mcount, mass_rem, mass_left, 0, 1, plant)
+            call report_harvest( sr, manFile%mcount, mass_rem, mass_left, 0, 1, harvPlant)
           if( manFile%rpt_season_flg ) then
               ! not reported by the kill process in this
               call report_hydrobal( sr, manFile%mcount, manFile%mperod )
               call plant_endseason( sr, manFile%mcount, manFile%mperod, am0cfl(sr), &
-                                   soil%nslay, mature_warn_flg, plant )
+                                   soil%nslay, mature_warn_flg, harvPlant )
               ! set to stop additional report in this operation
               manFile%rpt_season_flg = .false.
           end if
@@ -2095,19 +2102,19 @@ module manage_mod
           ! removed mass is used in calibration
           if(      (harv_calib_flg .gt. 0) &
              .and. (manFile%harv_calib_not_selected) ) then
-            call get_calib_crops(sr, plant)
-            call get_calib_yield(sr, manFile%mcount, mass_rem, mass_left, plant)
-            call report_calib_harvest( sr, manFile%mcount, mass_rem, mass_left, plant )
+            call get_calib_crops(sr, harvPlant)
+            call get_calib_yield(sr, manFile%mcount, mass_rem, mass_left, harvPlant)
+            call report_calib_harvest( sr, manFile%mcount, mass_rem, mass_left, harvPlant )
             manFile%harv_calib_not_selected = .false.
           end if
           ! removed mass appears in crop report
           call report_harvest( sr, manFile%mcount, mass_rem, mass_left, &
-                               harv_unit_flg, harv_report_flg, plant )
+                               harv_unit_flg, harv_report_flg, harvPlant )
           if( manFile%rpt_season_flg ) then
             ! not reported by the kill process in this
             call report_hydrobal( sr, manFile%mcount, manFile%mperod )
             call plant_endseason( sr, manFile%mcount, manFile%mperod, am0cfl(sr), &
-                                 soil%nslay, mature_warn_flg, plant )
+                                 soil%nslay, mature_warn_flg, harvPlant )
               ! set to stop additional report in this operation
             manFile%rpt_season_flg = .false.
           end if
@@ -2796,7 +2803,7 @@ module manage_mod
 
     real function poolmass( nslay, plant )
 
-      ! returns the sum of all biomass (living and fresh residue) in the first plant
+      ! returns the sum of all biomass (living and fresh residue) in a single plant
 
       use biomaterial, only: plant_pointer
 
@@ -2828,8 +2835,8 @@ module manage_mod
         if( associated(plant%residue) ) then
           ! residue exists
           if( plant%residue%resday .eq. 0 ) then
-            ! this is new residue, so count it
-            mass = plant%residue%standstem + plant%residue%standleaf + plant%residue%standstore &
+            ! this is residue killed today, so count it
+            mass = mass + plant%residue%standstem + plant%residue%standleaf + plant%residue%standstore &
                  + plant%residue%flatstem + plant%residue%flatleaf + plant%residue%flatstore
             ! add in below ground biomass pools
             do idx = 1, nslay

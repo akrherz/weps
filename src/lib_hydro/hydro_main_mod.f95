@@ -636,6 +636,12 @@ module hydro_main_mod
         ! interate over all transpiring plants
         do while ( associated(thisPlant) )
           if( (thisPlant%growth%fliveleaf .gt. 0.0) .and. thisPlant%growth%am0cgf) then
+            ! check command line transpiration depth flag, set plant depth accordingly
+            if( transpiration_depth .eq. 0 ) then
+              cropdp = thisPlant%geometry%zrtd * mtomm
+            else
+              cropdp = thisPlant%deriv%ztranspdepth * mtomm
+            end if
             ! partition potential transpiration based on proportion of living leaf area in canopy leaf area
             thisPlant%growth%ptp = h1et%zptp * ((thisPlant%growth%fliveleaf * thisPlant%deriv%rlai) / bbrlailive)
             call transp (layrsn, 1, bszlyd, bszlyt, cropdp, &

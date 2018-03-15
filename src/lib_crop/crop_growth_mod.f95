@@ -141,7 +141,7 @@ module crop_growth_mod
 !     bctverndel - thermal delay coefficient pre-vernalization
 !     bc0idc - crop type:annual,perennial,etc
 !     bc0nam - crop name
-!     acxrow - Crop row spacing (m)
+!     bcxrow - Crop row spacing (m)
 !     bczmrt - maximum root depth
 !     bc0sla - specific leaf area (cm^2/g)
 !     bsfsmb     - sum of bases (cmol/kg)

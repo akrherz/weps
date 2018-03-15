@@ -400,10 +400,10 @@
       end if
       if (opnd .eqv. .true.) then
          !write(0,*) 'calling erodin with output unit no: ', o_einp_unit
-         call erodin(input_filepath, i_unit, o_einp_unit, force_debug_flag, hagen_plot_flag, subrsurf) !Echo input to a file
+         call erodin(input_filepath, i_unit, o_einp_unit, force_debug_flag, hagen_plot_flag) !Echo input to a file
       else
          !write(0,*) 'calling erodin with output unit no: ', o_unit
-         call erodin(input_filepath, i_unit, o_unit, force_debug_flag, hagen_plot_flag, subrsurf)  !Doesn't echo input to file
+         call erodin(input_filepath, i_unit, o_unit, force_debug_flag, hagen_plot_flag)  !Doesn't echo input to file
       endif
 
       ! Set based on allocated size of subrsurf (accounting for 0 based index)

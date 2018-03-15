@@ -655,6 +655,7 @@ contains
 
      ! initialize crop type id to 0 indicating no crop type is growing
      plantNew%database%idc = 0
+     plantNew%database%baflg = 0
      plantNew%database%sla = 0.0
      plantNew%geometry%dpop = 0.0
 
@@ -788,7 +789,7 @@ contains
 
        end do
 
-       write(*,*) 'PLANTTOTMASS: ', totmass, plantPntr%deriv%m
+       write(*,*) 'PLANT TOTMASS HT: ', totmass, plantPntr%deriv%m, plantPntr%geometry%zht
 
        thisResidue => plantPntr%residue
        do while( associated(thisResidue) )
@@ -1045,7 +1046,7 @@ contains
 
        end do
 
-       write(*,*) 'RESIDUETOTMASS: ', totmass, residuePntr%deriv%m
+       write(*,*) 'RESID TOTMASS HT: ', totmass, residuePntr%deriv%m, residuePntr%zht
 
      else
        write(*,*) 'No Residue'

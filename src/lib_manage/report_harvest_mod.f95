@@ -13,7 +13,7 @@ module report_harvest_mod
   contains
 
     subroutine report_harvest( sr, bmrotation, mass_rem, mass_left, &
-                               harv_unit_flg, harv_report_flg, plant )
+                               harv_unit_flg, harv_report_flg, thisPlant )
 
       use weps_main_mod, only: init_loop, calib_loop
       use file_io_mod, only: luoharvest_si, luoharvest_en
@@ -26,7 +26,7 @@ module report_harvest_mod
       real mass_rem, mass_left
       integer harv_unit_flg
       integer harv_report_flg
-      type(plant_pointer), pointer :: plant     ! pointer to youngest plant data, which chains to older plant data
+      type(plant_pointer), pointer :: thisPlant     ! pointer to plant for reporting
 
       ! + + + ARGUMENT DEFINITIONS + + +
       ! sr    - subregion number
@@ -44,14 +44,13 @@ module report_harvest_mod
       real tot_mass, harvest_index
       logical match
       integer i
-      type(plant_pointer), pointer :: thisPlant
 
  1000 format(1x,i2,'/',i2,'/',i2,'|',i2,'|',a,'|', &
              f12.3,'|',a,'|',f12.3,'|',a,'|', &
              f6.3,'|',a,'|',f12.3,'|',a,'|',f5.1,'|',a,'|')
  1001 format(a)
 
-      if( init_loop .or. calib_loop ) then  !initilizing or calibrating cycle
+      if( init_loop .or. calib_loop ) then  !initializing or calibrating cycle
 
         ! set to the beginning of simulation
         ! to eliminate newline at beginning of file
@@ -66,73 +65,57 @@ module report_harvest_mod
           harvest_index = mass_rem/tot_mass
         end if
 
-        ! loop to find plant for report
-        thisPlant => plant
-        do while( associated(thisPlant) )
-          ! plant exists
-          if( thisPlant%database%idc .gt. 0 ) then
-            ! this is a plant, not some added residue
+        if( bmrotation .gt. cprevrotation(sr) ) then
+          ! write newline
+          write(unit=luoharvest_si(sr),fmt=1001) ''
+          write(unit=luoharvest_en(sr),fmt=1001) ''
+        end if
 
-            if( bmrotation .gt. cprevrotation(sr) ) then
-              ! write newline
-              write(unit=luoharvest_si(sr),fmt=1001) ''
-              write(unit=luoharvest_en(sr),fmt=1001) ''
-            end if
+        write(unit=luoharvest_si(sr),fmt=1000,advance='NO') &
+          lastoper(sr)%day, lastoper(sr)%mon, lastoper(sr)%yr, &
+          harv_report_flg, trim(thisPlant%bname), &
+          mass_rem, 'kg/m^2', &
+          mass_left, 'kg/m^2', &
+          harvest_index, "Harvest Index", &
+          mass_rem / ( 1.0-thisPlant%database%ywct/100.0 ), &
+          'kg/m^2', &
+          thisPlant%database%ywct, 'percent water'
 
-            write(unit=luoharvest_si(sr),fmt=1000,advance='NO') &
-              lastoper(sr)%day, lastoper(sr)%mon, lastoper(sr)%yr, &
-              harv_report_flg, trim(thisPlant%bname), &
-              mass_rem, 'kg/m^2', &
-              mass_left, 'kg/m^2', &
-              harvest_index, "Harvest Index", &
-              mass_rem / ( 1.0-thisPlant%database%ywct/100.0 ), &
-              'kg/m^2', &
-              thisPlant%database%ywct, 'percent water'
+        if( harv_unit_flg .eq. 0 ) then
+          ! the conversion is from dry mass to wet weight
+          ! and from kg/m^2 to acynmu units
+          write(unit=luoharvest_en(sr),fmt=1000,advance='NO') &
+            lastoper(sr)%day, lastoper(sr)%mon, lastoper(sr)%yr, &
+            harv_report_flg, trim(thisPlant%bname), &
+            mass_rem*KG_per_M2_to_LBS_per_ACRE, 'lb/ac', &
+            mass_left*KG_per_M2_to_LBS_per_ACRE, 'lb/ac', &
+            harvest_index, "Harvest Index", &
+            mass_rem*thisPlant%database%ycon/(1.0-thisPlant%database%ywct/100.0), &
+            thisPlant%database%ynmu(1:len_trim(thisPlant%database%ynmu)), &
+            thisPlant%database%ywct, 'percent water'
+        else
+          ! the conversion is from dry mass to wet weight
+          ! and from kg/m^2 to lbs/ac units
+          write(unit=luoharvest_en(sr),fmt=1000,advance='NO') &
+            lastoper(sr)%day, lastoper(sr)%mon, lastoper(sr)%yr, &
+            harv_report_flg, trim(thisPlant%bname), &
+            mass_rem*KG_per_M2_to_LBS_per_ACRE, 'lb/ac', &
+            mass_left*KG_per_M2_to_LBS_per_ACRE, 'lb/ac', &
+            harvest_index, "Harvest Index", mass_rem * &
+            KG_per_M2_to_LBS_per_ACRE/( 1.0-thisPlant%database%ywct/100.0 ), &
+            'lb/ac', &
+            thisPlant%database%ywct, 'percent water'
+        end if
 
-            if( harv_unit_flg .eq. 0 ) then
-              ! the conversion is from dry mass to wet weight
-              ! and from kg/m^2 to acynmu units
-              write(unit=luoharvest_en(sr),fmt=1000,advance='NO') &
-                lastoper(sr)%day, lastoper(sr)%mon, lastoper(sr)%yr, &
-                harv_report_flg, trim(thisPlant%bname), &
-                mass_rem*KG_per_M2_to_LBS_per_ACRE, 'lb/ac', &
-                mass_left*KG_per_M2_to_LBS_per_ACRE, 'lb/ac', &
-                harvest_index, "Harvest Index", &
-                mass_rem*thisPlant%database%ycon/(1.0-thisPlant%database%ywct/100.0), &
-                thisPlant%database%ynmu(1:len_trim(thisPlant%database%ynmu)), &
-                thisPlant%database%ywct, 'percent water'
-            else
-              ! the conversion is from dry mass to wet weight
-              ! and from kg/m^2 to lbs/ac units
-              write(unit=luoharvest_en(sr),fmt=1000,advance='NO') &
-                lastoper(sr)%day, lastoper(sr)%mon, lastoper(sr)%yr, &
-                harv_report_flg, trim(thisPlant%bname), &
-                mass_rem*KG_per_M2_to_LBS_per_ACRE, 'lb/ac', &
-                mass_left*KG_per_M2_to_LBS_per_ACRE, 'lb/ac', &
-                harvest_index, "Harvest Index", mass_rem * &
-                KG_per_M2_to_LBS_per_ACRE/( 1.0-thisPlant%database%ywct/100.0 ), &
-                'lb/ac', &
-                thisPlant%database%ywct, 'percent water'
-            end if
-
-            ! updated every call to get newline in right place
-            cprevrotation(sr) = bmrotation
-
-            ! only dealing with one plant in this report, exit do loop on first valid plant
-            exit
-
-          end if
-
-          ! go to next older plant
-          thisPlant => thisPlant%olderPlant
-        end do
+        ! updated every call to get newline in right place
+        cprevrotation(sr) = bmrotation
 
       end if
 
       return
     end subroutine report_harvest
 
-    subroutine report_calib_harvest(sr,bmrotation,mass_rem, mass_left, plant)
+    subroutine report_calib_harvest(sr,bmrotation,mass_rem, mass_left, thisPlant)
 
       use weps_main_mod, only: init_loop, report_loop, calib_cycle
       use file_io_mod, only: luoharvest_calib, luoharvest_calib_parm
@@ -142,7 +125,7 @@ module report_harvest_mod
       ! + + + ARGUMENT DECLARATIONS + + +
       integer sr, bmrotation
       real mass_rem, mass_left
-      type(plant_pointer), pointer :: plant     ! pointer to youngest plant data, which chains to older plant data
+      type(plant_pointer), pointer :: thisPlant     ! pointer to plant for reporting
 
       ! + + + ARGUMENT DEFINITIONS + + +
       ! sr    - subregion number
@@ -156,7 +139,6 @@ module report_harvest_mod
 
       ! + + + LOCAL DECLARATIONS + + +
       real tot_mass, harvest_index
-      type(plant_pointer), pointer :: thisPlant
 
       integer, save :: prev_calib_cycle = -1
 
@@ -176,92 +158,76 @@ module report_harvest_mod
           RETURN
       else 
 
-        ! loop to find plant for report
-        thisPlant => plant
-        do while( associated(thisPlant) )
-          ! plant exists
-          if( thisPlant%database%idc .gt. 0 ) then
-            ! this is a plant, not some added residue
+        if (thisPlant%database%baflg == 0) then       ! crop not flagged for calibration
+          RETURN
+        end if
 
-            if (thisPlant%database%baflg == 0) then       ! crop not flagged for calibration
-              RETURN
-            end if
+        ! We have a crop flagged for calibration and this is a calibration cycle
 
-            ! We have a crop flagged for calibration and this is a calibration cycle
+        !Start a new line if this is the next rotation cycle
+        if (bmrotation .gt. cprevcalibrotation(sr))  then
+          write(unit=luoharvest_calib(sr),fmt="(a)") ''        ! write newline
+          write(unit=luoharvest_calib_parm(sr),fmt="(a)") ''   ! write newline
+        end if
 
-            !Start a new line if this is the next rotation cycle
-            if (bmrotation .gt. cprevcalibrotation(sr))  then
-              write(unit=luoharvest_calib(sr),fmt="(a)") ''        ! write newline
-              write(unit=luoharvest_calib_parm(sr),fmt="(a)") ''   ! write newline
-            end if
-
-            !Start a new line if this is the next calib_cycle
-            if ((bmrotation .eq. cprevcalibrotation(sr)) &
-              .and. (prev_calib_cycle .ne. calib_cycle) ) then
-              if (prev_calib_cycle .ne. -1) then             ! planting operation
-                write(unit=luoharvest_calib(sr),fmt="(a)") ''        ! write newline
-                write(unit=luoharvest_calib_parm(sr),fmt="(a)") ''   ! write newline
-              end if
-              prev_calib_cycle = calib_cycle                 ! keep prev cycle
-            end if
-
-            ! Update every time we have a crop flagged to get newline in the right place (hopefully)
-            cprevcalibrotation(sr) = bmrotation
-
-            ! Only harvest triggers the following print statements
-
-            ! Print out the "calibration cycle" and "rotation year within cycle"
-            write(unit=luoharvest_calib(sr), fmt=1000,advance='NO') &
-              calib_cycle, bmrotation
-            write(unit=luoharvest_calib_parm(sr), fmt=1001,advance='NO') &
-              calib_cycle
-
-            ! Print out the "planting" and "harvest" dates and "crop name"
-            write(unit=luoharvest_calib(sr),fmt=1015,advance='NO') &
-              thisPlant%database%plant_day, thisPlant%database%plant_month, thisPlant%database%plant_rotyr, &
-              lastoper(sr)%day, lastoper(sr)%mon, lastoper(sr)%yr, trim(thisPlant%bname)
-            write(unit=luoharvest_calib_parm(sr),fmt=1015,advance='NO') &
-              thisPlant%database%plant_day, thisPlant%database%plant_month, thisPlant%database%plant_rotyr, &
-              lastoper(sr)%day, lastoper(sr)%mon, lastoper(sr)%yr, trim(thisPlant%bname)
-
-            tot_mass = mass_rem + mass_left
-            if (tot_mass .le. 0.0) then
-              harvest_index = 0.0
-            else
-              harvest_index = mass_rem/tot_mass
-            end if
-
-            ! Print out "dry weight yield removed" and "residue left"
-            write(unit=luoharvest_calib(sr),fmt=1020,advance='NO') &
-              mass_rem, 'kg/m^2', mass_left, 'kg/m^2'
-
-            ! Print out "harvest index", "wet weight yield" and "yield water content"
-            write(unit=luoharvest_calib(sr),fmt=1030,advance='NO') &
-              harvest_index, "HI", &
-              mass_rem/(1.0-(thisPlant%database%ywct/100.0)), "kg/m^2", &
-              thisPlant%database%ywct, '% H2O'
-
-            ! Print out "biomass adj factor", "yield adj factor",
-            !           "target yield" and "target yield units"
-            write(unit=luoharvest_calib(sr),fmt=1040,advance='NO') &
-              thisPlant%database%baflg,thisPlant%database%baf,thisPlant%database%yraf, &
-              thisPlant%database%ytgt,trim(thisPlant%database%ynmu)
-            write(unit=luoharvest_calib_parm(sr),fmt=1041,advance='NO') &
-              thisPlant%database%baf
-
-            ! Print out "wet target yield" (metric) and "dry target yield" (metric)
-            write(unit=luoharvest_calib(sr),fmt=1050,advance='NO') &
-              thisPlant%database%ytgt/thisPlant%database%ycon, 'kg/m^2', &
-              (thisPlant%database%ytgt/thisPlant%database%ycon) * (1.0-(thisPlant%database%ywct/100.0)), 'kg/m^2'
-
-            ! only dealing with one plant in this report, exit do loop on first valid plant
-            exit
-
+        !Start a new line if this is the next calib_cycle
+        if ((bmrotation .eq. cprevcalibrotation(sr)) &
+          .and. (prev_calib_cycle .ne. calib_cycle) ) then
+          if (prev_calib_cycle .ne. -1) then             ! planting operation
+            write(unit=luoharvest_calib(sr),fmt="(a)") ''        ! write newline
+            write(unit=luoharvest_calib_parm(sr),fmt="(a)") ''   ! write newline
           end if
+          prev_calib_cycle = calib_cycle                 ! keep prev cycle
+        end if
 
-          ! go to next older plant
-          thisPlant => thisPlant%olderPlant
-        end do
+        ! Update every time we have a crop flagged to get newline in the right place (hopefully)
+        cprevcalibrotation(sr) = bmrotation
+
+        ! Only harvest triggers the following print statements
+
+        ! Print out the "calibration cycle" and "rotation year within cycle"
+        write(unit=luoharvest_calib(sr), fmt=1000,advance='NO') &
+          calib_cycle, bmrotation
+        write(unit=luoharvest_calib_parm(sr), fmt=1001,advance='NO') &
+          calib_cycle
+
+        ! Print out the "planting" and "harvest" dates and "crop name"
+        write(unit=luoharvest_calib(sr),fmt=1015,advance='NO') &
+          thisPlant%database%plant_day, thisPlant%database%plant_month, thisPlant%database%plant_rotyr, &
+          lastoper(sr)%day, lastoper(sr)%mon, lastoper(sr)%yr, trim(thisPlant%bname)
+        write(unit=luoharvest_calib_parm(sr),fmt=1015,advance='NO') &
+          thisPlant%database%plant_day, thisPlant%database%plant_month, thisPlant%database%plant_rotyr, &
+          lastoper(sr)%day, lastoper(sr)%mon, lastoper(sr)%yr, trim(thisPlant%bname)
+
+        tot_mass = mass_rem + mass_left
+        if (tot_mass .le. 0.0) then
+          harvest_index = 0.0
+        else
+          harvest_index = mass_rem/tot_mass
+        end if
+
+        ! Print out "dry weight yield removed" and "residue left"
+        write(unit=luoharvest_calib(sr),fmt=1020,advance='NO') &
+          mass_rem, 'kg/m^2', mass_left, 'kg/m^2'
+
+        ! Print out "harvest index", "wet weight yield" and "yield water content"
+        write(unit=luoharvest_calib(sr),fmt=1030,advance='NO') &
+          harvest_index, "HI", &
+          mass_rem/(1.0-(thisPlant%database%ywct/100.0)), "kg/m^2", &
+          thisPlant%database%ywct, '% H2O'
+
+        ! Print out "biomass adj factor", "yield adj factor",
+        !           "target yield" and "target yield units"
+        write(unit=luoharvest_calib(sr),fmt=1040,advance='NO') &
+          thisPlant%database%baflg,thisPlant%database%baf,thisPlant%database%yraf, &
+          thisPlant%database%ytgt,trim(thisPlant%database%ynmu)
+        write(unit=luoharvest_calib_parm(sr),fmt=1041,advance='NO') &
+          thisPlant%database%baf
+
+        ! Print out "wet target yield" (metric) and "dry target yield" (metric)
+        write(unit=luoharvest_calib(sr),fmt=1050,advance='NO') &
+          thisPlant%database%ytgt/thisPlant%database%ycon, 'kg/m^2', &
+          (thisPlant%database%ytgt/thisPlant%database%ycon) * (1.0-(thisPlant%database%ywct/100.0)), 'kg/m^2'
 
       endif
 
