@@ -87,7 +87,7 @@ SUBROUTINE update_yrly_update_vars(isr, yrly_update, yrot_update, yr_update, cel
     DO i = 1, imax-1 
        DO j = 1, jmax-1 
           if( (isr .eq. 0) .or. (isr .eq. cellstate(i,j)%csr) ) then
-             IF ((cellstate(i,j)%egt - cellstate(i,j)%egtss) < -eros_thresh) THEN
+             IF ((cellstate(i,j)%egt - cellstate(i,j)%egtss) < 0.0) THEN
                 sum_salt_loss = sum_salt_loss + (cellstate(i,j)%egt - cellstate(i,j)%egtss)
                 cnt_eros = cnt_eros + 1
              END IF
@@ -103,7 +103,7 @@ SUBROUTINE update_yrly_update_vars(isr, yrly_update, yrot_update, yr_update, cel
     DO i = 1, imax-1 
        DO j = 1, jmax-1 
           if( (isr .eq. 0) .or. (isr .eq. cellstate(i,j)%csr) ) then
-             IF ((cellstate(i,j)%egt - cellstate(i,j)%egtss) > eros_thresh) THEN
+             IF ((cellstate(i,j)%egt - cellstate(i,j)%egtss) > 0.0) THEN
                 sum_salt_dep = sum_salt_dep + (cellstate(i,j)%egt - cellstate(i,j)%egtss)
                 cnt_dep = cnt_dep + 1
              END IF
