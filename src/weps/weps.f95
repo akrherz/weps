@@ -524,7 +524,7 @@
             call flush(6)
         end if
         do isr=1,nsubr
-          ! do multiple subregion      
+          ! do multiple subregion
           call submodels(isr, soil(isr), plants(isr)%plant, plants(isr)%plantIndex, restot(isr), croptot(isr),  &
                biotot(isr), decompfac(isr), mandatbs(isr)%mandate, h1et(isr), h1bal(isr), wp(isr), manFile(isr))
           ! set initialization flag to .false. after first day
@@ -958,6 +958,7 @@
       end if
 
       ! deallocate soil arrays
+      sum_stat = 0
       do isr = 1, nsubr
         call deallocate_soil(soil_in(isr))
         call deallocate_soil(soil(isr))
@@ -979,7 +980,6 @@
          call destroy_wepp_param(wp(isr))
          call destroy_subregion_alloc(subrsurf(isr))
       end do
-      sum_stat = 0
       !deallocate subrsurf array
       deallocate(subrsurf, stat=alloc_stat)
       !deallocate management data arrays

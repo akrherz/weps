@@ -791,7 +791,7 @@ contains
 
        end do
 
-       write(*,*) 'PLANT STANDMASS HT: ', standmass, plantPntr%geometry%zht
+       write(*,*) 'PLANT STANDMASS HT FLAT: ', standmass, plantPntr%geometry%zht, flatmass
 
        thisResidue => plantPntr%residue
        do while( associated(thisResidue) )

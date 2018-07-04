@@ -85,9 +85,9 @@ module mproc_bio_mod
       do while( associated(thisPlant) )
         if( (thisPlant%database%rbc.ge.1).and.(thisPlant%database%rbc.le.mnrbc) ) then
           ! residue burial class indexes are within range
+          flatfrac = min( 1.0, fltcoef(thisPlant%database%rbc) * tillf )
           if (BTEST(tflg,0)) then
           ! flag indicates to flatten this plant
-            flatfrac = min( 1.0, fltcoef(thisPlant%database%rbc) * tillf )
             if( flatfrac .gt. 0.0 ) then
               ! flatten standing living plant biomass for thisPlant
               ! increase flat pools
@@ -108,20 +108,22 @@ module mproc_bio_mod
           do while( associated(thisResidue) )
             idy = idy + 1
             if (BTEST(tflg,idy)) then
-              ! increase flat pools
-              thisResidue%flatstem = thisResidue%flatstem + thisResidue%standstem * flatfrac
-              thisResidue%flatleaf = thisResidue%flatleaf + thisResidue%standleaf * flatfrac
-              thisResidue%flatstore = thisResidue%flatstore + thisResidue%standstore * flatfrac
-              ! decrease standing pools
-              thisResidue%standstem = thisResidue%standstem * (1.0 - flatfrac)
-              thisResidue%standleaf = thisResidue%standleaf * (1.0 - flatfrac)
-              thisResidue%standstore = thisResidue%standstore * (1.0 - flatfrac)
-              ! reduce # of stems
-              thisResidue%dstm = thisResidue%dstm * (1.0 - flatfrac)
-
-              ! go to next older residue in thisPlant
-              thisResidue => thisResidue%olderResidue
+              if( flatfrac .gt. 0.0 ) then
+                ! increase flat pools
+                thisResidue%flatstem = thisResidue%flatstem + thisResidue%standstem * flatfrac
+                thisResidue%flatleaf = thisResidue%flatleaf + thisResidue%standleaf * flatfrac
+                thisResidue%flatstore = thisResidue%flatstore + thisResidue%standstore * flatfrac
+                ! decrease standing pools
+                thisResidue%standstem = thisResidue%standstem * (1.0 - flatfrac)
+                thisResidue%standleaf = thisResidue%standleaf * (1.0 - flatfrac)
+                thisResidue%standstore = thisResidue%standstore * (1.0 - flatfrac)
+                ! reduce # of stems
+                thisResidue%dstm = thisResidue%dstm * (1.0 - flatfrac)
+              end if
             end if
+
+            ! go to next older residue in thisPlant
+            thisResidue => thisResidue%olderResidue
           end do
         end if
 
@@ -425,6 +427,9 @@ module mproc_bio_mod
 
             ! stem component
             tbury = thisPlant%mass%flatstem*buryf(thisPlant%database%rbc)*tillf
+
+            !write(*,*) 'MBURY STEM: ', tbury, thisPlant%mass%flatstem
+
             do lay=1,nlay
               thisPlant%residue%stemz(lay) = thisPlant%residue%stemz(lay)+tbury*fracbury(lay)
             end do
@@ -432,6 +437,9 @@ module mproc_bio_mod
 
             ! leaf component
             tbury = thisPlant%mass%flatleaf*buryf(thisPlant%database%rbc)*tillf
+
+            !write(*,*) 'MBURY LEAF: ', tbury
+
             do lay=1,nlay
               thisPlant%residue%leafz(lay) = thisPlant%residue%leafz(lay)+tbury*fracbury(lay)
             end do
@@ -439,6 +447,9 @@ module mproc_bio_mod
 
             ! storage component
             tbury = thisPlant%mass%flatstore*buryf(thisPlant%database%rbc)*tillf
+
+            !write(*,*) 'MBURY STORE: ', tbury
+
             do lay=1,nlay
               thisPlant%residue%storez(lay) = thisPlant%residue%storez(lay) + tbury*fracbury(lay)
             end do

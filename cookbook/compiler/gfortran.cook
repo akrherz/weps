@@ -73,6 +73,7 @@ fc_debug		+= "-fno-unsafe-math-optimizations -frounding-math -fsignaling-nans -W
 /*fc_debug		= "-Og -g -Wall -Wextra -fimplicit-none -fcheck=all -fbacktrace -fno-automatic -ffpe-trap=zero,overflow -fdefault-real-8";*/
 
 /* optimization flags */
+/*fc_optimize		= "-g -O3 -ffpe-trap=invalid,zero,overflow -fno-omit-frame-pointer";*/
 fc_optimize		= "-O3";
 
 /*release flags	*/
@@ -95,8 +96,8 @@ function print "fc_flags are: " [fc_flags];
 /**********************************
 	    	  LINKER
  **********************************/
-ld				= [fc];
-ld_version		= [fc_version];
+ld			= [fc]; /*gcc;*/
+ld_version		= [fc_version]; /*[collect_lines [ld] --version | head -1];*/
 
 /* Setup the correct default architecture configuration based upon the system the compiler (linker) is running on. */
 if [ matches [gfortran_arch] 32 ] then {
