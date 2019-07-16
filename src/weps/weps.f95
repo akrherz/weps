@@ -68,6 +68,7 @@
       use mandate_mod
       use manage_data_struct_defs, only: lastoper, manFile
       use manage_mod, only: mfinit
+      use manage_xml_mod, only: setup_man_xml
       use erosion_mod, only: erosion, erodinit
       use erosion_data_struct_defs, only: in_sweep, create_subregion_alloc, destroy_subregion_alloc, &
                                           subregionsurfacestate, threshold, cellsurfacestate, &
@@ -387,12 +388,13 @@
       ! allocate layer arrays
       call allocate_soil(soil(0))
 
+      call setup_man_xml()
       do isr = 1, nsubr
           ! Likely that we will put all management data into memory
           ! and only read and initialize everything here, looping through
           ! each management file (one for each subregion).
 
-          ! Initialize the management file and rotation counters
+          ! Read in management file and initialize rotation counters
           call mfinit(manFile(isr))
           t_mperod(isr) = manFile(isr)%mperod
           ! initializing this to 1 or greater eliminates (random) blank line in season.out

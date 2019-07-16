@@ -17,7 +17,7 @@ module manage_xml_mod
   end type tag_def
 
   type(tag_def), dimension(:), allocatable :: man_tag
-  integer :: max_tags
+  integer, parameter :: max_tags = 14      ! count of unique tags needed from management files
 
   integer, parameter, public :: rotationyears = 1
   integer, parameter, public :: wepsmanvalue = 2
@@ -83,23 +83,34 @@ contains
     integer, intent(in) :: isubr
 
     integer :: idx
-    integer :: sum_stat
-    integer :: alloc_stat
 
     ! set subregion index used with manFile
     isub = isubr
-
-    max_tags = 14   ! count of unique tags needed from management files
-    allocate( man_tag(max_tags), stat=alloc_stat)
-    if( alloc_stat .gt. 0 ) then
-      write(*,*) 'ERROR: memory alloc., input_tag'
-    end if
 
     ! assign defaults to flag status values
     do idx = 1, max_tags
       man_tag(idx)%acquired = .false.
       man_tag(idx)%in_tag = .false.
     end do
+
+    all_wepsmanvalues = .true.  ! .true. indicates that no values are required
+    all_operationDBs = .true.  ! .false. indicates that a value is required
+    all_actionvalues = .true.
+    all_params = .true.
+
+  end subroutine init_man_xml
+
+  subroutine setup_man_xml()
+
+    integer :: idx
+    integer :: sum_stat
+    integer :: alloc_stat
+
+    ! max_tags = 14 set above
+    allocate( man_tag(max_tags), stat=alloc_stat)
+    if( alloc_stat .gt. 0 ) then
+      write(*,*) 'ERROR: memory alloc., input_tag'
+    end if
 
    ! assign tag names
     man_tag(1)%name = "rotationyears"
@@ -918,12 +929,7 @@ contains
       write(*,*) 'ERROR: memory alloc., parameter names reference'
     end if
 
-    all_wepsmanvalues = .true.  ! .true. indicates that no values are required
-    all_operationDBs = .true.  ! .false. indicates that a value is required
-    all_actionvalues = .true.
-    all_params = .true.
-
-  end subroutine init_man_xml
+  end subroutine setup_man_xml
 
   function oper_check_params( operPtr ) result(acquired)
     use manage_data_struct_defs, only: operation
