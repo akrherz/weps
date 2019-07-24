@@ -14,13 +14,12 @@ module weps_output_mod
       ! to make it easier to select specific columns for comparisons between the
       ! crop and individual biomass pools (not all pools have the same variables)
 
-      use weps_main_mod, only: daysim, am0ifl
+      use weps_main_mod, only: old_run_file, rootp, daysim, am0ifl
       use datetime_mod, only: get_simdate_doy, get_simdate_year
       use biomaterial, only: plant_pointer, residue_pointer, biototal, decomp_factors
       use file_io_mod, only: luocrp1, luobio1, makenamnum, makedir, fopenk
       use decomp_data_struct_defs, only: am0dfl
       use climate_input_mod, only: cli_today
-      use input_run_mod, only: old_run_file, rootp
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer isr
@@ -540,7 +539,7 @@ module weps_output_mod
       use manage_data_struct_defs, only: manFile
       use crop_data_struct_defs, only: am0cfl, am0cdb
       use decomp_data_struct_defs, only: am0dfl, am0ddb
-      use input_run_mod, only: old_run_file, rootp
+      use weps_main_mod, only: old_run_file, rootp
       use crop_mod, only: cpout
 
 !     + + +   LOCAL VARIABLES + + +

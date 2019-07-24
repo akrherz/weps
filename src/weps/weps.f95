@@ -37,11 +37,11 @@
                                    init_cycle, calc_confidence, hb_freq, &
                                    report_info, report_debug, run_erosion,&
                                    saeinp_all, saeinp_daysim, saeinp_jday, wepp_hydro
-      use weps_main_mod, only: wepsinit, cmdline, &
-                               daysim, ijday, ljday, maxper, ncycles, &
+      use weps_main_mod, only: old_run_file, run_rot_cycles, id, im, iy, ld, lm, ly, rootp, &
+                               daysim, ijday, ljday, maxper, longest_mgt_rotation, ncycles, &
                                init_loop, calib_loop, report_loop, &
                                max_calib_cycles, calib_cycle, calib_done, &
-                               am0ifl, longest_mgt_rotation
+                               am0ifl, wepsinit, cmdline
 
       use weps_submodel_mod, only: submodels, erodsubr_update
       use weps_output_mod
@@ -94,7 +94,7 @@
       use sim_area_average_mod, only: sim_area_average
       use wepp_param_mod
       use climate_input_mod, only: cliginit, getcli, windinit, getwin
-      use input_run_mod, only: old_run_file, input, run_rot_cycles, id, im, iy, ld, lm, ly, rootp
+      use input_run_mod, only: input
       use lcm_mod, only: lcm_n
       use asd_mod, only: asdini
       use decomp_out_mod, only: decopen
@@ -532,7 +532,15 @@
       ! The following line is incorrect for calculating the initialization cycles - LEW
 !      end_init_y = iy + (maxper*init_cycle) - 1
       end_init_y = iy + (longest_mgt_rotation*init_cycle) - 1
-      !print *, 'end_init_y:', end_init_y, iy + (maxper*init_cycle) - 1
+      ! Wrong!! Using longest_mgt_rotation results in some management cycles being terminated
+      ! part way through the rotation. This means that a winter annual may be growing
+      ! only to be terminated by a spring planted crop or the erosion simulation would start with
+      ! the harvest of a winter annual crop that has not been planted, which is one reason we do
+      ! initialization in the first place. An alternative would be to start
+      ! part way through managment cycles so they all end at the end of initialization, so
+      ! the erosion simulation begins with all managment cycles at the beginning. - FAF
+
+      end_init_y = iy + (longest_mgt_rotation*init_cycle) - 1
       if( end_init_y .eq. 0 ) end_init_y = -1
       end_init_jday = julday(end_init_d, end_init_m, end_init_y)
 

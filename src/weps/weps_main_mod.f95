@@ -51,8 +51,6 @@ module weps_main_mod
     logical :: am0ifl  ! flag to run initialization of submodels
                        ! .true. means initialization will be run
 
-    
-
   contains
 
     subroutine wepsinit

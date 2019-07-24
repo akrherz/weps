@@ -1,8 +1,7 @@
-!$Author: wagner $
-!$Date: $
-!$Revision: $
-!$HeadURL:
-!https://infosys.ars.usda.gov/svn/code/weps1/branches/weps.src.subregion/src/weps/weps_cmdline_parms.f95 $
+!$Author$
+!$Date$
+!$Revision$
+!$HeadURL$
 
 module weps_cmdline_parms
 

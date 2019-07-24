@@ -1,7 +1,7 @@
-!$Author:$
-!$Date:$
-!$Revision:$
-!$HeadURL:$
+!$Author$
+!$Date$
+!$Revision$
+!$HeadURL$
 
 module stir_soil_texture_mod
     implicit none

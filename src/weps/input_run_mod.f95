@@ -5,7 +5,8 @@
 
 module input_run_mod
 
-  use weps_main_mod
+  use weps_main_mod, only: old_run_file, clifil, runfil, subfil, winfil, usrnam, farmid, fieldid, &
+                           run_rot_cycles, id, im, iy, ld, lm, ly, rootp
   use weps_cmdline_parms, only: report_info, run_erosion
 
 contains

@@ -1,10 +1,14 @@
-!
+!$Author$
+!$Date$
+!$Revision$
+!$HeadURL$
+
 !   Add this definition file in every source file to insure that the compiler can
 !   verify subroutine and function signatures.
-!  
+  
 !   Can't seem to use constants in interface block? This effects two dimensional arrays where the
 !   first dimension must be specified 
-!       
+       
        MODULE wepp_interface_defs
           
        interface
