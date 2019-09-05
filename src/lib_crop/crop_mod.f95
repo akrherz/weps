@@ -195,7 +195,7 @@ module crop_mod
 
       ! + + + LOCAL VARIABLES + + +
       integer lay, dd, mm, yy
-      real hui
+      real :: hui = 0.0
       real bg_stem_sum, root_store_sum, root_fiber_sum
       integer adj_plant_yr
       type(plant_pointer), pointer :: thisPlant

@@ -251,7 +251,7 @@ module crop_growth_mod
       double precision frst, a_fr, b_fr, ffa, ffw
       double precision lost_mass
       real :: hrlt, hrlty   ! length of day in hours for today and yesterday
-      double precision :: hui           ! heat unit index
+      double precision :: hui = 0.0     ! heat unit index
       double precision :: huiy          ! heat unit index for yesterday
       double precision :: huirt         ! root growth heat unit index
       double precision :: huirty        ! root growth heat unit index yesterday
