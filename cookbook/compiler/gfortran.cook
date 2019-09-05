@@ -43,6 +43,7 @@ function print "gfortran_arch:" [gfortran_arch];
 
 fc			= gfortran;
 fc_version 		= [collect_lines [fc] --version | head -1];
+skip_mods		= "omp_lib"; /* skip omp module file in dependency checks, etc. */
 
 /* Setup the correct default architecture configuration based upon the system the compiler is running on. */
 if [ matches [gfortran_arch] 32 ] then {
@@ -78,7 +79,6 @@ fc_optimize		= "-O3";
 
 /*release flags	*/
 fc_release		= "-O3";
-
 
 /* includes */
 fc_inc_flag		= "-I ";
