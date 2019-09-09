@@ -643,7 +643,7 @@
              end if
            end do  ! end subregion
          end do   ! "calibration" phase
-        do isr=1,nsubr   ! do multiple subregion     
+         do isr=1,nsubr   ! do multiple subregion     
              manfile(isr)%mnryr = keep(isr)
              ! at end of managment file, reset mcount
              manFile(isr)%mcount = 0
