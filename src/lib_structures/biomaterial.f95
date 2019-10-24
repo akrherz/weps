@@ -1264,6 +1264,59 @@ contains
         
   end subroutine plantSumAll
 
+  subroutine plantSumPool(plantPntr, nsoillay, label)
+
+     use weps_main_mod, only: daysim
+
+     type(plant_pointer), pointer :: plantPntr
+     integer, intent(in) :: nsoillay
+     character(*) :: label
+
+     real :: poolsum
+
+     ! local variable
+     type(plant_pointer), pointer :: thisPlant
+     type(residue_pointer), pointer :: thisResidue
+     integer :: idx
+     real :: resstandmass
+     real :: resflatmass
+     real :: layersumburied
+     real :: layersumroot
+
+     integer :: poolcount
+
+     poolcount = 0
+
+     thisPlant => plantPntr
+     do while( associated(thisPlant) )
+
+       thisResidue => thisPlant%residue
+       do while( associated(thisResidue) )
+         ! total pool count
+         poolcount = poolcount + 1
+
+         resstandmass = thisResidue%standstem + thisResidue%standleaf + thisResidue%standstore
+         resflatmass = thisResidue%flatstem + thisResidue%flatleaf + thisResidue%flatstore &
+                     + thisResidue%flatrootstore + thisResidue%flatrootfiber
+
+         layersumburied = 0.0
+         layersumroot = 0.0
+         do idx = 1, nsoillay
+           layersumburied = layersumburied + thisResidue%stemz(idx) + thisResidue%leafz(idx) + thisResidue%storez(idx)
+           layersumroot = layersumroot + thisResidue%rootstorez(idx) + thisResidue%rootfiberz(idx)
+         end do
+
+         poolsum = resstandmass + resstandmass + layersumburied + layersumroot
+
+         write(*,*) label, daysim, poolcount, poolsum, trim(thisPlant%bname)
+
+         thisResidue => thisResidue%olderResidue
+       end do
+       thisPlant => thisPlant%olderPlant
+     end do
+
+  end subroutine plantSumPool
+
 end module biomaterial
 
 

@@ -688,7 +688,7 @@ module mproc_soil_mod
       ! soilair     - soil air entery potential
       ! satcond     - saturated hydraulic conductivity
 
-      ! residue     - structure containing residue by soil layer
+      ! plant       - pointer to plant with residue by soil layer (kg/m^2)
       ! massf       - mass fractions for sieve cuts
 
       ! nlay        - number of soil layers used
@@ -761,7 +761,7 @@ module mproc_soil_mod
       !******************ASD MASS FRACTIONS********************	
 
 
-      !******************DECOMPOSITION VARIABLES********************	
+      !******************RESIDUE MASS VARIABLES********************	
       ! need to invert each pool for these
 
       thisPlant => plant
@@ -773,43 +773,43 @@ module mproc_soil_mod
         do while( associated(thisResidue) )
 
           do k = 1, nlay
-            dum(k) = thisResidue%stemz(k)
+            dum(k) = thisResidue%stemz(k) / laythk(k)
           end do
           call invproc(nlay,laythk,dum)
           do k = 1, nlay
-            thisResidue%stemz(k) = dum(k)
+            thisResidue%stemz(k) = dum(k) * laythk(k)
           end do
 
           do k = 1, nlay
-            dum(k) = thisResidue%leafz(k)
+            dum(k) = thisResidue%leafz(k) / laythk(k)
           end do
           call invproc(nlay,laythk,dum)
           do k = 1, nlay
-            thisResidue%leafz(k) = dum(k)
+            thisResidue%leafz(k) = dum(k) * laythk(k)
           end do
 
           do k = 1, nlay
-            dum(k) = thisResidue%storez(k)
+            dum(k) = thisResidue%storez(k) / laythk(k)
           end do
           call invproc(nlay,laythk,dum)
           do k = 1, nlay
-            thisResidue%storez(k) = dum(k)
+            thisResidue%storez(k) = dum(k) * laythk(k)
           end do
 
           do k = 1, nlay
-            dum(k) = thisResidue%rootstorez(k)
+            dum(k) = thisResidue%rootstorez(k) / laythk(k)
           end do
           call invproc(nlay,laythk,dum)
           do k = 1, nlay
-            thisResidue%rootstorez(k) = dum(k)
+            thisResidue%rootstorez(k) = dum(k) * laythk(k)
           end do
 
           do k = 1, nlay
-            dum(k) = thisResidue%rootfiberz(k)
+            dum(k) = thisResidue%rootfiberz(k) / laythk(k)
           end do
           call invproc(nlay,laythk,dum)
           do k = 1, nlay
-            thisResidue%rootfiberz(k) = dum(k)
+            thisResidue%rootfiberz(k) = dum(k) * laythk(k)
           end do
 
           ! go to next older residue in thisPlant
@@ -819,7 +819,7 @@ module mproc_soil_mod
         ! go to next older plant
         thisPlant => thisPlant%olderPlant
       end do
-      !******************DECOMPOSITION VARIABLES********************
+      !******************RESIDUE MASS VARIABLES********************
 		  
       do i = 1, nlay
          dum(i) = bulkden(i)
