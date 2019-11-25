@@ -229,15 +229,17 @@ module sberod_mod
           cellstate(i,j)%sf10 = subrsurf(icsr)%sfd10
           cellstate(i,j)%sf84 = subrsurf(icsr)%sfd84
           cellstate(i,j)%sf200 = subrsurf(icsr)%sfd200
-          ! edit ljh - 1-22-04
+          cellstate(i,j)%sf84mn = 0.0
           cellstate(i,j)%svroc = subrsurf(icsr)%bsl(1)%asvroc    ! if ifc has surface rock, 1st index maybe 0.
-
           cellstate(i,j)%szcr = subrsurf(icsr)%aszcr
           cellstate(i,j)%sfcr = subrsurf(icsr)%asfcr
           cellstate(i,j)%smlos = subrsurf(icsr)%asmlos
           cellstate(i,j)%sflos = subrsurf(icsr)%asflos
-
+          cellstate(i,j)%smaglos = 0.0
+          cellstate(i,j)%dmlos = 0.0
+          cellstate(i,j)%smaglosmx = 0.0
           cellstate(i,j)%szrgh = subrsurf(icsr)%aszrgh
+          cellstate(i,j)%sxprg = subrsurf(icsr)%sxprg
 
           ! initialize RR values for each grid cell
           cellstate(i,j)%slrr = subrsurf(icsr)%aslrr
@@ -248,10 +250,24 @@ module sberod_mod
               cellstate(i,j)%slrr = SLRR_MAX
           endif
 
-          cellstate(i,j)%dmlos = 0.0
-          cellstate(i,j)%smaglos = 0.0
-          cellstate(i,j)%smaglosmx = 0.0
-          cellstate(i,j)%sf84mn = 0.0
+          cellstate(i,j)%w0br = 0.0
+          cellstate(i,j)%egt = 0.0
+          cellstate(i,j)%egtcs = 0.0
+          cellstate(i,j)%egtss = 0.0
+          cellstate(i,j)%egt10 = 0.0
+          cellstate(i,j)%egt2_5 = 0.0
+          cellstate(i,j)%wus = 0.0
+          cellstate(i,j)%wust = 0.0
+          cellstate(i,j)%wusto = 0.0
+          cellstate(i,j)%wusp = 0.0
+          cellstate(i,j)%qi = 0.0
+          cellstate(i,j)%qcsi = 0.0
+          cellstate(i,j)%qssi = 0.0
+          cellstate(i,j)%q10i = 0.0
+          cellstate(i,j)%qo = 0.0
+          cellstate(i,j)%qcso = 0.0
+          cellstate(i,j)%qsso = 0.0
+          cellstate(i,j)%q10o = 0.0
 
         end do
       end do
