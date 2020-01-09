@@ -324,26 +324,26 @@ module crop_mod
       integer, intent(in) :: isr   ! subregion number
 
       ! + + + OUTPUT FORMATS + + +
- 2131 format ('#                           stand   stand   stand   flat &
+ 2131 format ('#    -    -   -    -    -   stand   stand   stand   flat &
      &   flat    flat    root    root  bel.grnd  total   total')
- 2132 format ('#daysim doy year dap heatui stem    leaf    store   stem &
-     &   leaf    store   store   fiber   stem    leaf    stem    height &
-     & #stem   lai     eff_lai rootd  grainf tempst watstf  frost  ffa  &
-     &  ffw   par     apar     massinc    p_rw   p_st   p_lf   p_rp  std&
-     &flt pdiam  parea  fpdiam fparea hu_del frzhrd sai repstmd rgflg fl&
-     &ivelf crop')
- 2133 format ('#                           kg/m^2  kg/m^2  kg/m^2  kg/m^&
+ 2132 format ('# daysim doy year dap heatui stem    leaf    store   stem&
+     &    leaf    store   store   fiber   stem    leaf    stem    height&
+     &   stem   lai     eff_lai rootd  grainf tempst watstf  frost  ffa &
+     &   ffw   par     apar     massinc    p_rw   p_st   p_lf   p_rp  st&
+     &dflt pdiam  parea  fpdiam fparea hu_del frzhrd sai repstmd rgflg f&
+     &livelf crop')
+ 2133 format ('#    -    -   -    -    -   kg/m^2  kg/m^2  kg/m^2  kg/m^&
      &2  kg/m^2  kg/m^2  kg/m^2  kg/m^2  kg/m^2  kg/m^2  kg/m^2  meters &
-     &         m^2/m^2 m^2/m^2 meters                                   &
-     &        MJ/m^2  MJ/m^2   kg/plnt                                  &
-     &    meters m^2')
+     &    -    m^2/m^2 m^2/m^2 meters     -      -     -       -     -  &
+     &  #/m^2 MJ/m^2  MJ/m^2   kg/plnt      -      -      -       -     &
+     & -  meters m^2')
 
- 2231 format ('#daysim doy year dap heatui ',                           &
+ 2231 format ('# daysim doy year dap heatui ',                          &
      &        's_root_sum f_root_sum tot_mass_req end_shoot_mass ',     &
      &        'end_root_mass d_root_mass d_shoot_mass d_s_root_mass ',  &
      &        'end_stem_mass end_stem_area end_shoot_len bczshoot ',    &
      &        'bcmshoot bcdstm crop%bname')
- 2232 format ('#(dy) (dy) (yr) (dy) (C)    ',                           &
+ 2232 format ('# (dy) (dy) (yr) (dy) (C)    ',                          &
      &        '(kg/m^2)   (kg/m^2)   (mg/shoot)   (mg/shoot)     ',     &
      &        '(mg/shoot)    (mg/shoot)  (mg/shoot)   (mg/shoot)    ',  &
      &        '(mg/shoot)    (m^2/shoot)   (m)           (m)      ',    &
