@@ -1,6 +1,11 @@
+!$Author$
+!$Date$
+!$Revision$
+!$HeadURL$
+
 module gddmethod1_mod
     use Preprocess_mod
-    use constants, only : dp
+    use constants, only : dp, check_return
     use plant_mod
     implicit none
 
@@ -13,16 +18,16 @@ module gddmethod1_mod
 
   contains
 
-    subroutine load_state(self, process_state)
+    subroutine load_state(self, processState)
       ! Variables
       implicit none
       class(gdd1_method), intent(inout) :: self
-      type(hash_state), intent(inout) :: process_state
+      type(hash_state), intent(inout) :: processState
       ! Body of loadState
-      ! load process_state into my state:
-      self%process_state = hash_state()
-      call self%process_state%init()
-      call self%process_state%clone(process_state)
+      ! load processState into my state:
+      self%processState = hash_state()
+      call self%processState%init()
+      call self%processState%clone(processState)
     end subroutine load_state
     
     subroutine register_proc(self, req_input, prod_output)
@@ -36,7 +41,7 @@ module gddmethod1_mod
 
     subroutine gdd_process(self, plnt, env)
       implicit none
-      class(gdd1_method), intent(in) :: self
+      class(gdd1_method), intent(inout) :: self
       type(plant), intent(inout) :: plnt
       type(environment_state), intent(inout) :: env
       real(dp) :: tmin, tmax, tbase, daygdd
@@ -44,11 +49,17 @@ module gddmethod1_mod
 
       ! get tsMin
       call env%state%get("tmin", tmin, succ)
+      if( .not. check_return( "tmin", succ ) ) return
       call env%state%get("tmax", tmax, succ)
-      call plnt%pars%get("tbase", tbase, succ)
+      if( .not. check_return( "tmax", succ ) ) return
+      call plnt%pars%get("tbas", tbase, succ)
+      if( .not. check_return( "tbas", succ ) ) return
 
       daygdd =  max(0.0_dp, ((tmax+tmin)/2) - tbase)
+
       call plnt%state%replace("daygdd", daygdd, succ)
+      if( .not. check_return( "daygdd", succ ) ) return
+
     end subroutine gdd_process
 
 end module gddmethod1_mod

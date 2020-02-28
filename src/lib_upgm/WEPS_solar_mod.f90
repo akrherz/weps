@@ -1,7 +1,7 @@
-!$Author: fredfox $
-!$Date: 2017-07-11 19:01:32 -0600 (Tue, 11 Jul 2017) $
-!$Revision: 15514 $
-!$HeadURL: https://infosys.ars.usda.gov/svn/code/weps1/branches/weps.src.subregion.plants/src/util/lib_solar/solar_mod.f95 $
+!$Author$
+!$Date$
+!$Revision$
+!$HeadURL$
 
 module WEPS_solar_mod
 

@@ -1,3 +1,8 @@
+!$Author$
+!$Date$
+!$Revision$
+!$HeadURL$
+
 module ritchieVernalization_mod
   use Preprocess_mod
   use constants, only: dp, int32, check_return
@@ -13,15 +18,15 @@ module ritchieVernalization_mod
 
   contains
 
-    subroutine load_state(self, process_state)
+    subroutine load_state(self, processState)
       implicit none
       class(ritchieVernalization), intent(inout) :: self
-      type(hash_state), intent(inout) :: process_state
+      type(hash_state), intent(inout) :: processState
       ! Body of loadState
-      ! load process_state into my state:
-      self%process_state = hash_state()
-      call self%process_state%init()
-      call self%process_state%clone(process_state)
+      ! load processState into my state:
+      self%processState = hash_state()
+      call self%processState%init()
+      call self%processState%clone(processState)
     end subroutine load_state
 
     subroutine proc_register(self, req_input, prod_output)
@@ -36,7 +41,7 @@ module ritchieVernalization_mod
 
     subroutine Vernalization(self, plnt, env)
       implicit none
-      class(ritchieVernalization), intent(in) :: self
+      class(ritchieVernalization), intent(inout) :: self
       type(plant), intent(inout) :: plnt
       type(environment_state), intent(inout) :: env
       real(dp) :: chill_unit_cum  ! accumulated chill units for vernalization

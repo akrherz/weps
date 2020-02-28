@@ -1,3 +1,8 @@
+!$Author$
+!$Date$
+!$Revision$
+!$HeadURL$
+
 module WEPSCrop_mod
 
     ! routines from WEPS supporting crop growth the WEPS way
@@ -146,6 +151,7 @@ module WEPSCrop_mod
       if( end_shoot_len .le. plant%growth%zgrowpt ) then
              write(UNIT=6,FMT="(1x,3(a),f7.4,a,f7.4,a)") &
                  'Warning: ', &
+                 trim(plant%bname), &
                  ' growth halted. Shoot extension: ', end_shoot_len, &
                  ' Depth in soil: ', plant%growth%zgrowpt, ' meters.'
       end if
@@ -347,7 +353,7 @@ module WEPSCrop_mod
 
       use soil_data_struct_defs, only: soil_def
       use biomaterial, only: plant_pointer
-      use WEPSCrop_util_mod, only: freeze_damage, shootnum
+      use WEPSCrop_util_mod, only: shootnum
       use weps_cmdline_parms, only: cook_yield
 
       integer(int32), parameter :: growth_stress = 3
@@ -597,7 +603,11 @@ module WEPSCrop_mod
       end if
 
       ! calculate stress adjusted height
-      dht = pdht * strs
+      if( pddm .gt. 0.0_dp ) then
+        dht = pdht * strs
+      else
+        dht = 0.0_dp
+      end if
 
       ! add mass increment to accumulated biomass (kg/m^2)
       ! all leaf mass added to living leaf in standing pool
@@ -633,6 +643,9 @@ module WEPSCrop_mod
 
       ! calculate rooting depth (eq. 2.203) and check that it is not deeper
       ! than the maximum potential depth, and the depth of the root zone.
+      if( pddm .le. 0.0_dp ) then
+        pdrd = 0.0_dp
+      end if
       plant%geometry%zrtd = min(plant%database%zmrt, plant%geometry%zrtd + pdrd)
       plant%geometry%zrtd = min(soil%aszlyd(bnslay)*u_mmtom, plant%geometry%zrtd)
 

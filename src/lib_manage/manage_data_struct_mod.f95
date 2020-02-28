@@ -7,6 +7,7 @@ module manage_data_struct_mod
 
   use manage_data_struct_defs, only: operation, group, process
   use manage_data_struct_defs, only: max_ogp, param_nt
+  use constants, only : dp, int32
 
   interface elemCreate
     module procedure operCreate
@@ -24,6 +25,7 @@ module manage_data_struct_mod
     module procedure getManVal_proc_int
     module procedure getManVal_proc_real
     module procedure getManVal_proc_str
+    module procedure getManVal_proc_dp
   end interface getManVal
 contains
 
@@ -470,6 +472,24 @@ contains
     end if
 
   end subroutine getManVal_proc_str
+
+  subroutine getManVal_proc_dp(procPtr, nameV, manVal)
+    use manage_data_struct_defs, only: process
+    type(process), pointer :: procPtr
+    character(len=*), intent(in) :: nameV
+    real(dp), intent(out) :: manVal
+
+    integer :: idx
+
+    idx = get_value_index ( procPtr%OGPidx, nameV )
+    if ( idx .gt. 0 ) then
+      manVal = procPtr%r_param(idx)%p_value
+    else
+      write(*,*) 'Name: ', trim(nameV), ' is not properly specified in getManVal request.'
+      call exit(1)
+    end if
+
+  end subroutine getManVal_proc_dp
 
 end module manage_data_struct_mod
 

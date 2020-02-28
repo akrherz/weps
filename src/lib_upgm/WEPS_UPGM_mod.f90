@@ -1,3 +1,8 @@
+!$Author$
+!$Date$
+!$Revision$
+!$HeadURL$
+
 module WEPS_UPGM_mod
 
     implicit none
@@ -54,7 +59,7 @@ module WEPS_UPGM_mod
       r_setter = cli_today%tdmx
       call plant%env%state%put("tmax", r_setter, success)
       r_setter = plant%database%tmin
-      call plant%upgm_grow%plant%plantstate%pars%put("tbase", r_setter, success)
+      call plant%upgm_grow%plant%plantstate%pars%put("tbas", r_setter, success)
       r_setter = plant%database%topt
       call plant%upgm_grow%plant%plantstate%pars%put("topt", r_setter, success)
       r_setter = 0.0_dp
@@ -71,7 +76,7 @@ module WEPS_UPGM_mod
       ! create WEPS temperature stress method
       call plant%upgm_grow%plant%add_process("weps_tempstress", "Temp Stress", 0)
       ! create input names
-      ! uses tmin, tmax, tbase and topt from above
+      ! uses tmin, tmax, tbas and topt from above
       r_setter = 1.0_dp
       call plant%upgm_grow%plant%plantstate%state%put("tstress", r_setter, success)
 
@@ -79,18 +84,15 @@ module WEPS_UPGM_mod
       ! create WEPS freeze damage method
       call plant%upgm_grow%plant%add_process("weps_freezedamage", "Freeze Damage", 0)
       ! create input names
-      r_setter = plant%growth%thucum
-      call plant%upgm_grow%plant%plantstate%state%put("thucum", r_setter, success)
-      r_setter = plant%database%thum
-      call plant%upgm_grow%plant%plantstate%pars%put("thum", r_setter, success)
-      r_setter = plant%database%ehu0
-      call plant%upgm_grow%plant%plantstate%pars%put("ehu0", r_setter, success)
+      r_setter = 1.0_dp
+      call plant%upgm_grow%plant%plantstate%state%put("ffa", r_setter, success)
       r_setter = soil%tsmn(1)
       call plant%env%state%put("tsmn1", r_setter, success)
       ! calculates Frost damage s-curve coefficients
       call scrv1(plant%database%fd1(1),plant%database%fd1(2),plant%database%fd2(1),plant%database%fd2(2),a_fr,b_fr)
-      call plant%upgm_grow%plant%plantstate%pars%put("a_fr", a_fr, success)
-      call plant%upgm_grow%plant%plantstate%pars%put("b_fr", b_fr, success)
+      call plant%upgm_grow%plant%processCurrent%ptr%processPars%put("a_fr", a_fr, success)
+      call plant%upgm_grow%plant%processCurrent%ptr%processPars%put("b_fr", b_fr, success)
+
       r_setter = plant%mass%standleaf
       call plant%upgm_grow%plant%plantstate%state%put("mstandleaf", r_setter, success)
       r_setter = plant%growth%fliveleaf
@@ -103,17 +105,14 @@ module WEPS_UPGM_mod
       ! create ritchieHardening method
       call plant%upgm_grow%plant%add_process("ritchie_winterhardening", "Winter Hardening", 0)
       ! create input names
-      r_setter = soil%tsmx(1)
-      call plant%env%state%put("tsmx1", r_setter, success)
-      r_setter = plant%database%fleaf2stor
-      call plant%upgm_grow%plant%plantstate%pars%put("leaf2stor", r_setter, success)
-      r_setter = plant%database%fstem2stor
-      call plant%upgm_grow%plant%plantstate%pars%put("stem2stor", r_setter, success)
-      r_setter = plant%database%fstor2stor
-      call plant%upgm_grow%plant%plantstate%pars%put("stor2stor", r_setter, success)
-
       r_setter = 0.0_dp
       call plant%upgm_grow%plant%plantstate%state%put("harden_index", r_setter, success)
+      l_setter = .false.
+      call plant%upgm_grow%plant%plantstate%state%put("can_harden", l_setter, success)
+      r_setter = soil%tsmx(1)
+      call plant%env%state%put("tsmx1", r_setter, success)
+      ! use from above
+      ! tsmn1
 
       ! add process
       ! create WEPS warmdays method
@@ -122,65 +121,40 @@ module WEPS_UPGM_mod
       r_setter = 0.0_dp
       call plant%upgm_grow%plant%plantstate%state%put("warmdays", r_setter, success)
 
+      ! add process
+      ! create WEPS_regrowth method
+      call plant%upgm_grow%plant%add_process("weps_regrowth", "Check for Regrowth", 0)
 
-      ! add phase
-      call plant%upgm_grow%plant%add_phase("weps_shootgrow", "Shoot Grow", 0)
-
-      ! create phase state
-      call plant%upgm_grow%plant%phaseCurrent%ptr%phaseState%put("stagegdd", r_setter, success)
-
-      ! create all input names
-      ! uses thum, ehu0 mstandleaf fliveleaf from above
-
+      ! create input names
+      ! plant database
       r_setter = plant%geometry%dpop
       call plant%upgm_grow%plant%plantstate%pars%put("plantpop", r_setter, success)
+      r_setter = plant%database%fleafstem
+      call plant%upgm_grow%plant%plantstate%pars%put("leafstem", r_setter, success)
+      i_setter = plant%database%idc
+      call plant%upgm_grow%plant%plantstate%pars%put("idc", i_setter, success)
       r_setter = plant%database%shoot
-      call plant%upgm_grow%plant%plantstate%pars%put("mshoot", r_setter, success)
+      call plant%upgm_grow%plant%plantstate%pars%put("regrmshoot", r_setter, success)
       r_setter = plant%database%dmaxshoot
       call plant%upgm_grow%plant%plantstate%pars%put("dmaxshoot", r_setter, success)
-      r_setter = plant%database%hue
-      call plant%upgm_grow%plant%plantstate%pars%put("huie", r_setter, success)
-      r_setter = plant%database%growdepth
-      call plant%upgm_grow%plant%plantstate%pars%put("growdepth", r_setter, success)
       r_setter = plant%database%storeinit
       call plant%upgm_grow%plant%plantstate%pars%put("storeinit", r_setter, success)
-      r_setter = plant%database%alf
-      call plant%upgm_grow%plant%plantstate%pars%put("alf", r_setter, success)
-      r_setter = plant%database%blf
-      call plant%upgm_grow%plant%plantstate%pars%put("blf", r_setter, success)
-      r_setter = plant%database%clf
-      call plant%upgm_grow%plant%plantstate%pars%put("clf", r_setter, success)
-      r_setter = plant%database%dlf
-      call plant%upgm_grow%plant%plantstate%pars%put("dlf", r_setter, success)
-      r_setter = plant%database%arp
-      call plant%upgm_grow%plant%plantstate%pars%put("arp", r_setter, success)
-      r_setter = plant%database%brp
-      call plant%upgm_grow%plant%plantstate%pars%put("brp", r_setter, success)
-      r_setter = plant%database%crp
-      call plant%upgm_grow%plant%plantstate%pars%put("crp", r_setter, success)
-      r_setter = plant%database%drp
-      call plant%upgm_grow%plant%plantstate%pars%put("drp", r_setter, success)
-      r_setter = plant%database%aht
-      call plant%upgm_grow%plant%plantstate%pars%put("aht", r_setter, success)
-      r_setter = plant%database%bht
-      call plant%upgm_grow%plant%plantstate%pars%put("bht", r_setter, success)
-      r_setter = plant%database%zmxc
-      call plant%upgm_grow%plant%plantstate%pars%put("zmxc", r_setter, success)
-      r_setter = plant%database%zmrt
-      call plant%upgm_grow%plant%plantstate%pars%put("zmrt", r_setter, success)
+      r_setter = plant%database%hue
+      call plant%upgm_grow%plant%plantstate%pars%put("huie", r_setter, success)
+      r_setter = plant%database%zloc_regrow
+      call plant%upgm_grow%plant%plantstate%pars%put("zloc_regrow", r_setter, success)
 
-      ! day of year
-      jd = get_simdate_doy()
-      call plant%env%state%put("dayofyear", jd, success)
-
-      ! calculate day length
+      ! environment variables
       r_setter = daylen(amalat, jd-1, civilrise)
       call plant%env%state%put("hrlty", r_setter, success)
       r_setter = daylen(amalat, jd, civilrise)
       call plant%env%state%put("hrlt", r_setter, success)
 
+      ! plant state
       r_setter = plant%mass%standstem
       call plant%upgm_grow%plant%plantstate%state%put("mstandstem", r_setter, success)
+      ! use from above
+      ! mstandleaf
       r_setter = plant%mass%standstore
       call plant%upgm_grow%plant%plantstate%state%put("mstandstore", r_setter, success)
       r_setter = plant%mass%flatstem
@@ -189,9 +163,11 @@ module WEPS_UPGM_mod
       call plant%upgm_grow%plant%plantstate%state%put("mflatleaf", r_setter, success)
       r_setter = plant%mass%flatstore
       call plant%upgm_grow%plant%plantstate%state%put("mflatstore", r_setter, success)
+      r_setter = plant%growth%mshoot
       call plant%upgm_grow%plant%plantstate%state%put("masshoot", r_setter, success)
+      r_setter = plant%growth%mtotshoot
       call plant%upgm_grow%plant%plantstate%state%put("mtotshoot", r_setter, success)
-  
+
       nelem = size(plant%mass%stemz)
       allocate(ra_setter(nelem), stat = alloc_stat)
       if( alloc_stat .gt. 0 ) then
@@ -210,23 +186,14 @@ module WEPS_UPGM_mod
       call plant%upgm_grow%plant%plantstate%state%put("mrootstorez", ra_setter, success)
       deallocate(ra_setter, stat = alloc_stat)
 
-      nelem = size(plant%mass%rootfiberz)
-      allocate(ra_setter(nelem), stat = alloc_stat)
-      if( alloc_stat .gt. 0 ) then
-        write(*,*) 'Unable to allocate memory for UPGM.'
-      end if
-      ra_setter = plant%mass%rootfiberz
-      call plant%upgm_grow%plant%plantstate%state%put("mrootfiberz", ra_setter, success)
-      deallocate(ra_setter, stat = alloc_stat)
-
       r_setter = plant%geometry%zht
       call plant%upgm_grow%plant%plantstate%state%put("height", r_setter, success)
       r_setter = plant%geometry%dstm
       call plant%upgm_grow%plant%plantstate%state%put("dstm", r_setter, success)
-      r_setter = plant%growth%zgrowpt
-      call plant%upgm_grow%plant%plantstate%state%put("zgrowpt", r_setter, success)
-      r_setter = plant%growth%trthucum
-      call plant%upgm_grow%plant%plantstate%state%put("trthucum", r_setter, success)
+      i_setter = plant%growth%dayam
+      call plant%upgm_grow%plant%plantstate%state%put("dayam", i_setter, success)
+      ! use from above
+      ! fliveleaf
       r_setter = plant%growth%thu_shoot_beg
       call plant%upgm_grow%plant%plantstate%state%put("thu_shoot_beg", r_setter, success)
       r_setter = plant%growth%thu_shoot_end
@@ -237,31 +204,11 @@ module WEPS_UPGM_mod
       call plant%upgm_grow%plant%plantstate%state%put("leafareatrend", r_setter, success)
       r_setter = plant%growth%stemmasstrend
       call plant%upgm_grow%plant%plantstate%state%put("stemmasstrend", r_setter, success)
-
-      r_setter = plant%database%fleafstem
-      call plant%upgm_grow%plant%plantstate%pars%put("leafstem", r_setter, success)
-      i_setter = plant%database%idc
-      call plant%upgm_grow%plant%plantstate%pars%put("idc", i_setter, success)
-
-      r_setter = plant%database%shoot
-      call plant%upgm_grow%plant%plantstate%pars%put("regrmshoot", r_setter, success)
-      r_setter = plant%database%zloc_regrow
-      call plant%upgm_grow%plant%plantstate%state%put("zloc_regrow", r_setter, success)
-      i_setter = plant%growth%dayam
-      call plant%upgm_grow%plant%plantstate%state%put("dayam", i_setter, success)
-
-      nelem = size(soil%tsmx)
-      allocate(ra_setter(nelem), stat = alloc_stat)
-      if( alloc_stat .gt. 0 ) then
-        write(*,*) 'Unable to allocate memory for UPGM.'
-      end if
-      ra_setter = soil%tsmx
-      call plant%env%state%put("htsmx", ra_setter, success)
-      deallocate(ra_setter, stat = alloc_stat)
-
-      r_setter = plant%database%tverndel
-      call plant%upgm_grow%plant%plantstate%pars%put("tverndel", r_setter, success)
-
+      ! use from above
+      ! warmdays
+      ! chill_unit_cum
+      i_setter = -2
+      call plant%upgm_grow%plant%plantstate%state%put("regrowth_flg", i_setter, success)
       r_setter = plant%prev%liveleaf
       call plant%upgm_grow%plant%plantstate%state%put("prevliveleaf", r_setter, success)
       r_setter = plant%prev%standleaf
@@ -290,27 +237,106 @@ module WEPS_UPGM_mod
       call plant%upgm_grow%plant%plantstate%state%put("res_grainf", r_setter, success)
       call plant%upgm_grow%plant%plantstate%state%put("res_zht", r_setter, success)
       call plant%upgm_grow%plant%plantstate%state%put("res_dstm", r_setter, success)
-      call plant%upgm_grow%plant%plantstate%state%put("hui", r_setter, success)
-      call plant%upgm_grow%plant%plantstate%state%put("huiy", r_setter, success)
-      call plant%upgm_grow%plant%plantstate%state%put("huirt", r_setter, success)
-      call plant%upgm_grow%plant%plantstate%state%put("huirty", r_setter, success)
+      l_setter = .false.
+      call plant%upgm_grow%plant%plantstate%state%put("growing", l_setter, success)
+      call plant%upgm_grow%plant%plantstate%state%put("shoot_growing", l_setter, success)
+      call plant%upgm_grow%plant%plantstate%state%put("can_regrow", l_setter, success)
+      call plant%upgm_grow%plant%plantstate%state%put("do_regrow", l_setter, success)
+
+      ! add phase
+      call plant%upgm_grow%plant%add_phase("weps_shootgrow", "Shoot Grow", 0)
+      ! Associate regrowth phase
+      plant%upgm_grow%plant%phaseCurrent%ptr%phaseRegrow => plant%upgm_grow%plant%phaseCurrent%ptr
+
+      ! create phase states
+      call plant%upgm_grow%plant%phaseCurrent%ptr%phaseState%put("stagegdd", r_setter, success)
+      call plant%upgm_grow%plant%phaseCurrent%ptr%phaseState%put("phase_rel_gdd", r_setter, success)
+
+      ! create all input names
+      ! use from above
+      ! plantpop
+      ! idc
+      r_setter = plant%database%tverndel
+      call plant%upgm_grow%plant%plantstate%pars%put("tverndel", r_setter, success)
+      r_setter = plant%database%fleaf2stor
+      call plant%upgm_grow%plant%plantstate%pars%put("leaf2stor", r_setter, success)
+      r_setter = plant%database%fstem2stor
+      call plant%upgm_grow%plant%plantstate%pars%put("stem2stor", r_setter, success)
+      r_setter = plant%database%fstor2stor
+      call plant%upgm_grow%plant%plantstate%pars%put("stor2stor", r_setter, success)
+      ! use from above
+      ! regrmshoot
+      ! dmaxshoot
+      ! huie
+      r_setter = plant%database%thum
+      call plant%upgm_grow%plant%plantstate%pars%put("thum", r_setter, success)
+      r_setter = plant%database%alf
+      call plant%upgm_grow%plant%plantstate%pars%put("alf", r_setter, success)
+      r_setter = plant%database%blf
+      call plant%upgm_grow%plant%plantstate%pars%put("blf", r_setter, success)
+      r_setter = plant%database%clf
+      call plant%upgm_grow%plant%plantstate%pars%put("clf", r_setter, success)
+      r_setter = plant%database%dlf
+      call plant%upgm_grow%plant%plantstate%pars%put("dlf", r_setter, success)
+      r_setter = plant%database%arp
+      call plant%upgm_grow%plant%plantstate%pars%put("arp", r_setter, success)
+      r_setter = plant%database%brp
+      call plant%upgm_grow%plant%plantstate%pars%put("brp", r_setter, success)
+      r_setter = plant%database%crp
+      call plant%upgm_grow%plant%plantstate%pars%put("crp", r_setter, success)
+      r_setter = plant%database%drp
+      call plant%upgm_grow%plant%plantstate%pars%put("drp", r_setter, success)
+      r_setter = plant%database%aht
+      call plant%upgm_grow%plant%plantstate%pars%put("aht", r_setter, success)
+      r_setter = plant%database%bht
+      call plant%upgm_grow%plant%plantstate%pars%put("bht", r_setter, success)
+      r_setter = plant%database%zmxc
+      call plant%upgm_grow%plant%plantstate%pars%put("zmxc", r_setter, success)
+      r_setter = plant%database%zmrt
+      call plant%upgm_grow%plant%plantstate%pars%put("zmrt", r_setter, success)
+      r_setter = plant%database%ehu0
+      call plant%upgm_grow%plant%plantstate%pars%put("ehu0", r_setter, success)
+      jd = get_simdate_doy()
+      call plant%env%state%put("dayofyear", jd, success)
+      ! use from above
+      ! mtotshoot
+      ! mrootstorez
+      ! dstm
+      r_setter = plant%growth%zgrowpt
+      call plant%upgm_grow%plant%plantstate%state%put("zgrowpt", r_setter, success)
+      r_setter = plant%growth%trthucum
+      call plant%upgm_grow%plant%plantstate%state%put("trthucum", r_setter, success)
+      ! use from above
+      ! thu_shoot_beg
+      ! thu_shoot_end
+      ! harden_index
+      ! warmdays
+      ! chill_unit_cum
+      r_setter = plant%growth%dayspring
+      call plant%upgm_grow%plant%plantstate%state%put("dayspring", r_setter, success)
+      ! use from above
+      ! can_regrow
+      ! ffa
+      ! values only returned from ShootGrow
+      r_setter = 0.0_dp
+      call plant%upgm_grow%plant%plantstate%state%put("ffw", r_setter, success)
+      call plant%upgm_grow%plant%plantstate%state%put("ffr", r_setter, success)
+      call plant%upgm_grow%plant%plantstate%state%put("gif", r_setter, success)
+      call plant%upgm_grow%plant%plantstate%state%put("shoot_hui", r_setter, success)
+      call plant%upgm_grow%plant%plantstate%state%put("shoot_huiy", r_setter, success)
       call plant%upgm_grow%plant%plantstate%state%put("p_rw", r_setter, success)
       call plant%upgm_grow%plant%plantstate%state%put("p_st", r_setter, success)
       call plant%upgm_grow%plant%plantstate%state%put("p_lf", r_setter, success)
       call plant%upgm_grow%plant%plantstate%state%put("p_rp", r_setter, success)
       call plant%upgm_grow%plant%plantstate%state%put("pdht", r_setter, success)
       call plant%upgm_grow%plant%plantstate%state%put("pdrd", r_setter, success)
-      call plant%upgm_grow%plant%plantstate%state%put("ffa", r_setter, success)
-      call plant%upgm_grow%plant%plantstate%state%put("ffw", r_setter, success)
-      call plant%upgm_grow%plant%plantstate%state%put("ffr", r_setter, success)
-      call plant%upgm_grow%plant%plantstate%state%put("gif", r_setter, success)
-      call plant%upgm_grow%plant%plantstate%state%put("shoot_hui", r_setter, success)
-      call plant%upgm_grow%plant%plantstate%state%put("shoot_huiy", r_setter, success)
-
-
+      ! use from above
+      !growing
+      l_setter = .false.
+      call plant%upgm_grow%plant%plantstate%state%put("lastday", l_setter, success)
       ! reporting only variables
       call plant%upgm_grow%plant%plantstate%state%put("hu_delay", r_setter, success)
-      call plant%upgm_grow%plant%plantstate%state%put("regrowth_flg", i_setter, success)
+      call plant%upgm_grow%plant%plantstate%state%put("spring_flg", i_setter, success)
 
       ! loop day steps
       plant%upgm_grow%plant%phaseCurrent%ptr => plant%upgm_grow%plant%phases%ptr
@@ -327,10 +353,9 @@ module WEPS_UPGM_mod
       use constants, only : dp, int32
       use soil_data_struct_defs, only: soil_def
       use biomaterial, only: plant_pointer, residueAdd
+      use crop_data_struct_defs, only: crop_residue, am0cfl
       use crop_data_struct_defs, only: create_crop_residue, destroy_crop_residue
-      use crop_data_struct_defs, only: am0cfl
       use climate_input_mod, only: amalat, cli_today
-      use crop_data_struct_defs, only: crop_residue
       use weps_main_mod, only: daysim
       use datetime_mod, only: get_simdate_doy, get_simdate_year
       use file_io_mod, only: luocrop, luoshoot
@@ -362,7 +387,6 @@ module WEPS_UPGM_mod
       real(dp) :: ffr  ! root weight reduction factor (ratio)
       real(dp) :: gif  ! grain index accounting for development of chaff before grain fill
       real(dp) :: hui  ! fraction of growing season accumulation
-      real(dp) :: huiy ! previous day fraction of growing season accumulation
       real(dp) :: shoot_hui    ! today fraction of heat unit shoot growth index accumulation
       real(dp) :: shoot_huiy   ! previous day fraction of heat unit shoot growth index accumulation
       real(dp) :: s_root_sum   ! storage root mass sum (total in all layers) (kg/m^2)
@@ -393,73 +417,428 @@ module WEPS_UPGM_mod
       real(dp) :: temp_stmrep
       real(dp) :: lost_mass    ! biomass that decayed (disappeared) from scenescence and freeze damage
       integer(int32) :: regrowth_flg
+      integer(int32) :: spring_flg
+      integer(int32) :: regrowth_or_spring_flg
       integer(int32) :: idx
       integer(int32) :: jd ! day of year
       real(dp) :: trend ! test computation for trend direction of living leaf area
+      character(len=80) :: PhaseLabel
 
-!      if( ( plant%prev%hucum/plant%database%thum .ge. 1.0) .or. (plant%geometry%dstm .le. 0.0)) then
-        ! heat units completed, crop leaf mass is non transpiring
-!        plant%growth%fliveleaf = 0.0
+      regrowth_flg = -2
+      spring_flg = -2
+      jd = get_simdate_doy()
 
-        ! check for mature perennial that may re-sprout before fall (alfalfa, grasses)
-!        if( (plant%database%idc.eq.3) .or. (plant%database%idc.eq.6) ) then
-          ! check for growing weather and regrowth ready state
-          ! transfer all mature biomass to residue pool
-          ! find number of stems to regrow
-          ! reset heat units to start shoot regrowth
-!        end if
+      ! set flag indicating shoot_growing (cannot regrow)
+      if( (shoot_hui .le. 1.0_dp ) .and. (shoot_hui .ge. 0.0_dp) ) then
+        if( shoot_huiy .lt. 1.0_dp ) then
+          plant%growth%shoot_growing = .true.
+        else
+          plant%growth%shoot_growing = .false.
+        end if
+      else
+        plant%growth%shoot_growing = .false.
+      end if
 
-        ! accumulate days after maturity
-!        plant%growth%dayam = plant%growth%dayam + 1
-
-!      end if
+      if(    (plant%database%fleaf2stor .gt. 0.0_dp) &
+        .or. (plant%database%fstem2stor .gt. 0.0_dp) &
+        .or. (plant%database%fstor2stor .gt. 0.0_dp) ) then
+        plant%growth%can_regrow = .true.
+        plant%growth%can_harden = .true.
+      else
+        plant%growth%can_regrow = .false.
+        plant%growth%can_harden = .false.
+      end if
 
       ! update daily inputs for preprocesses
-      r_setter = cli_today%tdmn
-      call plant%env%state%replace("tmin", r_setter, success)
-      r_setter = cli_today%tdmx
-      call plant%env%state%replace("tmax", r_setter, success)
-      r_setter = plant%growth%thucum
-      call plant%upgm_grow%plant%plantstate%state%replace("thucum", r_setter, success)
-      r_setter = soil%tsmx(1)
-      call plant%env%state%replace("tsmx1", r_setter, success)
-      r_setter = soil%tsmn(1)
-      call plant%env%state%replace("tsmn1", r_setter, success)
-      r_setter = plant%mass%standleaf
-      call plant%upgm_grow%plant%plantstate%state%replace("mstandleaf", r_setter, success)
-      r_setter = plant%growth%fliveleaf
-      call plant%upgm_grow%plant%plantstate%state%replace("fliveleaf", r_setter, success)
-
-      ! run daily preprocesses
       plant%upgm_grow%plant%processCurrent%ptr => plant%upgm_grow%plant%processes%ptr
-      call plant%upgm_grow%preproc(plant%env)
+      do while ( associated(plant%upgm_grow%plant%processCurrent%ptr) )
 
-      if( associated(plant%upgm_grow%plant%phaseCurrent%ptr) ) then
+        select case(plant%upgm_grow%plant%processCurrent%ptr%processName)
 
-        ! update daily inputs
-        select case(plant%upgm_grow%plant%phaseCurrent%ptr%phaseLabel)
-        case ("Germination")
-          ra_setter = [0.45, 0.35, 0.30, 0.35, 0.32]
-          call plant%env%state%replace("swc", ra_setter, success)
-
-        case ("Emergence")
-          r_setter = 0.3_dp
-          call plant%upgm_grow%plant%plantstate%state%replace("stress", r_setter, success)
-
-        case ("Tiller_Initiation")
-          r_setter = 0.3_dp
-          call plant%upgm_grow%plant%plantstate%state%replace("stress", r_setter, success)
-
-        case ("Shoot Grow")
-
-          jd = get_simdate_doy()
-          call plant%env%state%replace("dayofyear", jd, success)
-
+        case ("gddmethod1")
+          r_setter = cli_today%tdmn
+          call plant%env%state%replace("tmin", r_setter, success)
+          r_setter = cli_today%tdmx
+          call plant%env%state%replace("tmax", r_setter, success)
+        case ("gddweps_method")
+          r_setter = cli_today%tdmn
+          call plant%env%state%replace("tmin", r_setter, success)
+          r_setter = cli_today%tdmx
+          call plant%env%state%replace("tmax", r_setter, success)
+        case ("ritchie_vernalization")
+          r_setter = plant%growth%tchillucum
+          call plant%upgm_grow%plant%plantstate%state%replace("chill_unit_cum", r_setter, success)
+          r_setter = cli_today%tdmn
+          call plant%env%state%replace("tmin", r_setter, success)
+          r_setter = cli_today%tdmx
+          call plant%env%state%replace("tmax", r_setter, success)
+        case ("ritchie_winterhardening")
+          r_setter = plant%growth%thardnx
+          call plant%upgm_grow%plant%plantstate%state%replace("harden_index", r_setter, success)
+          l_setter = plant%growth%can_harden
+          call plant%upgm_grow%plant%plantstate%state%replace("can_harden", l_setter, success)
+          r_setter = soil%tsmx(1)
+          call plant%env%state%replace("tsmx1", r_setter, success)
+          r_setter = soil%tsmn(1)
+          call plant%env%state%replace("tsmn1", r_setter, success)
+        case ("weps_warmdays")
+          r_setter = plant%growth%twarmdays
+          call plant%upgm_grow%plant%plantstate%state%replace("warmdays", r_setter, success)
+          r_setter = cli_today%tdmn
+          call plant%env%state%replace("tmin", r_setter, success)
+          r_setter = cli_today%tdmx
+          call plant%env%state%replace("tmax", r_setter, success)
+        case ("weps_tempstress")
+          r_setter = cli_today%tdmn
+          call plant%env%state%replace("tmin", r_setter, success)
+          r_setter = cli_today%tdmx
+          call plant%env%state%replace("tmax", r_setter, success)
+        case ("weps_freezedamage")
+          r_setter = plant%mass%standleaf
+          call plant%upgm_grow%plant%plantstate%state%replace("mstandleaf", r_setter, success)
+          r_setter = plant%growth%fliveleaf
+          call plant%upgm_grow%plant%plantstate%state%replace("fliveleaf", r_setter, success)
+          r_setter = soil%tsmn(1)
+          call plant%env%state%replace("tsmn1", r_setter, success)
+        case ("weps_regrowth")
           ! calculate day length
           r_setter = daylen(amalat, jd-1, civilrise)
           call plant%env%state%replace("hrlty", r_setter, success)
           r_setter = daylen(amalat, jd, civilrise)
           call plant%env%state%replace("hrlt", r_setter, success)
+          r_setter = plant%mass%standstem
+          call plant%upgm_grow%plant%plantstate%state%replace("mstandstem", r_setter, success)
+          r_setter = plant%mass%standleaf
+          call plant%upgm_grow%plant%plantstate%state%replace("mstandleaf", r_setter, success)
+          r_setter = plant%mass%standstore
+          call plant%upgm_grow%plant%plantstate%state%replace("mstandstore", r_setter, success)
+          r_setter = plant%mass%flatstem
+          call plant%upgm_grow%plant%plantstate%state%replace("mflatstem", r_setter, success)
+          r_setter = plant%mass%flatleaf
+          call plant%upgm_grow%plant%plantstate%state%replace("mflatleaf", r_setter, success)
+          r_setter = plant%mass%flatstore
+          call plant%upgm_grow%plant%plantstate%state%replace("mflatstore", r_setter, success)
+          r_setter = plant%growth%mshoot
+          call plant%upgm_grow%plant%plantstate%state%replace("masshoot", r_setter, success)
+          r_setter = plant%growth%mtotshoot
+          call plant%upgm_grow%plant%plantstate%state%replace("mtotshoot", r_setter, success)
+
+          nelem = size(plant%mass%stemz)
+          allocate(ra_setter(nelem), stat = alloc_stat)
+          if( alloc_stat .gt. 0 ) then
+            write(*,*) 'Unable to allocate memory for UPGM.'
+          end if
+          ra_setter = plant%mass%stemz
+          call plant%upgm_grow%plant%plantstate%state%replace("mbgstemz", ra_setter, success)
+          deallocate(ra_setter, stat = alloc_stat)
+
+          nelem = size(plant%mass%rootstorez)
+          allocate(ra_setter(nelem), stat = alloc_stat)
+          if( alloc_stat .gt. 0 ) then
+             write(*,*) 'Unable to allocate memory for UPGM.'
+          end if
+          ra_setter = plant%mass%rootstorez
+          call plant%upgm_grow%plant%plantstate%state%replace("mrootstorez", ra_setter, success)
+          deallocate(ra_setter, stat = alloc_stat)
+
+          r_setter = plant%geometry%zht
+          call plant%upgm_grow%plant%plantstate%state%replace("height", r_setter, success)
+          r_setter = plant%geometry%dstm
+          call plant%upgm_grow%plant%plantstate%state%replace("dstm", r_setter, success)
+          i_setter = plant%growth%dayam
+          call plant%upgm_grow%plant%plantstate%state%replace("dayam", i_setter, success)
+          r_setter = plant%growth%fliveleaf
+          call plant%upgm_grow%plant%plantstate%state%replace("fliveleaf", r_setter, success)
+          r_setter = plant%growth%thu_shoot_beg
+          call plant%upgm_grow%plant%plantstate%state%replace("thu_shoot_beg", r_setter, success)
+          r_setter = plant%growth%thu_shoot_end
+          call plant%upgm_grow%plant%plantstate%state%replace("thu_shoot_end", r_setter, success)
+          r_setter = plant%geometry%grainf
+          call plant%upgm_grow%plant%plantstate%state%replace("grainf", r_setter, success)
+          r_setter = plant%growth%leafareatrend
+          call plant%upgm_grow%plant%plantstate%state%replace("leafareatrend", r_setter, success)
+          r_setter = plant%growth%stemmasstrend
+          call plant%upgm_grow%plant%plantstate%state%replace("stemmasstrend", r_setter, success)
+          r_setter = plant%growth%twarmdays
+          call plant%upgm_grow%plant%plantstate%state%replace("warmdays", r_setter, success)
+          r_setter = plant%growth%tchillucum
+          call plant%upgm_grow%plant%plantstate%state%replace("chill_unit_cum", r_setter, success)
+          r_setter = plant%prev%liveleaf
+          call plant%upgm_grow%plant%plantstate%state%replace("prevliveleaf", r_setter, success)
+          r_setter = plant%prev%standleaf
+          call plant%upgm_grow%plant%plantstate%state%replace("prevstandleaf", r_setter, success)
+          r_setter = plant%prev%standstem
+          call plant%upgm_grow%plant%plantstate%state%replace("prevstandstem", r_setter, success)
+          r_setter = plant%prev%flatstem
+          call plant%upgm_grow%plant%plantstate%state%replace("prevflatstem", r_setter, success)
+
+          l_setter = plant%growth%growing
+          call plant%upgm_grow%plant%plantstate%state%replace("growing", l_setter, success)
+          l_setter = plant%growth%shoot_growing
+          call plant%upgm_grow%plant%plantstate%state%replace("shoot_growing", l_setter, success)
+          l_setter = plant%growth%can_regrow
+          call plant%upgm_grow%plant%plantstate%state%replace("can_regrow", l_setter, success)
+
+        end select
+
+        plant%upgm_grow%plant%processCurrent%ptr => plant%upgm_grow%plant%processCurrent%ptr%processNext
+      end do
+
+      ! run daily preprocesses
+      plant%upgm_grow%plant%processCurrent%ptr => plant%upgm_grow%plant%processes%ptr
+      call plant%upgm_grow%preproc(plant%env)
+
+      ! update local values changed by preprocesses
+      plant%upgm_grow%plant%processCurrent%ptr => plant%upgm_grow%plant%processes%ptr
+      do while ( associated(plant%upgm_grow%plant%processCurrent%ptr) )
+
+        select case(plant%upgm_grow%plant%processCurrent%ptr%processName)
+
+        case ("gddmethod1")
+        case ("gddweps_method")
+        case ("ritchie_vernalization")
+          call plant%upgm_grow%plant%plantstate%state%get("chill_unit_cum", r_setter, success)
+          plant%growth%tchillucum = r_setter
+        case ("ritchie_winterhardening")
+          call plant%upgm_grow%plant%plantstate%state%get("harden_index", r_setter, success)
+          plant%growth%thardnx = r_setter
+        case ("weps_warmdays")
+          call plant%upgm_grow%plant%plantstate%state%get("warmdays", r_setter, success)
+          plant%growth%twarmdays = r_setter
+        case ("weps_tempstress")
+        case ("weps_freezedamage")
+          call plant%upgm_grow%plant%plantstate%state%get("mstandleaf", r_setter, success)
+          plant%mass%standleaf = r_setter
+          call plant%upgm_grow%plant%plantstate%state%get("fliveleaf", r_setter, success)
+          plant%growth%fliveleaf = r_setter
+        case ("weps_regrowth")
+          call plant%upgm_grow%plant%plantstate%state%get("mstandstem", r_setter, success)
+          plant%mass%standstem = r_setter
+          call plant%upgm_grow%plant%plantstate%state%get("mstandleaf", r_setter, success)
+          plant%mass%standleaf = r_setter
+          call plant%upgm_grow%plant%plantstate%state%get("mstandstore", r_setter, success)
+          plant%mass%standstore = r_setter
+          call plant%upgm_grow%plant%plantstate%state%get("mflatstem", r_setter, success)
+          plant%mass%flatstem = r_setter
+          call plant%upgm_grow%plant%plantstate%state%get("mflatleaf", r_setter, success)
+          plant%mass%flatleaf = r_setter
+          call plant%upgm_grow%plant%plantstate%state%get("mflatstore", r_setter, success)
+          plant%mass%flatstore = r_setter
+          call plant%upgm_grow%plant%plantstate%state%get("masshoot", r_setter, success)
+          plant%growth%mshoot = r_setter
+          call plant%upgm_grow%plant%plantstate%state%get("mtotshoot", r_setter, success)
+          plant%growth%mtotshoot = r_setter
+          call plant%upgm_grow%plant%plantstate%state%get("mbgstemz", ra_setter, success)
+          plant%mass%stemz = ra_setter
+          deallocate(ra_setter, stat = alloc_stat)
+          if( alloc_stat .gt. 0 ) then
+            write(*,*) 'Unable to deallocate memory for UPGM.'
+          end if
+          call plant%upgm_grow%plant%plantstate%state%get("height", r_setter, success)
+          plant%geometry%zht = r_setter
+          call plant%upgm_grow%plant%plantstate%state%get("dstm", r_setter, success)
+          plant%geometry%dstm = r_setter
+          call plant%upgm_grow%plant%plantstate%state%get("dayam", i_setter, success)
+          plant%growth%dayam = i_setter
+          call plant%upgm_grow%plant%plantstate%state%get("thu_shoot_beg", r_setter, success)
+          plant%growth%thu_shoot_beg = r_setter
+          call plant%upgm_grow%plant%plantstate%state%get("thu_shoot_end", r_setter, success)
+          plant%growth%thu_shoot_end = r_setter
+          call plant%upgm_grow%plant%plantstate%state%get("grainf", r_setter, success)
+          plant%geometry%grainf = r_setter
+          call plant%upgm_grow%plant%plantstate%state%get("leafareatrend", r_setter, success)
+          plant%growth%leafareatrend = r_setter
+          call plant%upgm_grow%plant%plantstate%state%get("stemmasstrend", r_setter, success)
+          plant%growth%stemmasstrend = r_setter
+          call plant%upgm_grow%plant%plantstate%state%get("chill_unit_cum", r_setter, success)
+          plant%growth%tchillucum = r_setter
+          call plant%upgm_grow%plant%plantstate%state%get("regrowth_flg", regrowth_flg, success)
+
+          cropres = create_crop_residue(soil%nslay)
+
+          call plant%upgm_grow%plant%plantstate%state%get("res_standstem", r_setter, success)
+          cropres%standstem = r_setter
+          call plant%upgm_grow%plant%plantstate%state%get("res_standleaf", r_setter, success)
+          cropres%standleaf = r_setter
+          call plant%upgm_grow%plant%plantstate%state%get("res_standstore", r_setter, success)
+          cropres%standstore = r_setter
+          call plant%upgm_grow%plant%plantstate%state%get("res_flatstem", r_setter, success)
+          cropres%flatstem = r_setter
+          call plant%upgm_grow%plant%plantstate%state%get("res_flatleaf", r_setter, success)
+          cropres%flatleaf = r_setter
+          call plant%upgm_grow%plant%plantstate%state%get("res_flatstore", r_setter, success)
+          cropres%flatstore = r_setter
+          call plant%upgm_grow%plant%plantstate%state%get("res_bgstemz", ra_setter, success)
+          cropres%stemz = ra_setter
+          deallocate(ra_setter, stat = alloc_stat)
+          if( alloc_stat .gt. 0 ) then
+            write(*,*) 'Unable to deallocate memory for UPGM.'
+          end if
+          call plant%upgm_grow%plant%plantstate%state%get("res_grainf", r_setter, success)
+          cropres%grainf = r_setter
+          call plant%upgm_grow%plant%plantstate%state%get("res_zht", r_setter, success)
+          cropres%zht = r_setter
+          call plant%upgm_grow%plant%plantstate%state%get("res_dstm", r_setter, success)
+          cropres%dstm = r_setter
+
+          ! check for abandoned stems in crop regrowth
+          if( ( cropres%standstem + cropres%standleaf + cropres%standstore &
+              + cropres%flatstem + cropres%flatleaf + cropres%flatstore ) &
+               .gt. 0.0 ) then
+            ! create new residue pool and transfer cropres into it
+            plant%residue => residueAdd( plant%residue, plant%residueIndex, soil%nslay ) 
+
+            plant%residue%standstem = cropres%standstem
+            plant%residue%standleaf = cropres%standleaf
+            plant%residue%standstore = cropres%standstore
+            plant%residue%flatstem = cropres%flatstem
+            plant%residue%flatleaf = cropres%flatleaf
+            plant%residue%flatstore = cropres%flatstore
+            plant%residue%stemz = cropres%stemz
+            plant%residue%zht = cropres%zht
+            plant%residue%dstm = cropres%dstm
+            plant%residue%xstmrep = plant%geometry%xstmrep
+            plant%residue%grainf = cropres%grainf
+
+            ! reset abandoned stem amounts to zero
+            r_setter = 0.0_dp
+            call plant%upgm_grow%plant%plantstate%state%replace("res_standstem", r_setter, success)
+            call plant%upgm_grow%plant%plantstate%state%replace("res_standleaf", r_setter, success)
+            call plant%upgm_grow%plant%plantstate%state%replace("res_standstore", r_setter, success)
+            call plant%upgm_grow%plant%plantstate%state%replace("res_flatstem", r_setter, success)
+            call plant%upgm_grow%plant%plantstate%state%replace("res_flatleaf", r_setter, success)
+            call plant%upgm_grow%plant%plantstate%state%replace("res_flatstore", r_setter, success)
+            nelem = size(soil%aszlyd)
+            allocate(ra_setter(nelem), stat = alloc_stat)
+            if( alloc_stat .gt. 0 ) then
+              write(*,*) 'Unable to allocate memory for UPGM.'
+            end if
+            ra_setter = 0.0_dp
+            call plant%upgm_grow%plant%plantstate%state%replace("res_bgstemz", ra_setter, success)
+            deallocate(ra_setter, stat = alloc_stat)
+
+            call plant%upgm_grow%plant%plantstate%state%replace("res_grainf", r_setter, success)
+            call plant%upgm_grow%plant%plantstate%state%replace("res_zht", r_setter, success)
+            call plant%upgm_grow%plant%plantstate%state%replace("res_dstm", r_setter, success)
+
+          end if
+
+          call destroy_crop_residue(cropres)
+
+          call plant%upgm_grow%plant%plantstate%state%get("do_regrow", l_setter, success)
+          plant%growth%do_regrow = l_setter
+        end select
+
+        plant%upgm_grow%plant%processCurrent%ptr => plant%upgm_grow%plant%processCurrent%ptr%processNext
+      end do
+
+      if( associated(plant%upgm_grow%plant%phaseCurrent%ptr) ) then
+
+        ! if regrowth is triggered, set current phase pointer to regrowth phase and set phase state inputs
+        if( plant%growth%do_regrow ) then
+          if( associated(plant%upgm_grow%plant%phaseCurrent%ptr%phaseRegrow) ) then
+            plant%upgm_grow%plant%phaseCurrent%ptr => plant%upgm_grow%plant%phaseCurrent%ptr%phaseRegrow
+            ! reset phase state to start again
+            r_setter = 0.0_dp
+            call plant%upgm_grow%plant%phaseCurrent%ptr%phaseState%replace("phase_rel_gdd", r_setter, success)
+            call plant%upgm_grow%plant%phaseCurrent%ptr%phaseState%replace("stagegdd", r_setter, success)
+            plant%growth%do_regrow = .false.
+            l_setter = .false.
+            call plant%upgm_grow%plant%plantstate%state%replace("growing", l_setter, success)
+            plant%growth%growing = l_setter
+          end if
+        end if
+
+        ! update daily inputs
+        select case(plant%upgm_grow%plant%phaseCurrent%ptr%phaseName)
+        case ("pmms_germination")
+
+          allocate(ra_setter(soil%nslay), stat = alloc_stat)
+          if( alloc_stat .gt. 0 ) then
+            write(*,*) 'Unable to allocate memory for UPGM.'
+          end if
+          do idx=1,soil%nslay
+            ra_setter(idx) = soil%theta(idx)
+          end do
+          call plant%env%state%replace("swc", ra_setter, success)
+          deallocate(ra_setter, stat = alloc_stat)
+
+        case ("pmms_shootgrg")
+          ! set below
+          ! "daygdd"
+          r_setter = 1.0_dp - plant%growth%fwsf
+          call plant%upgm_grow%plant%plantstate%state%replace("stress", r_setter, success)
+          r_setter = plant%growth%fliveleaf
+          call plant%upgm_grow%plant%plantstate%state%replace("fliveleaf", r_setter, success)
+          r_setter = plant%growth%thu_shoot_beg
+          call plant%upgm_grow%plant%plantstate%state%replace("thu_shoot_beg", r_setter, success)
+          r_setter = plant%growth%thu_shoot_end
+          call plant%upgm_grow%plant%plantstate%state%replace("thu_shoot_end", r_setter, success)
+
+        case ("pmms_basephenol")
+          ! set below
+          ! "daygdd"
+          r_setter = 1.0_dp - plant%growth%fwsf
+          call plant%upgm_grow%plant%plantstate%state%replace("stress", r_setter, success)
+          r_setter = plant%growth%fliveleaf
+          call plant%upgm_grow%plant%plantstate%state%replace("fliveleaf", r_setter, success)
+          r_setter = plant%growth%thu_shoot_beg
+
+        case ("pmms_springphenol")
+          ! set below
+          ! "daygdd"
+          r_setter = 1.0_dp - plant%growth%fwsf
+          call plant%upgm_grow%plant%plantstate%state%replace("stress", r_setter, success)
+          r_setter = plant%growth%mtotshoot
+          call plant%upgm_grow%plant%plantstate%state%replace("mtotshoot", r_setter, success)
+
+          nelem = size(plant%mass%rootstorez)
+          allocate(ra_setter(nelem), stat = alloc_stat)
+          if( alloc_stat .gt. 0 ) then
+             write(*,*) 'Unable to allocate memory for UPGM.'
+          end if
+          ra_setter = plant%mass%rootstorez
+          call plant%upgm_grow%plant%plantstate%state%replace("mrootstorez", ra_setter, success)
+          deallocate(ra_setter, stat = alloc_stat)
+
+          r_setter = plant%geometry%dstm
+          call plant%upgm_grow%plant%plantstate%state%replace("dstm", r_setter, success)
+          r_setter = plant%growth%fliveleaf
+          call plant%upgm_grow%plant%plantstate%state%replace("fliveleaf", r_setter, success)
+          r_setter = plant%growth%zgrowpt
+          call plant%upgm_grow%plant%plantstate%state%replace("zgrowpt", r_setter, success)
+          r_setter = plant%growth%thu_shoot_beg
+          call plant%upgm_grow%plant%plantstate%state%replace("thu_shoot_beg", r_setter, success)
+          r_setter = plant%growth%thu_shoot_end
+          call plant%upgm_grow%plant%plantstate%state%replace("thu_shoot_end", r_setter, success)
+          r_setter = plant%growth%thardnx
+          call plant%upgm_grow%plant%plantstate%state%replace("harden_index", r_setter, success)
+          r_setter = plant%growth%twarmdays
+          call plant%upgm_grow%plant%plantstate%state%replace("warmdays", r_setter, success)
+          r_setter = plant%growth%tchillucum
+          call plant%upgm_grow%plant%plantstate%state%replace("chill_unit_cum", r_setter, success)
+          r_setter = plant%growth%dayspring
+          call plant%upgm_grow%plant%plantstate%state%replace("dayspring", r_setter, success)
+          l_setter = plant%growth%can_regrow
+          call plant%upgm_grow%plant%plantstate%state%replace("can_regrow", l_setter, success)
+
+        case ("pmms_fallphenol")
+          ! set below
+          ! "daygdd"
+          r_setter = 1.0_dp - plant%growth%fwsf
+          call plant%upgm_grow%plant%plantstate%state%replace("stress", r_setter, success)
+          r_setter = plant%growth%fliveleaf
+          call plant%upgm_grow%plant%plantstate%state%replace("fliveleaf", r_setter, success)
+          r_setter = plant%growth%tchillucum
+          call plant%upgm_grow%plant%plantstate%state%replace("chill_unit_cum", r_setter, success)
+
+        case ("weps_shootgrow")
+
+          call plant%env%state%replace("dayofyear", jd, success)
+
+          ! calculate day length
+!          r_setter = daylen(amalat, jd, civilrise)
+!          call plant%env%state%replace("hrlt", r_setter, success)
 
           r_setter = plant%mass%standstem
           call plant%upgm_grow%plant%plantstate%state%replace("mstandstem", r_setter, success)
@@ -500,24 +879,10 @@ module WEPS_UPGM_mod
             write(*,*) 'Unable to deallocate memory for UPGM.'
           end if
 
-          nelem = size(plant%mass%rootfiberz)
-          allocate(ra_setter(nelem), stat = alloc_stat)
-          if( alloc_stat .gt. 0 ) then
-            write(*,*) 'Unable to allocate memory for UPGM.'
-          end if
-          ra_setter = plant%mass%rootfiberz
-          call plant%upgm_grow%plant%plantstate%state%replace("mrootfiberz", ra_setter, success)
-          deallocate(ra_setter, stat = alloc_stat)
-          if( alloc_stat .gt. 0 ) then
-            write(*,*) 'Unable to deallocate memory for UPGM.'
-          end if
-
           r_setter = plant%geometry%zht
           call plant%upgm_grow%plant%plantstate%state%replace("height", r_setter, success)
           r_setter = plant%geometry%dstm
           call plant%upgm_grow%plant%plantstate%state%replace("dstm", r_setter, success)
-          i_setter = plant%growth%dayam
-          call plant%upgm_grow%plant%plantstate%state%replace("dayam", i_setter, success)
           r_setter = plant%growth%zgrowpt
           call plant%upgm_grow%plant%plantstate%state%replace("zgrowpt", r_setter, success)
           r_setter = plant%growth%trthucum
@@ -530,19 +895,6 @@ module WEPS_UPGM_mod
           call plant%upgm_grow%plant%plantstate%state%replace("stemmasstrend", r_setter, success)
           r_setter = plant%growth%dayspring
           call plant%upgm_grow%plant%plantstate%state%replace("dayspring", r_setter, success)
-
-          nelem = size(soil%tsmx)
-          allocate(ra_setter(nelem), stat = alloc_stat)
-          if( alloc_stat .gt. 0 ) then
-            write(*,*) 'Unable to allocate memory for UPGM.'
-          end if
-          ra_setter = soil%tsmx
-          call plant%env%state%replace("htsmx", ra_setter, success)
-          deallocate(ra_setter, stat = alloc_stat)
-          if( alloc_stat .gt. 0 ) then
-            write(*,*) 'Unable to deallocate memory for UPGM.'
-          end if
-
           r_setter = plant%prev%liveleaf
           call plant%upgm_grow%plant%plantstate%state%replace("prevliveleaf", r_setter, success)
           r_setter = plant%prev%standleaf
@@ -551,7 +903,8 @@ module WEPS_UPGM_mod
           call plant%upgm_grow%plant%plantstate%state%replace("prevstandstem", r_setter, success)
           r_setter = plant%prev%flatstem
           call plant%upgm_grow%plant%plantstate%state%replace("prevflatstem", r_setter, success)
-          r_setter = plant%prev%hucum
+          l_setter = plant%growth%can_regrow
+          call plant%upgm_grow%plant%plantstate%state%replace("can_regrow", l_setter, success)
 
         end select
 
@@ -608,13 +961,6 @@ module WEPS_UPGM_mod
           write(*,*) 'Unable to deallocate memory for UPGM.'
         end if
 
-        call plant%upgm_grow%plant%plantstate%state%get("mrootfiberz", ra_setter, success)
-        plant%mass%rootfiberz = ra_setter
-        deallocate(ra_setter, stat = alloc_stat)
-        if( alloc_stat .gt. 0 ) then
-          write(*,*) 'Unable to deallocate memory for UPGM.'
-        end if
-
         call plant%upgm_grow%plant%plantstate%state%get("height", r_setter, success)
         plant%geometry%zht = r_setter
         call plant%upgm_grow%plant%plantstate%state%get("dstm", r_setter, success)
@@ -646,96 +992,21 @@ module WEPS_UPGM_mod
         call plant%upgm_grow%plant%plantstate%state%get("dayspring", r_setter, success)
         plant%growth%dayspring = r_setter
 
-        call plant%upgm_grow%plant%plantstate%state%get("prevliveleaf", r_setter, success)
-        plant%prev%liveleaf = r_setter
-        call plant%upgm_grow%plant%plantstate%state%get("prevstandleaf", r_setter, success)
-        plant%prev%standleaf = r_setter
-        call plant%upgm_grow%plant%plantstate%state%get("prevstandstem", r_setter, success)
-        plant%prev%standstem = r_setter
-        call plant%upgm_grow%plant%plantstate%state%get("prevflatstem", r_setter, success)
-        plant%prev%flatstem = r_setter
-
-        cropres = create_crop_residue(soil%nslay)
-
-        call plant%upgm_grow%plant%plantstate%state%get("res_standstem", r_setter, success)
-        cropres%standstem = r_setter
-        call plant%upgm_grow%plant%plantstate%state%get("res_standleaf", r_setter, success)
-        cropres%standleaf = r_setter
-        call plant%upgm_grow%plant%plantstate%state%get("res_standstore", r_setter, success)
-        cropres%standstore = r_setter
-        call plant%upgm_grow%plant%plantstate%state%get("res_flatstem", r_setter, success)
-        cropres%flatstem = r_setter
-        call plant%upgm_grow%plant%plantstate%state%get("res_flatleaf", r_setter, success)
-        cropres%flatleaf = r_setter
-        call plant%upgm_grow%plant%plantstate%state%get("res_flatstore", r_setter, success)
-        cropres%flatstore = r_setter
-
-        call plant%upgm_grow%plant%plantstate%state%get("res_bgstemz", ra_setter, success)
-        cropres%stemz = ra_setter
-        deallocate(ra_setter, stat = alloc_stat)
-        if( alloc_stat .gt. 0 ) then
-          write(*,*) 'Unable to deallocate memory for UPGM.'
-        end if
-
-        call plant%upgm_grow%plant%plantstate%state%get("res_grainf", r_setter, success)
-        cropres%grainf = r_setter
-        call plant%upgm_grow%plant%plantstate%state%get("res_zht", r_setter, success)
-        cropres%zht = r_setter
-        call plant%upgm_grow%plant%plantstate%state%get("res_dstm", r_setter, success)
-        cropres%dstm = r_setter
+        call plant%upgm_grow%plant%plantstate%state%get("growing", l_setter, success)
+        plant%growth%growing = l_setter
+        call plant%upgm_grow%plant%plantstate%state%get("lastday", l_setter, success)
+        plant%growth%lastday = l_setter
 
         if( associated(plant%upgm_grow%plant%phaseCurrent%ptr) ) then
           call plant%upgm_grow%plant%phaseCurrent%ptr%phaseState%get("stagegdd", r_setter, success)
           plant%growth%thucum = r_setter
+          call plant%upgm_grow%plant%phaseCurrent%ptr%phaseState%get("phase_rel_gdd", hui, success)
+          PhaseLabel = plant%upgm_grow%plant%phaseCurrent%ptr%PhaseLabel
         else
           call plant%upgm_grow%plant%plantstate%state%get("remgdd", remgdd, success)
           call plant%upgm_grow%plant%plantstate%state%get("daygdd", daygdd, success)
           plant%growth%thucum = plant%growth%thucum + daygdd - remgdd
         end if
-
-        ! check for abandoned stems in crop regrowth
-        if( ( cropres%standstem + cropres%standleaf + cropres%standstore &
-           + cropres%flatstem + cropres%flatleaf + cropres%flatstore ) &
-             .gt. 0.0 ) then
-          ! create new residue pool and transfer cropres into it
-          plant%residue => residueAdd( plant%residue, plant%residueIndex, soil%nslay ) 
-
-          plant%residue%standstem = cropres%standstem
-          plant%residue%standleaf = cropres%standleaf
-          plant%residue%standstore = cropres%standstore
-          plant%residue%flatstem = cropres%flatstem
-          plant%residue%flatleaf = cropres%flatleaf
-          plant%residue%flatstore = cropres%flatstore
-          plant%residue%stemz = cropres%stemz
-          plant%residue%zht = cropres%zht
-          plant%residue%dstm = cropres%dstm
-          plant%residue%xstmrep = plant%geometry%xstmrep
-          plant%residue%grainf = cropres%grainf
-
-          ! reset abandoned stem amounts to zero
-          r_setter = 0.0_dp
-          call plant%upgm_grow%plant%plantstate%state%replace("res_standstem", r_setter, success)
-          call plant%upgm_grow%plant%plantstate%state%replace("res_standleaf", r_setter, success)
-          call plant%upgm_grow%plant%plantstate%state%replace("res_standstore", r_setter, success)
-          call plant%upgm_grow%plant%plantstate%state%replace("res_flatstem", r_setter, success)
-          call plant%upgm_grow%plant%plantstate%state%replace("res_flatleaf", r_setter, success)
-          call plant%upgm_grow%plant%plantstate%state%replace("res_flatstore", r_setter, success)
-          nelem = size(soil%aszlyd)
-          allocate(ra_setter(nelem), stat = alloc_stat)
-          if( alloc_stat .gt. 0 ) then
-            write(*,*) 'Unable to allocate memory for UPGM.'
-          end if
-          ra_setter = 0.0_dp
-          call plant%upgm_grow%plant%plantstate%state%replace("res_bgstemz", ra_setter, success)
-          deallocate(ra_setter, stat = alloc_stat)
-
-          call plant%upgm_grow%plant%plantstate%state%replace("res_grainf", r_setter, success)
-          call plant%upgm_grow%plant%plantstate%state%replace("res_zht", r_setter, success)
-          call plant%upgm_grow%plant%plantstate%state%replace("res_dstm", r_setter, success)
-
-        end if
-
-        call destroy_crop_residue(cropres)
 
         if(plant%growth%am0cif) then
           if (am0cfl(isr) .ge. 1) then
@@ -749,12 +1020,10 @@ module WEPS_UPGM_mod
           plant%growth%am0cif = .false.
         end if
 
-        call plant%upgm_grow%plant%plantstate%state%get("hui", hui, success)
-        call plant%upgm_grow%plant%plantstate%state%get("huiy", huiy, success)
         call plant%upgm_grow%plant%plantstate%state%get("shoot_hui", shoot_hui, success)
         call plant%upgm_grow%plant%plantstate%state%get("shoot_huiy", shoot_huiy, success)
 
-        if( ( huiy .lt. 1.0_dp) .and. (plant%geometry%dstm .gt. 0.0_dp)) then
+        if( plant%growth%growing ) then
           ! crop growth not yet complete
           ! stem count can be set to zero by harvest, but not reset by
           ! regrowth early in spring, causing divide by zero in shoot_grow
@@ -801,20 +1070,34 @@ module WEPS_UPGM_mod
                    stem_propor, pdiam, parea, &
                    temp_sai, temp_stmrep, lost_mass )
 
+          if( (shoot_hui .lt. 1.0_dp ) .and. (shoot_hui .gt. 0.0_dp) ) then
+            plant%growth%shoot_growing = .true.
+          else
+            ! set flag indicating regrowth capability
+            plant%growth%shoot_growing = .false.
+          end if
+
+          if(    (plant%database%fleaf2stor .gt. 0.0_dp) &
+            .or. (plant%database%fstem2stor .gt. 0.0_dp) &
+            .or. (plant%database%fstor2stor .gt. 0.0_dp) ) then
+            plant%growth%can_regrow = .true.
+          else
+            plant%growth%can_regrow = .false.
+          end if
+
           ! set trend direction for living leaf area
           trend = (plant%growth%fliveleaf * plant%mass%standleaf) - (plant%prev%liveleaf * plant%prev%standleaf)
           if ((trend .ne. 0.0_dp) &
-              .and. ((hui .gt. plant%database%hue) .or. (plant%database%idc.eq.8))) then
-              ! trend non-zero and (heat units past emergence or staged crown release crop)
-              plant%growth%leafareatrend = trend
+            .and. (.not. plant%growth%shoot_growing .or. (plant%database%idc.eq.8))) then
+            ! trend non-zero and (heat units past emergence or staged crown release crop)
+            plant%growth%leafareatrend = trend
           end if
-
           ! set trend direction for above ground stem mass from growth
           trend = plant%mass%standstem + plant%mass%flatstem - plant%prev%standstem - plant%prev%flatstem
           if ((trend .ne. 0.0_dp) &
-              .and. ((hui .gt. plant%database%hue) .or. (plant%database%idc.eq.8))) then
-              ! trend non-zero and (heat units past emergence or staged crown release crop)
-              plant%growth%stemmasstrend = trend
+            .and. (.not. plant%growth%shoot_growing .or. (plant%database%idc.eq.8))) then
+            ! trend non-zero and (heat units past emergence or staged crown release crop)
+            plant%growth%stemmasstrend = trend
           end if
 
           plant%prev%standstem = plant%mass%standstem
@@ -843,7 +1126,7 @@ module WEPS_UPGM_mod
 
           ! update values not directly used in growth, but for reporting
           plant%growth%dayap = plant%growth%dayap + 1
-          plant%prev%dayap = plant%growth%dayap 
+          plant%prev%dayap = plant%growth%dayap
 
         else
           ! accumulate days after maturity
@@ -867,12 +1150,12 @@ module WEPS_UPGM_mod
             if( shoot_hui .gt. 0.0_dp ) then
               if (am0cfl(isr) .ge. 1) then
                 write(luoshoot(isr), "(1x,i5,1x,i3,1x,i4,1x,i4,1x,f6.3, 2(1x,f10.4), 2(1x,f12.4), &
-                  4(1x,f10.4), 4(1x,f10.4), (1x,f8.4),(1x,f8.3),1x,a20)") &
+                  4(1x,f10.4), 4(1x,f10.4), (1x,f8.4),(1x,f8.3),1x,a)") &
                   daysim, jd, get_simdate_year(), plant%growth%dayap, shoot_hui, &
                   s_root_sum, f_root_sum, tot_mass_req, end_shoot_mass, &
                   end_root_mass, d_root_mass, d_shoot_mass, d_s_root_mass, &
                   end_stem_mass, end_stem_area, end_shoot_len, plant%geometry%zshoot, &
-                  plant%growth%mshoot, plant%geometry%dstm, plant%bname
+                  plant%growth%mshoot, plant%geometry%dstm, trim(plant%bname)
               end if
             end if
 
@@ -881,17 +1164,22 @@ module WEPS_UPGM_mod
                   ! single blank line to separate shoot growth periods
                   write(luoshoot(isr),*)  ! shoot.out
               end if
+              ! last day of shoot grow, set shoot_huiy so shoot grow stops after shoot grow phase is completed.
+              shoot_huiy = 1.0_dp
+              call plant%upgm_grow%plant%plantstate%state%replace("shoot_huiy", shoot_huiy, success)
             end if
           end if
 
-          if( ( huiy .lt. 1.0_dp) .and. (plant%geometry%dstm .gt. 0.0_dp)) then
+          if( plant%growth%growing) then
             ! reporting only variables
             call plant%upgm_grow%plant%plantstate%state%get("frst", frst, success)
             call plant%upgm_grow%plant%plantstate%state%get("hu_delay", hu_delay, success)
-            call plant%upgm_grow%plant%plantstate%state%get("regrowth_flg", regrowth_flg, success)
+            call plant%upgm_grow%plant%plantstate%state%get("spring_flg", spring_flg, success)
+
+            regrowth_or_spring_flg = max(regrowth_flg, spring_flg)
 
             write(luocrop(isr), "(1x,i6,1x,i3,1x,i4,1x,i5,1x,f6.3,12(1x,f7.4),1x,f7.2, &
-              3(1x,f7.4),8(1x,f6.3),1x,e12.3, 11(1x,f6.3),2(1x,f8.5),1x,i2,1x,f6.3,1x,a30)") &
+     &         3(1x,f7.4),8(1x,f6.3),1x,e12.3, 11(1x,f6.3),2(1x,f8.5),1x,i2,1x,f6.3,1x,a,1x,a)") &
             daysim, jd, get_simdate_year(), plant%growth%dayap, &
             hui, &
             plant%mass%standstem, plant%mass%standleaf, plant%mass%standstore, &
@@ -904,22 +1192,18 @@ module WEPS_UPGM_mod
             par, apar, pddm, p_rw, p_st, p_lf, p_rp, &
             stem_propor, pdiam, parea, pdiam/plant%database%diammax, &
             parea*plant%geometry%dpop, hu_delay, plant%growth%thardnx, temp_sai,  &
-            temp_stmrep, regrowth_flg, plant%growth%fliveleaf, plant%bname
+            temp_stmrep, regrowth_or_spring_flg, plant%growth%fliveleaf, trim(plant%bname) !, trim(PhaseLabel)
           end if
 
         end if
 
-        if( ( hui .ge. 1.0_dp) .and. (plant%geometry%dstm .gt. 0.0_dp)) then
+        if( plant%growth%lastday ) then
           ! heat units completed, crop leaf mass is non transpiring
           plant%growth%fliveleaf = 0.0_dp
-
-          ! check for mature perennial that may re-sprout before fall (alfalfa, grasses)
-          if( (plant%database%idc.eq.3) .or. (plant%database%idc.eq.6) ) then
-              ! check for growing weather and regrowth ready state
-                  ! transfer all mature biomass to residue pool
-                  ! find number of stems to regrow
-                  ! reset heat units to start shoot regrowth
-          end if
+          l_setter = .false.
+          call plant%upgm_grow%plant%plantstate%state%replace("lastday", l_setter, success)
+          plant%growth%lastday = .false.
+          plant%growth%growing = .false.
         end if
 
       end if

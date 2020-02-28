@@ -1,3 +1,8 @@
+!$Author$
+!$Date$
+!$Revision$
+!$HeadURL$
+
 module PhenologyMMS_mod
   use constants, only: dp, int32
   implicit none

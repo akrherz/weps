@@ -128,10 +128,11 @@ contains
     man_tag(13)%name = "version"
     man_tag(14)%name = "wepsmanDB"
 
-    max_ogp = 53   ! count of total number of operations, groups, and processes
+    max_ogp = 56   ! count of total number of operations, groups, and processes
     sum_stat = 0
     allocate( param_nt(max_ogp), stat=alloc_stat)
     sum_stat = sum_stat + alloc_stat
+
     param_nt(1)%ogp="O"
     param_nt(1)%id="00"
     allocate( param_nt(1)%i_name(0), stat=alloc_stat )
@@ -140,6 +141,7 @@ contains
     sum_stat = sum_stat + alloc_stat
     allocate( param_nt(1)%s_name(0), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
+
     param_nt(2)%ogp="O"
     param_nt(2)%id="01"
     allocate( param_nt(2)%i_name(0), stat=alloc_stat )
@@ -153,6 +155,7 @@ contains
     param_nt(2)%r_name(3)="ostdspeed"
     param_nt(2)%r_name(4)="ominspeed"
     param_nt(2)%r_name(5)="omaxspeed"
+
     param_nt(3)%ogp="O"
     param_nt(3)%id="02"
     allocate( param_nt(3)%i_name(0), stat=alloc_stat )
@@ -161,6 +164,7 @@ contains
     sum_stat = sum_stat + alloc_stat
     allocate( param_nt(3)%s_name(0), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
+
     param_nt(4)%ogp="O"
     param_nt(4)%id="03"
     allocate( param_nt(4)%i_name(0), stat=alloc_stat )
@@ -177,6 +181,7 @@ contains
     param_nt(4)%r_name(6)="ominspeed"
     param_nt(4)%r_name(7)="omaxspeed"
     param_nt(4)%s_name(1)="ofuel"
+
     param_nt(5)%ogp="O"
     param_nt(5)%id="04"
     allocate( param_nt(5)%i_name(0), stat=alloc_stat )
@@ -188,6 +193,7 @@ contains
     param_nt(5)%r_name(1)="oenergyarea"
     param_nt(5)%r_name(2)="ostir"
     param_nt(5)%s_name(1)="ofuel"
+
     param_nt(6)%ogp="G"
     param_nt(6)%id="01"
     allocate( param_nt(6)%i_name(0), stat=alloc_stat )
@@ -202,6 +208,7 @@ contains
     param_nt(6)%r_name(4)="gtstddepth"
     param_nt(6)%r_name(5)="gtmindepth"
     param_nt(6)%r_name(6)="gtmaxdepth"
+
     param_nt(7)%ogp="G"
     param_nt(7)%id="02"
     allocate( param_nt(7)%i_name(0), stat=alloc_stat )
@@ -211,6 +218,7 @@ contains
     allocate( param_nt(7)%s_name(0), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
     param_nt(7)%r_name(1)="gbioarea"
+
     param_nt(8)%ogp="G"
     param_nt(8)%id="03"
     allocate( param_nt(8)%i_name(0), stat=alloc_stat )
@@ -220,6 +228,7 @@ contains
     allocate( param_nt(8)%s_name(1), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
     param_nt(8)%s_name(1)="gcropname"
+
     param_nt(9)%ogp="G"
     param_nt(9)%id="04"
     allocate( param_nt(9)%i_name(0), stat=alloc_stat )
@@ -229,6 +238,7 @@ contains
     allocate( param_nt(9)%s_name(1), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
     param_nt(9)%s_name(1)="gamdname"
+
     param_nt(10)%ogp="P"
     param_nt(10)%id="01"
     allocate( param_nt(10)%i_name(0), stat=alloc_stat )
@@ -237,6 +247,7 @@ contains
     sum_stat = sum_stat + alloc_stat
     allocate( param_nt(10)%s_name(0), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
+
     param_nt(11)%ogp="P"
     param_nt(11)%id="02"
     allocate( param_nt(11)%i_name(1), stat=alloc_stat )
@@ -247,6 +258,7 @@ contains
     sum_stat = sum_stat + alloc_stat
     param_nt(11)%i_name(1)="rroughflag"
     param_nt(11)%r_name(1)="rrough"
+
     param_nt(12)%ogp="P"
     param_nt(12)%id="05"
     allocate( param_nt(12)%i_name(1), stat=alloc_stat )
@@ -261,6 +273,7 @@ contains
     param_nt(12)%r_name(3)="rdgwidth"
     param_nt(12)%r_name(4)="dkhit"
     param_nt(12)%r_name(5)="dkspac"
+
     param_nt(13)%ogp="P"
     param_nt(13)%id="11"
     allocate( param_nt(13)%i_name(0), stat=alloc_stat )
@@ -271,6 +284,7 @@ contains
     sum_stat = sum_stat + alloc_stat
     param_nt(13)%r_name(1)="asdf"
     param_nt(13)%r_name(2)="crif"
+
     param_nt(14)%ogp="P"
     param_nt(14)%id="12"
     allocate( param_nt(14)%i_name(0), stat=alloc_stat )
@@ -280,6 +294,7 @@ contains
     allocate( param_nt(14)%s_name(0), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
     param_nt(14)%r_name(1)="soilos"
+
     param_nt(15)%ogp="P"
     param_nt(15)%id="13"
     allocate( param_nt(15)%i_name(0), stat=alloc_stat )
@@ -289,6 +304,7 @@ contains
     allocate( param_nt(15)%s_name(0), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
     param_nt(15)%r_name(1)="laymix"
+
     param_nt(16)%ogp="P"
     param_nt(16)%id="14"
     allocate( param_nt(16)%i_name(1), stat=alloc_stat )
@@ -297,6 +313,7 @@ contains
     sum_stat = sum_stat + alloc_stat
     allocate( param_nt(16)%s_name(0), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
+
     param_nt(17)%ogp="P"
     param_nt(17)%id="24"
     allocate( param_nt(17)%i_name(1), stat=alloc_stat )
@@ -311,6 +328,7 @@ contains
     param_nt(17)%r_name(3)="massflatvt3"
     param_nt(17)%r_name(4)="massflatvt4"
     param_nt(17)%r_name(5)="massflatvt5"
+
     param_nt(18)%ogp="P"
     param_nt(18)%id="25"
     allocate( param_nt(18)%i_name(1), stat=alloc_stat )
@@ -325,6 +343,7 @@ contains
     param_nt(18)%r_name(3)="massburyvt3"
     param_nt(18)%r_name(4)="massburyvt4"
     param_nt(18)%r_name(5)="massburyvt5"
+
     param_nt(19)%ogp="P"
     param_nt(19)%id="26"
     allocate( param_nt(19)%i_name(0), stat=alloc_stat )
@@ -338,6 +357,7 @@ contains
     param_nt(19)%r_name(3)="massresurvt3"
     param_nt(19)%r_name(4)="massresurvt4"
     param_nt(19)%r_name(5)="massresurvt5"
+
     param_nt(20)%ogp="P"
     param_nt(20)%id="31"
     allocate( param_nt(20)%i_name(1), stat=alloc_stat )
@@ -347,6 +367,7 @@ contains
     allocate( param_nt(20)%s_name(0), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
     param_nt(20)%i_name(1)="kilflag"
+
     param_nt(21)%ogp="P"
     param_nt(21)%id="32"
     allocate( param_nt(21)%i_name(1), stat=alloc_stat )
@@ -360,6 +381,7 @@ contains
     param_nt(21)%r_name(2)="cyldrmh"
     param_nt(21)%r_name(3)="cplrmh"
     param_nt(21)%r_name(4)="cstrmh"
+
     param_nt(22)%ogp="P"
     param_nt(22)%id="33"
     allocate( param_nt(22)%i_name(0), stat=alloc_stat )
@@ -372,6 +394,7 @@ contains
     param_nt(22)%r_name(2)="cyldrmf"
     param_nt(22)%r_name(3)="cplrmf"
     param_nt(22)%r_name(4)="cstrmf"
+
     param_nt(23)%ogp="P"
     param_nt(23)%id="34"
     allocate( param_nt(23)%i_name(1), stat=alloc_stat )
@@ -391,6 +414,7 @@ contains
     param_nt(23)%r_name(8)="threshmultvt3"
     param_nt(23)%r_name(9)="threshmultvt4"
     param_nt(23)%r_name(10)="threshmultvt5"
+
     param_nt(24)%ogp="P"
     param_nt(24)%id="37"
     allocate( param_nt(24)%i_name(0), stat=alloc_stat )
@@ -403,6 +427,7 @@ contains
     param_nt(24)%r_name(2)="tyldrmp"
     param_nt(24)%r_name(3)="tplrmp"
     param_nt(24)%r_name(4)="tstrmp"
+
     param_nt(25)%ogp="P"
     param_nt(25)%id="38"
     allocate( param_nt(25)%i_name(0), stat=alloc_stat )
@@ -415,6 +440,7 @@ contains
     param_nt(25)%r_name(2)="tyldrmf"
     param_nt(25)%r_name(3)="tplrmf"
     param_nt(25)%r_name(4)="tstrmf"
+
     param_nt(26)%ogp="P"
     param_nt(26)%id="40"
     allocate( param_nt(26)%i_name(0), stat=alloc_stat )
@@ -423,6 +449,7 @@ contains
     sum_stat = sum_stat + alloc_stat
     allocate( param_nt(26)%s_name(0), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
+
     param_nt(27)%ogp="P"
     param_nt(27)%id="42"
     allocate( param_nt(27)%i_name(5), stat=alloc_stat )
@@ -440,6 +467,7 @@ contains
     param_nt(27)%r_name(2)="cyldrmh"
     param_nt(27)%r_name(3)="cplrmh"
     param_nt(27)%r_name(4)="cstrmh"
+
     param_nt(28)%ogp="P"
     param_nt(28)%id="43"
     allocate( param_nt(28)%i_name(4), stat=alloc_stat )
@@ -456,6 +484,7 @@ contains
     param_nt(28)%r_name(2)="cyldrmf"
     param_nt(28)%r_name(3)="cplrmf"
     param_nt(28)%r_name(4)="cstrmf"
+
     param_nt(29)%ogp="P"
     param_nt(29)%id="47"
     allocate( param_nt(29)%i_name(4), stat=alloc_stat )
@@ -472,6 +501,7 @@ contains
     param_nt(29)%r_name(2)="tyldrmp"
     param_nt(29)%r_name(3)="tplrmp"
     param_nt(29)%r_name(4)="tstrmp"
+
     param_nt(30)%ogp="P"
     param_nt(30)%id="48"
     allocate( param_nt(30)%i_name(4), stat=alloc_stat )
@@ -488,6 +518,7 @@ contains
     param_nt(30)%r_name(2)="tyldrmf"
     param_nt(30)%r_name(3)="tplrmf"
     param_nt(30)%r_name(4)="tstrmf"
+
     param_nt(31)%ogp="P"
     param_nt(31)%id="50"
     allocate( param_nt(31)%i_name(1), stat=alloc_stat )
@@ -515,6 +546,7 @@ contains
     param_nt(31)%r_name(16)="covfact"
     param_nt(31)%r_name(17)="resevapa"
     param_nt(31)%r_name(18)="resevapb"
+
     param_nt(32)%ogp="P"
     param_nt(32)%id="51"
     allocate( param_nt(32)%i_name(9), stat=alloc_stat )
@@ -594,6 +626,7 @@ contains
     param_nt(32)%r_name(59)="noparam3"
     param_nt(32)%r_name(60)="noparam2"
     param_nt(32)%r_name(61)="noparam1"
+
     param_nt(33)%ogp="P"
     param_nt(33)%id="61"
     allocate( param_nt(33)%i_name(2), stat=alloc_stat )
@@ -609,6 +642,7 @@ contains
     param_nt(33)%r_name(3)="rstem"
     param_nt(33)%r_name(4)="rrootstore"
     param_nt(33)%r_name(5)="rrootfiber"
+
     param_nt(34)%ogp="P"
     param_nt(34)%id="62"
     allocate( param_nt(34)%i_name(7), stat=alloc_stat )
@@ -629,6 +663,7 @@ contains
     param_nt(34)%r_name(3)="rstem"
     param_nt(34)%r_name(4)="rrootstore"
     param_nt(34)%r_name(5)="rrootfiber"
+
     param_nt(35)%ogp="P"
     param_nt(35)%id="65"
     allocate( param_nt(35)%i_name(1), stat=alloc_stat )
@@ -656,6 +691,7 @@ contains
     param_nt(35)%r_name(16)="covfact"
     param_nt(35)%r_name(17)="resevapa"
     param_nt(35)%r_name(18)="resevapb"
+
     param_nt(36)%ogp="P"
     param_nt(36)%id="66"
     allocate( param_nt(36)%i_name(1), stat=alloc_stat )
@@ -685,6 +721,7 @@ contains
     param_nt(36)%r_name(18)="covfact"
     param_nt(36)%r_name(19)="resevapa"
     param_nt(36)%r_name(20)="resevapb"
+
     param_nt(37)%ogp="P"
     param_nt(37)%id="71"
     allocate( param_nt(37)%i_name(1), stat=alloc_stat )
@@ -695,6 +732,7 @@ contains
     sum_stat = sum_stat + alloc_stat
     param_nt(37)%i_name(1)="irrtype"
     param_nt(37)%r_name(1)="irrdepth"
+
     param_nt(38)%ogp="P"
     param_nt(38)%id="72"
     allocate( param_nt(38)%i_name(2), stat=alloc_stat )
@@ -711,6 +749,7 @@ contains
     param_nt(38)%r_name(4)="irrapploc"
     param_nt(38)%r_name(5)="irrminapp"
     param_nt(38)%r_name(6)="irrmad"
+
     param_nt(39)%ogp="P"
     param_nt(39)%id="73"
     allocate( param_nt(39)%i_name(0), stat=alloc_stat )
@@ -723,6 +762,7 @@ contains
     param_nt(39)%r_name(2)="irrrate"
     param_nt(39)%r_name(3)="irrduration"
     param_nt(39)%r_name(4)="irrapploc"
+
     param_nt(40)%ogp="P"
     param_nt(40)%id="74"
     allocate( param_nt(40)%i_name(0), stat=alloc_stat )
@@ -731,6 +771,7 @@ contains
     sum_stat = sum_stat + alloc_stat
     allocate( param_nt(40)%s_name(0), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
+
     param_nt(41)%ogp="P"
     param_nt(41)%id="91"
     allocate( param_nt(41)%i_name(0), stat=alloc_stat )
@@ -744,6 +785,7 @@ contains
     param_nt(41)%r_name(3)="gsdx"
     param_nt(41)%r_name(4)="mnot"
     param_nt(41)%r_name(5)="minf"
+
     param_nt(42)%ogp="P"
     param_nt(42)%id="92"
     allocate( param_nt(42)%i_name(0), stat=alloc_stat )
@@ -755,175 +797,315 @@ contains
     param_nt(42)%r_name(1)="wcdepth"
     param_nt(42)%r_name(2)="wc"
 
-    ! upgm_initialize
+    ! UPGMinWEPS_init
     param_nt(43)%ogp="P"
     param_nt(43)%id="100"
-    allocate( param_nt(43)%i_name(1), stat=alloc_stat )
+    allocate( param_nt(43)%i_name(9), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
-    allocate( param_nt(43)%r_name(5), stat=alloc_stat )
+    allocate( param_nt(43)%r_name(40), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
-    allocate( param_nt(43)%s_name(1), stat=alloc_stat )
+    allocate( param_nt(43)%s_name(2), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
     param_nt(43)%s_name(1)="stage_label"
     param_nt(43)%i_name(1)="stage_type"
-    param_nt(43)%r_name(1)="GDD_germination"
-    param_nt(43)%r_name(2)="soil_water_content"
-    param_nt(43)%r_name(3)="leaf_partition"
-    param_nt(43)%r_name(4)="stem_partition"
-    param_nt(43)%r_name(5)="reproductive_partition"
+    param_nt(43)%i_name(2)="rowflag"
+    param_nt(43)%r_name(1)="rowspac"
+    param_nt(43)%i_name(3)="rowridge"
+    param_nt(43)%r_name(2)="plantpop"
+    param_nt(43)%r_name(3)="dmaxshoot"
+    param_nt(43)%i_name(4)="cbaflag"
+    param_nt(43)%r_name(4)="tgtyield"
+    param_nt(43)%r_name(5)="cbafact"
+    param_nt(43)%i_name(5)="hyldflag"
+    param_nt(43)%s_name(2)="hyldunits"
+    param_nt(43)%r_name(6)="hyldwater"
+    param_nt(43)%r_name(7)="hyconfact"
+    param_nt(43)%i_name(6)="idc"
+    param_nt(43)%r_name(8)="grf"
+    param_nt(43)%r_name(9)="ck"
+    param_nt(43)%r_name(10)="hmx"
+    param_nt(43)%r_name(11)="growdepth"
+    param_nt(43)%r_name(12)="rdmx"
+    param_nt(43)%r_name(13)="tbas"
+    param_nt(43)%r_name(14)="topt"
+    param_nt(43)%i_name(7)="thudf"
+    param_nt(43)%i_name(8)="dtm"
+    param_nt(43)%r_name(15)="thum"
+    param_nt(43)%r_name(16)="bceff"
+    param_nt(43)%r_name(17)="ssaa"
+    param_nt(43)%r_name(18)="ssab"
+    param_nt(43)%r_name(19)="sla"
+    param_nt(43)%r_name(20)="diammax"
+    param_nt(43)%r_name(21)="storeinit"
+    param_nt(43)%r_name(22)="mshoot"
+    param_nt(43)%r_name(23)="leafstem"
+    param_nt(43)%r_name(24)="fshoot"
+    param_nt(43)%r_name(25)="leaf2stor"
+    param_nt(43)%r_name(26)="stem2stor"
+    param_nt(43)%r_name(27)="stor2stor"
+    param_nt(43)%i_name(9)="rbc"
+    param_nt(43)%r_name(28)="standdk"
+    param_nt(43)%r_name(29)="surfdk"
+    param_nt(43)%r_name(30)="burieddk"
+    param_nt(43)%r_name(31)="rootdk"
+    param_nt(43)%r_name(32)="stemnodk"
+    param_nt(43)%r_name(33)="stemdia"
+    param_nt(43)%r_name(34)="thrddys"
+    param_nt(43)%r_name(35)="covfact"
+    param_nt(43)%r_name(36)="resevapa"
+    param_nt(43)%r_name(37)="resevapb"
+    param_nt(43)%r_name(38)="yield_coefficient"
+    param_nt(43)%r_name(39)="residue_intercept"
+    param_nt(43)%r_name(40)="regrow_location"
+
     ! pmms_germination
     param_nt(44)%ogp="P"
     param_nt(44)%id="110"
     allocate( param_nt(44)%i_name(1), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
-    allocate( param_nt(44)%r_name(6), stat=alloc_stat )
+    allocate( param_nt(44)%r_name(8), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
     allocate( param_nt(44)%s_name(1), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
     param_nt(44)%s_name(1)="stage_label"
     param_nt(44)%i_name(1)="stage_type"
-    param_nt(44)%r_name(1)="GDD_to_next_stage"
-    param_nt(44)%r_name(2)="GDD_to_stage_termination"
-    param_nt(44)%r_name(3)="stress_factor"
-    param_nt(44)%r_name(4)="leaf_partition"
-    param_nt(44)%r_name(5)="stem_partition"
-    param_nt(44)%r_name(6)="reproductive_partition"
-    ! pmms_basephenol
+    param_nt(44)%r_name(1)="swc_curve1"
+    param_nt(44)%r_name(2)="swc_curve2"
+    param_nt(44)%r_name(3)="swc_curve3"
+    param_nt(44)%r_name(4)="swc_curve4"
+    param_nt(44)%r_name(5)="gdd_resp1"
+    param_nt(44)%r_name(6)="gdd_resp2"
+    param_nt(44)%r_name(7)="gdd_resp3"
+    param_nt(44)%r_name(8)="gdd_resp4"
+
+    ! pmms_shootgrg
     param_nt(45)%ogp="P"
     param_nt(45)%id="120"
     allocate( param_nt(45)%i_name(1), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
-    allocate( param_nt(45)%r_name(4), stat=alloc_stat )
+    allocate( param_nt(45)%r_name(20), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
     allocate( param_nt(45)%s_name(1), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
     param_nt(45)%s_name(1)="stage_label"
     param_nt(45)%i_name(1)="stage_type"
-    param_nt(45)%r_name(1)="Vern_k"
-    param_nt(45)%r_name(2)="Vern_days"
-    param_nt(45)%r_name(3)="Photo_c"
-    param_nt(45)%r_name(4)="Photo_daylen"
-    ! pmms_fallphenol
+    param_nt(45)%r_name(1)="GN_trans_gdd"
+    param_nt(45)%r_name(2)="GN_stress"
+    param_nt(45)%r_name(3)="GS_trans_gdd"
+    param_nt(45)%r_name(4)="GS_stress"
+    param_nt(45)%r_name(5)="height_inc"
+    param_nt(45)%r_name(6)="root_depth_inc"
+    param_nt(45)%r_name(7)="beg_live_leaf"
+    param_nt(45)%r_name(8)="end_live_leaf"
+    param_nt(45)%r_name(9)="beg_weath_leaf"
+    param_nt(45)%r_name(10)="end_weath_leaf"
+    param_nt(45)%r_name(11)="beg_senes_root"
+    param_nt(45)%r_name(12)="end_senes_root"
+    param_nt(45)%r_name(13)="beg_grain_index"
+    param_nt(45)%r_name(14)="end_grain_index"
+    param_nt(45)%r_name(15)="beg_p_rw"
+    param_nt(45)%r_name(16)="end_p_rw"
+    param_nt(45)%r_name(17)="beg_p_lf"
+    param_nt(45)%r_name(18)="end_p_lf"
+    param_nt(45)%r_name(19)="beg_p_rp"
+    param_nt(45)%r_name(20)="end_p_rp"
+
+    ! pmms_basephenol
     param_nt(46)%ogp="P"
-    param_nt(46)%id="121"
+    param_nt(46)%id="130"
     allocate( param_nt(46)%i_name(1), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
-    allocate( param_nt(46)%r_name(4), stat=alloc_stat )
+    allocate( param_nt(46)%r_name(20), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
     allocate( param_nt(46)%s_name(1), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
     param_nt(46)%s_name(1)="stage_label"
     param_nt(46)%i_name(1)="stage_type"
-    param_nt(46)%r_name(1)="Vern_k"
-    param_nt(46)%r_name(2)="Vern_days"
-    param_nt(46)%r_name(3)="Photo_c"
-    param_nt(46)%r_name(4)="Photo_daylen"
+    param_nt(46)%r_name(1)="GN_trans_gdd"
+    param_nt(46)%r_name(2)="GN_stress"
+    param_nt(46)%r_name(3)="GS_trans_gdd"
+    param_nt(46)%r_name(4)="GS_stress"
+    param_nt(46)%r_name(5)="height_inc"
+    param_nt(46)%r_name(6)="root_depth_inc"
+    param_nt(46)%r_name(7)="beg_live_leaf"
+    param_nt(46)%r_name(8)="end_live_leaf"
+    param_nt(46)%r_name(9)="beg_weath_leaf"
+    param_nt(46)%r_name(10)="end_weath_leaf"
+    param_nt(46)%r_name(11)="beg_senes_root"
+    param_nt(46)%r_name(12)="end_senes_root"
+    param_nt(46)%r_name(13)="beg_grain_index"
+    param_nt(46)%r_name(14)="end_grain_index"
+    param_nt(46)%r_name(15)="beg_p_rw"
+    param_nt(46)%r_name(16)="end_p_rw"
+    param_nt(46)%r_name(17)="beg_p_lf"
+    param_nt(46)%r_name(18)="end_p_lf"
+    param_nt(46)%r_name(19)="beg_p_rp"
+    param_nt(46)%r_name(20)="end_p_rp"
+
     ! pmms_springphenol
     param_nt(47)%ogp="P"
-    param_nt(47)%id="122"
+    param_nt(47)%id="140"
     allocate( param_nt(47)%i_name(1), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
-    allocate( param_nt(47)%r_name(4), stat=alloc_stat )
+    allocate( param_nt(47)%r_name(20), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
     allocate( param_nt(47)%s_name(1), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
     param_nt(47)%s_name(1)="stage_label"
     param_nt(47)%i_name(1)="stage_type"
-    param_nt(47)%r_name(1)="Vern_k"
-    param_nt(47)%r_name(2)="Vern_days"
-    param_nt(47)%r_name(3)="Photo_c"
-    param_nt(47)%r_name(4)="Photo_daylen"
+    param_nt(47)%r_name(1)="GN_trans_gdd"
+    param_nt(47)%r_name(2)="GN_stress"
+    param_nt(47)%r_name(3)="GS_trans_gdd"
+    param_nt(47)%r_name(4)="GS_stress"
+    param_nt(47)%r_name(5)="height_inc"
+    param_nt(47)%r_name(6)="root_depth_inc"
+    param_nt(47)%r_name(7)="beg_live_leaf"
+    param_nt(47)%r_name(8)="end_live_leaf"
+    param_nt(47)%r_name(9)="beg_weath_leaf"
+    param_nt(47)%r_name(10)="end_weath_leaf"
+    param_nt(47)%r_name(11)="beg_senes_root"
+    param_nt(47)%r_name(12)="end_senes_root"
+    param_nt(47)%r_name(13)="beg_grain_index"
+    param_nt(47)%r_name(14)="end_grain_index"
+    param_nt(47)%r_name(15)="beg_p_rw"
+    param_nt(47)%r_name(16)="end_p_rw"
+    param_nt(47)%r_name(17)="beg_p_lf"
+    param_nt(47)%r_name(18)="end_p_lf"
+    param_nt(47)%r_name(19)="beg_p_rp"
+    param_nt(47)%r_name(20)="end_p_rp"
 
-    ! gddmethod1
+    ! pmms_fallphenol
     param_nt(48)%ogp="P"
-    param_nt(48)%id="200"
+    param_nt(48)%id="150"
     allocate( param_nt(48)%i_name(1), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
-    allocate( param_nt(48)%r_name(4), stat=alloc_stat )
+    allocate( param_nt(48)%r_name(21), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
     allocate( param_nt(48)%s_name(1), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
     param_nt(48)%s_name(1)="stage_label"
     param_nt(48)%i_name(1)="stage_type"
-    param_nt(48)%r_name(1)="Vern_k"
-    param_nt(48)%r_name(2)="Vern_days"
-    param_nt(48)%r_name(3)="Photo_c"
-    param_nt(48)%r_name(4)="Photo_daylen"
-    ! gddweps_method
+    param_nt(48)%r_name(1)="GN_trans_gdd"
+    param_nt(48)%r_name(2)="GN_stress"
+    param_nt(48)%r_name(3)="GS_trans_gdd"
+    param_nt(48)%r_name(4)="GS_stress"
+    param_nt(48)%r_name(5)="tverndel"
+    param_nt(48)%r_name(6)="height_inc"
+    param_nt(48)%r_name(7)="root_depth_inc"
+    param_nt(48)%r_name(8)="beg_live_leaf"
+    param_nt(48)%r_name(9)="end_live_leaf"
+    param_nt(48)%r_name(10)="beg_weath_leaf"
+    param_nt(48)%r_name(11)="end_weath_leaf"
+    param_nt(48)%r_name(12)="beg_senes_root"
+    param_nt(48)%r_name(13)="end_senes_root"
+    param_nt(48)%r_name(14)="beg_grain_index"
+    param_nt(48)%r_name(15)="end_grain_index"
+    param_nt(48)%r_name(16)="beg_p_rw"
+    param_nt(48)%r_name(17)="end_p_rw"
+    param_nt(48)%r_name(18)="beg_p_lf"
+    param_nt(48)%r_name(19)="end_p_lf"
+    param_nt(48)%r_name(20)="beg_p_rp"
+    param_nt(48)%r_name(21)="end_p_rp"
+
+    ! gddmethod1
     param_nt(49)%ogp="P"
-    param_nt(49)%id="201"
+    param_nt(49)%id="200"
     allocate( param_nt(49)%i_name(1), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
-    allocate( param_nt(49)%r_name(4), stat=alloc_stat )
+    allocate( param_nt(49)%r_name(0), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
     allocate( param_nt(49)%s_name(1), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
-    param_nt(49)%s_name(1)="stage_label"
-    param_nt(49)%i_name(1)="stage_type"
-    param_nt(49)%r_name(1)="Vern_k"
-    param_nt(49)%r_name(2)="Vern_days"
-    param_nt(49)%r_name(3)="Photo_c"
-    param_nt(49)%r_name(4)="Photo_daylen"
-    ! ritchie_vernalization
+    param_nt(49)%s_name(1)="process_label"
+    param_nt(49)%i_name(1)="process_type"
+
+    ! gddweps_method
     param_nt(50)%ogp="P"
-    param_nt(50)%id="210"
+    param_nt(50)%id="201"
     allocate( param_nt(50)%i_name(1), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
-    allocate( param_nt(50)%r_name(4), stat=alloc_stat )
+    allocate( param_nt(50)%r_name(0), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
     allocate( param_nt(50)%s_name(1), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
-    param_nt(50)%s_name(1)="stage_label"
-    param_nt(50)%i_name(1)="stage_type"
-    param_nt(50)%r_name(1)="Vern_k"
-    param_nt(50)%r_name(2)="Vern_days"
-    param_nt(50)%r_name(3)="Photo_c"
-    param_nt(50)%r_name(4)="Photo_daylen"
-    ! ritchie_winterhardening
+    param_nt(50)%s_name(1)="process_label"
+    param_nt(50)%i_name(1)="process_type"
+
+    ! ritchie_vernalization
     param_nt(51)%ogp="P"
-    param_nt(51)%id="211"
+    param_nt(51)%id="210"
     allocate( param_nt(51)%i_name(1), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
-    allocate( param_nt(51)%r_name(4), stat=alloc_stat )
+    allocate( param_nt(51)%r_name(0), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
     allocate( param_nt(51)%s_name(1), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
-    param_nt(51)%s_name(1)="stage_label"
-    param_nt(51)%i_name(1)="stage_type"
-    param_nt(51)%r_name(1)="Vern_k"
-    param_nt(51)%r_name(2)="Vern_days"
-    param_nt(51)%r_name(3)="Photo_c"
-    param_nt(51)%r_name(4)="Photo_daylen"
-    ! weps_warmdays
+    param_nt(51)%s_name(1)="process_label"
+    param_nt(51)%i_name(1)="process_type"
+
+    ! ritchie_winterhardening
     param_nt(52)%ogp="P"
-    param_nt(52)%id="220"
+    param_nt(52)%id="211"
     allocate( param_nt(52)%i_name(1), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
-    allocate( param_nt(52)%r_name(4), stat=alloc_stat )
+    allocate( param_nt(52)%r_name(0), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
     allocate( param_nt(52)%s_name(1), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
-    param_nt(52)%s_name(1)="stage_label"
-    param_nt(52)%i_name(1)="stage_type"
-    param_nt(52)%r_name(1)="Vern_k"
-    param_nt(52)%r_name(2)="Vern_days"
-    param_nt(52)%r_name(3)="Photo_c"
-    param_nt(52)%r_name(4)="Photo_daylen"
-    ! weps_tempstress
+    param_nt(52)%s_name(1)="process_label"
+    param_nt(52)%i_name(1)="process_type"
+
+    ! weps_warmdays
     param_nt(53)%ogp="P"
-    param_nt(53)%id="221"
+    param_nt(53)%id="220"
     allocate( param_nt(53)%i_name(1), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
-    allocate( param_nt(53)%r_name(4), stat=alloc_stat )
+    allocate( param_nt(53)%r_name(0), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
     allocate( param_nt(53)%s_name(1), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
-    param_nt(53)%s_name(1)="stage_label"
-    param_nt(53)%i_name(1)="stage_type"
-    param_nt(53)%r_name(1)="Vern_k"
-    param_nt(53)%r_name(2)="Vern_days"
-    param_nt(53)%r_name(3)="Photo_c"
-    param_nt(53)%r_name(4)="Photo_daylen"
+    param_nt(53)%s_name(1)="process_label"
+    param_nt(53)%i_name(1)="process_type"
+
+    ! weps_tempstress
+    param_nt(54)%ogp="P"
+    param_nt(54)%id="221"
+    allocate( param_nt(54)%i_name(1), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    allocate( param_nt(54)%r_name(4), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    allocate( param_nt(54)%s_name(1), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    param_nt(54)%s_name(1)="process_label"
+    param_nt(54)%i_name(1)="process_type"
+
+    ! weps_freezedamage
+    param_nt(55)%ogp="P"
+    param_nt(55)%id="222"
+    allocate( param_nt(55)%i_name(1), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    allocate( param_nt(55)%r_name(4), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    allocate( param_nt(55)%s_name(1), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    param_nt(55)%s_name(1)="process_label"
+    param_nt(55)%i_name(1)="process_type"
+    param_nt(55)%r_name(1)="frsx1"
+    param_nt(55)%r_name(2)="frsx2"
+    param_nt(55)%r_name(3)="frsy1"
+    param_nt(55)%r_name(4)="frsy2"
+
+    ! weps_regrowth
+    param_nt(56)%ogp="P"
+    param_nt(56)%id="230"
+    allocate( param_nt(56)%i_name(1), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    allocate( param_nt(56)%r_name(4), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    allocate( param_nt(56)%s_name(1), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    param_nt(56)%s_name(1)="process_label"
+    param_nt(56)%i_name(1)="process_type"
 
     if( alloc_stat .gt. 0 ) then
       write(*,*) 'ERROR: memory alloc., parameter names reference'
@@ -1508,6 +1690,8 @@ contains
               end do
               linidx = linidx + 1
               call readValues(manFile(isub)%oper, line, 'ofuel')
+          else
+              call readValues(manFile(isub)%oper, ' ', 'ofuel')
           end if
         case ('04') ! added energy and stir to O2
           do while (line(1:1) .ne. '+' )
@@ -1525,6 +1709,8 @@ contains
               end do
               linidx = linidx + 1
               call readValues(manFile(isub)%oper, line, 'ofuel')
+          else
+              call readValues(manFile(isub)%oper, ' ', 'ofuel')
           end if
         end select
 

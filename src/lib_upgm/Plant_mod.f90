@@ -1,3 +1,8 @@
+!$Author$
+!$Date$
+!$Revision$
+!$HeadURL$
+
     module plant_mod
     use UPGM_state
     use plant_parameters_mod

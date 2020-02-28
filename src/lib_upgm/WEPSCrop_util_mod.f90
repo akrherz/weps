@@ -1,3 +1,8 @@
+!$Author$
+!$Date$
+!$Revision$
+!$HeadURL$
+
 module WEPSCrop_util_mod
 
     use constants, only: dp, int32, u_pi, u_mgtokg, u_hatom2, u_max_arg_exp, u_max_real, u_mmtom, precision_init
@@ -269,21 +274,20 @@ module WEPSCrop_util_mod
       ! local variables
       real(dp) :: tmean   ! arithmetic average of tmax and tmin
 
-      tmean = (tmax + tmin) / 2.0
+      tmean = (tmax + tmin) / 2.0_dp
       if (tmean .gt. thres) then
           ! this is a warm day
-          bctwarmdays = bctwarmdays + 1
+          bctwarmdays = bctwarmdays + 1.0_dp
       else
           ! reduce warm day total, but do not zero, for proper fall regrow of perennials
-          bctwarmdays = bctwarmdays / 2
+          bctwarmdays = bctwarmdays / 2.0_dp
       end if
 
       return
     end subroutine warmday_cum
 
-    subroutine freeze_damage( hui, bcehui0, stsmn1, a_fr, b_fr, bcmstandleaf, bcfliveleaf, frst, lost_mass )
-      real(dp), intent(in) :: hui
-      real(dp), intent(in) :: bcehui0
+    subroutine freeze_damage( ff_senescence, stsmn1, a_fr, b_fr, bcmstandleaf, bcfliveleaf, frst, lost_mass )
+      real(dp), intent(in) :: ff_senescence
       real(dp), intent(in) :: stsmn1
       real(dp), intent(in) :: a_fr
       real(dp), intent(in) :: b_fr
@@ -294,15 +298,12 @@ module WEPSCrop_util_mod
 
       real(dp), parameter :: frac_frst_mass_lost = 0.0_dp
 
-      real(dp) :: hui0f  ! heat unit index that indicates the start of scenescence
       real(dp) :: xw
       real(dp) :: ffa
       real(dp) :: ffw
       real(dp) :: froz_mass
       real(dp) :: live_leaf
       real(dp) :: dead_leaf
-
-      hui0f = bcehui0 - bcehui0 * 0.1_dp
 
       ! reduce green leaf mass in freezing weather
       if (stsmn1 .lt. -2.0_dp) then
@@ -316,7 +317,7 @@ module WEPSCrop_util_mod
           frst = min(1.0_dp, max(0.0_dp, frst))
 
           ! is it before or after scenescence?
-          if (hui .lt. hui0f) then
+          if (ff_senescence .gt. 0.9999_dp) then
               ! before scenescence, frost killed mass is fragile and a fraction disappears
               ffa = 1.0_dp - frst
               ffw = 1.0_dp - frst * frac_frst_mass_lost

@@ -1,3 +1,8 @@
+!$Author$
+!$Date$
+!$Revision$
+!$HeadURL$
+
 ! JSON-Fortran preprocessor macros.
 !
 ! License

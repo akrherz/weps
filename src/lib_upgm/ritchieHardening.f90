@@ -1,3 +1,8 @@
+!$Author$
+!$Date$
+!$Revision$
+!$HeadURL$
+
 module ritchieHardening_mod
   use Preprocess_mod
   use constants, only: dp, check_return
@@ -13,15 +18,15 @@ module ritchieHardening_mod
 
   contains
 
-    subroutine load_state(self, process_state)
+    subroutine load_state(self, processState)
       implicit none
       class(ritchieHardening), intent(inout) :: self
-      type(hash_state), intent(inout) :: process_state
+      type(hash_state), intent(inout) :: processState
       ! Body of loadState
-      ! load process_state into my state:
-      self%process_state = hash_state()
-      call self%process_state%init()
-      call self%process_state%clone(process_state)
+      ! load processState into my state:
+      self%processState = hash_state()
+      call self%processState%init()
+      call self%processState%clone(processState)
     end subroutine load_state
 
     subroutine proc_register(self, req_input, prod_output)
@@ -36,39 +41,32 @@ module ritchieHardening_mod
 
     subroutine Hardening(self, plnt, env)
       implicit none
-      class(ritchieHardening), intent(in) :: self
+      class(ritchieHardening), intent(inout) :: self
       type(plant), intent(inout) :: plnt
       type(environment_state), intent(inout) :: env
       real(dp) :: harden_index   ! hardening index for winter hardiness
       real(dp) :: tmax           ! Maximum temperature for this growth day
       real(dp) :: tmin           ! Minimum temperature for this growth day
-      real(dp) :: leaf2stor      ! fraction of assimilate partitioned to leaf that is diverted to root store
-      real(dp) :: stem2stor      ! fraction of assimilate partitioned to stem that is diverted to root store
-      real(dp) :: stor2stor      ! fraction of assimilate partitioned to standing storage
-                                 ! (reproductive) that is diverted to root store
+      logical :: can_harden
+
       logical :: succ = .false.
 
       ! get input values
       call plnt%state%get("harden_index", harden_index, succ)
       if( .not. check_return( "harden_index", succ ) ) return
+      call plnt%state%get("can_harden", can_harden, succ)
+      if( .not. check_return( "can_harden", succ ) ) return
       call env%state%get("tsmx1", tmax, succ)
       if( .not. check_return( "tsmx1", succ ) ) return
       call env%state%get("tsmn1", tmin, succ)
       if( .not. check_return( "tsmn1", succ ) ) return
-      call plnt%pars%get("leaf2stor", leaf2stor, succ)
-      if( .not. check_return( "leaf2stor", succ ) ) return
-      call plnt%pars%get("stem2stor", stem2stor, succ)
-      if( .not. check_return( "stem2stor", succ ) ) return
-      call plnt%pars%get("stor2stor", stor2stor, succ)
-      if( .not. check_return( "stor2stor", succ ) ) return
 
-      if(    (leaf2stor .gt. 0.0_dp) &
-        .or. (stem2stor .gt. 0.0_dp) &
-        .or. (stor2stor .gt. 0.0_dp) ) then
+      if( can_harden ) then
         call freezeharden(harden_index, tmax, tmin)
 
         !write(*,*) 'Hardening: ', harden_index, tmax, tmin
-
+      else
+        harden_index = 0.0_dp
       end if
 
       call plnt%state%replace("harden_index", harden_index, succ)

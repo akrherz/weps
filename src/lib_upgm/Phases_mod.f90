@@ -1,3 +1,8 @@
+!$Author$
+!$Date$
+!$Revision$
+!$HeadURL$
+
   module phases_mod
     use plant_mod
     use environment_state_mod

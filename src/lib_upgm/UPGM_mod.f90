@@ -1,3 +1,8 @@
+!$Author$
+!$Date$
+!$Revision$
+!$HeadURL$
+
 module upgm_mod
     use plantcycle_mod
     use constants, only : int32
@@ -36,7 +41,7 @@ module upgm_mod
       integer(int32) :: status
       allocate(self%plant, STAT = status)
       self%plant => plantcycle()
-      print *, "constructed upgm", status
+      write(*,*) "Constructed UPGM"
     end function newugpm
 
     subroutine load_from_file(self, fpath)
@@ -93,7 +98,7 @@ module upgm_mod
     integer(int32) :: status
     if( associated(self%plant) ) then
       DEALLOCATE(self%plant, STAT=status)
-      print *, "destructed upgm", status
+      write(*,*) "Destructed UPGM"
     endif
     end subroutine upgm_destructor
 

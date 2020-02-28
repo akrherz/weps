@@ -1,3 +1,8 @@
+!$Author$
+!$Date$
+!$Revision$
+!$HeadURL$
+
     module environment_state_mod
     use UPGM_state
     use constants, only : int32, dp

@@ -1,3 +1,8 @@
+!$Author$
+!$Date$
+!$Revision$
+!$HeadURL$
+
 module WEPSwarmdays_mod
   use Preprocess_mod
   use constants, only: dp, check_return
@@ -14,15 +19,15 @@ module WEPSwarmdays_mod
 
   contains
 
-    subroutine load_state(self, process_state)
+    subroutine load_state(self, processState)
       implicit none
       class(WEPSwarmdays), intent(inout) :: self
-      type(hash_state), intent(inout) :: process_state
+      type(hash_state), intent(inout) :: processState
       ! Body of loadState
-      ! load process_state into my state:
-      self%process_state = hash_state()
-      call self%process_state%init()
-      call self%process_state%clone(process_state)
+      ! load processState into my state:
+      self%processState = hash_state()
+      call self%processState%init()
+      call self%processState%clone(processState)
     end subroutine load_state
 
     subroutine proc_register(self, req_input, prod_output)
@@ -37,7 +42,7 @@ module WEPSwarmdays_mod
 
     subroutine warmday_proc(self, plnt, env)
       implicit none
-      class(WEPSwarmdays), intent(in) :: self
+      class(WEPSwarmdays), intent(inout) :: self
       type(plant), intent(inout) :: plnt
       type(environment_state), intent(inout) :: env
       real(dp) :: warmdays       ! accumulated warm days
@@ -49,16 +54,14 @@ module WEPSwarmdays_mod
       ! get input values
       call plnt%state%get("warmdays", warmdays, succ)
       if( .not. check_return( "warmdays", succ ) ) return
-      call plnt%pars%get("tbase", tbase, succ)
-      if( .not. check_return( "tbase", succ ) ) return
+      call plnt%pars%get("tbas", tbase, succ)
+      if( .not. check_return( "tbas", succ ) ) return
       call env%state%get("tmax", tmax, succ)
       if( .not. check_return( "tmax", succ ) ) return
       call env%state%get("tmin", tmin, succ)
       if( .not. check_return( "tmin", succ ) ) return
 
       call warmday_cum(warmdays, tbase, tmax, tmin)
-
-      !write(*,*) 'warmday_proc: ', warmdays, tbase, tmax, tmin
 
       call plnt%state%replace("warmdays", warmdays, succ)
     end subroutine warmday_proc

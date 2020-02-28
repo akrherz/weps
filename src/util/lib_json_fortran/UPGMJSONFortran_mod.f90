@@ -1,3 +1,8 @@
+!$Author$
+!$Date$
+!$Revision$
+!$HeadURL$
+
 module UPGM_state
     use json_module
     use constants, only : int32, dp
@@ -14,10 +19,10 @@ module UPGM_state
         procedure, public, pass(self) :: clone => clonestate
         generic, public :: put => put_logical, put_integer, put_real, put_string, put_int_array, put_real_array, put_str_array
         generic, public :: get => get_logical, get_integer, get_real, get_string, get_int_array, get_real_array, get_str_array
-        generic, public :: replace => update_logic, update_int, update_real, update_str, update_int_array, update_real_array
+        generic, public :: replace => update_logical, update_int, update_real, update_str, update_int_array, update_real_array
         procedure, pass(self), private :: put_logical, put_integer, put_real,put_string,put_int_array,put_real_array,put_str_array
         procedure, pass(self), private :: get_logical, get_integer, get_real,get_string,get_int_array,get_real_array,get_str_array
-        procedure, pass(self), private :: update_logic, update_int, update_real, update_str, update_int_array, update_real_array
+        procedure, pass(self), private :: update_logical, update_int, update_real, update_str, update_int_array, update_real_array
     end type hash_state
 
     interface hash_state
@@ -78,14 +83,14 @@ module UPGM_state
       call self%core%get(self%jstate, key, value, found)
     end subroutine get_logical
 
-    subroutine update_logic(self, key, value, found)
+    subroutine update_logical(self, key, value, found)
       class(hash_state), intent(inout) :: self
       logical, target, intent(in) :: value
       character(len=*), intent(in) :: key
       logical, intent(inout) :: found
 
       call self%core%update(self%jstate, key, value, found)
-    end subroutine update_logic
+    end subroutine update_logical
 
     ! ********** Integers ********************************
     subroutine put_integer(self, key, value, success)

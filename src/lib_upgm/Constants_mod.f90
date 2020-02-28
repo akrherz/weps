@@ -1,3 +1,8 @@
+!$Author$
+!$Date$
+!$Revision$
+!$HeadURL$
+
 module constants
     use, intrinsic :: iso_fortran_env, only : isodp => real64, isoint=> int32 
     implicit none
@@ -37,7 +42,7 @@ module constants
       logical :: succ
       logical :: result_val
 
-      ! returns true if the value is successfully retireved
+      ! returns true if the value is successfully retrieved
       ! also resets the succ value to false for next test
       if( succ ) then
         succ = .false.

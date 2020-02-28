@@ -1,3 +1,8 @@
+!$Author$
+!$Date$
+!$Revision$
+!$HeadURL$
+
 module WEPSTempStress_mod
   use Preprocess_mod
   use constants, only: dp, check_return
@@ -14,15 +19,15 @@ module WEPSTempStress_mod
 
   contains
 
-    subroutine load_state(self, process_state)
+    subroutine load_state(self, processState)
       implicit none
       class(WEPSTempStress), intent(inout) :: self
-      type(hash_state), intent(inout) :: process_state
+      type(hash_state), intent(inout) :: processState
       ! Body of loadState
-      ! load process_state into my state:
-      self%process_state = hash_state()
-      call self%process_state%init()
-      call self%process_state%clone(process_state)
+      ! load processState into my state:
+      self%processState = hash_state()
+      call self%processState%init()
+      call self%processState%clone(processState)
     end subroutine load_state
 
     subroutine proc_register(self, req_input, prod_output)
@@ -37,7 +42,7 @@ module WEPSTempStress_mod
 
     subroutine TempStress(self, plnt, env)
       implicit none
-      class(WEPSTempStress), intent(in) :: self
+      class(WEPSTempStress), intent(inout) :: self
       type(plant), intent(inout) :: plnt
       type(environment_state), intent(inout) :: env
       real(dp) :: tstress     ! temperature stress factor for growth
@@ -56,8 +61,8 @@ module WEPSTempStress_mod
       if( .not. check_return( "tmin", succ ) ) return
       call plnt%pars%get("topt", topt, succ)
       if( .not. check_return( "topt", succ ) ) return
-      call plnt%pars%get("tbase", tbase, succ)
-      if( .not. check_return( "tbase", succ ) ) return
+      call plnt%pars%get("tbas", tbase, succ)
+      if( .not. check_return( "tbas", succ ) ) return
 
       tstress = temp_stress( tmax, tmin, topt, tbase )
 

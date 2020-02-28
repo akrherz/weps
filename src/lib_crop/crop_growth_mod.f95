@@ -98,7 +98,7 @@ module crop_growth_mod
       real bcgrainf, bczgrowpt
       double precision bcfliveleaf
       double precision bcleafareatrend, bcstemmasstrend
-      real bctwarmdays
+      double precision bctwarmdays
       double precision bctchillucum
       double precision bcthardnx
       double precision bcthu_shoot_beg, bcthu_shoot_end
@@ -394,6 +394,7 @@ module crop_growth_mod
           then  ! trend non-zero and (heat units past emergence or staged crown release crop)
           bcleafareatrend = trend
       end if
+
       ! set trend direction for above ground stem mass from external forces
       trend = dble(bcmstandstem) + dble(bcmflatstem) - dble(bprevstandstem) - dble(bprevflatstem)
       if ((trend .ne. 0.0d0)                                          &
@@ -464,7 +465,7 @@ module crop_growth_mod
             regrowth_flg = 2
             if( bctwarmdays .ge. shoot_delay ) then                       ! enough warm days to start regrowth
              regrowth_flg = 3
-             if( (bcthucum  / bcthum .ge. bc0hue)                       & ! heat units past emergence
+             if( (bcthucum/bcthum .ge. bc0hue)                          & ! heat units past emergence
      &           .or.((bc0idc.eq.8).and.(bcstemmasstrend.lt.0.0)) ) then  ! staged crown release will regrow without full emergence, but only if stem removed ie harvest
               regrowth_flg = 4
               if( (bcthucum .lt. bcthum)                                & ! not yet mature
@@ -595,10 +596,6 @@ module crop_growth_mod
               huirt = huirty
           end if
       endif
-
-!      write(*,*) 'crop:huiy: ', huiy
-!      write(*,*) 'crop:regrowth_flg: ', regrowth_flg
-!      write(*,*) 'crop:bctwarmdays: ', bctwarmdays
 
       bcmtotshoot = u_bcmtotshoot
       bcdstm = u_bcdstm
@@ -1398,12 +1395,12 @@ module crop_growth_mod
      &                    par, apar, pddm, p_rw, p_st, p_lf, p_rp,      &
      &                    stem_propor, pdiam, parea, pdiam/bc0diammax,  &
      &                    parea*bcdpop, hu_delay, bcthardnx, temp_sai,  &
-     &                    temp_stmrep, regrowth_flg, bcfliveleaf, bc0nam
+     &                    temp_stmrep, regrowth_flg, bcfliveleaf, trim(bc0nam)
       end if
 
  2130 format(1x,i6,1x,i3,1x,i4,1x,i5,1x,f6.3,12(1x,f7.4),1x,f7.2,       &
      & 3(1x,f7.4),8(1x,f6.3),1x,e12.3, 11(1x,f6.3),2(1x,f8.5),1x,i2,    &
-     & 1x,f6.3,1x,a30)
+     & 1x,f6.3,1x,a)
 
       return
     end subroutine growth
@@ -1821,14 +1818,14 @@ module crop_growth_mod
      &        s_root_sum, f_root_sum, tot_mass_req, end_shoot_mass,     &
      &        end_root_mass, d_root_mass, d_shoot_mass, d_s_root_mass,  &
      &        end_stem_mass, end_stem_area, end_shoot_len, bczshoot,    &
-     &        bcmshoot, bcdstm, bc0nam
+     &        bcmshoot, bcdstm, trim(bc0nam)
       end if
 
  1000 format(1x,i5,1x,i3,1x,i4,1x,i4,1x,f6.3,                           &
      &       2(1x,f10.4), 2(1x,f12.4),                                  &
      &       4(1x,f10.4),                                               &
      &       4(1x,f10.4),                                               &
-     &       (1x,f8.4),(1x,f8.3),1x,a20)
+     &       (1x,f8.4),(1x,f8.3),1x,a)
 
       return
     end subroutine shoot_grow

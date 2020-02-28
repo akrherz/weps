@@ -1,3 +1,8 @@
+!$Author$
+!$Date$
+!$Revision$
+!$HeadURL$
+
 module Process_Factory
     use Preprocess_mod
     use gddmethod1_mod
@@ -7,12 +12,16 @@ module Process_Factory
     use WEPSwarmdays_mod
     use WEPStempstress_mod
     use WEPSFreezeDamage_mod
+    use WEPSregrowth_mod
 
   contains
     
-    function create_process(processName) result(processPtr)
+    function create_process(processName, processLabel) result(processPtr)
       class(preprocess), pointer :: processPtr
       character(len=*), intent(in) :: processName ! please trim, all lower case.
+      character(len=*), intent(in) :: processLabel ! please trim, all lower case.
+
+      nullify(processPtr)
     
       if (processName == "gddmethod1") then
         allocate(gdd1_method :: processPtr)
@@ -28,9 +37,17 @@ module Process_Factory
         allocate(WEPSTempStress :: processPtr)
       elseif (processName == "weps_freezedamage") then
         allocate(WEPSFreezeDamage :: processPtr)
-      else
-        nullify(processPtr)
+      elseif (processName == "weps_regrowth") then
+        allocate(WEPSregrowth :: processPtr)
       endif
+
+      if( associated(processPtr) ) then
+        processPtr%processName = processName
+        processPtr%processLabel = processLabel
+        call processPtr%processPars%init()
+        call processPtr%processState%init()
+        nullify( processPtr%processNext )
+    end if
 
     end function create_process
     

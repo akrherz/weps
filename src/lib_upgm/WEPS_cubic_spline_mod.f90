@@ -1,7 +1,7 @@
-!$Author: fredfox $
-!$Date: 2016-12-16 18:07:13 -0700 (Fri, 16 Dec 2016) $
-!$Revision: 14791 $
-!$HeadURL: https://infosys.ars.usda.gov/svn/code/weps1/branches/weps.src.subregion.plants/src/util/lib_math/cubic_spline_mod.f95 $
+!$Author$
+!$Date$
+!$Revision$
+!$HeadURL$
 
 module WEPS_cubic_spline_mod
 

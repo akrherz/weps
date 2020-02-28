@@ -1,3 +1,8 @@
+!$Author$
+!$Date$
+!$Revision$
+!$HeadURL$
+
 !*****************************************************************************************
 !> author: Jacob Williams
 !  license: BSD

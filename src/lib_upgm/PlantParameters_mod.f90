@@ -1,3 +1,8 @@
+!$Author$
+!$Date$
+!$Revision$
+!$HeadURL$
+
     module plant_parameters_mod
     use constants, only : dp, int32
     implicit none

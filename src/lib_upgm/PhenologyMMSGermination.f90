@@ -1,3 +1,8 @@
+!$Author$
+!$Date$
+!$Revision$
+!$HeadURL$
+
 module PhenologyMMSGermination_mod
     use phases_mod
     use constants, only: dp, int32, check_return
@@ -41,15 +46,15 @@ module PhenologyMMSGermination_mod
       class(PhenologyMMS_Germination), intent(inout) :: self
       type(plant), intent(inout) :: plnt
       type(environment_state), intent(inout) :: env
-      real(dp), dimension(:), allocatable :: soil_moisture, gdd_resp, gdd_curve
+      real(dp), dimension(:), allocatable :: soil_moisture, gdd_resp, swc_curve
       real(dp) :: daygdd, stagegdd
       real(dp) :: soilmoistureplanting
       real(dp) :: requiredgdd
-      integer(int32) :: p_depth, idx, tmp
+      integer(int32) :: p_layer, idx, tmp
       logical :: succ = .false.
       ! Body of germination
-      call plnt%state%get("p_depth", p_depth, succ)
-      if( .not. check_return( "p_depth", succ ) ) return
+      call plnt%state%get("p_layer", p_layer, succ)
+      if( .not. check_return( "p_layer", succ ) ) return
       call env%state%get("swc", soil_moisture, succ)
       if( .not. check_return( "swc", succ ) ) return
       call plnt%state%get("daygdd", daygdd, succ)
@@ -57,23 +62,23 @@ module PhenologyMMSGermination_mod
       call self%phaseState%get("stagegdd", stagegdd, succ)
       if( .not. check_return( "stagegdd", succ ) ) return
       ! phase specific parameters
-      call self%phasePars%get("gdd_curve", gdd_curve, succ)
-      if( .not. check_return( "gdd_curve", succ ) ) return
+      call self%phasePars%get("swc_curve", swc_curve, succ)
+      if( .not. check_return( "swc_curve", succ ) ) return
       call self%phasePars%get("gdd_resp", gdd_resp, succ)
       if( .not. check_return( "gdd_resp", succ ) ) return
 
-      write(*,*) 'PhaseName: ', self%phaseName
+      !write(*,*) 'PhaseName: ', self%phaseName
 
-      !NOTE: assume p_depth has been calculated as the appropriate index in the swc array.
-      soilmoistureplanting = soil_moisture(p_depth)
+      !NOTE: assume p_layer has been calculated as the appropriate index in the swc array.
+      soilmoistureplanting = soil_moisture(p_layer)
 
       ! curve contains lower exclusive limit for that response range.
       ! 1) 45 (so > 45)
       ! 2) 35 (so > 35, <= 45 )
       ! 3) 25 (so > 25, <= 35)
       ! 4) -1 ( anything > 0 but <= 25)
-      do idx = 1, size(gdd_curve)
-        if (soilmoistureplanting >= gdd_curve(idx)) then
+      do idx = 1, size(swc_curve)
+        if (soilmoistureplanting >= swc_curve(idx)) then
             requiredgdd = gdd_resp(idx)
             exit
         end if

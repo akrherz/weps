@@ -1,3 +1,8 @@
+!$Author$
+!$Date$
+!$Revision$
+!$HeadURL$
+
     module Preprocess_mod
     use plant_mod
     use environment_state_mod
@@ -5,7 +10,8 @@
     type, abstract :: Preprocess
       character(len=40) :: processName ! please trim, all lower case.
       character(len=40) :: processLabel ! please trim, all lower case.
-      type(hash_state), public :: process_state ! dynamic setup for processes
+      type(hash_state), public :: processPars ! parameters initialized for this process
+      type(hash_state), public :: processState ! dynamic setup for processes
       class(Preprocess), public, pointer :: processNext
     contains
     procedure(generic_loadstate), deferred, pass(self) :: load
@@ -17,7 +23,7 @@
 
     subroutine generic_process(self, plnt, env)
     import :: Preprocess, plant, environment_state
-    class(Preprocess), intent(in) :: self
+    class(Preprocess), intent(inout) :: self
     type(plant), intent(inout) :: plnt
     type(environment_state), intent(inout) :: env
     end subroutine generic_process
@@ -29,10 +35,10 @@
     type(hash_state), intent(inout) :: prod_output
     end subroutine generic_register
 
-    subroutine generic_loadstate(self, process_state)
+    subroutine generic_loadstate(self, processState)
     import :: Preprocess, hash_state
     class(Preprocess), intent(inout) :: self
-    type(hash_state), intent(inout) :: process_state
+    type(hash_state), intent(inout) :: processState
     end subroutine generic_loadstate
 
     end interface

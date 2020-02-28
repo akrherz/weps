@@ -1,3 +1,8 @@
+!$Author$
+!$Date$
+!$Revision$
+!$HeadURL$
+
     module test_phenol_mod
     use upgm_mod
      use phase_factory_mod
@@ -14,7 +19,7 @@
     class(phase), pointer :: stage
     type(environment_state) :: env
     real(dp), dimension(5) :: soil_moisture
-    real(dp), dimension(4) :: gdd_resp, gdd_curve
+    real(dp), dimension(4) :: gdd_resp, swc_curve
     real(dp) :: daygdd, stagegdd
     integer(int32) :: p_depth
     logical :: success = .false.
@@ -30,7 +35,7 @@
     ! "ratio pore space filled"
     soil_moisture = [0.45, 0.35, 0.30, 0.35, 0.32]
     !"ratio" response
-    gdd_curve = [0.45, 0.35, 0.25, -0.1]
+    swc_curve = [0.45, 0.35, 0.25, -0.1]
     ! corresponding gdd value
     gdd_resp = [25, 30, 35, 600]
     ! planting in layer 2
@@ -44,8 +49,8 @@
     call model%plant%plantstate%state%put("p_depth", p_depth, success)
     print *, "p_depth inserted into plant", p_depth, " success=", success
 
-    call model%plant%plantstate%state%put("gdd_curve", gdd_curve, success)
-    print *, "gdd_curve inserted into plant", gdd_curve, " success=", success
+    call model%plant%plantstate%state%put("swc_curve", swc_curve, success)
+    print *, "swc_curve inserted into plant", swc_curve, " success=", success
 
     call model%plant%plantstate%state%put("gdd_resp", gdd_resp, success)
     print *, "gdd_resp inserted into plant", gdd_resp, " success=", success

@@ -1,3 +1,8 @@
+!$Author$
+!$Date$
+!$Revision$
+!$HeadURL$
+
 !  The argument list for the various `initialize` subroutines.
 
 logical(LK),intent(in),optional :: verbose

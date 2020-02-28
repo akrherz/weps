@@ -1,3 +1,8 @@
+!$Author$
+!$Date$
+!$Revision$
+!$HeadURL$
+
 module WEPSFreezeDamage_mod
   use Preprocess_mod
   use constants, only: dp, check_return
@@ -14,15 +19,15 @@ module WEPSFreezeDamage_mod
 
   contains
 
-    subroutine load_state(self, process_state)
+    subroutine load_state(self, processState)
       implicit none
       class(WEPSFreezeDamage), intent(inout) :: self
-      type(hash_state), intent(inout) :: process_state
+      type(hash_state), intent(inout) :: processState
       ! Body of loadState
-      ! load process_state into my state:
-      self%process_state = hash_state()
-      call self%process_state%init()
-      call self%process_state%clone(process_state)
+      ! load processState into my state:
+      self%processState = hash_state()
+      call self%processState%init()
+      call self%processState%clone(processState)
     end subroutine load_state
 
     subroutine proc_register(self, req_input, prod_output)
@@ -37,42 +42,37 @@ module WEPSFreezeDamage_mod
 
     subroutine FreezeDamage(self, plnt, env)
       implicit none
-      class(WEPSFreezeDamage), intent(in) :: self
+      class(WEPSFreezeDamage), intent(inout) :: self
       type(plant), intent(inout) :: plnt
       type(environment_state), intent(inout) :: env
-      real(dp) :: thucum ! accumulated growing degree days
-      real(dp) :: thum   ! Maximum accumulated grwoing degree days (maturity)
-      real(dp) :: ehu0   ! fraction of season where senescence occurs
-      real(dp) :: tsmn1  ! minimum temperature of surface soil layer
       real(dp) :: a_fr   ! parameter in the frost damage s-curve
       real(dp) :: b_fr   ! parameter in the frost damage s-curve
+      real(dp) :: ffa    ! fraction of live leaf senescence occuring
+      real(dp) :: tsmn1  ! minimum temperature of surface soil layer
       real(dp) :: mstandleaf ! mass of standing leaf
       real(dp) :: fliveleaf ! mass of standing leaf
       real(dp) :: frst   ! the fraction of living leaf killed by freezing
       real(dp) :: lost_mass ! the amount of mass lost due to freeze damage
       logical :: succ = .false.
 
+      ! get process parameters
+      call self%processPars%get("a_fr", a_fr, succ)
+      if( .not. check_return( "a_fr", succ ) ) return
+      call self%processPars%get("b_fr", b_fr, succ)
+      if( .not. check_return( "b_fr", succ ) ) return
+
       ! get input values
-      call plnt%state%get("thucum", thucum, succ)
-      if( .not. check_return( "thucum", succ ) ) return
+      call plnt%state%get("ffa", ffa, succ)
+      if( .not. check_return( "ffa", succ ) ) return
       call plnt%state%get("mstandleaf", mstandleaf, succ)
       if( .not. check_return( "mstandleaf", succ ) ) return
       call plnt%state%get("fliveleaf", fliveleaf, succ)
       if( .not. check_return( "fliveleaf", succ ) ) return
 
-      call plnt%pars%get("thum", thum, succ)
-      if( .not. check_return( "thum", succ ) ) return
-      call plnt%pars%get("ehu0", ehu0, succ)
-      if( .not. check_return( "ehu0", succ ) ) return
-      call plnt%pars%get("a_fr", a_fr, succ)
-      if( .not. check_return( "a_fr", succ ) ) return
-      call plnt%pars%get("b_fr", b_fr, succ)
-      if( .not. check_return( "b_fr", succ ) ) return
-
       call env%state%get("tsmn1", tsmn1, succ)
       if( .not. check_return( "tsmn1", succ ) ) return
 
-      call freeze_damage( thucum/thum, ehu0, tsmn1, a_fr, b_fr, mstandleaf, fliveleaf, frst, lost_mass )
+      call freeze_damage( ffa, tsmn1, a_fr, b_fr, mstandleaf, fliveleaf, frst, lost_mass )
 
       call plnt%state%replace("mstandleaf", mstandleaf, succ)
       call plnt%state%replace("fliveleaf", fliveleaf, succ)

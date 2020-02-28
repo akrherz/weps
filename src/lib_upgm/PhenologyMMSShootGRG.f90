@@ -3,25 +3,24 @@
 !$Revision$
 !$HeadURL$
 
-module PhenologyMMSFallphenol_mod
+module PhenologyMMSShootGRG_mod
   use phases_mod
   use constants, only: dp, int32, check_return
-  use WEPSCrop_util_mod, only: chilluv, dev_floor
   use PhenologyMMS_mod, only: gdd_stressed_del, height_stressed
   implicit none
 
-  type, extends(phase) :: PhenologyMMS_Fallphenol
+  type, extends(phase) :: PhenologyMMS_ShootGRG
     contains
     procedure, pass(self) :: load => load_state
-    procedure, pass(self) :: doPhase => pmms_fallphenol ! may not need to pass self
+    procedure, pass(self) :: doPhase => pmms_ShootGRG ! may not need to pass self
     procedure, pass(self) :: register => phase_register
-  end type PhenologyMMS_Fallphenol
+  end type PhenologyMMS_ShootGRG
 
   contains
 
     subroutine load_state(self, phaseState)
       implicit none
-      class(PhenologyMMS_Fallphenol), intent(inout) :: self
+      class(PhenologyMMS_ShootGRG), intent(inout) :: self
       type(hash_state), intent(inout) :: phaseState
       ! Body of loadState
       ! load phaseState into my state:
@@ -33,28 +32,26 @@ module PhenologyMMSFallphenol_mod
     subroutine phase_register(self, req_input, prod_output)
       ! Variables
       implicit none
-      class(PhenologyMMS_Fallphenol), intent(in) :: self
+      class(PhenologyMMS_ShootGRG), intent(in) :: self
       type(hash_state), intent(inout) :: req_input
       type(hash_state), intent(inout) :: prod_output
       ! Body of stage_register
       ! add stuff here the component requires and any outputs it will generate.
     end subroutine phase_register
 
-    subroutine pmms_fallphenol(self, plnt, env)
+    subroutine pmms_ShootGRG(self, plnt, env)
       implicit none
-      class(PhenologyMMS_Fallphenol), intent(inout) :: self
+      class(PhenologyMMS_ShootGRG), intent(inout) :: self
       type(plant), intent(inout) :: plnt
       type(environment_state), intent(inout) :: env
       real(dp) :: stagegdd       ! GDD accumulated for this phase
       real(dp) :: phase_rel_gdd  ! relative GDD accumulated for this phase (1 means phase completion)
       real(dp) :: daygdd         ! GDD total for this growth day
       real(dp) :: stress         ! level of stress for this day (0 = no stress, 1 = maximum stress)
-      real(dp) :: chill_unit_cum ! accumulated chill units for vernalization
       real(dp) :: GN_trans_gdd   ! Non-stressed transition GDD
       real(dp) :: GN_stress      ! level of stress corresponding to Non-stressed transition GDD
       real(dp) :: GS_trans_gdd   ! Stressed transition GDD
       real(dp) :: GS_stress      ! level of stress corresponding to stressed transition GDD
-      real(dp) :: tverndel      ! thermal delay coefficient pre-vernalization
       real(dp) :: height_inc     ! potential height increase during this phase
       real(dp) :: root_depth_inc ! potential root depth increase during this phase
       real(dp) :: begin_phase_rel ! phase_rel_gdd at beginning of day step
@@ -79,6 +76,8 @@ module PhenologyMMSFallphenol_mod
 
       ! plant state
       real(dp) :: bcfliveleaf ! fraction of standing plant leaf which is living (transpiring)
+      real(dp) :: bcthu_shoot_beg ! heat unit index (fraction) for beginning of shoot grow from root storage period
+      real(dp) :: bcthu_shoot_end ! heat unit index (fraction) for end of shoot grow from root storage period
 
       ! locally computed values
       real(dp) :: live_leaf  ! live leaf fraction at end of today (interpolated)
@@ -98,7 +97,7 @@ module PhenologyMMSFallphenol_mod
       real(dp) :: p_lf_rp    ! sum of leaf and reproductive partitioning fractions
       logical :: growing
 
-      ! Body of mms_fallphenol
+      ! Body of mms_ShootGRG
 
       ! plant state
       call plnt%state%get("daygdd", daygdd, succ)
@@ -107,8 +106,10 @@ module PhenologyMMSFallphenol_mod
       if( .not. check_return( "stress", succ ) ) return
       call plnt%state%get("fliveleaf", bcfliveleaf, succ)
       if( .not. check_return( "fliveleaf", succ ) ) return
-      call plnt%state%get("chill_unit_cum", chill_unit_cum, succ)
-      if( .not. check_return( "chill_unit_cum", succ ) ) return
+      call plnt%state%get("thu_shoot_beg", bcthu_shoot_beg, succ)
+      if( .not. check_return( "thu_shoot_beg", succ ) ) return
+      call plnt%state%get("thu_shoot_end", bcthu_shoot_end, succ)
+      if( .not. check_return( "thu_shoot_end", succ ) ) return
 
       ! phase state
       !initialized to zero at phase beginning
@@ -126,8 +127,7 @@ module PhenologyMMSFallphenol_mod
       if( .not. check_return( "GS_trans_gdd", succ ) ) return
       call self%phasePars%get("GS_stress", GS_stress, succ)
       if( .not. check_return( "GS_stress", succ ) ) return
-      call self%phasePars%get("tverndel", tverndel, succ)
-      if( .not. check_return( "tverndel", succ ) ) return
+
       call self%phasePars%get("height_inc", height_inc, succ)
       if( .not. check_return( "height_inc", succ ) ) return
       call self%phasePars%get("root_depth_inc", root_depth_inc, succ)
@@ -170,10 +170,8 @@ module PhenologyMMSFallphenol_mod
 
       begin_phase_rel = phase_rel_gdd
 
-      hu_delay = max( dev_floor, min(1.0_dp, 1.0_dp - tverndel * (chilluv-chill_unit_cum) ) )
-
-      ! if phase_rel_gdd exceeds 1.0, remainder of daygdd is returned, else daygdd is 0.0
-      call gdd_stressed_del(phase_rel_gdd, stagegdd, daygdd, stress, GN_trans_gdd, GN_stress, GS_trans_gdd, GS_stress, hu_delay)
+      ! if phase_rel_gdd exceeds 1.0, remainder of daygdd is returned
+      call gdd_stressed_del(phase_rel_gdd, stagegdd, daygdd, stress, GN_trans_gdd, GN_stress, GS_trans_gdd, GS_stress, 1.0_dp)
 
       ! senescence is done on a whole plant mass basis not incremental mass
       live_leaf = beg_live_leaf + (end_live_leaf - beg_live_leaf) * phase_rel_gdd
@@ -189,9 +187,20 @@ module PhenologyMMSFallphenol_mod
       pdht = height_inc * (phase_rel_gdd - begin_phase_rel)
       pdrd = root_depth_inc * (phase_rel_gdd - begin_phase_rel)
 
-      ! calculate shoot_hui (no initial growth or regrowth in this phase)
-      shoot_hui = 1.0_dp
-      shoot_huiy = 1.0_dp
+      ! calculate shoot_hui
+      if( begin_phase_rel .lt. bcthu_shoot_end ) then
+        if( phase_rel_gdd .gt. bcthu_shoot_beg ) then
+          ! fraction of shoot growth from stored reserves (today and yesterday)
+          shoot_hui = min( 1.0_dp, (phase_rel_gdd - bcthu_shoot_beg) / (bcthu_shoot_end - bcthu_shoot_beg) )
+          shoot_huiy = max( 0.0_dp, (begin_phase_rel - bcthu_shoot_beg) / (bcthu_shoot_end - bcthu_shoot_beg) )
+        else
+          shoot_hui = 0.0_dp
+          shoot_huiy = 0.0_dp
+        end if
+      else
+        shoot_hui = 1.0_dp
+        shoot_huiy = 1.0_dp
+      end if
 
       p_rw = beg_p_rw + (end_p_rw - beg_p_rw) * phase_rel_gdd
       p_lf = beg_p_lf + (end_p_lf - beg_p_lf) * phase_rel_gdd
@@ -209,6 +218,7 @@ module PhenologyMMSFallphenol_mod
           p_st = 1.0_dp - p_lf_rp
       end if
 
+      hu_delay = 1.0_dp
       growing = .true.
 
       if (phase_rel_gdd .ge. 1.0_dp) then
@@ -225,10 +235,10 @@ module PhenologyMMSFallphenol_mod
       if( .not. check_return( "phase_rel_gdd", succ ) ) return
       call self%phaseState%replace("stagegdd", stagegdd, succ)
       if( .not. check_return( "stagegdd", succ ) ) return
-      call plnt%state%replace("remgdd", daygdd, succ)
-      if( .not. check_return( "remgdd", succ ) ) return
 
       ! update plant state values
+      call plnt%state%replace("remgdd", daygdd, succ)
+      if( .not. check_return( "remgdd", succ ) ) return
       call plnt%state%replace("ffa", ffa, succ)
       if( .not. check_return( "ffa", succ ) ) return
       call plnt%state%replace("ffw", ffw, succ)
@@ -260,6 +270,6 @@ module PhenologyMMSFallphenol_mod
 
       return
 
-    end subroutine pmms_fallphenol
+    end subroutine pmms_ShootGRG
 
-end module PhenologyMMSFallphenol_mod
+end module PhenologyMMSShootGRG_mod

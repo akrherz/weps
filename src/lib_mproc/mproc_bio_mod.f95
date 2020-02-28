@@ -576,7 +576,9 @@ module mproc_bio_mod
             thisPlant%residue%dstm = thisPlant%geometry%dstm
             thisPlant%geometry%dstm = 0.0
             thisPlant%residue%xstmrep = thisPlant%geometry%xstmrep
-            thisPlant%geometry%xstmrep = 0.0
+            ! do not zero to preserver for end of season report
+            ! It is set to zero by plant update
+            ! thisPlant%geometry%xstmrep = 0.0
             thisPlant%residue%zrtd = thisPlant%geometry%zrtd
             thisPlant%geometry%zrtd = 0.0
             thisPlant%residue%grainf = thisPlant%geometry%grainf

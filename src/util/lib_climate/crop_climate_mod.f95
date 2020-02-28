@@ -18,7 +18,8 @@ module crop_climate_mod
   end interface heatunit
 
   interface warmday_cum
-      module procedure warmday_cum_today
+      module procedure warmday_cum_today_dble
+      module procedure warmday_cum_today_sngl
       module procedure warmday_cum_temps
   end interface warmday_cum
 
@@ -122,33 +123,48 @@ module crop_climate_mod
 
     ! calculates the cumulative number of days the daily average temperature
     ! is above a threshold temperature.
-    subroutine warmday_cum_today( bctwarmdays, thres )
-      real, intent(inout) :: bctwarmdays  ! total number of consequtive days temperature is above threshold
+    subroutine warmday_cum_today_dble( bctwarmdays, thres )
+      double precision, intent(inout) :: bctwarmdays  ! total number of consequtive days temperature is above threshold
       real, intent(in) :: thres  ! threshold temperature (such as minimum temperature for growth)
 
       call warmday_cum_temps( bctwarmdays, thres, cli_today%tdmx, cli_today%tdmn )
 
       return
-    end subroutine warmday_cum_today
+    end subroutine warmday_cum_today_dble
+
+    ! calculates the cumulative number of days the daily average temperature
+    ! is above a threshold temperature.
+    subroutine warmday_cum_today_sngl( bctwarmdays, thres )
+      real, intent(inout) :: bctwarmdays  ! total number of consequtive days temperature is above threshold
+      real, intent(in) :: thres  ! threshold temperature (such as minimum temperature for growth)
+
+      double precision :: temp_warmdays
+
+      temp_warmdays = bctwarmdays
+      call warmday_cum_temps( temp_warmdays, thres, cli_today%tdmx, cli_today%tdmn )
+      bctwarmdays = temp_warmdays
+
+      return
+    end subroutine warmday_cum_today_sngl
 
     ! calculates the cumulative number of days the daily average temperature
     ! is above a threshold temperature.
     subroutine warmday_cum_temps( bctwarmdays, thres, tmax, tmin )
-      real, intent(inout) :: bctwarmdays  ! total number of consequtive days tempeature is above threshold
+      double precision, intent(inout) :: bctwarmdays  ! total number of consequtive days tempeature is above threshold
       real, intent(in) :: thres  ! threshold temperature (such as minimum temperature for growth)
       real, intent(in) :: tmax   ! maximum daily air temperature
       real, intent(in) :: tmin   ! minimum daily air temperature
 
       ! local variables
-      real :: tmean   ! arithmetic average of tmax and tmin
+      double precision:: tmean   ! arithmetic average of tmax and tmin
 
-      tmean = (tmax + tmin) / 2.0
-      if (tmean .gt. thres) then
+      tmean = (dble(tmax) + dble(tmin)) / 2.0d0
+      if (tmean .gt. dble(thres)) then
           ! this is a warm day
-          bctwarmdays = bctwarmdays + 1
+          bctwarmdays = bctwarmdays + 1.0d0
       else
           ! reduce warm day total, but do not zero, for proper fall regrow of perennials
-          bctwarmdays = bctwarmdays / 2
+          bctwarmdays = bctwarmdays / 2.0d0
       end if
 
       return

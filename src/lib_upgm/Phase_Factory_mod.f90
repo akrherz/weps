@@ -1,6 +1,12 @@
+!$Author$
+!$Date$
+!$Revision$
+!$HeadURL$
+
 module phase_factory_mod
     use phases_mod
     use PhenologyMMSGermination_mod
+    use PhenologyMMSShootGRG_mod
     use PhenologyMMSBasephenol_mod
     use PhenologyMMSFallphenol_mod
     use PhenologyMMSSpringphenol_mod
@@ -18,6 +24,8 @@ module phase_factory_mod
 
     if (phaseName == "pmms_germination") then
         allocate(PhenologyMMS_Germination :: phasePtr)
+    elseif (phaseName == "pmms_shootgrg") then
+        allocate(PhenologyMMS_ShootGRG :: phasePtr)
     elseif (phaseName == "pmms_basephenol") then
         allocate(PhenologyMMS_Basephenol :: phasePtr)
     elseif (phaseName == "pmms_fallphenol") then
@@ -28,8 +36,6 @@ module phase_factory_mod
         allocate(WEPS_ShootGrow:: phasePtr)
     !elseif(phaseName == "phase") then
         !allocate( phase:: phasePtr)
-    else
-        nullify(phasePtr)
     endif
 
     if( associated(phasePtr) ) then

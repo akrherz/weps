@@ -61,6 +61,12 @@ module biomaterial
   type biostate_growth
      logical :: am0cgf      ! flag if set to .true. then run CROP growth subroutines.
      logical :: am0cif      ! flag if set to .true. then run CROP growth initialization subroutine.
+     logical :: growing     ! flag set to indicate that crop is growing
+     logical :: shoot_growing     ! flag set to indicate that shoot growth occuring
+     logical :: can_regrow  ! flag set to indicate that crop is able to regrow (past bc0hue, partition to root store)
+     logical :: do_regrow   ! flag set to indicate that regrow has been triggered
+     logical :: can_harden  ! flag set to indicate that crop respond to hardening stimulus
+     logical :: lastday     ! flag set to indicate the last day of crop growth
      double precision :: thucum         ! crop accumulated heat units
      double precision :: trthucum       ! accumulated root growth heat units (degree-days)
 
@@ -71,7 +77,7 @@ module biomaterial
      double precision :: stemmasstrend  ! direction in which stem mass is trending.
                             ! Saves trend even if stem mass is static for long periods.
 
-     real :: twarmdays      ! number of consecutive days that the temperature has been above the minimum growth temperature
+     double precision :: twarmdays      ! number of consecutive days that the temperature has been above the minimum growth temperature
      double precision :: tchillucum     ! accumulated chilling units (days)
      double precision :: thardnx        ! hardening index for winter annuals (range from 0 t0 2)
 
@@ -599,6 +605,9 @@ contains
      ! plant not growing, just created
      plantNew%growth%am0cgf = .false.
      plantNew%growth%am0cif = .false.
+     plantNew%growth%growing = .false.
+     plantNew%growth%can_regrow = .false.
+     plantNew%growth%do_regrow = .false.
      plantNew%growth%thucum = 0.0
      plantNew%growth%trthucum = 0.0
      plantNew%growth%zgrowpt = 0.0

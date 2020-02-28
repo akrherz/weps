@@ -1,6 +1,11 @@
+!$Author$
+!$Date$
+!$Revision$
+!$HeadURL$
+
 module gddmethodWEPS_mod
     use Preprocess_mod
-    use constants, only : dp
+    use constants, only : dp, check_return
     use plant_mod
     use WEPSCrop_util_mod, only: huc
     implicit none
@@ -14,16 +19,16 @@ module gddmethodWEPS_mod
 
   contains
 
-    subroutine load_state(self, process_state)
+    subroutine load_state(self, processState)
       ! Variables
       implicit none
       class(gddWEPS_method), intent(inout) :: self
-      type(hash_state), intent(inout) :: process_state
+      type(hash_state), intent(inout) :: processState
       ! Body of loadState
-      ! load process_state into my state:
-      self%process_state = hash_state()
-      call self%process_state%init()
-      call self%process_state%clone(process_state)
+      ! load processState into my state:
+      self%processState = hash_state()
+      call self%processState%init()
+      call self%processState%clone(processState)
     end subroutine load_state
 
     subroutine register_proc(self, req_input, prod_output)
@@ -38,7 +43,7 @@ module gddmethodWEPS_mod
 
     subroutine gdd_process(self, plnt, env)
       implicit none
-      class(gddWEPS_method), intent(in) :: self
+      class(gddWEPS_method), intent(inout) :: self
       type(plant), intent(inout) :: plnt
       type(environment_state), intent(inout) :: env
       real(dp) :: tmin, tmax, tbase, topt, daygdd
@@ -46,13 +51,19 @@ module gddmethodWEPS_mod
 
       ! get tsMin
       call env%state%get("tmin", tmin, succ)
+      if( .not. check_return( "tmin", succ ) ) return
       call env%state%get("tmax", tmax, succ)
-      call plnt%pars%get("tbase", tbase, succ)
+      if( .not. check_return( "tmax", succ ) ) return
+      call plnt%pars%get("tbas", tbase, succ)
+      if( .not. check_return( "tbas", succ ) ) return
       call plnt%pars%get("topt", topt, succ)
+      if( .not. check_return( "topt", succ ) ) return
 
       daygdd = huc( tmax, tmin, topt, tbase )
 
       call plnt%state%replace("daygdd", daygdd, succ)
+      if( .not. check_return( "daygdd", succ ) ) return
+
     end subroutine gdd_process
 
 end module gddmethodWEPS_mod
