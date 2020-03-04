@@ -162,18 +162,29 @@ module report_update_vars_mod
     period_update(Crop_canopy_cov)%val = croptot%ftcancov
     period_update(Crop_canopy_cov)%cnt = period_update(Crop_canopy_cov)%cnt + 1
 
+    !Flat crop cover (includes stem area and flat stems+leaves)
+    !Added 03/03/2020 - LEW
+    period_update(Crop_flat_cov)%val = croptot%ftcvtot
+    period_update(Crop_flat_cov)%cnt = period_update(Crop_flat_cov)%cnt + 1
+
     period_update(Crop_stand_sil)%val = croptot%rcdtot
     period_update(Crop_stand_sil)%cnt = period_update(Crop_stand_sil)%cnt + 1
 
    !period_update(Crop_flat_mass)%val = croptot%mftot
    !period_update(Crop_flat_mass)%cnt = period_update(Crop_flat_mass)%cnt + 1
 
-   !Note currently we report this as "Above Ground Mass" not "Standing Mass"
+   !Note currently we report this as "Leaf and Stem Mass" not "Total Standing Mass" or "Total Above Ground Mass"
    !Note that we are also subtracting the "store" portion
    !which contains the reproductive (seed and fruit) components
     ! Remove live standing and flat crop reproductive mass from reported value
-    period_update(Crop_stand_mass)%val = croptot%msttot + croptot%mftot - croptot%mstandstore - croptot%mflatstore
-    period_update(Crop_stand_mass)%cnt = period_update(Crop_stand_mass)%cnt + 1
+    ! Changed name from "Crop_stand_mass" to "Crop_leaf_stem_mass" - 03/03/2020 LEW
+    period_update(Crop_leaf_stem_mass)%val = croptot%msttot + croptot%mftot - croptot%mstandstore - croptot%mflatstore
+    period_update(Crop_leaf_stem_mass)%cnt = period_update(Crop_leaf_stem_mass)%cnt + 1
+
+    !Total above ground crop mass - includes all biomass, standing+flat, including storage (reproductive) mass
+    !Added 03/03/2020 - LEW
+    period_update(Crop_total_above_ground_mass)%val = croptot%msttot + croptot%mftot
+    period_update(Crop_total_above_ground_mass)%cnt = period_update(Crop_total_above_ground_mass)%cnt + 1
 
     period_update(Crop_root_mass)%val = croptot%mrttot
     period_update(Crop_root_mass)%cnt = period_update(Crop_root_mass)%cnt + 1
@@ -196,6 +207,11 @@ module report_update_vars_mod
 
     period_update(Res_stand_mass)%val = restot%msttot
     period_update(Res_stand_mass)%cnt = period_update(Res_stand_mass)%cnt + 1
+
+    !Total above ground residue mass - includes all biomass, standing+flat, including storage (reproductive) mass
+    !Added 03/04/2020 - LEW
+    period_update(Res_total_above_ground_mass)%val = restot%msttot + restot%mftot
+    period_update(Res_total_above_ground_mass)%cnt = period_update(Res_total_above_ground_mass)%cnt + 1
 
     period_update(Res_buried_mass)%val = restot%mbgtot
     period_update(Res_buried_mass)%cnt = period_update(Res_buried_mass)%cnt + 1
@@ -223,6 +239,11 @@ module report_update_vars_mod
     ! Remove live standing crop reproductive mass from reported value
     period_update(All_stand_mass)%val = biotot%msttot - croptot%mstandstore
     period_update(All_stand_mass)%cnt = period_update(All_stand_mass)%cnt + 1
+
+    !Total above ground (live and dead) mass - includes all biomass, standing+flat, including storage (reproductive) mass
+    !Added 03/04/2020 - LEW
+    period_update(All_total_above_ground_mass)%val = croptot%msttot + croptot%mftot + restot%msttot + restot%mftot
+    period_update(All_total_above_ground_mass)%cnt = period_update(All_total_above_ground_mass)%cnt + 1
 
     period_update(All_buried_mass)%val = croptot%mrttot + restot%mrttot + restot%mbgtot
     period_update(All_buried_mass)%cnt = period_update(All_buried_mass)%cnt + 1

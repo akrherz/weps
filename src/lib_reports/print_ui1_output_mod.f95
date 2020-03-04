@@ -93,15 +93,16 @@ module print_ui1_output_mod
               '    precip|','  w_energy|','snow_cover|','     irrig|'
 !              '    precip|','  w_energy|','snow_cover|'
 !              '    precip|','  w_energy|','snow_cover|','   dry_idx|'
-    write (UNIT=luogui1,FMT="(6(A))",ADVANCE="NO")                      &
-              ' l_can_cov|','l_sil_area|',' l_st_mass|',' l_rt_mass|',  &
-              '   l_st_ht|',' l_no_stem|'
     write (UNIT=luogui1,FMT="(8(A))",ADVANCE="NO")                      &
+              ' l_can_cov|','l_f_fl_cov|','l_sil_area|','l_lst_mass|',  &
+              'l_abovegnd|',' l_rt_mass|','   l_st_ht|',' l_no_stem|'
+    write (UNIT=luogui1,FMT="(9(A))",ADVANCE="NO")                      &
               '  d_fl_cov|','  d_st_sil|',' d_fl_mass|',' d_st_mass|',  &
-              ' d_bg_mass|',' d_rt_mass|','   d_st_ht|',' d_no_stem|'
-    write (UNIT=luogui1,FMT="(5(A))",ADVANCE="NO")                      &
+              'd_abovegnd|',' d_bg_mass|',' d_rt_mass|','   d_st_ht|',  &
+              ' d_no_stem|'
+    write (UNIT=luogui1,FMT="(6(A))",ADVANCE="NO")                      &
               'b_f_fl_cov|','b_f_st_sil|','b_m_fl_cov|','b_m_st_sil|',  &
-              'b_m_bg_all|'
+              'b_abovegnd|','b_m_bg_all|'
     write (UNIT=luogui1,FMT="(4(A))",ADVANCE="NO")                      &
               '    rdg_or|','    rdg_ht|','    rdg_sp|','        rr|'
     write (UNIT=luogui1,FMT="(4(A))",ADVANCE="NO")                      &
@@ -280,27 +281,31 @@ module print_ui1_output_mod
                  write (UNIT=luogui1,FMT="(4(A10,'|'))",ADVANCE="NO") "","","",""
              END IF
 
-             write (UNIT=luogui1,FMT="(6(f10.4,'|'))",ADVANCE="NO")    &
+             write (UNIT=luogui1,FMT="(8(f10.4,'|'))",ADVANCE="NO")    &
                       rep_report%period_report(Crop_canopy_cov,p)%val,             &
+                      rep_report%period_report(Crop_flat_cov,p)%val,               &
                       rep_report%period_report(Crop_stand_sil,p)%val,              &
-                      rep_report%period_report(Crop_stand_mass,p)%val,             &
+                      rep_report%period_report(Crop_leaf_stem_mass,p)%val,         &
+                      rep_report%period_report(Crop_total_above_ground_mass,p)%val,&
                       rep_report%period_report(Crop_root_mass,p)%val,              &
                       rep_report%period_report(Crop_stand_height,p)%val,           &
                       rep_report%period_report(Crop_number_stems,p)%val
-             write (UNIT=luogui1,FMT="(8(f10.4,'|'))",ADVANCE="NO")    &
+             write (UNIT=luogui1,FMT="(9(f10.4,'|'))",ADVANCE="NO")    &
                       rep_report%period_report(Res_flat_cov,p)%val,                &
                       rep_report%period_report(Res_stand_sil,p)%val,               &
                       rep_report%period_report(Res_flat_mass,p)%val,               &
                       rep_report%period_report(Res_stand_mass,p)%val,              &
+                      rep_report%period_report(Res_total_above_ground_mass,p)%val, &
                       rep_report%period_report(Res_buried_mass,p)%val,             &
                       rep_report%period_report(Res_root_mass,p)%val,               &
                       rep_report%period_report(Res_stand_height,p)%val,            &
                       rep_report%period_report(Res_number_stems,p)%val
-             write (UNIT=luogui1,FMT="(5(f10.4,'|'))",ADVANCE="NO")    &
+             write (UNIT=luogui1,FMT="(6(f10.4,'|'))",ADVANCE="NO")    &
                       rep_report%period_report(All_flat_cov,p)%val,                &
                       rep_report%period_report(All_stand_sil,p)%val,               &
                       rep_report%period_report(All_flat_mass,p)%val,               &
                       rep_report%period_report(All_stand_mass,p)%val,              &
+                      rep_report%period_report(All_total_above_ground_mass,p)%val, &
                       rep_report%period_report(All_buried_mass,p)%val
 
              write (UNIT=luogui1,FMT="(4(f10.4,'|'))",ADVANCE="NO")     &

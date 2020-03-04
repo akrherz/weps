@@ -107,48 +107,57 @@ MODULE pd_var_tables
 
     ! Table of period variables in which the end-of-period values
     ! are to be averaged
-    INTEGER, PARAMETER :: Random_rough      =  1 + Max_mave_vars
-    INTEGER, PARAMETER :: Ridge_ht          =  2 + Max_mave_vars
-    INTEGER, PARAMETER :: Ridge_sp          =  3 + Max_mave_vars
-    INTEGER, PARAMETER :: Ridge_dir         =  4 + Max_mave_vars
+    INTEGER, PARAMETER :: Random_rough                    =  1 + Max_mave_vars
+    INTEGER, PARAMETER :: Ridge_ht                        =  2 + Max_mave_vars
+    INTEGER, PARAMETER :: Ridge_sp                        =  3 + Max_mave_vars
+    INTEGER, PARAMETER :: Ridge_dir                       =  4 + Max_mave_vars
 
-    INTEGER, PARAMETER :: Crop_canopy_cov   =  5 + Max_mave_vars
-    INTEGER, PARAMETER :: Crop_stand_sil    =  6 + Max_mave_vars
-    INTEGER, PARAMETER :: Crop_stand_mass   =  7 + Max_mave_vars
-    INTEGER, PARAMETER :: Crop_root_mass    =  8 + Max_mave_vars
-    INTEGER, PARAMETER :: Crop_stand_height =  9 + Max_mave_vars
-    INTEGER, PARAMETER :: Crop_number_stems = 10 + Max_mave_vars
+    INTEGER, PARAMETER :: Crop_canopy_cov                 =  5 + Max_mave_vars
+    ! Added "Crop_flat_cov" on 03/03/2020 - LEW
+    INTEGER, PARAMETER :: Crop_flat_cov                   =  6 + Max_mave_vars
+    INTEGER, PARAMETER :: Crop_stand_sil                  =  7 + Max_mave_vars
+    ! Renamed to "Crop_stand_mass" to "Crop_leaf_stem_mass" on 03/03/2020 - LEW
+    INTEGER, PARAMETER :: Crop_leaf_stem_mass             =  8 + Max_mave_vars
+    ! Added "Crop_total_above_ground_mass" on 03/03/2020 - LEW
+    INTEGER, PARAMETER :: Crop_total_above_ground_mass    =  9 + Max_mave_vars
+    INTEGER, PARAMETER :: Crop_root_mass                  = 10 + Max_mave_vars
+    INTEGER, PARAMETER :: Crop_stand_height               = 11 + Max_mave_vars
+    INTEGER, PARAMETER :: Crop_number_stems               = 12 + Max_mave_vars
 
 
-    INTEGER, PARAMETER :: Res_flat_cov      = 11 + Max_mave_vars
-    INTEGER, PARAMETER :: Res_stand_sil     = 12 + Max_mave_vars
-    INTEGER, PARAMETER :: Res_flat_mass     = 13 + Max_mave_vars
-    INTEGER, PARAMETER :: Res_stand_mass    = 14 + Max_mave_vars
-    INTEGER, PARAMETER :: Res_buried_mass   = 15 + Max_mave_vars
-    INTEGER, PARAMETER :: Res_root_mass     = 16 + Max_mave_vars
-    INTEGER, PARAMETER :: Res_stand_height  = 17 + Max_mave_vars
-    INTEGER, PARAMETER :: Res_number_stems  = 18 + Max_mave_vars
+    INTEGER, PARAMETER :: Res_flat_cov                    = 13 + Max_mave_vars
+    INTEGER, PARAMETER :: Res_stand_sil                   = 14 + Max_mave_vars
+    INTEGER, PARAMETER :: Res_flat_mass                   = 15 + Max_mave_vars
+    INTEGER, PARAMETER :: Res_stand_mass                  = 16 + Max_mave_vars
+    INTEGER, PARAMETER :: Res_buried_mass                 = 17 + Max_mave_vars
+    ! Added "Res_total_above_ground_mass" on 03/03/2020 - LEW
+    INTEGER, PARAMETER :: Res_total_above_ground_mass     = 18 + Max_mave_vars
+    INTEGER, PARAMETER :: Res_root_mass                   = 19 + Max_mave_vars
+    INTEGER, PARAMETER :: Res_stand_height                = 20 + Max_mave_vars
+    INTEGER, PARAMETER :: Res_number_stems                = 21 + Max_mave_vars
 
-    INTEGER, PARAMETER :: All_flat_cov      = 19 + Max_mave_vars
-    INTEGER, PARAMETER :: All_stand_sil     = 20 + Max_mave_vars
-    INTEGER, PARAMETER :: All_flat_mass     = 21 + Max_mave_vars
-    INTEGER, PARAMETER :: All_stand_mass    = 22 + Max_mave_vars
-    INTEGER, PARAMETER :: All_buried_mass   = 23 + Max_mave_vars
+    INTEGER, PARAMETER :: All_flat_cov                    = 22 + Max_mave_vars
+    INTEGER, PARAMETER :: All_stand_sil                   = 23 + Max_mave_vars
+    INTEGER, PARAMETER :: All_flat_mass                   = 24 + Max_mave_vars
+    INTEGER, PARAMETER :: All_stand_mass                  = 25 + Max_mave_vars
+    ! Added "All_total_above_ground_mass" on 03/03/2020 - LEW
+    INTEGER, PARAMETER :: All_total_above_ground_mass     = 26 + Max_mave_vars
+    INTEGER, PARAMETER :: All_buried_mass                 = 27 + Max_mave_vars
 
-    INTEGER, PARAMETER :: Surface_Ag_84     = 24 + Max_mave_vars
-    INTEGER, PARAMETER :: Surface_Ag_AS     = 25 + Max_mave_vars
-    INTEGER, PARAMETER :: Surface_Ag_DN     = 26 + Max_mave_vars
-    INTEGER, PARAMETER :: Surface_Ag_CA     = 27 + Max_mave_vars
-    INTEGER, PARAMETER :: Surface_Cr        = 28 + Max_mave_vars
-    INTEGER, PARAMETER :: Surface_Cr_AS     = 20 + Max_mave_vars
-    INTEGER, PARAMETER :: Surface_Cr_LM     = 30 + Max_mave_vars
-    INTEGER, PARAMETER :: Surface_Cr_TH     = 31 + Max_mave_vars
-    INTEGER, PARAMETER :: Surface_Cr_DN     = 32 + Max_mave_vars
-    INTEGER, PARAMETER :: Surface_Cr_LF     = 33 + Max_mave_vars
-    INTEGER, PARAMETER :: Surface_Cr_CA     = 34 + Max_mave_vars
-    INTEGER, PARAMETER :: Soil_Water        = 35 + Max_mave_vars
+    INTEGER, PARAMETER :: Surface_Ag_84                   = 28 + Max_mave_vars
+    INTEGER, PARAMETER :: Surface_Ag_AS                   = 29 + Max_mave_vars
+    INTEGER, PARAMETER :: Surface_Ag_DN                   = 30 + Max_mave_vars
+    INTEGER, PARAMETER :: Surface_Ag_CA                   = 31 + Max_mave_vars
+    INTEGER, PARAMETER :: Surface_Cr                      = 32 + Max_mave_vars
+    INTEGER, PARAMETER :: Surface_Cr_AS                   = 33 + Max_mave_vars
+    INTEGER, PARAMETER :: Surface_Cr_LM                   = 34 + Max_mave_vars
+    INTEGER, PARAMETER :: Surface_Cr_TH                   = 35 + Max_mave_vars
+    INTEGER, PARAMETER :: Surface_Cr_DN                   = 36 + Max_mave_vars
+    INTEGER, PARAMETER :: Surface_Cr_LF                   = 37 + Max_mave_vars
+    INTEGER, PARAMETER :: Surface_Cr_CA                   = 38 + Max_mave_vars
+    INTEGER, PARAMETER :: Soil_Water                      = 39 + Max_mave_vars
 
-    INTEGER, PARAMETER :: N_eop_vars        = 35
+    INTEGER, PARAMETER :: N_eop_vars                      = 39
 
     !"e"nd of "o"f "p"eriod variables (mostly crop, residue, and surface)
     INTEGER, PARAMETER :: Min_eop_vars     = Max_mave_vars + 1
