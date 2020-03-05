@@ -69,20 +69,12 @@ module print_ui1_output_mod
     write (UNIT=luogui1,FMT="(1(A))",ADVANCE="NO") 'nloss_per_evnt|'
     write (UNIT=luogui1,FMT="(1(A))",ADVANCE="NO") 'gross_loss|'
 
-    if( old_run_file ) then
-       write (UNIT=luogui1,FMT="(16(A))",ADVANCE="NO")                     &
-              '  tot_loss|','  crp+salt|','    suspen|','      pm10|',  &
-              '       cs1|','       cs2|','       cs3|','       cs4|',  &
-              '       ss1|','       ss2|','       ss3|','       ss4|',  &
-              '       pm1|','       pm2|','       pm3|','       pm4|'
-    else
        write (UNIT=luogui1,FMT="(21(A))",ADVANCE="NO")                     &
               '  tot_loss|','  crp+salt|','    suspen|','      pm10|','     pm2.5|',  &
               '       cs1|','       cs2|','       cs3|','       cs4|',  &
               '       ss1|','       ss2|','       ss3|','       ss4|',  &
               '    pm10_1|','    pm10_2|','    pm10_3|','    pm10_4|',  &
               '   pm2.5_1|','   pm2.5_2|','   pm2.5_3|','   pm2.5_4|'
-    end if
 
     write (UNIT=luogui1,FMT="(11(A))",ADVANCE="NO")                     &
               ' salt_loss|',' loss_area|',' loss_frac|',                &
@@ -202,26 +194,7 @@ module print_ui1_output_mod
                       rep_report%period_report(Eros_loss,p)%val -                  &
                                   rep_report%period_report(Salt_dep2,p)%val
 
-             if( old_run_file ) then
-                write (UNIT=luogui1,FMT="(16(f10.4,'|'))",ADVANCE="NO")    &
-                      rep_report%period_report(Eros_loss,p)%val,                   &
-                      rep_report%period_report(Salt_loss,p)%val,                   &
-                      rep_report%period_report(Susp_loss,p)%val,                   &
-                      rep_report%period_report(PM10_loss,p)%val,                   &
-                      rep_report%period_report(Salt_1,p)%val,                      &
-                      rep_report%period_report(Salt_2,p)%val,                      &
-                      rep_report%period_report(Salt_3,p)%val,                      &
-                      rep_report%period_report(Salt_4,p)%val,                      &
-                      rep_report%period_report(Susp_1,p)%val,                      &
-                      rep_report%period_report(Susp_2,p)%val,                      &
-                      rep_report%period_report(Susp_3,p)%val,                      &
-                      rep_report%period_report(Susp_4,p)%val,                      &
-                      rep_report%period_report(PM10_1,p)%val,                      &
-                      rep_report%period_report(PM10_2,p)%val,                      &
-                      rep_report%period_report(PM10_3,p)%val,                      &
-                      rep_report%period_report(PM10_4,p)%val
-             else
-                write (UNIT=luogui1,FMT="(21(f10.4,'|'))",ADVANCE="NO")    &
+                  write (UNIT=luogui1,FMT="(21(f10.4,'|'))",ADVANCE="NO")    &
                       rep_report%period_report(Eros_loss,p)%val,                   &
                       rep_report%period_report(Salt_loss,p)%val,                   &
                       rep_report%period_report(Susp_loss,p)%val,                   &
@@ -243,7 +216,6 @@ module print_ui1_output_mod
                       rep_report%period_report(PM2_5_2,p)%val,                     &
                       rep_report%period_report(PM2_5_3,p)%val,                     &
                       rep_report%period_report(PM2_5_4,p)%val
-             end if
 
              write (UNIT=luogui1,FMT="(11(f10.4,'|'))",ADVANCE="NO")    &
                       rep_report%period_report(Salt_loss2_rate,p)%val,             &
@@ -377,25 +349,6 @@ module print_ui1_output_mod
                       rep_report%yrly_report(Eros_loss,y)%val -                    &
                                rep_report%yrly_report(Salt_dep2,y)%val
 
-       if( old_run_file ) then
-          write (UNIT=luogui1,FMT="(21(f10.4,'|'))",ADVANCE="NO")          &
-                      rep_report%yrly_report(Eros_loss,y)%val,                     &
-                      rep_report%yrly_report(Salt_loss,y)%val,                     &
-                      rep_report%yrly_report(Susp_loss,y)%val,                     &
-                      rep_report%yrly_report(PM10_loss,y)%val,                     &
-                      rep_report%yrly_report(Salt_1,y)%val,                        &
-                      rep_report%yrly_report(Salt_2,y)%val,                        &
-                      rep_report%yrly_report(Salt_3,y)%val,                        &
-                      rep_report%yrly_report(Salt_4,y)%val,                        &
-                      rep_report%yrly_report(Susp_1,y)%val,                        &
-                      rep_report%yrly_report(Susp_2,y)%val,                        &
-                      rep_report%yrly_report(Susp_3,y)%val,                        &
-                      rep_report%yrly_report(Susp_4,y)%val,                        &
-                      rep_report%yrly_report(PM10_1,y)%val,                        &
-                      rep_report%yrly_report(PM10_2,y)%val,                        &
-                      rep_report%yrly_report(PM10_3,y)%val,                        &
-                      rep_report%yrly_report(PM10_4,y)%val
-       else
           write (UNIT=luogui1,FMT="(21(f10.4,'|'))",ADVANCE="NO")          &
                       rep_report%yrly_report(Eros_loss,y)%val,                     &
                       rep_report%yrly_report(Salt_loss,y)%val,                     &
@@ -418,7 +371,7 @@ module print_ui1_output_mod
                       rep_report%yrly_report(PM2_5_2,y)%val,                       &
                       rep_report%yrly_report(PM2_5_3,y)%val,                       &
                       rep_report%yrly_report(PM2_5_4,y)%val
-       end if
+
              write (UNIT=luogui1,FMT="(11(f10.4,'|'))",ADVANCE="NO")    &
                       rep_report%yrly_report(Salt_loss2_rate,y)%val,               &
                       rep_report%yrly_report(Salt_loss2_area,y)%val,               &
@@ -489,25 +442,6 @@ module print_ui1_output_mod
                       rep_report%monthly_report(Eros_loss,m,y)%val -               &
                                 rep_report%monthly_report(Salt_dep2,m,y)%val
 
-       if( old_run_file ) then
-          write (UNIT=luogui1,FMT="(16(f10.4,'|'))",ADVANCE="NO")          &
-                      rep_report%monthly_report(Eros_loss,m,y)%val,                &
-                      rep_report%monthly_report(Salt_loss,m,y)%val,                &
-                      rep_report%monthly_report(Susp_loss,m,y)%val,                &
-                      rep_report%monthly_report(PM10_loss,m,y)%val,                &
-                      rep_report%monthly_report(Salt_1,m,y)%val,                   &
-                      rep_report%monthly_report(Salt_2,m,y)%val,                   &
-                      rep_report%monthly_report(Salt_3,m,y)%val,                   &
-                      rep_report%monthly_report(Salt_4,m,y)%val,                   &
-                      rep_report%monthly_report(Susp_1,m,y)%val,                   &
-                      rep_report%monthly_report(Susp_2,m,y)%val,                   &
-                      rep_report%monthly_report(Susp_3,m,y)%val,                   &
-                      rep_report%monthly_report(Susp_4,m,y)%val,                   &
-                      rep_report%monthly_report(PM10_1,m,y)%val,                   &
-                      rep_report%monthly_report(PM10_2,m,y)%val,                   &
-                      rep_report%monthly_report(PM10_3,m,y)%val,                   &
-                      rep_report%monthly_report(PM10_4,m,y)%val
-       else
           write (UNIT=luogui1,FMT="(21(f10.4,'|'))",ADVANCE="NO")          &
                       rep_report%monthly_report(Eros_loss,m,y)%val,                &
                       rep_report%monthly_report(Salt_loss,m,y)%val,                &
@@ -530,7 +464,6 @@ module print_ui1_output_mod
                       rep_report%monthly_report(PM2_5_2,m,y)%val,                  &
                       rep_report%monthly_report(PM2_5_3,m,y)%val,                  &
                       rep_report%monthly_report(PM2_5_4,m,y)%val
-       end if
 
              write (UNIT=luogui1,FMT="(11(f10.4,'|'))",ADVANCE="NO")    &
                       rep_report%monthly_report(Salt_loss2_rate,m,y)%val,          &
@@ -607,25 +540,6 @@ module print_ui1_output_mod
                           rep_report%yr_report(Eros_loss,y)%val -                    &
                                  rep_report%yr_report(Salt_dep2,y)%val
 
-       if( old_run_file ) then
-          write (UNIT=luogui1,FMT="(16(f10.4,'|'))",ADVANCE="NO")           &
-                          rep_report%yr_report(Eros_loss,y)%val,                     &
-                          rep_report%yr_report(Salt_loss,y)%val,                     &
-                          rep_report%yr_report(Susp_loss,y)%val,                     &
-                          rep_report%yr_report(PM10_loss,y)%val,                     &
-                          rep_report%yr_report(Salt_1,y)%val,                        &
-                          rep_report%yr_report(Salt_2,y)%val,                        &
-                          rep_report%yr_report(Salt_3,y)%val,                        &
-                          rep_report%yr_report(Salt_4,y)%val,                        &
-                          rep_report%yr_report(Susp_1,y)%val,                        &
-                          rep_report%yr_report(Susp_2,y)%val,                        &
-                          rep_report%yr_report(Susp_3,y)%val,                        &
-                          rep_report%yr_report(Susp_4,y)%val,                        &
-                          rep_report%yr_report(PM10_1,y)%val,                        &
-                          rep_report%yr_report(PM10_2,y)%val,                        &
-                          rep_report%yr_report(PM10_3,y)%val,                        &
-                          rep_report%yr_report(PM10_4,y)%val
-       else
           write (UNIT=luogui1,FMT="(21(f10.4,'|'))",ADVANCE="NO")           &
                           rep_report%yr_report(Eros_loss,y)%val,                     &
                           rep_report%yr_report(Salt_loss,y)%val,                     &
@@ -648,7 +562,6 @@ module print_ui1_output_mod
                           rep_report%yr_report(PM2_5_2,y)%val,                       &
                           rep_report%yr_report(PM2_5_3,y)%val,                       &
                           rep_report%yr_report(PM2_5_4,y)%val
-       end if
     
         write (UNIT=luogui1,FMT="(11(f10.4,'|'))",ADVANCE="NO")           &
                           rep_report%yr_report(Salt_loss2_rate,y)%val,               &
@@ -719,25 +632,6 @@ module print_ui1_output_mod
                       rep_report%yrly_report(Eros_loss,y)%val -                    &
                             rep_report%yrly_report(Salt_dep2,y)%val
 
-    if( old_run_file ) then
-       write (UNIT=luogui1,FMT="(16(f10.4,'|'))",ADVANCE="NO")             &
-                      rep_report%yrly_report(Eros_loss,y)%val,                     &
-                      rep_report%yrly_report(Salt_loss,y)%val,                     &
-                      rep_report%yrly_report(Susp_loss,y)%val,                     &
-                      rep_report%yrly_report(PM10_loss,y)%val,                     &
-                      rep_report%yrly_report(Salt_1,y)%val,                        &
-                      rep_report%yrly_report(Salt_2,y)%val,                        &
-                      rep_report%yrly_report(Salt_3,y)%val,                        &
-                      rep_report%yrly_report(Salt_4,y)%val,                        &
-                      rep_report%yrly_report(Susp_1,y)%val,                        &
-                      rep_report%yrly_report(Susp_2,y)%val,                        &
-                      rep_report%yrly_report(Susp_3,y)%val,                        &
-                      rep_report%yrly_report(Susp_4,y)%val,                        &
-                      rep_report%yrly_report(PM10_1,y)%val,                        &
-                      rep_report%yrly_report(PM10_2,y)%val,                        &
-                      rep_report%yrly_report(PM10_3,y)%val,                        &
-                      rep_report%yrly_report(PM10_4,y)%val
-    else
        write (UNIT=luogui1,FMT="(21(f10.4,'|'))",ADVANCE="NO")             &
                       rep_report%yrly_report(Eros_loss,y)%val,                     &
                       rep_report%yrly_report(Salt_loss,y)%val,                     &
@@ -760,7 +654,6 @@ module print_ui1_output_mod
                       rep_report%yrly_report(PM2_5_2,y)%val,                       &
                       rep_report%yrly_report(PM2_5_3,y)%val,                       &
                       rep_report%yrly_report(PM2_5_4,y)%val
-    end if
 
     write (UNIT=luogui1,FMT="(11(f10.4,'|'))",ADVANCE="NO")             &
                       rep_report%yrly_report(Salt_loss2_rate,y)%val,               &
