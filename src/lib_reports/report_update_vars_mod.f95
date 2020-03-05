@@ -326,6 +326,8 @@ module report_update_vars_mod
       period_update(Susp_3)%val = period_update(Susp_3)%val + cellstate(i,jmax)%egtss/(imax-1)
       period_update(PM10_1)%val = period_update(PM10_1)%val + cellstate(i,0)%egt10/(imax-1)
       period_update(PM10_3)%val = period_update(PM10_3)%val + cellstate(i,jmax)%egt10/(imax-1)
+      period_update(PM2_5_1)%val = period_update(PM2_5_1)%val + cellstate(i,0)%egt2_5/(imax-1)
+      period_update(PM2_5_3)%val = period_update(PM2_5_3)%val + cellstate(i,jmax)%egt2_5/(imax-1)
     END DO
     period_update(Salt_1)%cnt = period_update(Salt_1)%cnt + 1
     period_update(Salt_3)%cnt = period_update(Salt_3)%cnt + 1
@@ -333,6 +335,8 @@ module report_update_vars_mod
     period_update(Susp_3)%cnt = period_update(Susp_3)%cnt + 1
     period_update(PM10_1)%cnt = period_update(PM10_1)%cnt + 1
     period_update(PM10_3)%cnt = period_update(PM10_3)%cnt + 1
+    period_update(PM2_5_1)%cnt = period_update(PM2_5_1)%cnt + 1
+    period_update(PM2_5_3)%cnt = period_update(PM2_5_3)%cnt + 1
 
     DO j = 0, jmax 
       period_update(Salt_2)%val = period_update(Salt_2)%val + cellstate(0,j)%egtcs/(jmax-1)
@@ -341,6 +345,8 @@ module report_update_vars_mod
       period_update(Susp_4)%val = period_update(Susp_4)%val + cellstate(imax,j)%egtss/(jmax-1)
       period_update(PM10_2)%val = period_update(PM10_2)%val + cellstate(0,j)%egt10/(jmax-1)
       period_update(PM10_4)%val = period_update(PM10_4)%val + cellstate(imax,j)%egt10/(jmax-1)
+      period_update(PM2_5_2)%val = period_update(PM2_5_2)%val + cellstate(0,j)%egt2_5/(jmax-1)
+      period_update(PM2_5_4)%val = period_update(PM2_5_4)%val + cellstate(imax,j)%egt2_5/(jmax-1)
     END DO
     period_update(Salt_2)%cnt = period_update(Salt_2)%cnt + 1
     period_update(Salt_4)%cnt = period_update(Salt_4)%cnt + 1
@@ -348,7 +354,8 @@ module report_update_vars_mod
     period_update(Susp_4)%cnt = period_update(Susp_4)%cnt + 1
     period_update(PM10_2)%cnt = period_update(PM10_2)%cnt + 1
     period_update(PM10_4)%cnt = period_update(PM10_4)%cnt + 1
-
+    period_update(PM2_5_2)%cnt = period_update(PM2_5_2)%cnt + 1
+    period_update(PM2_5_4)%cnt = period_update(PM2_5_4)%cnt + 1
 
      IF (Have_Erosion) THEN !We have erosion somewhere
  
