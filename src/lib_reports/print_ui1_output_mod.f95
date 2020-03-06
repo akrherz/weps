@@ -34,7 +34,6 @@ module print_ui1_output_mod
 
     USE pd_var_tables
     use mandate_mod, only: opercrop_date
-    use input_run_mod, only: old_run_file
 
     IMPLICIT NONE
 
@@ -115,15 +114,9 @@ module print_ui1_output_mod
        DO p = 1, nperiods
           IF (rep_dates%period(p)%sy == y) THEN
              write (UNIT=luogui1,FMT="(' P |')",ADVANCE="NO")
-             if( old_run_file ) then
-                write (UNIT=luogui1,FMT="(i2, '-',i2,'/',i2,'/',i2,'|')",ADVANCE="NO") &
+             write (UNIT=luogui1,FMT="(i2, '-',i2,'/',i2,'/',i0,'|')",ADVANCE="NO") &
                  rep_dates%period(p)%sd, rep_dates%period(p)%ed,                   &
                  rep_dates%period(p)%sm, rep_dates%period(p)%sy
-             else
-                write (UNIT=luogui1,FMT="(i2, '-',i2,'/',i2,'/',i0,'|')",ADVANCE="NO") &
-                 rep_dates%period(p)%sd, rep_dates%period(p)%ed,                   &
-                 rep_dates%period(p)%sm, rep_dates%period(p)%sy
-             end if
 
              ! Check to see if an operation occurs on this date
              ! If so, set the flag and then look for any additional
@@ -312,13 +305,8 @@ module print_ui1_output_mod
 
        ! Print out the "Y" rows (rotation yearly values) here
        write (UNIT=luogui1,FMT="(' Y |')",ADVANCE="NO")
-       if( old_run_file ) then
-          write (UNIT=luogui1,FMT="(1('Rot. yr: ',i2,'|'))",ADVANCE="NO")  &
+       write (UNIT=luogui1,FMT="(1('Rot. yr: ',i0,'|'))",ADVANCE="NO")  &
               rep_dates%yrly(y)%sy
-       else
-          write (UNIT=luogui1,FMT="(1('Rot. yr: ',i0,'|'))",ADVANCE="NO")  &
-              rep_dates%yrly(y)%sy
-       end if
        write (UNIT=luogui1,FMT="(1x,A125,'|')",ADVANCE="NO") "" !skip op field
        write (UNIT=luogui1,FMT="(1x,A125,'|')",ADVANCE="NO") "" !skip crop field
 
@@ -503,13 +491,8 @@ module print_ui1_output_mod
     DO y = 1, nrot_years*ncycles
         ! print the simulation run individual yearly ave values here
         write (UNIT=luogui1,FMT="(' y |')",ADVANCE="NO")
-        if( old_run_file ) then
-           write (UNIT=luogui1,FMT="(A,i4,A)",ADVANCE="NO")                      &
+        write (UNIT=luogui1,FMT="(A,i0,A)",ADVANCE="NO")                      &
                  'Year:  ',y,'|'
-        else
-           write (UNIT=luogui1,FMT="(A,i0,A)",ADVANCE="NO")                      &
-                 'Year:  ',y,'|'
-        end if
         write (UNIT=luogui1,FMT="(1x,A125,'|')",ADVANCE="NO") "" !skip op field
         write (UNIT=luogui1,FMT="(1x,A125,'|')",ADVANCE="NO") "" !skip crop field
 
