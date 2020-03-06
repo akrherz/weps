@@ -478,8 +478,8 @@ module weps_output_mod
         if( noerod%wus .gt. tiny(noerod%wus) ) then
           ! ratios of friction velocity outputs
           write (luoplt(sr), 2086, ADVANCE="NO")                            &
-     &       noerod%wus_anemom/noerod%wus, noerod%wus_random/noerod%wus,&
-     &       noerod%wus_ridge/noerod%wus, noerod%wus_biodrag/noerod%wus
+     &       min(9999.9, noerod%wus_anemom/noerod%wus), min(9999.9, noerod%wus_random/noerod%wus),&
+     &       min(9999.9,noerod%wus_ridge/noerod%wus), min(9999.9, noerod%wus_biodrag/noerod%wus)
         else
           ! zero denominator, write zero values
           write (luoplt(sr), 2086, ADVANCE="NO") 0.0, 0.0, 0.0, 0.0
