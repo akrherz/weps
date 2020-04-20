@@ -76,21 +76,24 @@ module weps_submodel_mod
       return
     end subroutine submodels
 
-    subroutine erodsubr_update( sr, soil, plant, biotot, hstate, h1et, subrsurf )
+    subroutine erodsubr_update( sr, manFile, soil, plant, biotot, hstate, h1et, subrsurf )
 
       ! assign all input data for stand alone erosion to subrsurf structure
 
       use subregions_mod
+      use manage_data_struct_defs, only: man_file_struct
       use soil_data_struct_defs, only: soil_def
       use biomaterial, only: plant_pointer, residue_pointer, biototal
       use hydro_data_struct_defs, only: hydro_derived_et, hydro_state, hhrs
       use erosion_data_struct_defs, only: subregionsurfacestate, create_brcdinputpools, destroy_brcdinputpools
       use sberod_mod, only: sbsfdall
+      use manage_data_struct_defs, only: man_file_struct
 
       !     +++ ARGUMENT DECLARATIONS +++
-      integer sr                               ! subregion index (eventually obsolete)
-      type(soil_def), intent(in) :: soil  ! soil for this subregion
-      type(plant_pointer), pointer :: plant     ! pointer to youngest plant data, which chains to older plant data
+      integer sr                                   ! subregion index (eventually obsolete)
+      type(man_file_struct), intent(in) :: manFile
+      type(soil_def), intent(in) :: soil           ! soil for this subregion
+      type(plant_pointer), pointer :: plant        ! pointer to youngest plant data, which chains to older plant data
       type(biototal), intent(in) :: biotot
       type(hydro_state), intent(in) :: hstate
       type(hydro_derived_et), intent(in) :: h1et
@@ -103,6 +106,10 @@ module weps_submodel_mod
       type(residue_pointer), pointer :: thisResidue   ! pointer used to interate residue pointer chain
 
       !     +++ END SPECIFICATIONS +++
+
+      ! transfer management and soil file names to subrsurf
+      subrsurf%tinfil = trim(manFile%tinfil)
+      subrsurf%sinfil = trim(soil%sinfil)
 
       ! clear out brcdInput values
       if( allocated( subrsurf%brcdInput ) ) then
@@ -145,6 +152,7 @@ module weps_submodel_mod
         if( (thisPlant%geometry%zht .gt. 0.0 ) .and. ((thisPlant%deriv%rlai .gt. 0.0) .or. (thisPlant%deriv%rsai .gt. 0.0)) ) then
           ! this has biodrag, add to subrsurf
           npools = npools + 1
+          subrsurf%brcdInput(npools)%bname = thisPlant%bname
           subrsurf%brcdInput(npools)%rlai = thisPlant%deriv%rlai
           subrsurf%brcdInput(npools)%rsai = thisPlant%deriv%rsai
           subrsurf%brcdInput(npools)%rg = thisPlant%geometry%rg
@@ -159,6 +167,7 @@ module weps_submodel_mod
           if( (thisResidue%zht .gt. 0.0) .and. ((thisResidue%deriv%rlai .gt. 0.0) .or. (thisResidue%deriv%rsai .gt. 0.0)) ) then
             ! this has biodrag, add to subrsurf
             npools = npools + 1
+            subrsurf%brcdInput(npools)%bname = thisPlant%bname
             subrsurf%brcdInput(npools)%rlai = thisResidue%deriv%rlai
             subrsurf%brcdInput(npools)%rsai = thisResidue%deriv%rsai
             subrsurf%brcdInput(npools)%rg = thisPlant%geometry%rg

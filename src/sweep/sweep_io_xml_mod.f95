@@ -22,21 +22,18 @@ module sweep_io_xml_mod
   use p1erode_def, only: SLRR_MIN, SLRR_MAX, WZZO_MIN, WZZO_MAX
   use barriers_mod, only: create_barrier, barrier, barseas
   use barriers_mod, only: barrier_day_state, barrier_params, barrier_climate
-  use grid_mod, only: amasim, amxsim, xgdpt, ygdpt
-  use sae_in_out_mod, only: saeinp
+  use sae_in_out_mod, only: saeinp, subrfiles
+  use grid_mod, only: gridfile
   use read_write_xml_mod, only: read_param
- 
-  integer, parameter :: max_simyear = 100000  ! value used to test simulation year input range
+  use sae_in_out_mod, only: mksaeinp
+
   integer :: nacctr   ! Number of accounting regions
   integer :: nsubr    ! Number of subregions
-  integer :: npools   ! number of brcdInput pools
   integer :: nbr      ! number of barriers
   integer :: seas_flg ! barrier season flag
   integer :: ntm_seas ! number of time marks for seasonal barrier
   integer :: poly_np  ! number of points in polygon or polyline
   integer :: isr      ! index for subregion reading
-  integer :: isl      ! index for soil layer reading
-  integer :: ipool    ! index for biomass pool reading
   integer :: iar      ! index for accounting region reading
   integer :: ibr      ! index for barrier reading
   integer :: ipol     ! index for polygon reading
@@ -59,6 +56,11 @@ module sweep_io_xml_mod
   type(barrier_day_state) :: t_day_state
   type(barrier_climate) :: t_climate
   logical :: sweepdata_complete
+  logical, dimension(:), allocatable :: treatmentdata_complete
+  logical, dimension(:), allocatable :: soilstate_complete
+
+  integer :: npools   ! number of brcdInput pools
+  integer :: ipool    ! index for biomass pool reading
 
   ! temporary holders for brcdInput data until whole record read
   real :: rlai     ! leaf area index (m^2/m^2)
@@ -67,9 +69,11 @@ module sweep_io_xml_mod
   real :: xrow     ! row spacing (m)
   real :: zht      ! height (m)
 
+  integer :: isl      ! index for soil layer reading
+
 contains
 
-  subroutine begin_element_handler(name,attributes)
+  subroutine begin_sweep_element_handler(name,attributes)
     character(len=*), intent(in)   :: name
     type(dictionary_t), intent(in) :: attributes
 
@@ -92,11 +96,6 @@ contains
     end do
 
     if (   (idx .eq. SCI_Subregions) &
-      .or. (idx .eq. SCI_coords) &
-      .or. (idx .eq. SCI_brcdInputs) &
-      .or. (idx .eq. SCI_SoilLays) &
-      .or. (idx .eq. SCI_SurfaceSubDayWaters) &
-      .or. (idx .eq. SCI_Accounts) &
       .or. (idx .eq. SCI_Barriers) &
       .or. (idx .eq. SCI_WindSpeeds) ) then
       if ( has_key(attributes, input_tag(SCI_number)%name) ) then
@@ -104,18 +103,20 @@ contains
         select case (idx)
         case (SCI_Subregions)
           call read_param(input_tag(SCI_number)%name, param_value, nsubr)
-          write(*,*) 'Number of Subregions: ', nsubr
           ! create data array to hold input and derived values for each subregion
           sum_stat = 0
           allocate(subrsurf(0:nsubr), stat=alloc_stat)
           sum_stat = sum_stat + alloc_stat
-          ! create subregion polygon array
-          allocate(subr_poly(nsubr), stat=alloc_stat)
+          allocate(subrfiles(nsubr), stat=alloc_stat)
           sum_stat = sum_stat + alloc_stat
           allocate(subregion_complete(nsubr), stat = alloc_stat)
           sum_stat = sum_stat + alloc_stat
+          allocate(treatmentdata_complete(nsubr), stat = alloc_stat)
+          sum_stat = sum_stat + alloc_stat
+          allocate(soilstate_complete(nsubr), stat = alloc_stat)
+          sum_stat = sum_stat + alloc_stat
           if( sum_stat .gt. 0 ) then
-            write(*,*) 'ERROR: memory allocation, subrsurf, subr_poly'
+            write(*,*) 'ERROR: memory allocation, subrsurf, subrfiles'
           end if
           ! for all subregions
           do idx = 1, nsubr
@@ -123,93 +124,6 @@ contains
             subregion_complete(idx) = .false.
             ! nullify brcdInput pointers
           end do
-
-        case (SCI_coords)
-          call read_param(input_tag(SCI_number)%name, param_value, poly_np)
-          ! write(*,*) 'Number of Subregion Coordinate Points: ', poly_np
-          if (poly_np .ge. 3) then
-            if ( input_tag(SCI_Subregion)%in_tag ) then
-              ! create polygon point storage
-              subr_poly(isr) = create_polygon(poly_np)
-            else if ( input_tag(SCI_Account)%in_tag ) then
-              ! create polygon point storage
-              acct_poly(iar) = create_polygon(poly_np)
-            end if
-            ! create storage for points index tracking
-            allocate(coord_complete(poly_np), stat = alloc_stat)
-            if( alloc_stat .gt. 0 ) then
-              ! allocation failed
-              write(*,*) "ERROR: unable to allocate memory for coord_complete array"
-            end if
-            ! initialize _complete arrays to false
-            do idx = 1, poly_np
-              coord_complete(idx) = .false.
-            end do
-          else
-            write(*,*) 'Subregion or Account Coordinate polygons must have at least 3 points. Only has ', poly_np
-            call exit(1)
-          end if
-
-        case (SCI_brcdInputs)
-          call read_param(input_tag(SCI_number)%name, param_value, npools)
-          !write(*,*) 'Number of Biomass Pools: ', npools
-          allocate(brcdinput_complete(npools), stat=alloc_stat)
-          if( alloc_stat .gt. 0 ) then
-            write(*,*) 'ERROR: memory allocation, brcdinput_complete'
-          end if
-          ! initialize _complete arrays to false
-          do idx = 1, npools
-            brcdinput_complete(idx) = .false.
-          end do
-          ! create brcdInput arrays
-          subrsurf(isr)%npools = npools
-          call create_brcdinputpools( npools, subrsurf(isr) )
-
-        case (SCI_SoilLays)
-          call read_param(input_tag(SCI_number)%name, param_value, subrsurf(isr)%nslay)
-          !write(*,*) 'Number of Soil Layers: ', subrsurf(isr)%nslay
-          allocate(soillay_complete(subrsurf(isr)%nslay), stat=alloc_stat)
-          if( alloc_stat .gt. 0 ) then
-            write(*,*) 'ERROR: memory allocation, soillay_complete'
-          end if
-          ! initialize _complete arrays to false
-          do idx = 1, subrsurf(isr)%nslay
-            soillay_complete(idx) = .false.
-          end do
-          ! create subrsurf soil layer arrays
-          call create_subregionsoillayers(subrsurf(isr)%nslay, subrsurf(isr))
-
-        case (SCI_SurfaceSubDayWaters)
-          call read_param(input_tag(SCI_number)%name, param_value, subrsurf(isr)%nswet)
-          !write(*,*) 'Number of Surface Water Sub Day values: ', subrsurf(isr)%nswet
-            allocate(surfwat_complete(subrsurf(isr)%nswet), stat=alloc_stat)
-            if( alloc_stat .gt. 0 ) then
-              write(*,*) 'ERROR: memory allocation, surfwat_complete'
-              call exit(1)
-            end if
-            call create_subregionsurfacewet(subrsurf(isr)%nswet, subrsurf(isr))
-            ! initialize _complete arrays to .false.
-            do idx = 1, subrsurf(isr)%nswet
-              surfwat_complete(idx) = .false.
-            end do
-
-        case (SCI_Accounts)
-          call read_param(input_tag(SCI_number)%name, param_value, nacctr)
-          !write(*,*) 'Number of Accounting Regions: ', nacctr
-          ! allocate structure for accounting regions (nacctr .lt. 1 gives zero size array)
-          sum_stat = 0
-          allocate(acct_poly(nacctr), stat = alloc_stat)
-          sum_stat = sum_stat + alloc_stat
-          allocate(account_complete(nacctr), stat = alloc_stat)
-          sum_stat = sum_stat + alloc_stat
-          if( sum_stat .gt. 0 ) then
-            write(*,*) 'ERROR: memory alloc., accounting region arrays'
-          end if
-          ! initialize _complete arrays to .false.
-          do idx = 1, nacctr
-            account_complete(idx) = .false.
-          end do
-          accounts_present = .true.
 
         case (SCI_Barriers)
           call read_param(input_tag(SCI_number)%name, param_value, nbr)
@@ -222,7 +136,7 @@ contains
           sum_stat = sum_stat + alloc_stat
           allocate(barrier_complete(nbr), stat = alloc_stat)
           if( sum_stat .gt. 0 ) then
-            write(*,*) 'ERROR: memory alloc., barrier arrays'
+            write(*,*) 'ERROR: memory alisrloc., barrier arrays'
           end if
           ! initialize _complete arrays to .false.
           do idx = 1, nbr
@@ -253,11 +167,6 @@ contains
         call exit(1)
       end if
     else if ( (idx .eq. SCI_Subregion) &
-      .or. (idx .eq. SCI_Account) &
-      .or. (idx .eq. SCI_coord) &
-      .or. (idx .eq. SCI_brcdInput) &
-      .or. (idx .eq. SCI_SoilLay) &
-      .or. (idx .eq. SCI_SurfaceSubDayWater) &
       .or. (idx .eq. SCI_BarPoint) &
       .or. (idx .eq. SCI_WindSpeed) ) then
       if ( has_key(attributes, input_tag(SCI_index)%name) ) then
@@ -267,32 +176,8 @@ contains
           call read_param(input_tag(SCI_index)%name, param_value, isr)
           ! adjust from base 0 to base 1 arrays
           isr = isr + 1
+          subrfiles(isr)%isub = isr
           !write(*,*) 'Subregion Index: ', isr
-        case (SCI_coord)
-          call read_param(input_tag(SCI_index)%name, param_value, ipol)
-          ! adjust from base 0 to base 1 arrays
-          ipol = ipol + 1
-          !write(*,*) 'Subregion Coordinates Point Index: ', ipol
-        case (SCI_brcdInput)
-          call read_param(input_tag(SCI_index)%name, param_value, ipool)
-          ! adjust from base 0 to base 1 arrays
-          ipool = ipool + 1
-          !write(*,*) 'Soil Layer Index: ', isl
-        case (SCI_SoilLay)
-          call read_param(input_tag(SCI_index)%name, param_value, isl)
-          ! adjust from base 0 to base 1 arrays
-          isl = isl + 1
-          !write(*,*) 'Soil Layer Index: ', isl
-        case (SCI_SurfaceSubDayWater)
-          call read_param(input_tag(SCI_index)%name, param_value, isurfwat)
-          ! adjust from base 0 to base 1 arrays
-          isurfwat = isurfwat + 1
-          !write(*,*) 'Surface Water Index: ', isurfwat
-        case (SCI_Account)
-          call read_param(input_tag(SCI_index)%name, param_value, iar)
-          ! adjust from base 0 to base 1 arrays
-          iar = iar + 1
-          !write(*,*) 'Accounting region Index: ', iar
         case (SCI_BarPoint)
           call read_param(input_tag(SCI_index)%name, param_value, ipol)
           ! adjust from base 0 to base 1 arrays
@@ -348,12 +233,9 @@ contains
 
     end if
 
-  end subroutine begin_element_handler
+  end subroutine begin_sweep_element_handler
 
-  subroutine end_element_handler(name)
-
-    use erosion_data_struct_defs, only: subrsurf
-
+  subroutine end_sweep_element_handler(name)
     character(len=*), intent(in)     :: name
 
     integer :: idx
@@ -369,16 +251,6 @@ contains
         ! write(*,*) 'In tag ', trim(name)
 
         if (idx .eq. SweepData) then
-          if ( .not. accounts_present) then
-            ! no SCI_Accounts tag found (not needed so set to true)
-            input_tag(SCI_Accounts)%acquired = .true.
-            ! allocate structure for accounting regions (zero size array allowed)
-            allocate(acct_poly(0), stat = alloc_stat)
-            if( alloc_stat .gt. 0 ) then
-              write(*,*) 'ERROR: memory alloc., accounting region arrays'
-            end if
-          end if
-
           if ( .not. barriers_present) then
             ! no SCI_Barriers tag found (not needed so set to true)
             input_tag(SCI_Barriers)%acquired = .true.
@@ -399,8 +271,6 @@ contains
             .and. input_tag(SCI_YOrigin)%acquired &
             .and. input_tag(SCI_XLength)%acquired &
             .and. input_tag(SCI_YLength)%acquired &
-            .and. input_tag(SCI_XGrid)%acquired &
-            .and. input_tag(SCI_YGrid)%acquired &
             .and. input_tag(SCI_AirDensity)%acquired &
             .and. input_tag(SCI_WindDirection)%acquired &
             .and. input_tag(SCI_AnemometerHeight)%acquired &
@@ -409,8 +279,8 @@ contains
             .and. input_tag(SCI_AverageAnnualPrecipitation)%acquired &
             .and. input_tag(SCI_Subregions)%acquired &
             .and. input_tag(SCI_WindSpeeds)%acquired &
-            .and. input_tag(SCI_Accounts)%acquired &
             .and. input_tag(SCI_Barriers)%acquired &
+            .and. input_tag(SCI_GridFile)%acquired &
             ) then
             sweepdata_complete = .true.
 
@@ -425,20 +295,18 @@ contains
                     SCI_YOrigin, &
                     SCI_XLength, &
                     SCI_YLength, &
-                    SCI_XGrid, &
-                    SCI_YGrid, &
                     SCI_AirDensity, &
                     SCI_WindDirection, &
                     SCI_AnemometerHeight, &
                     SCI_AerodynamicRoughness, &
                     SCI_AnemometerFlag, &
-                    SCI_AverageAnnualPrecipitation)
+                    SCI_AverageAnnualPrecipitation, &
+                    SCI_GridFile)
                 if( .not. input_tag(jdx)%acquired ) then
                   write(*,'(3a)') 'Tag ', trim(input_tag(jdx)%name), ' is missing from input file.'
                 end if
               case (SCI_Subregions, &
                     SCI_WindSpeeds, &
-                    SCI_Accounts, &
                     SCI_Barriers)
                 if( .not. input_tag(jdx)%acquired ) then
                   write(*,'(3a)') 'Tag ', trim(input_tag(jdx)%name), ' is incomplete in input file.'
@@ -476,7 +344,7 @@ contains
           deallocate(subregion_complete, stat=dealloc_stat)
           if( dealloc_stat .gt. 0 ) then
             ! deallocation failed
-            write(*,*) "ERROR: unable to deallocate memory for tags and subregion_complete arrays"
+            write(*,*) "ERROR: unable to deallocate memory for subregion_complete array"
           end if
 
         else if (idx .eq. SCI_WindSpeeds) then
@@ -508,58 +376,17 @@ contains
           deallocate(wind_complete, stat=dealloc_stat)
           if( dealloc_stat .gt. 0 ) then
             ! deallocation failed
-            write(*,*) "ERROR: unable to deallocate memory for tags and wind_complete array"
+            write(*,*) "ERROR: unable to deallocate memory for wind_complete array"
           end if
 
         else if (idx .eq. SCI_Subregion) then
           ! check for acquisition of all required elements
-          if (    input_tag(SCI_coords)%acquired &
-
-            .and. input_tag(SCI_BiomassRsai)%acquired &
-            .and. input_tag(SCI_BiomassRlai)%acquired &
-            .and. input_tag(SCI_BiomassHeight)%acquired &
-
-            .and. input_tag(SCI_BiomassFlatCover)%acquired &
-            .and. input_tag(SCI_CrustCover)%acquired &
-            .and. input_tag(SCI_CrustThick)%acquired &
-            .and. input_tag(SCI_CrustFracCoverLoose)%acquired &
-            .and. input_tag(SCI_CrustMassCoverLoose)%acquired &
-            .and. input_tag(SCI_CrustDensity)%acquired &
-            .and. input_tag(SCI_CrustStability)%acquired &
-            .and. input_tag(SCI_RandomRoughness)%acquired &
-            .and. input_tag(SCI_RidgeHeight)%acquired &
-            .and. input_tag(SCI_RidgeSpacing)%acquired &
-            .and. input_tag(SCI_RidgeWidth)%acquired &
-            .and. input_tag(SCI_RidgeOrientation)%acquired &
-            .and. input_tag(SCI_DikeSpacing)%acquired &
-            .and. input_tag(SCI_SnowDepth)%acquired &
-            .and. input_tag(SCI_brcdInputs)%acquired &
-            .and. input_tag(SCI_SoilLays)%acquired &
-            .and. input_tag(SCI_SurfaceSubDayWaters)%acquired &
+          if (    input_tag(SCI_treat)%acquired &
+            .and. input_tag(SCI_soilsurf)%acquired &
             ) then
-            input_tag(SCI_coords)%acquired = .false.
+            input_tag(SCI_treat)%acquired = .false.
 
-            input_tag(SCI_BiomassRsai)%acquired = .false.
-            input_tag(SCI_BiomassRlai)%acquired = .false.
-            input_tag(SCI_BiomassHeight)%acquired = .false.
-
-            input_tag(SCI_BiomassFlatCover)%acquired = .false.
-            input_tag(SCI_CrustCover)%acquired = .false.
-            input_tag(SCI_CrustThick)%acquired = .false.
-            input_tag(SCI_CrustFracCoverLoose)%acquired = .false.
-            input_tag(SCI_CrustMassCoverLoose)%acquired = .false.
-            input_tag(SCI_CrustDensity)%acquired = .false.
-            input_tag(SCI_CrustStability)%acquired = .false.
-            input_tag(SCI_RandomRoughness)%acquired = .false.
-            input_tag(SCI_RidgeHeight)%acquired = .false.
-            input_tag(SCI_RidgeSpacing)%acquired = .false.
-            input_tag(SCI_RidgeWidth)%acquired = .false.
-            input_tag(SCI_RidgeOrientation)%acquired = .false.
-            input_tag(SCI_DikeSpacing)%acquired = .false.
-            input_tag(SCI_SnowDepth)%acquired = .false.
-            input_tag(SCI_brcdInputs)%acquired = .false.
-            input_tag(SCI_SoilLays)%acquired = .false.
-            input_tag(SCI_SurfaceSubDayWaters)%acquired = .false.
+            input_tag(SCI_soilsurf)%acquired = .false.
             subregion_complete(isr) = .true.
 
             !write(*,*) 'SCI_Subregion complete'
@@ -567,279 +394,10 @@ contains
             !write(*,*) 'SCI_Subregion NOT complete'
             do jdx = 1, size(input_tag)
               select case (jdx)
-              case (SCI_BiomassRsai, &
-                    SCI_BiomassRlai, &
-                    SCI_BiomassHeight, &
-                    SCI_BiomassFlatCover, &
-                    SCI_CrustCover, &      
-                    SCI_CrustThick, &      
-                    SCI_CrustFracCoverLoose, &      
-                    SCI_CrustMassCoverLoose, &      
-                    SCI_CrustDensity, &      
-                    SCI_CrustStability, &      
-                    SCI_RandomRoughness, &      
-                    SCI_RidgeHeight, &      
-                    SCI_RidgeSpacing, &      
-                    SCI_RidgeWidth, &      
-                    SCI_RidgeOrientation, &      
-                    SCI_DikeSpacing, &      
-                    SCI_SnowDepth)
+              case (SCI_treat, &
+                    SCI_soilsurf)
                 if( .not. input_tag(jdx)%acquired ) then
                   write(*,'(3a)') 'Tag ', trim(input_tag(jdx)%name), ' is missing from input file.'
-                end if
-              case (SCI_brcdInputs, &
-                    SCI_SoilLays, &
-                    SCI_SurfaceSubDayWaters)
-                if( .not. input_tag(jdx)%acquired ) then
-                  write(*,'(3a)') 'Tag ', trim(input_tag(jdx)%name), ' is incomplete or missing from input file.'
-                end if
-              end select
-            end do
-          end if
-
-        else if (idx .eq. SCI_coords) then
-          count_complete = 0
-          do jdx = 1, poly_np
-            if (coord_complete(jdx)) then
-              count_complete = count_complete + 1
-            end if
-          end do
-          if (count_complete .ge. poly_np) then
-            input_tag(SCI_coords)%acquired = .true.
-            ! polygon complete, set area
-            if ( input_tag(SCI_Subregion)%in_tag ) then
-              call set_area_polygon(subr_poly(isr))
-            else if ( input_tag(SCI_Account)%in_tag ) then
-              call set_area_polygon(acct_poly(iar))
-            end if
-          else
-            do jdx = 1, poly_np
-              if ( .not. coord_complete(jdx)) then
-                write(*,'(3a,i0,a)') 'Tag ', trim(input_tag(SCI_coord)%name), &
-                                     ' SCI_index="', jdx-1, '" is incomplete or missing from input file.'
-              end if
-            end do
-          end if
-          ! deallocate _complete array
-          deallocate(coord_complete, stat=dealloc_stat)
-          if( dealloc_stat .gt. 0 ) then
-            ! deallocation failed
-            write(*,*) "ERROR: unable to deallocate memory for tags and coord_complete array"
-          end if
-
-        else if (idx .eq. SCI_brcdInputs) then
-          count_complete = 0
-          do jdx = 1, npools
-            if (brcdinput_complete(jdx)) then
-              count_complete = count_complete + 1
-            end if
-          end do
-          if (count_complete .ge. npools) then
-            input_tag(SCI_brcdInputs)%acquired = .true.
-          else
-            do jdx = 1, size(brcdinput_complete)
-             if ( .not. brcdinput_complete(jdx)) then
-                 write(*,'(3a,i0,a)') 'Tag ', trim(input_tag(SCI_brcdInput)%name), &
-                                      ' SCI_index="', jdx-1, '" is incomplete or missing from input file.'
-              end if
-            end do
-          end if
-          ! deallocate _complete array
-          deallocate(brcdinput_complete, stat=dealloc_stat)
-          if( dealloc_stat .gt. 0 ) then
-            ! deallocation failed
-            write(*,*) "ERROR: unable to deallocate memory for tags and brcdinput_complete array"
-          end if
-
-        else if (idx .eq. SCI_SoilLays) then
-          count_complete = 0
-          do jdx = 1, subrsurf(isr)%nslay
-            if (soillay_complete(jdx)) then
-              count_complete = count_complete + 1
-            end if
-          end do
-          if (count_complete .ge. subrsurf(isr)%nslay) then
-            input_tag(SCI_SoilLays)%acquired = .true.
-          else
-            do jdx = 1, size(soillay_complete)
-              if ( .not. soillay_complete(jdx)) then
-                 write(*,'(3a,i0,a)') 'Tag ', trim(input_tag(SCI_SoilLay)%name), &
-                                      ' SCI_index="', jdx-1, '" is incomplete or missing from input file.'
-              end if
-            end do
-          end if
-          ! deallocate _complete array
-          deallocate(soillay_complete, stat=dealloc_stat)
-          if( dealloc_stat .gt. 0 ) then
-            ! deallocation failed
-            write(*,*) "ERROR: unable to deallocate memory for tags and soillay_complete array"
-          end if
-
-        else if (idx .eq. SCI_SurfaceSubDayWaters) then
-          count_complete = 0
-          do jdx = 1, subrsurf(isr)%nswet
-            if (surfwat_complete(jdx)) then
-              count_complete = count_complete + 1
-            end if
-          end do
-          if (count_complete .ge. subrsurf(isr)%nswet) then
-            input_tag(SCI_SurfaceSubDayWaters)%acquired = .true.
-          else
-            do jdx = 1, subrsurf(isr)%nswet
-              if ( .not. surfwat_complete(jdx)) then
-                 write(*,'(3a,i0,a)') 'Tag ', trim(input_tag(SCI_SurfaceSubDayWater)%name), &
-                                      ' SCI_index="', jdx-1, '" is incomplete or missing from input file.'
-              end if
-            end do
-          end if
-          ! deallocate _complete array
-          deallocate(surfwat_complete, stat=dealloc_stat)
-          if( dealloc_stat .gt. 0 ) then
-            ! deallocation failed
-            write(*,*) "ERROR: unable to deallocate memory for tags and surfwat_complete array"
-          end if
-
-        else if (idx .eq. SCI_coord) then
-          ! check for acquisition of all required elements
-          if (    input_tag(SCI_x)%acquired &
-            .and. input_tag(SCI_y)%acquired &
-            ) then 
-            input_tag(SCI_x)%acquired = .false.
-            input_tag(SCI_y)%acquired = .false.
-            coord_complete(ipol) = .true.
-          else
-            do jdx = 1, size(input_tag)
-              select case (jdx)
-              case (SCI_x, &
-                    SCI_y)
-                if( .not. input_tag(jdx)%acquired ) then
-                  write(*,'(3a)') 'Tag ', trim(input_tag(jdx)%name), ' is missing from input file.'
-                end if
-              end select
-            end do
-          end if
-
-        else if (idx .eq. SCI_brcdInput) then
-          ! check for acquisition of all required elements
-          if (    input_tag(SCI_brcdRlai)%acquired &
-            .and. input_tag(SCI_brcdRsai)%acquired &
-            .and. input_tag(SCI_brcdRg)%acquired &
-            .and. input_tag(SCI_brcdXrow)%acquired &
-            .and. input_tag(SCI_brcdZht)%acquired ) then
-            input_tag(SCI_brcdRlai)%acquired = .false.
-            input_tag(SCI_brcdRsai)%acquired = .false.
-            input_tag(SCI_brcdRg)%acquired = .false.
-            input_tag(SCI_brcdXrow)%acquired = .false.
-            input_tag(SCI_brcdZht)%acquired = .false.
-            brcdinput_complete(ipool) = .true.
-          else
-            do jdx = 1, size(input_tag)
-              select case (jdx)
-              case (SCI_brcdRlai, & 
-                    SCI_brcdRsai, &
-                    SCI_brcdRg, &
-                    SCI_brcdXrow, &
-                    SCI_brcdZht)
-                if( .not. input_tag(jdx)%acquired ) then
-                  write(*,*) 'Tag ', trim(input_tag(jdx)%name), ' is missing from input file.'
-                end if
-              end select
-            end do
-          end if
-
-        else if (idx .eq. SCI_SoilLay) then
-          ! check for acquisition of all required elements
-          if (    input_tag(SCI_LayerThickness)%acquired &
-            .and. input_tag(SCI_BulkDensity)%acquired &
-            .and. input_tag(SCI_Sand)%acquired &
-            .and. input_tag(SCI_Silt)%acquired &
-            .and. input_tag(SCI_Clay)%acquired &
-            .and. input_tag(SCI_VeryFineSand)%acquired &
-            .and. input_tag(SCI_RockVolume)%acquired &
-            .and. input_tag(SCI_AggregateDensity)%acquired &
-            .and. input_tag(SCI_AggregateStability)%acquired &
-            .and. input_tag(SCI_AggregateGMD)%acquired &
-            .and. input_tag(SCI_AggregateGSD)%acquired &
-            .and. input_tag(SCI_AggregateMIN)%acquired &
-            .and. input_tag(SCI_AggregateMAX)%acquired &
-            .and. input_tag(SCI_WiltingPoint)%acquired &
-            .and. input_tag(SCI_WaterContent)%acquired ) then
-            input_tag(SCI_LayerThickness)%acquired = .false.
-            input_tag(SCI_BulkDensity)%acquired = .false.
-            input_tag(SCI_Sand)%acquired = .false.
-            input_tag(SCI_Silt)%acquired = .false.
-            input_tag(SCI_Clay)%acquired = .false.
-            input_tag(SCI_VeryFineSand)%acquired = .false.
-            input_tag(SCI_RockVolume)%acquired = .false.
-            input_tag(SCI_AggregateDensity)%acquired = .false.
-            input_tag(SCI_AggregateStability)%acquired = .false.
-            input_tag(SCI_AggregateGMD)%acquired = .false.
-            input_tag(SCI_AggregateGSD)%acquired = .false.
-            input_tag(SCI_AggregateMIN)%acquired = .false.
-            input_tag(SCI_AggregateMAX)%acquired = .false.
-            input_tag(SCI_WiltingPoint)%acquired = .false.
-            input_tag(SCI_WaterContent)%acquired = .false.
-            soillay_complete(isl) = .true.
-          else
-            do jdx = 1, size(input_tag)
-              select case (jdx)
-              case (SCI_LayerThickness, &
-                    SCI_BulkDensity, &
-                    SCI_Sand, &
-                    SCI_Silt, &
-                    SCI_Clay, &
-                    SCI_VeryFineSand, &
-                    SCI_RockVolume, &
-                    SCI_AggregateDensity, &
-                    SCI_AggregateStability, &
-                    SCI_AggregateGMD, &
-                    SCI_AggregateGSD, &
-                    SCI_AggregateMIN, &
-                    SCI_AggregateMAX, &
-                    SCI_WiltingPoint, &
-                    SCI_WaterContent)
-                if( .not. input_tag(jdx)%acquired ) then
-                  write(*,*) 'Tag ', trim(input_tag(jdx)%name), ' is missing from input file.'
-                end if
-              end select
-            end do
-          end if
-
-        else if (idx .eq. SCI_Accounts) then
-          count_complete = 0
-          do jdx = 1, nacctr
-            if (account_complete(jdx)) then
-              count_complete = count_complete + 1
-            end if
-          end do
-          if (count_complete .ge. nacctr) then
-            input_tag(SCI_Accounts)%acquired = .true.
-          else
-            do jdx = 1, size(account_complete)
-              if ( .not. account_complete(jdx)) then
-                write(*,'(3a,i0,a)') 'Tag ', trim(input_tag(SCI_Account)%name), &
-                                     ' SCI_index="', jdx-1, '" is incomplete or missing from input file.'
-              end if
-            end do
-          end if
-          ! deallocate _complete arrays
-          deallocate(account_complete, stat=dealloc_stat)
-          if( dealloc_stat .gt. 0 ) then
-            ! deallocation failed
-            write(*,*) "ERROR: unable to deallocate memory for account_complete array"
-          end if
-
-        else if (idx .eq. SCI_Account) then
-          ! check for acquisition of all required elements
-          if ( input_tag(SCI_coords)%acquired ) then 
-            input_tag(SCI_coords)%acquired = .false.
-            account_complete(iar) = .true.
-          else
-            do jdx = 1, size(input_tag)
-              select case (jdx)
-              case (SCI_coords)
-                if( .not. input_tag(jdx)%acquired ) then
-                  write(*,'(3a)') 'Tag ', trim(input_tag(jdx)%name), ' is incomplete or missing from input file.'
                 end if
               end select
             end do
@@ -939,12 +497,15 @@ contains
       end if
     end do
 
-  end subroutine end_element_handler
+  end subroutine end_sweep_element_handler
 
-  subroutine pcdata_chunk_handler(chunk)
+  subroutine pcdata_sweep_chunk_handler(chunk)
+  use grid_mod, only: amasim, amxsim
     character(len=*), intent(in) :: chunk
 
     character(len=80) :: param_value
+    type(xml_t) :: fxml   ! xml file handle structure
+    integer :: iostat     ! input/output status
 
     param_value = trim(chunk)
 
@@ -969,207 +530,31 @@ contains
         call read_param(input_tag(SCI_YLength)%name, param_value, amxsim(2)%y)
         input_tag(SCI_YLength)%acquired = .true.
 
-      else if (input_tag(SCI_XGrid)%in_tag) then
-        call read_param(input_tag(SCI_XGrid)%name, param_value, xgdpt)
-        input_tag(SCI_XGrid)%acquired = .true.
-
-      else if (input_tag(SCI_YGrid)%in_tag) then
-        call read_param(input_tag(SCI_YGrid)%name, param_value, ygdpt)
-        input_tag(SCI_YGrid)%acquired = .true.
-
-      else if (input_tag(SCI_Accounts)%in_tag) then
-        if (input_tag(SCI_Account)%in_tag) then
-          if (input_tag(SCI_coords)%in_tag) then
-            if (input_tag(SCI_coord)%in_tag) then
-              !SCI_coord
-              if (input_tag(SCI_x)%in_tag) then
-                call read_param(input_tag(SCI_x)%name, param_value, acct_poly(iar)%points(ipol)%x)
-                input_tag(SCI_x)%acquired = .true.
-              else if (input_tag(SCI_y)%in_tag) then
-                call read_param(input_tag(SCI_y)%name, param_value, acct_poly(iar)%points(ipol)%y)
-                input_tag(SCI_y)%acquired = .true.
-              end if
-            end if
-          end if
-        end if
-
       else if (input_tag(SCI_Subregions)%in_tag) then
         if (input_tag(SCI_Subregion)%in_tag) then
           ! SCI_Subregion
-          if (input_tag(SCI_coords)%in_tag) then
-            if (input_tag(SCI_coord)%in_tag) then
-              !SCI_coord
-              if (input_tag(SCI_x)%in_tag) then
-                call read_param(input_tag(SCI_x)%name, param_value, subr_poly(isr)%points(ipol)%x)
-                input_tag(SCI_x)%acquired = .true.
-              else if (input_tag(SCI_y)%in_tag) then
-                call read_param(input_tag(SCI_y)%name, param_value, subr_poly(isr)%points(ipol)%y)
-                input_tag(SCI_y)%acquired = .true.
-              end if
-            end if
+          if (input_tag(SCI_treat)%in_tag) then
+            call read_param(input_tag(SCI_treat)%name, param_value, subrfiles(isr)%treatfil)
 
-          else if (input_tag(SCI_BiomassRsai)%in_tag) then
-            call read_param(input_tag(SCI_BiomassRsai)%name, param_value, subrsurf(isr)%abrsai)
-            input_tag(SCI_BiomassRsai)%acquired = .true.
+            ! open input file
+            call open_xmlfile(trim(mksaeinp%fullpath) // trim(subrfiles(isr)%treatfil),fxml,iostat)
+            if (iostat /= 0) stop "Cannot open xml input file"
+            call close_xmlfile(fxml)
 
-          else if (input_tag(SCI_BiomassRlai)%in_tag) then
-            call read_param(input_tag(SCI_BiomassRlai)%name, param_value, subrsurf(isr)%abrlai)
-            input_tag(SCI_BiomassRlai)%acquired = .true.
+            input_tag(SCI_treat)%acquired = .true.
 
-          else if (input_tag(SCI_BiomassHeight)%in_tag) then
-            call read_param(input_tag(SCI_BiomassHeight)%name, param_value, subrsurf(isr)%abzht)
-            input_tag(SCI_BiomassHeight)%acquired = .true.
+          else if (input_tag(SCI_soilsurf)%in_tag) then
+            call read_param(input_tag(SCI_soilsurf)%name, param_value, subrfiles(isr)%slstfil)
 
-          else if (input_tag(SCI_BiomassFlatCover)%in_tag) then
-            call read_param(input_tag(SCI_BiomassFlatCover)%name, param_value, subrsurf(isr)%abffcv)
-            input_tag(SCI_BiomassFlatCover)%acquired = .true.
+            ! open input file
+            call open_xmlfile(trim(mksaeinp%fullpath) // trim(subrfiles(isr)%slstfil),fxml,iostat)
+            if (iostat /= 0) stop "Cannot open xml input file"
+            call close_xmlfile(fxml)
 
-          else if (input_tag(SCI_CrustCover)%in_tag) then
-            call read_param(input_tag(SCI_CrustCover)%name, param_value, subrsurf(isr)%asfcr)
-            input_tag(SCI_CrustCover)%acquired = .true.
+            input_tag(SCI_soilsurf)%acquired = .true.
 
-          else if (input_tag(SCI_CrustThick)%in_tag) then
-            call read_param(input_tag(SCI_CrustThick)%name, param_value, subrsurf(isr)%aszcr)
-            input_tag(SCI_CrustThick)%acquired = .true.
-
-          else if (input_tag(SCI_CrustFracCoverLoose)%in_tag) then
-            call read_param(input_tag(SCI_CrustFracCoverLoose)%name, param_value, subrsurf(isr)%asflos)
-            input_tag(SCI_CrustFracCoverLoose)%acquired = .true.
-
-          else if (input_tag(SCI_CrustMassCoverLoose)%in_tag) then
-            call read_param(input_tag(SCI_CrustMassCoverLoose)%name, param_value, subrsurf(isr)%asmlos)
-            input_tag(SCI_CrustMassCoverLoose)%acquired = .true.
-
-          else if (input_tag(SCI_CrustDensity)%in_tag) then
-            call read_param(input_tag(SCI_CrustDensity)%name, param_value, subrsurf(isr)%asdcr)
-            input_tag(SCI_CrustDensity)%acquired = .true.
-
-          else if (input_tag(SCI_CrustStability)%in_tag) then
-            call read_param(input_tag(SCI_CrustStability)%name, param_value, subrsurf(isr)%asecr)
-            input_tag(SCI_CrustStability)%acquired = .true.
-
-          else if (input_tag(SCI_RandomRoughness)%in_tag) then
-            call read_param(input_tag(SCI_RandomRoughness)%name, param_value, subrsurf(isr)%aslrr)
-            input_tag(SCI_RandomRoughness)%acquired = .true.
-
-            !Lower and upper limits of grid cell RR allowed by erosion submodel
-            if (subrsurf(isr)%aslrr < SLRR_MIN) then
-              write(0,*) 'slrr: ', subrsurf(isr)%aslrr,' < ', SLRR_MIN
-            end if
-            if (subrsurf(isr)%aslrr > SLRR_MAX) then
-              write(0,*) 'slrr: ', subrsurf(isr)%aslrr,' < ', SLRR_MIN
-            end if
-
-            !Lower and upper limits of grid cell aerodynamic roughness allowed
-            !by erosion submodel (currently determined by equation used here)
-            if (subrsurf(isr)%aslrr < (WZZO_MIN/0.3)) then
-              write(0,*) 'slrr: ', subrsurf(isr)%aslrr
-              write(0,*) 'wzzo < WZZO_MIN: ', subrsurf(isr)%aslrr*0.3,' < ', WZZO_MIN
-            else if(subrsurf(isr)%aslrr > (WZZO_MAX/0.3)) then
-              write(0,*) 'slrr: ', subrsurf(isr)%aslrr
-              write(0,*) 'wzzo > WZZO_MAX: ', subrsurf(isr)%aslrr*0.3,' > ', WZZO_MAX
-            end if
-
-          else if (input_tag(SCI_RidgeHeight)%in_tag) then
-            call read_param(input_tag(SCI_RidgeHeight)%name, param_value, subrsurf(isr)%aszrgh)
-            input_tag(SCI_RidgeHeight)%acquired = .true.
-
-          else if (input_tag(SCI_RidgeSpacing)%in_tag) then
-            call read_param(input_tag(SCI_RidgeSpacing)%name, param_value, subrsurf(isr)%asxrgs)
-            input_tag(SCI_RidgeSpacing)%acquired = .true.
-
-          else if (input_tag(SCI_RidgeWidth)%in_tag) then
-            call read_param(input_tag(SCI_RidgeWidth)%name, param_value, subrsurf(isr)%asxrgw)
-            input_tag(SCI_RidgeWidth)%acquired = .true.
-
-          else if (input_tag(SCI_RidgeOrientation)%in_tag) then
-            call read_param(input_tag(SCI_RidgeOrientation)%name, param_value, subrsurf(isr)%asargo)
-            input_tag(SCI_RidgeOrientation)%acquired = .true.
-
-          else if (input_tag(SCI_DikeSpacing)%in_tag) then
-            call read_param(input_tag(SCI_DikeSpacing)%name, param_value, subrsurf(isr)%asxdks)
-            input_tag(SCI_DikeSpacing)%acquired = .true.
-
-          else if (input_tag(SCI_SnowDepth)%in_tag) then
-            call read_param(input_tag(SCI_SnowDepth)%name, param_value, subrsurf(isr)%ahzsnd)
-            input_tag(SCI_SnowDepth)%acquired = .true.
-
-          else if (input_tag(SCI_brcdInputs)%in_tag) then
-            if (input_tag(SCI_brcdInput)%in_tag) then
-              if (input_tag(SCI_brcdRlai)%in_tag) then
-                call read_param(input_tag(SCI_brcdRlai)%name, param_value, subrsurf(isr)%brcdInput(ipool)%rlai)
-                input_tag(SCI_brcdRlai)%acquired = .true.
-              else if (input_tag(SCI_brcdRsai)%in_tag) then
-                call read_param(input_tag(SCI_brcdRsai)%name, param_value, subrsurf(isr)%brcdInput(ipool)%rsai)
-                input_tag(SCI_brcdRsai)%acquired = .true.
-              else if (input_tag(SCI_brcdRg)%in_tag) then
-                call read_param(input_tag(SCI_brcdRg)%name, param_value, subrsurf(isr)%brcdInput(ipool)%rg)
-                input_tag(SCI_brcdRg)%acquired = .true.
-              else if (input_tag(SCI_brcdXrow)%in_tag) then
-                call read_param(input_tag(SCI_brcdXrow)%name, param_value, subrsurf(isr)%brcdInput(ipool)%xrow)
-                input_tag(SCI_brcdXrow)%acquired = .true.
-              else if (input_tag(SCI_brcdZht)%in_tag) then
-                call read_param(input_tag(SCI_brcdZht)%name, param_value, subrsurf(isr)%brcdInput(ipool)%zht)
-                input_tag(SCI_brcdZht)%acquired = .true.
-              end if
-            end if
-
-          else if (input_tag(SCI_SoilLays)%in_tag) then
-            if (input_tag(SCI_SoilLay)%in_tag) then
-              if (input_tag(SCI_LayerThickness)%in_tag) then
-                call read_param(input_tag(SCI_LayerThickness)%name, param_value, subrsurf(isr)%bsl(isl)%aszlyt)
-                input_tag(SCI_LayerThickness)%acquired = .true.
-              else if (input_tag(SCI_BulkDensity)%in_tag) then
-                call read_param(input_tag(SCI_BulkDensity)%name, param_value, subrsurf(isr)%bsl(isl)%asdblk)
-                input_tag(SCI_BulkDensity)%acquired = .true.
-              else if (input_tag(SCI_Sand)%in_tag) then
-                call read_param(input_tag(SCI_Sand)%name, param_value, subrsurf(isr)%bsl(isl)%asfsan)
-                input_tag(SCI_Sand)%acquired = .true.
-              else if (input_tag(SCI_Silt)%in_tag) then
-                call read_param(input_tag(SCI_Silt)%name, param_value, subrsurf(isr)%bsl(isl)%asfsil)
-                input_tag(SCI_Silt)%acquired = .true.
-              else if (input_tag(SCI_Clay)%in_tag) then
-                call read_param(input_tag(SCI_Clay)%name, param_value, subrsurf(isr)%bsl(isl)%asfcla)
-                input_tag(SCI_Clay)%acquired = .true.
-              else if (input_tag(SCI_VeryFineSand)%in_tag) then
-                call read_param(input_tag(SCI_VeryFineSand)%name, param_value, subrsurf(isr)%bsl(isl)%asfvfs)
-                input_tag(SCI_VeryFineSand)%acquired = .true.
-              else if (input_tag(SCI_RockVolume)%in_tag) then
-                call read_param(input_tag(SCI_RockVolume)%name, param_value, subrsurf(isr)%bsl(isl)%asvroc)
-                input_tag(SCI_RockVolume)%acquired = .true.
-              else if (input_tag(SCI_AggregateDensity)%in_tag) then
-                call read_param(input_tag(SCI_AggregateDensity)%name, param_value, subrsurf(isr)%bsl(isl)%asdagd)
-                input_tag(SCI_AggregateDensity)%acquired = .true.
-              else if (input_tag(SCI_AggregateStability)%in_tag) then
-                call read_param(input_tag(SCI_AggregateStability)%name, param_value, subrsurf(isr)%bsl(isl)%aseags)
-                input_tag(SCI_AggregateStability)%acquired = .true.
-              else if (input_tag(SCI_AggregateGMD)%in_tag) then
-                call read_param(input_tag(SCI_AggregateGMD)%name, param_value, subrsurf(isr)%bsl(isl)%aslagm)
-                input_tag(SCI_AggregateGMD)%acquired = .true.
-              else if (input_tag(SCI_AggregateGSD)%in_tag) then
-                call read_param(input_tag(SCI_AggregateGSD)%name, param_value, subrsurf(isr)%bsl(isl)%as0ags)
-                input_tag(SCI_AggregateGSD)%acquired = .true.
-              else if (input_tag(SCI_AggregateMIN)%in_tag) then
-                call read_param(input_tag(SCI_AggregateMIN)%name, param_value, subrsurf(isr)%bsl(isl)%aslagn)
-                input_tag(SCI_AggregateMIN)%acquired = .true.
-              else if (input_tag(SCI_AggregateMAX)%in_tag) then
-                call read_param(input_tag(SCI_AggregateMAX)%name, param_value, subrsurf(isr)%bsl(isl)%aslagx)
-                input_tag(SCI_AggregateMAX)%acquired = .true.
-              else if (input_tag(SCI_WiltingPoint)%in_tag) then
-                call read_param(input_tag(SCI_WiltingPoint)%name, param_value, subrsurf(isr)%bsl(isl)%ahrwcw)
-                input_tag(SCI_WiltingPoint)%acquired = .true.
-              else if (input_tag(SCI_WaterContent)%in_tag) then
-                call read_param(input_tag(SCI_WaterContent)%name, param_value, subrsurf(isr)%bsl(isl)%ahrwca)
-                input_tag(SCI_WaterContent)%acquired = .true.
-              end if
-            end if
-
-          else if (input_tag(SCI_SurfaceSubDayWaters)%in_tag) then
-            if (input_tag(SCI_SurfaceSubDayWater)%in_tag) then
-              call read_param(input_tag(SCI_SurfaceSubDayWater)%name, param_value, subrsurf(isr)%ahrwc0(isurfwat))
-              surfwat_complete(isurfwat) = .true.
-            end if
           end if
+
         end if
 
       else if (input_tag(SCI_Barrier)%in_tag) then
@@ -1236,10 +621,673 @@ contains
           call read_param(input_tag(SCI_WindSpeed)%name, param_value, subday(iwind)%awu)
           wind_complete(iwind) = .true.
         end if
+      else if (input_tag(SCI_GridFile)%in_tag) then
+        call read_param(input_tag(SCI_GridFile)%name, param_value, gridfile)
+        input_tag(SCI_GridFile)%acquired = .true.
       end if
 
     end if
 
-  end subroutine pcdata_chunk_handler
+  end subroutine pcdata_sweep_chunk_handler
+
+  subroutine begin_soilstate_element_handler(name,attributes)
+    use erosion_data_struct_defs, only: subrsurf, create_subregionsoillayers
+
+    character(len=*), intent(in)   :: name
+    type(dictionary_t), intent(in) :: attributes
+
+    integer :: idx
+    character(len=80) :: param_value
+    integer :: ret_stat
+    integer :: alloc_stat
+
+    !write(*,*) ">>Begin Element: ", name
+    !write(*,*) "--- ", len(attributes), " attributes:"
+    !call print_dict(attributes)
+
+    do idx = 1, size(input_tag)
+      if( input_tag(idx)%name .eq. name ) then
+        input_tag(idx)%in_tag = .true.
+        ! write(*,*) 'In tag ', trim(name)
+        exit  ! found tag, no need to look further
+      end if
+    end do
+
+    if (   (idx .eq. SCI_SoilLays) ) then
+      if ( has_key(attributes, input_tag(SCI_number)%name) ) then
+        call get_value(attributes, input_tag(SCI_number)%name, param_value, ret_stat)
+        select case (idx)
+        case (SCI_SoilLays)
+          call read_param(input_tag(SCI_number)%name, param_value, subrsurf(isr)%nslay)
+          !write(*,*) 'Number of Soil Layers: ', subrsurf(isr)%nslay
+          allocate(soillay_complete(subrsurf(isr)%nslay), stat=alloc_stat)
+          if( alloc_stat .gt. 0 ) then
+            write(*,*) 'ERROR: memory allocation, soillay_complete'
+          end if
+          ! initialize _complete arrays to false
+          do idx = 1, subrsurf(isr)%nslay
+            soillay_complete(idx) = .false.
+          end do
+          ! create subrsurf soil layer arrays
+          call create_subregionsoillayers(subrsurf(isr)%nslay, subrsurf(isr))
+        end select
+      else
+        write(*,*) 'SCI_number attribute required for each ', trim(input_tag(idx)%name), ' Tag.'
+        call exit(1)
+      end if
+    else if ( (idx .eq. SCI_SoilLay) ) then
+      if ( has_key(attributes, input_tag(SCI_index)%name) ) then
+        call get_value(attributes, input_tag(SCI_index)%name, param_value, ret_stat)
+        select case (idx)
+        case (SCI_SoilLay)
+          call read_param(input_tag(SCI_index)%name, param_value, isl)
+          ! adjust from base 0 to base 1 arrays
+          isl = isl + 1
+          !write(*,*) 'Soil Layer Index: ', isl
+        end select
+      else
+        write(*,*) 'SCI_index attribute required for each ', trim(input_tag(idx)%name), ' Tag.'
+        call exit(1)
+      end if
+
+    end if
+
+  end subroutine begin_soilstate_element_handler
+
+  subroutine end_soilstate_element_handler(name)
+    use erosion_data_struct_defs, only: subrsurf
+
+    character(len=*), intent(in)     :: name
+
+    integer :: idx
+    integer :: jdx
+    integer :: dealloc_stat
+
+    do idx = 1, size(input_tag)
+      if( input_tag(idx)%name .eq. name ) then
+        input_tag(idx)%in_tag = .false.
+        ! write(*,*) 'In tag ', trim(name)
+
+        if (idx .eq. SoilState) then
+
+          ! check for acquisition of all required elements
+          if ( input_tag(SCI_SoilLays)%acquired &
+            ) then
+            soilstate_complete(isr) = .true.
+
+            ! always true on sweep runs
+            am0eif = .true.
+          else
+            soilstate_complete(isr) = .false.
+            do jdx = 1, size(input_tag)
+              select case (jdx)
+              case (SCI_SoilLays)
+                if( .not. input_tag(jdx)%acquired ) then
+                  write(*,'(3a)') 'Tag ', trim(input_tag(jdx)%name), ' is incomplete in input file.'
+                end if
+              end select
+            end do
+            write(*,*) 'No Results Generated.'
+          end if
+          ! deallocate Tag array
+          deallocate( input_tag, stat=dealloc_stat)
+          if( dealloc_stat .gt. 0 ) then
+            ! deallocation failed
+            write(*,*) "ERROR: unable to deallocate memory for Tag array"
+          end if
+
+        else if (idx .eq. SCI_SoilLays) then
+          count_complete = 0
+          do jdx = 1, subrsurf(isr)%nslay
+            if (soillay_complete(jdx)) then
+              count_complete = count_complete + 1
+            end if
+          end do
+          if (count_complete .ge. subrsurf(isr)%nslay) then
+            input_tag(SCI_SoilLays)%acquired = .true.
+          else
+            do jdx = 1, size(soillay_complete)
+              if ( .not. soillay_complete(jdx)) then
+                 write(*,'(3a,i0,a)') 'Tag ', trim(input_tag(SCI_SoilLay)%name), &
+                                      ' SCI_index=', jdx-1, ' is incomplete or missing from input file.'
+              end if
+            end do
+          end if
+          ! deallocate _complete array
+          deallocate(soillay_complete, stat=dealloc_stat)
+          if( dealloc_stat .gt. 0 ) then
+            ! deallocation failed
+            write(*,*) "ERROR: unable to deallocate memory for soillay_complete array"
+          end if
+
+        else if (idx .eq. SCI_SoilLay) then
+          ! check for acquisition of all required elements
+          if (    input_tag(SCI_LayerThickness)%acquired &
+            .and. input_tag(SCI_Sand)%acquired &
+            .and. input_tag(SCI_Silt)%acquired &
+            .and. input_tag(SCI_Clay)%acquired &
+            .and. input_tag(SCI_RockVolume)%acquired &
+            .and. input_tag(SCI_VeryFineSand)%acquired &
+            .and. input_tag(SCI_AggregateGMD)%acquired &
+            .and. input_tag(SCI_AggregateGSD)%acquired &
+            .and. input_tag(SCI_AggregateMAX)%acquired &
+            .and. input_tag(SCI_AggregateMIN)%acquired &
+            .and. input_tag(SCI_AggregateDensity)%acquired &
+            .and. input_tag(SCI_AggregateStability)%acquired &
+            .and. input_tag(SCI_BulkDensity)%acquired &
+            .and. input_tag(SCI_WaterContent)%acquired &
+            .and. input_tag(SCI_WiltingPoint)%acquired ) then
+            input_tag(SCI_LayerThickness)%acquired = .false.
+            input_tag(SCI_Sand)%acquired = .false.
+            input_tag(SCI_Silt)%acquired = .false.
+            input_tag(SCI_Clay)%acquired = .false.
+            input_tag(SCI_RockVolume)%acquired = .false.
+            input_tag(SCI_VeryFineSand)%acquired = .false.
+            input_tag(SCI_AggregateGMD)%acquired = .false.
+            input_tag(SCI_AggregateGSD)%acquired = .false.
+            input_tag(SCI_AggregateMAX)%acquired = .false.
+            input_tag(SCI_AggregateMIN)%acquired = .false.
+            input_tag(SCI_AggregateDensity)%acquired = .false.
+            input_tag(SCI_AggregateStability)%acquired = .false.
+            input_tag(SCI_BulkDensity)%acquired = .false.
+            input_tag(SCI_WaterContent)%acquired = .false.
+            input_tag(SCI_WiltingPoint)%acquired = .false.
+            soillay_complete(isl) = .true.
+          else
+            do jdx = 1, size(input_tag)
+              select case (jdx)
+              case (SCI_LayerThickness, &
+                    SCI_Sand, &
+                    SCI_Silt, &
+                    SCI_Clay, &
+                    SCI_RockVolume, &
+                    SCI_VeryFineSand, &
+                    SCI_AggregateGMD, &
+                    SCI_AggregateGSD, &
+                    SCI_AggregateMAX, &
+                    SCI_AggregateMIN, &
+                    SCI_AggregateDensity, &
+                    SCI_AggregateStability, &
+                    SCI_BulkDensity, &
+                    SCI_WaterContent, &
+                    SCI_WiltingPoint)
+                if( .not. input_tag(jdx)%acquired ) then
+                  write(*,*) 'Tag ', trim(input_tag(jdx)%name), ' is missing from input file.'
+                end if
+              end select
+            end do
+          end if
+
+
+        end if
+
+        exit  ! found tag, no need to look further
+
+      end if
+    end do
+
+  end subroutine end_soilstate_element_handler
+
+  subroutine pcdata_soilstate_chunk_handler(chunk)
+    use erosion_data_struct_defs, only: subrsurf
+
+    character(len=*), intent(in) :: chunk
+
+    character(len=80) :: param_value
+
+    param_value = trim(chunk)
+
+    if (input_tag(SoilState)%in_tag) then
+      if (input_tag(SCI_SoilLays)%in_tag) then
+        if (input_tag(SCI_SoilLay)%in_tag) then
+          if (input_tag(SCI_LayerThickness)%in_tag) then
+            call read_param(input_tag(SCI_LayerThickness)%name, param_value, subrsurf(isr)%bsl(isl)%aszlyt)
+            input_tag(SCI_LayerThickness)%acquired = .true.
+          else if (input_tag(SCI_Sand)%in_tag) then
+            call read_param(input_tag(SCI_Sand)%name, param_value, subrsurf(isr)%bsl(isl)%asfsan)
+            input_tag(SCI_Sand)%acquired = .true.
+          else if (input_tag(SCI_Silt)%in_tag) then
+            call read_param(input_tag(SCI_Silt)%name, param_value, subrsurf(isr)%bsl(isl)%asfsil)
+            input_tag(SCI_Silt)%acquired = .true.
+          else if (input_tag(SCI_Clay)%in_tag) then
+            call read_param(input_tag(SCI_Clay)%name, param_value, subrsurf(isr)%bsl(isl)%asfcla)
+            input_tag(SCI_Clay)%acquired = .true.
+          else if (input_tag(SCI_RockVolume)%in_tag) then
+            call read_param(input_tag(SCI_RockVolume)%name, param_value, subrsurf(isr)%bsl(isl)%asvroc)
+            input_tag(SCI_RockVolume)%acquired = .true.
+          else if (input_tag(SCI_VeryFineSand)%in_tag) then
+            call read_param(input_tag(SCI_VeryFineSand)%name, param_value, subrsurf(isr)%bsl(isl)%asfvfs)
+            input_tag(SCI_VeryFineSand)%acquired = .true.
+          else if (input_tag(SCI_AggregateGMD)%in_tag) then
+            call read_param(input_tag(SCI_AggregateGMD)%name, param_value, subrsurf(isr)%bsl(isl)%aslagm)
+            input_tag(SCI_AggregateGMD)%acquired = .true.
+          else if (input_tag(SCI_AggregateGSD)%in_tag) then
+            call read_param(input_tag(SCI_AggregateGSD)%name, param_value, subrsurf(isr)%bsl(isl)%as0ags)
+            input_tag(SCI_AggregateGSD)%acquired = .true.
+          else if (input_tag(SCI_AggregateMAX)%in_tag) then
+            call read_param(input_tag(SCI_AggregateMAX)%name, param_value, subrsurf(isr)%bsl(isl)%aslagx)
+            input_tag(SCI_AggregateMAX)%acquired = .true.
+          else if (input_tag(SCI_AggregateMIN)%in_tag) then
+            call read_param(input_tag(SCI_AggregateMIN)%name, param_value, subrsurf(isr)%bsl(isl)%aslagn)
+            input_tag(SCI_AggregateMIN)%acquired = .true.
+          else if (input_tag(SCI_AggregateDensity)%in_tag) then
+            call read_param(input_tag(SCI_AggregateDensity)%name, param_value, subrsurf(isr)%bsl(isl)%asdagd)
+            input_tag(SCI_AggregateDensity)%acquired = .true.
+          else if (input_tag(SCI_AggregateStability)%in_tag) then
+            call read_param(input_tag(SCI_AggregateStability)%name, param_value, subrsurf(isr)%bsl(isl)%aseags)
+            input_tag(SCI_AggregateStability)%acquired = .true.
+          else if (input_tag(SCI_BulkDensity)%in_tag) then
+            call read_param(input_tag(SCI_BulkDensity)%name, param_value, subrsurf(isr)%bsl(isl)%asdblk)
+            input_tag(SCI_BulkDensity)%acquired = .true.
+          else if (input_tag(SCI_WaterContent)%in_tag) then
+            call read_param(input_tag(SCI_WaterContent)%name, param_value, subrsurf(isr)%bsl(isl)%ahrwca)
+            input_tag(SCI_WaterContent)%acquired = .true.
+          else if (input_tag(SCI_WiltingPoint)%in_tag) then
+            call read_param(input_tag(SCI_WiltingPoint)%name, param_value, subrsurf(isr)%bsl(isl)%ahrwcw)
+            input_tag(SCI_WiltingPoint)%acquired = .true.
+          end if
+        end if
+
+      end if
+
+    end if
+
+  end subroutine pcdata_soilstate_chunk_handler
+
+  subroutine begin_treatment_element_handler(name,attributes)
+    character(len=*), intent(in)   :: name
+    type(dictionary_t), intent(in) :: attributes
+
+    integer :: idx
+    character(len=80) :: param_value
+    integer :: ret_stat
+    integer :: alloc_stat
+
+    !write(*,*) ">>Begin Element: ", name
+    !write(*,*) "--- ", len(attributes), " attributes:"
+    !call print_dict(attributes)
+
+    do idx = 1, size(input_tag)
+      if( input_tag(idx)%name .eq. name ) then
+        input_tag(idx)%in_tag = .true.
+        ! write(*,*) 'In tag ', trim(name)
+        exit  ! found tag, no need to look further
+      end if
+    end do
+
+    if (   (idx .eq. SCI_brcdInputs) &
+      .or. (idx .eq. SCI_SurfaceSubDayWaters) ) then
+      if ( has_key(attributes, input_tag(SCI_number)%name) ) then
+        call get_value(attributes, input_tag(SCI_number)%name, param_value, ret_stat)
+        select case (idx)
+        case (SCI_brcdInputs)
+          call read_param(input_tag(SCI_number)%name, param_value, npools)
+          !write(*,*) 'Number of Biomass Pools: ', npools
+          allocate(brcdinput_complete(npools), stat=alloc_stat)
+          if( alloc_stat .gt. 0 ) then
+            write(*,*) 'ERROR: memory allocation, brcdinput_complete'
+          end if
+          ! initialize _complete arrays to false
+          do idx = 1, npools
+            brcdinput_complete(idx) = .false.
+          end do
+          ! create brcdInput arrays
+          subrsurf(isr)%npools = npools
+          call create_brcdinputpools( npools, subrsurf(isr) )
+
+        case (SCI_SurfaceSubDayWaters)
+          call read_param(input_tag(SCI_number)%name, param_value, subrsurf(isr)%nswet)
+          !write(*,*) 'Number of Surface Water Sub Day values: ', subrsurf(isr)%nswet
+            allocate(surfwat_complete(subrsurf(isr)%nswet), stat=alloc_stat)
+            if( alloc_stat .gt. 0 ) then
+              write(*,*) 'ERROR: memory allocation, surfwat_complete'
+              call exit(1)
+            end if
+            call create_subregionsurfacewet(subrsurf(isr)%nswet, subrsurf(isr))
+            ! initialize _complete arrays to .false.
+            do idx = 1, subrsurf(isr)%nswet
+              surfwat_complete(idx) = .false.
+            end do
+
+        end select
+      else
+        write(*,*) 'SCI_number attribute required for each ', trim(input_tag(idx)%name), ' Tag.'
+        call exit(1)
+      end if
+    else if ( (idx .eq. SCI_brcdInput) &
+      .or. (idx .eq. SCI_SurfaceSubDayWater) ) then
+      if ( has_key(attributes, input_tag(SCI_index)%name) ) then
+        call get_value(attributes, input_tag(SCI_index)%name, param_value, ret_stat)
+        select case (idx)
+        case (SCI_brcdInput)
+          call read_param(input_tag(SCI_index)%name, param_value, ipool)
+          ! adjust from base 0 to base 1 arrays
+          ipool = ipool + 1
+          !write(*,*) 'Soil Layer Index: ', isl
+        case (SCI_SurfaceSubDayWater)
+          call read_param(input_tag(SCI_index)%name, param_value, isurfwat)
+          ! adjust from base 0 to base 1 arrays
+          isurfwat = isurfwat + 1
+          !write(*,*) 'Surface Water Index: ', isurfwat
+        end select
+      else
+        write(*,*) 'SCI_index attribute required for each ', trim(input_tag(idx)%name), ' Tag.'
+        call exit(1)
+      end if
+
+    end if
+
+  end subroutine begin_treatment_element_handler
+
+  subroutine end_treatment_element_handler(name)
+
+    use erosion_data_struct_defs, only: subrsurf
+
+    character(len=*), intent(in)     :: name
+
+    integer :: idx
+    integer :: jdx
+    integer :: dealloc_stat
+
+    do idx = 1, size(input_tag)
+      if( input_tag(idx)%name .eq. name ) then
+        input_tag(idx)%in_tag = .false.
+        ! write(*,*) 'In tag ', trim(name)
+
+        if (idx .eq. TreatmentData) then
+          ! check for acquisition of all required elements
+          if (    input_tag(SCI_brcdInputs)%acquired &
+            .and. input_tag(SCI_BiomassFlatCover)%acquired &
+            .and. input_tag(SCI_CrustThick)%acquired &
+            .and. input_tag(SCI_CrustDensity)%acquired &
+            .and. input_tag(SCI_CrustStability)%acquired &
+            .and. input_tag(SCI_CrustCover)%acquired &
+            .and. input_tag(SCI_CrustMassCoverLoose)%acquired &
+            .and. input_tag(SCI_CrustFracCoverLoose)%acquired &
+            .and. input_tag(SCI_RandomRoughness)%acquired &
+            .and. input_tag(SCI_RidgeOrientation)%acquired &
+            .and. input_tag(SCI_RidgeHeight)%acquired &
+            .and. input_tag(SCI_RidgeSpacing)%acquired &
+            .and. input_tag(SCI_RidgeWidth)%acquired &
+            .and. input_tag(SCI_DikeSpacing)%acquired &
+            .and. input_tag(SCI_SnowDepth)%acquired &
+            .and. input_tag(SCI_SurfaceSubDayWaters)%acquired &
+            ) then
+            input_tag(SCI_brcdInputs)%acquired = .false.
+            input_tag(SCI_BiomassFlatCover)%acquired = .false.
+            input_tag(SCI_CrustThick)%acquired = .false.
+            input_tag(SCI_CrustDensity)%acquired = .false.
+            input_tag(SCI_CrustStability)%acquired = .false.
+            input_tag(SCI_CrustCover)%acquired = .false.
+            input_tag(SCI_CrustMassCoverLoose)%acquired = .false.
+            input_tag(SCI_CrustFracCoverLoose)%acquired = .false.
+            input_tag(SCI_RandomRoughness)%acquired = .false.
+            input_tag(SCI_RidgeOrientation)%acquired = .false.
+            input_tag(SCI_RidgeHeight)%acquired = .false.
+            input_tag(SCI_RidgeSpacing)%acquired = .false.
+            input_tag(SCI_RidgeWidth)%acquired = .false.
+            input_tag(SCI_DikeSpacing)%acquired = .false.
+            input_tag(SCI_SnowDepth)%acquired = .false.
+            input_tag(SCI_SurfaceSubDayWaters)%acquired = .false.
+            treatmentdata_complete(isr) = .true.
+
+            !write(*,*) 'TreatmentData complete'
+          else
+            !write(*,*) 'TreatmentData NOT complete'
+            do jdx = 1, size(input_tag)
+              select case (jdx)
+              case (SCI_BiomassFlatCover, &
+                    SCI_CrustThick, &      
+                    SCI_CrustDensity, &      
+                    SCI_CrustStability, &      
+                    SCI_CrustCover, &      
+                    SCI_CrustMassCoverLoose, &      
+                    SCI_CrustFracCoverLoose, &      
+                    SCI_RandomRoughness, &      
+                    SCI_RidgeOrientation, &      
+                    SCI_RidgeHeight, &      
+                    SCI_RidgeSpacing, &      
+                    SCI_RidgeWidth, &      
+                    SCI_DikeSpacing, &      
+                    SCI_SnowDepth)
+                if( .not. input_tag(jdx)%acquired ) then
+                  write(*,'(3a)') 'Tag ', trim(input_tag(jdx)%name), ' is missing from input file.'
+                end if
+              case (SCI_brcdInputs, &
+                    SCI_SurfaceSubDayWaters)
+                if( .not. input_tag(jdx)%acquired ) then
+                  write(*,'(3a)') 'Tag ', trim(input_tag(jdx)%name), ' is incomplete or missing from input file.'
+                end if
+              end select
+            end do
+          end if
+          ! deallocate Tag array
+          deallocate( input_tag, stat=dealloc_stat)
+          if( dealloc_stat .gt. 0 ) then
+            ! deallocation failed
+            write(*,*) "ERROR: unable to deallocate memory for Tag array"
+          end if
+
+        else if (idx .eq. SCI_brcdInputs) then
+          count_complete = 0
+          do jdx = 1, npools
+            if (brcdinput_complete(jdx)) then
+              count_complete = count_complete + 1
+            end if
+          end do
+          if (count_complete .ge. npools) then
+            input_tag(SCI_brcdInputs)%acquired = .true.
+
+            ! assign values to subrsurf variables based on brcdInputs
+            ! sum the stem area index and leaf area index values
+            subrsurf(isr)%abrsai = 0.0
+            do jdx = 1, npools
+              subrsurf(isr)%abrsai = subrsurf(isr)%abrsai + subrsurf(isr)%brcdInput(jdx)%rsai
+              subrsurf(isr)%abrlai = subrsurf(isr)%abrlai + subrsurf(isr)%brcdInput(jdx)%rlai 
+            end do
+
+            ! Compute the weighted average "biomass height" (residues and crop)
+            subrsurf(isr)%abzht = 0.0
+            if (subrsurf(isr)%abrsai .gt. 0.0) then
+              do jdx = 1, npools
+                subrsurf(isr)%abzht = subrsurf(isr)%abzht + (subrsurf(isr)%brcdInput(jdx)%zht * subrsurf(isr)%brcdInput(jdx)%rsai)
+              end do
+              subrsurf(isr)%abzht = subrsurf(isr)%abzht / subrsurf(isr)%abrsai
+            endif
+
+          else
+            do jdx = 1, size(brcdinput_complete)
+             if ( .not. brcdinput_complete(jdx)) then
+                 write(*,'(3a,i0,a)') 'Tag ', trim(input_tag(SCI_brcdInput)%name), &
+                                      ' SCI_index="', jdx-1, '" is incomplete or missing from input file.'
+              end if
+            end do
+          end if
+          ! deallocate _complete array
+          deallocate(brcdinput_complete, stat=dealloc_stat)
+          if( dealloc_stat .gt. 0 ) then
+            ! deallocation failed
+            write(*,*) "ERROR: unable to deallocate memory for brcdinput_complete array"
+          end if
+
+        else if (idx .eq. SCI_SurfaceSubDayWaters) then
+          count_complete = 0
+          do jdx = 1, subrsurf(isr)%nswet
+            if (surfwat_complete(jdx)) then
+              count_complete = count_complete + 1
+            end if
+          end do
+          if (count_complete .ge. subrsurf(isr)%nswet) then
+            input_tag(SCI_SurfaceSubDayWaters)%acquired = .true.
+          else
+            do jdx = 1, subrsurf(isr)%nswet
+              if ( .not. surfwat_complete(jdx)) then
+                 write(*,'(3a,i0,a)') 'Tag ', trim(input_tag(SCI_SurfaceSubDayWater)%name), &
+                                      ' SCI_index="', jdx-1, '" is incomplete or missing from input file.'
+              end if
+            end do
+          end if
+          ! deallocate _complete array
+          deallocate(surfwat_complete, stat=dealloc_stat)
+          if( dealloc_stat .gt. 0 ) then
+            ! deallocation failed
+            write(*,*) "ERROR: unable to deallocate memory surfwat_complete array"
+          end if
+
+        else if (idx .eq. SCI_brcdInput) then
+          ! check for acquisition of all required elements
+          if (    input_tag(SCI_brcdBname)%acquired &
+            .and. input_tag(SCI_brcdRlai)%acquired &
+            .and. input_tag(SCI_brcdRsai)%acquired &
+            .and. input_tag(SCI_brcdRg)%acquired &
+            .and. input_tag(SCI_brcdXrow)%acquired &
+            .and. input_tag(SCI_brcdZht)%acquired ) then
+            input_tag(SCI_brcdBname)%acquired = .false.
+            input_tag(SCI_brcdRlai)%acquired = .false.
+            input_tag(SCI_brcdRsai)%acquired = .false.
+            input_tag(SCI_brcdRg)%acquired = .false.
+            input_tag(SCI_brcdXrow)%acquired = .false.
+            input_tag(SCI_brcdZht)%acquired = .false.
+            brcdinput_complete(ipool) = .true.
+          else
+            do jdx = 1, size(input_tag)
+              select case (jdx)
+              case (SCI_brcdBname, & 
+                    SCI_brcdRlai, & 
+                    SCI_brcdRsai, &
+                    SCI_brcdRg, &
+                    SCI_brcdXrow, &
+                    SCI_brcdZht)
+                if( .not. input_tag(jdx)%acquired ) then
+                  write(*,*) 'Tag ', trim(input_tag(jdx)%name), ' is missing from input file.'
+                end if
+              end select
+            end do
+          end if
+
+        end if
+
+        exit  ! found tag, no need to look further
+
+      end if
+    end do
+
+  end subroutine end_treatment_element_handler
+
+  subroutine pcdata_treatment_chunk_handler(chunk)
+    character(len=*), intent(in) :: chunk
+
+    character(len=80) :: param_value
+
+    param_value = trim(chunk)
+
+    if (input_tag(TreatmentData)%in_tag) then
+      if (input_tag(SCI_brcdInputs)%in_tag) then
+        if (input_tag(SCI_brcdInput)%in_tag) then
+          if (input_tag(SCI_brcdBname)%in_tag) then
+            call read_param(input_tag(SCI_brcdBname)%name, param_value, subrsurf(isr)%brcdInput(ipool)%bname)
+            input_tag(SCI_brcdBname)%acquired = .true.
+          else if (input_tag(SCI_brcdRlai)%in_tag) then
+            call read_param(input_tag(SCI_brcdRlai)%name, param_value, subrsurf(isr)%brcdInput(ipool)%rlai)
+            input_tag(SCI_brcdRlai)%acquired = .true.
+          else if (input_tag(SCI_brcdRsai)%in_tag) then
+            call read_param(input_tag(SCI_brcdRsai)%name, param_value, subrsurf(isr)%brcdInput(ipool)%rsai)
+            input_tag(SCI_brcdRsai)%acquired = .true.
+          else if (input_tag(SCI_brcdRg)%in_tag) then
+            call read_param(input_tag(SCI_brcdRg)%name, param_value, subrsurf(isr)%brcdInput(ipool)%rg)
+            input_tag(SCI_brcdRg)%acquired = .true.
+          else if (input_tag(SCI_brcdXrow)%in_tag) then
+            call read_param(input_tag(SCI_brcdXrow)%name, param_value, subrsurf(isr)%brcdInput(ipool)%xrow)
+            input_tag(SCI_brcdXrow)%acquired = .true.
+          else if (input_tag(SCI_brcdZht)%in_tag) then
+            call read_param(input_tag(SCI_brcdZht)%name, param_value, subrsurf(isr)%brcdInput(ipool)%zht)
+            input_tag(SCI_brcdZht)%acquired = .true.
+          end if
+        end if
+
+      else if (input_tag(SCI_BiomassFlatCover)%in_tag) then
+        call read_param(input_tag(SCI_BiomassFlatCover)%name, param_value, subrsurf(isr)%abffcv)
+        input_tag(SCI_BiomassFlatCover)%acquired = .true.
+
+      else if (input_tag(SCI_CrustThick)%in_tag) then
+        call read_param(input_tag(SCI_CrustThick)%name, param_value, subrsurf(isr)%aszcr)
+        input_tag(SCI_CrustThick)%acquired = .true.
+
+      else if (input_tag(SCI_CrustDensity)%in_tag) then
+        call read_param(input_tag(SCI_CrustDensity)%name, param_value, subrsurf(isr)%asdcr)
+        input_tag(SCI_CrustDensity)%acquired = .true.
+
+      else if (input_tag(SCI_CrustStability)%in_tag) then
+        call read_param(input_tag(SCI_CrustStability)%name, param_value, subrsurf(isr)%asecr)
+        input_tag(SCI_CrustStability)%acquired = .true.
+
+      else if (input_tag(SCI_CrustCover)%in_tag) then
+        call read_param(input_tag(SCI_CrustCover)%name, param_value, subrsurf(isr)%asfcr)
+        input_tag(SCI_CrustCover)%acquired = .true.
+
+      else if (input_tag(SCI_CrustMassCoverLoose)%in_tag) then
+        call read_param(input_tag(SCI_CrustMassCoverLoose)%name, param_value, subrsurf(isr)%asmlos)
+        input_tag(SCI_CrustMassCoverLoose)%acquired = .true.
+
+      else if (input_tag(SCI_CrustFracCoverLoose)%in_tag) then
+        call read_param(input_tag(SCI_CrustFracCoverLoose)%name, param_value, subrsurf(isr)%asflos)
+        input_tag(SCI_CrustFracCoverLoose)%acquired = .true.
+
+      else if (input_tag(SCI_RandomRoughness)%in_tag) then
+        call read_param(input_tag(SCI_RandomRoughness)%name, param_value, subrsurf(isr)%aslrr)
+        input_tag(SCI_RandomRoughness)%acquired = .true.
+
+        !Lower and upper limits of grid cell RR allowed by erosion submodel
+        if (subrsurf(isr)%aslrr < SLRR_MIN) then
+          write(0,*) 'slrr: ', subrsurf(isr)%aslrr,' < ', SLRR_MIN
+        end if
+        if (subrsurf(isr)%aslrr > SLRR_MAX) then
+          write(0,*) 'slrr: ', subrsurf(isr)%aslrr,' < ', SLRR_MIN
+        end if
+
+        !Lower and upper limits of grid cell aerodynamic roughness allowed
+        !by erosion submodel (currently determined by equation used here)
+        if (subrsurf(isr)%aslrr < (WZZO_MIN/0.3)) then
+          write(0,*) 'slrr: ', subrsurf(isr)%aslrr
+          write(0,*) 'wzzo < WZZO_MIN: ', subrsurf(isr)%aslrr*0.3,' < ', WZZO_MIN
+        else if(subrsurf(isr)%aslrr > (WZZO_MAX/0.3)) then
+          write(0,*) 'slrr: ', subrsurf(isr)%aslrr
+          write(0,*) 'wzzo > WZZO_MAX: ', subrsurf(isr)%aslrr*0.3,' > ', WZZO_MAX
+        end if
+
+      else if (input_tag(SCI_RidgeOrientation)%in_tag) then
+        call read_param(input_tag(SCI_RidgeOrientation)%name, param_value, subrsurf(isr)%asargo)
+        input_tag(SCI_RidgeOrientation)%acquired = .true.
+
+      else if (input_tag(SCI_RidgeHeight)%in_tag) then
+        call read_param(input_tag(SCI_RidgeHeight)%name, param_value, subrsurf(isr)%aszrgh)
+        input_tag(SCI_RidgeHeight)%acquired = .true.
+
+      else if (input_tag(SCI_RidgeSpacing)%in_tag) then
+        call read_param(input_tag(SCI_RidgeSpacing)%name, param_value, subrsurf(isr)%asxrgs)
+        input_tag(SCI_RidgeSpacing)%acquired = .true.
+
+      else if (input_tag(SCI_RidgeWidth)%in_tag) then
+        call read_param(input_tag(SCI_RidgeWidth)%name, param_value, subrsurf(isr)%asxrgw)
+        input_tag(SCI_RidgeWidth)%acquired = .true.
+
+      else if (input_tag(SCI_DikeSpacing)%in_tag) then
+        call read_param(input_tag(SCI_DikeSpacing)%name, param_value, subrsurf(isr)%asxdks)
+        input_tag(SCI_DikeSpacing)%acquired = .true.
+
+      else if (input_tag(SCI_SnowDepth)%in_tag) then
+        call read_param(input_tag(SCI_SnowDepth)%name, param_value, subrsurf(isr)%ahzsnd)
+        input_tag(SCI_SnowDepth)%acquired = .true.
+
+      else if (input_tag(SCI_SurfaceSubDayWaters)%in_tag) then
+        if (input_tag(SCI_SurfaceSubDayWater)%in_tag) then
+          call read_param(input_tag(SCI_SurfaceSubDayWater)%name, param_value, subrsurf(isr)%ahrwc0(isurfwat))
+          surfwat_complete(isurfwat) = .true.
+        end if
+      end if
+
+    end if
+
+  end subroutine pcdata_treatment_chunk_handler
 
 end module sweep_io_xml_mod

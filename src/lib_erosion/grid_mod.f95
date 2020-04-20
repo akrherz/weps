@@ -5,6 +5,10 @@
 
 module grid_mod
     use Points_Mod, only: point
+    use flib_sax
+    use read_write_xml_mod, only: read_param
+    use erosion_data_struct_defs, only: cellstate
+
     implicit none
 
     integer :: i1, i2, i3  ! do loop parameters defining grid update sequence, i1..i3 defines second update directions
@@ -17,8 +21,8 @@ module grid_mod
 
     integer :: imax             ! Number of grid intervals in x direction on EROSION grid
     integer :: jmax             ! Number of grid intervals in y direction on EROSION grid
-    real :: ix                  ! grid interval in x-direction (m) (range from 7.0 to 3000)
-    real :: jy                  ! grid interval in y-direction (m) (range from 7.0 to 3000)
+    real :: lencell_x                  ! grid interval in x-direction (m) (range from 7.0 to 3000)
+    real :: lencell_y                  ! grid interval in y-direction (m) (range from 7.0 to 3000)
 
     ! added for command line or alternate specification of grid dimensions
     integer :: xgdpt            ! specified # of grid data points in the x-dir
@@ -33,138 +37,451 @@ module grid_mod
     real :: sim_area            ! sim_area - Simulation Region area (m^2)
     real :: amasim              ! Field angle (degrees) (0 to 360) the angle of the simulation region boundary relative to north.
 
+    character(len=512) :: gridfile  ! name of the grid input file
+    logical :: griddata_complete
+    logical, dimension(:,:), allocatable :: gridnum_complete
+    integer :: igx       ! index for grid x direction
+    integer :: jgy       ! index for grid y direction
+    integer :: count_complete
+
+    integer, parameter :: MAX_NAME_LEN  = 40
+
+    type :: tag_def
+      character(len=MAX_NAME_LEN)  :: name   ! tag name
+      logical :: required                    ! .true. if tag is required
+      logical :: acquired                    ! .true. if tag has been read
+      logical :: in_tag                      ! .true. if inside tag now
+    end type tag_def
+
+    type(tag_def), dimension(:), allocatable :: grid_tag
+    integer :: max_tags
+  
+    integer, parameter :: gridData = 1
+    integer, parameter :: SCI_XGrid = 2 
+    integer, parameter :: SCI_YGrid = 3
+    integer, parameter :: SCI_SubrNum = 4
+    integer, parameter :: SCI_Xindex = 5
+    integer, parameter :: SCI_Yindex = 6
+
   contains
+
+    subroutine init_grid_xml()
+
+      integer :: idx
+      integer :: alloc_stat
+
+      max_tags = 6   ! count of unique tags needed from all dtd files
+      allocate( grid_tag(max_tags), stat=alloc_stat)
+      if( alloc_stat .gt. 0 ) then
+        write(*,*) 'ERROR: memory alloc., grid_tag'
+      end if
+
+      ! assign defaults to flag status values
+      do idx = 1, max_tags
+        grid_tag(idx)%required = .true.
+        grid_tag(idx)%acquired = .false.
+        grid_tag(idx)%in_tag = .false.
+      end do
+
+      ! assign tag names
+      grid_tag(1)%name = "gridData"
+      grid_tag(2)%name = "SCI_XGrid"
+      grid_tag(3)%name = "SCI_YGrid"
+      grid_tag(4)%name = "SCI_SubrNum"
+      grid_tag(5)%name = "SCI_Xindex"
+      grid_tag(6)%name = "SCI_Yindex"
+
+    end subroutine init_grid_xml
+
+    subroutine write_grid( daypath )
+      use file_io_mod, only: fopenk
+      use read_write_xml_mod, only: w_begin_tag, w_end_tag, w_whole_tag
+      character(len=*) :: daypath
+
+      integer :: idx
+      integer :: jdy
+      integer :: dealloc_stat
+      integer :: luo_saeinp     ! output unit number
+
+      call init_grid_xml()  ! creates grid_tag array
+
+      ! write single subregion grid array file
+      call fopenk (luo_saeinp, (trim(daypath) // trim(gridfile)), 'unknown')
+
+      ! write XML header
+      write(luo_saeinp,"(a)") '<?xml version="1.0" encoding="ISO-8859-1"?>'
+      write(luo_saeinp,"(a)") '<!DOCTYPE sweepData SYSTEM "grid.dtd">'
+
+      ! these are the actual values used in the simulation, not same as in .sweep file
+      call w_begin_tag( luo_saeinp, grid_tag(gridData)%name, &
+                                    grid_tag(SCI_XGrid)%name, imax-1, &
+                                    grid_tag(SCI_YGrid)%name, jmax-1 )
+        do idx = 1, imax - 1
+          do jdy = 1, jmax - 1
+            ! NOTE: indexes adjusted to zero based
+            call w_whole_tag( luo_saeinp, grid_tag(SCI_SubrNum)%name, &
+                                    grid_tag(SCI_Xindex)%name, idx-1, &
+                                    grid_tag(SCI_Yindex)%name, jdy-1, &
+                                    cellstate(idx,jdy)%csr-1 )
+          end do
+        end do
+      call w_end_tag( luo_saeinp, grid_tag(gridData)%name )
+
+      close(luo_saeinp)
+
+      ! deallocate Tag array
+      deallocate( grid_tag, stat=dealloc_stat)
+      if( dealloc_stat .gt. 0 ) then
+        ! deallocation failed
+        write(*,*) "ERROR: unable to deallocate memory for Grid Tag array"
+      end if
+
+    end subroutine
+
+    subroutine begin_griddata_element_handler(name,attributes)
+      character(len=*), intent(in)   :: name
+      type(dictionary_t), intent(in) :: attributes
+
+      integer :: idx
+      integer :: jdx
+      integer :: kdx
+      character(len=80) :: param_value
+      integer :: ret_stat
+      integer :: sum_stat
+      integer :: alloc_stat
+
+      !write(*,*) ">>Begin Element: ", name
+      !write(*,*) "--- ", len(attributes), " attributes:"
+      !call print_dict(attributes)
+
+      do idx = 1, size(grid_tag)
+        if( grid_tag(idx)%name .eq. name ) then
+          grid_tag(idx)%in_tag = .true.
+          ! write(*,*) 'In tag ', trim(name)
+          exit  ! found tag, no need to look further
+        end if
+      end do
+
+      if (   (idx .eq. gridData) ) then
+        if ( has_key(attributes, grid_tag(SCI_XGrid)%name) ) then
+          call get_value(attributes, grid_tag(SCI_XGrid)%name, param_value, ret_stat)
+          call read_param(grid_tag(SCI_XGrid)%name, param_value, imax)
+          ! erod.sweep is read first so amxsim values are set
+          lencell_x = (amxsim(2)%x - amxsim(1)%x) / imax
+          ! grid array has boundary cell on edges, so with dimension goes from 0 to XGrid + 1
+          imax = imax + 1
+          !write(*,*) 'XGrid Index: ', imax
+        else
+          write(*,*) 'SCI_XGrid attribute required for each ', trim(grid_tag(idx)%name), ' Tag.'
+          call exit(1)
+        end if
+        if ( has_key(attributes, grid_tag(SCI_YGrid)%name) ) then
+          call get_value(attributes, grid_tag(SCI_YGrid)%name, param_value, ret_stat)
+          call read_param(grid_tag(SCI_YGrid)%name, param_value, jmax)
+          ! erod.sweep is read first so amxsim values are set
+          lencell_y = (amxsim(2)%y - amxsim(1)%y) / jmax
+          ! grid array has boundary cell on edges, so with dimension goes from 0 to XGrid + 1
+          jmax = jmax + 1
+          !write(*,*) 'YGrid Index: ', jmax
+
+          ! allocate cellstate
+          sum_stat = 0
+          allocate(gridnum_complete(imax-1,jmax-1), stat=alloc_stat)
+          sum_stat = sum_stat + alloc_stat
+          allocate(cellstate(0:imax,0:jmax), stat=alloc_stat)
+          sum_stat = sum_stat + alloc_stat
+          if( sum_stat .gt. 0 ) then
+            Write(*,*) 'ERROR: unable to allocate enough memory for cellstate data arrays'
+          else
+            do kdx = 1, imax - 1
+              do jdx = 1, jmax - 1
+                gridnum_complete(kdx,jdx) = .false.
+              end do
+            end do
+          end if
+        else
+          write(*,*) 'SCI_YGrid attribute required for each ', trim(grid_tag(idx)%name), ' Tag.'
+          call exit(1)
+        end if
+
+      else if ( idx .eq.SCI_SubrNum ) then
+        if ( has_key(attributes, grid_tag(SCI_Xindex)%name) ) then
+          call get_value(attributes, grid_tag(SCI_Xindex)%name, param_value, ret_stat)
+          call read_param(grid_tag(SCI_Xindex)%name, param_value, igx)
+          ! adjust from 0 based array to 1 based array
+          igx = igx + 1
+          !write(*,*) 'SubrNum Xindex: ', igx
+        else
+          write(*,*) 'SCI_Xindex attribute required for each ', trim(grid_tag(idx)%name), ' Tag.'
+          call exit(1)
+        end if
+        if ( has_key(attributes, grid_tag(SCI_Yindex)%name) ) then
+          call get_value(attributes, grid_tag(SCI_Yindex)%name, param_value, ret_stat)
+          call read_param(grid_tag(SCI_Yindex)%name, param_value, jgy)
+          ! adjust from 0 based array to 1 based array
+          jgy = jgy + 1
+          !write(*,*) 'SubrNum Yindex: ', jgy
+        else
+          write(*,*) 'SCI_Yindex attribute required for each ', trim(grid_tag(idx)%name), ' Tag.'
+          call exit(1)
+        end if
+      end if
+
+    end subroutine begin_griddata_element_handler
+
+    subroutine end_griddata_element_handler(name)
+      character(len=*), intent(in)     :: name
+
+      integer :: idx
+      integer :: jdx
+      integer :: kdx
+      integer :: dealloc_stat
+
+      do idx = 1, size(grid_tag)
+        if( grid_tag(idx)%name .eq. name ) then
+          grid_tag(idx)%in_tag = .false.
+          ! write(*,*) 'In tag ', trim(name)
+
+          if (idx .eq. gridData) then
+
+            ! check for acquisition of all required elements
+            count_complete = 0
+            do kdx = 1, imax - 1
+              do jdx = 1, jmax - 1
+                if (gridnum_complete(kdx,jdx)) then
+                  count_complete = count_complete + 1
+                else
+                  write(*,'(3a)') 'Tag ', trim(grid_tag(SCI_SubrNum)%name), &
+                                  ' SCI_Xindex="', kdx-1, &
+                                  ' SCI_Yindex="', jdx-1, ' is missing from input file.'
+                end if
+              end do
+            end do
+            ! deallocate _complete array
+            deallocate(gridnum_complete, stat=dealloc_stat)
+            if( dealloc_stat .gt. 0 ) then
+              ! deallocation failed
+              write(*,*) "ERROR: unable to deallocate memory for gridnum_complete array"
+            end if
+
+            if( count_complete .eq. (imax-1)*(jmax-1) ) then
+              griddata_complete = .true.
+            else
+              griddata_complete = .false.
+            end if
+            ! deallocate Tag array
+            deallocate( grid_tag, stat=dealloc_stat)
+            if( dealloc_stat .gt. 0 ) then
+              ! deallocation failed
+              write(*,*) "ERROR: unable to deallocate memory for Tag array"
+            end if
+          else if (idx .eq. SCI_SubrNum) then
+            if ( grid_tag(SCI_SubrNum)%acquired ) then
+              grid_tag(SCI_SubrNum)%acquired = .false.
+              gridnum_complete(igx,jgy) = .true.
+            else
+              gridnum_complete(igx,jgy) = .false.
+            end if
+          end if
+
+          exit  ! found tag, no need to look further
+
+        end if
+      end do
+
+    end subroutine end_griddata_element_handler
+
+    subroutine pcdata_griddata_chunk_handler(chunk)
+      character(len=*), intent(in) :: chunk
+
+      character(len=80) :: param_value
+
+      param_value = trim(chunk)
+
+      if (grid_tag(gridData)%in_tag) then
+        if (grid_tag(SCI_SubrNum)%in_tag) then
+          call read_param(grid_tag(SCI_SubrNum)%name, param_value, cellstate(igx,jgy)%csr)
+          ! adjust from 0 based to 1 based array
+          cellstate(igx,jgy)%csr = cellstate(igx,jgy)%csr + 1
+          !write(*,*) 'Subregion igx, iy, Number: ', igx, iy, cellstate(igx,jgy)%csr
+          grid_tag(SCI_SubrNum)%acquired = .true.
+        end if
+      end if
+
+    end subroutine pcdata_griddata_chunk_handler
 
     subroutine sbgrid( minht )
 
-!     +++ PURPOSE +++
-!     to calculate grid size and spacing for EROSION.
-!     grid size assumes outer points are outside field boundary a distance ix/2
-!     to calculate number of grid points for EROSION.
-!     A max 'interior' square grid of 29X29 is assigned-no barriers
-!     A max 'interior' rectangular grid of 59X59 is assigned barriers
+      ! +++ PURPOSE +++
+      ! to calculate grid size and spacing for EROSION.
+      ! grid size assumes outer points are outside field boundary a distance lencell_x/2
+      ! to calculate number of grid points for EROSION.
+      ! A max 'interior' square grid of 29X29 is assigned-no barriers
+      ! A max 'interior' rectangular grid of 59X59 is assigned barriers
 
-!     +++ ARGUMENTS +++
+      ! +++ ARGUMENTS +++
       real :: minht    ! minimum height of barrier along it's length.
 
-!     +++ LOCAL VARIABLES +++
+      ! +++ LOCAL VARIABLES +++
       integer :: ngdpt ! number of grid points along a direction
       real :: dxmin    ! minimum grid interval (m)
       real :: lx, ly   ! x-axis and y-axis lengths of simulation region
       logical :: bar_exist  ! .true if barriers exist
+      integer :: alloc_stat
+      integer :: idx
+      integer :: jdx
 
-!     +++ END SPECIFICATIONS +++
+      ! +++ END SPECIFICATIONS +++
 
-       ! set min grid spacing
-       dxmin = MIN_GRID_SP
+      ! calc. lx and ly sides of field
+      lx = amxsim(2)%x - amxsim(1)%x
+      ly = amxsim(2)%y - amxsim(1)%y
 
-       ! set max no. of grid points with no barrier
-       ngdpt = N_G_DPT
+      ! write(*,*) 'SBGRID: lx, ly: ', lx, ly
 
-       if( minht > 0.0 ) then    !Check for zero height barriers
+      ! check to see if grid dimensions specified via cmdline args
+      if ((xgdpt > 0) .and. (ygdpt > 0)) then
+        imax = xgdpt + 1
+        jmax = ygdpt + 1
+        lencell_x = (amxsim(2)%x - amxsim(1)%x) / xgdpt
+        lencell_y = (amxsim(2)%y - amxsim(1)%y) / ygdpt
+      else
+        ! use Hagen's grid dimensioning as the default
+
+        ! set min grid spacing
+        dxmin = MIN_GRID_SP
+
+        ! set max no. of grid points with no barrier
+        ngdpt = N_G_DPT
+
+        if( minht > 0.0 ) then    !Check for zero height barriers
           ! at least one barrier exists
           dxmin = min(dxmin, 5.0*minht)
           ngdpt = B_G_DPT  !default to this value if a barrier exists
           bar_exist = .true.
-       else
+        else
           bar_exist = .false.
-       endif
+        endif
 
-!     calculate max grid intervals
-!       calc. lx and ly sides of field
-      lx = amxsim(2)%x - amxsim(1)%x
-      ly = amxsim(2)%y - amxsim(1)%y
-
-      !write(*,*) 'SBGRID: lx, ly: ', lx, ly
-
-!     increase grid points on large field
-!      if((lx .gt. 200) .or. (ly  .gt. 200)) then
-!         ngdpt = B_G_DPT
-!      endif
-
-      ! case where lx > ly
-      if ( lx .gt. ly)then
-        imax  = int ( lx / dxmin)
-        imax = min(imax,ngdpt)
-        imax = max(imax,2)
-        ! calculate spacing for square or with barriers a rectangular grid
-        ix  = lx / (imax - 1)
-
-         if( bar_exist ) then
-           jmax  = int (ly / dxmin)
-           jmax  = min(jmax, ngdpt)
-         else
-           jmax = nint(ly/ix) + 1
-         endif
-
-        jmax = max(jmax,2)
-        jy   = ly / (jmax - 1)
-
-      ! case where lx = ly or lx < ly
-      else
-        jmax  = int (ly / dxmin)
-        jmax = min(jmax,ngdpt)
-        jmax = max(jmax,2)
-        jy   = ly / (jmax - 1)
+        ! calculate max grid intervals
+        ! case where lx > ly
+        if ( lx .gt. ly)then
+          imax  = int ( lx / dxmin)
+          imax = min(imax,ngdpt)
+          imax = max(imax,2)
+          ! calculate spacing for square or with barriers a rectangular grid
+          lencell_x  = lx / (imax - 1)
 
         if( bar_exist ) then
-           imax  = int (lx / dxmin)
-           imax  = min(imax,ngdpt)
+          jmax  = int (ly / dxmin)
+          jmax  = min(jmax, ngdpt)
         else
-           imax = nint(lx/jy) + 1
+          jmax = nint(ly/lencell_x) + 1
         endif
-        imax = max(imax,2)
-        ix = lx/(imax-1)
+
+        jmax = max(jmax,2)
+        lencell_y   = ly / (jmax - 1)
+
+        ! case where lx = ly or lx < ly
+        else
+          jmax  = int (ly / dxmin)
+          jmax = min(jmax,ngdpt)
+          jmax = max(jmax,2)
+          lencell_y   = ly / (jmax - 1)
+
+          if( bar_exist ) then
+            imax  = int (lx / dxmin)
+            imax  = min(imax,ngdpt)
+          else
+            imax = nint(lx/lencell_y) + 1
+          endif
+          imax = max(imax,2)
+          lencell_x = lx/(imax-1)
+        end if
 
       endif
 
+      allocate(cellstate(0:imax,0:jmax), stat=alloc_stat)
+      if( alloc_stat .gt. 0 ) then
+        Write(*,*) 'ERROR: unable to allocate enough memory for cellstate data array'
+      end if
+
+      ! this only happens with old single subregion file
+      ! so set to subregion 1
+      do jdx = 1, jmax-1
+        do idx = 1, imax-1
+          cellstate(idx,jdx)%csr = 1
+        end do
+      end do
+
     end subroutine sbgrid
 
-    subroutine sbigrd( cellstate )
+    subroutine sbigrd( subrsurf )
+      use erosion_data_struct_defs, only: subregionsurfacestate
 
-!     + + + PURPOSE + + +
-!     To set the grid output arrays to zero
-
-      use erosion_data_struct_defs, only: cellsurfacestate
+      ! + + + PURPOSE + + +
+      ! To set the grid output arrays to zero
+      ! To set subregion cell counts
 
 !     +++ ARGUMENT DECLARATIONS +++
-      type(cellsurfacestate), dimension(0:,0:), intent(inout) :: cellstate     ! initialized grid cell state values
+      type(subregionsurfacestate), dimension(0:), intent(inout) :: subrsurf  ! subregion surface conditions (erosion specific set)
 
-!     + + + LOCAL VARIABLES + + +
-      integer i, j
+      ! + + + LOCAL VARIABLES + + +
+      integer :: nsubr
+      integer :: isr
+      integer :: idx
+      integer :: jdx
 
-!     + + + END SPECIFICATIONS + + +
+      ! + + + END SPECIFICATIONS + + +
 
-      do j = 0, jmax
-         do i = 0, imax
-            cellstate(i,j)%egt = 0.0
-            cellstate(i,j)%egtcs = 0.0
-            cellstate(i,j)%egtss = 0.0
-            cellstate(i,j)%egt10 = 0.0
-            cellstate(i,j)%egt2_5 = 0.0
+      nsubr = size(subrsurf) - 1
+      do isr = 0, nsubr
+        subrsurf(isr)%cntcells = 0
+      end do
+
+      ! Set the grid output arrays to zero
+      do jdx = 0, jmax
+         do idx = 0, imax
+            cellstate(idx,jdx)%egt = 0.0
+            cellstate(idx,jdx)%egtcs = 0.0
+            cellstate(idx,jdx)%egtss = 0.0
+            cellstate(idx,jdx)%egt10 = 0.0
+            cellstate(idx,jdx)%egt2_5 = 0.0
+         end do
+      end do
+
+      ! To set subregion cell counts
+      do jdx = 1, jmax-1
+         do idx = 1, imax-1
+           ! count cells in each subregion and put into subrsurf
+           ! also sum subrsurf(0) for total area
+           subrsurf(0)%cntcells = subrsurf(0)%cntcells + 1
+           if( (cellstate(idx,jdx)%csr .ge. 1) .and. (cellstate(idx,jdx)%csr .le. nsubr) ) then
+             subrsurf(cellstate(idx,jdx)%csr)%cntcells = subrsurf(cellstate(idx,jdx)%csr)%cntcells + 1
+           else
+             write(*,*) 'Grid contains invalid subregion index'
+             write(*,"(3(a,i0))") 'cellstate(', idx, ',', jdx, ')%csr = ', cellstate(idx,jdx)%csr
+             stop
+           end if
          end do
       end do
       
     end subroutine sbigrd     
 
-    subroutine init_regions_grid( cellstate )
+    subroutine init_regions_grid( )
 
-!     +++ PURPOSE +++
-!     Set the subregion and accounting region associations with each grid cell
+      ! +++ PURPOSE +++
+      ! Set the subregion and accounting region associations with each grid cell
 
-!     + + + Modules Used + + +
+      ! + + + Modules Used + + +
       use pnpoly_mod, only: pnpoly
       use subregions_mod, only: subr_poly, acct_poly
-      use erosion_data_struct_defs, only: cellsurfacestate
 
-!     +++ ARGUMENT DECLARATIONS +++
-      type(cellsurfacestate), dimension(0:,0:), intent(inout) :: cellstate     ! initialized grid cell state values
-
-!     +++ LOCAL VARIABLES +++
+      ! +++ LOCAL VARIABLES +++
       integer i, j, sr
       type(point) :: centroid
 
-!     +++ END SPECIFICATIONS +++
+      ! +++ END SPECIFICATIONS +++
 
       ! assign subregion number to each grid cell
       ! code lifted from sbgrid because it is initialized there - LEW
@@ -172,8 +489,8 @@ module grid_mod
         do i = 1, imax-1
           ! The grid cell is assumed rectangular. Use centroid of grid cell
           ! with subregion polygon to select grid cell subregion
-          centroid%x = 0.5 * (i-1+i) * ix
-          centroid%y = 0.5 * (j-1+j) * jy
+          centroid%x = 0.5 * (i-1+i) * lencell_x
+          centroid%y = 0.5 * (j-1+j) * lencell_y
           do sr = 1, size(subr_poly)
             ! Check if it is inside subregion polygon
             if( pnpoly(centroid, subr_poly(sr)) .ge. 0) then
@@ -207,18 +524,16 @@ module grid_mod
 
     end subroutine init_regions_grid
 
-    subroutine sbdirini(wind_dir, cellstate)
+    subroutine sbdirini(wind_dir)
 
 !     +++ purpose +++
 !     Calc. wind angle on the sim. region
 !     Calc. sweep sequence for update of grid cells
 
-      use erosion_data_struct_defs, only: cellsurfacestate
       use p1unconv_mod, only: degtorad
 
 !     +++ ARGUMENT DECLARATIONS +++
       real wind_dir  ! direction of the wind in degrees from north
-      type(cellsurfacestate),dimension(0:,0:),intent(inout) :: cellstate     ! grid cell state for sbbr
 
 !     + + + END SPECIFICATION + + +
 

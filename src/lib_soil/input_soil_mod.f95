@@ -64,9 +64,6 @@ module input_soil_mod
                    
       close (lui1)    
      
-!! removed code reading IFC file data - moved to inp_ifc.for
-!! which now handles both version 1.0 and version 1.1 IFC file formats
-
       ! initialize new variables not read in from ifc file 
       do lay = 1, soil%nslay
           soil%ahfredsat(lay) = 0.0d0

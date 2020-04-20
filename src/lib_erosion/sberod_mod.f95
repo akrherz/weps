@@ -16,7 +16,7 @@ module sberod_mod
 !         depletes upwind and increases downwind
 
       use erosion_data_struct_defs, only: subregionsurfacestate, cellsurfacestate
-      use grid_mod, only: i1, i2, i3, i4, i5, i6, sin_awa, cos_awa, tan_awa, imax, jmax, ix, jy
+      use grid_mod, only: i1, i2, i3, i4, i5, i6, sin_awa, cos_awa, tan_awa, imax, jmax, lencell_x, lencell_y
       use timer_mod, only: timer, TIMSBEROD, TIMSBQOUT, TIMSTART, TIMSTOP
       use process_mod, only: sbqout
 
@@ -48,7 +48,6 @@ module sberod_mod
       !real :: qcso   ! output discharge (creep/saltation)
       !real :: qsso   ! output discharge (suspension)
       !real :: q10o   ! output discharge (pm10)
-      real :: eg     ! accumulation (total), loss is negative
       real :: egcs   ! accumulation (creep/saltation), loss is negative
       real :: egss   ! accumulation (suspension), loss is negative
       real :: eg10   ! accumulation (pm10), loss is negative
@@ -80,34 +79,34 @@ module sberod_mod
    50 continue
 
 !     set a correction term
-!      cc = (jy - ix)/ix
+!      cc = (lencell_y - lencell_x)/lencell_x
 !*    set field length
-!      lx = ix/(abs(sin_awa)+0.001)
-!      if (lx .gt. max(ix,jy))then
-!          lx = max(ix,jy)
+!      lx = lencell_x/(abs(sin_awa)+0.001)
+!      if (lx .gt. max(lencell_x,lencell_y))then
+!          lx = max(lencell_x,lencell_y)
 !      endif
 
       ! grid length (lx): revised by LH 9-22-00
-      if (abs(tan_awa) .le. (ix/jy)) then
-         la = jy
-         lb = abs(tan_awa*jy)
-         ld = abs(jy/cos_awa)
+      if (abs(tan_awa) .le. (lencell_x/lencell_y)) then
+         la = lencell_y
+         lb = abs(tan_awa*lencell_y)
+         ld = abs(lencell_y/cos_awa)
       else
-         ld = abs(ix/sin_awa)
-         lb = ix
+         ld = abs(lencell_x/sin_awa)
+         lb = lencell_x
          la = sqrt(ld*ld - lb*lb)
       endif
-       lx = ld*(1.0 - 0.292893*la*lb/(ix*jy))
-       ly = ix*jy/lx
+       lx = ld*(1.0 - 0.292893*la*lb/(lencell_x*lencell_y))
+       ly = lencell_x*lencell_y/lx
 
       ! update interior grid cells:
       do i = i1, i2, i3
         do j = i4, i5, i6
 
           ! calculate input discharge
-          cellstate(i,j)%qcsi = (qcsx(i-i3,j)*jy + qcsy(i,j-i6)*ix)/ly
-          cellstate(i,j)%qssi = (qssx(i-i3,j)*jy + qssy(i,j-i6)*ix)/ly
-          cellstate(i,j)%q10i = (q10x(i-i3,j)*jy + q10y(i,j-i6)*ix)/ly
+          cellstate(i,j)%qcsi = (qcsx(i-i3,j)*lencell_y + qcsy(i,j-i6)*lencell_x)/ly
+          cellstate(i,j)%qssi = (qssx(i-i3,j)*lencell_y + qssy(i,j-i6)*lencell_x)/ly
+          cellstate(i,j)%q10i = (q10x(i-i3,j)*lencell_y + q10y(i,j-i6)*lencell_x)/ly
 
           ! calc. output discharge
           icsr = cellstate(i,j)%csr
@@ -148,16 +147,16 @@ module sberod_mod
           cellstate(i,j)%egt2_5 = pm2_5_pm10 * cellstate(i,j)%egt10
 
           !* update discharge scalars
-          aa = abs(-ix*cos_awa)
-          bb = abs(-jy*sin_awa)
+          aa = abs(-lencell_x*cos_awa)
+          bb = abs(-lencell_y*sin_awa)
           dd = abs(aa)+abs(bb)
 
-          qcsx(i,j) = cellstate(i,j)%qcso*ly*bb/(jy*dd)
-          qcsy(i,j) = cellstate(i,j)%qcso*ly*aa/(ix*dd)
-          qssx(i,j) = cellstate(i,j)%qsso*ly*bb/(jy*dd)
-          qssy(i,j) = cellstate(i,j)%qsso*ly*aa/(ix*dd)
-          q10x(i,j) = cellstate(i,j)%q10o*ly*bb/(jy*dd)
-          q10y(i,j) = cellstate(i,j)%q10o*ly*aa/(ix*dd)
+          qcsx(i,j) = cellstate(i,j)%qcso*ly*bb/(lencell_y*dd)
+          qcsy(i,j) = cellstate(i,j)%qcso*ly*aa/(lencell_x*dd)
+          qssx(i,j) = cellstate(i,j)%qsso*ly*bb/(lencell_y*dd)
+          qssy(i,j) = cellstate(i,j)%qsso*ly*aa/(lencell_x*dd)
+          q10x(i,j) = cellstate(i,j)%q10o*ly*bb/(lencell_y*dd)
+          q10y(i,j) = cellstate(i,j)%q10o*ly*aa/(lencell_x*dd)
 
 !          qcsx(i,j) = -qcso*sin_awa
 !          qcsy(i,j)   = -(qcso + (qcso - qcsi)*cc)*cos_awa
@@ -202,7 +201,7 @@ module sberod_mod
 !     to the grid points of the erosion submodel which erosion changes
 !     Calc. soil fraction of 4 dia. from asd, & rr shelter angles
 
-      use erosion_data_struct_defs, only: subregionsurfacestate, cellsurfacestate, awzypt
+      use erosion_data_struct_defs, only: subregionsurfacestate, cellsurfacestate
       use grid_mod, only: imax, jmax
       use p1erode_def, only: SLRR_MIN, SLRR_MAX
       use process_mod, only: sbpm10, sbsfdi

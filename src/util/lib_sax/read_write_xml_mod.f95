@@ -11,7 +11,7 @@ module read_write_xml_mod
   integer, parameter :: MAX_NAME_LEN  = 40
 
   integer :: indent  ! indent level of tag being written
-  integer, parameter :: INDENT_SPACES = 2
+  integer, parameter :: INDENT_SPACES = 1
 
   interface read_param
     module procedure read_param_real_1
@@ -20,6 +20,7 @@ module read_write_xml_mod
     module procedure read_param_int_2
     module procedure read_param_int_3
     module procedure read_param_delim_int_3
+    module procedure read_param_char
   end interface
 
   interface w_begin_tag
@@ -31,7 +32,10 @@ module read_write_xml_mod
   interface w_whole_tag
     module procedure w_whole_tag_a0_real
     module procedure w_whole_tag_a0_integer
+    module procedure w_whole_tag_a0_char
     module procedure w_whole_tag_a1
+    module procedure w_whole_tag_a2_real
+    module procedure w_whole_tag_a2_integer
   end interface
 
   public :: read_param
@@ -135,13 +139,22 @@ contains
 
   end subroutine read_param_delim_int_3
 
+  subroutine read_param_char(tag_name, param_string, val)
+    character(len=*), intent(in) :: tag_name
+    character(len=*), intent(in) :: param_string
+    character(len=*), intent(out) :: val
+
+    val = trim(param_string)
+
+  end subroutine read_param_char
+
   subroutine w_spaces( luo_saeinp )
     integer, intent(in) :: luo_saeinp      ! output unit number
 
     integer :: idx
 
     do idx = 1, indent
-      write(luo_saeinp,'(a1)',advance='no') ' '
+      write(luo_saeinp,'(g0)',advance='no') achar(9)
     end do
   end subroutine w_spaces
 
@@ -207,14 +220,14 @@ contains
   end subroutine w_end_tag
 
   ! write whole tag with zero attributes and real number value
-  subroutine w_whole_tag_a0_real( luo_saeinp, tag_name, value )
+  subroutine w_whole_tag_a0_real( luo_saeinp, tag_name, in_val )
     integer, intent(in) :: luo_saeinp      ! output unit number
     character(len=*), intent(in) :: tag_name
-    real, intent(in) :: value
+    real, intent(in) :: in_val
 
     character(len=MAX_NAME_LEN) :: real_str
 
-    write(real_str, '(g39.15)') value
+    write(real_str, '(g39.15)') in_val
     call w_spaces( luo_saeinp )
     write(luo_saeinp,"(7a)") '<', trim(tag_name), '>', &
                          trim(adjustl(real_str)), &
@@ -222,33 +235,45 @@ contains
   end subroutine w_whole_tag_a0_real
 
   ! write whole tag with zero attributes and integer number value
-  subroutine w_whole_tag_a0_integer( luo_saeinp, tag_name, value )
+  subroutine w_whole_tag_a0_integer( luo_saeinp, tag_name, in_val )
     integer, intent(in) :: luo_saeinp      ! output unit number
     character(len=*), intent(in) :: tag_name
-    integer, intent(in) :: value
+    integer, intent(in) :: in_val
 
     character(len=MAX_NAME_LEN) :: integer_str
 
-    write(integer_str, '(i0)') value
+    write(integer_str, '(i0)') in_val
     call w_spaces( luo_saeinp )
     write(luo_saeinp,"(7a)") '<', trim(tag_name), '>', &
                          trim(adjustl(integer_str)), &
                         '</', trim(tag_name), '>'
   end subroutine w_whole_tag_a0_integer
 
+  ! write whole tag with zero attributes and character string
+  subroutine w_whole_tag_a0_char( luo_saeinp, tag_name, in_val )
+    integer, intent(in) :: luo_saeinp      ! output unit number
+    character(len=*), intent(in) :: tag_name
+    character(len=*), intent(in) :: in_val
+
+    call w_spaces( luo_saeinp )
+    write(luo_saeinp,"(7a)") '<', trim(tag_name), '>', &
+                         trim(adjustl(in_val)), &
+                        '</', trim(tag_name), '>'
+  end subroutine w_whole_tag_a0_char
+
   ! write whole tag with one attribute
-  subroutine w_whole_tag_a1( luo_saeinp, tag_name, attrib1, attr1_value, value )
+  subroutine w_whole_tag_a1( luo_saeinp, tag_name, attrib1, attr1_value, in_val )
     integer, intent(in) :: luo_saeinp      ! output unit number
     character(len=*), intent(in) :: tag_name
     character(len=*), intent(in) :: attrib1
     integer, intent(in) :: attr1_value
-    real, intent(in) :: value
+    real, intent(in) :: in_val
 
     character(len=MAX_NAME_LEN) :: attr1_str
     character(len=MAX_NAME_LEN) :: real_str
 
     write(attr1_str, '(i0)') attr1_value
-    write(real_str, '(g39.15)') value
+    write(real_str, '(g39.15)') in_val
 
     call w_spaces( luo_saeinp )
     write(luo_saeinp,"(11a)") '<', trim(tag_name), &
@@ -256,6 +281,58 @@ contains
                         trim(adjustl(real_str)), &
                         '</', trim(tag_name), '>'
   end subroutine w_whole_tag_a1
+
+  ! write whole tag with two attributes and real value
+  subroutine w_whole_tag_a2_real( luo_saeinp, tag_name, attrib1, attr1_value, attrib2, attr2_value, in_val )
+    integer, intent(in) :: luo_saeinp      ! output unit number
+    character(len=*), intent(in) :: tag_name
+    character(len=*), intent(in) :: attrib1
+    integer, intent(in) :: attr1_value
+    character(len=*), intent(in) :: attrib2
+    integer, intent(in) :: attr2_value
+    real, intent(in) :: in_val
+
+    character(len=MAX_NAME_LEN) :: attr1_str
+    character(len=MAX_NAME_LEN) :: attr2_str
+    character(len=MAX_NAME_LEN) :: real_str
+
+    write(attr1_str, '(i0)') attr1_value
+    write(attr2_str, '(i0)') attr2_value
+    write(real_str, '(g39.15)') in_val
+
+    call w_spaces( luo_saeinp )
+    write(luo_saeinp,"(11a)") '<', trim(tag_name), &
+                        ' ', trim(attrib1), '="', trim(adjustl(attr1_str)), '"', &
+                        ' ', trim(attrib2), '="', trim(adjustl(attr2_str)), '">', &
+                        trim(adjustl(real_str)), &
+                        '</', trim(tag_name), '>'
+  end subroutine w_whole_tag_a2_real
+
+  ! write whole tag with two attributes and integer value
+  subroutine w_whole_tag_a2_integer( luo_saeinp, tag_name, attrib1, attr1_value, attrib2, attr2_value, in_val )
+    integer, intent(in) :: luo_saeinp      ! output unit number
+    character(len=*), intent(in) :: tag_name
+    character(len=*), intent(in) :: attrib1
+    integer, intent(in) :: attr1_value
+    character(len=*), intent(in) :: attrib2
+    integer, intent(in) :: attr2_value
+    integer, intent(in) :: in_val
+
+    character(len=MAX_NAME_LEN) :: attr1_str
+    character(len=MAX_NAME_LEN) :: attr2_str
+    character(len=MAX_NAME_LEN) :: integer_str
+
+    write(attr1_str, '(i0)') attr1_value
+    write(attr2_str, '(i0)') attr2_value
+    write(integer_str, '(i0)') in_val
+
+    call w_spaces( luo_saeinp )
+    write(luo_saeinp,"(16a)") '<', trim(tag_name), &
+                        ' ', trim(attrib1), '="', trim(adjustl(attr1_str)), '"', &
+                        ' ', trim(attrib2), '="', trim(adjustl(attr2_str)), '">', &
+                        trim(adjustl(integer_str)), &
+                        '</', trim(tag_name), '>'
+  end subroutine w_whole_tag_a2_integer
 
 end module read_write_xml_mod
 

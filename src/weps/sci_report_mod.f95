@@ -30,7 +30,7 @@ module sci_report_mod
       use file_io_mod, only: luosci
       use erosion_data_struct_defs, only: cellsurfacestate
       use manage_data_struct_defs, only: manFile
-      use grid_mod, only: imax, jmax, ix, jy
+      use grid_mod, only: imax, jmax, lencell_x, lencell_y
       use sci_soil_texture_mod, only: get_sci_soil_multiplier
 
 !     + + + ARGUMENT DECLARATIONS + + +
@@ -89,7 +89,7 @@ module sci_report_mod
       !       if cell area by x,y index is available, change is simple
       ! initialize area totals
       tarea = 0.0
-      cellarea = (ix*jy)
+      cellarea = (lencell_x*lencell_y)
       avgtexmult = 0.0
       avgallbiomass = 0.0
       avgallerosion = 0.0

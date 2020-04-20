@@ -21,85 +21,93 @@ module sweep_io_xml_defs
   type(tag_def), dimension(:), allocatable :: input_tag
   integer :: max_tags
 
-  integer, parameter, public :: GUI_lat = 1
-  integer, parameter, public :: GUI_lon = 2
-  integer, parameter, public :: SCI_Accounts = 3
-  integer, parameter, public :: SCI_Account = 4
-  integer, parameter, public :: SCI_AerodynamicRoughness = 5
-  integer, parameter, public :: SCI_AggregateDensity = 6
-  integer, parameter, public :: SCI_AggregateGMD = 7
-  integer, parameter, public :: SCI_AggregateGSD = 8
-  integer, parameter, public :: SCI_AggregateMAX = 9
-  integer, parameter, public :: SCI_AggregateMIN = 10
-  integer, parameter, public :: SCI_AggregateStability = 11
-  integer, parameter, public :: SCI_AirDensity = 12
-  integer, parameter, public :: SCI_AnemometerFlag = 13
-  integer, parameter, public :: SCI_AnemometerHeight = 14
-  integer, parameter, public :: SCI_AverageAnnualPrecipitation = 15
-  integer, parameter, public :: SCI_BarPoint = 16
-  integer, parameter, public :: SCI_Barrier = 17
-  integer, parameter, public :: SCI_Barriers = 18
-  integer, parameter, public :: SCI_BiomassFlatCover = 19
-  integer, parameter, public :: SCI_BiomassHeight = 20
-  integer, parameter, public :: SCI_BiomassRsai = 21
-  integer, parameter, public :: SCI_BiomassRlai = 22
+  integer, parameter, public :: SCI_number = 1
+  integer, parameter, public :: SCI_index = 2
 
-  integer, parameter, public :: SCI_brcdInputs = 23
-  integer, parameter, public :: SCI_brcdInput = 24
-  integer, parameter, public :: SCI_brcdRlai = 25
-  integer, parameter, public :: SCI_brcdRsai = 26
-  integer, parameter, public :: SCI_brcdRg = 27
-  integer, parameter, public :: SCI_brcdXrow = 28
-  integer, parameter, public :: SCI_brcdZht = 29
-  integer, parameter, public :: SCI_BulkDensity = 30
-  integer, parameter, public :: SCI_Clay = 31
-  integer, parameter, public :: SCI_coord = 32
-  integer, parameter, public :: SCI_coords = 33
-  integer, parameter, public :: SCI_CrustCover = 34
-  integer, parameter, public :: SCI_CrustDensity = 35
-  integer, parameter, public :: SCI_CrustFracCoverLoose = 36
-  integer, parameter, public :: SCI_CrustMassCoverLoose = 37
-  integer, parameter, public :: SCI_CrustStability = 38
-  integer, parameter, public :: SCI_CrustThick = 39
-  integer, parameter, public :: SCI_DikeSpacing = 40
-  integer, parameter, public :: SCI_height = 41
-  integer, parameter, public :: SCI_index = 42
-  integer, parameter, public :: SCI_LayerThickness = 43
-  integer, parameter, public :: SCI_number = 44
-  integer, parameter, public :: SCI_BarPoints = 45
-  integer, parameter, public :: SCI_porosity = 46
-  integer, parameter, public :: SCI_RandomRoughness = 47
-  integer, parameter, public :: SCI_RegionAngle = 48
-  integer, parameter, public :: SCI_RidgeHeight = 49
-  integer, parameter, public :: SCI_RidgeOrientation = 50
-  integer, parameter, public :: SCI_RidgeSpacing = 51
-  integer, parameter, public :: SCI_RidgeWidth = 52
-  integer, parameter, public :: SCI_RockVolume = 53
-  integer, parameter, public :: SCI_Sand = 54
-  integer, parameter, public :: SCI_Silt = 55
-  integer, parameter, public :: SCI_SnowDepth = 56
-  integer, parameter, public :: SCI_SoilLay = 57
-  integer, parameter, public :: SCI_SoilLays = 58
-  integer, parameter, public :: SCI_Subregion = 59
-  integer, parameter, public :: SCI_Subregions = 60
-  integer, parameter, public :: SCI_SurfaceSubDayWater = 61
-  integer, parameter, public :: SCI_SurfaceSubDayWaters = 62
-  integer, parameter, public :: SCI_VeryFineSand = 63
-  integer, parameter, public :: SCI_WaterContent = 64
-  integer, parameter, public :: SCI_width = 65
-  integer, parameter, public :: SCI_WiltingPoint = 66
-  integer, parameter, public :: SCI_WindDirection = 67
-  integer, parameter, public :: SCI_WindSpeed = 68
-  integer, parameter, public :: SCI_WindSpeeds = 69
-  integer, parameter, public :: SCI_x = 70
-  integer, parameter, public :: SCI_XGrid = 71
-  integer, parameter, public :: SCI_XLength = 72
-  integer, parameter, public :: SCI_XOrigin = 73
-  integer, parameter, public :: SCI_y = 74
-  integer, parameter, public :: SCI_YGrid = 75
-  integer, parameter, public :: SCI_YLength = 76
-  integer, parameter, public :: SCI_YOrigin = 77
-  integer, parameter, public :: sweepData = 78
+  ! erod.sweep tags
+  integer, parameter, public :: SweepData = 3
+  integer, parameter, public :: SCI_XOrigin = 4
+  integer, parameter, public :: SCI_YOrigin = 5
+  integer, parameter, public :: SCI_XLength = 6
+  integer, parameter, public :: SCI_YLength = 7
+  integer, parameter, public :: SCI_RegionAngle = 8
+  integer, parameter, public :: SCI_XGrid = 9
+  integer, parameter, public :: SCI_YGrid = 10
+  integer, parameter, public :: GUI_polygons = 11
+  integer, parameter, public :: SCI_Subregions = 12
+  integer, parameter, public :: SCI_Subregion = 13
+  integer, parameter, public :: SCI_treat = 14
+  integer, parameter, public :: SCI_soilsurf = 15
+  integer, parameter, public :: GUI_soilifc = 16
+  integer, parameter, public :: SCI_Barriers = 17
+  integer, parameter, public :: SCI_Barrier = 18
+  integer, parameter, public :: SCI_BarPoint = 19
+  integer, parameter, public :: SCI_x = 20
+  integer, parameter, public :: SCI_y = 21
+  integer, parameter, public :: SCI_height = 22
+  integer, parameter, public :: SCI_width = 23
+  integer, parameter, public :: SCI_porosity = 24
+
+  integer, parameter, public :: SCI_AirDensity = 25
+  integer, parameter, public :: SCI_WindDirection = 26
+  integer, parameter, public :: SCI_AnemometerHeight = 27
+  integer, parameter, public :: SCI_AerodynamicRoughness = 28
+  integer, parameter, public :: SCI_AnemometerFlag = 29
+  integer, parameter, public :: SCI_AverageAnnualPrecipitation = 30
+
+  integer, parameter, public :: SCI_WindSpeeds = 31
+  integer, parameter, public :: SCI_WindSpeed = 32
+
+  ! soilState.slst tags
+  integer, parameter, public :: SoilState = 33
+  integer, parameter, public :: SCI_SoilLays = 34
+  integer, parameter, public :: SCI_SoilLay = 35
+  integer, parameter, public :: SCI_LayerThickness = 36
+  integer, parameter, public :: SCI_BulkDensity = 37
+  integer, parameter, public :: SCI_Sand = 38
+  integer, parameter, public :: SCI_VeryFineSand = 39
+  integer, parameter, public :: SCI_Silt = 40
+  integer, parameter, public :: SCI_Clay = 41
+  integer, parameter, public :: SCI_RockVolume = 42
+  integer, parameter, public :: SCI_AggregateDensity = 43
+  integer, parameter, public :: SCI_AggregateStability = 44
+  integer, parameter, public :: SCI_AggregateGMD = 45
+  integer, parameter, public :: SCI_AggregateGSD = 46
+  integer, parameter, public :: SCI_AggregateMIN = 47
+  integer, parameter, public :: SCI_AggregateMAX = 48
+  integer, parameter, public :: SCI_WiltingPoint = 49
+  integer, parameter, public :: SCI_WaterContent = 50
+
+  ! treatment.treat tags
+  integer, parameter, public :: TreatmentData = 51
+  integer, parameter, public :: SCI_brcdInputs = 52
+  integer, parameter, public :: SCI_brcdInput = 53
+  integer, parameter, public :: SCI_brcdBname = 54
+  integer, parameter, public :: SCI_brcdRlai = 55
+  integer, parameter, public :: SCI_brcdRsai = 56
+  integer, parameter, public :: SCI_brcdRg = 57
+  integer, parameter, public :: SCI_brcdXrow = 58
+  integer, parameter, public :: SCI_brcdZht = 59
+
+  integer, parameter, public :: SCI_BiomassFlatCover = 60
+  integer, parameter, public :: SCI_CrustThick = 61
+  integer, parameter, public :: SCI_CrustDensity = 62
+  integer, parameter, public :: SCI_CrustStability = 63
+  integer, parameter, public :: SCI_CrustCover = 64
+  integer, parameter, public :: SCI_CrustMassCoverLoose = 65
+  integer, parameter, public :: SCI_CrustFracCoverLoose = 66
+  integer, parameter, public :: SCI_RandomRoughness = 67
+  integer, parameter, public :: SCI_RidgeOrientation = 68
+  integer, parameter, public :: SCI_RidgeHeight = 69
+  integer, parameter, public :: SCI_RidgeSpacing = 70
+  integer, parameter, public :: SCI_RidgeWidth = 71
+  integer, parameter, public :: SCI_DikeSpacing = 72
+  integer, parameter, public :: SCI_SnowDepth = 73
+  integer, parameter, public :: SCI_SurfaceSubDayWaters = 74
+  integer, parameter, public :: SCI_SurfaceSubDayWater = 75
+
+  ! erod.grid tags
+  integer, parameter, public :: SCI_GridFile = 76
 
 contains
 
@@ -110,7 +118,7 @@ contains
 
     indent = 0
 
-    max_tags = 78   ! count of unique tags needed from all dtd files
+    max_tags = 76   ! count of unique tags needed from all dtd files
     allocate( input_tag(max_tags), stat=alloc_stat)
     if( alloc_stat .gt. 0 ) then
       write(*,*) 'ERROR: memory alloc., input_tag'
@@ -122,86 +130,108 @@ contains
       input_tag(idx)%in_tag = .false.
     end do
 
-    ! assign tag names
-    input_tag(1)%name = "GUI_lat"
-    input_tag(2)%name = "GUI_lon"
-    input_tag(3)%name = "SCI_Accounts"
-    input_tag(4)%name = "SCI_Account"
-    input_tag(5)%name = "SCI_AerodynamicRoughness"
-    input_tag(6)%name = "SCI_AggregateDensity"
-    input_tag(7)%name = "SCI_AggregateGMD"
-    input_tag(8)%name = "SCI_AggregateGSD"
-    input_tag(9)%name = "SCI_AggregateMAX"
-    input_tag(10)%name = "SCI_AggregateMIN"
-    input_tag(11)%name = "SCI_AggregateStability"
-    input_tag(12)%name = "SCI_AirDensity"
-    input_tag(13)%name = "SCI_AnemometerFlag"
-    input_tag(14)%name = "SCI_AnemometerHeight"
-    input_tag(15)%name = "SCI_AverageAnnualPrecipitation"
-    input_tag(16)%name = "SCI_BarPoint"
-    input_tag(17)%name = "SCI_Barrier"
-    input_tag(18)%name = "SCI_Barriers"
-    input_tag(19)%name = "SCI_BiomassFlatCover"
-    input_tag(20)%name = "SCI_BiomassHeight"
-    input_tag(21)%name = "SCI_BiomassRsai"
-    input_tag(22)%name = "SCI_BiomassRlai"
+    ! tags used in all files
+    input_tag(1)%name = "SCI_number"
+    input_tag(2)%name = "SCI_index"
 
-    input_tag(23)%name = "SCI_brcdInputs"
-    input_tag(24)%name = "SCI_brcdInput"
-    input_tag(25)%name = "SCI_brcdRlai"
-    input_tag(26)%name = "SCI_brcdRsai"
-    input_tag(27)%name = "SCI_brcdRg"
-    input_tag(28)%name = "SCI_brcdXrow"
-    input_tag(29)%name = "SCI_brcdZht"
-    input_tag(30)%name = "SCI_BulkDensity"
-    input_tag(31)%name = "SCI_Clay"
-    input_tag(32)%name = "SCI_coord"
-    input_tag(33)%name = "SCI_coords"
-    input_tag(34)%name = "SCI_CrustCover"
-    input_tag(35)%name = "SCI_CrustDensity"
-    input_tag(36)%name = "SCI_CrustFracCoverLoose"
-    input_tag(37)%name = "SCI_CrustMassCoverLoose"
-    input_tag(38)%name = "SCI_CrustStability"
-    input_tag(39)%name = "SCI_CrustThick"
-    input_tag(40)%name = "SCI_DikeSpacing"
-    input_tag(41)%name = "SCI_height"
-    input_tag(42)%name = "SCI_index"
-    input_tag(43)%name = "SCI_LayerThickness"
-    input_tag(44)%name = "SCI_number"
-    input_tag(45)%name = "SCI_BarPoints"
-    input_tag(46)%name = "SCI_porosity"
-    input_tag(47)%name = "SCI_RandomRoughness"
-    input_tag(48)%name = "SCI_RegionAngle"
-    input_tag(49)%name = "SCI_RidgeHeight"
-    input_tag(50)%name = "SCI_RidgeOrientation"
-    input_tag(51)%name = "SCI_RidgeSpacing"
-    input_tag(52)%name = "SCI_RidgeWidth"
-    input_tag(53)%name = "SCI_RockVolume"
-    input_tag(54)%name = "SCI_Sand"
-    input_tag(55)%name = "SCI_Silt"
-    input_tag(56)%name = "SCI_SnowDepth"
-    input_tag(57)%name = "SCI_SoilLay"
-    input_tag(58)%name = "SCI_SoilLays"
-    input_tag(59)%name = "SCI_Subregion"
-    input_tag(60)%name = "SCI_Subregions"
-    input_tag(61)%name = "SCI_SurfaceSubDayWater"
-    input_tag(62)%name = "SCI_SurfaceSubDayWaters"
-    input_tag(63)%name = "SCI_VeryFineSand"
-    input_tag(64)%name = "SCI_WaterContent"
-    input_tag(65)%name = "SCI_width"
-    input_tag(66)%name = "SCI_WiltingPoint"
-    input_tag(67)%name = "SCI_WindDirection"
-    input_tag(68)%name = "SCI_WindSpeed"
-    input_tag(69)%name = "SCI_WindSpeeds"
-    input_tag(70)%name = "SCI_x"
-    input_tag(71)%name = "SCI_XGrid"
-    input_tag(72)%name = "SCI_XLength"
-    input_tag(73)%name = "SCI_XOrigin"
-    input_tag(74)%name = "SCI_y"
-    input_tag(75)%name = "SCI_YGrid"
-    input_tag(76)%name = "SCI_YLength"
-    input_tag(77)%name = "SCI_YOrigin"
-    input_tag(78)%name = "sweepData"
+    ! erod.sweep tags
+    input_tag(3)%name = "sweepData"
+    input_tag(4)%name = "SCI_XOrigin"
+    input_tag(5)%name = "SCI_YOrigin"
+    input_tag(6)%name = "SCI_XLength"
+    input_tag(7)%name = "SCI_YLength"
+    input_tag(8)%name = "SCI_RegionAngle"
+    input_tag(9)%name = "SCI_XGrid"
+    input_tag(10)%name = "SCI_YGrid"
+    input_tag(11)%name = "GUI_polygons"
+    input_tag(12)%name = "SCI_Subregions"
+    input_tag(13)%name = "SCI_Subregion"
+    input_tag(14)%name = "SCI_treat"
+    input_tag(15)%name = "SCI_soilsurf"
+    input_tag(16)%name = "GUI_soilifc"
+    input_tag(17)%name = "SCI_Barriers"
+    input_tag(18)%name = "SCI_Barrier"
+    input_tag(19)%name = "SCI_BarPoint"
+    input_tag(20)%name = "SCI_x"
+    input_tag(21)%name = "SCI_y"
+    input_tag(22)%name = "SCI_height"
+    input_tag(23)%name = "SCI_width"
+    input_tag(24)%name = "SCI_porosity"
+
+    input_tag(25)%name = "SCI_AirDensity"
+    input_tag(26)%name = "SCI_WindDirection"
+    input_tag(27)%name = "SCI_AnemometerHeight"
+    input_tag(28)%name = "SCI_AerodynamicRoughness"
+    input_tag(29)%name = "SCI_AnemometerFlag"
+    input_tag(30)%name = "SCI_AverageAnnualPrecipitation"
+
+    input_tag(31)%name = "SCI_WindSpeeds"
+    input_tag(32)%name = "SCI_WindSpeed"
+
+    ! soilState.slst tags
+    input_tag(33)%name = "SoilState"
+    input_tag(34)%name = "SCI_SoilLays"
+    input_tag(35)%name = "SCI_SoilLay"
+    input_tag(36)%name = "SCI_LayerThickness"
+    input_tag(37)%name = "SCI_BulkDensity"
+    input_tag(38)%name = "SCI_Sand"
+    input_tag(39)%name = "SCI_VeryFineSand"
+    input_tag(40)%name = "SCI_Silt"
+    input_tag(41)%name = "SCI_Clay"
+    input_tag(42)%name = "SCI_RockVolume"
+    input_tag(43)%name = "SCI_AggregateDensity"
+    input_tag(44)%name = "SCI_AggregateStability"
+    input_tag(45)%name = "SCI_AggregateGMD"
+    input_tag(46)%name = "SCI_AggregateGSD"
+    input_tag(47)%name = "SCI_AggregateMIN"
+    input_tag(48)%name = "SCI_AggregateMAX"
+    input_tag(49)%name = "SCI_WiltingPoint"
+    input_tag(50)%name = "SCI_WaterContent"
+
+    ! treatment.treat tags
+    input_tag(51)%name = "TreatmentData"
+    input_tag(52)%name = "SCI_brcdInputs"
+    input_tag(53)%name = "SCI_brcdInput"
+    input_tag(54)%name = "SCI_brcdBname"
+    input_tag(55)%name = "SCI_brcdRlai"
+    input_tag(56)%name = "SCI_brcdRsai"
+    input_tag(57)%name = "SCI_brcdRg"
+    input_tag(58)%name = "SCI_brcdXrow"
+    input_tag(59)%name = "SCI_brcdZht"
+
+    input_tag(60)%name = "SCI_BiomassFlatCover"
+    input_tag(61)%name = "SCI_CrustThick"
+    input_tag(62)%name = "SCI_CrustDensity"
+    input_tag(63)%name = "SCI_CrustStability"
+    input_tag(64)%name = "SCI_CrustCover"
+    input_tag(65)%name = "SCI_CrustMassCoverLoose"
+    input_tag(66)%name = "SCI_CrustFracCoverLoose"
+    input_tag(67)%name = "SCI_RandomRoughness"
+    input_tag(68)%name = "SCI_RidgeOrientation"
+    input_tag(69)%name = "SCI_RidgeHeight"
+    input_tag(70)%name = "SCI_RidgeSpacing"
+    input_tag(71)%name = "SCI_RidgeWidth"
+    input_tag(72)%name = "SCI_DikeSpacing"
+    input_tag(73)%name = "SCI_SnowDepth"
+    input_tag(74)%name = "SCI_SurfaceSubDayWaters"
+    input_tag(75)%name = "SCI_SurfaceSubDayWater"
+
+    ! erod.grid tags
+    input_tag(76)%name = "SCI_GridFile"
+
+    ! temporarily retained 
+    !input_tag(76)%name = "SCI_Accounts"
+    !input_tag(77)%name = "SCI_Account"
+
+    ! tags no longer needed
+    !input_tag(32)%name = "SCI_coord"
+    !input_tag(33)%name = "SCI_coords"
+    !input_tag(45)%name = "SCI_BarPoints"
+    !input_tag(1)%name = "GUI_lat"
+    !input_tag(2)%name = "GUI_lon"
+    !input_tag(20)%name = "SCI_BiomassHeight"
+    !input_tag(21)%name = "SCI_BiomassRsai"
+    !input_tag(22)%name = "SCI_BiomassRlai"
 
     ! See above:
     ! create integer variable names for tags and assign index number.

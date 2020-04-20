@@ -23,11 +23,11 @@ module erosion_mod
                                           ntstep, erod_interval, anemht, awzzo, &
                                           wzoflg, awadir, awudmx, subday, am0efl
       use erosion_data_struct_defs, only: initflag
-      use sae_in_out_mod, only: mksaeinp, mksaeout, saeinp, daily_erodout, sb1out, sb2out, sbemit
+      use sae_in_out_mod, only: mksaeinp, mksaeout, daily_erodout, sb1out, sb2out, sbemit, saeinp, sweepfile, polyfile
       use p1unconv_mod, only: SEC_PER_DAY, degtorad
       use timer_mod, only: timer, TIMEROS, TIMSBEROD, TIMSBWIND, TIMSTART, TIMSTOP
       use barriers_mod, only: sbbr
-      use grid_mod, only: sbdirini
+      use grid_mod, only: sbdirini, gridfile
       use wind_mod, only: sbzo, sbwus, biodrag
       use sberod_mod, only: sberod, sbinit, sbwind
       use process_mod, only: sbwust, sbsfdi
@@ -45,7 +45,6 @@ module erosion_mod
 
 !     +++ LOCAL VARIABLES +++
       logical :: first_emit  ! pass to sbemit on first entry to zero out daily accumulators
-      integer :: luo_saeinp  ! used here to tell saeinp to make it's own file
       integer :: idx      ! time step loop index    
       integer :: ndx      ! sub_ntstep loop index
       integer :: wustfl   ! flag to update threshold friction velocity
@@ -275,8 +274,10 @@ module erosion_mod
       ! code to output standalone erosion input file on specified date
       ! check for day of simulation for which you want a file created
       if( mksaeinp%simday .gt. 0 ) then
-          luo_saeinp = -1      !used here to tell saeinp to make it's own file
-          call saeinp( luo_saeinp, subrsurf )    ! output daily erosion stuff
+          sweepfile = 'erod.sweep'
+          gridfile = '../../erod.grid'
+          polyfile = '../../erod.poly'
+          call saeinp( subrsurf )    ! output daily erosion stuff
       end if
 
       if (btest(am0efl,2)) then
@@ -300,7 +301,7 @@ module erosion_mod
       prev_dir = subday(1)%awdir+ 1.0   !make different to force calculation
       ! NOTE: this would be moved into subday loop if daily direction array is populated and surface updating can handle changing directions
       if( subday(1)%awdir .ne. prev_dir ) then
-         call sbdirini( subday(1)%awdir, cellstate )
+         call sbdirini( subday(1)%awdir )
          ! determine barrier influence
          call sbbr( cellstate )
          prev_dir = subday(1)%awdir
@@ -523,7 +524,7 @@ module erosion_mod
 
     end subroutine erosion
 
-    subroutine erodinit( noerod, cellstate )
+    subroutine erodinit( noerod, subrsurf )
 
 !     +++ PURPOSE +++
 !
@@ -535,13 +536,13 @@ module erosion_mod
 !        when erosion is not being called.
 
 !     + + + Modules Used + + +
-      use grid_mod, only: sbigrd, init_regions_grid
-      use subregions_mod
+      use grid_mod, only: sbigrd
       use erosion_data_struct_defs, only: threshold, cellsurfacestate, am0eif
+      use erosion_data_struct_defs, only: subregionsurfacestate
 
 !     +++ ARGUMENT DECLARATIONS +++
       type(threshold), dimension(:), intent(inout) :: noerod                 ! report values to show which factors prevented erosion
-      type(cellsurfacestate), dimension(0:,0:), intent(inout) :: cellstate   ! initialized grid cell state values
+      type(subregionsurfacestate), dimension(0:), intent(inout) :: subrsurf  ! subregion surface conditions (erosion specific set)
 
 !     +++ LOCAL VARIABLES +++
       integer :: sr    ! subregion do loop index
@@ -549,14 +550,13 @@ module erosion_mod
 
 !     +++ END SPECIFICATIONS +++
 
-      nsubr = size(subr_poly)
+      nsubr = size(noerod)
 
       ! Grid is created at least once.
       if (am0eif .eqv. .true.) then
-         call init_regions_grid( cellstate )
-
          ! set grid cell output arrays to zero
-         call sbigrd( cellstate )
+         ! set subrsurf cell counts for each subregion (total in 0)
+         call sbigrd( subrsurf )
 
          ! check for hills - sbhill not implemented
          !if (nhill .gt. 0) then

@@ -14,6 +14,24 @@ module weps_main_mod
     character*256 :: farmid  ! Farm identifier
     character*256 :: tractid ! Tract identifier
     character*256 :: fieldid ! Field identifier
+    character*256 :: siteid  ! Site identifier
+    character*256 :: runtype ! cycle vs date
+    character*256 :: cliflag ! interface cligen flag
+    character*256 :: climethod ! method used in generation
+    character*256 :: clilatitiude ! cligen latitude
+    character*256 :: clilongitude ! cligen longitude
+    character*256 :: clistateid ! cligen state id
+    character*256 :: clistationnum ! cligen station number
+    character*256 :: clistationname ! cligen station name
+    character*256 :: clielevation ! cligen elevation
+    character*256 :: winflag ! interface windgen flag
+    character*256 :: winmethod ! method used in generation
+    character*256 :: winlatitude ! windgen latitude
+    character*256 :: winlongitude ! windgen longitude
+    character*256 :: winstationnum ! windgen station number
+    character*256 :: wincountry ! windgen country
+    character*256 :: winstate ! windgen state
+    character*256 :: winstationname ! windgen station name
 
     integer :: run_rot_cycles ! number of rotation cycles
 
@@ -94,6 +112,7 @@ module weps_main_mod
       use datetime_mod, only: julday
       use f2kcli, only: COMMAND_ARGUMENT_COUNT, GET_COMMAND_ARGUMENT
       use climate_input_mod, only: wind_max_value, wind_max_flag
+      use grid_mod, only: xgdpt, ygdpt
 
 !     + + + LOCAL VARIABLES + + +
       integer       ln
@@ -175,6 +194,12 @@ module weps_main_mod
       calc_confidence = 0 !default is set to not calculate confidence intervals.
       frac_frst_mass_lost = 0.0 !default is set to 0.0 fraction loss of young leaf freeze damaged mass
       transpiration_depth = 0 !default is set to not set transpiration depth to more than root depth.
+
+      make_runxml = 0     ! default is set to not create weps.run.xml/erod.grid from weps.run file
+
+      xgdpt = 0           ! default xgdpt = 0 uses Hagen's grid spacings
+      ygdpt = 0           ! default ygdpt = 0 uses Hagen's grid spacings
+                          ! both must be set to use alternate spacing
 
 ! ----Determine Number of Command Line Arguments.
 
@@ -325,6 +350,11 @@ module weps_main_mod
      &'    Specify -l50 to inc. 50 percent for each layer (no decimals)'
 
               write(*,*)                                                &
+     &'-n  Write new format weps.run.xml and erod.grid files'
+              write(*,*) '    0 = Do not create weps.run.xml/erod.grid from weps.run'
+              write(*,*) '    1 = Create weps.run.xml/erod.grid from weps.run'
+
+              write(*,*)                                                &
      &'-O  Generate stand alone erosion input file on simulation day'
               write(*,*)                                                &
      &'    Specify -O2932 to output file on simulation day 2932'
@@ -417,9 +447,19 @@ module weps_main_mod
               write(*,*) '    2 = Green-Ampt infil., WEPP runoff'
 
               write(*,*)                                                &
+     &'-x  Specify number grid cells in x direction'
+              write(*,*)                                                &
+     &'    Specify -x75 for 75 grid cells in the x direction'
+
+              write(*,*)                                                &
      &'-X  Specify maximum wind speed cap (m/s)'
               write(*,*)                                                &
      &'    Specify -X25.0 to limit input wind speeds to a max of 25 m/s'
+
+              write(*,*)                                                &
+     &'-y  Specify number grid cells in y direction'
+              write(*,*)                                                &
+     &'    Specify -y75 for 75 grid cells in the y direction'
 
               write(*,*)                                                &
      &'-Y  Optional functional Yield/residue ratio'
@@ -437,23 +477,23 @@ module weps_main_mod
      &               ' -C',i1,' -E',i1,' -e',i1,                        &
      &               ' -f',f4.2,                                        &
      &               ' -g',i1,' -G',f4.2,' -H',i1,' -i',i1,' -I',i1,    &
-     &               ' -L',i1,' -l',i2,' -O(no file)',' -o(no file)',   &
+     &               ' -L',i1,' -l',i2,' -n',i1,' -O(no file)',' -o(no file)', &
      &               ' -p',i1,' -P',a,                                  &
      &               ' -r',i1,' -R',i1,' -S',i1,                        &
      &               ' -s',i1,' -T', i1,' -t', i1,                      &
-     &               ' -u', i1,' -U',i1,' -w',i1,' -W',i1,              &
-     &               ' -X',f4.1,' -Y',i1' -Z',i1)
+     &               ' -u', i1,' -U',i1,' -w',i1,' -W',i1,' -x',i1,     &
+     &               ' -X',f4.1,' -y',i1,' -Y',i1' -Z',i1)
 
               write(0,2600) soil_cond,                                  &
      &         calibrate_crops, run_erosion, saeinp_all,                &
      &         frac_frst_mass_lost, growth_stress,                      &
      &          water_stress_max, hb_freq, report_info, init_cycle,     &
-     &         layer_scale, layer_infla,                                &
+     &         layer_scale, layer_infla, make_runxml,                   &
      &         puddle_warm, trim(rootp),                                &
      &         winter_ann_root, report_debug, wc_type,                  &
      &         ifc_format, transpiration_depth, calc_confidence,        &
-     &         resurf_roots, upgm_growth, layer_weighting, wepp_hydro,  &
-     &         wind_max_value, cook_yield, calibrate_rotcycles
+     &         resurf_roots, upgm_growth, layer_weighting, wepp_hydro, xgdpt, &
+     &         wind_max_value, ygdpt, cook_yield, calibrate_rotcycles
 
               call exit(1)
 
@@ -575,6 +615,16 @@ module weps_main_mod
      &           'Ignoring invalid layer_infla option: ', trim(argv)
             else
               layer_infla = cmd_iarg
+            endif
+
+          ! specify report debug options
+          else if(argv(2:2) .eq. 'n') then
+            read(argv(3:),*) cmd_iarg
+            if( cmd_iarg .gt. 1 ) then
+              write(*,*)                                                &
+     &           'Ignoring invalid make_runxml option: ', trim(argv)
+            else
+              make_runxml = cmd_iarg
             endif
 
           !generate stand alone erosion input file on simulation day
@@ -713,6 +763,16 @@ module weps_main_mod
               wepp_hydro = cmd_iarg
             endif
 
+          !specify number of grid cells in the y direction
+          else if(argv(2:2) .eq. 'x') then
+            read(argv(3:),*) cmd_iarg
+            if( cmd_iarg .lt. 0 ) then
+              write(*,*)                                                &
+     &           'Ignoring invalid x_grid option: ', trim(argv)
+            else
+              xgdpt = cmd_iarg
+            endif
+
           !specify max wind speed value and set flag to use it
           else if(argv(2:2) .eq. 'X') then
             read(argv(3:),*) cmd_rarg
@@ -722,6 +782,16 @@ module weps_main_mod
             else
               wind_max_value = cmd_rarg
               wind_max_flag = 1         !set max wind value cap flag
+            endif
+
+          !specify number of grid cells in the y direction
+          else if(argv(2:2) .eq. 'y') then
+            read(argv(3:),*) cmd_iarg
+            if( cmd_iarg .lt. 0 ) then
+              write(*,*)                                                &
+     &           'Ignoring invalid y_grid option: ', trim(argv)
+            else
+              ygdpt = cmd_iarg
             endif
 
           !specify functional Yield/Residue ratio flag
@@ -758,6 +828,14 @@ module weps_main_mod
           write (0,*) "Error: Yield calibration run mode requires at lea&
      &st one initialization cycle (use '-I1' WEPS cmdline option)"
           call exit(1)
+      endif
+
+      if (((xgdpt > 0) .and. (ygdpt == 0)) .or.                         &
+     &    ((xgdpt == 0) .and. (ygdpt > 0))) then
+        write(0,*) 'xgdpt = ', xgdpt, 'ygdpt = ', ygdpt
+        write(0,*)                                                      &
+     &         'Error: Only one grid dimension specified on commandline'
+        call exit(131)
       endif
 
       if (report_info >= 1) then

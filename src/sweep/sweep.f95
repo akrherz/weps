@@ -11,17 +11,17 @@
 !**********************************************************************
       program sweep
 
-      use sweep_io_mod
+      use sweep_io_mod, only: erodin, erodout
       use datetime_mod, only: update_system_time, get_systime_string, julday
       use file_io_mod, only: fopenk, luo_erod, luo_egrd, luo_emit, luo_sgrd
       use f2kcli, only: COMMAND_ARGUMENT_COUNT, GET_COMMAND_ARGUMENT
+      use grid_mod, only: sbgrid, xgdpt, ygdpt, gridfile
       use erosion_mod, only: erosion, erodinit
       use erosion_data_struct_defs, only: in_sweep, subregionsurfacestate, threshold, cellsurfacestate, erod_interval, &
-                                          ntstep, am0eif, am0efl, subrsurf
+                                          ntstep, am0eif, am0efl, subrsurf, cellstate
       use barriers_mod, only: minht_barriers
       use wind_mod, only: anemometer_init
-      use grid_mod, only: sbgrid, imax, jmax, ix, jy, xgdpt, ygdpt, amxsim
-      use sae_in_out_mod, only: mksaeinp, mksaeout, in_weps
+      use sae_in_out_mod, only: mksaeinp, mksaeout, in_weps, saeinp, infilebase, sweepfile, polyfile
       use p1unconv_mod, only: SEC_PER_DAY
 
 !     +++  PURPOSE +++
@@ -43,12 +43,10 @@
       character(len=21) :: rundatetime
       integer :: nsubr       ! number of subregions (found from size of subrsurf)
       type(threshold), dimension(:), allocatable :: noerod                 ! report values to show which factors prevented erosion
-      type(cellsurfacestate), dimension(:,:), allocatable :: cellstate     ! grid cell state values (allocate in erodinit)
 
-      integer :: alloc_stat, sum_stat
-
-      character*1024 exe_filepath
-      character*1024 input_filepath
+      integer :: alloc_stat
+      character*1024 exe_pathfile    ! comandline full path and exe file name
+      character*1024 input_pathfile  ! commandline argument with full path and file name
       integer i_unit
       integer o_unit
 
@@ -56,7 +54,7 @@
       integer        i
       integer        numarg
       integer        ll, ss
-      logical        opnd
+      logical        input_to_new_format
  
       logical        have_ifile
       integer        indx, rndx
@@ -69,25 +67,21 @@
       character*1024 fpath_bname
       character*1024 input_filename
 
-      integer        o_einp_unit   !Unit number for generated input file
       integer        o_egrd_unit   !Unit number for grid summary erosion
       integer        o_sgrd_unit   !Unit number for grid subdaily erosion
       integer        o_erod_unit   !Unit number for total erosion
       integer        o_emit_unit   !Unit number for detail grid erosion
 
-      character*80   o_einp_ext    !generated input file extension
       character*80   o_egrd_ext    !grid summary erosion file extension
       character*80   o_sgrd_ext    !grid subdaily erosion file extension
       character*80   o_erod_ext    !total erosion summary file extension
       character*80   o_emit_ext    !detail grid erosion file extension
 
-      character*1024 o_einp_file   !generated input file name
       character*1024 o_egrd_file   !grid summary erosion file name
       character*1024 o_sgrd_file   !grid subdaily erosion file name
       character*1024 o_erod_file   !total erosion summary file name
       character*1024 o_emit_file   !detail grid erosion file name
 
-      character*1024 o_einp_fpath  !generated input file/path name
       character*1024 o_egrd_fpath  !grid summary erosion file/path name
       character*1024 o_sgrd_fpath  !grid subdaily erosion file/path name
       character*1024 o_erod_fpath  !total erosion summary file/path name
@@ -103,6 +97,9 @@
       ! indicates running stand alone erosion
       in_sweep = .true.
 
+      ! do not write updated input files (default)
+      input_to_new_format = .false.
+
       ! Determine date of Run
       call update_system_time
 
@@ -114,15 +111,13 @@
       ! initialize anemometer defaults
       call anemometer_init
 
-      mksaeinp%simday = 0 ! 0 means saeinp will not be used to create file.
+      mksaeinp%simday = 0 ! 0 means saeinp will use path to sweep input file to convert from old to new format
+      mksaeinp%jday = julday( 1, 1, 1 )
 
       ! set a calendar day. Erosion output report this day so set to match previous verions of SWEEP
       mksaeout%jday = julday( 1, 1, 1 )
 
       min_erosion_awu = 5.0  !default minimum erosive wind speed
-
-      xgdpt = 0         !default grid spacing values if not specified
-      ygdpt = 0         !on the commandline
 
       erod_interval = 0 !do not overide default surface updating interval
 
@@ -139,9 +134,7 @@
 !     (stdin = 5, stdout = 6)
       i_unit = 5         !If -i option is specified, use unit number 50
       o_unit = 6         !stdout
-      o_einp_unit = -1   ! fails test for opened file in debug mode
 
-      o_einp_ext = ".einp"   !filename extension for echo'd input data file
       o_egrd_ext = ".egrd"   !filename extension for grid erosion summary output
       o_sgrd_ext = ".sgrd"   !filename extension for grid erosion subdaily output
       o_erod_ext = ".erod"   !filename extension for erosion summary output
@@ -157,7 +150,7 @@
 
       call GET_COMMAND_ARGUMENT(0,argv,ll,ss) !get name of executing program
       !write(0,*) 'argv ',i,' is: ', trim(argv) ! debug print of arg list
-      exe_filepath = trim(argv)
+      exe_pathfile = trim(argv)
 
       if (numarg .gt. 0) then
         do 09 i = 1, numarg
@@ -271,24 +264,25 @@
                    write(0,*) 'missing -i filename option'
                    call exit(61)
              else
-                input_filepath = trim(argv(3:))
-                !write(0,*) 'input_filepath', trim(input_filepath)
+                input_pathfile = trim(argv(3:))
+                !write(0,*) 'input_pathfile', trim(input_pathfile)
 
                 ! checks and exits if file does not exist
-                call fopenk (i_unit, input_filepath, 'old')
+                call fopenk (i_unit, input_pathfile, 'old')
                 have_ifile = .true.
 
                !extract input file basename from it's path
-               indx = index(trim(input_filepath),'/',back=.true.)
+               indx = index(trim(input_pathfile),'/',back=.true.)
                !cut extension from input filename (if it exists)
-               rndx = index(trim(input_filepath),'.',back=.true.)
+               rndx = index(trim(input_pathfile),'.',back=.true.)
                if (rndx == 0) then   !No input filename extension found
-                  rndx = len_trim(input_filepath) + 1
+                  rndx = len_trim(input_pathfile) + 1
                endif
                !input file and filepath basenames
-               file_bname = trim(input_filepath(indx+1:rndx-1))
-               fpath_bname = trim(input_filepath(:rndx-1))
-               input_filename = trim(input_filepath(indx+1:))
+               file_bname = trim(input_pathfile(indx+1:rndx-1))
+               mksaeinp%fullpath = trim(input_pathfile(:indx))
+               fpath_bname = trim(input_pathfile(:rndx-1))
+               input_filename = trim(input_pathfile(indx+1:))
              endif
 			 
            else if (argv(2:5) == 'Einp') then
@@ -297,11 +291,9 @@
                 write(0,*) 'Must specify input file before -Einp option'
                 call exit(71)
              endif
-             !create new grid erosion summary output filename from input filename
-             o_einp_file = trim(file_bname) //  trim(o_einp_ext)
-             o_einp_fpath = trim(fpath_bname) // trim(o_einp_ext)
 
-             call fopenk(o_einp_unit, o_einp_fpath, 'unknown')
+             ! Using old input file, write out new format input files
+             input_to_new_format = .true.
 
            else if (argv(2:5) == 'Erod') then
              !write(0,*) '"-Erod" option specified'
@@ -395,24 +387,17 @@
         call exit(131)
       endif
 
-      if( o_einp_unit .gt. 0 ) then
-         inquire(unit=o_einp_unit, opened=opnd)
-      else
-         opnd = .false.
+      ! reading input file(s)
+      if( erodin(input_pathfile, i_unit, force_debug_flag, hagen_plot_flag) ) then
+        ! xml input file, cancel old to xml conversion
+        input_to_new_format = .false.
       end if
-      if (opnd .eqv. .true.) then
-         !write(0,*) 'calling erodin with output unit no: ', o_einp_unit
-         call erodin(input_filepath, i_unit, o_einp_unit, force_debug_flag, hagen_plot_flag) !Echo input to a file
-      else
-         !write(0,*) 'calling erodin with output unit no: ', o_unit
-         call erodin(input_filepath, i_unit, o_unit, force_debug_flag, hagen_plot_flag)  !Doesn't echo input to file
-      endif
-
+ 
       ! Set based on allocated size of subrsurf (accounting for 0 based index)
       nsubr = size(subrsurf) - 1
 
-! Check for invalid commandline input values which are dependent
-! upon erodin input values.
+      ! Check for invalid commandline input values which are dependent
+      ! upon erodin input values.
 
       if (erod_interval /= 0) then
           i = SEC_PER_DAY
@@ -425,32 +410,35 @@
 
       write(0,*) 'am0efl is = ', am0efl
 
-!     Initialize erosion code, create grid, etc:
-!     (must come after sim field size, & no. subr specified)
+      ! Initialize erosion code, create grid, etc:
+      ! (must come after sim field size, & no. subr specified)
 
-      ! Grid is created at least once.
+      ! Grid is initialized at least once.
       if (am0eif .eqv. .true.) then
-         ! check to see if grid dimensions specified via cmdline args
-         if ((xgdpt > 0) .and. (ygdpt > 0)) then
-           imax = xgdpt + 1
-           jmax = ygdpt + 1
-           ix = (amxsim(2)%x - amxsim(1)%x) / xgdpt
-           jy = (amxsim(2)%y - amxsim(1)%y) / ygdpt
-         else          !use Hagen's grid dimensioning as the default
+         if( .not. allocated(cellstate) ) then
+           ! did not read grid file, so create cellstate array
            call sbgrid( minht_barriers() )
-         endif
-
-         ! allocate cellstate array to cover grid
-         sum_stat = 0
-         allocate(noerod(nsubr), stat=alloc_stat)
-         sum_stat = sum_stat + alloc_stat
-         allocate(cellstate(0:imax,0:jmax), stat=alloc_stat)
-         sum_stat = sum_stat + alloc_stat
-         if( sum_stat .gt. 0 ) then
-            Write(*,*) 'ERROR: unable to allocate enough memory for weps main data arrays'
          end if
 
-         call erodinit( noerod, cellstate )
+         ! allocate cellstate array to cover grid
+         allocate(noerod(nsubr), stat=alloc_stat)
+         if( alloc_stat .gt. 0 ) then
+            Write(*,*) 'ERROR: unable to allocate enough memory for noerod data array'
+         end if
+
+         call erodinit( noerod, subrsurf )
+
+         ! read in old single subregion file. Write updated input files
+         if( input_to_new_format ) then
+           infilebase = trim(file_bname)
+           sweepfile = 'erod.sweep' 
+           gridfile = 'erod.grid'
+           subrsurf(1)%tinfil = trim(file_bname)
+           subrsurf(1)%sinfil = trim(file_bname)
+           polyfile = 'erod.poly'
+           call saeinp( subrsurf )
+         end if
+
       endif
 
 !     write (*,*) 'call to erosion '
@@ -466,7 +454,6 @@
       if (o_unit .ne. 6) then
         close(o_unit)
       endif
-      !close(o_einp_unit)
       close(o_erod_unit)
       !close(o_egrd_unit)
       !close(o_sgrd_unit)

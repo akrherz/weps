@@ -36,7 +36,8 @@
       use weps_cmdline_parms, only: calibrate_crops, calibrate_rotcycles, &
                                    init_cycle, calc_confidence, hb_freq, &
                                    report_info, report_debug, run_erosion,&
-                                   saeinp_all, saeinp_daysim, saeinp_jday, wepp_hydro
+                                   saeinp_all, saeinp_daysim, saeinp_jday, wepp_hydro, &
+                                   make_runxml
       use weps_main_mod, only: old_run_file, run_rot_cycles, id, im, iy, ld, lm, ly, rootp, &
                                daysim, ijday, ljday, maxper, longest_mgt_rotation, ncycles, &
                                init_loop, calib_loop, report_loop, &
@@ -56,8 +57,6 @@
       use report_init_mod
       use report_print_mod
       use print_ui1_output_mod
-      use Polygons_Mod, only: destroy_polygon
-      use subregions_mod, only: subr_poly, acct_poly
       use barriers_mod, only: barrier, barseas, minht_barriers, destroy_barrier, set_barrier_season
       use file_io_mod, only: luo_egrd, luo_emit, luo_sgrd, luogui1, luomandate, makedir, fopenk, luolog
       use input_soil_mod, only: input_ifc, soil_in
@@ -73,11 +72,11 @@
       use manage_xml_mod, only: setup_man_xml
       use erosion_mod, only: erosion, erodinit
       use erosion_data_struct_defs, only: in_sweep, create_subregion_alloc, destroy_subregion_alloc, &
-                                          subregionsurfacestate, threshold, cellsurfacestate, &
+                                          threshold, cellsurfacestate, cellstate, &
                                           erod_interval, awudmx, am0eif, am0efl, subrsurf
       use wind_mod, only: anemometer_init
       use precision_mod, only: precision_init
-      use grid_mod, only: sbgrid, sbigrd, imax, jmax, ix, jy, xgdpt, ygdpt, amxsim
+      use grid_mod, only: sbgrid, sbigrd, write_grid, gridfile
       use sae_in_out_mod, only: mksaeinp, mksaeout, in_weps
       use stir_soil_texture_mod, only: create_stir_soil_multiplier, destroy_stir_soil_multiplier
       use sci_soil_texture_mod, only: create_sci_soil_multiplier, destroy_sci_soil_multiplier
@@ -94,16 +93,17 @@
       use wepp_param_mod
       use climate_input_mod, only: cliginit, getcli, windinit, getwin
       use input_run_mod, only: input
+      use input_run_xml_mod, only: write_run_xml
       use lcm_mod, only: lcm_n
       use asd_mod, only: asdini
       use decomp_out_mod, only: decopen
       use water_erosion_mod, only: water_erosion, weppsum
       use confidence_interval_mod, only: confidence_interval
 
-! build and release info, fpp created by cook
+      ! build and release info, fpp created by cook
       include 'build.inc'
 
-!     + + + LOCAL VARIABLES + + +
+      ! + + + LOCAL VARIABLES + + +
       character(len=21) :: rundatetime
 
       integer, dimension(:), allocatable :: nperiods       ! number of reporting periods being accumulated
@@ -132,7 +132,7 @@
       real :: ci               ! confidence interval value (decimal)
 
       integer :: SURF_UPD_FLG              ! erosion surface updating (0 - disabled, 1 - enabled)
-      integer :: nsubr                     ! total number of subregions (read in inprun, derived from allocated subr_poly)
+      integer :: nsubr                     ! total number of subregions (read in inprun, derived from allocated soil_in)
 
       type(soil_def), dimension(:), allocatable :: soil             ! structure with soil state and parameters as updated during simulation
       type(plants_struct), dimension(:), allocatable :: plants      ! array of pointers to structure for all biomaterial
@@ -144,7 +144,6 @@
       type(mandate_array), dimension(:), allocatable :: mandatbs    ! structure with management dates, operation names and crops
 
       type(threshold), dimension(:), allocatable :: noerod                 ! report values to show which factors prevented erosion
-      type(cellsurfacestate), dimension(:,:), allocatable :: cellstate     ! grid cell state values (allocate in erodinit)
 
       type(reporting_report), dimension(:), target, allocatable :: rep_report
       type(reporting_update), dimension(:), target, allocatable :: rep_update
@@ -165,7 +164,6 @@
 !     bpools   -  prints many biomass pool components (for debugging)
 
 !     + + + DATA INITIALIZATIONS + + +
-
       data yrsim /0/
       data lcaljday /0/
 
@@ -212,9 +210,6 @@
 
       SURF_UPD_FLG = 1  ! enable surface updating by erosion submodel
 
-      xgdpt = 0         !use default grid spacing values if
-      ygdpt = 0         !these are not specified on the commandline
-
       erod_interval = 0 !default value for updating eroding soil surface
                         !(currently only used in standalone erosion submodel)
       calib_cycle = 0
@@ -227,11 +222,9 @@
       call cmdline()
 
 !     Open the WEPS log file, etc.
-      call fopenk (luolog, rootp(1:len_trim(rootp)) // 'logfil.txt',    &
-     &        'unknown')
+      call fopenk (luolog, trim(rootp) // 'logfil.txt', 'unknown')
       if (report_info >= 1) then
-        write(luolog, *) 'Using ', rootp(1:len_trim(rootp)),              &
-     &           ' as the simulation input directory'
+        write(luolog, *) 'Using ', trim(rootp), ' as the simulation input directory'
       end if
 
       if (calibrate_crops > 3) max_calib_cycles = calibrate_crops
@@ -241,8 +234,9 @@
       ! When reading the xml input, soil_in is accessed through the input_soil_mod definition.
       call input(soil_in)
 
-      ! set total number of subregions from size of allocated subr_poly array
-      nsubr = size(subr_poly)
+      ! set total number of subregions from size of allocated soil_in array
+      ! Note: soil array has 0 index, soil_in does not
+      nsubr = size(soil_in)
 
       ! keep
       sum_stat = 0
@@ -421,25 +415,16 @@
 
       ! Grid is created at least once.
       if (am0eif .eqv. .true.) then
-         ! check to see if grid dimensions specified via cmdline args
-         if ((xgdpt > 0) .and. (ygdpt > 0)) then
-           imax = xgdpt + 1
-           jmax = ygdpt + 1
-           ix = (amxsim(2)%x - amxsim(1)%x) / xgdpt
-           jy = (amxsim(2)%y - amxsim(1)%y) / ygdpt
-         else          !use Hagen's grid dimensioning as the default
+         if( old_run_file ) then
            call sbgrid( minht_barriers() )
-         endif
-
-         ! allocate cellstate array to cover grid
-         sum_stat = 0
-         allocate(cellstate(0:imax,0:jmax), stat=alloc_stat)
-         sum_stat = sum_stat + alloc_stat
-         if( sum_stat .gt. 0 ) then
-            Write(*,*) 'ERROR: unable to allocate enough memory for weps main data arrays'
+           if( make_runxml .gt. 0 ) then
+             ! create new weps.run.xml
+             gridfile = 'erod.grid'
+             call write_run_xml()
+             call write_grid( trim(rootp) )
+           end if
          end if
-
-         call erodinit( noerod, cellstate )
+         call erodinit( noerod, subrsurf )
       endif
 
       do isr = 1, nsubr
@@ -467,7 +452,7 @@
       end do
 
 !     Initializations unique to particular submodels
-      do isr=1,nsubr
+      do isr = 1, nsubr
          call decopen(isr) ! prints headers in above.out and below.out
          ! Initialize the water holding capacity variable
          call hydrinit(isr, soil(isr), hstate(isr), h1et(isr), h1bal(isr), wp(isr))
@@ -509,7 +494,7 @@
           write(6,*) "Starting initialization phase"
       else
         ! reset year value for next time through
-        do isr=1,nsubr   ! do multiple subregion      
+        do isr = 1, nsubr   ! do multiple subregion      
           lastoper(isr)%yr = 1
         end do
       endif
@@ -535,7 +520,7 @@
             end if
             call flush(6)
         end if
-        do isr=1,nsubr
+        do isr = 1, nsubr
           ! do multiple subregion
           call submodels(isr, soil(isr), plants(isr)%plant, plants(isr)%plantIndex, restot(isr), croptot(isr),  &
                biotot(isr), decompfac(isr), mandatbs(isr)%mandate, hstate(isr), h1et(isr), h1bal(isr), wp(isr), manFile(isr))
@@ -578,7 +563,7 @@
       call getwin(0, cm, cy)  ! Reset windgen file (day == 0)
 
       ! Start of "calibrate" section
-      do isr=1,nsubr   ! do multiple subregion     
+      do isr = 1, nsubr   ! do multiple subregion     
           keep(isr) = manfile(isr)%mnryr
       end do
       if ((calibrate_crops > 0) .and. (.not. calib_done) .and. (calib_cycle < max_calib_cycles)) then
@@ -617,7 +602,7 @@
               call flush(6)
            end if
 
-           do isr=1,nsubr   ! do multiple subregion     
+           do isr = 1, nsubr   ! do multiple subregion     
              call submodels(isr, soil(isr), plants(isr)%plant, plants(isr)%plantIndex, restot(isr), croptot(isr), &
                  biotot(isr), decompfac(isr), mandatbs(isr)%mandate, hstate(isr), h1et(isr), h1bal(isr), wp(isr), manFile(isr))
              ! print to plot data file
@@ -643,7 +628,7 @@
              end if
            end do  ! end subregion
          end do   ! "calibration" phase
-         do isr=1,nsubr   ! do multiple subregion     
+         do isr = 1, nsubr   ! do multiple subregion     
              manfile(isr)%mnryr = keep(isr)
              ! at end of managment file, reset mcount
              manFile(isr)%mcount = 0
@@ -744,7 +729,7 @@
                call flush(6)
             end if
 
-            do isr=1,nsubr   ! do multiple subregion     
+            do isr = 1, nsubr   ! do multiple subregion     
 
                call submodels(isr, soil(isr), plants(isr)%plant, plants(isr)%plantIndex, restot(isr), croptot(isr), &
                               biotot(isr), decompfac(isr), mandatbs(isr)%mandate, hstate(isr), h1et(isr), h1bal(isr), wp(isr), &
@@ -758,8 +743,9 @@
 
               ! transfer data values from submodel structures into erosion input structure
               ! some of these values are shown in plot.out, so do every day
-               do isr=1,nsubr   ! do multiple subregion
-                  call erodsubr_update( isr, soil(isr), plants(isr)%plant, biotot(isr), hstate(isr), h1et(isr), subrsurf(isr) )
+               do isr = 1, nsubr   ! do multiple subregion
+                  call erodsubr_update( isr, manFile(isr), soil(isr), plants(isr)%plant, biotot(isr), hstate(isr), h1et(isr), &
+                                        subrsurf(isr) )
                end do
 
                if (awudmx .gt. 8.0) then ! if wind is great enough, call erosion
@@ -789,11 +775,11 @@
                   call erosion( 5.0, SURF_UPD_FLG, subrsurf, noerod, cellstate )
                else
                   ! set plot.out indicator flags (initialization complete so cellstate unaltered)
-                  call erodinit( noerod, cellstate )
+                  call erodinit( noerod, subrsurf )
                end if
             end if
 
-            do isr=1,nsubr   ! do multiple subregions
+            do isr = 1, nsubr   ! do multiple subregions
                if ((run_erosion .eq. 2) .or. (run_erosion .eq. 3)) then
                   call water_erosion( isr, cd, cm, cy, soil(isr), restot(isr), croptot(isr), wp(isr) )
                end if
@@ -835,7 +821,7 @@
             end if
 
             ! area average values over simregion for 0 index reporting
-            call sim_area_average( subr_poly, h1et, h1bal, subrsurf, soil, croptot, restot, biotot )
+            call sim_area_average( h1et, h1bal, subrsurf, soil, croptot, restot, biotot )
 
             do isr = 0, nsubr   ! 0 is whole region, and then all subregion     
                ! Compute yrly values
@@ -899,7 +885,7 @@
             endif
 
             ! set erosion accumulators on grid to zero in preparation for next day
-            call sbigrd( cellstate )
+            call sbigrd( subrsurf )
 
          end do   ! end of "reporting" loop
          report_loop = .false.
@@ -933,22 +919,6 @@
 
       ! close all open files
       call closefils()
-
-      ! deallocate accounting region polygon storage, no longer needed
-      do isr = 1, size(acct_poly)
-          ! free memory in polygon point arrays
-          call destroy_polygon(acct_poly(isr))
-      end do
-      ! free memory for array of polygons
-      deallocate(acct_poly)
-
-      ! deallocate subregion polygon storage, no longer needed
-      do isr = 1, nsubr
-          ! free memory in polygon point arrays
-          call destroy_polygon(subr_poly(isr))
-      end do
-      ! free memory for array of polygons
-      deallocate(subr_poly)
 
       ! deallocate barrier storage arrays
       if( allocated(barrier) ) then

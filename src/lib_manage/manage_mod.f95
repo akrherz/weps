@@ -96,6 +96,7 @@ module manage_mod
            end_element_handler = end_man_element_handler, &
            pcdata_chunk_handler = pcdata_man_chunk_handler, &
            verbose = .false.)
+        call close_xmlfile(fxml)
         if (.not. manfile_complete) then
           write(*,*) 'Management file incomplete: ', trim(manFile%tinfil)
           call exit(1)

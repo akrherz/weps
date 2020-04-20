@@ -55,7 +55,6 @@ module climate_input_mod
         real :: wawudav  ! Average daily wind speed (m/s)
     end type windgen_state
 
-    character(80) :: cligen_sname ! CLIGEN station name from WEPS.RUN file
     integer :: cli_gen_fmt_flag   ! flag indicating type of cli_gen daily input file
                                   ! = 1 --> 3.1 version cligen db format
                                   ! = 2 --> Forest Service cligen db format

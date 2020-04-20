@@ -127,7 +127,7 @@ contains
   end subroutine destroy_barrier_fixed
 
   ! allocates a barrier_data structure which can contain nump points
-  subroutine create_barrier_seasonal(barr, nump,numtm,sflg)
+  subroutine create_barrier_seasonal(barr, nump, numtm, sflg)
     type(barrier_seasonal), intent(inout) :: barr ! barrier to be allocated
     integer, intent(in) :: nump  ! number of points in barrier_params and polyline created
     integer, intent(in) :: numtm ! number of time marks in barrier_params
@@ -136,6 +136,7 @@ contains
     ! local variable
     integer :: sum_stat
     integer :: alloc_stat
+    integer :: iseas
 
     sum_stat = 0
     allocate(barr%points(nump), stat=alloc_stat)
@@ -162,6 +163,10 @@ contains
       barr%np = nump
       barr%ntm = numtm
       barr%seas_flg = sflg
+      do iseas = 1, barr%ntm
+        barr%dst(iseas)%st_desc = 'fixed'
+        barr%dst(iseas)%doy = 0
+      end do
     end if 
   end subroutine create_barrier_seasonal
  
@@ -449,7 +454,7 @@ contains
 !     from up wind and down wind sources of shelter at all interior nodes
 
       use erosion_data_struct_defs, only: cellsurfacestate
-      use grid_mod, only: imax, jmax, ix, jy, amxsim, awa
+      use grid_mod, only: imax, jmax, lencell_x, lencell_y, amxsim, awa
       use Points_Mod, only: point
       use pnt_polyline_mod, only: location_intersect, pl_intersect
       use lin_interp_mod, only: lin_interp
@@ -478,8 +483,8 @@ contains
       do i = 1, imax-1
         do j = 1, jmax-1
           ! calculate distance to middle of grid cell (maybe offset from origin)
-          pnt_grid%x = (i-0.5)*ix + amxsim(1)%x
-          pnt_grid%y = (j-0.5)*jy + amxsim(1)%y
+          pnt_grid%x = (i-0.5)*lencell_x + amxsim(1)%x
+          pnt_grid%y = (j-0.5)*lencell_y + amxsim(1)%y
 
           ! barrier sweep
           w0br_min = 1.0   ! maximum value for parameter

@@ -59,6 +59,7 @@ module erosion_data_struct_defs
   end type cellsurfacestate
 
   type biodrag_input_array
+     character*(80) :: bname  ! the name of the plant or biodrag element
      real :: rlai     ! leaf area index (m^2/m^2)
      real :: rsai     ! stem area index (m^2/m^2)
      integer :: rg    ! seed placement (0 - furrow, 1 - ridge)
@@ -85,7 +86,10 @@ module erosion_data_struct_defs
   end type by_soil_layer
 
   type subregionsurfacestate
-     integer :: npools
+     character(len=512) :: tinfil  ! management file name
+     character(len=512) :: sinfil  ! soil input file name
+     integer :: cntcells ! count of number of cells assigned to this subregion
+     integer :: npools  ! number of brcdInput pools
      type(biodrag_input_array), dimension(:), allocatable :: brcdInput
      ! ERODIN inputs
      real :: abffcv     ! (b1geom.inc) Flat biomass cover (m^2/m^2)
@@ -107,7 +111,7 @@ module erosion_data_struct_defs
      real :: aslrr      ! Allmaras random roughness (mm)
      real :: ahzsnd     ! (h1db1.inc) Snow depth (mm)
      integer :: nswet   ! number of surface wetness values
-     real, dimension(:), allocatable :: ahrwc0
+     real, dimension(:), allocatable :: ahrwc0  ! subday soil surface water content
      ! derived
      real :: abrsai     ! abrsai - Biomass stem area index (m^2/m^2)
      real :: abrlai     ! abrlai - Biomass leaf area index (m^2/m^2)
@@ -191,16 +195,16 @@ module erosion_data_struct_defs
  ! end type simulationregionvalues
 
      type(subregionsurfacestate), dimension(:), allocatable :: subrsurf   ! subregion surface state needed by erosion
+     type(cellsurfacestate), dimension(:,:), allocatable :: cellstate     ! grid cell state values (allocate in io_xml)
 
      ! erosion detailed grid output flags and counter
      integer :: initflag, ipd, npd
 
 contains
 
-  function create_cellsurfacestate(xdim, ydim) result(cellstate)
+  subroutine create_cellsurfacestate(xdim, ydim)
      integer, intent(in) :: xdim
      integer, intent(in) :: ydim
-     type(cellsurfacestate), dimension(:,:), allocatable :: cellstate
 
      ! local variable
      integer :: alloc_stat  ! allocation status return
@@ -214,11 +218,9 @@ contains
         write(*,*) 'ERROR: unable to allocate memory for cellstate'
         stop 1
      end if
-  end function create_cellsurfacestate
+  end subroutine create_cellsurfacestate
 
-  subroutine destroy_cellsurfacestate(cellstate)
-     type(cellsurfacestate), dimension(:,:), allocatable, intent(inout) :: cellstate
-
+  subroutine destroy_cellsurfacestate()
      ! local variable
      integer :: dealloc_stat
      integer :: sum_stat    ! accumulates allocation status results so only one write/exit statement needed

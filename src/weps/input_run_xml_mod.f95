@@ -13,12 +13,10 @@ module input_run_xml_mod
   use flib_sax
   use datetime_mod, only: lstday, difdat
   use Polygons_Mod, only: polygon, create_polygon, destroy_polygon, set_area_polygon
-  use subregions_mod, only: acct_poly, subr_poly
   use file_io_mod, only: fopenk, luicli, luiwin, luolog
-  use climate_input_mod, only: cli_gen_fmt_flag, wind_gen_fmt_flag, cligen_sname
+  use climate_input_mod, only: cli_gen_fmt_flag, wind_gen_fmt_flag
   use climate_input_mod, only: amalat, amalon, amzele
   use erosion_data_struct_defs, only: subday, ntstep, am0efl
-  use grid_mod, only: amasim, amxsim, sim_area, xgdpt, ygdpt
   use hydro_data_struct_defs, only: am0hfl, am0hdb
   use soil_data_struct_defs, only: am0sfl, am0sdb
 
@@ -45,83 +43,108 @@ module input_run_xml_mod
   type(tag_def), dimension(:), allocatable :: run_tag
   integer :: max_tags
   
-  integer, parameter :: SCI_Accounts = 1
-  integer, parameter :: SCI_Account = 2
-  integer, parameter :: SCI_AverageSlope = 3
-  integer, parameter :: SCI_BarCli = 4
-  integer, parameter :: SCI_BarCliIndex = 5
-  integer, parameter :: SCI_BarCliNumber = 6
-  integer, parameter :: SCI_Barrier = 7
-  integer, parameter :: SCI_Barriers = 8
-  integer, parameter :: SCI_BarrierSeasonFlag = 9
-  integer, parameter :: SCI_BegTranBase = 10
-  integer, parameter :: SCI_BegTranFlg = 11
-  integer, parameter :: SCI_BegTranThresh = 12
-  integer, parameter :: SCI_climateFile = 13
-  integer, parameter :: SCI_CoordinateNumber = 14
-  integer, parameter :: SCI_coord = 15
-  integer, parameter :: SCI_coordIndex = 16
-  integer, parameter :: SCI_coords = 17
-  integer, parameter :: SCI_crop = 18
-  integer, parameter :: SCI_CycleCount = 19
-  integer, parameter :: SCI_DebugOutput = 20
-  integer, parameter :: SCI_decomp = 21
-  integer, parameter :: SCI_Description = 22
-  integer, parameter :: SCI_Elevation = 23
-  integer, parameter :: SCI_EndDate = 24
-  integer, parameter :: SCI_EndTranBase = 25
-  integer, parameter :: SCI_EndTranFlg = 26
-  integer, parameter :: SCI_EndTranThresh = 27
-  integer, parameter :: SCI_ErosionSubmodelOutput = 28
-  integer, parameter :: SCI_height = 29
-  integer, parameter :: SCI_hydro = 30
-  integer, parameter :: SCI_index = 31
-  integer, parameter :: SCI_LatLong = 32
-  integer, parameter :: SCI_ManageFile = 33
-  integer, parameter :: SCI_man = 34
-  integer, parameter :: SCI_number = 35
-  integer, parameter :: SCI_PointBarCli = 36
-  integer, parameter :: SCI_PointBarClis = 37
-  integer, parameter :: SCI_porosity = 38
-  integer, parameter :: SCI_RegionAngle = 39
-  integer, parameter :: runFileData = 40
-  integer, parameter :: SCI_SoilFile = 41
-  integer, parameter :: SCI_soil = 42
-  integer, parameter :: SCI_SoilRockFragments = 43
-  integer, parameter :: SCI_StartDate = 44
-  integer, parameter :: SCI_subDailyFile = 45
-  integer, parameter :: SCI_SubmodelOutput = 46
-  integer, parameter :: SCI_Subregion = 47
-  integer, parameter :: SCI_Subregions = 48
-  integer, parameter :: SCI_TimeDesc = 49
-  integer, parameter :: SCI_TimeMark = 50
-  integer, parameter :: SCI_TimeSteps = 51
-  integer, parameter :: SCI_WaterErosionLoss = 52
-  integer, parameter :: SCI_width = 53
-  integer, parameter :: SCI_windFile = 54
-  integer, parameter :: SCI_XGrid = 55
-  integer, parameter :: SCI_XLength = 56
-  integer, parameter :: SCI_XOrigin = 57
-  integer, parameter :: SCI_x = 58
-  integer, parameter :: SCI_YGrid = 59
-  integer, parameter :: SCI_YLength = 60
-  integer, parameter :: SCI_YOrigin = 61
-  integer, parameter :: SCI_y = 62
+  integer, parameter :: runFileData               = 1
+
+  integer, parameter :: SCI_CycleCount            = 2
+  integer, parameter :: SCI_CentrLatitude         = 3
+  integer, parameter :: SCI_CentrLongitude        = 4
+  integer, parameter :: SCI_Elevation             = 5
+  integer, parameter :: SCI_StartDate             = 6
+  integer, parameter :: SCI_EndDate               = 7
+  integer, parameter :: SCI_Day                   = 8
+  integer, parameter :: SCI_Month                 = 9
+  integer, parameter :: SCI_Year                  = 10
+  integer, parameter :: SCI_TimeSteps             = 11
+  integer, parameter :: SCI_climateFile           = 12
+  integer, parameter :: SCI_windFile              = 13
+  integer, parameter :: SCI_ErosionSubmodelOutput = 14
+  integer, parameter :: SCI_RegionAngle           = 15
+  integer, parameter :: SCI_XOrigin               = 16
+  integer, parameter :: SCI_YOrigin               = 17
+  integer, parameter :: SCI_XLength               = 18
+  integer, parameter :: SCI_YLength               = 19
+
+  integer, parameter :: SCI_number                = 20
+  integer, parameter :: SCI_index                 = 21
+
+  integer, parameter :: SCI_Subregions            = 22
+  integer, parameter :: SCI_Subregion             = 23
+  integer, parameter :: SCI_SubmodelOutput        = 24
+  integer, parameter :: SCI_DebugOutput           = 25
+  integer, parameter :: SCI_hydro                 = 26
+  integer, parameter :: SCI_soil                  = 27
+  integer, parameter :: SCI_man                   = 28
+  integer, parameter :: SCI_crop                  = 29
+  integer, parameter :: SCI_decomp                = 30
+  integer, parameter :: SCI_AverageSlope          = 31
+  integer, parameter :: SCI_SoilRockFragments     = 32
+  integer, parameter :: SCI_SoilFile              = 33
+  integer, parameter :: SCI_ManageFile            = 34
+  integer, parameter :: SCI_WaterErosionLoss      = 35
+
+  integer, parameter :: SCI_BarrierSeasonFlag     = 36
+  integer, parameter :: SCI_BarCliNumber          = 37
+  integer, parameter :: SCI_CoordinateNumber      = 38
+  integer, parameter :: SCI_BarCliIndex           = 39
+  integer, parameter :: SCI_coordIndex            = 40
+
+  integer, parameter :: SCI_Barriers              = 41
+  integer, parameter :: SCI_Barrier               = 42
+  integer, parameter :: SCI_Description           = 43
+  integer, parameter :: SCI_PointBarClis          = 44
+  integer, parameter :: SCI_BarCli                = 45
+  integer, parameter :: SCI_TimeDesc              = 46
+  integer, parameter :: SCI_TimeMark              = 47
+  integer, parameter :: SCI_coord                 = 48
+  integer, parameter :: SCI_x                     = 49
+  integer, parameter :: SCI_y                     = 50
+  integer, parameter :: SCI_PointBarCli           = 51
+  integer, parameter :: SCI_height                = 52
+  integer, parameter :: SCI_width                 = 53
+  integer, parameter :: SCI_porosity              = 54
+  integer, parameter :: SCI_BegTranFlg            = 55
+  integer, parameter :: SCI_BegTranThresh         = 56
+  integer, parameter :: SCI_BegTranBase           = 57
+  integer, parameter :: SCI_EndTranFlg            = 58
+  integer, parameter :: SCI_EndTranThresh         = 59
+  integer, parameter :: SCI_EndTranBase           = 60
+
+  integer, parameter :: GUI_UserName              = 61
+  integer, parameter :: GUI_FarmId                = 62
+  integer, parameter :: GUI_TractId               = 63
+  integer, parameter :: GUI_FieldId               = 64
+  integer, parameter :: GUI_RunTypeDisp           = 65
+  integer, parameter :: GUI_Site                  = 66
+  integer, parameter :: GUI_cligenFlag            = 67
+  integer, parameter :: GUI_cligenMethod          = 68
+  integer, parameter :: GUI_cligenLatitude        = 69
+  integer, parameter :: GUI_cligenLongitude       = 70
+  integer, parameter :: GUI_cligenStateId         = 71
+  integer, parameter :: GUI_cligenStationNum      = 72
+  integer, parameter :: GUI_cligenStationName     = 73
+  integer, parameter :: GUI_cligenElevation       = 74
+  integer, parameter :: GUI_windgenFlag           = 75
+  integer, parameter :: GUI_windgenMethod         = 76
+  integer, parameter :: GUI_windgenLatitude       = 77
+  integer, parameter :: GUI_windgenLongitude      = 78
+  integer, parameter :: GUI_windgenStationNum     = 79
+  integer, parameter :: GUI_windgenCountry        = 80
+  integer, parameter :: GUI_windgenState          = 81
+  integer, parameter :: GUI_windgenStationName    = 82
+  integer, parameter :: GUI_lastrun               = 83
+  integer, parameter :: GUI_lat                   = 84
+  integer, parameter :: GUI_lon                   = 85
 
   integer, parameter :: max_simyear = 100000  ! value used to test simulation year input range
-  integer :: nacctr   ! Number of accounting regions
   integer :: nsubr    ! Number of subregions
   integer :: nbr      ! number of barriers
   integer :: seas_flg ! barrier season flag
   integer :: ntm_seas ! number of time marks for seasonal barrier
   integer :: poly_np  ! number of points in polygon or polyline
   integer :: isr      ! index for subregion reading
-  integer :: iar      ! index for accounting region reading
   integer :: ibr      ! index for barrier reading
   integer :: ipol     ! index for polygon reading
   integer :: iseas    ! index for barrier season reading
-  logical :: accounts_present
-  logical, dimension(:), allocatable :: account_complete
   logical :: barriers_present
   logical, dimension(:), allocatable :: barrier_complete
   logical, dimension(:), allocatable :: subregion_complete
@@ -141,7 +164,7 @@ contains
     integer :: idx
     integer :: alloc_stat
 
-    max_tags = 62   ! count of unique tags needed from all dtd files
+    max_tags = 85   ! count of unique tags needed from all dtd files
     allocate( run_tag(max_tags), stat=alloc_stat)
     if( alloc_stat .gt. 0 ) then
       write(*,*) 'ERROR: memory alloc., run_tag'
@@ -155,73 +178,102 @@ contains
     end do
 
     ! assign tag names
-    run_tag(1)%name = "SCI_Accounts"
-    run_tag(2)%name = "SCI_Account"
-    run_tag(3)%name = "SCI_AverageSlope"
-    run_tag(4)%name = "SCI_BarCli"
-    run_tag(5)%name = "SCI_BarCliIndex"
-    run_tag(6)%name = "SCI_BarCliNumber"
-    run_tag(7)%name = "SCI_Barrier"
-    run_tag(8)%name = "SCI_Barriers"
-    run_tag(9)%name = "SCI_BarrierSeasonFlag"
-    run_tag(10)%name = "SCI_BegTranBase"
-    run_tag(11)%name = "SCI_BegTranFlg"
-    run_tag(12)%name = "SCI_BegTranThresh"
-    run_tag(13)%name = "SCI_climateFile"
-    run_tag(14)%name = "SCI_CoordinateNumber"
-    run_tag(15)%name = "SCI_coord"
-    run_tag(16)%name = "SCI_coordIndex"
-    run_tag(17)%name = "SCI_coords"
-    run_tag(18)%name = "SCI_crop"
-    run_tag(19)%name = "SCI_CycleCount"
-    run_tag(20)%name = "SCI_DebugOutput"
-    run_tag(21)%name = "SCI_decomp"
-    run_tag(22)%name = "SCI_Description"
-    run_tag(23)%name = "SCI_Elevation"
-    run_tag(24)%name = "SCI_EndDate"
-    run_tag(25)%name = "SCI_EndTranBase"
-    run_tag(26)%name = "SCI_EndTranFlg"
-    run_tag(27)%name = "SCI_EndTranThresh"
-    run_tag(28)%name = "SCI_ErosionSubmodelOutput"
-    run_tag(29)%name = "SCI_height"
-    run_tag(30)%name = "SCI_hydro"
-    run_tag(31)%name = "SCI_index"
-    run_tag(32)%name = "SCI_LatLong"
-    run_tag(33)%name = "SCI_ManageFile"
-    run_tag(34)%name = "SCI_man"
-    run_tag(35)%name = "SCI_number"
-    run_tag(36)%name = "SCI_PointBarCli"
-    run_tag(37)%name = "SCI_PointBarClis"
-    run_tag(38)%name = "SCI_porosity"
-    run_tag(39)%name = "SCI_RegionAngle"
-    run_tag(40)%name = "runFileData"
-    run_tag(41)%name = "SCI_SoilFile"
-    run_tag(42)%name = "SCI_soil"
-    run_tag(43)%name = "SCI_SoilRockFragments"
-    run_tag(44)%name = "SCI_StartDate"
-    run_tag(45)%name = "SCI_subDailyFile"
-    run_tag(46)%name = "SCI_SubmodelOutput"
-    run_tag(47)%name = "SCI_Subregion"
-    run_tag(48)%name = "SCI_Subregions"
-    run_tag(49)%name = "SCI_TimeDesc"
-    run_tag(50)%name = "SCI_TimeMark"
-    run_tag(51)%name = "SCI_TimeSteps"
-    run_tag(52)%name = "SCI_WaterErosionLoss"
+    run_tag(1)%name = "runFileData"
+
+    run_tag(2)%name = "SCI_CycleCount"
+    run_tag(3)%name = "SCI_CentrLatitude"
+    run_tag(4)%name = "SCI_CentrLongitude"
+    run_tag(5)%name = "SCI_Elevation"
+    run_tag(6)%name = "SCI_StartDate"
+    run_tag(7)%name = "SCI_EndDate"
+    run_tag(8)%name = "SCI_Day"
+    run_tag(9)%name = "SCI_Month"
+    run_tag(10)%name = "SCI_Year"
+    run_tag(11)%name = "SCI_TimeSteps"
+    run_tag(12)%name = "SCI_climateFile"
+    run_tag(13)%name = "SCI_windFile"
+    run_tag(14)%name = "SCI_ErosionSubmodelOutput"
+    run_tag(15)%name = "SCI_RegionAngle"
+    run_tag(16)%name = "SCI_XOrigin"
+    run_tag(17)%name = "SCI_YOrigin"
+    run_tag(18)%name = "SCI_XLength"
+    run_tag(19)%name = "SCI_YLength"
+
+    run_tag(20)%name = "SCI_number"
+    run_tag(21)%name = "SCI_index"
+
+    run_tag(22)%name = "SCI_Subregions"
+    run_tag(23)%name = "SCI_Subregion"
+    run_tag(24)%name = "SCI_SubmodelOutput"
+    run_tag(25)%name = "SCI_DebugOutput"
+    run_tag(26)%name = "SCI_hydro"
+    run_tag(27)%name = "SCI_soil"
+    run_tag(28)%name = "SCI_man"
+    run_tag(29)%name = "SCI_crop"
+    run_tag(30)%name = "SCI_decomp"
+    run_tag(31)%name = "SCI_AverageSlope"
+    run_tag(32)%name = "SCI_SoilRockFragments"
+    run_tag(33)%name = "SCI_SoilFile"
+    run_tag(34)%name = "SCI_ManageFile"
+    run_tag(35)%name = "SCI_WaterErosionLoss"
+
+    run_tag(36)%name = "SCI_BarrierSeasonFlag"
+    run_tag(37)%name = "SCI_BarCliNumber"
+    run_tag(38)%name = "SCI_CoordinateNumber"
+    run_tag(39)%name = "SCI_BarCliIndex"
+    run_tag(40)%name = "SCI_coordIndex"
+
+    run_tag(41)%name = "SCI_Barriers"
+    run_tag(42)%name = "SCI_Barrier"
+    run_tag(43)%name = "SCI_Description"
+    run_tag(44)%name = "SCI_PointBarClis"
+    run_tag(45)%name = "SCI_BarCli"
+    run_tag(46)%name = "SCI_TimeDesc"
+    run_tag(47)%name = "SCI_TimeMark"
+    run_tag(48)%name = "SCI_coord"
+    run_tag(49)%name = "SCI_x"
+    run_tag(50)%name = "SCI_y"
+    run_tag(51)%name = "SCI_PointBarCli"
+    run_tag(52)%name = "SCI_height"
     run_tag(53)%name = "SCI_width"
-    run_tag(54)%name = "SCI_windFile"
-    run_tag(55)%name = "SCI_XGrid"
-    run_tag(56)%name = "SCI_XLength"
-    run_tag(57)%name = "SCI_XOrigin"
-    run_tag(58)%name = "SCI_x"
-    run_tag(59)%name = "SCI_YGrid"
-    run_tag(60)%name = "SCI_YLength"
-    run_tag(61)%name = "SCI_YOrigin"
-    run_tag(62)%name = "SCI_y"
+    run_tag(54)%name = "SCI_porosity"
+    run_tag(55)%name = "SCI_BegTranFlg"
+    run_tag(56)%name = "SCI_BegTranThresh"
+    run_tag(57)%name = "SCI_BegTranBase"
+    run_tag(58)%name = "SCI_EndTranFlg"
+    run_tag(59)%name = "SCI_EndTranThresh"
+    run_tag(60)%name = "SCI_EndTranBase"
+
+    run_tag(61)%name = "GUI_UserName"
+    run_tag(62)%name = "GUI_FarmId"
+    run_tag(63)%name = "GUI_TractId"
+    run_tag(64)%name = "GUI_FieldId"
+    run_tag(65)%name = "GUI_RunTypeDisp"
+    run_tag(66)%name = "GUI_Site"
+    run_tag(67)%name = "GUI_cligenFlag"
+    run_tag(68)%name = "GUI_cligenMethod"
+    run_tag(69)%name = "GUI_cligenLatitude"
+    run_tag(70)%name = "GUI_cligenLongitude"
+    run_tag(71)%name = "GUI_cligenStateId"
+    run_tag(72)%name = "GUI_cligenStationNum"
+    run_tag(73)%name = "GUI_cligenStationName"
+    run_tag(74)%name = "GUI_cligenElevation"
+    run_tag(75)%name = "GUI_windgenFlag"
+    run_tag(76)%name = "GUI_windgenMethod"
+    run_tag(77)%name = "GUI_windgenLatitude"
+    run_tag(78)%name = "GUI_windgenLongitude"
+    run_tag(79)%name = "GUI_windgenStationNum"
+    run_tag(80)%name = "GUI_windgenCountry"
+    run_tag(81)%name = "GUI_windgenState"
+    run_tag(82)%name = "GUI_windgenStationName"
+    run_tag(83)%name = "GUI_lastrun"
+    run_tag(84)%name = "GUI_lat"
+    run_tag(85)%name = "GUI_lon"
+
 
     ! create integer variable names for tags and assign index number.
     ! makes chunk code more understandable.
 
-    accounts_present = .false.
     barriers_present = .false.
     bar_seasons = .false.
     bar_coords = .false.
@@ -252,8 +304,6 @@ contains
     end do
 
     if (   (idx .eq. SCI_Subregions) &
-      .or. (idx .eq. SCI_coords) &
-      .or. (idx .eq. SCI_Accounts) &
       .or. (idx .eq. SCI_Barriers) ) then
       if ( has_key(attributes, run_tag(SCI_number)%name) ) then
         call get_value(attributes, run_tag(SCI_number)%name, param_value, ret_stat)
@@ -266,9 +316,6 @@ contains
             call exit(1)
           end if
           sum_stat = 0
-          ! create array of subregion polygons
-          allocate(subr_poly(nsubr), stat = alloc_stat)
-          sum_stat = sum_stat + alloc_stat
           ! create arrays for submodel output flags
           allocate(am0hfl(nsubr), stat=alloc_stat)
           sum_stat = sum_stat + alloc_stat
@@ -301,57 +348,6 @@ contains
 
           call manFileAlloc(nsubr)
 
-        case (SCI_coords)
-          call read_param(run_tag(SCI_number)%name, param_value, poly_np)
-          ! write(*,*) 'Number of Subregion Coordinate Points: ', poly_np
-          if ( run_tag(SCI_Subregion)%in_tag ) then
-            if (poly_np .ge. 3) then
-              ! create polygon point storage
-              subr_poly(isr) = create_polygon(poly_np)
-            else
-              write(*,'(2(a,i0))') 'Tag SCI_Subregion SCI_index="',isr-1, &
-                                   '" Coordinate polygons must have at least 3 points. Only has ', poly_np
-              call exit(1)
-            end if
-          else if ( run_tag(SCI_Account)%in_tag ) then
-            if (poly_np .ge. 3) then
-              ! create polygon point storage
-              acct_poly(iar) = create_polygon(poly_np)
-            else
-              write(*,'(2(a,i0))') 'Tag SCI_Account SCI_Index="',iar-1, &
-                                   '" Coordinate polygons must have at least 3 points. Only has ', poly_np
-              call exit(1)
-            end if
-          end if
-          ! create storage for points index tracking
-          allocate(coord_complete(poly_np), stat = alloc_stat)
-          if( alloc_stat .gt. 0 ) then
-            ! allocation failed
-            write(*,*) "ERROR: unable to allocate memory for coord_complete array"
-          end if
-          ! initialize _complete arrays to false
-          do idx = 1, poly_np
-            coord_complete(idx) = .false.
-          end do
-
-        case (SCI_Accounts)
-          call read_param(run_tag(SCI_number)%name, param_value, nacctr)
-          !write(*,*) 'Number of Accounting Regions: ', nacctr
-          ! allocate structure for accounting regions (nacctr .lt. 1 gives zero size array)
-          sum_stat = 0
-          allocate(acct_poly(nacctr), stat = alloc_stat)
-          sum_stat = sum_stat + alloc_stat
-          allocate(account_complete(nacctr), stat = alloc_stat)
-          sum_stat = sum_stat + alloc_stat
-          if( sum_stat .gt. 0 ) then
-            write(*,*) 'ERROR: memory alloc., accounting region arrays'
-          end if
-          ! initialize _complete arrays to .false.
-          do idx = 1, nacctr
-            account_complete(idx) = .false.
-          end do
-          accounts_present = .true.
-
         case (SCI_Barriers)
           call read_param(run_tag(SCI_number)%name, param_value, nbr)
           !write(*,*) 'Number of Barriers: ', nbr
@@ -378,8 +374,7 @@ contains
       end if
     else if ( (idx .eq. SCI_Subregion) &
       .or. (idx .eq. SCI_coord) &
-      .or. (idx .eq. SCI_BarCli) &
-      .or. (idx .eq. SCI_Account) ) then
+      .or. (idx .eq. SCI_BarCli) ) then
       if ( has_key(attributes, run_tag(SCI_index)%name) ) then
         call get_value(attributes, run_tag(SCI_index)%name, param_value, ret_stat)
         select case (idx)
@@ -398,11 +393,6 @@ contains
           ! adjust from base 0 to base 1 arrays
           iseas = iseas + 1
           !write(*,*) 'Barrier Point Index: ', ipol
-        case (SCI_Account)
-          call read_param(run_tag(SCI_index)%name, param_value, iar)
-          ! adjust from base 0 to base 1 arrays
-          iar = iar + 1
-          !write(*,*) 'Accounting region Index: ', iar
         end select
       else
         write(*,*) 'SCI_index attribute required for each ', trim(run_tag(idx)%name), ' Tag.'
@@ -528,16 +518,6 @@ contains
 
         if (idx .eq. runFileData) then
 
-          if ( .not. accounts_present) then
-            ! no SCI_Accounts tag found (not needed so set to true)
-            run_tag(SCI_Accounts)%acquired = .true.
-            ! allocate structure for accounting regions (zero size array allowed)
-            allocate(acct_poly(0), stat = alloc_stat)
-            if( alloc_stat .gt. 0 ) then
-              write(*,*) 'ERROR: memory alloc., accounting region arrays'
-            end if
-          end if
-
           if ( .not. barriers_present) then
             ! no SCI_Barriers tag found (not needed so set to true)
             run_tag(SCI_Barriers)%acquired = .true.
@@ -554,7 +534,8 @@ contains
 
           ! check for acquisition of all required elements
           if (    run_tag(SCI_CycleCount)%acquired &
-            .and. run_tag(SCI_LatLong)%acquired &
+            .and. run_tag(SCI_CentrLatitude)%acquired &
+            .and. run_tag(SCI_CentrLongitude)%acquired &
             .and. run_tag(SCI_Elevation)%acquired &
             .and. run_tag(SCI_StartDate)%acquired &
             .and. run_tag(SCI_EndDate)%acquired &
@@ -567,10 +548,7 @@ contains
             .and. run_tag(SCI_YOrigin)%acquired &
             .and. run_tag(SCI_XLength)%acquired &
             .and. run_tag(SCI_YLength)%acquired &
-            .and. run_tag(SCI_XGrid)%acquired &
-            .and. run_tag(SCI_YGrid)%acquired &
             .and. run_tag(SCI_Subregions)%acquired &
-            .and. run_tag(SCI_Accounts)%acquired &
             .and. run_tag(SCI_Barriers)%acquired &
             ) then
             runfile_complete = .true.
@@ -579,7 +557,8 @@ contains
             do jdx = 1, size(run_tag)
               select case (jdx)
               case (SCI_CycleCount, &
-                    SCI_LatLong, &
+                    SCI_CentrLatitude, &
+                    SCI_CentrLongitude, &
                     SCI_Elevation, &
                     SCI_StartDate, &
                     SCI_EndDate, &
@@ -591,14 +570,11 @@ contains
                     SCI_XOrigin, &
                     SCI_YOrigin, &
                     SCI_XLength, &
-                    SCI_YLength, &
-                    SCI_XGrid, &
-                    SCI_YGrid)
+                    SCI_YLength)
                 if( .not. run_tag(jdx)%acquired ) then
                   write(*,'(3a)') 'Tag ', trim(run_tag(jdx)%name), ' is missing from input file.'
                 end if
               case (SCI_Subregions, &
-                    SCI_Accounts, &
                     SCI_Barriers)
                 if( .not. run_tag(jdx)%acquired ) then
                   write(*,'(3a)') 'Tag ', trim(run_tag(jdx)%name), ' is incomplete in input file.'
@@ -614,6 +590,84 @@ contains
             write(*,*) "ERROR: unable to deallocate memory for tag array"
           end if
 
+        else if (idx .eq. SCI_StartDate) then
+          ! check for acquisition of all required elements
+          if (    run_tag(SCI_Day)%acquired &
+            .and. run_tag(SCI_Month)%acquired &
+            .and. run_tag(SCI_Year)%acquired &
+            ) then 
+            run_tag(SCI_Day)%acquired = .false.
+            run_tag(SCI_Month)%acquired = .false.
+            run_tag(SCI_Year)%acquired = .false.
+            run_tag(SCI_StartDate)%acquired = .true.
+            ! check for valid date values
+            if ((id .lt. 1) .or. (id .gt. lstday(im,iy))) then
+              write(*,*) 'Start date day of month: ', id, ' is not valid'
+              call exit(1)
+            end if
+            if ((im .lt. 1) .or. (im .gt. 12)) then
+              write(*,*) 'Start date month of year: ', im, ' is not valid'
+              call exit(1)
+            end if
+            if ((iy .lt. 0) .or. (iy .gt.max_simyear)) then
+              write(*,*) 'Start date year: ', im, ' must be less than ', max_simyear
+              call exit(1)
+            end if
+          else
+            do jdx = 1, size(run_tag)
+              select case (jdx)
+              case (SCI_Day, &
+                    SCI_Month, &
+                    SCI_Year)
+                if( .not. run_tag(jdx)%acquired ) then
+                  write(*,'(3a)') 'Tag ', trim(run_tag(jdx)%name), ' is missing from input file.'
+                end if
+              end select
+            end do
+          end if
+
+        else if (idx .eq. SCI_EndDate) then
+          ! check for acquisition of all required elements
+          if (    run_tag(SCI_Day)%acquired &
+            .and. run_tag(SCI_Month)%acquired &
+            .and. run_tag(SCI_Year)%acquired &
+            ) then 
+            run_tag(SCI_Day)%acquired = .false.
+            run_tag(SCI_Month)%acquired = .false.
+            run_tag(SCI_Year)%acquired = .false.
+            run_tag(SCI_EndDate)%acquired = .true.
+            ! check for valid date values
+            if ((ld .lt. 1) .or. (ld .gt. lstday(lm,ly))) then
+              write(*,*) 'Start date day of month: ', ld, ' is not valid'
+              call exit(1)
+            end if
+            if ((lm .lt. 1) .or. (lm .gt. 12)) then
+              write(*,*) 'Start date month of year: ', lm, ' is not valid'
+              call exit(1)
+            end if
+            if ((ly .lt. 0) .or. (ly .gt.max_simyear)) then
+              write(*,*) 'Start date year: ', im, ' must be less than ', max_simyear
+              call exit(1)
+            end if
+            if (difdat(id, im, iy, ld, lm, ly) .le. 0) then
+              write(*,*) 'Start date must be less than end date'
+              write(*,*) ''
+              call exit(1)
+            end if
+
+          else
+            do jdx = 1, size(run_tag)
+              select case (jdx)
+              case (SCI_Day, &
+                    SCI_Month, &
+                    SCI_Year)
+                if( .not. run_tag(jdx)%acquired ) then
+                  write(*,'(3a)') 'Tag ', trim(run_tag(jdx)%name), ' is missing from input file.'
+                end if
+              end select
+            end do
+          end if
+
         else if (idx .eq. SCI_TimeSteps) then
           ! allocate wind direction and speed array
           allocate(subday(ntstep), stat=alloc_stat)
@@ -622,7 +676,7 @@ contains
           end if
 
         else if (idx .eq. SCI_Subregions) then
-          !write(*,*) 'SCI_Subregions end of tag nsubr: ', nsubr
+          !write(*,*) 'SCI_Subregions end of tag, nsubr: ', nsubr
           count_complete = 0
           do jdx = 1, nsubr
             if (subregion_complete(jdx)) then
@@ -644,47 +698,6 @@ contains
           if( dealloc_stat .gt. 0 ) then
             ! deallocation failed
             write(*,*) "ERROR: unable to deallocate memory for tags and subregion_complete arrays"
-          end if
-
-        else if (idx .eq. SCI_Accounts) then
-          count_complete = 0
-          do jdx = 1, nacctr
-            if (account_complete(jdx)) then
-              count_complete = count_complete + 1
-            end if
-          end do
-          if (count_complete .ge. nacctr) then
-            run_tag(SCI_Accounts)%acquired = .true.
-          else
-            do jdx = 1, nacctr
-              if ( .not. account_complete(jdx)) then
-                write(*,'(3a,i0,a)') 'Tag ', trim(run_tag(SCI_Account)%name), &
-                                     ' SCI_index="', jdx-1, '" is incomplete or missing from input file.'
-              end if
-            end do
-          end if
-          ! deallocate _complete arrays
-          deallocate(account_complete, stat=dealloc_stat)
-          if( dealloc_stat .gt. 0 ) then
-            ! deallocation failed
-            write(*,*) "ERROR: unable to deallocate memory for account_complete array"
-          end if
-
-        else if (idx .eq. SCI_Account) then
-          ! check for acquisition of all required elements
-          if ( run_tag(SCI_coords)%acquired ) then 
-            run_tag(SCI_coords)%acquired = .false.
-            account_complete(iar) = .true.
-            call set_area_polygon(acct_poly(iar))
-          else
-            do jdx = 1, size(run_tag)
-              select case (jdx)
-              case (SCI_coords)
-                if( .not. run_tag(jdx)%acquired ) then
-                  write(*,'(3a)') 'Tag ', trim(run_tag(jdx)%name), ' is incomplete or missing from input file.'
-                end if
-              end select
-            end do
           end if
 
         else if (idx .eq. SCI_Barriers) then
@@ -890,30 +903,6 @@ contains
             end do
           end if
 
-        else if (idx .eq. SCI_coords) then
-          count_complete = 0
-          do jdx = 1, poly_np
-            if (coord_complete(jdx)) then
-              count_complete = count_complete + 1
-            end if
-          end do
-          if (count_complete .ge. poly_np) then
-            run_tag(SCI_coords)%acquired = .true.
-          else
-            do jdx = 1, size(coord_complete)
-              if ( .not. coord_complete(jdx)) then
-                write(*,'(3a,i0,a)') 'Tag ', trim(run_tag(SCI_coord)%name), &
-                                     ' SCI_index="', jdx-1, '" is incomplete or missing from input file.'
-              end if
-            end do
-          end if
-          ! deallocate _complete arrays
-          deallocate(coord_complete, stat=dealloc_stat)
-          if( dealloc_stat .gt. 0 ) then
-            ! deallocation failed
-            write(*,*) "ERROR: unable to deallocate memory for coord_complete array"
-          end if
-
         else if (idx .eq. SCI_coord) then
           ! check for acquisition of all required elements
           if (    run_tag(SCI_x)%acquired &
@@ -941,7 +930,6 @@ contains
           ! check for acquisition of all required elements
           if (    run_tag(SCI_SubmodelOutput)%acquired &
             .and. run_tag(SCI_DebugOutput)%acquired &
-            .and. run_tag(SCI_coords)%acquired &
             .and. run_tag(SCI_AverageSlope)%acquired &
             .and. run_tag(SCI_SoilRockFragments)%acquired &
             .and. run_tag(SCI_SoilFile)%acquired &
@@ -950,14 +938,12 @@ contains
             ) then 
             run_tag(SCI_SubmodelOutput)%acquired = .false.
             run_tag(SCI_DebugOutput)%acquired = .false.
-            run_tag(SCI_coords)%acquired = .false.
             run_tag(SCI_AverageSlope)%acquired = .false.
             run_tag(SCI_SoilRockFragments)%acquired = .false.
             run_tag(SCI_SoilFile)%acquired = .false.
             run_tag(SCI_ManageFile)%acquired = .false.
             run_tag(SCI_WaterErosionLoss)%acquired = .false.
             subregion_complete(isr) = .true.
-            call set_area_polygon(subr_poly(isr))
           else
             do jdx = 1, size(run_tag)
               select case (jdx)
@@ -970,8 +956,7 @@ contains
                   write(*,'(3a)') 'Tag ', trim(run_tag(jdx)%name), ' is missing from input file.'
                 end if
               case (SCI_SubmodelOutput, &
-                    SCI_DebugOutput, &
-                    SCI_coords)
+                    SCI_DebugOutput)
                 if( .not. run_tag(jdx)%acquired ) then
                   write(*,'(3a)') 'Tag ', trim(run_tag(jdx)%name), ' is incomplete or missing from input file.'
                 end if
@@ -1047,6 +1032,7 @@ contains
   end subroutine end_element_handler
 
   subroutine pcdata_chunk_handler(chunk)
+    use grid_mod, only: amasim, amxsim, sim_area
     character(len=*), intent(in) :: chunk
 
     character(len=80) :: param_value
@@ -1060,58 +1046,53 @@ contains
         call read_param(run_tag(SCI_CycleCount)%name, param_value, run_rot_cycles)
         run_tag(SCI_CycleCount)%acquired = .true.
 
-      else if (run_tag(SCI_LatLong)%in_tag) then
-        call read_param(run_tag(SCI_LatLong)%name, param_value, amalat, amalon)
+      else if (run_tag(SCI_CentrLatitude)%in_tag) then
+        call read_param(run_tag(SCI_CentrLatitude)%name, param_value, amalat)
         if ((amalat .lt. -90.) .or. (amalat .gt. 90.)) then
            write (*,*)'ERROR: latitude is not between -90. and 90. degrees. Please check run file'
            call exit(1)
         end if
+        run_tag(SCI_CentrLatitude)%acquired = .true.
+
+      else if (run_tag(SCI_CentrLongitude)%in_tag) then
+        call read_param(run_tag(SCI_CentrLongitude)%name, param_value, amalon)
         if ((amalon .lt. -180.) .or. (amalon .gt. 180.)) then
            write (*,*) 'ERROR: longitude is not between -180. and 180. degrees. Please check run file'
            call exit(1)
         end if
-        run_tag(SCI_LatLong)%acquired = .true.
+        run_tag(SCI_CentrLongitude)%acquired = .true.
 
       else if (run_tag(SCI_Elevation)%in_tag) then
         call read_param(run_tag(SCI_Elevation)%name, param_value, amzele)
         run_tag(SCI_Elevation)%acquired = .true.
 
       else if (run_tag(SCI_StartDate)%in_tag) then
-        call read_param(run_tag(SCI_StartDate)%name, param_value, id, im, iy)
-        if ((id .lt. 1) .or. (id .gt. lstday(im,iy))) then
-          write(*,*) 'Start date day of month: ', id, ' is not valid'
-          call exit(1)
+        if (run_tag(SCI_Day)%in_tag) then
+          call read_param(run_tag(SCI_Day)%name, param_value, id)
+          run_tag(SCI_Day)%acquired = .true.
+
+        else if (run_tag(SCI_Month)%in_tag) then
+          call read_param(run_tag(SCI_Month)%name, param_value, im)
+          run_tag(SCI_Month)%acquired = .true.
+
+        else if (run_tag(SCI_Year)%in_tag) then
+          call read_param(run_tag(SCI_Year)%name, param_value, iy)
+          run_tag(SCI_Year)%acquired = .true.
         end if
-        if ((im .lt. 1) .or. (im .gt. 12)) then
-          write(*,*) 'Start date month of year: ', im, ' is not valid'
-          call exit(1)
-        end if
-        if ((iy .lt. 0) .or. (iy .gt.max_simyear)) then
-          write(*,*) 'Start date year: ', im, ' must be less than ', max_simyear
-          call exit(1)
-        end if
-        run_tag(SCI_StartDate)%acquired = .true.
 
       else if (run_tag(SCI_EndDate)%in_tag) then
-        call read_param(run_tag(SCI_EndDate)%name, param_value, ld, lm, ly)
-        if ((ld .lt. 1) .or. (ld .gt. lstday(lm,ly))) then
-          write(*,*) 'Start date day of month: ', ld, ' is not valid'
-          call exit(1)
+        if (run_tag(SCI_Day)%in_tag) then
+          call read_param(run_tag(SCI_Day)%name, param_value, ld)
+          run_tag(SCI_Day)%acquired = .true.
+
+        else if (run_tag(SCI_Month)%in_tag) then
+          call read_param(run_tag(SCI_Month)%name, param_value, lm)
+          run_tag(SCI_Month)%acquired = .true.
+
+        else if (run_tag(SCI_Year)%in_tag) then
+          call read_param(run_tag(SCI_Year)%name, param_value, ly)
+          run_tag(SCI_Year)%acquired = .true.
         end if
-        if ((lm .lt. 1) .or. (lm .gt. 12)) then
-          write(*,*) 'Start date month of year: ', lm, ' is not valid'
-          call exit(1)
-        end if
-        if ((ly .lt. 0) .or. (ly .gt.max_simyear)) then
-          write(*,*) 'Start date year: ', im, ' must be less than ', max_simyear
-          call exit(1)
-        end if
-        if (difdat(id, im, iy, ld, lm, ly) .le. 0) then
-          write(*,*) 'Start date must be less than end date'
-          write(*,*) ''
-          call exit(1)
-        end if
-        run_tag(SCI_EndDate)%acquired = .true.
 
       else if (run_tag(SCI_TimeSteps)%in_tag) then
         call read_param(run_tag(SCI_TimeSteps)%name, param_value, ntstep)
@@ -1119,7 +1100,7 @@ contains
 
       else if (run_tag(SCI_climateFile)%in_tag) then
         ! read CLIGEN file name
-        clifil = rootp(1:len_trim(rootp)) // param_value(1:len_trim(param_value))
+        clifil = trim(rootp) // param_value(1:len_trim(param_value))
         write(luolog, *) 'clifil: ', clifil(1:len_trim(clifil))
         ! open CLIGEN run file
         call fopenk (luicli, clifil, 'old')
@@ -1173,7 +1154,7 @@ contains
 
       else if (run_tag(SCI_windFile)%in_tag) then
         ! read WINDGEN file name
-        winfil = rootp(1:len_trim(rootp)) // param_value(1:len_trim(param_value))
+        winfil = trim(rootp) // param_value(1:len_trim(param_value))
         ! open WINDGEN file
         call fopenk (luiwin, winfil, 'old')
         ! We will now check the header to determine which wind_gen data file
@@ -1195,8 +1176,6 @@ contains
         endif
         rewind luiwin
         run_tag(SCI_windFile)%acquired = .true.
-
-      ! else if (run_tag(SCI_subDailyFile)%in_tag) then
 
       else if (run_tag(SCI_ErosionSubmodelOutput)%in_tag) then
         call read_param(run_tag(SCI_ErosionSubmodelOutput)%name, param_value, am0efl)
@@ -1220,7 +1199,7 @@ contains
         ! compute the simulation area
         if (run_tag(SCI_YLength)%acquired) then
           sim_area = (amxsim(2)%x - amxsim(1)%x) * (amxsim(2)%y - amxsim(1)%y)
-          write(6,*) "Simulation area (m^2)", sim_area
+          !write(6,*) "Simulation area (m^2)", sim_area
         end if
 
       else if (run_tag(SCI_YLength)%in_tag) then
@@ -1229,31 +1208,7 @@ contains
         ! compute the simulation area
         if (run_tag(SCI_XLength)%acquired) then
           sim_area = (amxsim(2)%x - amxsim(1)%x) * (amxsim(2)%y - amxsim(1)%y)
-          write(6,*) "Simulation area (m^2)", sim_area
-        end if
-
-      else if (run_tag(SCI_XGrid)%in_tag) then
-        call read_param(run_tag(SCI_XGrid)%name, param_value, xgdpt)
-        run_tag(SCI_XGrid)%acquired = .true.
-
-      else if (run_tag(SCI_YGrid)%in_tag) then
-        call read_param(run_tag(SCI_YGrid)%name, param_value, ygdpt)
-        run_tag(SCI_YGrid)%acquired = .true.
-
-      else if (run_tag(SCI_Accounts)%in_tag) then
-        if (run_tag(SCI_Account)%in_tag) then
-          if (run_tag(SCI_coords)%in_tag) then
-            if (run_tag(SCI_coord)%in_tag) then
-              !SCI_coord
-              if (run_tag(SCI_x)%in_tag) then
-                call read_param(run_tag(SCI_x)%name, param_value, acct_poly(iar)%points(ipol)%x)
-                run_tag(SCI_x)%acquired = .true.
-              else if (run_tag(SCI_y)%in_tag) then
-                call read_param(run_tag(SCI_y)%name, param_value, acct_poly(iar)%points(ipol)%y)
-                run_tag(SCI_y)%acquired = .true.
-              end if
-            end if
-          end if
+          !write(6,*) "Simulation area (m^2)", sim_area
         end if
 
       else if (run_tag(SCI_Subregions)%in_tag) then
@@ -1295,17 +1250,6 @@ contains
               call read_param(run_tag(SCI_decomp)%name, param_value, am0ddb(isr))
               run_tag(SCI_decomp)%acquired = .true.
             end if
-          else if (run_tag(SCI_Coords)%in_tag) then
-            !SCI_Coords
-            if (run_tag(SCI_coord)%in_tag) then
-              if (run_tag(SCI_x)%in_tag) then
-                call read_param(run_tag(SCI_x)%name, param_value, subr_poly(isr)%points(ipol)%x)
-                run_tag(SCI_x)%acquired = .true.
-              else if (run_tag(SCI_y)%in_tag) then
-                call read_param(run_tag(SCI_y)%name, param_value, subr_poly(isr)%points(ipol)%y)
-                run_tag(SCI_y)%acquired = .true.
-              end if
-            end if
           else if (run_tag(SCI_AverageSlope)%in_tag) then
             !        The new "versioned" IFC files contain a slope value
             !        which will be used if this value is set negative, 
@@ -1316,19 +1260,19 @@ contains
             run_tag(SCI_AverageSlope)%acquired = .true.
 
           else if (run_tag(SCI_SoilRockFragments)%in_tag) then
+            ! If this value is set to -1, the value from the ifc is used
+            ! If set here to value of 0 or greater, this value is assigned to all layers
             call read_param(run_tag(SCI_SoilRockFragments)%name, param_value, soil_in(isr)%SoilRockFragments)
             run_tag(SCI_SoilRockFragments)%acquired = .true.
 
           else if (run_tag(SCI_SoilFile)%in_tag) then
             ! read in initial field conditions file name
-            soil_in(isr)%sinfil = rootp(1:len_trim(rootp)) // param_value(1:len_trim(param_value))
+            soil_in(isr)%sinfil = trim(rootp) // param_value(1:len_trim(param_value))
             run_tag(SCI_SoilFile)%acquired = .true.
-
-            write(*,*) 'SOILFILE: ', param_value(1:len_trim(param_value))
 
           else if (run_tag(SCI_ManageFile)%in_tag) then
             ! read in management file name
-            manFile(isr)%tinfil = rootp(1:len_trim(rootp)) // param_value(1:len_trim(param_value))
+            manFile(isr)%tinfil = trim(rootp) // param_value(1:len_trim(param_value))
             run_tag(SCI_ManageFile)%acquired = .true.
 
           else if (run_tag(SCI_WaterErosionLoss)%in_tag) then
@@ -1427,4 +1371,173 @@ contains
 
   end subroutine pcdata_chunk_handler
 
+  subroutine write_run_xml()
+    use read_write_xml_mod, only: w_begin_tag, w_end_tag, w_whole_tag
+    use grid_mod, only: amasim, amxsim
+
+    character*512 :: runxmlfil  ! xml run file name
+    logical :: fexist     ! flag used to indicate result of file existence
+    integer :: luo_xml     ! output unit number
+    integer :: dealloc_stat
+
+    nsubr = size(soil_in)
+
+    runxmlfil = trim(rootp) // 'weps.run.xml'
+
+    call init_run_xml()
+
+    inquire(file = trim(runxmlfil), exist = fexist)
+    if (fexist) then
+      ! do not overwrite existing file
+      write(*,*) 'File exists, move or delete to create new: ', trim(runxmlfil)
+      return
+    end if
+
+    call fopenk (luo_xml, trim(runxmlfil), 'unknown')
+
+    call w_begin_tag( luo_xml, run_tag(runFileData)%name )
+
+      ! GUI tags
+      call w_whole_tag( luo_xml, run_tag(GUI_UserName)%name, trim(usrnam) )
+      call w_whole_tag( luo_xml, run_tag(GUI_FarmId)%name, trim(farmid) )
+      call w_whole_tag( luo_xml, run_tag(GUI_TractId)%name, trim(tractid) )
+      call w_whole_tag( luo_xml, run_tag(GUI_FieldId)%name, trim(fieldid) )
+      call w_whole_tag( luo_xml, run_tag(GUI_RunTypeDisp)%name, trim(runtype) )
+      call w_whole_tag( luo_xml, run_tag(GUI_Site)%name, trim(siteid) )
+      call w_whole_tag( luo_xml, run_tag(GUI_cligenFlag)%name, trim(cliflag) )
+      call w_whole_tag( luo_xml, run_tag(GUI_cligenMethod)%name, trim(climethod) )
+      call w_whole_tag( luo_xml, run_tag(GUI_cligenLatitude)%name, trim(clilatitiude) )
+      call w_whole_tag( luo_xml, run_tag(GUI_cligenLongitude)%name, trim(clilongitude) )
+      call w_whole_tag( luo_xml, run_tag(GUI_cligenStateId)%name, trim(clistateid) )
+      call w_whole_tag( luo_xml, run_tag(GUI_cligenStationNum)%name, trim(clistationnum) )
+      call w_whole_tag( luo_xml, run_tag(GUI_cligenStationName)%name, trim(clistationname) )
+      call w_whole_tag( luo_xml, run_tag(GUI_cligenElevation)%name, trim(clielevation) )
+      call w_whole_tag( luo_xml, run_tag(GUI_windgenFlag)%name, trim(winflag) )
+      call w_whole_tag( luo_xml, run_tag(GUI_windgenMethod)%name, trim(winmethod) )
+      call w_whole_tag( luo_xml, run_tag(GUI_windgenLatitude)%name, trim(winlatitude) )
+      call w_whole_tag( luo_xml, run_tag(GUI_windgenLongitude)%name, trim(winlongitude) )
+      call w_whole_tag( luo_xml, run_tag(GUI_windgenStationNum)%name, trim(winstationnum) )
+      call w_whole_tag( luo_xml, run_tag(GUI_windgenCountry)%name, trim(wincountry) )
+      call w_whole_tag( luo_xml, run_tag(GUI_windgenState)%name, trim(winstate) )
+      call w_whole_tag( luo_xml, run_tag(GUI_windgenStationName)%name, trim(winstationname) )
+      ! not recorded in old weps.run files, so make blank entry
+      call w_whole_tag( luo_xml, run_tag(GUI_lastrun)%name, '' )
+
+      call w_whole_tag( luo_xml, run_tag(SCI_CycleCount)%name, run_rot_cycles )
+      call w_whole_tag( luo_xml, run_tag(SCI_CentrLatitude)%name, amalat )
+      call w_whole_tag( luo_xml, run_tag(SCI_CentrLongitude)%name, amalon )
+      call w_whole_tag( luo_xml, run_tag(SCI_Elevation)%name, amzele )
+      call w_begin_tag( luo_xml, run_tag(SCI_StartDate)%name )
+        call w_whole_tag( luo_xml, run_tag(SCI_Day)%name, id )
+        call w_whole_tag( luo_xml, run_tag(SCI_Month)%name, im )
+        call w_whole_tag( luo_xml, run_tag(SCI_Year)%name, iy )
+      call w_end_tag( luo_xml, run_tag(SCI_StartDate)%name )
+      call w_begin_tag( luo_xml, run_tag(SCI_EndDate)%name )
+        call w_whole_tag( luo_xml, run_tag(SCI_Day)%name, ld )
+        call w_whole_tag( luo_xml, run_tag(SCI_Month)%name, lm )
+        call w_whole_tag( luo_xml, run_tag(SCI_Year)%name, ly )
+      call w_end_tag( luo_xml, run_tag(SCI_EndDate)%name )
+      call w_whole_tag( luo_xml, run_tag(SCI_TimeSteps)%name, ntstep )
+      call w_whole_tag( luo_xml, run_tag(SCI_climateFile)%name, trim(clifil) )
+      call w_whole_tag( luo_xml, run_tag(SCI_windFile)%name, trim(winfil) )
+      call w_whole_tag( luo_xml, run_tag(SCI_ErosionSubmodelOutput)%name, am0efl )
+      call w_whole_tag( luo_xml, run_tag(SCI_RegionAngle)%name, amasim )
+      call w_whole_tag( luo_xml, run_tag(SCI_XOrigin)%name, amxsim(1)%x )
+      call w_whole_tag( luo_xml, run_tag(SCI_YOrigin)%name, amxsim(1)%y )
+      call w_whole_tag( luo_xml, run_tag(SCI_XLength)%name, amxsim(2)%x )
+      call w_whole_tag( luo_xml, run_tag(SCI_YLength)%name, amxsim(2)%y )
+
+      call w_begin_tag( luo_xml, run_tag(SCI_Subregions)%name, &
+                                 run_tag(SCI_number)%name, nsubr)
+      do isr = 1, nsubr
+        call w_begin_tag( luo_xml, run_tag(SCI_Subregion)%name, &
+                                   run_tag(SCI_index)%name, isr-1)
+          call w_begin_tag( luo_xml, run_tag(SCI_SubmodelOutput)%name )
+            call w_whole_tag( luo_xml, run_tag(SCI_hydro)%name, am0hfl(isr) )
+            call w_whole_tag( luo_xml, run_tag(SCI_soil)%name, am0sfl(isr) )
+            call w_whole_tag( luo_xml, run_tag(SCI_man)%name, manFile(isr)%am0tfl )
+            call w_whole_tag( luo_xml, run_tag(SCI_crop)%name, am0cfl(isr) )
+            call w_whole_tag( luo_xml, run_tag(SCI_decomp)%name, am0dfl(isr) )
+          call w_end_tag( luo_xml, run_tag(SCI_SubmodelOutput)%name )
+          call w_begin_tag( luo_xml, run_tag(SCI_DebugOutput)%name )
+            call w_whole_tag( luo_xml, run_tag(SCI_hydro)%name, am0hdb(isr) )
+            call w_whole_tag( luo_xml, run_tag(SCI_soil)%name, am0sdb(isr) )
+            call w_whole_tag( luo_xml, run_tag(SCI_man)%name, manFile(isr)%am0tdb )
+            call w_whole_tag( luo_xml, run_tag(SCI_crop)%name, am0cdb(isr) )
+            call w_whole_tag( luo_xml, run_tag(SCI_decomp)%name, am0ddb(isr) )
+          call w_end_tag( luo_xml, run_tag(SCI_DebugOutput)%name )
+          call w_whole_tag( luo_xml, run_tag(SCI_AverageSlope)%name , soil_in(isr)%amrslp )
+          call w_whole_tag( luo_xml, run_tag(SCI_SoilRockFragments)%name , soil_in(isr)%SoilRockFragments )
+          call w_whole_tag( luo_xml, run_tag(SCI_SoilFile)%name , soil_in(isr)%sinfil )
+          call w_whole_tag( luo_xml, run_tag(SCI_ManageFile)%name , manFile(isr)%tinfil )
+          call w_whole_tag( luo_xml, run_tag(SCI_WaterErosionLoss)%name , soil_in(isr)%WaterErosion )
+        call w_end_tag( luo_xml, run_tag(SCI_Subregion)%name )
+      end do
+      call w_end_tag( luo_xml, run_tag(SCI_Subregions)%name )
+
+      nbr = size(barseas)
+      call w_begin_tag( luo_xml, run_tag(SCI_Barriers)%name, &
+                                 run_tag(SCI_number)%name, nbr)
+      do ibr = 1, nbr
+        call w_begin_tag( luo_xml, run_tag(SCI_Barrier)%name, &
+                                   run_tag(SCI_BarrierSeasonFlag)%name, barseas(ibr)%seas_flg, &
+                                   run_tag(SCI_index)%name, ibr-1)
+          call w_whole_tag( luo_xml, run_tag(SCI_Description)%name, trim(barseas(ibr)%amzbt) )
+            call w_begin_tag( luo_xml, run_tag(SCI_PointBarClis)%name, &
+                                       run_tag(SCI_BarCliNumber)%name, barseas(ibr)%ntm, &
+                                       run_tag(SCI_CoordinateNumber)%name, barseas(ibr)%np )
+            do iseas = 1, barseas(ibr)%ntm
+              call w_begin_tag( luo_xml, run_tag(SCI_BarCli)%name, &
+                                         run_tag(SCI_index)%name, iseas-1 )
+                call w_whole_tag( luo_xml, run_tag(SCI_TimeDesc)%name, trim(barseas(ibr)%dst(iseas)%st_desc) )
+                call w_whole_tag( luo_xml, run_tag(SCI_TimeMark)%name, barseas(ibr)%dst(iseas)%doy )
+
+                if( barseas(ibr)%seas_flg .eq. 2 ) then
+                  ! these are used for climate based seasonal transitions
+                  call w_whole_tag( luo_xml, run_tag(SCI_BegTranFlg)%name, barseas(ibr)%clim(iseas)%beg_flg )
+                  call w_whole_tag( luo_xml, run_tag(SCI_BegTranThresh)%name, barseas(ibr)%clim(iseas)%beg_thresh )
+                  call w_whole_tag( luo_xml, run_tag(SCI_BegTranBase)%name, barseas(ibr)%clim(iseas)%beg_base )
+                  call w_whole_tag( luo_xml, run_tag(SCI_EndTranFlg)%name, barseas(ibr)%clim(iseas)%end_flg )
+                  call w_whole_tag( luo_xml, run_tag(SCI_EndTranThresh)%name, barseas(ibr)%clim(iseas)%end_thresh )
+                  call w_whole_tag( luo_xml, run_tag(SCI_EndTranBase)%name, barseas(ibr)%clim(iseas)%end_base )
+                end if
+              call w_end_tag( luo_xml, run_tag(SCI_BarCli)%name )
+            end do
+            do ipol = 1, barseas(ibr)%np
+              call w_begin_tag( luo_xml, run_tag(SCI_coord)%name, &
+                                         run_tag(SCI_index)%name, ipol-1 )
+                call w_whole_tag( luo_xml, run_tag(SCI_x)%name, barseas(ibr)%points(ipol)%x )
+                call w_whole_tag( luo_xml, run_tag(SCI_y)%name, barseas(ibr)%points(ipol)%y )
+                !GUI_lat
+                !GUI_lon
+              call w_end_tag( luo_xml, run_tag(SCI_coord)%name )
+            end do
+            do iseas = 1, barseas(ibr)%ntm
+              do ipol = 1, barseas(ibr)%np
+                call w_begin_tag( luo_xml, run_tag(SCI_PointBarCli)%name, &
+                                         run_tag(SCI_BarCliIndex)%name, iseas-1, &
+                                         run_tag(SCI_coordIndex)%name, ipol-1 )
+                  call w_whole_tag( luo_xml, run_tag(SCI_height)%name, barseas(ibr)%param(ipol,iseas)%amzbr )
+                  call w_whole_tag( luo_xml, run_tag(SCI_width)%name, barseas(ibr)%param(ipol,iseas)%amxbrw )
+                  call w_whole_tag( luo_xml, run_tag(SCI_porosity)%name, barseas(ibr)%param(ipol,iseas)%ampbr )
+                call w_end_tag( luo_xml, run_tag(SCI_PointBarCli)%name )
+              end do
+            end do
+            call w_end_tag( luo_xml, run_tag(SCI_PointBarClis)%name )
+          call w_end_tag( luo_xml, run_tag(SCI_Barrier)%name )
+      end do
+      call w_end_tag( luo_xml, run_tag(SCI_Barriers)%name )
+
+    call w_end_tag( luo_xml, run_tag(runFileData)%name )
+
+    close (luo_xml)
+
+    ! deallocate tag array
+    deallocate( run_tag, stat=dealloc_stat)
+    if( dealloc_stat .gt. 0 ) then
+      ! deallocation failed
+      write(*,*) "ERROR: unable to deallocate memory for tag array"
+    end if
+
+  end subroutine write_run_xml
 end module input_run_xml_mod

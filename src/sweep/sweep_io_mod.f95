@@ -25,35 +25,37 @@ module sweep_io_mod
 
    contains
 
-   subroutine erodin (input_filepath, i_unit, o_unit, cmdebugflag, hagen_plot_flag)
+   function erodin (input_filepath, i_unit, cmdebugflag, hagen_plot_flag) result(xmlformat)
 
       ! +++ PURPOSE +++
       ! Utility to read initial conditions and variables from
       ! input file (stdin or erod.in) for the standalone erosion submodel
 
-      ! If "o_unit" == stdout (6) then input not echo'd
-
       ! + + + Modules Used + + +
-      use Polygons_Mod, only: create_polygon
-      use barriers_mod, only: create_barrier
-      use sae_in_out_mod, only: saeinp
       use flib_sax
       use sweep_io_xml_defs, only: init_input_xml
-      use sweep_io_xml_mod, only: sweepdata_complete
-      use sweep_io_xml_mod, only: begin_element_handler, end_element_handler, pcdata_chunk_handler
+      use sweep_io_xml_mod, only: sweepdata_complete, isr, treatmentdata_complete, soilstate_complete
+      use sweep_io_xml_mod, only: begin_sweep_element_handler, end_sweep_element_handler, pcdata_sweep_chunk_handler
+      use sweep_io_xml_mod, only: begin_treatment_element_handler, end_treatment_element_handler, pcdata_treatment_chunk_handler
+      use sweep_io_xml_mod, only: begin_soilstate_element_handler, end_soilstate_element_handler, pcdata_soilstate_chunk_handler
+      use sae_in_out_mod, only: mksaeinp, subrfiles
+      use grid_mod, only: gridfile, griddata_complete, init_grid_xml
+      use grid_mod, only: begin_griddata_element_handler, end_griddata_element_handler, pcdata_griddata_chunk_handler
 
       ! +++ ARGUMENT DECLARATIONS +++
       character*1024  :: input_filepath
       integer :: i_unit
-      integer :: o_unit
       integer :: cmdebugflag
       logical :: hagen_plot_flag
+      logical :: xmlformat
 
       ! +++ LOCAL VARIABLES +++
       character*(mrcl) line
 
       type(xml_t) :: fxml   ! xml file handle structure
       integer :: iostat     ! input/output status
+
+      integer :: nsubr      ! number of subregions
 
       ! +++ END SPECIFICATIONS +++
 
@@ -71,36 +73,109 @@ module sweep_io_mod
             write(*,*) 'ERROR: XML input file must be input using the -i flag on the command line'
             call exit(1)
           endif
+          ! set file type for return value
+          xmlformat = .true.
+
           ! open input file
           call open_xmlfile(trim(input_filepath),fxml,iostat)
-          if (iostat /= 0) stop "Cannot open xml input file"
+          if (iostat /= 0) then
+            write(*,*) "Cannot open xml input file: ", trim(input_filepath)
+            stop
+          end if
           ! read in xml based input file
           call init_input_xml()
           call xml_parse(fxml, &
-             begin_element_handler = begin_element_handler, &
-             end_element_handler = end_element_handler, &
-             pcdata_chunk_handler = pcdata_chunk_handler, &
+             begin_element_handler = begin_sweep_element_handler, &
+             end_element_handler = end_sweep_element_handler, &
+             pcdata_chunk_handler = pcdata_sweep_chunk_handler, &
              verbose = .false.)
+          call close_xmlfile(fxml)
           if (.not. sweepdata_complete) then
             write(*,*) 'Simulation run file incomplete'
             call exit(1)
           end if
+
+          ! number of subregions
+          nsubr = size(subrfiles)
+
+          do isr = 1, nsubr
+
+            ! open treatment file
+            call open_xmlfile(trim(mksaeinp%fullpath) // trim(subrfiles(isr)%treatfil),fxml,iostat)
+            if (iostat /= 0) then
+              write(*,*) "Cannot open xml input file: ", trim(mksaeinp%fullpath) // trim(subrfiles(isr)%treatfil)
+              stop
+            end if
+            ! read in xml based input file
+            call init_input_xml()
+            call xml_parse(fxml, &
+              begin_element_handler = begin_treatment_element_handler, &
+              end_element_handler = end_treatment_element_handler, &
+              pcdata_chunk_handler = pcdata_treatment_chunk_handler, &
+              verbose = .false.)
+            call close_xmlfile(fxml)
+            if (.not. treatmentdata_complete(isr)) then
+              write(*,*) 'Treatment File incomplete, Subregion: ', isr
+              call exit(1)
+            end if
+
+            ! open soilstate file
+            call open_xmlfile(trim(mksaeinp%fullpath) // trim(subrfiles(isr)%slstfil),fxml,iostat)
+            if (iostat /= 0) then
+              write(*,*) "Cannot open xml input file: ", trim(mksaeinp%fullpath) // trim(subrfiles(isr)%slstfil)
+              stop
+            end if
+            ! read in xml based input file
+            call init_input_xml()
+            call xml_parse(fxml, &
+              begin_element_handler = begin_soilstate_element_handler, &
+              end_element_handler = end_soilstate_element_handler, &
+              pcdata_chunk_handler = pcdata_soilstate_chunk_handler, &
+              verbose = .false.)
+            call close_xmlfile(fxml)
+            if (.not. soilstate_complete(isr)) then
+              write(*,*) 'Soil State File incomplete, Subregion: ', isr
+              call exit(1)
+            end if
+
+          end do
+
+          ! open grid file
+          call open_xmlfile(trim(mksaeinp%fullpath) // trim(gridfile),fxml,iostat)
+          if (iostat /= 0) then
+              write(*,*) "Cannot open xml input file: ", trim(mksaeinp%fullpath) // trim(gridfile)
+              stop
+            end if
+          ! Read in grid subregion assignments from erod.grid
+          call init_grid_xml()
+          call xml_parse(fxml, &
+            begin_element_handler = begin_griddata_element_handler, &
+            end_element_handler = end_griddata_element_handler, &
+            pcdata_chunk_handler = pcdata_griddata_chunk_handler, &
+            verbose = .false.)
+          call close_xmlfile(fxml)
+          if (.not. griddata_complete) then
+            write(*,*) 'Grid Data File incomplete'
+            call exit(1)
+          end if
+
           return
       else
+          ! set file type for return value
+          xmlformat = .false.
+
           ! unversioned file, read old file format
-          call erodin_legacy (line, i_unit, o_unit, cmdebugflag, hagen_plot_flag)
+          call erodin_legacy (line, i_unit, cmdebugflag, hagen_plot_flag)
           return
       end if
 
-   end subroutine erodin
+   end function erodin
 
-   subroutine erodin_legacy (line, i_unit, o_unit, cmdebugflag, hagen_plot_flag)
+   subroutine erodin_legacy (line, i_unit, cmdebugflag, hagen_plot_flag)
 
       ! +++ PURPOSE +++
       ! Utility to read initial conditions and variables from
       ! input file (stdin or erod.in) for the standalone erosion submodel
-
-      ! If "o_unit" == stdout (6) then input not echo'd
 
       ! + + + Modules Used + + +
       use Polygons_Mod, only: create_polygon
@@ -112,14 +187,12 @@ module sweep_io_mod
       use p1erode_def, only: SLRR_MIN, SLRR_MAX, WZZO_MIN, WZZO_MAX
       use barriers_mod, only: create_barrier, barrier, barseas
       use grid_mod, only: amasim, amxsim
-      use sae_in_out_mod, only: saeinp
 
       ! +++ ARGUMENT DECLARATIONS +++
       character*(mrcl), intent(inout) :: line
-      integer :: i_unit
-      integer :: o_unit
-      integer :: cmdebugflag
-      logical :: hagen_plot_flag
+      integer, intent(in) :: i_unit
+      integer, intent(in) :: cmdebugflag
+      logical, intent(in) :: hagen_plot_flag
 
       ! +++ LOCAL VARIABLES +++
       integer i,j            ! do loop indices
@@ -286,6 +359,11 @@ module sweep_io_mod
       line = getline(i_unit)
       read (line,*) nsubr
 
+      if( nsubr .gt. 1 ) then
+        write(*,*) 'Expected legacy file to have only one subregion. Found: ', nsubr
+        write(*,*) 'Results may not be valid.'
+      end if
+
       ! create data array to hold input and derived values for each subregion
       sum_stat = 0
       allocate(subrsurf(0:nsubr), stat=alloc_stat)
@@ -380,6 +458,7 @@ module sweep_io_mod
         if( (aczht .gt. 0.0) .and. ((acrsai .gt. 0.0) .or. (acrlai .gt. 0.0)) ) then
           ! biodrag elements exist, add brcdInput
           npools = npools + 1
+          subrsurf(sr)%brcdInput(npools)%bname = 'crop'
           subrsurf(sr)%brcdInput(npools)%rlai = acrlai
           subrsurf(sr)%brcdInput(npools)%rsai = acrsai
           subrsurf(sr)%brcdInput(npools)%rg = ac0rg
@@ -390,6 +469,7 @@ module sweep_io_mod
         if( (adzht_ave .gt. 0.0) .and. ((adrsaitot .gt. 0.0) .or. (adrlaitot .gt. 0.0)) ) then
           ! biodrag elements exist, add brcdInput
           npools = npools + 1
+          subrsurf(sr)%brcdInput(npools)%bname = 'residue'
           subrsurf(sr)%brcdInput(npools)%rlai = adrlaitot
           subrsurf(sr)%brcdInput(npools)%rsai = adrsaitot
           subrsurf(sr)%brcdInput(npools)%rg = 0
@@ -634,11 +714,6 @@ module sweep_io_mod
       if( hagen_plot_flag ) then 
          call plotin(subrsurf)
       end if
-
-      ! + + + OUTPUT SECTION + + +
-      if (o_unit .ne. 6) then  !Only echo input if stdout not specified
-          call saeinp( o_unit, subrsurf )
-      endif !(o_unit .ne. 6)
 
    end subroutine erodin_legacy
 

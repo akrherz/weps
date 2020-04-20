@@ -15,8 +15,7 @@ module sim_area_average_mod
 
   contains
 
-    subroutine sim_area_average( subr_poly, h1et, h1bal, subrsurf, soil, croptot, restot, biotot )
-       type(polygon), dimension(:), intent(in) :: subr_poly
+    subroutine sim_area_average( h1et, h1bal, subrsurf, soil, croptot, restot, biotot )
        type(hydro_derived_et), dimension(0:), intent(inout) :: h1et
        type(hydro_balance), dimension(0:), intent(inout) :: h1bal
        type(subregionsurfacestate), dimension(0:), intent(inout) :: subrsurf  ! subregion surface conditions
@@ -59,13 +58,10 @@ module sim_area_average_mod
        real :: frac_area
        REAL, PARAMETER :: snow_depth_thresh = 20.0
 
-       nsubr = size(subr_poly)
+       nsubr = size(subrsurf) - 1
 
        ! sum up all subregion areas
-       tot_area = 0.0
-       do isr = 1, nsubr
-          tot_area = tot_area + subr_poly(isr)%area
-       end do
+       tot_area = subrsurf(0)%cntcells
 
        h1et(0)%zea  = 0.0
        h1et(0)%zep  = 0.0
@@ -92,6 +88,7 @@ module sim_area_average_mod
        subrsurf(0)%acancr = 0.0  ! Surface Crust Coeff. of abrasion (1/m)
 
        croptot(0)%ftcancov = 0.0 ! Crop canopy cover fraction
+       croptot(0)%ftcvtot = 0.0  ! Crop flat cover fraction
        croptot(0)%rcdtot = 0.0   ! Crop Standing silhouette (m^2/m^2)
        croptot(0)%msttot = 0.0      ! Crop standing mass (kg/m^2)
        croptot(0)%mftot = 0.0       ! Crop Flat masss (kg/m^2)
@@ -135,7 +132,7 @@ module sim_area_average_mod
        soil(0)%acancr = 0.0
 
        do isr = 1, nsubr
-          frac_area = subr_poly(isr)%area / tot_area
+          frac_area = subrsurf(isr)%cntcells / tot_area
           h1et(0)%zea  = h1et(0)%zea  + h1et(isr)%zea  * frac_area
           h1et(0)%zep  = h1et(0)%zep  + h1et(isr)%zep  * frac_area
           h1et(0)%zeta = h1et(0)%zeta + h1et(isr)%zeta * frac_area
@@ -170,6 +167,7 @@ module sim_area_average_mod
           subrsurf(0)%acancr = subrsurf(0)%acancr + subrsurf(isr)%acancr * frac_area
 
           croptot(0)%ftcancov = croptot(0)%ftcancov + croptot(isr)%ftcancov * frac_area
+          croptot(0)%ftcvtot = croptot(0)%ftcvtot + croptot(isr)%ftcvtot * frac_area
           croptot(0)%rcdtot = croptot(0)%rcdtot + croptot(isr)%rcdtot * frac_area
           croptot(0)%msttot = croptot(0)%msttot + croptot(isr)%msttot * frac_area
           croptot(0)%mftot = croptot(0)%mftot + croptot(isr)%mftot * frac_area
