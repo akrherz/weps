@@ -138,7 +138,7 @@ module water_erosion_mod
       ctclst = 0.0
       slpprv = 0.0
       wdhtop = 0.0
-!
+!getfromweps
 !     copy any weps variables into WEPP names
 !     variables that begin with wp_ are stored in the WEPP
 !     common area and don't have direct WEPS equivalent. 
@@ -146,7 +146,7 @@ module water_erosion_mod
 !     them now.
 !
 
-      call getfromweps(isr,sand,silt,clay,orgmat,                       &
+      call getfromweps(sand,silt,clay,orgmat,                           &
      &  thetdr,rrc,dg,st,thdp,frdp, thetfc, por, rh,                    &
      &  frctrl, frcsol, prcp, soil)
 

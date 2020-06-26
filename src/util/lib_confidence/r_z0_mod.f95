@@ -31,7 +31,7 @@ end subroutine
 double precision function r (psi, psihat, sigsqhat, wbar1, wbar2, nval)
     double precision, intent(in) :: psi, psihat, sigsqhat, wbar1, wbar2
     integer, intent(in) :: nval
-    double precision :: sigsqhatpsi, r_psi, u_psi, B, one
+    double precision :: sigsqhatpsi, r_psi, B, one
 
     sigsqhatpsi = 2.0 * sqrt((psi+1)**2 + wbar2 - 2.0*psi*wbar1 - 2*psi) - 2.0
     B = psihat - psi

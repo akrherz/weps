@@ -8,14 +8,13 @@ module weps_submodel_mod
   contains
 
     subroutine submodels (isr, soil, plant, plantIndex, restot, croptot, &
-                          biotot, decompfac, mandate, hstate, h1et, h1bal, wp, manFile)
+                          biotot, decompfac, hstate, h1et, h1bal, wp, manFile)
 
       use weps_main_mod, only: daysim
       use soil_data_struct_defs, only: soil_def
       use biomaterial, only: decomp_factors
       use biomaterial, only: plant_pointer, residue_pointer, biototal
       use input_run_mod, only: iy
-      use mandate_mod, only: opercrop_date
       use hydro_data_struct_defs, only: hydro_derived_et, hydro_state
       use hydro_mod, only: callhydr
       use report_hydrobal_mod, only: hydro_balance
@@ -36,7 +35,6 @@ module weps_submodel_mod
       type(biototal), intent(inout) :: croptot ! structure array containing summary amounts for living plant biomass
       type(biototal), intent(inout) :: biotot  ! structure array containing summary amounts for all biomass
       type(decomp_factors), intent(inout) :: decompfac
-      type(opercrop_date), dimension(:), intent(inout) :: mandate
       type(hydro_state), intent(inout) :: hstate
       type(hydro_derived_et), intent(inout) :: h1et
       type(hydro_balance), intent(inout) :: h1bal
@@ -46,7 +44,7 @@ module weps_submodel_mod
       ! write(*,*) "Start manage", daysim
 
       ! MANAGEment (tillage) submodel
-      call manage(isr, iy, soil, plant, plantIndex, biotot, mandate, hstate, h1et, manFile)
+      call manage(isr, iy, soil, plant, plantIndex, biotot, hstate, h1et, manFile)
 
       call plantupdate( soil, plant, croptot, restot, biotot )
 
@@ -76,7 +74,7 @@ module weps_submodel_mod
       return
     end subroutine submodels
 
-    subroutine erodsubr_update( sr, manFile, soil, plant, biotot, hstate, h1et, subrsurf )
+    subroutine erodsubr_update( manFile, soil, plant, biotot, hstate, h1et, subrsurf )
 
       ! assign all input data for stand alone erosion to subrsurf structure
 
@@ -90,7 +88,6 @@ module weps_submodel_mod
       use manage_data_struct_defs, only: man_file_struct
 
       !     +++ ARGUMENT DECLARATIONS +++
-      integer sr                                   ! subregion index (eventually obsolete)
       type(man_file_struct), intent(in) :: manFile
       type(soil_def), intent(in) :: soil           ! soil for this subregion
       type(plant_pointer), pointer :: plant        ! pointer to youngest plant data, which chains to older plant data

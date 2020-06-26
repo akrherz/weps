@@ -9,6 +9,14 @@ module solar_mod
     real, parameter :: civilrise = 96.0   ! solar altitude angle defined as civil twilight
     real, parameter :: nautrise = 102.0   ! solar altitude angle defined as nautical twilight
     real, parameter :: astrorise = 108.0  ! solar altitude angle defined as astronomical twilight
+    integer, parameter :: N_spring_eqx = 79 ! day of year for spring equinox in Northern Hemishpere (non leap year)
+    integer, parameter :: N_summer_sol = 172 ! day of year for summer solstice in Northern Hemishpere (non leap year)
+    integer, parameter :: N_fall_eqx = 264 ! day of year for fall equinox in Northern Hemishpere (non leap year)
+    integer, parameter :: N_winter_sol = 355 ! day of year for winter solstice in Northern Hemishpere (non leap year)
+    integer, parameter :: S_spring_eqx = 264 ! day of year for spring equinox in Southern Hemishpere (non leap year)
+    integer, parameter :: S_summer_sol = 355 ! day of year for summer solstice in Southern Hemishpere (non leap year)
+    integer, parameter :: S_fall_eqx = 79 ! day of year for fall equinox in Southern Hemishpere (non leap year)
+    integer, parameter :: S_winter_sol = 172 ! day of year for winter solstice in Southern Hemishpere (non leap year)
 
   contains
 

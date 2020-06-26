@@ -156,7 +156,7 @@ module mproc_surface_mod
 
       ! Is RR going to be increased?  If so, then just do it.
       if (rradj .ge. rr) then 
-	      rr = tillf*rradj + (1.0-tillf)*rr
+          rr = tillf*rradj + (1.0-tillf)*rr
       else
           rr = tillf*(till_i*rradj + (1.0-till_i)*rr)                   &
      &       + (1.0-tillf)*rr
@@ -266,8 +266,8 @@ module mproc_surface_mod
             dh = impl_dh
             ds = impl_ds
           else                          
-			if (impl_rh .ge. (2.0 * (rh/2.0 - tilld))) then
-			   !tillage implement ridging great enough
+            if (impl_rh .ge. (2.0 * (rh/2.0 - tilld))) then
+               !tillage implement ridging great enough
                rh = impl_rh
                rw = impl_rw
                rs = impl_rs

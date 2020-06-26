@@ -3,7 +3,7 @@
 !$Revision$
 !$HeadURL$
 
-      subroutine getfromweps(isr,sand,silt,clay,orgmat,                 &
+      subroutine getfromweps(sand,silt,clay,orgmat,                     &
      & thetdr,rrc,dg,st,thdp,frdp,thetfc,por,rh,                        &
      & frctrl, frcsol, precip, soil)
      
@@ -28,7 +28,6 @@
 
       include 'wepp_erosion.inc'
 
-      integer, intent(in):: isr
       real, intent(out):: sand(mxnsl), silt(mxnsl), clay(mxnsl)
       real, intent(out):: orgmat(mxnsl)
       real, intent(out):: thetdr(mxnsl), rrc
@@ -39,7 +38,6 @@
       type(soil_def), intent(in) :: soil  ! soil for this subregion
       
 !     + + + argument declarations + + +     
-!     isr - This variable holds the subregion index.
 !     sand() - sand fraction by layer
 !     silt() - silt fraction by layer
 !     clay() - clay fraction by layer

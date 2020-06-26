@@ -42,9 +42,9 @@ module manage_xml_mod
   integer :: ogp_id_idx
   integer :: p_idx
 
-  character(len=3) :: operID
-  character(len=3) :: grpID
-  character(len=3) :: procID
+  integer :: operID
+  integer :: grpID
+  integer :: procID
 
   logical :: all_wepsmanvalues
   logical :: all_operationDBs
@@ -102,7 +102,6 @@ contains
 
   subroutine setup_man_xml()
 
-    integer :: idx
     integer :: sum_stat
     integer :: alloc_stat
 
@@ -128,13 +127,13 @@ contains
     man_tag(13)%name = "version"
     man_tag(14)%name = "wepsmanDB"
 
-    max_ogp = 56   ! count of total number of operations, groups, and processes
+    max_ogp = 57   ! count of total number of operations, groups, and processes
     sum_stat = 0
     allocate( param_nt(max_ogp), stat=alloc_stat)
     sum_stat = sum_stat + alloc_stat
 
     param_nt(1)%ogp="O"
-    param_nt(1)%id="00"
+    param_nt(1)%id = 0
     allocate( param_nt(1)%i_name(0), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
     allocate( param_nt(1)%r_name(0), stat=alloc_stat )
@@ -143,7 +142,7 @@ contains
     sum_stat = sum_stat + alloc_stat
 
     param_nt(2)%ogp="O"
-    param_nt(2)%id="01"
+    param_nt(2)%id = 1
     allocate( param_nt(2)%i_name(0), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
     allocate( param_nt(2)%r_name(5), stat=alloc_stat )
@@ -157,7 +156,7 @@ contains
     param_nt(2)%r_name(5)="omaxspeed"
 
     param_nt(3)%ogp="O"
-    param_nt(3)%id="02"
+    param_nt(3)%id = 2
     allocate( param_nt(3)%i_name(0), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
     allocate( param_nt(3)%r_name(0), stat=alloc_stat )
@@ -166,7 +165,7 @@ contains
     sum_stat = sum_stat + alloc_stat
 
     param_nt(4)%ogp="O"
-    param_nt(4)%id="03"
+    param_nt(4)%id = 3
     allocate( param_nt(4)%i_name(0), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
     allocate( param_nt(4)%r_name(7), stat=alloc_stat )
@@ -183,7 +182,7 @@ contains
     param_nt(4)%s_name(1)="ofuel"
 
     param_nt(5)%ogp="O"
-    param_nt(5)%id="04"
+    param_nt(5)%id = 4
     allocate( param_nt(5)%i_name(0), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
     allocate( param_nt(5)%r_name(2), stat=alloc_stat )
@@ -195,7 +194,7 @@ contains
     param_nt(5)%s_name(1)="ofuel"
 
     param_nt(6)%ogp="G"
-    param_nt(6)%id="01"
+    param_nt(6)%id = 1
     allocate( param_nt(6)%i_name(0), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
     allocate( param_nt(6)%r_name(6), stat=alloc_stat )
@@ -210,7 +209,7 @@ contains
     param_nt(6)%r_name(6)="gtmaxdepth"
 
     param_nt(7)%ogp="G"
-    param_nt(7)%id="02"
+    param_nt(7)%id = 2
     allocate( param_nt(7)%i_name(0), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
     allocate( param_nt(7)%r_name(1), stat=alloc_stat )
@@ -220,7 +219,7 @@ contains
     param_nt(7)%r_name(1)="gbioarea"
 
     param_nt(8)%ogp="G"
-    param_nt(8)%id="03"
+    param_nt(8)%id = 3
     allocate( param_nt(8)%i_name(0), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
     allocate( param_nt(8)%r_name(0), stat=alloc_stat )
@@ -230,7 +229,7 @@ contains
     param_nt(8)%s_name(1)="gcropname"
 
     param_nt(9)%ogp="G"
-    param_nt(9)%id="04"
+    param_nt(9)%id = 4
     allocate( param_nt(9)%i_name(0), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
     allocate( param_nt(9)%r_name(0), stat=alloc_stat )
@@ -240,7 +239,7 @@ contains
     param_nt(9)%s_name(1)="gamdname"
 
     param_nt(10)%ogp="P"
-    param_nt(10)%id="01"
+    param_nt(10)%id = 1
     allocate( param_nt(10)%i_name(0), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
     allocate( param_nt(10)%r_name(0), stat=alloc_stat )
@@ -249,7 +248,7 @@ contains
     sum_stat = sum_stat + alloc_stat
 
     param_nt(11)%ogp="P"
-    param_nt(11)%id="02"
+    param_nt(11)%id = 2
     allocate( param_nt(11)%i_name(1), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
     allocate( param_nt(11)%r_name(1), stat=alloc_stat )
@@ -260,7 +259,7 @@ contains
     param_nt(11)%r_name(1)="rrough"
 
     param_nt(12)%ogp="P"
-    param_nt(12)%id="05"
+    param_nt(12)%id = 5
     allocate( param_nt(12)%i_name(1), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
     allocate( param_nt(12)%r_name(5), stat=alloc_stat )
@@ -275,7 +274,7 @@ contains
     param_nt(12)%r_name(5)="dkspac"
 
     param_nt(13)%ogp="P"
-    param_nt(13)%id="11"
+    param_nt(13)%id = 11
     allocate( param_nt(13)%i_name(0), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
     allocate( param_nt(13)%r_name(2), stat=alloc_stat )
@@ -286,7 +285,7 @@ contains
     param_nt(13)%r_name(2)="crif"
 
     param_nt(14)%ogp="P"
-    param_nt(14)%id="12"
+    param_nt(14)%id = 12
     allocate( param_nt(14)%i_name(0), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
     allocate( param_nt(14)%r_name(1), stat=alloc_stat )
@@ -296,7 +295,7 @@ contains
     param_nt(14)%r_name(1)="soilos"
 
     param_nt(15)%ogp="P"
-    param_nt(15)%id="13"
+    param_nt(15)%id = 13
     allocate( param_nt(15)%i_name(0), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
     allocate( param_nt(15)%r_name(1), stat=alloc_stat )
@@ -306,7 +305,7 @@ contains
     param_nt(15)%r_name(1)="laymix"
 
     param_nt(16)%ogp="P"
-    param_nt(16)%id="14"
+    param_nt(16)%id = 14
     allocate( param_nt(16)%i_name(1), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
     allocate( param_nt(16)%r_name(5), stat=alloc_stat )
@@ -315,7 +314,7 @@ contains
     sum_stat = sum_stat + alloc_stat
 
     param_nt(17)%ogp="P"
-    param_nt(17)%id="24"
+    param_nt(17)%id = 24
     allocate( param_nt(17)%i_name(1), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
     allocate( param_nt(17)%r_name(5), stat=alloc_stat )
@@ -330,7 +329,7 @@ contains
     param_nt(17)%r_name(5)="massflatvt5"
 
     param_nt(18)%ogp="P"
-    param_nt(18)%id="25"
+    param_nt(18)%id = 25
     allocate( param_nt(18)%i_name(1), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
     allocate( param_nt(18)%r_name(5), stat=alloc_stat )
@@ -345,7 +344,7 @@ contains
     param_nt(18)%r_name(5)="massburyvt5"
 
     param_nt(19)%ogp="P"
-    param_nt(19)%id="26"
+    param_nt(19)%id = 26
     allocate( param_nt(19)%i_name(0), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
     allocate( param_nt(19)%r_name(5), stat=alloc_stat )
@@ -359,7 +358,7 @@ contains
     param_nt(19)%r_name(5)="massresurvt5"
 
     param_nt(20)%ogp="P"
-    param_nt(20)%id="31"
+    param_nt(20)%id = 31
     allocate( param_nt(20)%i_name(1), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
     allocate( param_nt(20)%r_name(0), stat=alloc_stat )
@@ -369,7 +368,7 @@ contains
     param_nt(20)%i_name(1)="kilflag"
 
     param_nt(21)%ogp="P"
-    param_nt(21)%id="32"
+    param_nt(21)%id = 32
     allocate( param_nt(21)%i_name(1), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
     allocate( param_nt(21)%r_name(4), stat=alloc_stat )
@@ -383,7 +382,7 @@ contains
     param_nt(21)%r_name(4)="cstrmh"
 
     param_nt(22)%ogp="P"
-    param_nt(22)%id="33"
+    param_nt(22)%id = 33
     allocate( param_nt(22)%i_name(0), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
     allocate( param_nt(22)%r_name(4), stat=alloc_stat )
@@ -396,7 +395,7 @@ contains
     param_nt(22)%r_name(4)="cstrmf"
 
     param_nt(23)%ogp="P"
-    param_nt(23)%id="34"
+    param_nt(23)%id = 34
     allocate( param_nt(23)%i_name(1), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
     allocate( param_nt(23)%r_name(10), stat=alloc_stat )
@@ -416,7 +415,7 @@ contains
     param_nt(23)%r_name(10)="threshmultvt5"
 
     param_nt(24)%ogp="P"
-    param_nt(24)%id="37"
+    param_nt(24)%id = 37
     allocate( param_nt(24)%i_name(0), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
     allocate( param_nt(24)%r_name(4), stat=alloc_stat )
@@ -429,7 +428,7 @@ contains
     param_nt(24)%r_name(4)="tstrmp"
 
     param_nt(25)%ogp="P"
-    param_nt(25)%id="38"
+    param_nt(25)%id = 38
     allocate( param_nt(25)%i_name(0), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
     allocate( param_nt(25)%r_name(4), stat=alloc_stat )
@@ -442,7 +441,7 @@ contains
     param_nt(25)%r_name(4)="tstrmf"
 
     param_nt(26)%ogp="P"
-    param_nt(26)%id="40"
+    param_nt(26)%id = 40
     allocate( param_nt(26)%i_name(0), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
     allocate( param_nt(26)%r_name(0), stat=alloc_stat )
@@ -451,7 +450,7 @@ contains
     sum_stat = sum_stat + alloc_stat
 
     param_nt(27)%ogp="P"
-    param_nt(27)%id="42"
+    param_nt(27)%id = 42
     allocate( param_nt(27)%i_name(5), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
     allocate( param_nt(27)%r_name(4), stat=alloc_stat )
@@ -469,7 +468,7 @@ contains
     param_nt(27)%r_name(4)="cstrmh"
 
     param_nt(28)%ogp="P"
-    param_nt(28)%id="43"
+    param_nt(28)%id = 43
     allocate( param_nt(28)%i_name(4), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
     allocate( param_nt(28)%r_name(4), stat=alloc_stat )
@@ -486,7 +485,7 @@ contains
     param_nt(28)%r_name(4)="cstrmf"
 
     param_nt(29)%ogp="P"
-    param_nt(29)%id="47"
+    param_nt(29)%id = 47
     allocate( param_nt(29)%i_name(4), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
     allocate( param_nt(29)%r_name(4), stat=alloc_stat )
@@ -503,7 +502,7 @@ contains
     param_nt(29)%r_name(4)="tstrmp"
 
     param_nt(30)%ogp="P"
-    param_nt(30)%id="48"
+    param_nt(30)%id = 48
     allocate( param_nt(30)%i_name(4), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
     allocate( param_nt(30)%r_name(4), stat=alloc_stat )
@@ -520,7 +519,7 @@ contains
     param_nt(30)%r_name(4)="tstrmf"
 
     param_nt(31)%ogp="P"
-    param_nt(31)%id="50"
+    param_nt(31)%id = 50
     allocate( param_nt(31)%i_name(1), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
     allocate( param_nt(31)%r_name(18), stat=alloc_stat )
@@ -548,7 +547,7 @@ contains
     param_nt(31)%r_name(18)="resevapb"
 
     param_nt(32)%ogp="P"
-    param_nt(32)%id="51"
+    param_nt(32)%id = 51
     allocate( param_nt(32)%i_name(9), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
     allocate( param_nt(32)%r_name(61), stat=alloc_stat )
@@ -628,7 +627,7 @@ contains
     param_nt(32)%r_name(61)="noparam1"
 
     param_nt(33)%ogp="P"
-    param_nt(33)%id="61"
+    param_nt(33)%id = 61
     allocate( param_nt(33)%i_name(2), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
     allocate( param_nt(33)%r_name(5), stat=alloc_stat )
@@ -644,7 +643,7 @@ contains
     param_nt(33)%r_name(5)="rrootfiber"
 
     param_nt(34)%ogp="P"
-    param_nt(34)%id="62"
+    param_nt(34)%id = 62
     allocate( param_nt(34)%i_name(7), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
     allocate( param_nt(34)%r_name(5), stat=alloc_stat )
@@ -665,7 +664,7 @@ contains
     param_nt(34)%r_name(5)="rrootfiber"
 
     param_nt(35)%ogp="P"
-    param_nt(35)%id="65"
+    param_nt(35)%id = 65
     allocate( param_nt(35)%i_name(1), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
     allocate( param_nt(35)%r_name(18), stat=alloc_stat )
@@ -693,7 +692,7 @@ contains
     param_nt(35)%r_name(18)="resevapb"
 
     param_nt(36)%ogp="P"
-    param_nt(36)%id="66"
+    param_nt(36)%id = 66
     allocate( param_nt(36)%i_name(1), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
     allocate( param_nt(36)%r_name(20), stat=alloc_stat )
@@ -723,7 +722,7 @@ contains
     param_nt(36)%r_name(20)="resevapb"
 
     param_nt(37)%ogp="P"
-    param_nt(37)%id="71"
+    param_nt(37)%id = 71
     allocate( param_nt(37)%i_name(1), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
     allocate( param_nt(37)%r_name(1), stat=alloc_stat )
@@ -734,7 +733,7 @@ contains
     param_nt(37)%r_name(1)="irrdepth"
 
     param_nt(38)%ogp="P"
-    param_nt(38)%id="72"
+    param_nt(38)%id = 72
     allocate( param_nt(38)%i_name(2), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
     allocate( param_nt(38)%r_name(6), stat=alloc_stat )
@@ -751,7 +750,7 @@ contains
     param_nt(38)%r_name(6)="irrmad"
 
     param_nt(39)%ogp="P"
-    param_nt(39)%id="73"
+    param_nt(39)%id = 73
     allocate( param_nt(39)%i_name(0), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
     allocate( param_nt(39)%r_name(4), stat=alloc_stat )
@@ -764,7 +763,7 @@ contains
     param_nt(39)%r_name(4)="irrapploc"
 
     param_nt(40)%ogp="P"
-    param_nt(40)%id="74"
+    param_nt(40)%id = 74
     allocate( param_nt(40)%i_name(0), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
     allocate( param_nt(40)%r_name(0), stat=alloc_stat )
@@ -773,7 +772,7 @@ contains
     sum_stat = sum_stat + alloc_stat
 
     param_nt(41)%ogp="P"
-    param_nt(41)%id="91"
+    param_nt(41)%id = 91
     allocate( param_nt(41)%i_name(0), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
     allocate( param_nt(41)%r_name(5), stat=alloc_stat )
@@ -787,7 +786,7 @@ contains
     param_nt(41)%r_name(5)="minf"
 
     param_nt(42)%ogp="P"
-    param_nt(42)%id="92"
+    param_nt(42)%id = 92
     allocate( param_nt(42)%i_name(0), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
     allocate( param_nt(42)%r_name(2), stat=alloc_stat )
@@ -797,122 +796,100 @@ contains
     param_nt(42)%r_name(1)="wcdepth"
     param_nt(42)%r_name(2)="wc"
 
-    ! UPGMinWEPS_init
+    ! planting location
     param_nt(43)%ogp="P"
-    param_nt(43)%id="100"
-    allocate( param_nt(43)%i_name(9), stat=alloc_stat )
+    param_nt(43)%id = 101
+    allocate( param_nt(43)%i_name(2), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
-    allocate( param_nt(43)%r_name(40), stat=alloc_stat )
+    allocate( param_nt(43)%r_name(1), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
-    allocate( param_nt(43)%s_name(2), stat=alloc_stat )
+    allocate( param_nt(43)%s_name(0), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
-    param_nt(43)%s_name(1)="stage_label"
-    param_nt(43)%i_name(1)="stage_type"
-    param_nt(43)%i_name(2)="rowflag"
+    param_nt(43)%i_name(1)="rowflag"
     param_nt(43)%r_name(1)="rowspac"
-    param_nt(43)%i_name(3)="rowridge"
-    param_nt(43)%r_name(2)="plantpop"
-    param_nt(43)%r_name(3)="dmaxshoot"
-    param_nt(43)%i_name(4)="cbaflag"
-    param_nt(43)%r_name(4)="tgtyield"
-    param_nt(43)%r_name(5)="cbafact"
-    param_nt(43)%i_name(5)="hyldflag"
-    param_nt(43)%s_name(2)="hyldunits"
-    param_nt(43)%r_name(6)="hyldwater"
-    param_nt(43)%r_name(7)="hyconfact"
-    param_nt(43)%i_name(6)="idc"
-    param_nt(43)%r_name(8)="grf"
-    param_nt(43)%r_name(9)="ck"
-    param_nt(43)%r_name(10)="hmx"
-    param_nt(43)%r_name(11)="growdepth"
-    param_nt(43)%r_name(12)="rdmx"
-    param_nt(43)%r_name(13)="tbas"
-    param_nt(43)%r_name(14)="topt"
-    param_nt(43)%i_name(7)="thudf"
-    param_nt(43)%i_name(8)="dtm"
-    param_nt(43)%r_name(15)="thum"
-    param_nt(43)%r_name(16)="bceff"
-    param_nt(43)%r_name(17)="ssaa"
-    param_nt(43)%r_name(18)="ssab"
-    param_nt(43)%r_name(19)="sla"
-    param_nt(43)%r_name(20)="diammax"
-    param_nt(43)%r_name(21)="storeinit"
-    param_nt(43)%r_name(22)="mshoot"
-    param_nt(43)%r_name(23)="leafstem"
-    param_nt(43)%r_name(24)="fshoot"
-    param_nt(43)%r_name(25)="leaf2stor"
-    param_nt(43)%r_name(26)="stem2stor"
-    param_nt(43)%r_name(27)="stor2stor"
-    param_nt(43)%i_name(9)="rbc"
-    param_nt(43)%r_name(28)="standdk"
-    param_nt(43)%r_name(29)="surfdk"
-    param_nt(43)%r_name(30)="burieddk"
-    param_nt(43)%r_name(31)="rootdk"
-    param_nt(43)%r_name(32)="stemnodk"
-    param_nt(43)%r_name(33)="stemdia"
-    param_nt(43)%r_name(34)="thrddys"
-    param_nt(43)%r_name(35)="covfact"
-    param_nt(43)%r_name(36)="resevapa"
-    param_nt(43)%r_name(37)="resevapb"
-    param_nt(43)%r_name(38)="yield_coefficient"
-    param_nt(43)%r_name(39)="residue_intercept"
-    param_nt(43)%r_name(40)="regrow_location"
+    param_nt(43)%i_name(2)="rowridge"
 
-    ! pmms_germination
+    ! UPGMinWEPS_init
     param_nt(44)%ogp="P"
-    param_nt(44)%id="110"
-    allocate( param_nt(44)%i_name(1), stat=alloc_stat )
+    param_nt(44)%id = 100
+    allocate( param_nt(44)%i_name(7), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
-    allocate( param_nt(44)%r_name(8), stat=alloc_stat )
+    allocate( param_nt(44)%r_name(39), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
-    allocate( param_nt(44)%s_name(1), stat=alloc_stat )
+    allocate( param_nt(44)%s_name(2), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
     param_nt(44)%s_name(1)="stage_label"
     param_nt(44)%i_name(1)="stage_type"
-    param_nt(44)%r_name(1)="swc_curve1"
-    param_nt(44)%r_name(2)="swc_curve2"
-    param_nt(44)%r_name(3)="swc_curve3"
-    param_nt(44)%r_name(4)="swc_curve4"
-    param_nt(44)%r_name(5)="gdd_resp1"
-    param_nt(44)%r_name(6)="gdd_resp2"
-    param_nt(44)%r_name(7)="gdd_resp3"
-    param_nt(44)%r_name(8)="gdd_resp4"
+    param_nt(44)%r_name(1)="plantpop"
+    param_nt(44)%r_name(2)="dmaxshoot"
+    param_nt(44)%i_name(2)="cbaflag"
+    param_nt(44)%r_name(3)="tgtyield"
+    param_nt(44)%r_name(4)="cbafact"
+    param_nt(44)%i_name(3)="hyldflag"
+    param_nt(44)%s_name(2)="hyldunits"
+    param_nt(44)%r_name(5)="hyldwater"
+    param_nt(44)%r_name(6)="hyconfact"
+    param_nt(44)%i_name(4)="idc"
+    param_nt(44)%r_name(7)="grf"
+    param_nt(44)%r_name(8)="ck"
+    param_nt(44)%r_name(9)="hmx"
+    param_nt(44)%r_name(10)="growdepth"
+    param_nt(44)%r_name(11)="rdmx"
+    param_nt(44)%r_name(12)="tbas"
+    param_nt(44)%r_name(13)="topt"
+    param_nt(44)%i_name(5)="thudf"
+    param_nt(44)%i_name(6)="dtm"
+    param_nt(44)%r_name(14)="thum"
+    param_nt(44)%r_name(15)="bceff"
+    param_nt(44)%r_name(16)="ssaa"
+    param_nt(44)%r_name(17)="ssab"
+    param_nt(44)%r_name(18)="sla"
+    param_nt(44)%r_name(19)="diammax"
+    param_nt(44)%r_name(20)="storeinit"
+    param_nt(44)%r_name(21)="mshoot"
+    param_nt(44)%r_name(22)="leafstem"
+    param_nt(44)%r_name(23)="fshoot"
+    param_nt(44)%r_name(24)="leaf2stor"
+    param_nt(44)%r_name(25)="stem2stor"
+    param_nt(44)%r_name(26)="stor2stor"
+    param_nt(44)%i_name(7)="rbc"
+    param_nt(44)%r_name(27)="standdk"
+    param_nt(44)%r_name(28)="surfdk"
+    param_nt(44)%r_name(29)="burieddk"
+    param_nt(44)%r_name(30)="rootdk"
+    param_nt(44)%r_name(31)="stemnodk"
+    param_nt(44)%r_name(32)="stemdia"
+    param_nt(44)%r_name(33)="thrddys"
+    param_nt(44)%r_name(34)="covfact"
+    param_nt(44)%r_name(35)="resevapa"
+    param_nt(44)%r_name(36)="resevapb"
+    param_nt(44)%r_name(37)="yield_coefficient"
+    param_nt(44)%r_name(38)="residue_intercept"
+    param_nt(44)%r_name(39)="regrow_location"
 
-    ! pmms_shootgrg
+    ! pmms_germination
     param_nt(45)%ogp="P"
-    param_nt(45)%id="120"
+    param_nt(45)%id = 110
     allocate( param_nt(45)%i_name(1), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
-    allocate( param_nt(45)%r_name(20), stat=alloc_stat )
+    allocate( param_nt(45)%r_name(8), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
     allocate( param_nt(45)%s_name(1), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
     param_nt(45)%s_name(1)="stage_label"
     param_nt(45)%i_name(1)="stage_type"
-    param_nt(45)%r_name(1)="GN_trans_gdd"
-    param_nt(45)%r_name(2)="GN_stress"
-    param_nt(45)%r_name(3)="GS_trans_gdd"
-    param_nt(45)%r_name(4)="GS_stress"
-    param_nt(45)%r_name(5)="height_inc"
-    param_nt(45)%r_name(6)="root_depth_inc"
-    param_nt(45)%r_name(7)="beg_live_leaf"
-    param_nt(45)%r_name(8)="end_live_leaf"
-    param_nt(45)%r_name(9)="beg_weath_leaf"
-    param_nt(45)%r_name(10)="end_weath_leaf"
-    param_nt(45)%r_name(11)="beg_senes_root"
-    param_nt(45)%r_name(12)="end_senes_root"
-    param_nt(45)%r_name(13)="beg_grain_index"
-    param_nt(45)%r_name(14)="end_grain_index"
-    param_nt(45)%r_name(15)="beg_p_rw"
-    param_nt(45)%r_name(16)="end_p_rw"
-    param_nt(45)%r_name(17)="beg_p_lf"
-    param_nt(45)%r_name(18)="end_p_lf"
-    param_nt(45)%r_name(19)="beg_p_rp"
-    param_nt(45)%r_name(20)="end_p_rp"
+    param_nt(45)%r_name(1)="swc_curve1"
+    param_nt(45)%r_name(2)="swc_curve2"
+    param_nt(45)%r_name(3)="swc_curve3"
+    param_nt(45)%r_name(4)="swc_curve4"
+    param_nt(45)%r_name(5)="gdd_resp1"
+    param_nt(45)%r_name(6)="gdd_resp2"
+    param_nt(45)%r_name(7)="gdd_resp3"
+    param_nt(45)%r_name(8)="gdd_resp4"
 
-    ! pmms_basephenol
+    ! pmms_shootgrg
     param_nt(46)%ogp="P"
-    param_nt(46)%id="130"
+    param_nt(46)%id = 120
     allocate( param_nt(46)%i_name(1), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
     allocate( param_nt(46)%r_name(20), stat=alloc_stat )
@@ -942,9 +919,9 @@ contains
     param_nt(46)%r_name(19)="beg_p_rp"
     param_nt(46)%r_name(20)="end_p_rp"
 
-    ! pmms_springphenol
+    ! pmms_basephenol
     param_nt(47)%ogp="P"
-    param_nt(47)%id="140"
+    param_nt(47)%id = 130
     allocate( param_nt(47)%i_name(1), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
     allocate( param_nt(47)%r_name(20), stat=alloc_stat )
@@ -974,12 +951,12 @@ contains
     param_nt(47)%r_name(19)="beg_p_rp"
     param_nt(47)%r_name(20)="end_p_rp"
 
-    ! pmms_fallphenol
+    ! pmms_springphenol
     param_nt(48)%ogp="P"
-    param_nt(48)%id="150"
+    param_nt(48)%id = 140
     allocate( param_nt(48)%i_name(1), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
-    allocate( param_nt(48)%r_name(21), stat=alloc_stat )
+    allocate( param_nt(48)%r_name(20), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
     allocate( param_nt(48)%s_name(1), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
@@ -989,39 +966,59 @@ contains
     param_nt(48)%r_name(2)="GN_stress"
     param_nt(48)%r_name(3)="GS_trans_gdd"
     param_nt(48)%r_name(4)="GS_stress"
-    param_nt(48)%r_name(5)="tverndel"
-    param_nt(48)%r_name(6)="height_inc"
-    param_nt(48)%r_name(7)="root_depth_inc"
-    param_nt(48)%r_name(8)="beg_live_leaf"
-    param_nt(48)%r_name(9)="end_live_leaf"
-    param_nt(48)%r_name(10)="beg_weath_leaf"
-    param_nt(48)%r_name(11)="end_weath_leaf"
-    param_nt(48)%r_name(12)="beg_senes_root"
-    param_nt(48)%r_name(13)="end_senes_root"
-    param_nt(48)%r_name(14)="beg_grain_index"
-    param_nt(48)%r_name(15)="end_grain_index"
-    param_nt(48)%r_name(16)="beg_p_rw"
-    param_nt(48)%r_name(17)="end_p_rw"
-    param_nt(48)%r_name(18)="beg_p_lf"
-    param_nt(48)%r_name(19)="end_p_lf"
-    param_nt(48)%r_name(20)="beg_p_rp"
-    param_nt(48)%r_name(21)="end_p_rp"
+    param_nt(48)%r_name(5)="height_inc"
+    param_nt(48)%r_name(6)="root_depth_inc"
+    param_nt(48)%r_name(7)="beg_live_leaf"
+    param_nt(48)%r_name(8)="end_live_leaf"
+    param_nt(48)%r_name(9)="beg_weath_leaf"
+    param_nt(48)%r_name(10)="end_weath_leaf"
+    param_nt(48)%r_name(11)="beg_senes_root"
+    param_nt(48)%r_name(12)="end_senes_root"
+    param_nt(48)%r_name(13)="beg_grain_index"
+    param_nt(48)%r_name(14)="end_grain_index"
+    param_nt(48)%r_name(15)="beg_p_rw"
+    param_nt(48)%r_name(16)="end_p_rw"
+    param_nt(48)%r_name(17)="beg_p_lf"
+    param_nt(48)%r_name(18)="end_p_lf"
+    param_nt(48)%r_name(19)="beg_p_rp"
+    param_nt(48)%r_name(20)="end_p_rp"
 
-    ! gddmethod1
+    ! pmms_fallphenol
     param_nt(49)%ogp="P"
-    param_nt(49)%id="200"
+    param_nt(49)%id = 150
     allocate( param_nt(49)%i_name(1), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
-    allocate( param_nt(49)%r_name(0), stat=alloc_stat )
+    allocate( param_nt(49)%r_name(21), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
     allocate( param_nt(49)%s_name(1), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
-    param_nt(49)%s_name(1)="process_label"
-    param_nt(49)%i_name(1)="process_type"
+    param_nt(49)%s_name(1)="stage_label"
+    param_nt(49)%i_name(1)="stage_type"
+    param_nt(49)%r_name(1)="GN_trans_gdd"
+    param_nt(49)%r_name(2)="GN_stress"
+    param_nt(49)%r_name(3)="GS_trans_gdd"
+    param_nt(49)%r_name(4)="GS_stress"
+    param_nt(49)%r_name(5)="tverndel"
+    param_nt(49)%r_name(6)="height_inc"
+    param_nt(49)%r_name(7)="root_depth_inc"
+    param_nt(49)%r_name(8)="beg_live_leaf"
+    param_nt(49)%r_name(9)="end_live_leaf"
+    param_nt(49)%r_name(10)="beg_weath_leaf"
+    param_nt(49)%r_name(11)="end_weath_leaf"
+    param_nt(49)%r_name(12)="beg_senes_root"
+    param_nt(49)%r_name(13)="end_senes_root"
+    param_nt(49)%r_name(14)="beg_grain_index"
+    param_nt(49)%r_name(15)="end_grain_index"
+    param_nt(49)%r_name(16)="beg_p_rw"
+    param_nt(49)%r_name(17)="end_p_rw"
+    param_nt(49)%r_name(18)="beg_p_lf"
+    param_nt(49)%r_name(19)="end_p_lf"
+    param_nt(49)%r_name(20)="beg_p_rp"
+    param_nt(49)%r_name(21)="end_p_rp"
 
-    ! gddweps_method
+    ! gddmethod1
     param_nt(50)%ogp="P"
-    param_nt(50)%id="201"
+    param_nt(50)%id = 200
     allocate( param_nt(50)%i_name(1), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
     allocate( param_nt(50)%r_name(0), stat=alloc_stat )
@@ -1031,9 +1028,9 @@ contains
     param_nt(50)%s_name(1)="process_label"
     param_nt(50)%i_name(1)="process_type"
 
-    ! ritchie_vernalization
+    ! gddweps_method
     param_nt(51)%ogp="P"
-    param_nt(51)%id="210"
+    param_nt(51)%id = 201
     allocate( param_nt(51)%i_name(1), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
     allocate( param_nt(51)%r_name(0), stat=alloc_stat )
@@ -1043,9 +1040,9 @@ contains
     param_nt(51)%s_name(1)="process_label"
     param_nt(51)%i_name(1)="process_type"
 
-    ! ritchie_winterhardening
+    ! ritchie_vernalization
     param_nt(52)%ogp="P"
-    param_nt(52)%id="211"
+    param_nt(52)%id = 210
     allocate( param_nt(52)%i_name(1), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
     allocate( param_nt(52)%r_name(0), stat=alloc_stat )
@@ -1055,9 +1052,9 @@ contains
     param_nt(52)%s_name(1)="process_label"
     param_nt(52)%i_name(1)="process_type"
 
-    ! weps_warmdays
+    ! ritchie_winterhardening
     param_nt(53)%ogp="P"
-    param_nt(53)%id="220"
+    param_nt(53)%id = 211
     allocate( param_nt(53)%i_name(1), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
     allocate( param_nt(53)%r_name(0), stat=alloc_stat )
@@ -1067,21 +1064,21 @@ contains
     param_nt(53)%s_name(1)="process_label"
     param_nt(53)%i_name(1)="process_type"
 
-    ! weps_tempstress
+    ! weps_warmdays
     param_nt(54)%ogp="P"
-    param_nt(54)%id="221"
+    param_nt(54)%id = 220
     allocate( param_nt(54)%i_name(1), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
-    allocate( param_nt(54)%r_name(4), stat=alloc_stat )
+    allocate( param_nt(54)%r_name(0), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
     allocate( param_nt(54)%s_name(1), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
     param_nt(54)%s_name(1)="process_label"
     param_nt(54)%i_name(1)="process_type"
 
-    ! weps_freezedamage
+    ! weps_tempstress
     param_nt(55)%ogp="P"
-    param_nt(55)%id="222"
+    param_nt(55)%id = 221
     allocate( param_nt(55)%i_name(1), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
     allocate( param_nt(55)%r_name(4), stat=alloc_stat )
@@ -1090,14 +1087,10 @@ contains
     sum_stat = sum_stat + alloc_stat
     param_nt(55)%s_name(1)="process_label"
     param_nt(55)%i_name(1)="process_type"
-    param_nt(55)%r_name(1)="frsx1"
-    param_nt(55)%r_name(2)="frsx2"
-    param_nt(55)%r_name(3)="frsy1"
-    param_nt(55)%r_name(4)="frsy2"
 
-    ! weps_regrowth
+    ! weps_freezedamage
     param_nt(56)%ogp="P"
-    param_nt(56)%id="230"
+    param_nt(56)%id = 222
     allocate( param_nt(56)%i_name(1), stat=alloc_stat )
     sum_stat = sum_stat + alloc_stat
     allocate( param_nt(56)%r_name(4), stat=alloc_stat )
@@ -1106,6 +1099,22 @@ contains
     sum_stat = sum_stat + alloc_stat
     param_nt(56)%s_name(1)="process_label"
     param_nt(56)%i_name(1)="process_type"
+    param_nt(56)%r_name(1)="frsx1"
+    param_nt(56)%r_name(2)="frsx2"
+    param_nt(56)%r_name(3)="frsy1"
+    param_nt(56)%r_name(4)="frsy2"
+
+    ! weps_regrowth
+    param_nt(57)%ogp="P"
+    param_nt(57)%id = 230
+    allocate( param_nt(57)%i_name(1), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    allocate( param_nt(57)%r_name(4), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    allocate( param_nt(57)%s_name(1), stat=alloc_stat )
+    sum_stat = sum_stat + alloc_stat
+    param_nt(57)%s_name(1)="process_label"
+    param_nt(57)%i_name(1)="process_type"
 
     if( alloc_stat .gt. 0 ) then
       write(*,*) 'ERROR: memory alloc., parameter names reference'
@@ -1130,7 +1139,7 @@ contains
       else
         acquired = acquired .and. .false.
         write(date_str, '(2(i2,"/"),i4)') operPtr%operDate%day, operPtr%operDate%month, operPtr%operDate%year
-        write(*,*) 'Missing value for: ', trim(param_nt(operPtr%OGPidx)%i_name(idx)), ' Parameter in: O ', trim(operPtr%operID), &
+        write(*,*) 'Missing value for: ', trim(param_nt(operPtr%OGPidx)%i_name(idx)), ' Parameter in: O ', operPtr%operID, &
                    ' of Operation: ', trim(operPtr%operName), ' on date: ', date_str
       end if
     end do
@@ -1140,7 +1149,7 @@ contains
       else
         acquired = acquired .and. .false.
         write(date_str, '(2(i2,"/"),i4)') operPtr%operDate%day, operPtr%operDate%month, operPtr%operDate%year
-        write(*,*) 'Missing value for: ', trim(param_nt(operPtr%OGPidx)%r_name(idx)), ' Parameter in: O ', trim(operPtr%operID), &
+        write(*,*) 'Missing value for: ', trim(param_nt(operPtr%OGPidx)%r_name(idx)), ' Parameter in: O ', operPtr%operID, &
                    ' of Operation: ', trim(operPtr%operName), ' on date: ', date_str
       end if
     end do
@@ -1150,7 +1159,7 @@ contains
       else
         acquired = acquired .and. .false.
         write(date_str, '(2(i2,"/"),i4)') operPtr%operDate%day, operPtr%operDate%month, operPtr%operDate%year
-        write(*,*) 'Missing value for: ', trim(param_nt(operPtr%OGPidx)%s_name(idx)), ' Parameter in: O ', trim(operPtr%operID), &
+        write(*,*) 'Missing value for: ', trim(param_nt(operPtr%OGPidx)%s_name(idx)), ' Parameter in: O ', operPtr%operID, &
                    ' of Operation: ', trim(operPtr%operName), ' on date: ', date_str
       end if
     end do
@@ -1174,7 +1183,7 @@ contains
       else
         acquired = acquired .and. .false.
         write(date_str, '(2(i2,"/"),i4)') operPtr%operDate%day, operPtr%operDate%month, operPtr%operDate%year
-        write(*,*) 'Missing value for: ', trim(param_nt(grpPtr%OGPidx)%i_name(idx)), ' Parameter in: G ', trim(grpPtr%grpID), &
+        write(*,*) 'Missing value for: ', trim(param_nt(grpPtr%OGPidx)%i_name(idx)), ' Parameter in: G ', grpPtr%grpID, &
                    ' of Operation: ', trim(operPtr%operName), ' on date: ', date_str
       end if
     end do
@@ -1184,7 +1193,7 @@ contains
       else
         acquired = acquired .and. .false.
         write(date_str, '(2(i2,"/"),i4)') operPtr%operDate%day, operPtr%operDate%month, operPtr%operDate%year
-        write(*,*) 'Missing value for: ', trim(param_nt(grpPtr%OGPidx)%r_name(idx)), ' Parameter in: G ', trim(grpPtr%grpID), &
+        write(*,*) 'Missing value for: ', trim(param_nt(grpPtr%OGPidx)%r_name(idx)), ' Parameter in: G ', grpPtr%grpID, &
                    ' of Operation: ', trim(operPtr%operName), ' on date: ', date_str
       end if
     end do
@@ -1194,7 +1203,7 @@ contains
       else
         acquired = acquired .and. .false.
         write(date_str, '(2(i2,"/"),i4)') operPtr%operDate%day, operPtr%operDate%month, operPtr%operDate%year
-        write(*,*) 'Missing value for: ', trim(param_nt(grpPtr%OGPidx)%s_name(idx)), ' Parameter in: G ', trim(grpPtr%grpID), &
+        write(*,*) 'Missing value for: ', trim(param_nt(grpPtr%OGPidx)%s_name(idx)), ' Parameter in: G ', grpPtr%grpID, &
                    ' of Operation: ', trim(operPtr%operName), ' on date: ', date_str
       end if
     end do
@@ -1218,7 +1227,7 @@ contains
       else
         acquired = .false.
         write(date_str, '(2(i2,"/"),i4)') operPtr%operDate%day, operPtr%operDate%month, operPtr%operDate%year
-        write(*,*) 'Missing value for: ', trim(param_nt(procPtr%OGPidx)%i_name(idx)), ' Parameter in: P ', trim(procPtr%procID), &
+        write(*,*) 'Missing value for: ', trim(param_nt(procPtr%OGPidx)%i_name(idx)), ' Parameter in: P ', procPtr%procID, &
                    ' of Operation: ', trim(operPtr%operName), ' on date: ', date_str
       end if
     end do
@@ -1228,7 +1237,7 @@ contains
       else
         acquired = .false.
         write(date_str, '(2(i2,"/"),i4)') operPtr%operDate%day, operPtr%operDate%month, operPtr%operDate%year
-        write(*,*) 'Missing value for: ', trim(param_nt(procPtr%OGPidx)%r_name(idx)), ' Parameter in: P ', trim(procPtr%procID), &
+        write(*,*) 'Missing value for: ', trim(param_nt(procPtr%OGPidx)%r_name(idx)), ' Parameter in: P ', procPtr%procID, &
                    ' of Operation: ', trim(operPtr%operName), ' on date: ', date_str
       end if
     end do
@@ -1238,7 +1247,7 @@ contains
       else
         acquired = .false.
         write(date_str, '(2(i2,"/"),i4)') operPtr%operDate%day, operPtr%operDate%month, operPtr%operDate%year
-        write(*,*) 'Missing value for: ', trim(param_nt(procPtr%OGPidx)%s_name(idx)), ' Parameter in: P ', trim(procPtr%procID), &
+        write(*,*) 'Missing value for: ', trim(param_nt(procPtr%OGPidx)%s_name(idx)), ' Parameter in: P ', procPtr%procID, &
                    ' of Operation: ', trim(operPtr%operName), ' on date: ', date_str
       end if
     end do
@@ -1392,11 +1401,11 @@ contains
 
     else if (idx .eq. actionvalue) then
       ! check if all parameters acquired for this action value
-      if ( operID .ne. '' ) then
+      if ( operID .ge. 0 ) then
         all_params = check_params( manFile(isub)%oper )
-      else if ( grpID .ne. '' ) then
+      else if ( grpID .ge. 0 ) then
         all_params = check_params( manFile(isub)%oper, manFile(isub)%grp )
-      else if ( procID .ne. '' ) then
+      else if ( procID .ge. 0 ) then
         all_params = check_params( manFile(isub)%oper, manFile(isub)%proc )
       end if
       if( man_tag(identity)%acquired &
@@ -1484,9 +1493,9 @@ contains
                   .or. t_code .eq. 'P' &
                   ) then
                   man_tag(code)%acquired = .true.
-                  operID = ''
-                  grpID = ''
-                  procID = ''
+                  operID = -1
+                  grpID = -1
+                  procID = -1
                 else
                   write(*,*) 'Unknown Identity code: "', trim(t_code), '" found in ', trim(manFile(isub)%tinfil)
                   call exit(1)
@@ -1495,7 +1504,7 @@ contains
                 man_tag(id)%acquired = .true.
                 select case (t_code)
                 case ('O')
-                  operID = trim(param_value)
+                  read(param_value, *) operID
                   if ( .not. associated(manFile(isub)%operFirst) ) then
                     manFile(isub)%operFirst => elemCreate( manFile(isub)%operFirst, operID )
                     manFile(isub)%oper => manFile(isub)%operFirst
@@ -1510,7 +1519,7 @@ contains
                   nullify(manFile(isub)%proc)
                   ogp_id_idx = manFile(isub)%oper%OGPidx
                 case ('G')
-                  grpID = trim(param_value)
+                  read(param_value, *) grpID
                   if ( .not. associated(manFile(isub)%oper) ) then
                     write(*,*) 'Group appears before Operation in Management File: ', trim(manFile(isub)%tinfil)
                     call exit(1)
@@ -1524,10 +1533,10 @@ contains
                   nullify(manFile(isub)%proc)
                   ogp_id_idx = manFile(isub)%grp%OGPidx
                 case ('P')
-                  procID = trim(param_value)
+                  read(param_value, *) procID
                   if ( .not. associated(manFile(isub)%grp) ) then
                     ! Operation has process without group preceeding, create null group to support structure.
-                    manFile(isub)%oper%grpFirst => elemCreate( manFile(isub)%oper%grpFirst, '00' )
+                    manFile(isub)%oper%grpFirst => elemCreate( manFile(isub)%oper%grpFirst, 0 )
                     manFile(isub)%grp => manFile(isub)%oper%grpFirst
                   end if
                   if ( .not. associated(manFile(isub)%grp%procFirst) ) then
@@ -1551,35 +1560,35 @@ contains
                 if ( man_tag(p_name)%acquired ) then
                   select case (p_type)
                   case ('int')
-                    if ( operID .ne. '' ) then
+                    if ( operID .ge. 0 ) then
                       call read_param(man_tag(p_name)%name, param_value, manFile(isub)%oper%i_param(p_idx)%p_value )
                       manFile(isub)%oper%i_param(p_idx)%p_acquired = .true.
-                    else if ( grpID .ne. '' ) then
+                    else if ( grpID .ge. 0 ) then
                       call read_param(man_tag(p_name)%name, param_value, manFile(isub)%grp%i_param(p_idx)%p_value )
                       manFile(isub)%grp%i_param(p_idx)%p_acquired = .true.
-                    else if ( procID .ne. '' ) then
+                    else if ( procID .ge. 0 ) then
                       call read_param(man_tag(p_name)%name, param_value, manFile(isub)%proc%i_param(p_idx)%p_value )
                       manFile(isub)%proc%i_param(p_idx)%p_acquired = .true.
                     end if
                   case ('real')
-                    if ( operID .ne. '' ) then
+                    if ( operID .ge. 0 ) then
                       call read_param(man_tag(p_name)%name, param_value, manFile(isub)%oper%r_param(p_idx)%p_value )
                       manFile(isub)%oper%r_param(p_idx)%p_acquired = .true.
-                    else if ( grpID .ne. '' ) then
+                    else if ( grpID .ge. 0 ) then
                       call read_param(man_tag(p_name)%name, param_value, manFile(isub)%grp%r_param(p_idx)%p_value )
                       manFile(isub)%grp%r_param(p_idx)%p_acquired = .true.
-                    else if ( procID .ne. '' ) then
+                    else if ( procID .ge. 0 ) then
                       call read_param(man_tag(p_name)%name, param_value, manFile(isub)%proc%r_param(p_idx)%p_value )
                       manFile(isub)%proc%r_param(p_idx)%p_acquired = .true.
                     end if
                   case ('str')
-                    if ( operID .ne. '' ) then
+                    if ( operID .ge. 0 ) then
                       manFile(isub)%oper%s_param(p_idx)%p_value = trim(param_value)
                       manFile(isub)%oper%s_param(p_idx)%p_acquired = .true.
-                    else if ( grpID .ne. '' ) then
+                    else if ( grpID .ge. 0 ) then
                       manFile(isub)%grp%s_param(p_idx)%p_value = trim(param_value)
                       manFile(isub)%grp%s_param(p_idx)%p_acquired = .true.
-                    else if ( procID .ne. '' ) then
+                    else if ( procID .ge. 0 ) then
                       manFile(isub)%proc%s_param(p_idx)%p_value = trim(param_value)
                       manFile(isub)%proc%s_param(p_idx)%p_acquired = .true.
                     end if
@@ -1606,7 +1615,7 @@ contains
 
     type(operation_date) :: t_operDate
     character(len=1) :: t_code
-    character(len=3) :: t_id
+    integer :: t_id
     character(len=80) :: t_name
 
     ! set subregion index used with manFile
@@ -1646,7 +1655,7 @@ contains
 
       case ('O')
         linidx = linidx + 1
-        read(line, '(a1,1x,a2,1x,a)', err=1001) t_code, t_id, t_name
+        read(line, '(a1,1x,i2,1x,a)', err=1001) t_code, t_id, t_name
         ! create operation
         if ( .not. associated(manFile(isub)%operFirst) ) then
           manFile(isub)%operFirst => elemCreate( manFile(isub)%operFirst, t_id )
@@ -1663,7 +1672,7 @@ contains
 
         ! read following lines as specified in operation type
         select case (manFile(isub)%oper%operID)
-        case ('01')  ! original ground engaging operation
+        case (1)  ! original ground engaging operation
           ! get additional line of data
           do while (line(1:1) .ne. '+' )
             read(luimanfile, '(a)', end=20) line
@@ -1672,7 +1681,7 @@ contains
           ! read tillage speed and direction
           call readValues(manFile(isub)%oper, line, 'ospeed', 'odirect', 'ostdspeed', 'ominspeed', 'omaxspeed')
 
-        case ('03') ! added energy and stir to O1
+        case (3) ! added energy and stir to O1
           ! get additional line of data
           do while (line(1:1) .ne. '+' )
             read(luimanfile, '(a)', end=20) line
@@ -1693,7 +1702,7 @@ contains
           else
               call readValues(manFile(isub)%oper, ' ', 'ofuel')
           end if
-        case ('04') ! added energy and stir to O2
+        case (4) ! added energy and stir to O2
           do while (line(1:1) .ne. '+' )
             read(luimanfile, '(a)', end=20) line
           end do
@@ -1716,7 +1725,7 @@ contains
 
       case ('G')
         linidx = linidx + 1
-        read(line, '(a1,1x,a2,1x,a)', err=1002) t_code, t_id, t_name
+        read(line, '(a1,1x,i2,1x,a)', err=1002) t_code, t_id, t_name
         ! create group
         if ( .not. associated(manFile(isub)%oper%grpFirst) ) then
           manFile(isub)%oper%grpFirst => elemCreate( manFile(isub)%oper%grpFirst, t_id )
@@ -1730,7 +1739,7 @@ contains
         nullify(manFile(isub)%proc)
 
         select case (manFile(isub)%grp%grpID)
-        case ('01')
+        case (1)
           do while (line(1:1) .ne. '+' )
             read(luimanfile, '(a)', end=20) line
           end do
@@ -1738,7 +1747,7 @@ contains
           ! read tillage depth, intensity and area
           call readValues(manFile(isub)%grp, line, 'gtdepth', 'gtilint', 'gtilArea', 'gtstddepth', 'gtmindepth', 'gtmaxdepth')
 
-        case ('02')
+        case (2)
           do while (line(1:1) .ne. '+' )
             read(luimanfile, '(a)', end=20) line
           end do
@@ -1746,7 +1755,7 @@ contains
           ! read biomass area affected
           call readValues(manFile(isub)%grp, line, 'gbioarea')
 
-        case ('03')
+        case (3)
           do while (line(1:1) .ne. '+' )
             read(luimanfile, '(a)', end=20) line
           end do
@@ -1755,7 +1764,7 @@ contains
           ! read crop name
           call readValues(manFile(isub)%grp, line, 'gcropname')
 
-        case ('04')
+        case (4)
           do while (line(1:1) .ne. '+' )
             read(luimanfile, '(a)', end=20) line
           end do
@@ -1765,10 +1774,10 @@ contains
         end select
 
       case ('P')
-        read(line, '(a1,1x,a2,1x,a)', err=1003) t_code, t_id, t_name
+        read(line, '(a1,1x,i2,1x,a)', err=1003) t_code, t_id, t_name
         if ( .not. associated(manFile(isub)%grp) ) then
           ! Operation has process without group preceeding, create null group to support structure.
-          manFile(isub)%oper%grpFirst => elemCreate( manFile(isub)%oper%grpFirst, '00' )
+          manFile(isub)%oper%grpFirst => elemCreate( manFile(isub)%oper%grpFirst, 0 )
           manFile(isub)%grp => manFile(isub)%oper%grpFirst
         end if
         ! create process
@@ -1782,7 +1791,7 @@ contains
         manFile(isub)%proc%procName = trim(t_name)
 
         select case (manFile(isub)%proc%procID)
-        case ('02')
+        case (2)
           do while (line(1:1) .ne. '+' )
             read(luimanfile, '(a)', end=20) line
           end do
@@ -1790,7 +1799,7 @@ contains
           ! read the random roughness for the implement
           call readValues(manFile(isub)%proc, line, 'rroughflag', 'rrough')
 
-        case ('05')
+        case (5)
           do while (line(1:1) .ne. '+' )
             read(luimanfile, '(a)', end=20) line
           end do
@@ -1798,7 +1807,7 @@ contains
           ! read the oriented roughness parameters for the implement
           call readValues(manFile(isub)%proc, line, 'rdgflag', 'rdghit', 'rdgspac', 'rdgwidth', 'dkhit', 'dkspac')
 
-        case ('11')
+        case (11)
           do while (line(1:1) .ne. '+' )
             read(luimanfile, '(a)', end=20) line
           end do
@@ -1806,7 +1815,7 @@ contains
           ! read the crushing parameters for the implement
           call readValues(manFile(isub)%proc, line, 'asdf', 'crif') ! alpha, beta
 
-        case ('12')
+        case (12)
           do while (line(1:1) .ne. '+' )
             read(luimanfile, '(a)', end=20) line
           end do
@@ -1814,7 +1823,7 @@ contains
           ! read the loosening parameter for the implement
           call readValues(manFile(isub)%proc, line, 'soilos') ! mu
 
-        case ('13')
+        case (13)
           do while (line(1:1) .ne. '+' )
             read(luimanfile, '(a)', end=20) line
           end do
@@ -1822,7 +1831,7 @@ contains
           ! read the mixing coefficient from the data file
           call readValues(manFile(isub)%proc, line, 'laymix') ! rho
 
-        case ('21')
+        case (21)
           do while (line(1:1) .ne. '+' )
             read(luimanfile, '(a)', end=20) line
           end do
@@ -1830,7 +1839,7 @@ contains
           ! read the compaction parameter for the implement
           call readValues(manFile(isub)%proc, line, 'mu', 'compact_load')
 
-        case ('24')
+        case (24)
           do while (line(1:1) .ne. '+' )
             read(luimanfile, '(a)', end=20) line
           end do
@@ -1838,7 +1847,7 @@ contains
           call readValues(manFile(isub)%proc, line, 'fbioflagvt', &
             'massflatvt1', 'massflatvt2', 'massflatvt3', 'massflatvt4', 'massflatvt5')
 
-        case ('25')
+        case (25)
           do while (line(1:1) .ne. '+' )
             read(luimanfile, '(a)', end=20) line
           end do
@@ -1846,35 +1855,35 @@ contains
           call readValues(manFile(isub)%proc, line, 'burydist', &
             'massburyvt1', 'massburyvt2', 'massburyvt3', 'massburyvt4', 'massburyvt5')
 
-        case ('26')
+        case (26)
           do while (line(1:1) .ne. '+' )
             read(luimanfile, '(a)', end=20) line
           end do
           linidx = linidx + 1
           call readValues(manFile(isub)%proc, line, 'massresurvt1', 'massresurvt2', 'massresurvt3', 'massresurvt4', 'massresurvt5')
 
-        case ('31')
+        case (31)
           do while (line(1:1) .ne. '+' )
             read(luimanfile, '(a)', end=20) line
           end do
           linidx = linidx + 1
           call readValues(manFile(isub)%proc, line, 'kilflag') ! am0kilfl
 
-        case ('32')
+        case (32)
           do while (line(1:1) .ne. '+' )
             read(luimanfile, '(a)', end=20) line
           end do
           linidx = linidx + 1
           call readValues(manFile(isub)%proc, line, 'cutflag', 'cutvalh', 'cyldrmh', 'cplrmh', 'cstrmh')
 
-        case ('33')
+        case (33)
           do while (line(1:1) .ne. '+' )
             read(luimanfile, '(a)', end=20) line
           end do
           linidx = linidx + 1
           call readValues(manFile(isub)%proc, line, 'cutvalf', 'cyldrmf', 'cplrmf', 'cstrmf')
 
-        case ('34')
+        case (34)
           do while (line(1:1) .ne. '+' )
             read(luimanfile, '(a)', end=20) line
           end do
@@ -1891,21 +1900,21 @@ contains
           call readValues(manFile(isub)%proc, line, &
             'threshmultvt1', 'threshmultvt2', 'threshmultvt3', 'threshmultvt4', 'threshmultvt5')
 
-        case ('37')
+        case (37)
           do while (line(1:1) .ne. '+' )
             read(luimanfile, '(a)', end=20) line
           end do
           linidx = linidx + 1
           call readValues(manFile(isub)%proc, line, 'thinvalp', 'tyldrmp', 'tplrmp', 'tstrmp')
 
-        case ('38')
+        case (38)
           do while (line(1:1) .ne. '+' )
             read(luimanfile, '(a)', end=20) line
           end do
           linidx = linidx + 1
           call readValues(manFile(isub)%proc, line, 'thinvalf', 'tyldrmf', 'tplrmf', 'tstrmf')
 
-        case ('42')
+        case (42)
           do while (line(1:1) .ne. '+' )
             read(luimanfile, '(a)', end=20) line
           end do
@@ -1913,7 +1922,7 @@ contains
           call readValues(manFile(isub)%proc, line, 'harv_report_flg', 'harv_calib_flg', 'harv_unit_flg', &
             'mature_warn_flg', 'cutflag', 'cutvalh', 'cyldrmh', 'cplrmh', 'cstrmh')
 
-        case ('43')
+        case (43)
           do while (line(1:1) .ne. '+' )
             read(luimanfile, '(a)', end=20) line
           end do
@@ -1921,7 +1930,7 @@ contains
           call readValues(manFile(isub)%proc, line, 'harv_report_flg', 'harv_calib_flg', 'harv_unit_flg', &
                                                     'mature_warn_flg', 'cutvalf', 'cyldrmf', 'cplrmf', 'cstrmf')
 
-        case ('47')
+        case (47)
           do while (line(1:1) .ne. '+' )
             read(luimanfile, '(a)', end=20) line
           end do
@@ -1929,7 +1938,7 @@ contains
           call readValues(manFile(isub)%proc, line, 'harv_report_flg', 'harv_calib_flg', 'harv_unit_flg', &
                                                     'mature_warn_flg', 'thinvalp', 'tyldrmp', 'tplrmp', 'tstrmp')
 
-        case ('48')
+        case (48)
           do while (line(1:1) .ne. '+' )
             read(luimanfile, '(a)', end=20) line
           end do
@@ -1937,7 +1946,7 @@ contains
           call readValues(manFile(isub)%proc, line, 'harv_report_flg', 'harv_calib_flg', 'harv_unit_flg', &
                                                     'mature_warn_flg', 'thinvalf', 'tyldrmf', 'tplrmf', 'tstrmf')
 
-        case ('50')
+        case (50)
           do while (line(1:1) .ne. '+' )
             read(luimanfile, '(a)', end=20) line
           end do
@@ -1973,7 +1982,7 @@ contains
           ! read decomposition parameters for type of residue buried
           call readValues(manFile(isub)%proc, line, 'resevapa', 'resevapb')
 
-        case ('51')
+        case (51)
           do while (line(1:1) .ne. '+' )
             read(luimanfile, '(a)', end=20) line
           end do
@@ -2058,14 +2067,14 @@ contains
           call readValues(manFile(isub)%proc, line, 'resevapa', 'resevapb', 'yield_coefficient', 'residue_intercept', &
             'regrow_location', 'noparam3', 'noparam2', 'noparam1')
 
-        case ('61')
+        case (61)
           do while (line(1:1) .ne. '+' )
             read(luimanfile, '(a)', end=20) line
           end do
           linidx = linidx + 1
           call readValues(manFile(isub)%proc, line, 'selpos', 'selpool', 'rstore', 'rleaf', 'rstem', 'rrootstore', 'rrootfiber')
 
-        case ('62')
+        case (62)
           do while (line(1:1) .ne. '+' )
             read(luimanfile, '(a)', end=20) line
           end do
@@ -2073,7 +2082,7 @@ contains
           call readValues(manFile(isub)%proc, line, 'harv_report_flg', 'harv_calib_flg', 'harv_unit_flg', 'mature_warn_flg', &
             'selpos', 'selpool', 'selagepool', 'rstore', 'rleaf', 'rstem', 'rrootstore', 'rrootfiber')
 
-        case ('65')
+        case (65)
           do while (line(1:1) .ne. '+' )
             read(luimanfile, '(a)', end=20) line
           end do
@@ -2108,7 +2117,7 @@ contains
           ! read parameters for residue suppression of evaporation
           call readValues(manFile(isub)%proc, line, 'resevapa', 'resevapb')
 
-        case ('66')
+        case (66)
           ! get additional line of data
           do while (line(1:1) .ne. '+' )
             read(luimanfile, '(a)', end=20) line
@@ -2153,7 +2162,7 @@ contains
           ! read parameters for residue suppression of evaporation
           call readValues(manFile(isub)%proc, line, 'resevapa', 'resevapb')
 
-        case ('71')
+        case (71)
           do while (line(1:1) .ne. '+' )
             read(luimanfile, '(a)', end=20) line
           end do
@@ -2161,7 +2170,7 @@ contains
           ! read in flag, irrigation depth
           call readValues(manFile(isub)%proc, line, 'irrtype', 'irrdepth')
 
-        case ('72')
+        case (72)
           do while (line(1:1) .ne. '+' )
             read(luimanfile, '(a)', end=20) line
           end do
@@ -2170,7 +2179,7 @@ contains
           call readValues(manFile(isub)%proc, line, 'irrmonflag', 'irrmaxapp', 'irrrate', 'irrduration', &
                                                     'irrapploc', 'irrminapp', 'irrmad', 'irrminint')
 
-        case ('73')
+        case (73)
           do while (line(1:1) .ne. '+' )
             read(luimanfile, '(a)', end=20) line
           end do
@@ -2178,7 +2187,7 @@ contains
           ! read in single irrigation depth, rate, duration and location
           call readValues(manFile(isub)%proc, line, 'irrdepth', 'irrrate', 'irrduration', 'irrapploc')
 
-        case ('91')
+        case (91)
           do while (line(1:1) .ne. '+' )
             read(luimanfile, '(a)', end=20) line
           end do
@@ -2186,7 +2195,7 @@ contains
           ! read in asd variables here
           call readValues(manFile(isub)%proc, line, 'asddepth', 'gmdx', 'gsdx', 'mnot', 'minf')
 
-        case ('92')
+        case (92)
           do while (line(1:1) .ne. '+' )
             read(luimanfile, '(a)', end=20) line
           end do

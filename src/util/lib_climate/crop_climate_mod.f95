@@ -29,7 +29,8 @@ module crop_climate_mod
   end interface coldunit
 
   interface coldday_cum
-      module procedure coldday_cum_today
+      module procedure coldday_cum_today_dble
+      module procedure coldday_cum_today_sngl
       module procedure coldday_cum_temps
   end interface coldday_cum
 
@@ -94,7 +95,6 @@ module crop_climate_mod
     ! threshold temperature assuming a fully sinusoidal daily 
     ! temperature cycle with maximum and minimum 12 hours apart.
     function heatunit_temps( tmax, tmin, thres ) result(heat_unit)
-      use p1unconv_mod, only: pi
       use constants, only: u_pi
       real, intent(in) :: tmax   ! maximum daily air temperature
       real, intent(in) :: tmin   ! minimum daily air temperature
@@ -214,33 +214,48 @@ module crop_climate_mod
 
     ! calculates the cumulative number of days the daily average temperature
     ! is below a threshold temperature.
-    subroutine coldday_cum_today( colddays, thres )
-      real, intent(inout) :: colddays  ! total number of consequtive days tempeature is below threshold
+    subroutine coldday_cum_today_dble( colddays, thres )
+      double precision, intent(inout) :: colddays  ! total number of consequtive days tempeature is below threshold
       real, intent(in) :: thres  ! threshold temperature (such as minimum temperature for growth)
 
       call coldday_cum( colddays, thres, cli_today%tdmx, cli_today%tdmn )
 
       return
-    end subroutine coldday_cum_today
+    end subroutine coldday_cum_today_dble
+
+    ! calculates the cumulative number of days the daily average temperature
+    ! is below a threshold temperature.
+    subroutine coldday_cum_today_sngl( colddays, thres )
+      real, intent(inout) :: colddays  ! total number of consequtive days tempeature is below threshold
+      real, intent(in) :: thres  ! threshold temperature (such as minimum temperature for growth)
+
+      double precision :: temp_colddays
+
+      temp_colddays = colddays
+      call coldday_cum( temp_colddays, thres, cli_today%tdmx, cli_today%tdmn )
+      colddays = temp_colddays
+
+      return
+    end subroutine coldday_cum_today_sngl
 
     ! calculates the cumulative number of days the daily average temperature
     ! is below a threshold temperature.
     subroutine coldday_cum_temps( colddays, thres, tmax, tmin )
-      real, intent(inout) :: colddays  ! total number of consequtive days tempeature is below threshold
+      double precision, intent(inout) :: colddays  ! total number of consequtive days tempeature is below threshold
       real, intent(in) :: thres  ! threshold temperature (such as minimum temperature for growth)
       real, intent(in) :: tmax   ! maximum daily air temperature
       real, intent(in) :: tmin   ! minimum daily air temperature
 
       ! local variables
-      real :: tmean   ! arithmetic average of tmax and tmin
+      double precision :: tmean   ! arithmetic average of tmax and tmin
 
-      tmean = (tmax + tmin) / 2.0
-      if (tmean .le. thres) then
+      tmean = (dble(tmax) + dble(tmin)) / 2.0d0
+      if (tmean .le. dble(thres)) then
           ! this is a cold day
-          colddays = colddays + 1
+          colddays = colddays + 1.0d0
       else
           ! reduce cold day total, but do not zero
-          colddays = colddays / 2
+          colddays = colddays / 2.0d0
       end if
 
       return

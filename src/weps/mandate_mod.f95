@@ -57,7 +57,6 @@ MODULE mandate_mod
        integer :: alloc_stat
        integer :: sum_stat
 
-       integer :: ld, lm, ly  ! day, month, year values
        integer :: daydif      ! result from difdat
 
        integer :: isr   ! subregion loop index
@@ -96,7 +95,7 @@ MODULE mandate_mod
        allocate( add_yr(lsr:usr), stat = alloc_stat )
        sum_stat = sum_stat + alloc_stat
        if( sum_stat .gt. 0 ) then
-          write(*,*) 'ERROR: unable to allocate memory in allmandates'
+          write(*,*) 'ERROR: unable to allocate memory in sync_harvcropnames'
           stop 1
        end if
 
@@ -408,7 +407,9 @@ MODULE mandate_mod
             IF (mandate(i)%y <= nrot_yrs) THEN
                ! Check if not 1st day of month and
                ! not middle start period day of month
-               IF ((mandate(i)%d == 1 ) .OR. (mandate(i)%d == 15)) THEN
+               IF ((mandate(i)%d == 0 ) .OR. (mandate(i)%d == 1 ) .OR. (mandate(i)%d == 15)) THEN
+                  ! an Operation type 0, initialization, maps into a day 0, month 0 year 0 mandate entry
+                  ! and is not used to create a period.
                   ! print *, "No new period (day == 1 or day == 15)"
                   CONTINUE               ! no new period here
                   ! Check if operation date .NE. previous operation date

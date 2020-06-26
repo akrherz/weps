@@ -49,15 +49,15 @@ module PhenologyMMS_mod
 
     end subroutine gdd_stressed_del
 
-    subroutine height_stressed(height, begin_phase_rel, phase_rel_gdd, stress, height_inc)
-      real(dp), intent(inout) :: height
-      real(dp), intent(in) :: begin_phase_rel
-      real(dp), intent(in) :: phase_rel_gdd
-      real(dp), intent(in) :: stress
-      real(dp), intent(in) :: height_inc
+    !subroutine height_stressed(height, begin_phase_rel, phase_rel_gdd, stress, height_inc)
+    !  real(dp), intent(inout) :: height
+    !  real(dp), intent(in) :: begin_phase_rel
+    !  real(dp), intent(in) :: phase_rel_gdd
+    !  real(dp), intent(in) :: stress
+    !  real(dp), intent(in) :: height_inc
 
-      height = height + height_inc * stress
+    !  height = height + height_inc * stress
 
-    end subroutine height_stressed
+    !end subroutine height_stressed
 
 end module PhenologyMMS_mod

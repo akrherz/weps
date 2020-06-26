@@ -102,9 +102,11 @@ module crop_mod
               thisPlant%growth%dayap, thisPlant%growth%dayam, &
               thisPlant%growth%thucum, thisPlant%growth%trthucum, &
               thisPlant%geometry%grainf, thisPlant%growth%zgrowpt, thisPlant%growth%fliveleaf, &
-              thisPlant%growth%leafareatrend, thisPlant%growth%stemmasstrend, thisPlant%growth%twarmdays, &
+              thisPlant%growth%leafareatrend, thisPlant%growth%stemmasstrend, &
+              thisPlant%growth%twarmdays, thisPlant%growth%tcolddays, &
               thisPlant%growth%tchillucum, thisPlant%growth%thardnx, thisPlant%growth%thu_shoot_beg, &
-              thisPlant%growth%thu_shoot_end, thisPlant%geometry%xstmrep, &
+              thisPlant%growth%thu_shoot_end, thisPlant%growth%mtotleaf, thisPlant%growth%thu_leaf_beg, &
+              thisPlant%growth%thu_leaf_end, thisPlant%geometry%xstmrep, &
               thisPlant%prev%standstem, thisPlant%prev%standleaf, thisPlant%prev%standstore, &
               thisPlant%prev%flatstem, thisPlant%prev%flatleaf, thisPlant%prev%flatstore, &
               thisPlant%prev%mshoot, thisPlant%prev%stemz, &
@@ -112,7 +114,8 @@ module crop_mod
               thisPlant%prev%ht, thisPlant%prev%zshoot, thisPlant%prev%stm, thisPlant%prev%rtd, &
               thisPlant%prev%dayap, thisPlant%prev%hucum, thisPlant%prev%rthucum, &
               thisPlant%prev%grainf, thisPlant%prev%chillucum, thisPlant%prev%liveleaf, &
-              thisPlant%prev%dayspring, daysim, thisPlant%growth%dayspring, thisPlant%database%zloc_regrow, &
+              thisPlant%prev%dayspring, thisPlant%prev%dayfall, daysim, &
+              thisPlant%growth%dayspring, thisPlant%growth%dayfall, thisPlant%database%zloc_regrow, &
               cropres%standstem, cropres%standleaf, cropres%standstore, &
               cropres%flatstem, cropres%flatleaf, cropres%flatstore, &
               cropres%stemz, &

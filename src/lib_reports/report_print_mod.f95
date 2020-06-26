@@ -432,19 +432,18 @@ module report_print_mod
           "--------------------------------------------"
   END SUBROUTINE print_report_vars
 
-  SUBROUTINE print_yr_report_vars(nperiods, nrot_yrs, ncycles, yr_report)
+  SUBROUTINE print_yr_report_vars(nrot_yrs, ncycles, yr_report)
 
     USE pd_var_type_def
     USE pd_var_tables
 
     IMPLICIT NONE
 
-    INTEGER, INTENT (IN) :: nperiods
     INTEGER, INTENT (IN) :: nrot_yrs
     INTEGER, INTENT (IN) :: ncycles
     TYPE (pd_var_type), DIMENSION(Min_yrly_vars:,:), intent(in) :: yr_report
 
-    INTEGER :: i,p,hm,m,y               ! local loop variables
+    INTEGER :: y               ! local loop variable
 
     print *,""
     print *, "  yr        Precip       WE       Dry Ratio   Snow Cover"

@@ -66,7 +66,7 @@
       use biomaterial
       use update_mod, only: plantupdate
       use debug_mod
-      use mandate_mod
+      use mandate_mod, only: mandate_array, get_nperiods, allmandates, sync_harvcropnames
       use manage_data_struct_defs, only: lastoper, manFile
       use manage_mod, only: mfinit
       use manage_xml_mod, only: setup_man_xml
@@ -523,7 +523,7 @@
         do isr = 1, nsubr
           ! do multiple subregion
           call submodels(isr, soil(isr), plants(isr)%plant, plants(isr)%plantIndex, restot(isr), croptot(isr),  &
-               biotot(isr), decompfac(isr), mandatbs(isr)%mandate, hstate(isr), h1et(isr), h1bal(isr), wp(isr), manFile(isr))
+               biotot(isr), decompfac(isr), hstate(isr), h1et(isr), h1bal(isr), wp(isr), manFile(isr))
           ! set initialization flag to .false. after first day
           if (am0ifl) am0ifl = .false.
           ! print to plot data file
@@ -604,7 +604,7 @@
 
            do isr = 1, nsubr   ! do multiple subregion     
              call submodels(isr, soil(isr), plants(isr)%plant, plants(isr)%plantIndex, restot(isr), croptot(isr), &
-                 biotot(isr), decompfac(isr), mandatbs(isr)%mandate, hstate(isr), h1et(isr), h1bal(isr), wp(isr), manFile(isr))
+                 biotot(isr), decompfac(isr), hstate(isr), h1et(isr), h1bal(isr), wp(isr), manFile(isr))
              ! print to plot data file
              call plotdata(isr, soil(isr), plants(isr)%plant, hstate(isr), restot(isr), croptot(isr), biotot(isr), noerod(isr), &
                                 manFile(isr), subrsurf(isr), cellstate)
@@ -732,7 +732,7 @@
             do isr = 1, nsubr   ! do multiple subregion     
 
                call submodels(isr, soil(isr), plants(isr)%plant, plants(isr)%plantIndex, restot(isr), croptot(isr), &
-                              biotot(isr), decompfac(isr), mandatbs(isr)%mandate, hstate(isr), h1et(isr), h1bal(isr), wp(isr), &
+                              biotot(isr), decompfac(isr), hstate(isr), h1et(isr), h1bal(isr), wp(isr), &
                               manFile(isr))
             end do
 
@@ -744,7 +744,7 @@
               ! transfer data values from submodel structures into erosion input structure
               ! some of these values are shown in plot.out, so do every day
                do isr = 1, nsubr   ! do multiple subregion
-                  call erodsubr_update( isr, manFile(isr), soil(isr), plants(isr)%plant, biotot(isr), hstate(isr), h1et(isr), &
+                  call erodsubr_update( manFile(isr), soil(isr), plants(isr)%plant, biotot(isr), hstate(isr), h1et(isr), &
                                         subrsurf(isr) )
                end do
 
@@ -902,7 +902,7 @@
               call print_report_vars(nperiods(0), mandatbs(isr)%mperod, rep_report(isr), mandatbs(isr)%mandate)
           end if
           if (report_debug >= 2) then
-              call print_yr_report_vars(nperiods(0), mandatbs(0)%mperod, n_rot_cycles(0), rep_report(isr)%yr_report)
+              call print_yr_report_vars(mandatbs(0)%mperod, n_rot_cycles(0), rep_report(isr)%yr_report)
           end if
           if(  (.not. old_run_file .or. (nsubr .gt. 1)) .or. (isr .gt. 0) ) then
 

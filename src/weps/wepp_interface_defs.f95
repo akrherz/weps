@@ -90,11 +90,10 @@
       real, intent(in) :: spg, dia
       end function falvel
 !---------------------------
-      subroutine getfromweps(isr,sand,silt,clay,orgmat, &
+      subroutine getfromweps(sand,silt,clay,orgmat, &
        thetdr,rrc,dg,st,thdp,frdp,thetfc,por,rh, &
        frctrl, frcsol, precip, soil)
       use soil_data_struct_defs, only: soil_def
-      integer, intent(in):: isr
       real, intent(out):: sand(*), silt(*), clay(*)
       real, intent(out):: orgmat(*)
       real, intent(out):: thetdr(*), rrc

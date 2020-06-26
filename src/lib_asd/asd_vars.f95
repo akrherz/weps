@@ -356,9 +356,9 @@ contains
 !   initialize accumulators
     REAL :: alpha = 0.0
     REAL :: beta = 0.0
-    REAL :: tmd(nsieves+1)
     INTEGER :: istart, istop, i
-    INTEGER :: sdia_start, sdia_istop, sdia_temp
+    !REAL :: tmd(nsieves+1)
+    !INTEGER :: sdia_start, sdia_istop, sdia_temp
 
     ! Initialize local variables
     istart = 1

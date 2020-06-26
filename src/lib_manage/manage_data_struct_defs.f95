@@ -30,7 +30,7 @@ module manage_data_struct_defs
   end type string_param
 
   type process
-    character(len=3) :: procID
+    integer :: procID
     integer :: procType
     integer :: OGPidx
     character(len=80) :: procName
@@ -41,7 +41,7 @@ module manage_data_struct_defs
   end type process
 
   type group
-    character(len=3) :: grpID
+    integer :: grpID
     integer :: grpType
     integer :: OGPidx
     character(len=80) :: grpName
@@ -55,7 +55,7 @@ module manage_data_struct_defs
   type operation
     type(operation_date) :: operDate
     character(len=80) :: operName
-    character(len=3) :: operID
+    integer :: operID
     integer :: operType
     integer :: OGPidx
     type(operation), pointer :: operNext
@@ -99,7 +99,7 @@ module manage_data_struct_defs
 
   type :: name_type
     character(len=1) :: ogp  ! identifies whether this is and operation, group or process parameter list
-    character(len=3) :: id   ! the id "number" of the operation, group or process
+    integer          :: id   ! the id "number" of the operation, group or process
     character(len=MAX_NAME_LEN), dimension(:), allocatable  :: i_name   ! integer parameter names
     character(len=MAX_NAME_LEN), dimension(:), allocatable  :: r_name   ! real parameter names
     character(len=MAX_NAME_LEN), dimension(:), allocatable  :: s_name   ! string parameter names

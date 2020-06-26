@@ -504,9 +504,10 @@ module hydro_heat_mod
       ! bsfom   - Organic matter fraction (kg organic matter/kg soil)
 
       ! + + + LOCAL VARIABLES + + +
-      real fac_a, fac_b, fac_c, fac_d, fac_e
+      !real fac_a, fac_b, fac_c, fac_d, fac_e
       real kersten, deg_sat, cond_dry, cond_sat
-      real volf_quartz, volf_mineral, volf_organic, volf_solid
+      real volf_quartz, volf_organic
+      !real volf_mineral, volf_solid
       real cond_soil, cond_water, volf_liq_water
 
       ! + + + LOCAL VARIABLE DEFINITION + + +

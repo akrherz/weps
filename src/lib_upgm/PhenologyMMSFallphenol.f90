@@ -7,7 +7,7 @@ module PhenologyMMSFallphenol_mod
   use phases_mod
   use constants, only: dp, int32, check_return
   use WEPSCrop_util_mod, only: chilluv, dev_floor
-  use PhenologyMMS_mod, only: gdd_stressed_del, height_stressed
+  use PhenologyMMS_mod, only: gdd_stressed_del
   implicit none
 
   type, extends(phase) :: PhenologyMMS_Fallphenol

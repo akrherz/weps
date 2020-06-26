@@ -70,7 +70,6 @@ subroutine ci_logwithzeros(value, nval, nzero, ngtz, prob, mean, ci_hi, ci_low)
     real :: s_sum, t_sum    ! S and T in Tian and Wu equation 12
     real :: muhat, etahat, psihat ! Tian and Wu equation 13
     real :: norm_dev                   ! amount to add to normalized mean, plus and minus
-    real :: temp          ! temporary value
 
     double precision :: norm_z         ! z value returned
 
@@ -168,7 +167,7 @@ end subroutine
 subroutine ci_lognozeros(value, nval, prob, mean, ci_hi, ci_low)
 
     use rstar_z0_mod, only: rstar_z0
-    use r_z0_mod, only: r_z0
+    ! use r_z0_mod, only: r_z0
 
     ! input values are random numbers drawn from a log-normal distribution
     ! taking the log of each values transforms them into normal deviates

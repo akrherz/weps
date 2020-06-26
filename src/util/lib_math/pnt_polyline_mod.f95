@@ -88,8 +88,6 @@ contains
     double precision :: rot_ang   ! angle to rotate the polyline
     double precision :: dist      ! distance from pnt to intersection
     double precision :: min_dist  ! minimum distance from pnt to intersection
-    double precision :: x_dist    ! temporary variable to hold segment x distance
-    double precision :: y_dist    ! temporary variable to hold segment y distance
 
     ! return value if nothing matches
     did_intersect = .false.

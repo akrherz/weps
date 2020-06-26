@@ -77,12 +77,17 @@ module biomaterial
      double precision :: stemmasstrend  ! direction in which stem mass is trending.
                             ! Saves trend even if stem mass is static for long periods.
 
-     double precision :: twarmdays      ! number of consecutive days that the temperature has been above the minimum growth temperature
+     double precision :: twarmdays      ! number of days that the temperature has been above the minimum growth temperature with decay
+     double precision :: tcolddays      ! number of days that the temperature has been below the minimum growth temperature with decay
      double precision :: tchillucum     ! accumulated chilling units (days)
      double precision :: thardnx        ! hardening index for winter annuals (range from 0 t0 2)
 
      double precision :: thu_shoot_beg  ! heat unit total for beginning of shoot grow from root storage period
      double precision :: thu_shoot_end  ! heat unit total for end of shoot grow from root storage period
+     double precision :: mtotleaf       ! total mass released from root storage biomass (kg/m^2)
+                                        ! in the period from beginning to completion of leaf emergence heat units
+     double precision :: thu_leaf_beg   ! heat unit index (fraction) for beginning of leaf emergence from root storage period
+     double precision :: thu_leaf_end   ! heat unit index (fraction) for end of leaf emergence from root storage period
      real :: mshoot         ! crop shoot mass grown from root storage (kg/m^2)
                             ! this is a "breakout" mass and does not represent a unique pool
                             ! since this mass is destributed into below ground stem and
@@ -92,7 +97,8 @@ module biomaterial
 
      integer :: dayap       ! number of days of growth completed since crop planted
      integer :: dayam       ! number of days since crop matured
-     integer :: dayspring   ! day of year in which a winter annual released stored growth
+     integer :: dayspring   ! day of year in which a winter annual/perennial released stored growth
+     integer :: dayfall     ! day of year in which a deciduous/evergreen perennial dropped all/some leaves/needles
 
      real :: ptp            ! plant transpiration potential
      real :: pta            ! plant transpiration actual
@@ -257,7 +263,8 @@ module biomaterial
      real :: grainf       ! internally computed grain fraction of reproductive mass
      double precision :: chillucum    ! accumulated chilling units (days)
      double precision :: liveleaf     ! fraction of standing plant leaf which is living (transpiring)
-     integer :: dayspring ! day of year in which a winter annual releases stored growth
+     integer :: dayspring ! day of year in which a winter annual/perennial releases stored growth
+     integer :: dayfall   ! day of year in which a deciduous/evergreen perennial dropped all/some leaves/needles
      real :: cancov       ! crop canopy cover (fraction)
   end type bio_prevday
 
@@ -615,15 +622,20 @@ contains
      plantNew%growth%leafareatrend = 0.0
      plantNew%growth%stemmasstrend = 0.0
      plantNew%growth%twarmdays = 0.0
+     plantNew%growth%tcolddays = 0.0
      plantNew%growth%tchillucum = 0.0d0
      plantNew%growth%thardnx = 0.0d0
      plantNew%growth%thu_shoot_beg = 0.0d0
      plantNew%growth%thu_shoot_end = 0.0d0
+     plantNew%growth%mtotleaf = 0.0d0
+     plantNew%growth%thu_leaf_beg = 0.0d0
+     plantNew%growth%thu_leaf_end = 0.0d0
      plantNew%growth%mshoot = 0.0
      plantNew%growth%mtotshoot = 0.0
      plantNew%growth%dayap = 0
      plantNew%growth%dayam = 0
      plantNew%growth%dayspring = 0
+     plantNew%growth%dayfall = 0
      plantNew%growth%ptp = 0.0
      plantNew%growth%pta = 0.0
      plantNew%growth%fwsf = 1.0

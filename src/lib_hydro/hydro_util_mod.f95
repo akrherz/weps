@@ -511,9 +511,11 @@ module hydro_util_mod
      
       ! + + + parameters + + +
 
-      real coeff,sbc
+      ! real coeff
+      real sbc
 
-      parameter   (coeff= -2.9e-5, sbc = 4.903e-9)
+      ! parameter   (coeff= -2.9e-5)
+      parameter   (sbc = 4.903e-9)
 
       ! coeff  - coefficient in the equation to estimate soil cover index
       ! sbc    - stefan-boltzmann constant, mj/m^2/day
@@ -644,7 +646,8 @@ module hydro_util_mod
       real wua, wup
       real wup_fac(0:layrsn)
       real wu_bal
-      real potm, soilrh, cond
+      !real potm, soilrh
+      real cond
 
 !     + + + LOCAL DEFINITIONS + + +
 

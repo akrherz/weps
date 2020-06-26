@@ -562,7 +562,7 @@ module manage_mod
 
     end subroutine dogroup
 
-    subroutine doproc (soil, plant, biotot, mandate, hstate, h1et, manFile)
+    subroutine doproc (soil, plant, biotot, hstate, h1et, manFile)
 
 !     + + + PURPOSE + + +
 !     Doproc is called when a processline is found in the management file
@@ -574,14 +574,12 @@ module manage_mod
 !     + + + KEYWORDS + + +
 !     tillage, process, management
 
-      use weps_cmdline_parms, only: cook_yield, resurf_roots, upgm_growth, wc_type
+      use weps_cmdline_parms, only: resurf_roots, upgm_growth, wc_type
       use file_io_mod, only: luomanage, luotdb, luoasd, luowc
       use soil_data_struct_defs, only: soil_def
       use input_soil_mod, only: proptext
       use biomaterial, only: plant_pointer, biototal
       use biomaterial, only: plantDestroy, residueAdd, residueDestroyAll
-      use mandate_mod, only: opercrop_date
-      use p1unconv_mod, only: mmtom
       use manage_data_struct_defs, only: lastoper, man_file_struct
       use crop_data_struct_defs, only: am0cfl
       use soilden_mod, only: setbdproc_wc
@@ -613,7 +611,6 @@ module manage_mod
       type(soil_def), intent(inout) :: soil  ! soil for this subregion
       type(plant_pointer), pointer :: plant     ! pointer to youngest plant data, which chains to older plant data
       type(biototal), intent(in) :: biotot
-      type(opercrop_date), dimension(:), intent(inout) :: mandate
       type(hydro_state), intent(inout) :: hstate
       type(hydro_derived_et), intent(inout) :: h1et
       type(man_file_struct), intent(inout) :: manFile
@@ -2598,6 +2595,18 @@ module manage_mod
           ! write(luowc(sr),"(i10,4(i5))",ADVANCE="YES") get_simdate_jday(), cd, cm, cy, get_simdate_doy()
         end if
 
+      case(101)  ! planting location
+
+        ! new plant created by biomass group (G 03)
+
+        ! crop pool state has been changed, force dependent variable update  
+        am0cropupfl = .true.
+
+        ! read spacing flags
+        call getManVal(manFile%proc, 'rowflag', plant%geometry%rsfg)        ! setup
+        call getManVal(manFile%proc, 'rowspac', plant%geometry%xrow)        ! setup
+        call getManVal(manFile%proc, 'rowridge', plant%geometry%rg)         ! setup
+
       case(100)  !  UPGMinWEPS_init
 
         ! new plant created by biomass group (G 03)
@@ -2605,10 +2614,7 @@ module manage_mod
         ! crop pool state has been changed, force dependent variable update  
         am0cropupfl = .true.
 
-        ! read population, spacing and yield flags
-        call getManVal(manFile%proc, 'rowflag', plant%geometry%rsfg)        ! setup
-        call getManVal(manFile%proc, 'rowspac', plant%geometry%xrow)        ! setup
-        call getManVal(manFile%proc, 'rowridge', plant%geometry%rg)         ! setup
+        ! read population and yield flags
         call getManVal(manFile%proc, 'plantpop', plant%geometry%dpop)       ! setup
         call getManVal(manFile%proc, 'dmaxshoot', plant%database%dmaxshoot) ! setup
         call getManVal(manFile%proc, 'cbaflag', plant%database%baflg)       ! calibration
@@ -4221,7 +4227,7 @@ module manage_mod
       return
     end subroutine mgdreset
 
-    subroutine manage( sr, startyr, soil, plant, plantIndex, biotot, mandate, hstate, h1et, manFile)
+    subroutine manage( sr, startyr, soil, plant, plantIndex, biotot, hstate, h1et, manFile)
 
 !     + + + PURPOSE + + +
 !     This is the main routine of the MANAGEMENT submodel. The date passed
@@ -4241,7 +4247,6 @@ module manage_mod
       use file_io_mod, only: luomanage
       use soil_data_struct_defs, only: soil_def
       use biomaterial, only: plant_pointer, biototal
-      use mandate_mod, only: opercrop_date
       use hydro_data_struct_defs, only: hydro_derived_et, hydro_state
       use manage_data_struct_defs, only: man_file_struct, lastoper
 
@@ -4252,7 +4257,6 @@ module manage_mod
       type(plant_pointer), pointer :: plant     ! pointer to youngest plant data, which chains to older plant data
       integer, intent(inout) :: plantIndex      ! index used for detailed plant/residue output
       type(biototal), intent(in) :: biotot
-      type(opercrop_date), dimension(:), intent(inout) :: mandate
       type(hydro_state), intent(inout) :: hstate
       type(hydro_derived_et), intent(inout) :: h1et
       type(man_file_struct), intent(inout) :: manFile
@@ -4284,7 +4288,7 @@ module manage_mod
       ! find simulation year to which management year corresponds
       mansimyr = simyr - mod (simyr-startyr, manFile%mperod) + manFile%oper%operDate%year - 1
       if (difdat (simdd,simmm,simyr,manFile%oper%operDate%day,manFile%oper%operDate%month,mansimyr).ne.0) then
-        ! simulation date precedes management date 
+        ! simulation date precedes management date
         return
       end if
 
@@ -4306,22 +4310,22 @@ module manage_mod
         lastoper(sr)%skip = 0
         cropres = create_crop_residue(soil%nslay)
         call dooper(manFile)
-        ! do groups
-        manFile%grp => manFile%oper%grpFirst
-        do while ( associated(manFile%grp) )
-          if(lastoper(sr)%skip.eq.0) then
+        if(lastoper(sr)%skip.eq.0) then
+          ! do groups
+          manFile%grp => manFile%oper%grpFirst
+          do while ( associated(manFile%grp) )
             call dogroup(soil, plant, plantIndex, manFile)
             ! do processes
             manFile%proc => manFile%grp%procFirst
             do while ( associated(manFile%proc) )
-              call doproc(soil, plant, biotot, mandate, hstate, h1et, manFile)
+              call doproc(soil, plant, biotot, hstate, h1et, manFile)
               ! next process
               manFile%proc => manFile%proc%procNext
             end do
             ! next group
             manFile%grp => manFile%grp%grpNext
-          end if
-        end do
+          end do
+        end if
         ! operation complete
         ! deallocate temporary crop residue structure
         call destroy_crop_residue(cropres)

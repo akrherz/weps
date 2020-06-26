@@ -31,7 +31,7 @@ contains
 
   function operCreate(operPntr, operID) result(operNew)
     type(operation), pointer :: operPntr
-    character(len=*), intent(in) :: operID
+    integer, intent(in) :: operID
     type(operation), pointer :: operNew
 
     integer :: int_cnt
@@ -47,7 +47,7 @@ contains
     end if
     operPntr%operID = operID
     call get_value_cnts ( 'O', operID, int_cnt, real_cnt, str_cnt, operPntr%OGPidx ) 
-    read(operID, *) operPntr%operType
+    operPntr%operType = operID
     sum_stat = 0
     allocate(operPntr%i_param(int_cnt), stat=alloc_stat)
     sum_stat = sum_stat + alloc_stat
@@ -80,7 +80,7 @@ contains
 
   function grpCreate(grpPntr, grpID) result(grpNew)
     type(group), pointer :: grpPntr
-    character(len=*), intent(in) :: grpID
+    integer, intent(in) :: grpID
     type(group), pointer :: grpNew
 
     integer :: int_cnt
@@ -96,7 +96,7 @@ contains
     end if
     grpPntr%grpID = grpID
     call get_value_cnts ( 'G', grpID, int_cnt, real_cnt, str_cnt, grpPntr%OGPidx ) 
-    read(grpID, *) grpPntr%grpType
+    grpPntr%grpType = grpID
     sum_stat = 0
     allocate(grpPntr%i_param(int_cnt), stat=alloc_stat)
     sum_stat = sum_stat + alloc_stat
@@ -129,7 +129,7 @@ contains
 
   function procCreate(procPntr, procID) result(procNew)
     type(process), pointer :: procPntr
-    character(len=*), intent(in) :: procID
+    integer, intent(in) :: procID
     type(process), pointer :: procNew
 
     integer :: int_cnt
@@ -145,7 +145,7 @@ contains
     end if
     procPntr%procID = procID
     call get_value_cnts ( 'P', procID, int_cnt, real_cnt, str_cnt, procPntr%OGPidx ) 
-    read(procID, *) procPntr%procType
+    procPntr%procType = procID
     sum_stat = 0
     allocate(procPntr%i_param(int_cnt), stat=alloc_stat)
     sum_stat = sum_stat + alloc_stat
@@ -177,7 +177,7 @@ contains
 
   subroutine get_value_cnts ( OGP, ID, int_cnt, real_cnt, str_cnt, code_id_index )
     character(len=*), intent(in) :: OGP
-    character(len=*), intent(in) :: ID
+    integer, intent(in) :: ID
     integer, intent(out) :: int_cnt
     integer, intent(out) :: real_cnt
     integer, intent(out) :: str_cnt
@@ -203,7 +203,7 @@ contains
 
   function get_code_id_index (OGP, ID) result(code_id_index)
     character(len=*), intent(in) :: OGP
-    character(len=*), intent(in) :: ID
+    integer, intent(in) :: ID
     integer :: code_id_index
 
     integer :: idx

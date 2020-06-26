@@ -759,7 +759,7 @@ module hydro_darcy_mod
           else
               ! add within layer source term to layers
               ! uses a finite interval to avoid overloading a thin layer
-              call distriblay( dvwp(isr)%layrsn, bszlyd, bszlyt, dvwp(isr)%source_rate,     &
+              call distriblay( dvwp(isr)%layrsn, bszlyd, dvwp(isr)%source_rate, &
      &                         dirrig * mmtom / (bhdurirr * hrtosec),   &
      &                         max(0.0,-bhlocirr-delta_drip),           &
      &                         -bhlocirr+delta_drip )

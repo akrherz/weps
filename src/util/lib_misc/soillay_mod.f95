@@ -6,8 +6,7 @@ module soillay_mod
 
   contains
 
-      subroutine distriblay( nlay, bszlyd, bszlyt, layval,              &
-     &                       insertval, begind, endd )
+      subroutine distriblay( nlay, bszlyd, layval, insertval, begind, endd )
 
 !     + + + PURPOSE + + +
 !     Distributes a quantity of material over an underground interval
@@ -18,13 +17,12 @@ module soillay_mod
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer nlay
-      real bszlyd(nlay), bszlyt(nlay), layval(nlay)
+      real bszlyd(nlay), layval(nlay)
       real insertval, begind, endd
 
 !     + + + ARGUMENT DEFINITIONS + + +
 !     nlay   - number of layers in soil input array
 !     bszlyd - depth to bottom of soil layers (mm)
-!     bszlyt - thickness of soil layers (mm)
 !     layval - the layer bins that will be supplemented by added material
 !     insertval - the quantity of material to be distributed into layval
 !     begind - uppper depth of soil interval (mm)

@@ -35,9 +35,11 @@ module crop_growth_mod
      &                 bcdayap, bcdayam,                                &
      &                 bcthucum, bctrthucum,                            &
      &                 bcgrainf, bczgrowpt, bcfliveleaf,                &
-     &                 bcleafareatrend, bcstemmasstrend, bctwarmdays,   &
+     &                 bcleafareatrend, bcstemmasstrend, &
+     &                 bctwarmdays, bctcolddays,  &
      &                 bctchillucum, bcthardnx, bcthu_shoot_beg,        &
-     &                 bcthu_shoot_end, bcxstmrep,                      &
+     &                 bcthu_shoot_end, bcmtotleaf, bcthu_leaf_beg, &
+     &                 bcthu_leaf_end, bcxstmrep, &
      &                 bprevstandstem, bprevstandleaf, bprevstandstore, &
      &                 bprevflatstem, bprevflatleaf, bprevflatstore,    &
      &                 bprevmshoot, bprevbgstemz,                       &
@@ -45,7 +47,8 @@ module crop_growth_mod
      &                 bprevht, bprevzshoot, bprevstm, bprevrtd,        &
      &                 bprevdayap, bprevhucum, bprevrthucum,            &
      &                 bprevgrainf, bprevchillucum, bprevliveleaf,      &
-     &               bprevdayspring, daysim, bcdayspring, bczloc_regrow,&
+     &                 bprevdayspring, bprevdayfall, daysim, &
+     &                 bcdayspring, bcdayfall, bczloc_regrow, &
      &                 bgmstandstem, bgmstandleaf, bgmstandstore,       &
      &                 bgmflatstem, bgmflatleaf, bgmflatstore,          &
      &                 bgmbgstemz,                                      &
@@ -59,10 +62,12 @@ module crop_growth_mod
       use file_io_mod, only: luocrop, luoshoot
       use constants, only: u_mgtokg
       use crop_data_struct_defs, only: am0cfl
-      use crop_climate_mod, only: huc1, freezeharden, chillunit_cum, warmday_cum
+      use crop_climate_mod, only: huc1, freezeharden, chillunit_cum, warmday_cum, coldday_cum
       use climate_input_mod, only: amalat
       use special_func_mod, only: scrv1
       use solar_mod, only: civilrise, daylen
+      use solar_mod, only: N_spring_eqx, N_summer_sol, N_fall_eqx, N_winter_sol
+      use solar_mod, only: S_spring_eqx, S_summer_sol, S_fall_eqx, S_winter_sol
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer, intent(in) :: isr   ! subregion number
@@ -99,9 +104,12 @@ module crop_growth_mod
       double precision bcfliveleaf
       double precision bcleafareatrend, bcstemmasstrend
       double precision bctwarmdays
+      double precision bctcolddays
       double precision bctchillucum
       double precision bcthardnx
       double precision bcthu_shoot_beg, bcthu_shoot_end
+      double precision bcmtotleaf
+      double precision bcthu_leaf_beg, bcthu_leaf_end
       double precision bcxstmrep
       real bprevstandstem, bprevstandleaf, bprevstandstore
       real bprevflatstem, bprevflatleaf, bprevflatstore
@@ -112,10 +120,10 @@ module crop_growth_mod
       double precision bprevhucum, bprevrthucum
       real bprevgrainf
       double precision bprevchillucum, bprevliveleaf
-      integer bprevdayspring
+      integer bprevdayspring, bprevdayfall
       logical bm0cif
       real    bcbaf
-      integer daysim, bcdayspring
+      integer daysim, bcdayspring, bcdayfall
       real    bczloc_regrow
       real    bgmstandstem, bgmstandleaf, bgmstandstore
       real    bgmflatstem, bgmflatleaf, bgmflatstore
@@ -191,7 +199,7 @@ module crop_growth_mod
 !                since this mass is destributed into below ground stem and
 !                standing stem as each increment of the shoot is added
 !     bcmtotshoot - total mass released from root storage biomass (kg/m^2)
-!                   in the period from beginning to completion of emegence heat units
+!                   in the period from beginning to completion of shoot emergence heat units
 !     bcmbgstemz - crop stem mass below soil surface by soil layer (kg/m^2)
 !     bcmrootstorez - crop root storage mass by soil layer (kg/m^2)
 !                   (tubers (potatoes, carrots), extended leaf (onion), seeds (peanuts))
@@ -212,16 +220,23 @@ module crop_growth_mod
 !                       Saves trend even if leaf area is static for long periods.
 !     bcstemmasstrend - direction in which stem mass is trending.
 !                        Saves trend even if stem mass is static for long periods.
-!     bctwarmdays - number of consecutive days that the daily average temperature
-!                   has been above the minimum growth temperature
+!     bctwarmdays - number of days that the daily average temperature
+!                   has been above the minimum growth temperature with decay
+!     bctcolddays - number of days that the daily average temperature
+!                   has been below the minimum growth temperature with decay
 !     bctchillucum - accumulated chilling units (days)
 !     bcthardnx - hardening index for winter annuals (range from 0 t0 2)
 !     bcthu_shoot_beg - heat unit index (fraction) for beginning of shoot grow from root storage period
 !     bcthu_shoot_end - heat unit index (fraction) for end of shoot grow from root storage period
+!     bcmtotleaf - total mass released from root storage biomass (kg/m^2)
+!                  in the period from beginning to completion of leaf emergence heat units
+!     bcthu_leaf_beg - heat unit index (fraction) for beginning of leaf emergence from root storage period
+!     bcthu_leaf_end - heat unit index (fraction) for end of leaf emergence from root storage period
 !     bcxstmrep - a representative diameter so that acdstm*acxstmrep*aczht=acrsai
 
 !     daysim   - day of the simulation
-!     bcdayspring - day of year in which a winter annual releases stored growth
+!     bcdayspring - day of year in which a winter annual/perennial releases stored growth
+!     bcdayfall - day of year in which a deciduous/evergreen perennial drops all/some leaves/needles
 !     bczloc_regrow - location of regrowth point (+ on stem, 0 or negative from crown at or below surface) (m)
 !     bgmstandstem - crop standing stem mass (kg/m^2)
 !     bgmstandleaf - crop standing leaf mass (kg/m^2)
@@ -242,6 +257,11 @@ module crop_growth_mod
 
 !     + + + LOCAL VARIABLES + + +
       integer :: jd     ! simulation day of year
+      integer :: spring_eqx
+      integer :: summer_sol
+      integer :: fall_eqx
+      integer :: winter_sol
+
       integer lay, dd, mm, yy
       double precision root_store_rel, pot_stems, pot_leaf_mass
       double precision vern_delay, photo_delay
@@ -251,7 +271,7 @@ module crop_growth_mod
       double precision frst, a_fr, b_fr, ffa, ffw
       double precision lost_mass
       real :: hrlt, hrlty   ! length of day in hours for today and yesterday
-      double precision :: hui           ! heat unit index
+      double precision :: hui           ! heat unit amalat, jdindex
       double precision :: huiy          ! heat unit index for yesterday
       double precision :: huirt         ! root growth heat unit index
       double precision :: huirty        ! root growth heat unit index yesterday
@@ -292,6 +312,10 @@ module crop_growth_mod
       parameter(max_photo_per = 20d0)
       parameter(spring_trig = 0.29d0)
       parameter(hard_spring = 1.0d0)
+
+      double precision hu_leaf_days
+      parameter(hu_leaf_days = 7.0d0)
+      double precision, parameter :: leaf_rel_frac = 0.5d0
 
       double precision bctphotodel
       parameter( bctphotodel = 0.0055d0)
@@ -389,7 +413,7 @@ module crop_growth_mod
 
       ! set trend direction for living leaf area from external forces
       trend = (bcfliveleaf*dble(bcmstandleaf)) - (bprevliveleaf*dble(bprevstandleaf))
-      if ((trend .ne. 0.0d0)                                          &
+      if ((trend .ne. 0.0d0) &
           .and. ((bcthucum/bcthum .gt. bc0hue) .or. (bc0idc.eq.8))) &
           then  ! trend non-zero and (heat units past emergence or staged crown release crop)
           bcleafareatrend = trend
@@ -397,7 +421,7 @@ module crop_growth_mod
 
       ! set trend direction for above ground stem mass from external forces
       trend = dble(bcmstandstem) + dble(bcmflatstem) - dble(bprevstandstem) - dble(bprevflatstem)
-      if ((trend .ne. 0.0d0)                                          &
+      if ((trend .ne. 0.0d0) &
           .and. ((bcthucum/bcthum .gt. bc0hue) .or. (bc0idc.eq.8))) &
           then  ! trend non-zero and (heat units past emergence or staged crown release crop)
           bcstemmasstrend = trend
@@ -405,6 +429,9 @@ module crop_growth_mod
 
       ! check for consecutive "warm" days based on daily average temperature
       call warmday_cum( bctwarmdays, bctmin )
+
+      ! check for consecutive "cold" days based on daily average temperature
+      call coldday_cum( bctcolddays, bctmin )
 
       ! accumulate chill units
       call chillunit_cum(bctchillucum)
@@ -414,11 +441,11 @@ module crop_growth_mod
 
       ! check crop type for shoot growth action
       regrowth_flg = -1
-      if(    (bcfleaf2stor .gt. 0.0)                                    &
-     &  .or. (bcfstem2stor .gt. 0.0)                                    &
-     &  .or. (bcfstor2stor .gt. 0.0) ) then
-        if( (bc0idc.eq.2) .or. (bc0idc.eq.5) ) then
+      if(    (bcfleaf2stor .gt. 0.0) &
+        .or. (bcfstem2stor .gt. 0.0) &
+        .or. (bcfstor2stor .gt. 0.0) ) then
 
+        if( (bc0idc.eq.2) .or. (bc0idc.eq.5) ) then
           ! check winter annuals for completion of vernalization,
           ! warming and spring day length 
           if( bczgrowpt .le. 0.0 ) then
@@ -434,7 +461,7 @@ module crop_growth_mod
               bcthu_shoot_beg = bcthucum / bcthum
               bcthu_shoot_end = bcthucum / bcthum + bc0hue
               call shootnum(shoot_flg, bnslay, bc0idc, bcdpop, bc0shoot, &
-     &             bcdmaxshoot, u_bcmtotshoot, bcmrootstorez, u_bcdstm )
+                   bcdmaxshoot, u_bcmtotshoot, bcmrootstorez, u_bcdstm )
               ! eliminate diversion of biomass to crown storage
               bcfleaf2stor = 0.0
               bcfstem2stor = 0.0
@@ -447,10 +474,105 @@ module crop_growth_mod
             end if
            end if
           end if
+
         else if( bc0idc.eq.7 ) then
           ! bi-annuals and perennials with tuber dormancy don't need
           ! either of these checks. Doing nothing here prevents
           ! resprouting after defoliation
+
+        else if( (bc0idc.eq.9) .or. (bc0idc.eq.10) ) then
+          ! bush/tree crops with annual cycle without replanting
+
+          ! set winter solstice based on latitude
+          if( amalat .gt. 0.0d0 ) then
+            spring_eqx = N_spring_eqx
+            summer_sol = N_summer_sol
+            fall_eqx = N_fall_eqx
+            winter_sol = N_winter_sol
+          else
+            spring_eqx = S_spring_eqx
+            summer_sol = S_summer_sol
+            fall_eqx = S_fall_eqx
+            winter_sol = S_winter_sol
+          end if
+
+          ! check for spring
+            if(     (hrlty .lt. hrlt) &
+              ! days lengthening (ie. spring)
+              .and. (bcdayspring .eq. 0) ) then
+              ! spring not yet triggered
+              if( bctwarmdays .ge. shoot_delay) then
+                ! consecutive warm days meets threshold
+                ! drop any remaining reproductive into flat residue pool
+                bgmflatstore = bcmflatstore + bcmstandstore
+                ! reset crop values
+                bcmstandstore = 0.0
+                bcmflatstore = 0.0
+                ! new leaves start to appear
+                bcmtotleaf = total_leaf( bnslay, bcmrootstorez )
+                if( bc0idc .eq. 9 ) then
+                  ! reset heat units
+                  bcthucum = 0.0d0
+                end if
+                bcthu_leaf_beg = bcthucum / bcthum
+                bcthu_leaf_end = (bcthucum + (hu_leaf_days * (bctopt-bctmin))) / bcthum
+                ! set day of year on which transition took place
+                bcdayspring = jd
+                ! reset triggers
+                bctchillucum = 0.0d0
+                bctcolddays = 0.0d0
+                bcdayfall = 0
+              end if
+            end if
+
+          ! check for fall conditions and leaf drop
+          if( (hrlty .gt. hrlt) &
+            ! days shortening (ie. fall)
+            .and. (bcdayfall .eq. 0)  ) then
+            ! fall not yet triggered
+            if( jd .ge. fall_eqx ) then
+              ! at least the first day of fall
+!              if(    (bctchillucum .ge. chilluv) &  ! enough cold to trigger leaf drop
+              if(    (bctcolddays .ge. shoot_delay) &  ! enough cold to trigger leaf drop
+                .or. (jd .eq. winter_sol) &         ! always drop leaves by winter solstice
+                ) then
+                ! cold days meet threshold
+                if( bc0idc .eq. 9 ) then
+                  ! Deciduous, drop all leaves
+                  ! drop leaves into flat residue pool
+                  bgmflatleaf = bcmflatleaf + bcmstandleaf
+                  ! reset crop values
+                  bcmstandleaf = 0.0
+                  bcmflatleaf = 0.0
+                  ! set heat units to mature
+                  bcthucum = bcthum
+                else if( bc0idc .eq. 10 ) then
+                  ! Evergreen, drop dead leaves
+                  ! drop leaves into flat residue pool
+                  bgmflatleaf = bcmflatleaf + bcmstandleaf * (1.0d0 - bcfliveleaf)
+                  ! reset crop values
+                  bcmstandleaf = bcmstandleaf * bcfliveleaf
+                  bcfliveleaf = 1.0d0
+                  bcmflatleaf = 0.0
+                  ! reset heat units (use vernalization delay)
+                  bcthucum = 0.0d0
+                end if
+                ! reset spring trigger values
+                bcmtotleaf = 0.0d0
+                bcthu_leaf_beg = 0.0d0
+                bcthu_leaf_end = 0.0d0
+                ! set day of year on which transition took place
+                bcdayfall = jd
+                ! reset triggers
+                bctwarmdays = 0.0d0
+                bcdayspring = 0
+                ! no shoot grow
+                bcthu_shoot_beg = 0.0d0
+                bcthu_shoot_end = 0.0d0
+              end if
+            end if
+          end if
+
         else
           ! check summer annuals and perennials for removal of all (most) leaf mass
           ! perennials with staged crown release also exhibit tuber dormancy
@@ -458,31 +580,39 @@ module crop_growth_mod
           ! after it matures, even if it is defoliated, or cut down, but
           ! also regrow in the spring even if not cut down (test 4 to 5 check below)
           regrowth_flg = 0
-          if( bcleafareatrend .lt. 0.0) then                             ! last change in leaf area was a reduction
+          if( bcleafareatrend .lt. 0.0) then
+           ! last change in leaf area was a reduction
            regrowth_flg = 1
            if( bcfliveleaf * bcmstandleaf .lt. 0.84d0*bc0storeinit*bcdpop & ! 0.42 * 2 = 0.84
-     &      * u_mgtokg * bcfleafstem / (bcfleafstem + 1.0d0) ) then           ! below minimum living leaf mass (which is twice seed leaf mass)
+            * u_mgtokg * bcfleafstem / (bcfleafstem + 1.0d0) ) then
+            ! below minimum leaf emergence period living leaf mass (which is twice seed leaf mass)
             regrowth_flg = 2
-            if( bctwarmdays .ge. shoot_delay ) then                       ! enough warm days to start regrowth
+            if( bctwarmdays .ge. shoot_delay ) then
+             ! enough warm days to start regrowth
              regrowth_flg = 3
-             if( (bcthucum/bcthum .ge. bc0hue)                          & ! heat units past emergence
-     &           .or.((bc0idc.eq.8).and.(bcstemmasstrend.lt.0.0)) ) then  ! staged crown release will regrow without full emergence, but only if stem removed ie harvest
+             if( (bcthucum/bcthum .ge. bc0hue) &
+              ! heat units past emergence
+              .or.((bc0idc.eq.8).and.(bcstemmasstrend.lt.0.0)) ) then
+              ! staged crown release will regrow without full emergence, but only if stem removed ie harvest
               regrowth_flg = 4
-              if( (bcthucum .lt. bcthum)                                & ! not yet mature
-     &            .or. ((bc0idc.eq.3) .or. (bc0idc.eq.6))               & ! perennial
-     &            .or. ((bc0idc.eq.8) .and. (hrlty .lt. hrlt)) ) then     ! staged crown release and days lengthening (ie. spring)
+              if( (bcthucum .lt. bcthum) &
+               ! not yet mature
+               .or. ((bc0idc.eq.3) .or. (bc0idc.eq.6)) &
+               ! perennial
+               .or. ((bc0idc.eq.8) .and. (hrlty .lt. hrlt)) ) then
+               ! staged crown release and days lengthening (ie. spring)
                regrowth_flg = 5
                ! find out how much root store could be released for regrowth
                call shootnum(shoot_flg, bnslay, bc0idc, bcdpop, bc0shoot, &
-     &               bcdmaxshoot, root_store_rel, bcmrootstorez, pot_stems)
+                     bcdmaxshoot, root_store_rel, bcmrootstorez, pot_stems)
                ! find the potential leaf mass to be achieved with regrowth
                if ( bczloc_regrow .gt. 0.0 ) then
-                   pot_leaf_mass = dble(bcmstandleaf) + 0.42d0                  &
-     &                           * min(root_store_rel, u_bcmtotshoot)     &
-     &                           * dble(bcfleafstem) / (dble(bcfleafstem) + 1.0d0)
+                   pot_leaf_mass = dble(bcmstandleaf) + 0.42d0 &
+                                 * min(root_store_rel, u_bcmtotshoot) &
+                                 * dble(bcfleafstem) / (dble(bcfleafstem) + 1.0d0)
                else
-                   pot_leaf_mass = 0.42d0 * root_store_rel                &
-     &                           * dble(bcfleafstem) / (dble(bcfleafstem) + 1.0d0)
+                   pot_leaf_mass = 0.42d0 * root_store_rel &
+                                 * dble(bcfleafstem) / (dble(bcfleafstem) + 1.0d0)
                end if
                ! is present living leaf mass less than leaf mass from storage regrowth
                if( (bcfliveleaf*dble(bcmstandleaf)) .lt. pot_leaf_mass ) then
@@ -611,7 +741,6 @@ module crop_growth_mod
           ! calculations using root reserves
           if(       (huiy .lt. bcthu_shoot_end)                         &
      &        .and. (hui  .gt. bcthu_shoot_beg) ) then
-
               ! daily shoot growth
               call shoot_grow( isr, bnslay, bszlyd, bcdpop,             &
      &                 bczmxc, bcfleafstem,                             &
@@ -625,6 +754,13 @@ module crop_growth_mod
      &                 bczgrowpt, bcfliveleaf, bc0nam,                  &
      &                 bchyfg, bcyld_coef, bcresid_int, bcgrf,          &
      &                 daysim, bcdayap )
+          end if
+
+          if(     (huiy .lt. bcthu_leaf_end) &
+            .and. (hui  .gt. bcthu_leaf_beg) ) then
+            ! daily leaf emergence
+            call leaf_emerge( bnslay, bcdpop, hui, huiy, bcthu_leaf_beg, bcthu_leaf_end, &
+                              bcmstandleaf, bcmtotleaf, bcmrootstorez, bcfliveleaf )
           end if
 
           if(       (huiy .lt. bcthu_shoot_end)                         &
@@ -702,6 +838,7 @@ module crop_growth_mod
           bprevchillucum = bctchillucum
           bprevliveleaf = bcfliveleaf
           bprevdayspring = bcdayspring
+          bprevdayfall = bcdayfall
       else
           ! accumulate days after maturity
           bcdayam = bcdayam + 1
@@ -709,8 +846,13 @@ module crop_growth_mod
       end if
 
       if( (hui .ge. 1.0d0) .and. (bcdstm .gt. 0.0)) then
-          ! heat units completed, crop leaf mass is non transpiring
-          bcfliveleaf = 0.0d0
+
+          if( (bc0idc.eq.9) .or. (bc0idc.eq.10) ) then
+            ! these crops continue until leaf drop or are evergreen
+          else
+            ! heat units completed, crop leaf mass is non transpiring
+            bcfliveleaf = 0.0d0
+          end if
 
           ! check for mature perennial that may re-sprout before fall (alfalfa, grasses)
           if( (bc0idc.eq.3) .or. (bc0idc.eq.6) ) then
@@ -1175,8 +1317,7 @@ module crop_growth_mod
       end if
 
       ! use ratios to divert biomass to root storage
-      drswt = dlfwt * adjleaf2stor + dstwt * adjstem2stor               &
-     &      + drpwt * adjstor2stor
+      drswt = dlfwt * adjleaf2stor + dstwt * adjstem2stor + drpwt * adjstor2stor
       dlfwt = dlfwt * (1.0d0-adjleaf2stor)
       dstwt = dstwt * (1.0d0-adjstem2stor)
       drpwt = drpwt * (1.0d0-adjstor2stor)
@@ -1830,6 +1971,167 @@ module crop_growth_mod
       return
     end subroutine shoot_grow
 
+    subroutine leaf_emerge( bnslay, bcdpop, hui, huiy, bcthu_leaf_beg, bcthu_leaf_end, &
+     &                      bcmstandleaf, bcmtotleaf, bcmrootstorez, bcfliveleaf )
+
+!     + + + KEYWORDS + + +
+!     spring leaf emergence
+
+      use constants, only: u_mgtokg, u_mmtom
+
+      use datetime_mod, only: get_simdate_doy
+
+!     + + + ARGUMENT DECLARATIONS + + +
+      integer bnslay
+      real bcdpop
+      double precision hui, huiy
+      double precision bcthu_leaf_beg, bcthu_leaf_end
+      real bcmstandleaf
+      double precision bcmtotleaf
+      real bcmrootstorez(*)
+      double precision bcfliveleaf
+
+!     + + + ARGUMENT DEFINITIONS + + +
+!     bnslay - number of soil layers
+!     bcdpop - Number of plants per unit area (#/m^2)
+!     hui - heat unit index for today
+!     huiy - heat unit index for yesterday
+!     bcthu_leaf_beg - heat unit index (fraction) for beginning of leaf emergence from root storage period
+!     bcthu_leaf_end - heat unit index (fraction) for end of leaf emergence from root storage period
+!     bcmstandleaf - crop standing leaf mass (kg/m^2)
+
+!     bcmtotleaf - total mass released from root storage biomass (kg/m^2)
+!                  in the period from beginning to completion of leaf emergence heat units
+
+!     bcmrootstorez - crop root storage mass by soil layer (kg/m^2)
+!                   (tubers (potatoes, carrots), extended leaf (onion), seeds (peanuts))
+
+!     bcfliveleaf - fraction of standing plant leaf which is living (transpiring)
+
+!     + + + LOCAL VARIABLES + + +
+      integer lay
+      double precision leaf_hui, leaf_huiy
+      double precision fexp_hui, fexp_huiy
+      double precision d_leaf_mass
+      double precision d_s_root_mass, tot_mass_req, red_mass_rat
+      double precision end_leaf_mass
+      double precision yesterday_len
+      double precision s_root_sum, avail_mass
+      double precision dlfwt, drswt
+
+      integer doy
+
+!     + + + LOCAL VARIABLE DEFINITIONS + + +
+!     lay - index into soil layers for looping
+!     leaf_hui - today fraction of heat unit leaf growth index accumulation
+!     leaf_huiy - previous day fraction of heat unit leaf growth index accumulation
+!     fexp_hui - exponential function evaluated at todays leaf heat unit index
+!     fexp_huiy - exponential function evaluated at yesterdays leaf heat unit index
+!     d_leaf_mass - mass increment added to leaf for the present day (mg/plant)
+!     d_s_root_mass - mass increment removed from storage roots for the present day (mg/plant)
+!     tot_mass_req - mass required from root mass for one plant (mg/plant)
+!     red_mass_rat - ratio of reduced mass available for stem growth to expected mass available
+!     end_leaf_mass - total leaf mass at end of leaf emergence period (mg/plant)
+!     yesterday_len - length of shoot yesterday (m)
+!     s_root_sum - storage root mass sum (total in all layers) (kg/m^2)
+!     avail_mass - storage root mass sum in (mg/plant)
+!     dlfwt - increment in leaf dry weight (kg/m^2)
+!     drswt - biomass diverted from partitioning to root storage
+
+!     + + + LOCAL PARAMETERS + + +
+      double precision, parameter :: leaf_exp = 2.0D0
+      double precision, parameter :: be_stor = 0.7D0
+
+!     + + + LOCAL PARAMETER DEFINITIONS + + +
+!     leaf_exp - exponent for shape of exponential function
+!                 small numbers  go toward straight line
+!                 large numbers delay development to end of period
+!     be_stor - conversion efficiency of biomass from storage to growth
+
+!     + + + END OF SPECIFICATIONS + + +
+
+      doy = get_simdate_doy()
+
+      ! fraction of leaf growth from stored reserves (today and yesterday)
+      leaf_hui = min( 1.0d0, (hui - bcthu_leaf_beg)                     &
+     &          / (dble(bcthu_leaf_end) - bcthu_leaf_beg) )
+      leaf_huiy = max( 0.0d0, (huiy - bcthu_leaf_beg)                   &
+     &           / (bcthu_leaf_end - bcthu_leaf_beg) )
+
+      ! total leaf emergence occurs at an exponential rate
+      fexp_hui = (exp(leaf_exp*leaf_hui)-1.0) / (exp(leaf_exp)-1)
+      fexp_huiy = (exp(leaf_exp*leaf_huiy)-1.0) / (exp(leaf_exp)-1)
+
+      ! sum present storage root mass (kg/m^2)
+      s_root_sum = 0.0d0
+      do lay = 1, bnslay
+          s_root_sum = s_root_sum + bcmrootstorez(lay)
+      end do
+
+      ! calculate storage mass required for leaves on a single plant
+      ! units: kg/m^2 / ( plants/m^2 * kg/mg ) = mg/plant
+      tot_mass_req = dble(bcmtotleaf) / (dble(bcdpop) * u_mgtokg)
+
+      end_leaf_mass = tot_mass_req * be_stor
+
+      ! this days incremental leaf mass for a single plant (mg/plant)
+      d_leaf_mass = end_leaf_mass * (fexp_hui - fexp_huiy)
+
+      ! this days mass removed from the storage root (mg/plant)
+      d_s_root_mass = d_leaf_mass / be_stor
+
+      ! check that sufficient storage root mass is available
+      ! units: mg/plant = kg/m^2 / (kg/mg * plant/m^2)
+      avail_mass = s_root_sum  / (bcdpop * u_mgtokg)
+      if( (d_s_root_mass .gt. avail_mass)                               &
+     &   .and. (d_s_root_mass .gt. 0.0d0) ) then
+          ! reduce removal to match available storage
+          red_mass_rat = avail_mass / d_s_root_mass
+          ! adjust leaf increment to match
+          d_leaf_mass = d_leaf_mass * red_mass_rat
+          ! adjust removal amount to match exactly
+          d_s_root_mass =  d_s_root_mass * red_mass_rat
+      end if
+
+      ! if no additional mass, no need to go further
+      if( d_leaf_mass .le. 0.0d0) return
+!! +++++++++++++ RETURN FROM HERE IF ZERO +++++++++++++++++
+
+      !convert from mg/plant to kg/m^2
+      dlfwt = d_leaf_mass * u_mgtokg * bcdpop
+
+      ! distribute mass into mass pools
+      if( (bcmstandleaf + dlfwt) .gt. 0.0 ) then
+          ! added leaf mass adjusts live leaf fraction, otherwise no change
+          bcfliveleaf = (bcfliveleaf*bcmstandleaf+dlfwt)                &
+     &            / (bcmstandleaf + dlfwt)
+      end if
+      bcmstandleaf = bcmstandleaf + dlfwt
+
+      ! remove from storage root mass
+      do lay = 1, bnslay
+          ! check for sufficient storage in layer to meet demand
+          if(       (bcmrootstorez(lay) .gt. 0.0d0)                       &
+     &        .and. (d_s_root_mass .gt. 0.0d0) ) then
+              ! demand and storage to meet it
+              ! units: mg/plant * kg/mg * plants/m^2 = kg/m^2
+              bcmrootstorez(lay) = bcmrootstorez(lay) - d_s_root_mass   &
+     &                           * u_mgtokg * bcdpop
+              if( bcmrootstorez(lay) .lt. 0.0d0 ) then
+                  ! not enough mass in this layer to meet need. Carry over
+                  ! to next layer in d_s_root_mass
+                  d_s_root_mass = - bcmrootstorez(lay) / (u_mgtokg*bcdpop)
+                  bcmrootstorez(lay) = 0.0d0
+              else
+                  ! no more mass needed
+                  d_s_root_mass = 0.0d0
+             end if
+          end if
+      end do
+
+      return
+    end subroutine leaf_emerge
+
     double precision function frac_lay( top_loc, bot_loc, top_lay, bot_lay )
 
       ! this function determines the fraction of a location which
@@ -1954,6 +2256,58 @@ module crop_growth_mod
 
       return
     end subroutine shootnum
+
+    function total_leaf( bnslay, bcmrootstorez ) result(bcmtotleaf)
+
+!     + + + PURPOSE + + +
+!     determine the mass of leaf emergence that root storage mass can support,
+!     and set the total mass to be released from root storage.
+
+!     + + + KEYWORDS + + +
+!     leaf emergence
+
+      use constants, only: u_mgtokg
+
+!     + + + ARGUMENT DECLARATIONS + + +
+      integer bnslay
+      real bcmrootstorez(*)
+      double precision bcmtotleaf
+
+!     + + + ARGUMENT DEFINITIONS + + +
+!     bnslay - number of soil layers
+!     bcmrootstorez - crop root storage mass by soil layer (kg/m^2)
+!                   (tubers (potatoes, carrots), extended leaf (onion), seeds (peanuts))
+!     bcmtotleaf - total mass released from root storage biomass (kg/m^2)
+!                  in the period from beginning to completion of leaf emergence heat units
+
+!     + + + LOCAL VARIABLES + + +
+      integer lay
+      double precision root_store_sum
+
+!     + + + LOCAL VARIABLE DEFINITIONS + + +
+!     lay - layer index for summing root storage
+!     root_store_sum - sum of root storage (kg/m^2)
+
+!     + + + PARAMETERS + + +
+      double precision leaf_release
+      PARAMETER (leaf_release = 0.5d0)
+
+!     + + + PARAMETER DEFINITIONS + + +
+!     leaf_release - fraction of available root storage mass released to
+!                    grow new leaves. Default is set to 50% of available
+
+      ! find mass of leaf that can be supported from
+      ! root storage mass up to the maximum
+      root_store_sum = 0.0d0
+      do lay = 1,bnslay
+          root_store_sum = root_store_sum + dble(bcmrootstorez(lay))
+      end do
+
+      ! set the mass of root storage that is released (for use in leaf emergence)
+      bcmtotleaf = root_store_sum * leaf_release
+
+      return
+    end function total_leaf
 
     subroutine cookyield(bchyfg, bnslay, dlfwt, dstwt, drpwt, drswt,  &
      &                     bcmstandstem, bcmstandleaf, bcmstandstore,   &
@@ -2178,5 +2532,7 @@ module crop_growth_mod
 
       return
     end subroutine ht_dia_sai
+
+
 
 end module crop_growth_mod

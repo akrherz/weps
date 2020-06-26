@@ -385,14 +385,13 @@ module hydro_wepp_util_mod
 !
 !     +++LOCAL VARIABLES+++
 !
-      integer  frstn,i,j,jend
+      integer  i
       real     slks(100)
       real     varsm,varwtp,varkus,vardp,tmpvr1,tmpvr2
 !
 !     +++LOCAL DEFINITIONS+++
 !
-!     frstn - frost existing fine layer number in a soil layer
-!     slks -  satuareated hydraulic conductivity of a fine layer m/s.
+!     slks -  saturated hydraulic conductivity of a fine layer m/s.
 !
 !     varsm  - soil moisture variable
 !     varwtp - water potential variable

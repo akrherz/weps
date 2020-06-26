@@ -6,7 +6,7 @@
 module PhenologyMMSShootGRG_mod
   use phases_mod
   use constants, only: dp, int32, check_return
-  use PhenologyMMS_mod, only: gdd_stressed_del, height_stressed
+  use PhenologyMMS_mod, only: gdd_stressed_del
   implicit none
 
   type, extends(phase) :: PhenologyMMS_ShootGRG
