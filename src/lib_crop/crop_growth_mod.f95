@@ -23,7 +23,7 @@ module crop_growth_mod
      &                 bcbaf,                                  &
      &                 bchyfg, bcthum, bcdpop, bcdmaxshoot,             &
      &                 bc0storeinit, bcfshoot,                          &
-     &                 bc0growdepth, bcfleafstem, bc0shoot,             &
+     &                 bcfleafstem, bc0shoot,             &
      &                 bc0diammax, bc0ssa, bc0ssb,                      &
      &                 bcfleaf2stor, bcfstem2stor, bcfstor2stor,        &
      &                 bcyld_coef, bcresid_int, bcxstm,                 &
@@ -47,12 +47,13 @@ module crop_growth_mod
      &                 bprevht, bprevzshoot, bprevstm, bprevrtd,        &
      &                 bprevdayap, bprevhucum, bprevrthucum,            &
      &                 bprevgrainf, bprevchillucum, bprevliveleaf,      &
-     &                 bprevdayspring, bprevdayfall, daysim, &
-     &                 bcdayspring, bcdayfall, bczloc_regrow, &
+     &                 bprevdayspring, bprevdayleafon, bprevdayleafoff, &
+     &                 daysim, bcdayspring, bcdayleafon, bcdayleafoff, &
+     &                 bczloc_regrow, &
      &                 bgmstandstem, bgmstandleaf, bgmstandstore,       &
      &                 bgmflatstem, bgmflatleaf, bgmflatstore,          &
      &                 bgmbgstemz,                                      &
-     &                 bgzht, bgdstm, bgxstmrep, bggrainf, pdate )
+     &                 bgzht, bgdstm, bgxstmrep, bggrainf )
 
 !     + + + PURPOSE + + +
 !     This is the main program for implementing the crop growth calculations.
@@ -88,7 +89,7 @@ module crop_growth_mod
       integer bchyfg
       real bcthum, bcdpop, bcdmaxshoot
       real bc0storeinit, bcfshoot
-      real bc0growdepth, bcfleafstem, bc0shoot
+      real bcfleafstem, bc0shoot
       real bc0diammax, bc0ssa, bc0ssb
       real bcfleaf2stor, bcfstem2stor, bcfstor2stor
       real bcyld_coef, bcresid_int, bcxstm
@@ -120,10 +121,10 @@ module crop_growth_mod
       double precision bprevhucum, bprevrthucum
       real bprevgrainf
       double precision bprevchillucum, bprevliveleaf
-      integer bprevdayspring, bprevdayfall
+      integer bprevdayspring, bprevdayleafon, bprevdayleafoff
       logical bm0cif
       real    bcbaf
-      integer daysim, bcdayspring, bcdayfall
+      integer daysim, bcdayspring, bcdayleafon, bcdayleafoff
       real    bczloc_regrow
       real    bgmstandstem, bgmstandleaf, bgmstandstore
       real    bgmflatstem, bgmflatleaf, bgmflatstore
@@ -131,7 +132,6 @@ module crop_growth_mod
       real    bgzht, bgdstm
       double precision bgxstmrep
       real bggrainf
-      integer pdate
 
 !     + + + ARGUMENT DEFINITIONS + + +
 
@@ -174,7 +174,6 @@ module crop_growth_mod
 !     bcdmaxshoot - maximum number of shoots possible from each plant
 !     bc0storeinit - db input, crop storage root mass initialzation (mg/plant)
 !     bcfshoot - crop ratio of shoot diameter to length
-!     bc0growdepth - depth of growing point at time of planting (m)
 !     bcfleafstem - crop leaf to stem mass ratio for shoots
 !     bc0shoot - mass from root storage required for each shoot (mg/shoot)
 !     bc0diammax - crop maximum plant diameter (m)
@@ -236,7 +235,8 @@ module crop_growth_mod
 
 !     daysim   - day of the simulation
 !     bcdayspring - day of year in which a winter annual/perennial releases stored growth
-!     bcdayfall - day of year in which a deciduous/evergreen perennial drops all/some leaves/needles
+!     bcdayleafon   ! day of year in which a perennial begins to grow new leaves/needles
+!     bcdayleafoff  ! day of year in which a perennial lost it's leaves (Deciduous all/ Conifer dead needles)
 !     bczloc_regrow - location of regrowth point (+ on stem, 0 or negative from crown at or below surface) (m)
 !     bgmstandstem - crop standing stem mass (kg/m^2)
 !     bgmstandleaf - crop standing leaf mass (kg/m^2)
@@ -253,7 +253,6 @@ module crop_growth_mod
 !     bgxstmrep - a representative diameter so that acdstm*acxstmrep*aczht=acrsai
 !     bgzrtd  - Crop root depth (m)
 !     bggrainf - internally computed grain fraction of reproductive mass
-!     pdate - planting day of year
 
 !     + + + LOCAL VARIABLES + + +
       integer :: jd     ! simulation day of year
@@ -302,23 +301,22 @@ module crop_growth_mod
       double precision shoot_delay
       double precision verndelmax
       double precision dev_floor
-      double precision max_photo_per
+      !double precision max_photo_per
       double precision spring_trig
       double precision hard_spring
       parameter(chilluv = 50.0d0)
       parameter(shoot_delay = 7.0d0)
       parameter(verndelmax = 0.04d0)
       parameter(dev_floor = 0.01d0)
-      parameter(max_photo_per = 20d0)
+      !parameter(max_photo_per = 20d0)
       parameter(spring_trig = 0.29d0)
       parameter(hard_spring = 1.0d0)
 
       double precision hu_leaf_days
       parameter(hu_leaf_days = 7.0d0)
-      double precision, parameter :: leaf_rel_frac = 0.5d0
 
-      double precision bctphotodel
-      parameter( bctphotodel = 0.0055d0)
+      !double precision bctphotodel
+      !parameter( bctphotodel = 0.0055d0)
 
       integer shoot_flg
       parameter( shoot_flg = 0)
@@ -336,6 +334,7 @@ module crop_growth_mod
 
 !     shoot_flg - used to control the behavior of the shootnum subroutine
 !             0 - returns the shoot number constrained by bcdmaxshoot
+!     hu_leaf_days - number of days of optimum heat units to get full leaf emergence
 
 !     + + + END OF SPECIFICATIONS + + +
 
@@ -573,7 +572,7 @@ module crop_growth_mod
             ! heat units past emergence
             if(     (hrlty .lt. hrlt) &
               ! days lengthening (ie. spring)
-              .and. (bcdayspring .eq. 0) ) then
+              .and. (bcdayleafon .eq. 0) ) then
               ! spring not yet triggered
               if( bctwarmdays .ge. shoot_delay) then
                 ! consecutive warm days meets threshold
@@ -591,11 +590,11 @@ module crop_growth_mod
                 bcthu_leaf_beg = bcthucum / bcthum
                 bcthu_leaf_end = (bcthucum + (hu_leaf_days * (bctopt-bctmin))) / bcthum
                 ! set day of year on which transition took place
-                bcdayspring = jd
+                bcdayleafon = jd
                 ! reset triggers
                 bctchillucum = 0.0d0
                 bctcolddays = 0.0d0
-                bcdayfall = 0
+                bcdayleafoff = 0
               end if
             end if
           end if
@@ -603,7 +602,7 @@ module crop_growth_mod
           ! check for fall conditions and leaf drop
           if( (hrlty .gt. hrlt) &
             ! days shortening (ie. fall)
-            .and. (bcdayfall .eq. 0)  ) then
+            .and. (bcdayleafoff .eq. 0)  ) then
             ! fall not yet triggered
             if( jd .ge. fall_eqx ) then
               ! at least the first day of fall
@@ -638,7 +637,7 @@ module crop_growth_mod
                   ! reset crop values
                   bcmstandleaf = bcmstandleaf * 0.5d0
                   ! drop dead evergreen leaves into flat residue pool
-                  bgmflatleaf = bcmflatleaf + bcmstandleaf * (1.0d0 - bcfliveleaf)
+                  bgmflatleaf = bgmflatleaf + bcmstandleaf * (1.0d0 - bcfliveleaf)
                   ! reset crop values
                   bcmstandleaf = bcmstandleaf * bcfliveleaf
                   bcfliveleaf = 1.0d0
@@ -651,10 +650,10 @@ module crop_growth_mod
                 bcthu_leaf_beg = 0.0d0
                 bcthu_leaf_end = 0.0d0
                 ! set day of year on which transition took place
-                bcdayfall = jd
+                bcdayleafoff = jd
                 ! reset triggers
                 bctwarmdays = 0.0d0
-                bcdayspring = 0
+                bcdayleafon = 0
                 ! no shoot grow
                 bcthu_shoot_beg = 0.0d0
                 bcthu_shoot_end = 0.0d0
@@ -872,7 +871,7 @@ module crop_growth_mod
      &                 bc0alf, bc0blf, bc0clf, bc0dlf, bc0arp,          &
      &                 bc0brp, bc0crp, bc0drp,                          &
      &                 bc0aht, bc0bht, bc0ssa, bc0ssb,                  &
-     &                 bc0sla, bcxstm,                           &
+     &                 bc0sla,                            &
      &                 bhfwsf,                                          &
      &                 hui, huiy, huirt, huirty, hu_delay, bcthardnx, &
      &                 bcbaf, bchyfg,                                   &
@@ -927,7 +926,8 @@ module crop_growth_mod
           bprevchillucum = bctchillucum
           bprevliveleaf = bcfliveleaf
           bprevdayspring = bcdayspring
-          bprevdayfall = bcdayfall
+          bprevdayleafon = bcdayleafon
+          bprevdayleafoff = bcdayleafoff
       else
           ! accumulate days after maturity
           bcdayam = bcdayam + 1
@@ -962,7 +962,7 @@ module crop_growth_mod
      &                 bc0alf, bc0blf, bc0clf, bc0dlf,                  &
      &                 bc0arp, bc0brp, bc0crp, bc0drp,                  &
      &                 bc0aht, bc0bht, bc0ssa, bc0ssb,                  &
-     &                 bc0sla, bcxstm,                          &
+     &                 bc0sla,                           &
      &                 bhfwsf,                                          &
      &                 hui, huiy, huirt, huirty, hu_delay, bcthardnx,   &
      &                 bcbaf, bchyfg,                                   &
@@ -1007,7 +1007,7 @@ module crop_growth_mod
       real bc0alf, bc0blf, bc0clf, bc0dlf
       real bc0arp, bc0brp, bc0crp, bc0drp
       real bc0aht, bc0bht, bc0ssa, bc0ssb
-      real bc0sla, bcxstm
+      real bc0sla
       real bhfwsf
       double precision hui, huiy
       double precision huirt, huirty
@@ -1058,7 +1058,6 @@ module crop_growth_mod
 !     bc0ssa - biomass to stem area conversion coefficient a
 !     bc0ssb - biomass to stem area conversion coefficient b
 !     bc0sla - specific leaf area (cm^2/g)
-!     bcxstm - mature crop stem diameter (m)
 !     bhfwsf - water stress factor (ratio)
 !     hui - heat unit index (ratio of acthucum to acthum)
 !     huiy - heat unit index (ratio of acthucum to acthum) on day (i-1)
@@ -2053,8 +2052,8 @@ module crop_growth_mod
 
  1000 format(1x,i5,1x,i3,1x,i4,1x,i4,1x,f6.3,                           &
      &       2(1x,f10.4), 2(1x,f12.4),                                  &
-     &       4(1x,f10.4),                                               &
-     &       4(1x,f10.4),                                               &
+     &       4(1x,f12.4),                                               &
+     &       4(1x,f12.4),                                               &
      &       (1x,f8.4),(1x,f8.3),1x,a)
 
       return
@@ -2066,7 +2065,7 @@ module crop_growth_mod
 !     + + + KEYWORDS + + +
 !     spring leaf emergence
 
-      use constants, only: u_mgtokg, u_mmtom
+      use constants, only: u_mgtokg
 
       use datetime_mod, only: get_simdate_doy
 
@@ -2104,9 +2103,8 @@ module crop_growth_mod
       double precision d_leaf_mass
       double precision d_s_root_mass, tot_mass_req, red_mass_rat
       double precision end_leaf_mass
-      double precision yesterday_len
       double precision s_root_sum, avail_mass
-      double precision dlfwt, drswt
+      double precision dlfwt
 
       integer doy
 
@@ -2121,11 +2119,9 @@ module crop_growth_mod
 !     tot_mass_req - mass required from root mass for one plant (mg/plant)
 !     red_mass_rat - ratio of reduced mass available for stem growth to expected mass available
 !     end_leaf_mass - total leaf mass at end of leaf emergence period (mg/plant)
-!     yesterday_len - length of shoot yesterday (m)
 !     s_root_sum - storage root mass sum (total in all layers) (kg/m^2)
 !     avail_mass - storage root mass sum in (mg/plant)
 !     dlfwt - increment in leaf dry weight (kg/m^2)
-!     drswt - biomass diverted from partitioning to root storage
 
 !     + + + LOCAL PARAMETERS + + +
       double precision, parameter :: leaf_exp = 2.0D0
@@ -2313,7 +2309,7 @@ module crop_growth_mod
 
       ! determine number of regrowth shoots
       ! units are kg/m^2 / kg/shoot = shoots/m^2
-      if( (bc0idc.eq.3) .or. (bc0idc.eq.6) ) then
+      if( (bc0idc.eq.3) .or. (bc0idc.eq.6) .or. (bc0idc.eq.12) ) then
           ! Perennials hold some mass in reserve
           bcdstm = max( dble(bcdpop),                                         &
      &             per_release * root_store_sum/(dble(bc0shoot)*u_mgtokg)  )
@@ -2348,8 +2344,6 @@ module crop_growth_mod
 
 !     + + + KEYWORDS + + +
 !     leaf emergence
-
-      use constants, only: u_mgtokg
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer bnslay

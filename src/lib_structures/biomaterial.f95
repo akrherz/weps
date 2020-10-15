@@ -97,7 +97,11 @@ module biomaterial
      integer :: dayap       ! number of days of growth completed since crop planted
      integer :: dayam       ! number of days since crop matured
      integer :: dayspring   ! day of year in which a winter annual/perennial released stored growth
-     integer :: dayfall     ! day of year in which a deciduous/evergreen perennial dropped all/some leaves/needles
+     integer :: dayleafoff  ! day of year in which a perennial lost it's leaves (Deciduous all/ Conifer dead needles)
+     integer :: dayleafon   ! day of year in which a perennial begins to grow new leaves/needles
+     logical :: do_spring   ! flag set to indicate that spring regrowth will begin
+     logical :: do_leafoff  ! flag set to indicate that leafoff will begin
+     logical :: do_leafon   ! flag set to indicate that leafon will begin
 
      real :: ptp            ! plant transpiration potential
      real :: pta            ! plant transpiration actual
@@ -263,7 +267,8 @@ module biomaterial
      double precision :: chillucum    ! accumulated chilling units (days)
      double precision :: liveleaf     ! fraction of standing plant leaf which is living (transpiring)
      integer :: dayspring ! day of year in which a winter annual/perennial releases stored growth
-     integer :: dayfall   ! day of year in which a deciduous/evergreen perennial dropped all/some leaves/needles
+     integer :: dayleafoff  ! day of year in which a perennial lost it's leaves (Deciduous all/ Conifer dead needles)
+     integer :: dayleafon   ! day of year in which a perennial begins to grow new leaves/needles
      real :: cancov       ! crop canopy cover (fraction)
   end type bio_prevday
 
@@ -634,7 +639,11 @@ contains
      plantNew%growth%dayap = 0
      plantNew%growth%dayam = 0
      plantNew%growth%dayspring = 0
-     plantNew%growth%dayfall = 0
+     plantNew%growth%dayleafoff = 0
+     plantNew%growth%dayleafon = 0
+     plantNew%growth%do_spring = .false.
+     plantNew%growth%do_leafoff = .false.
+     plantNew%growth%do_leafon = .false.
      plantNew%growth%ptp = 0.0
      plantNew%growth%pta = 0.0
      plantNew%growth%fwsf = 1.0

@@ -90,7 +90,7 @@ module crop_mod
               thisPlant%database%baf, &
               thisPlant%geometry%hyfg, thisPlant%database%thum, thisPlant%geometry%dpop, thisPlant%database%dmaxshoot, &
               thisPlant%database%storeinit, thisPlant%database%fshoot, &
-              thisPlant%database%growdepth, thisPlant%database%fleafstem, thisPlant%database%shoot, &
+              thisPlant%database%fleafstem, thisPlant%database%shoot, &
               thisPlant%database%diammax, thisPlant%database%ssa, thisPlant%database%ssb, &
               thisPlant%database%fleaf2stor, thisPlant%database%fstem2stor, thisPlant%database%fstor2stor, &
               thisPlant%database%yld_coef, thisPlant%database%resid_int, thisPlant%database%xstm, &
@@ -114,12 +114,13 @@ module crop_mod
               thisPlant%prev%ht, thisPlant%prev%zshoot, thisPlant%prev%stm, thisPlant%prev%rtd, &
               thisPlant%prev%dayap, thisPlant%prev%hucum, thisPlant%prev%rthucum, &
               thisPlant%prev%grainf, thisPlant%prev%chillucum, thisPlant%prev%liveleaf, &
-              thisPlant%prev%dayspring, thisPlant%prev%dayfall, daysim, &
-              thisPlant%growth%dayspring, thisPlant%growth%dayfall, thisPlant%database%zloc_regrow, &
+              thisPlant%prev%dayspring, thisPlant%prev%dayleafon, thisPlant%prev%dayleafoff, &
+              daysim, thisPlant%growth%dayspring, thisPlant%growth%dayleafon, thisPlant%growth%dayleafoff, &
+              thisPlant%database%zloc_regrow, &
               cropres%standstem, cropres%standleaf, cropres%standstore, &
               cropres%flatstem, cropres%flatleaf, cropres%flatstore, &
               cropres%stemz, &
-              cropres%zht, cropres%dstm, cropres%xstmrep, cropres%grainf, thisPlant%database%plant_doy )
+              cropres%zht, cropres%dstm, cropres%xstmrep, cropres%grainf )
 
             ! check for abandoned stems in crop regrowth
             if( ( cropres%standstem + cropres%standleaf + cropres%standstore &
@@ -215,7 +216,8 @@ module crop_mod
       ! + + + OUTPUT FORMATS + + +
  2010 format(1x,i2,'/',i2,'/',i3,'|',1x,i2,'/',i2,'/',i2,'|',a40,'|',   &
              10(f7.3,'|'),f7.2,'|',2(f7.3,'|'),f7.5,'|',f7.3,'|',i6,'|',&
-             3(f8.1,'|'),f5.3,'|',i4,'|',i6,'|')
+             3(f8.1,'|'),f5.3,'|',i4,'|')
+ 2011 format(i6,'|')
 
       ! + + + END OF SPECIFICATIONS + + +
 
@@ -278,7 +280,16 @@ module crop_mod
                 bg_stem_sum, root_store_sum, root_fiber_sum, &
                 thisPlant%prev%ht, thisPlant%prev%stm, thisPlant%prev%rtd, thisPlant%prev%grainf, &
                 thisPlant%geometry%xstmrep, thisPlant%prev%cancov, thisPlant%prev%dayap, thisPlant%prev%chillucum, &
-                thisPlant%prev%hucum, thisPlant%database%thum, hui, thisPlant%growth%dayam, thisPlant%prev%dayspring
+                thisPlant%prev%hucum, thisPlant%database%thum, hui, thisPlant%growth%dayam
+
+              if( (thisPlant%database%idc .ge. 9) .and. (thisPlant%database%idc .le. 12) ) then
+                write(UNIT=luoseason(isr),FMT=2011,advance='NO') &
+                  thisPlant%prev%dayleafon
+              else
+                write(UNIT=luoseason(isr),FMT=2011,advance='NO') &
+                  thisPlant%prev%dayspring
+              end if
+
             end if
 
             ! for annual crops, ALWAYS write out warning message
