@@ -335,6 +335,116 @@ module WEPSCrop_mod
       return
     end function frac_lay
 
+    subroutine leaf_emerge( plant, leaf_hui, leaf_huiy )
+
+      ! + + + KEYWORDS + + +
+      ! spring leaf emergence
+
+      use biomaterial, only: plant_pointer
+      use datetime_mod, only: get_simdate_doy
+
+      ! + + + ARGUMENT DECLARATIONS + + +
+      type(plant_pointer), pointer :: plant     ! pointer to youngest plant data, which chains to older
+      real(dp), intent(in) :: leaf_hui   ! today fraction of heat unit leaf growth index accumulation
+      real(dp), intent(in) :: leaf_huiy  ! previous day fraction of heat unit leaf growth index accumulation
+
+      ! + + + LOCAL VARIABLES + + +
+      integer(int32) :: bnslay  ! number of soil layers
+      integer(int32) :: lay     ! index into soil layers for looping
+      real(dp) :: fexp_hui      ! exponential function evaluated at todays leaf heat unit index
+      real(dp) :: fexp_huiy     ! exponential function evaluated at yesterdays leaf heat unit index
+      real(dp) :: d_leaf_mass   ! mass increment added to leaf for the present day (mg/plant)
+      real(dp) :: d_s_root_mass ! mass increment removed from storage roots for the present day (mg/plant)
+      real(dp) :: tot_mass_req  ! mass required from root mass for one plant (mg/plant)
+      real(dp) :: red_mass_rat  ! ratio of reduced mass available for stem growth to expected mass available
+      real(dp) :: end_leaf_mass ! total leaf mass at end of leaf emergence period (mg/plant)
+      real(dp) :: s_root_sum    ! storage root mass sum (total in all layers) (kg/m^2)
+      real(dp) :: avail_mass    ! storage root mass sum in (mg/plant)
+      real(dp) :: dlfwt         ! increment in leaf dry weight (kg/m^2)
+
+      integer(int32) :: doy
+
+      ! + + + LOCAL PARAMETERS + + +
+      real(dp), parameter :: leaf_exp = 2.0D0  ! exponent for shape of exponential function
+                                               ! small numbers  go toward straight line
+                                               ! large numbers delay development to end of period
+      real(dp), parameter :: be_stor = 0.7D0   ! conversion efficiency of biomass from storage to growth
+
+!     + + + END OF SPECIFICATIONS + + +
+
+      bnslay = size(plant%mass%rootstorez)
+      doy = get_simdate_doy()
+
+      ! total leaf emergence occurs at an exponential rate
+      fexp_hui = (exp(leaf_exp*leaf_hui)-1.0) / (exp(leaf_exp)-1)
+      fexp_huiy = (exp(leaf_exp*leaf_huiy)-1.0) / (exp(leaf_exp)-1)
+
+      ! sum present storage root mass (kg/m^2)
+      s_root_sum = 0.0d0
+      do lay = 1, bnslay
+          s_root_sum = s_root_sum + plant%mass%rootstorez(lay)
+      end do
+
+      ! calculate storage mass required for leaves on a single plant
+      ! units: kg/m^2 / ( plants/m^2 * kg/mg ) = mg/plant
+      tot_mass_req = plant%growth%mtotleaf / (plant%geometry%dpop * u_mgtokg)
+
+      end_leaf_mass = tot_mass_req * be_stor
+
+      ! this days incremental leaf mass for a single plant (mg/plant)
+      d_leaf_mass = end_leaf_mass * (fexp_hui - fexp_huiy)
+
+      ! this days mass removed from the storage root (mg/plant)
+      d_s_root_mass = d_leaf_mass / be_stor
+
+      ! check that sufficient storage root mass is available
+      ! units: mg/plant = kg/m^2 / (kg/mg * plant/m^2)
+      avail_mass = s_root_sum  / (plant%geometry%dpop * u_mgtokg)
+      if( (d_s_root_mass .gt. avail_mass) .and. (d_s_root_mass .gt. 0.0d0) ) then
+          ! reduce removal to match available storage
+          red_mass_rat = avail_mass / d_s_root_mass
+          ! adjust leaf increment to match
+          d_leaf_mass = d_leaf_mass * red_mass_rat
+          ! adjust removal amount to match exactly
+          d_s_root_mass =  d_s_root_mass * red_mass_rat
+      end if
+
+      ! if no additional mass, no need to go further
+      if( d_leaf_mass .le. 0.0d0) return
+      !! +++++++++++++ RETURN FROM HERE IF ZERO +++++++++++++++++
+
+      !convert from mg/plant to kg/m^2
+      dlfwt = d_leaf_mass * u_mgtokg * plant%geometry%dpop
+
+      ! distribute mass into mass pools
+      if( (plant%mass%standleaf + dlfwt) .gt. 0.0 ) then
+          ! added leaf mass adjusts live leaf fraction, otherwise no change
+          plant%growth%fliveleaf = (plant%growth%fliveleaf*plant%mass%standleaf+dlfwt) / (plant%mass%standleaf + dlfwt)
+      end if
+      plant%mass%standleaf = plant%mass%standleaf + dlfwt
+
+      ! remove from storage root mass
+      do lay = 1, bnslay
+          ! check for sufficient storage in layer to meet demand
+          if( (plant%mass%rootstorez(lay) .gt. 0.0d0) .and. (d_s_root_mass .gt. 0.0d0) ) then
+              ! demand and storage to meet it
+              ! units: mg/plant * kg/mg * plants/m^2 = kg/m^2
+              plant%mass%rootstorez(lay) = plant%mass%rootstorez(lay) - d_s_root_mass * u_mgtokg * plant%geometry%dpop
+              if( plant%mass%rootstorez(lay) .lt. 0.0d0 ) then
+                  ! not enough mass in this layer to meet need. Carry over
+                  ! to next layer in d_s_root_mass
+                  d_s_root_mass = - plant%mass%rootstorez(lay) / (u_mgtokg * plant%geometry%dpop)
+                  plant%mass%rootstorez(lay) = 0.0d0
+              else
+                  ! no more mass needed
+                  d_s_root_mass = 0.0d0
+             end if
+          end if
+      end do
+
+      return
+    end subroutine leaf_emerge
+
     subroutine growth(soil, plant, &
                       eirr, &
                       eff_lai, trad_lai, ts, p_rw, p_st, p_lf, p_rp, &
@@ -353,7 +463,7 @@ module WEPSCrop_mod
 
       use soil_data_struct_defs, only: soil_def
       use biomaterial, only: plant_pointer
-      use WEPSCrop_util_mod, only: shootnum
+      use WEPSCrop_util_mod, only: shootnum, per_release, stage_release
       use weps_cmdline_parms, only: cook_yield
 
       integer(int32), parameter :: growth_stress = 3
@@ -558,11 +668,22 @@ module WEPSCrop_mod
           adjstor2stor = plant%database%fstor2stor
       end if
 
-       ! check for full regrowth reserve on all but tuber crops
+       ! Limit accumulation of regrowth reserve on all but tuber crops
       if( plant%database%idc .ne. 7 ) then
           ! check for regrowth shoot number possible from root store
-          call shootnum(shoot_flg, bnslay, plant%database%idc, dble(plant%geometry%dpop), dble(plant%database%shoot), &
+          if( (plant%database%idc.eq.3) .or. (plant%database%idc.eq.6) ) then
+            ! perennial
+            call shootnum(shoot_flg, bnslay, per_release, dble(plant%geometry%dpop), dble(plant%database%shoot), &
                    dble(plant%database%dmaxshoot), temptotshoot, dble(plant%mass%rootstorez), tempdstm )
+          else if( plant%database%idc .eq. 8 ) then
+            ! staged release
+            call shootnum(shoot_flg, bnslay, stage_release, dble(plant%geometry%dpop), dble(plant%database%shoot), &
+                   dble(plant%database%dmaxshoot), temptotshoot, dble(plant%mass%rootstorez), tempdstm )
+          else
+            ! all others go for broke
+            call shootnum(shoot_flg, bnslay, 1.0_dp, dble(plant%geometry%dpop), dble(plant%database%shoot), &
+                   dble(plant%database%dmaxshoot), temptotshoot, dble(plant%mass%rootstorez), tempdstm )
+          end if
           ! compare to maximum shoot number
           if( tempdstm .ge. 5.0_dp * plant%database%dmaxshoot * plant%geometry%dpop ) then
               ! one of these must be non-zero or regrowth will never occur
@@ -844,7 +965,7 @@ module WEPSCrop_mod
           ! find remainder of mass increment
           ddm_adj = ddm_adj - drpwt
           ! distribute remainder of mass increment between stem and leaf
-          ! leaf increment gets priority
+          ! leaf increment gets prioritybcdpop
           if( ddm_adj .gt. dlfwt ) then
               ! set stem increment
               dstwt = ddm_adj - dlfwt

@@ -51,17 +51,20 @@ module ritchieHardening_mod
 
       logical :: succ = .false.
 
-      ! get input values
-      call plnt%state%get("harden_index", harden_index, succ)
-      if( .not. check_return( "harden_index", succ ) ) return
+      ! get plant state
       call plnt%state%get("can_harden", can_harden, succ)
-      if( .not. check_return( "can_harden", succ ) ) return
-      call env%state%get("tsmx1", tmax, succ)
-      if( .not. check_return( "tsmx1", succ ) ) return
-      call env%state%get("tsmn1", tmin, succ)
-      if( .not. check_return( "tsmn1", succ ) ) return
+      if( .not. check_return( trim(self%processName) , "can_harden", succ ) ) return
 
       if( can_harden ) then
+
+        ! get plant state
+        call plnt%state%get("harden_index", harden_index, succ)
+        if( .not. check_return( trim(self%processName) , "harden_index", succ ) ) return
+        call env%state%get("tsmx1", tmax, succ)
+        if( .not. check_return( trim(self%processName) , "tsmx1", succ ) ) return
+        call env%state%get("tsmn1", tmin, succ)
+        if( .not. check_return( trim(self%processName) , "tsmn1", succ ) ) return
+
         call freezeharden(harden_index, tmax, tmin)
 
         !write(*,*) 'Hardening: ', harden_index, tmax, tmin
@@ -70,6 +73,8 @@ module ritchieHardening_mod
       end if
 
       call plnt%state%replace("harden_index", harden_index, succ)
+      if( .not. check_return( trim(self%processName) , "harden_index", succ ) ) return
+
     end subroutine Hardening
 
     ! calculates the freeze hardening index for the day. The input value

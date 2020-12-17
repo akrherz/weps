@@ -54,18 +54,18 @@ module PhenologyMMSGermination_mod
       logical :: succ = .false.
       ! Body of germination
       call plnt%state%get("p_layer", p_layer, succ)
-      if( .not. check_return( "p_layer", succ ) ) return
+      if( .not. check_return( trim(self%phaseName) , "p_layer", succ ) ) return
       call env%state%get("swc", soil_moisture, succ)
-      if( .not. check_return( "swc", succ ) ) return
+      if( .not. check_return( trim(self%phaseName) , "swc", succ ) ) return
       call plnt%state%get("daygdd", daygdd, succ)
-      if( .not. check_return( "daygdd", succ ) ) return
+      if( .not. check_return( trim(self%phaseName) , "daygdd", succ ) ) return
       call self%phaseState%get("stagegdd", stagegdd, succ)
-      if( .not. check_return( "stagegdd", succ ) ) return
+      if( .not. check_return( trim(self%phaseName) , "stagegdd", succ ) ) return
       ! phase specific parameters
       call self%phasePars%get("swc_curve", swc_curve, succ)
-      if( .not. check_return( "swc_curve", succ ) ) return
+      if( .not. check_return( trim(self%phaseName) , "swc_curve", succ ) ) return
       call self%phasePars%get("gdd_resp", gdd_resp, succ)
-      if( .not. check_return( "gdd_resp", succ ) ) return
+      if( .not. check_return( trim(self%phaseName) , "gdd_resp", succ ) ) return
 
       !write(*,*) 'PhaseName: ', self%phaseName
 
@@ -92,18 +92,23 @@ module PhenologyMMSGermination_mod
         daygdd = stagegdd - requiredgdd
         stagegdd = requiredgdd
         call self%phaseState%replace("stagegdd", stagegdd, succ)
+        if( .not. check_return( trim(self%phaseName) , "stagegdd", succ ) ) return
         call plnt%state%replace("daygdd", daygdd, succ)
+        if( .not. check_return( trim(self%phaseName) , "daygdd", succ ) ) return
         ! update pointer here
         !plnt%next_phase() or something
         tmp = 1
         call plnt%state%replace("nextstage", tmp, succ)
+        if( .not. check_return( trim(self%phaseName) , "nextstage", succ ) ) return
         tmp = 0
         call plnt%state%replace("specstage", tmp, succ)
+        if( .not. check_return( trim(self%phaseName) , "specstage", succ ) ) return
         ! done
         return
       else
         ! Germination not complete.
         call self%phaseState%replace("stagegdd", stagegdd, succ)
+        if( .not. check_return( trim(self%phaseName) , "stagegdd", succ ) ) return
         return
       end if
 

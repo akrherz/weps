@@ -420,7 +420,7 @@ module manage_mod
           print*, 'SR',sr,' Skip operation', lastoper(sr)%code,' ', trim(lastoper(sr)%name)
       else
           if (report_info >= 1) then
-            print*, 'SR',sr,' Do operation', lastoper(sr)%code,' ', trim(lastoper(sr)%name)
+            print*, 'SR',sr,' Do operation  ', lastoper(sr)%code,' ', trim(lastoper(sr)%name)
           end if
       end if
 
@@ -1807,8 +1807,8 @@ module manage_mod
         ! Delete residue from all growing plants
         thisPlant => plant%olderPlant
         do while( associated(thisPlant) )
-          if( thisPlant%growth%growing ) then
-            ! growing plant, delete only plant residue pools
+          if( thisPlant%growth%living ) then
+            ! living plant, delete only plant residue pools
             call residueDestroyAll( thisPlant%residue )
             ! move to next plant
             thisPlant => thisPlant%olderPlant
@@ -1981,8 +1981,8 @@ module manage_mod
         if( (plant%geometry%dpop .gt. 0.0) .and. (plant%database%idc .gt. 0) ) then
           ! set flag for crop initialization - jt
           plant%growth%am0cif = .true.
-          ! set crop growth flag on - jt
-          plant%growth%growing = .true.
+          ! set crop living flag on - jt
+          plant%growth%living = .true.
 
           if( upgm_growth .eq. 1 ) then
             ! grow WEPS crop using upgm
@@ -2634,9 +2634,6 @@ module manage_mod
           ! non-harvest termination, suppress early harvest warnings
 
           if( manFile%rpt_season_flg ) then
-
-            write(*,*) 'REP101: ', get_simdate_doy(), trim(plant%olderPlant%bname)
-
             mature_warn_flg = 0
             call plant_endseason( sr, manFile%mcount, manFile%mperod, am0cfl(sr), &
                                   soil%nslay, mature_warn_flg, plant%olderPlant )
@@ -2669,7 +2666,6 @@ module manage_mod
         call getManVal(manFile%proc, 'hyldunits', plant%database%ynmu)      ! report
         call getManVal(manFile%proc, 'hyldwater', plant%database%ywct)      ! setup, calibration, report
         call getManVal(manFile%proc, 'hyconfact', plant%database%ycon)      ! calibration, report
-        call getManVal(manFile%proc, 'idc', plant%database%idc)             ! setup, growth
         call getManVal(manFile%proc, 'grf', plant%database%grf)             ! setup
         call getManVal(manFile%proc, 'ck', plant%database%ck)               ! growth
         ! read crop growth parameters
@@ -2724,11 +2720,11 @@ module manage_mod
 
         ! do process
         ! do not initialize crop if no crop is present
-        if( (plant%geometry%dpop .gt. 0.0) .and. (plant%database%idc .gt. 0) ) then
+        if( (plant%geometry%dpop .gt. 0.0) ) then
           ! set flag for crop initialization - jt
           plant%growth%am0cif = .true.
           ! set crop growth flag on - jt
-          plant%growth%growing = .true.
+          plant%growth%living = .true.
 
           ! initialize upgm_grow model
           plant%upgm_grow = UPGM()

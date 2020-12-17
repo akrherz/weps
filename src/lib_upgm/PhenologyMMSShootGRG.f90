@@ -100,72 +100,70 @@ module PhenologyMMSShootGRG_mod
 
       ! plant state
       call plnt%state%get("daygdd", daygdd, succ)
-      if( .not. check_return( "daygdd", succ ) ) return
+      if( .not. check_return( trim(self%phaseName) , "daygdd", succ ) ) return
       call plnt%state%get("stress", stress, succ)
-      if( .not. check_return( "stress", succ ) ) return
+      if( .not. check_return( trim(self%phaseName) , "stress", succ ) ) return
       call plnt%state%get("fliveleaf", bcfliveleaf, succ)
-      if( .not. check_return( "fliveleaf", succ ) ) return
-      call plnt%state%get("thu_shoot_beg", bcthu_shoot_beg, succ)
-      if( .not. check_return( "thu_shoot_beg", succ ) ) return
+      if( .not. check_return( trim(self%phaseName) , "fliveleaf", succ ) ) return
       call plnt%state%get("thu_shoot_end", bcthu_shoot_end, succ)
-      if( .not. check_return( "thu_shoot_end", succ ) ) return
+      if( .not. check_return( trim(self%phaseName) , "thu_shoot_end", succ ) ) return
 
       ! phase state
       !initialized to zero at phase beginning
       call self%phaseState%get("phase_rel_gdd", phase_rel_gdd, succ)
-      if( .not. check_return( "phase_rel_gdd", succ ) ) return
+      if( .not. check_return( trim(self%phaseName) , "phase_rel_gdd", succ ) ) return
       call self%phaseState%get("stagegdd", stagegdd, succ)
-      if( .not. check_return( "stagegdd", succ ) ) return
+      if( .not. check_return( trim(self%phaseName) , "stagegdd", succ ) ) return
 
       ! phase parameters
       call self%phasePars%get("GN_trans_gdd", GN_trans_gdd, succ)
-      if( .not. check_return( "GN_trans_gdd", succ ) ) return
+      if( .not. check_return( trim(self%phaseName) , "GN_trans_gdd", succ ) ) return
       call self%phasePars%get("GN_stress", GN_stress, succ)
-      if( .not. check_return( "GN_stress", succ ) ) return
+      if( .not. check_return( trim(self%phaseName) , "GN_stress", succ ) ) return
       call self%phasePars%get("GS_trans_gdd", GS_trans_gdd, succ)
-      if( .not. check_return( "GS_trans_gdd", succ ) ) return
+      if( .not. check_return( trim(self%phaseName) , "GS_trans_gdd", succ ) ) return
       call self%phasePars%get("GS_stress", GS_stress, succ)
-      if( .not. check_return( "GS_stress", succ ) ) return
+      if( .not. check_return( trim(self%phaseName) , "GS_stress", succ ) ) return
 
       call self%phasePars%get("height_inc", height_inc, succ)
-      if( .not. check_return( "height_inc", succ ) ) return
+      if( .not. check_return( trim(self%phaseName) , "height_inc", succ ) ) return
       call self%phasePars%get("root_depth_inc", root_depth_inc, succ)
-      if( .not. check_return( "root_depth_inc", succ ) ) return
+      if( .not. check_return( trim(self%phaseName) , "root_depth_inc", succ ) ) return
 
       call self%phasePars%get("beg_live_leaf", beg_live_leaf, succ)
-      if( .not. check_return( "beg_live_leaf", succ ) ) return
+      if( .not. check_return( trim(self%phaseName) , "beg_live_leaf", succ ) ) return
       call self%phasePars%get("end_live_leaf", end_live_leaf, succ)
-      if( .not. check_return( "end_live_leaf", succ ) ) return
+      if( .not. check_return( trim(self%phaseName) , "end_live_leaf", succ ) ) return
 
       call self%phasePars%get("beg_weath_leaf", beg_weath_leaf, succ)
-      if( .not. check_return( "beg_weath_leaf", succ ) ) return
+      if( .not. check_return( trim(self%phaseName) , "beg_weath_leaf", succ ) ) return
       call self%phasePars%get("end_weath_leaf", end_weath_leaf, succ)
-      if( .not. check_return( "end_weath_leaf", succ ) ) return
+      if( .not. check_return( trim(self%phaseName) , "end_weath_leaf", succ ) ) return
 
       call self%phasePars%get("beg_senes_root", beg_senes_root, succ)
-      if( .not. check_return( "beg_senes_root", succ ) ) return
+      if( .not. check_return( trim(self%phaseName) , "beg_senes_root", succ ) ) return
       call self%phasePars%get("end_senes_root", end_senes_root, succ)
-      if( .not. check_return( "end_senes_root", succ ) ) return
+      if( .not. check_return( trim(self%phaseName) , "end_senes_root", succ ) ) return
 
       call self%phasePars%get("beg_grain_index", beg_grain_index, succ)
-      if( .not. check_return( "beg_grain_index", succ ) ) return
+      if( .not. check_return( trim(self%phaseName) , "beg_grain_index", succ ) ) return
       call self%phasePars%get("end_grain_index", end_grain_index, succ)
-      if( .not. check_return( "end_grain_index", succ ) ) return
+      if( .not. check_return( trim(self%phaseName) , "end_grain_index", succ ) ) return
 
       call self%phasePars%get("beg_p_rw", beg_p_rw, succ)
-      if( .not. check_return( "beg_p_rw", succ ) ) return
+      if( .not. check_return( trim(self%phaseName) , "beg_p_rw", succ ) ) return
       call self%phasePars%get("end_p_rw", end_p_rw, succ)
-      if( .not. check_return( "end_p_rw", succ ) ) return
+      if( .not. check_return( trim(self%phaseName) , "end_p_rw", succ ) ) return
 
       call self%phasePars%get("beg_p_lf", beg_p_lf, succ)
-      if( .not. check_return( "beg_p_lf", succ ) ) return
+      if( .not. check_return( trim(self%phaseName) , "beg_p_lf", succ ) ) return
       call self%phasePars%get("end_p_lf", end_p_lf, succ)
-      if( .not. check_return( "end_p_lf", succ ) ) return
+      if( .not. check_return( trim(self%phaseName) , "end_p_lf", succ ) ) return
 
       call self%phasePars%get("beg_p_rp", beg_p_rp, succ)
-      if( .not. check_return( "beg_p_rp", succ ) ) return
+      if( .not. check_return( trim(self%phaseName) , "beg_p_rp", succ ) ) return
       call self%phasePars%get("end_p_rp", end_p_rp, succ)
-      if( .not. check_return( "end_p_rp", succ ) ) return
+      if( .not. check_return( trim(self%phaseName) , "end_p_rp", succ ) ) return
 
       begin_phase_rel = phase_rel_gdd
 
@@ -188,6 +186,11 @@ module PhenologyMMSShootGRG_mod
 
       ! calculate shoot_hui
       if( begin_phase_rel .lt. bcthu_shoot_end ) then
+
+        ! plant state
+        call plnt%state%get("thu_shoot_beg", bcthu_shoot_beg, succ)
+        if( .not. check_return( trim(self%phaseName) , "thu_shoot_beg", succ ) ) return
+
         if( phase_rel_gdd .gt. bcthu_shoot_beg ) then
           ! fraction of shoot growth from stored reserves (today and yesterday)
           shoot_hui = min( 1.0_dp, (phase_rel_gdd - bcthu_shoot_beg) / (bcthu_shoot_end - bcthu_shoot_beg) )
@@ -224,45 +227,47 @@ module PhenologyMMSShootGRG_mod
         ! set control variables
         i_setter = 1
         call plnt%state%replace("nextstage", i_setter, succ)
+        if( .not. check_return( trim(self%phaseName) , "nextstage", succ ) ) return
         i_setter = 0
         call plnt%state%replace("specstage", i_setter, succ)
+        if( .not. check_return( trim(self%phaseName) , "specstage", succ ) ) return
       end if
 
       ! return modified values
       call self%phaseState%replace("phase_rel_gdd", phase_rel_gdd, succ)
-      if( .not. check_return( "phase_rel_gdd", succ ) ) return
+      if( .not. check_return( trim(self%phaseName) , "phase_rel_gdd", succ ) ) return
       call self%phaseState%replace("stagegdd", stagegdd, succ)
-      if( .not. check_return( "stagegdd", succ ) ) return
+      if( .not. check_return( trim(self%phaseName) , "stagegdd", succ ) ) return
 
       ! update plant state values
       call plnt%state%replace("remgdd", daygdd, succ)
-      if( .not. check_return( "remgdd", succ ) ) return
+      if( .not. check_return( trim(self%phaseName) , "remgdd", succ ) ) return
       call plnt%state%replace("ffa", ffa, succ)
-      if( .not. check_return( "ffa", succ ) ) return
+      if( .not. check_return( trim(self%phaseName) , "ffa", succ ) ) return
       call plnt%state%replace("ffw", ffw, succ)
-      if( .not. check_return( "ffw", succ ) ) return
+      if( .not. check_return( trim(self%phaseName) , "ffw", succ ) ) return
       call plnt%state%replace("ffr", ffr, succ)
-      if( .not. check_return( "ffr", succ ) ) return
+      if( .not. check_return( trim(self%phaseName) , "ffr", succ ) ) return
       call plnt%state%replace("gif", gif, succ)
-      if( .not. check_return( "gif", succ ) ) return
+      if( .not. check_return( trim(self%phaseName) , "gif", succ ) ) return
       call plnt%state%replace("shoot_hui", shoot_hui, succ)
-      if( .not. check_return( "shoot_hui", succ ) ) return
+      if( .not. check_return( trim(self%phaseName) , "shoot_hui", succ ) ) return
       call plnt%state%replace("shoot_huiy", shoot_huiy, succ)
-      if( .not. check_return( "shoot_huiy", succ ) ) return
+      if( .not. check_return( trim(self%phaseName) , "shoot_huiy", succ ) ) return
       call plnt%state%replace("p_rw", p_rw, succ)
-      if( .not. check_return( "p_rw", succ ) ) return
+      if( .not. check_return( trim(self%phaseName) , "p_rw", succ ) ) return
       call plnt%state%replace("p_st", p_st, succ)
-      if( .not. check_return( "p_st", succ ) ) return
+      if( .not. check_return( trim(self%phaseName) , "p_st", succ ) ) return
       call plnt%state%replace("p_lf", p_lf, succ)
-      if( .not. check_return( "p_lf", succ ) ) return
+      if( .not. check_return( trim(self%phaseName) , "p_lf", succ ) ) return
       call plnt%state%replace("p_rp", p_rp, succ)
-      if( .not. check_return( "p_rp", succ ) ) return
+      if( .not. check_return( trim(self%phaseName) , "p_rp", succ ) ) return
       call plnt%state%replace("pdht", pdht, succ)
-      if( .not. check_return( "pdht", succ ) ) return
+      if( .not. check_return( trim(self%phaseName) , "pdht", succ ) ) return
       call plnt%state%replace("pdrd", pdrd, succ)
-      if( .not. check_return( "pdrd", succ ) ) return
+      if( .not. check_return( trim(self%phaseName) , "pdrd", succ ) ) return
       call plnt%state%replace("hu_delay", hu_delay, succ)
-      if( .not. check_return( "hu_delay", succ ) ) return
+      if( .not. check_return( trim(self%phaseName) , "hu_delay", succ ) ) return
 
       return
 

@@ -418,8 +418,8 @@
          if( old_run_file ) then
            call sbgrid( minht_barriers() )
            if( make_runxml .gt. 0 ) then
-             ! create new weps.run.xml
-             gridfile = 'erod.grid'
+             ! create new weps.runx
+             gridfile = 'erod.grdx'
              call write_run_xml()
              call write_grid( trim(rootp) )
            end if

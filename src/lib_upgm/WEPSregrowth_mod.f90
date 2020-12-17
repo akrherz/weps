@@ -7,7 +7,7 @@ module WEPSregrowth_mod
   use Preprocess_mod
   use constants, only: dp, check_return, u_mgtokg
   use plant_mod
-  use WEPSCrop_util_mod, only: shootnum, shoot_delay, shoot_flg
+  use WEPSCrop_util_mod, only: shootnum, shoot_delay, shoot_flg, per_release, stage_release
   implicit none
 
   type, extends(preprocess) :: WEPSregrowth
@@ -126,108 +126,96 @@ module WEPSregrowth_mod
       ! retrieve required inputs
       ! plant database
       call plnt%pars%get("plantpop", bcdpop, succ)
-      if( .not. check_return( "plantpop", succ ) ) return
+      if( .not. check_return( trim(self%processName) , "plantpop", succ ) ) return
       call plnt%pars%get("leafstem", bcfleafstem, succ)
-      if( .not. check_return( "leafstem", succ ) ) return
+      if( .not. check_return( trim(self%processName) , "leafstem", succ ) ) return
 
       call plnt%pars%get("idc", bc0idc, succ)
-      if( .not. check_return( "idc", succ ) ) return
+      if( .not. check_return( trim(self%processName) , "idc", succ ) ) return
       call plnt%pars%get("regrmshoot", bc0shoot, succ)
-      if( .not. check_return( "regrmshoot", succ ) ) return
+      if( .not. check_return( trim(self%processName) , "regrmshoot", succ ) ) return
       call plnt%pars%get("dmaxshoot", bcdmaxshoot, succ)
-      if( .not. check_return( "dmaxshoot", succ ) ) return
+      if( .not. check_return( trim(self%processName) , "dmaxshoot", succ ) ) return
       call plnt%pars%get("storeinit", bc0storeinit, succ)
-      if( .not. check_return( "storeinit", succ ) ) return
+      if( .not. check_return( trim(self%processName) , "storeinit", succ ) ) return
       call plnt%pars%get("huie", bc0hue, succ)
-      if( .not. check_return( "huie", succ ) ) return
+      if( .not. check_return( trim(self%processName) , "huie", succ ) ) return
       call plnt%pars%get("zloc_regrow", bczloc_regrow, succ)
-      if( .not. check_return( "zloc_regrow", succ ) ) return
+      if( .not. check_return( trim(self%processName) , "zloc_regrow", succ ) ) return
 
       ! environment variables
       call env%state%get("hrlty", hrlty, succ)
-      if( .not. check_return( "hrlty", succ ) ) return
+      if( .not. check_return( trim(self%processName) , "hrlty", succ ) ) return
       call env%state%get("hrlt", hrlt, succ)
-      if( .not. check_return( "hrlt", succ ) ) return
+      if( .not. check_return( trim(self%processName) , "hrlt", succ ) ) return
 
       ! plant state
       call plnt%state%get("mstandstem", bcmstandstem, succ)
-      if( .not. check_return( "mstandstem", succ ) ) return
+      if( .not. check_return( trim(self%processName) , "mstandstem", succ ) ) return
       call plnt%state%get("mstandleaf", bcmstandleaf, succ)
-      if( .not. check_return( "mstandleaf", succ ) ) return
+      if( .not. check_return( trim(self%processName) , "mstandleaf", succ ) ) return
       call plnt%state%get("mstandstore", bcmstandstore, succ)
-      if( .not. check_return( "mstandstore", succ ) ) return
+      if( .not. check_return( trim(self%processName) , "mstandstore", succ ) ) return
       call plnt%state%get("mflatstem", bcmflatstem, succ)
-      if( .not. check_return( "mflatstem", succ ) ) return
+      if( .not. check_return( trim(self%processName) , "mflatstem", succ ) ) return
       call plnt%state%get("mflatleaf", bcmflatleaf, succ)
-      if( .not. check_return( "mflatleaf", succ ) ) return
+      if( .not. check_return( trim(self%processName) , "mflatleaf", succ ) ) return
       call plnt%state%get("mflatstore", bcmflatstore, succ)
-      if( .not. check_return( "mflatstore", succ ) ) return
+      if( .not. check_return( trim(self%processName) , "mflatstore", succ ) ) return
       call plnt%state%get("masshoot", bcmshoot, succ)
-      if( .not. check_return( "masshoot", succ ) ) return
+      if( .not. check_return( trim(self%processName) , "masshoot", succ ) ) return
       call plnt%state%get("mtotshoot", bcmtotshoot, succ)
-      if( .not. check_return( "mtotshoot", succ ) ) return
+      if( .not. check_return( trim(self%processName) , "mtotshoot", succ ) ) return
       call plnt%state%get("mbgstemz", bcmbgstemz, succ)
-      if( .not. check_return( "mbgstemz", succ ) ) return
+      if( .not. check_return( trim(self%processName) , "mbgstemz", succ ) ) return
       call plnt%state%get("mrootstorez", bcmrootstorez, succ)
-      if( .not. check_return( "mrootstorez", succ ) ) return
+      if( .not. check_return( trim(self%processName) , "mrootstorez", succ ) ) return
       bnslay = size(bcmrootstorez)
 
       call plnt%state%get("height", bczht, succ)
-      if( .not. check_return( "height", succ ) ) return
+      if( .not. check_return( trim(self%processName) , "height", succ ) ) return
       call plnt%state%get("dstm", bcdstm, succ)
-      if( .not. check_return( "dstm", succ ) ) return
+      if( .not. check_return( trim(self%processName) , "dstm", succ ) ) return
       call plnt%state%get("dayam", bcdayam, succ)
-      if( .not. check_return( "dayam", succ ) ) return
+      if( .not. check_return( trim(self%processName) , "dayam", succ ) ) return
       call plnt%state%get("fliveleaf", bcfliveleaf, succ)
-      if( .not. check_return( "fliveleaf", succ ) ) return
+      if( .not. check_return( trim(self%processName) , "fliveleaf", succ ) ) return
       call plnt%state%get("thu_shoot_beg", bcthu_shoot_beg, succ)
-      if( .not. check_return( "thu_shoot_beg", succ ) ) return
+      if( .not. check_return( trim(self%processName) , "thu_shoot_beg", succ ) ) return
       call plnt%state%get("thu_shoot_end", bcthu_shoot_end, succ)
-      if( .not. check_return( "thu_shoot_end", succ ) ) return
+      if( .not. check_return( trim(self%processName) , "thu_shoot_end", succ ) ) return
       call plnt%state%get("grainf", bcgrainf, succ)
-      if( .not. check_return( "grainf", succ ) ) return
+      if( .not. check_return( trim(self%processName) , "grainf", succ ) ) return
       call plnt%state%get("leafareatrend", bcleafareatrend, succ)
-      if( .not. check_return( "leafareatrend", succ ) ) return
+      if( .not. check_return( trim(self%processName) , "leafareatrend", succ ) ) return
       call plnt%state%get("stemmasstrend", bcstemmasstrend, succ)
-      if( .not. check_return( "stemmasstrend", succ ) ) return
+      if( .not. check_return( trim(self%processName) , "stemmasstrend", succ ) ) return
       call plnt%state%get("warmdays", bctwarmdays, succ)
-      if( .not. check_return( "warmdays", succ ) ) return
+      if( .not. check_return( trim(self%processName) , "warmdays", succ ) ) return
       call plnt%state%get("chill_unit_cum", bctchillucum, succ)
-      if( .not. check_return( "chill_unit_cum", succ ) ) return
+      if( .not. check_return( trim(self%processName) , "chill_unit_cum", succ ) ) return
       call plnt%state%get("prevliveleaf", bprevliveleaf, succ)
-      if( .not. check_return( "prevliveleaf", succ ) ) return
+      if( .not. check_return( trim(self%processName) , "prevliveleaf", succ ) ) return
       call plnt%state%get("prevstandleaf", bprevstandleaf, succ)
-      if( .not. check_return( "prevstandleaf", succ ) ) return
+      if( .not. check_return( trim(self%processName) , "prevstandleaf", succ ) ) return
       call plnt%state%get("prevstandstem", bprevstandstem, succ)
-      if( .not. check_return( "prevstandstem", succ ) ) return
+      if( .not. check_return( trim(self%processName) , "prevstandstem", succ ) ) return
       call plnt%state%get("prevflatstem", bprevflatstem, succ)
-      if( .not. check_return( "prevflatstem", succ ) ) return
-      call plnt%state%get("res_standstem", bgmstandstem, succ)
-      if( .not. check_return( "res_standstem", succ ) ) return
-      call plnt%state%get("res_standleaf", bgmstandleaf, succ)
-      if( .not. check_return( "res_standleaf", succ ) ) return
-      call plnt%state%get("res_standstore", bgmstandstore, succ)
-      if( .not. check_return( "res_standstore", succ ) ) return
-      call plnt%state%get("res_flatstem", bgmflatstem, succ)
-      if( .not. check_return( "res_flatstem", succ ) ) return
-      call plnt%state%get("res_flatleaf", bgmflatleaf, succ)
-      if( .not. check_return( "res_flatleaf", succ ) ) return
-      call plnt%state%get("res_flatstore", bgmflatstore, succ)
-      if( .not. check_return( "res_flatstore", succ ) ) return
+      if( .not. check_return( trim(self%processName) , "prevflatstem", succ ) ) return
       call plnt%state%get("res_bgstemz", bgmbgstemz, succ)
-      if( .not. check_return( "res_bgstemz", succ ) ) return
+      if( .not. check_return( trim(self%processName) , "res_bgstemz", succ ) ) return
       call plnt%state%get("res_grainf", bggrainf, succ)
-      if( .not. check_return( "res_grainf", succ ) ) return
+      if( .not. check_return( trim(self%processName) , "res_grainf", succ ) ) return
       call plnt%state%get("res_zht", bgzht, succ)
-      if( .not. check_return( "res_zht", succ ) ) return
+      if( .not. check_return( trim(self%processName) , "res_zht", succ ) ) return
       call plnt%state%get("res_dstm", bgdstm, succ)
-      if( .not. check_return( "res_dstm", succ ) ) return
+      if( .not. check_return( trim(self%processName) , "res_dstm", succ ) ) return
       call plnt%state%get("growing", growing, succ)
-      if( .not. check_return( "growing", succ ) ) return
+      if( .not. check_return( trim(self%processName) , "growing", succ ) ) return
       call plnt%state%get("shoot_growing", shoot_growing, succ)
-      if( .not. check_return( "shoot_growing", succ ) ) return
+      if( .not. check_return( trim(self%processName) , "shoot_growing", succ ) ) return
       call plnt%state%get("can_regrow", can_regrow, succ)
-      if( .not. check_return( "can_regrow", succ ) ) return
+      if( .not. check_return( trim(self%processName) , "can_regrow", succ ) ) return
 
       ! set trend direction for living leaf area from external forces
       trend = (bcfliveleaf*bcmstandleaf) - (bprevliveleaf*bprevstandleaf)
@@ -274,8 +262,20 @@ module WEPSregrowth_mod
                ! staged crown release and days lengthening (ie. spring)
                regrowth_flg = 5
                ! find out how much root store could be released for regrowth
-               call shootnum(shoot_flg,bnslay, bc0idc, bcdpop, bc0shoot,&
+               if( (bc0idc.eq.3) .or. (bc0idc.eq.6) ) then
+                 ! perennial
+                 call shootnum(shoot_flg,bnslay, per_release, bcdpop, bc0shoot,&
                      bcdmaxshoot,root_store_rel,bcmrootstorez,pot_stems)
+               else if( bc0idc .eq. 8 ) then
+                 ! staged release
+                 call shootnum(shoot_flg,bnslay, stage_release, bcdpop, bc0shoot,&
+                     bcdmaxshoot,root_store_rel,bcmrootstorez,pot_stems)
+               else
+                 ! all others go for broke
+                 call shootnum(shoot_flg,bnslay, 1.0_dp, bcdpop, bc0shoot,&
+                     bcdmaxshoot,root_store_rel,bcmrootstorez,pot_stems)
+               end if
+
                ! find the potential leaf mass to be achieved with regrowth
                if ( bczloc_regrow .gt. 0.0_dp ) then
                    pot_leaf_mass = bcmstandleaf + 0.42_dp * min(root_store_rel, bcmtotshoot) &
@@ -352,65 +352,65 @@ module WEPSregrowth_mod
 
       ! update plant state values
       call plnt%state%replace("mstandstem", bcmstandstem, succ)
-      if( .not. check_return( "mstandstem", succ ) ) return
+      if( .not. check_return( trim(self%processName) , "mstandstem", succ ) ) return
       call plnt%state%replace("mstandleaf", bcmstandleaf, succ)
-      if( .not. check_return( "mstandleaf", succ ) ) return
+      if( .not. check_return( trim(self%processName) , "mstandleaf", succ ) ) return
       call plnt%state%replace("mstandstore", bcmstandstore, succ)
-      if( .not. check_return( "mstandstore", succ ) ) return
+      if( .not. check_return( trim(self%processName) , "mstandstore", succ ) ) return
       call plnt%state%replace("mflatstem", bcmflatstem, succ)
-      if( .not. check_return( "mflatstem", succ ) ) return
+      if( .not. check_return( trim(self%processName) , "mflatstem", succ ) ) return
       call plnt%state%replace("mflatleaf", bcmflatleaf, succ)
-      if( .not. check_return( "mflatleaf", succ ) ) return
+      if( .not. check_return( trim(self%processName) , "mflatleaf", succ ) ) return
       call plnt%state%replace("mflatstore", bcmflatstore, succ)
-      if( .not. check_return( "mflatstore", succ ) ) return
+      if( .not. check_return( trim(self%processName) , "mflatstore", succ ) ) return
       call plnt%state%replace("masshoot", bcmshoot, succ)
-      if( .not. check_return( "masshoot", succ ) ) return
+      if( .not. check_return( trim(self%processName) , "masshoot", succ ) ) return
       call plnt%state%replace("mtotshoot", bcmtotshoot, succ)
-      if( .not. check_return( "mtotshoot", succ ) ) return
+      if( .not. check_return( trim(self%processName) , "mtotshoot", succ ) ) return
       call plnt%state%replace("mbgstemz", bcmbgstemz, succ)
-      if( .not. check_return( "mbgstemz", succ ) ) return
+      if( .not. check_return( trim(self%processName) , "mbgstemz", succ ) ) return
       call plnt%state%replace("height", bczht, succ)
-      if( .not. check_return( "height", succ ) ) return
+      if( .not. check_return( trim(self%processName) , "height", succ ) ) return
       call plnt%state%replace("dstm", bcdstm, succ)
-      if( .not. check_return( "dstm", succ ) ) return
+      if( .not. check_return( trim(self%processName) , "dstm", succ ) ) return
       call plnt%state%replace("dayam", bcdayam, succ)
-      if( .not. check_return( "dayam", succ ) ) return
+      if( .not. check_return( trim(self%processName) , "dayam", succ ) ) return
       call plnt%state%replace("thu_shoot_beg", bcthu_shoot_beg, succ)
-      if( .not. check_return( "thu_shoot_beg", succ ) ) return
+      if( .not. check_return( trim(self%processName) , "thu_shoot_beg", succ ) ) return
       call plnt%state%replace("thu_shoot_end", bcthu_shoot_end, succ)
-      if( .not. check_return( "thu_shoot_end", succ ) ) return
+      if( .not. check_return( trim(self%processName) , "thu_shoot_end", succ ) ) return
       call plnt%state%replace("grainf", bcgrainf, succ)
-      if( .not. check_return( "grainf", succ ) ) return
+      if( .not. check_return( trim(self%processName) , "grainf", succ ) ) return
       call plnt%state%replace("leafareatrend", bcleafareatrend, succ)
-      if( .not. check_return( "leafareatrend", succ ) ) return
+      if( .not. check_return( trim(self%processName) , "leafareatrend", succ ) ) return
       call plnt%state%replace("stemmasstrend", bcstemmasstrend, succ)
-      if( .not. check_return( "stemmasstrend", succ ) ) return
+      if( .not. check_return( trim(self%processName) , "stemmasstrend", succ ) ) return
       call plnt%state%replace("chill_unit_cum", bctchillucum, succ)
-      if( .not. check_return( "chill_unit_cum", succ ) ) return
+      if( .not. check_return( trim(self%processName) , "chill_unit_cum", succ ) ) return
       call plnt%state%replace("regrowth_flg", regrowth_flg, succ)
-      if( .not. check_return( "regrowth_flg", succ ) ) return
+      if( .not. check_return( trim(self%processName) , "regrowth_flg", succ ) ) return
       call plnt%state%replace("res_standstem", bgmstandstem, succ)
-      if( .not. check_return( "res_standstem", succ ) ) return
+      if( .not. check_return( trim(self%processName) , "res_standstem", succ ) ) return
       call plnt%state%replace("res_standleaf", bgmstandleaf, succ)
-      if( .not. check_return( "res_standleaf", succ ) ) return
+      if( .not. check_return( trim(self%processName) , "res_standleaf", succ ) ) return
       call plnt%state%replace("res_standstore", bgmstandstore, succ)
-      if( .not. check_return( "res_standstore", succ ) ) return
+      if( .not. check_return( trim(self%processName) , "res_standstore", succ ) ) return
       call plnt%state%replace("res_flatstem", bgmflatstem, succ)
-      if( .not. check_return( "res_flatstem", succ ) ) return
+      if( .not. check_return( trim(self%processName) , "res_flatstem", succ ) ) return
       call plnt%state%replace("res_flatleaf", bgmflatleaf, succ)
-      if( .not. check_return( "res_flatleaf", succ ) ) return
+      if( .not. check_return( trim(self%processName) , "res_flatleaf", succ ) ) return
       call plnt%state%replace("res_flatstore", bgmflatstore, succ)
-      if( .not. check_return( "res_flatstore", succ ) ) return
+      if( .not. check_return( trim(self%processName) , "res_flatstore", succ ) ) return
       call plnt%state%replace("res_bgstemz", bgmbgstemz, succ)
-      if( .not. check_return( "res_bgstemz", succ ) ) return
+      if( .not. check_return( trim(self%processName) , "res_bgstemz", succ ) ) return
       call plnt%state%replace("res_grainf", bggrainf, succ)
-      if( .not. check_return( "res_grainf", succ ) ) return
+      if( .not. check_return( trim(self%processName) , "res_grainf", succ ) ) return
       call plnt%state%replace("res_zht", bgzht, succ)
-      if( .not. check_return( "res_zht", succ ) ) return
+      if( .not. check_return( trim(self%processName) , "res_zht", succ ) ) return
       call plnt%state%replace("res_dstm", bgdstm, succ)
-      if( .not. check_return( "res_dstm", succ ) ) return
+      if( .not. check_return( trim(self%processName) , "res_dstm", succ ) ) return
       call plnt%state%replace("do_regrow", do_regrow, succ)
-      if( .not. check_return( "do_regrow", succ ) ) return
+      if( .not. check_return( trim(self%processName) , "do_regrow", succ ) ) return
 
     end subroutine regrowth_proc
 

@@ -52,17 +52,18 @@ module ritchieVernalization_mod
 
       ! initialized to zero at process beginning
       call plnt%state%get("chill_unit_cum", chill_unit_cum, succ)
-      if( .not. check_return( "chill_unit_cum", succ ) ) return
+      if( .not. check_return( trim(self%processName) , "chill_unit_cum", succ ) ) return
       call env%state%get("tmax", tmax, succ)
-      if( .not. check_return( "tmax", succ ) ) return
+      if( .not. check_return( trim(self%processName) , "tmax", succ ) ) return
       call env%state%get("tmin", tmin, succ)
-      if( .not. check_return( "tmin", succ ) ) return
+      if( .not. check_return( trim(self%processName) , "tmin", succ ) ) return
 
       call chillunit_cum(chill_unit_cum, tmax, tmin)
 
       !write(*,*) 'Chill Units: ', chill_unit_cum, tmax, tmin
 
       call plnt%state%replace("chill_unit_cum", chill_unit_cum, succ)
+      if( .not. check_return( trim(self%processName) , "chill_unit_cum", succ ) ) return
 
     end subroutine Vernalization
 

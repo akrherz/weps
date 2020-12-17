@@ -3,54 +3,47 @@
 !$Revision$
 !$HeadURL$
 
-module WEPSShootGrow_mod
+module WEPSEvergreenWood_mod
     use phases_mod
-    use constants, only: dp, int32, check_return, u_mgtokg, u_max_arg_exp, u_max_real
-    use WEPSCrop_util_mod, only: chilluv, scrv1, shootnum
-    use WEPSCrop_util_mod, only: dev_floor, shoot_delay, shoot_flg, spring_trig, verndelmax, hard_spring
+    use constants, only: dp, int32, check_return, u_max_arg_exp, u_max_real
+    use WEPSCrop_util_mod, only: chilluv, total_leaf, dev_floor, spring_trig
    implicit none
 
-    type, extends(phase) :: WEPS_ShootGrow
+    type, extends(phase) :: WEPS_EvergreenWood
     contains
     procedure, pass(self) :: load => dummyload
-    procedure, pass(self) :: doPhase => shootgrow ! may not need to pass self
+    procedure, pass(self) :: doPhase => evergreenwood ! may not need to pass self
     procedure, pass(self) :: register => dummyregister
-    end type WEPS_ShootGrow
+    end type WEPS_EvergreenWood
 
   contains
 
     subroutine dummyload(self, phaseState)
       implicit none
-      class(WEPS_ShootGrow), intent(inout) :: self
+      class(WEPS_EvergreenWood), intent(inout) :: self
       type(hash_state), intent(inout) :: phaseState
     end subroutine dummyload
 
     subroutine dummyregister(self, req_input, prod_output)
       implicit none
-      class(WEPS_ShootGrow), intent(in) :: self
+      class(WEPS_EvergreenWood), intent(in) :: self
       type(hash_state), intent(inout) :: req_input
       type(hash_state), intent(inout) :: prod_output
     end subroutine dummyregister
 
-    subroutine shootgrow(self, plnt, env)
+    subroutine evergreenwood(self, plnt, env)
       implicit none
-      class(WEPS_ShootGrow), intent(inout) :: self
+      class(WEPS_EvergreenWood), intent(inout) :: self
       type(plant), intent(inout) :: plnt
       type(environment_state), intent(inout) :: env
 
       logical :: succ = .false.
 
+      ! phase parmeter
+      real(dp) :: leafhuie ! relative heat unit for leaf emergence (fraction)
+
       ! plant database
-      real(dp) :: bcdpop ! Number of plants per unit area (#/m^2)
-                     ! Note: bcdstm/bcdpop gives the number of stems per plant
       real(dp) :: bctverndel ! thermal delay coefficient pre-vernalization
-      real(dp) :: bcfleaf2stor ! fraction of assimilate partitioned to leaf that is diverted to root store
-      real(dp) :: bcfstem2stor ! fraction of assimilate partitioned to stem that is diverted to root store
-      real(dp) :: bcfstor2stor ! fraction of assimilate partitioned to standing storage
-                               ! (reproductive) that is diverted to root store
-      real(dp) :: bc0shoot ! mass from root storage required for each shoot (mg/shoot)
-      real(dp) :: bcdmaxshoot ! maximum number of shoots possible from each plant
-      real(dp) :: bc0hue ! relative heat unit for emergence (fraction)
       real(dp) :: bcthum ! potential heat units for crop maturity (deg. C)
       real(dp) :: alf  ! leaf partitioning s-curve coefficient a
       real(dp) :: blf  ! leaf partitioning s-curve coefficient b
@@ -71,18 +64,23 @@ module WEPSShootGrow_mod
       ! real(dp) :: hrlt   ! length of day (hours) today
 
       ! plant state
-      real(dp) :: bcmtotshoot ! total mass released from root storage biomass (kg/m^2)
-                              ! in the period from beginning to completion of emegence heat units
+      real(dp) :: bcmtotleaf  ! total mass released from root storage biomass (kg/m^2)
+                              ! in the period from beginning to completion of leaf emergence heat units
       real(dp), dimension(:), allocatable :: bcmrootstorez ! crop root storage mass by soil layer (kg/m^2)
                                                        ! (tubers (potatoes, carrots), extended leaf (onion), seeds (peanuts))
       real(dp) :: bcdstm ! Number of crop stems per unit area (#/m^2)
       real(dp) :: bctrthucum ! accumulated root growth heat units (degree-days)
+      real(dp) :: bcthu_leaf_beg
+      real(dp) :: bcthu_leaf_end
       real(dp) :: bcthu_shoot_beg ! heat unit index (fraction) for beginning of shoot grow from root storage period
       real(dp) :: bcthu_shoot_end ! heat unit index (fraction) for end of shoot grow from root storage period
-      real(dp) :: bcthardnx ! hardening index for winter annuals (range from 0 t0 2)
       real(dp) :: bctchillucum ! accumulated chilling units (deg C day)
+      real(dp) :: bctcolddays  ! number of days that the daily average temperature has been below the minimum growth temperature with decay
+      real(dp) :: bctwarmdays ! number of consecutive days that the temperature has been above the minimum growth temperature
       logical :: can_regrow ! flag set to indicate that crop is able to regrow
-      logical :: do_spring
+      logical :: do_leafon
+      logical :: do_leafoff
+      logical :: shoot_growing ! flag set to indicate that shoot growth is occuring
 
       ! stage state
       real(dp) :: bcthucum ! plant accumulated heat units (degree-days)
@@ -102,6 +100,8 @@ module WEPSShootGrow_mod
       real(dp) :: gif  ! grain index accounting for development of chaff before grain fill
       real(dp) :: shoot_hui    ! today fraction of heat unit shoot growth index accumulation
       real(dp) :: shoot_huiy   ! previous day fraction of heat unit shoot growth index accumulation
+      real(dp) :: leaf_hui    ! today fraction of heat unit leaf growth index accumulation
+      real(dp) :: leaf_huiy   ! previous day fraction of heat unit leaf growth index accumulation
       real(dp) :: p_rw ! fibrous root partitioning ratio
       real(dp) :: p_st ! stem partitioning ratio
       real(dp) :: p_lf ! leaf partitioning ratio
@@ -124,12 +124,11 @@ module WEPSShootGrow_mod
       integer(int32), parameter :: winter_ann_root = 1
       logical :: lastday
 
-      ! Body of shootgrow
+      ! Body of evergreenwood
 
       ! retrieve required inputs
+
       ! plant database
-      call plnt%pars%get("huie", bc0hue, succ)
-      if( .not. check_return( trim(self%phaseName) , "huie", succ ) ) return
       call plnt%pars%get("thum", bcthum, succ)
       if( .not. check_return( trim(self%phaseName) , "thum", succ ) ) return
       call plnt%pars%get("alf", alf, succ)
@@ -168,73 +167,83 @@ module WEPSShootGrow_mod
       if( .not. check_return( trim(self%phaseName) , "dstm", succ ) ) return
       call plnt%state%get("trthucum", bctrthucum, succ)
       if( .not. check_return( trim(self%phaseName) , "trthucum", succ ) ) return
-      call plnt%state%get("thu_shoot_beg", bcthu_shoot_beg, succ)
-      if( .not. check_return( trim(self%phaseName) , "thu_shoot_beg", succ ) ) return
-      call plnt%state%get("thu_shoot_end", bcthu_shoot_end, succ)
-      if( .not. check_return( trim(self%phaseName) , "thu_shoot_end", succ ) ) return
+
+      call plnt%state%get("chill_unit_cum", bctchillucum, succ)
+      if( .not. check_return( trim(self%phaseName) , "chill_unit_cum", succ ) ) return
       call plnt%state%get("can_regrow", can_regrow, succ)
       if( .not. check_return( trim(self%phaseName) , "can_regrow", succ ) ) return
+      call plnt%state%get("daygdd", daygdd, succ)
+      if( .not. check_return( trim(self%phaseName) , "daygdd", succ ) ) return
 
       ! stage state
       call self%phaseState%get("stagegdd", bcthucum, succ)
       if( .not. check_return( trim(self%phaseName) , "stagegdd", succ ) ) return
-      call plnt%state%get("daygdd", daygdd, succ)
-      if( .not. check_return( trim(self%phaseName) , "daygdd", succ ) ) return
 
-      ! release new growth
+      ! Set growth / no growth conditions depending on leaf actions
       if( can_regrow ) then
 
         ! plant state
-        call plnt%state%get("do_spring", do_spring, succ)
-        if( .not. check_return( trim(self%phaseName) , "do_spring", succ ) ) return
+        call plnt%state%get("do_leafon", do_leafon, succ)
+        if( .not. check_return( trim(self%phaseName) , "do_leafon", succ ) ) return
+        call plnt%state%get("do_leafoff", do_leafoff, succ)
+        if( .not. check_return( trim(self%phaseName) , "do_leafoff", succ ) ) return
 
-        if( do_spring ) then
-
-          ! plant database
-          call plnt%pars%get("plantpop", bcdpop, succ)
-          if( .not. check_return( trim(self%phaseName) , "plantpop", succ ) ) return
-          call plnt%pars%get("regrmshoot", bc0shoot, succ)
-          if( .not. check_return( trim(self%phaseName) , "regrmshoot", succ ) ) return
-          call plnt%pars%get("dmaxshoot", bcdmaxshoot, succ)
-          if( .not. check_return( trim(self%phaseName) , "dmaxshoot", succ ) ) return
-
+        if( do_leafon ) then
+          ! phase parameter
+          call self%phasePars%get("leafhuie", leafhuie, succ)
+          if( .not. check_return( trim(self%phaseName) , "leafhuie", succ ) ) return
           ! plant state
-          call plnt%state%get("mtotshoot", bcmtotshoot, succ)
-          if( .not. check_return( trim(self%phaseName) , "mtotshoot", succ ) ) return
           call plnt%state%get("mrootstorez", bcmrootstorez, succ)
           if( .not. check_return( trim(self%phaseName) , "mrootstorez", succ ) ) return
           bnslay = size(bcmrootstorez)
 
-          ! vernalized and ready to grow in spring
-          bcthu_shoot_beg = bcthucum / bcthum
-          bcthu_shoot_end = bcthucum / bcthum + bc0hue
-          call shootnum(shoot_flg, bnslay, 1.0_dp, bcdpop, bc0shoot,&
-     &             bcdmaxshoot, bcmtotshoot, bcmrootstorez, bcdstm )
-          ! turn off freeze hardening
-          bcthardnx = 0.0_dp
-          ! eliminate diversion of biomass to crown storage
-          bcfleaf2stor = 0.0_dp
-          bcfstem2stor = 0.0_dp
-          bcfstor2stor = 0.0_dp
+          ! new leaves start to appear
+          bcmtotleaf = total_leaf( bnslay, bcmrootstorez )
+          ! reset heat units
+          !bcthucum = 0.0d0
+          bcthu_leaf_beg = bcthucum / bcthum
+          bcthu_leaf_end = bcthucum + leafhuie
+          bctchillucum = 0.0d0
+          bctcolddays = 0.0d0
 
-         ! update plant state values
-         call plnt%state%replace("thu_shoot_beg", bcthu_shoot_beg, succ)
-         if( .not. check_return( trim(self%phaseName) , "thu_shoot_beg", succ ) ) return
-         call plnt%state%replace("thu_shoot_end", bcthu_shoot_end, succ)
-         if( .not. check_return( trim(self%phaseName) , "thu_shoot_end", succ ) ) return
-         call plnt%state%replace("mtotshoot", bcmtotshoot, succ)
-         if( .not. check_return( trim(self%phaseName) , "mtotshoot", succ ) ) return
-         call plnt%state%replace("dstm", bcdstm, succ)
-         if( .not. check_return( trim(self%phaseName) , "dstm", succ ) ) return
-         call plnt%state%replace("harden_index", bcthardnx, succ)
-         if( .not. check_return( trim(self%phaseName) , "harden_index", succ ) ) return
-         ! update plant par values
-         call plnt%pars%replace("leaf2stor", bcfleaf2stor, succ)
-         if( .not. check_return( trim(self%phaseName) , "leaf2stor", succ ) ) return
-         call plnt%pars%replace("stem2stor", bcfstem2stor, succ)
-         if( .not. check_return( trim(self%phaseName) , "stem2stor", succ ) ) return
-         call plnt%pars%replace("stor2stor", bcfstor2stor, succ)
-         if( .not. check_return( trim(self%phaseName) , "stor2stor", succ ) ) return
+          ! update plant state values
+          call plnt%state%replace("chill_unit_cum", bctchillucum, succ)
+          if( .not. check_return( trim(self%phaseName) , "chill_unit_cum", succ ) ) return
+          call plnt%state%replace("colddays", bctcolddays, succ)
+          if( .not. check_return( trim(self%phaseName) , "colddays", succ ) ) return
+
+        else if( do_leafoff ) then
+          ! reset heat units to begin season
+          bcthucum = 0.0d0
+          ! reset spring trigger values
+          bcmtotleaf = 0.0d0
+          bcthu_leaf_beg = 0.0d0
+          bcthu_leaf_end = 0.0d0
+          ! no shoot grow
+          bcthu_shoot_beg = 0.0d0
+          bcthu_shoot_end = 0.0d0
+          bctwarmdays = 0.0d0
+
+          ! update plant state values
+          call plnt%state%replace("thu_shoot_beg", bcthu_shoot_beg, succ)
+          if( .not. check_return( trim(self%phaseName) , "thu_shoot_beg", succ ) ) return
+          call plnt%state%replace("thu_shoot_end", bcthu_shoot_end, succ)
+          if( .not. check_return( trim(self%phaseName) , "thu_shoot_end", succ ) ) return
+          call plnt%state%replace("warmdays", bctwarmdays, succ)
+          if( .not. check_return( trim(self%phaseName) , "warmdays", succ ) ) return
+
+        end if
+        if( do_leafon .or. do_leafoff ) then
+          ! update phase state
+          call self%phaseState%replace("stagegdd", bcthucum, succ)
+          if( .not. check_return( trim(self%phaseName) , "stagegdd", succ ) ) return
+          ! update plant state values
+          call plnt%state%replace("mtotleaf", bcmtotleaf, succ)
+          if( .not. check_return( trim(self%phaseName) , "mtotleaf", succ ) ) return
+          call plnt%state%replace("thu_leaf_beg", bcthu_leaf_beg, succ)
+          if( .not. check_return( trim(self%phaseName) , "thu_leaf_beg", succ ) ) return
+          call plnt%state%replace("thu_leaf_end", bcthu_leaf_end, succ)
+          if( .not. check_return( trim(self%phaseName) , "thu_leaf_end", succ ) ) return
 
         end if
       end if
@@ -254,9 +263,14 @@ module WEPSShootGrow_mod
           huirty = bctrthucum / bcthum
           ! check for growth completion
           if( huiy .lt. 1.0_dp ) then
-              ! still growing
               ! accumulate additional for today
-              if( (huiy .ge. bc0hue).and. (huiy .lt. spring_trig) ) then
+
+              ! plant state
+              call plnt%state%get("shoot_growing", shoot_growing, succ)
+              if( .not. check_return( trim(self%phaseName) , "shoot_growing", succ ) ) return
+
+              ! check for emergence status
+              if( (.not. shoot_growing).and. (huiy .lt. spring_trig) ) then
                   ! emergence completed, account for vernalization and
                   ! photo period by delaying development rate until chill
                   ! units completed and spring trigger reached
@@ -264,10 +278,6 @@ module WEPSShootGrow_mod
                   ! plant database
                   call plnt%pars%get("tverndel", bctverndel, succ)
                   if( .not. check_return( trim(self%phaseName) , "tverndel", succ ) ) return
-
-                  ! plant state
-                  call plnt%state%get("chill_unit_cum", bctchillucum, succ)
-                  if( .not. check_return( trim(self%phaseName) , "chill_unit_cum", succ ) ) return
 
                   vern_delay = 1.0_dp-bctverndel*(chilluv-bctchillucum)
                   !vern_delay = 1.0        ! delay disabled
@@ -279,33 +289,18 @@ module WEPSShootGrow_mod
               bcthucum = bcthucum + daygdd * hu_delay
               ! root depth growth heat units
               bctrthucum = bctrthucum + daygdd
-              ! do not cap this for annuals, to allow it to continue
-              ! root mass partition is reduced to lower levels after the
-              ! first full year. Out of range is capped in the function
-              ! in growth.for
-              ! bctrthucum = min(bctrthucum, bcthum)
-              ! calculate heat unit index
               hui = min(1.0_dp, bcthucum / bcthum)
               huirt = bctrthucum / bcthum
-              !if( hui .ge. 1.0_dp ) then
-              !  ! stage complete, point to next stage
-              !  tmp = 1  ! go to next stage
-              !  call plnt%state%replace("nextstage", tmp, succ)
-              !  tmp = 0  ! do not go to specific stage number
-              !  call plnt%state%replace("specstage", tmp, succ)
-              !  ! return stage status
-              !  call self%phaseState%replace("stagegdd", bcthum, succ)
-              !  ! remainder daygdd
-              !  call plnt%state%replace("remgdd", bcthucum-bcthum, succ)
-              !  if( .not. check_return( trim(self%phaseName) , "remgdd", succ ) ) return
-              !  hui = min(1.0_dp, hui)
-              !else
               ! return stage status
               tmp = 0  ! clear nextstage, this phase never transitions
               call plnt%state%replace("nextstage", tmp, succ)
               call self%phaseState%replace("stagegdd", bcthucum, succ)
               if( .not. check_return( trim(self%phaseName) , "stagegdd", succ ) ) return
-              !end if
+
+              ! update plant state values
+              call plnt%state%replace("trthucum", bctrthucum, succ)
+              if( .not. check_return( trim(self%phaseName) , "trthucum", succ ) ) return
+
           else
               hui = huiy
               huirt = huirty
@@ -413,7 +408,7 @@ module WEPSShootGrow_mod
       ! reproductive development stage.
       gif=1.0_dp / (1.0_dp + exp(-(hui - 0.64_dp) / 0.05_dp))
 
-      if( (huiy .lt. 1.0) .and. (bcdstm .gt. 0.0)) then
+      if( (huiy .lt. 1.0_dp) .and. (bcdstm .gt. 0.0_dp)) then
         ! crop growth not yet complete
         ! stem count can be set to zero by harvest, but not reset by
         ! regrowth early in spring, causing divide by zero in shoot_grow
@@ -424,13 +419,33 @@ module WEPSShootGrow_mod
           lastday = .false.
         end if
 
+        ! plant state
+        call plnt%state%get("thu_shoot_end", bcthu_shoot_end, succ)
+        if( .not. check_return( trim(self%phaseName) , "thu_shoot_end", succ ) ) return
+
         if( huiy .lt. bcthu_shoot_end ) then
+
+          ! plant state
+          call plnt%state%get("thu_shoot_beg", bcthu_shoot_beg, succ)
+          if( .not. check_return( trim(self%phaseName) , "thu_shoot_beg", succ ) ) return
 
           if( hui .gt. bcthu_shoot_beg ) then
 
             ! fraction of shoot growth from stored reserves (today and yesterday)
-            shoot_hui = min( 1.0_dp, (hui - bcthu_shoot_beg) / (bcthu_shoot_end - bcthu_shoot_beg) )
             shoot_huiy = max( 0.0_dp, (huiy - bcthu_shoot_beg) / (bcthu_shoot_end - bcthu_shoot_beg) )
+            shoot_hui = (hui - bcthu_shoot_beg) / (bcthu_shoot_end - bcthu_shoot_beg)
+            if( shoot_hui .ge. 1.0_dp ) then
+              ! shoot growth completes on this day
+              bcthu_shoot_beg = 0.0d0
+              bcthu_shoot_end = 0.0d0
+
+              ! update plant state values
+              call plnt%state%replace("thu_shoot_beg", bcthu_shoot_beg, succ)
+              if( .not. check_return( trim(self%phaseName) , "thu_shoot_beg", succ ) ) return
+              call plnt%state%replace("thu_shoot_end", bcthu_shoot_end, succ)
+              if( .not. check_return( trim(self%phaseName) , "thu_shoot_end", succ ) ) return
+            end if
+            shoot_hui = min( 1.0_dp, shoot_hui )
 
           else
             shoot_hui = 0.0_dp
@@ -442,19 +457,46 @@ module WEPSShootGrow_mod
             shoot_huiy = 1.0_dp
         end if
 
-        ! update plant state values
+        ! plant state
+        call plnt%state%get("thu_leaf_end", bcthu_leaf_end, succ)
+        if( .not. check_return( trim(self%phaseName) , "thu_leaf_end", succ ) ) return
+
+        if( huiy .lt. bcthu_leaf_end ) then
+
+          ! plant state
+          call plnt%state%get("thu_leaf_beg", bcthu_leaf_beg, succ)
+          if( .not. check_return( trim(self%phaseName) , "thu_leaf_beg", succ ) ) return
+
+          if( hui .gt. bcthu_leaf_beg ) then
+
+            ! fraction of leaf growth from stored reserves (today and yesterday)
+            leaf_hui = min( 1.0d0, (hui - bcthu_leaf_beg) / (bcthu_leaf_end - bcthu_leaf_beg) )
+            leaf_huiy = max( 0.0d0, (huiy - bcthu_leaf_beg) / (bcthu_leaf_end - bcthu_leaf_beg) )
+
+          else
+            leaf_hui = 0.0_dp
+            leaf_huiy = 0.0_dp
+          end if
+
+        else
+          leaf_hui = 1.0_dp
+          leaf_huiy = 1.0_dp
+        end if
+
+        call plnt%state%replace("lastday", lastday, succ)
+        if( .not. check_return( trim(self%phaseName) , "lastday", succ ) ) return
         call plnt%state%replace("shoot_hui", shoot_hui, succ)
         if( .not. check_return( trim(self%phaseName) , "shoot_hui", succ ) ) return
         call plnt%state%replace("shoot_huiy", shoot_huiy, succ)
         if( .not. check_return( trim(self%phaseName) , "shoot_huiy", succ ) ) return
-        call plnt%state%replace("lastday", lastday, succ)
-        if( .not. check_return( trim(self%phaseName) , "lastday", succ ) ) return
+        call plnt%state%replace("leaf_hui", leaf_hui, succ)
+        if( .not. check_return( trim(self%phaseName) , "leaf_hui", succ ) ) return
+        call plnt%state%replace("leaf_huiy", leaf_huiy, succ)
+        if( .not. check_return( trim(self%phaseName) , "leaf_huiy", succ ) ) return
 
       end if
 
       ! update plant state values
-      call plnt%state%replace("trthucum", bctrthucum, succ)
-      if( .not. check_return( trim(self%phaseName) , "trthucum", succ ) ) return
       call plnt%state%replace("ffa", ffa, succ)
       if( .not. check_return( trim(self%phaseName) , "ffa", succ ) ) return
       call plnt%state%replace("ffw", ffw, succ)
@@ -482,6 +524,7 @@ module WEPSShootGrow_mod
       call self%phaseState%replace("phase_rel_gdd", hui, succ)
       if( .not. check_return( trim(self%phaseName) , "phase_rel_gdd", succ ) ) return
 
-    end subroutine shootgrow
 
-end module WEPSShootGrow_mod
+    end subroutine evergreenwood
+
+end module WEPSEvergreenWood_mod

@@ -403,23 +403,21 @@ MODULE mandate_mod
         ! of possible new periods.  Also, we will assume the "end date"
         ! of normal periods is the 14th day of each month.
 
-        DO i = 1, size(mandate) 
-            IF (mandate(i)%y <= nrot_yrs) THEN
-               ! Check if not 1st day of month and
-               ! not middle start period day of month
-               IF ((mandate(i)%d == 0 ) .OR. (mandate(i)%d == 1 ) .OR. (mandate(i)%d == 15)) THEN
-                  ! an Operation type 0, initialization, maps into a day 0, month 0 year 0 mandate entry
-                  ! and is not used to create a period.
+        DO i = 1, size(mandate)
+            IF( (mandate(i)%y <= nrot_yrs) .and. (mandate(i)%y .gt. 0) ) THEN
+               ! an Operation type 0, initialization, maps into a year-nrot_yrs mandate entry
+               IF( (mandate(i)%d == 1 ) .OR. (mandate(i)%d == 15) ) THEN
+                  ! not 1st day or middle day of month
                   ! print *, "No new period (day == 1 or day == 15)"
                   CONTINUE               ! no new period here
-                  ! Check if operation date .NE. previous operation date
                ELSE IF (i /= 1) THEN 
+                 ! Check if operation date .NE. previous operation date
                   IF ((mandate(i)%d == mandate(i-1)%d) .AND. &
                      (mandate(i)%m == mandate(i-1)%m) .AND. &
                      (mandate(i)%y == mandate(i-1)%y)) THEN
                     !print *, "No new period (2nd op on this date)"
-                    CONTINUE               ! no new period here
-                  ELSE                       ! We must have a new period
+                    CONTINUE             ! no new period here
+                  ELSE                   ! We must have a new period
                     nperiods = nperiods + 1
                   END IF
                ELSE

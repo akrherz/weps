@@ -432,7 +432,7 @@
          if( input_to_new_format ) then
            infilebase = trim(file_bname)
            sweepfile = 'erod.sweep' 
-           gridfile = 'erod.grid'
+           gridfile = 'erod.grdx'
            subrsurf(1)%tinfil = trim(file_bname)
            subrsurf(1)%sinfil = trim(file_bname)
            polyfile = 'erod.poly'

@@ -41,6 +41,10 @@ module PhenologyMMSSpringphenol_mod
     end subroutine phase_register
 
     subroutine pmms_springphenol(self, plnt, env)
+      ! This routine is intended simulate the spring growth of winter annuals where
+      ! new growth is released from plant stores, and no more biomass is diverted to plant stores
+      ! after spring release is triggered.
+
       implicit none
       class(PhenologyMMS_Springphenol), intent(inout) :: self
       type(plant), intent(inout) :: plnt
@@ -78,7 +82,6 @@ module PhenologyMMSSpringphenol_mod
       ! plant database
       real(dp) :: bcdpop ! Number of plants per unit area (#/m^2)
                      ! Note: bcdstm/bcdpop gives the number of stems per plant
-      integer(int32) :: bc0idc ! crop type:annual,perennial,etc
       real(dp) :: bctverndel ! thermal delay coefficient pre-vernalization
       real(dp) :: bcfleaf2stor ! fraction of assimilate partitioned to leaf that is diverted to root store
       real(dp) :: bcfstem2stor ! fraction of assimilate partitioned to stem that is diverted to root store
@@ -127,146 +130,168 @@ module PhenologyMMSSpringphenol_mod
 
       ! Body of mms_springphenol
 
-      ! plant database
-      call plnt%pars%get("plantpop", bcdpop, succ)
-      if( .not. check_return( "plantpop", succ ) ) return
-      call plnt%pars%get("idc", bc0idc, succ)
-      if( .not. check_return( "idc", succ ) ) return
-      call plnt%pars%get("verndel", bctverndel, succ)
-      if( .not. check_return( "verndel", succ ) ) return
-      call plnt%pars%get("leaf2stor", bcfleaf2stor, succ)
-      if( .not. check_return( "leaf2stor", succ ) ) return
-      call plnt%pars%get("stem2stor", bcfstem2stor, succ)
-      if( .not. check_return( "stem2stor", succ ) ) return
-      call plnt%pars%get("stor2stor", bcfstor2stor, succ)
-      if( .not. check_return( "stor2stor", succ ) ) return
-      call plnt%pars%get("mshoot", bc0shoot, succ)
-      if( .not. check_return( "mshoot", succ ) ) return
-      call plnt%pars%get("dmaxshoot", bcdmaxshoot, succ)
-      if( .not. check_return( "dmaxshoot", succ ) ) return
-
       ! plant state
       call plnt%state%get("daygdd", daygdd, succ)
-      if( .not. check_return( "daygdd", succ ) ) return
+      if( .not. check_return( trim(self%phaseName) , "daygdd", succ ) ) return
       call plnt%state%get("stress", stress, succ)
-      if( .not. check_return( "stress", succ ) ) return
-      call plnt%state%get("mtotshoot", bcmtotshoot, succ)
-      if( .not. check_return( "mtotshoot", succ ) ) return
-      call plnt%state%get("mrootstorez", bcmrootstorez, succ)
-      if( .not. check_return( "mrootstorez", succ ) ) return
-      bnslay = size(bcmrootstorez)
+      if( .not. check_return( trim(self%phaseName) , "stress", succ ) ) return
 
-      call plnt%state%get("dstm", bcdstm, succ)
-      if( .not. check_return( "dstm", succ ) ) return
       call plnt%state%get("fliveleaf", bcfliveleaf, succ)
-      if( .not. check_return( "fliveleaf", succ ) ) return
-      call plnt%state%get("zgrowpt", bczgrowpt, succ)
-      if( .not. check_return( "zgrowpt", succ ) ) return
+      if( .not. check_return( trim(self%phaseName) , "fliveleaf", succ ) ) return
       call plnt%state%get("thu_shoot_beg", bcthu_shoot_beg, succ)
-      if( .not. check_return( "thu_shoot_beg", succ ) ) return
+      if( .not. check_return( trim(self%phaseName) , "thu_shoot_beg", succ ) ) return
       call plnt%state%get("thu_shoot_end", bcthu_shoot_end, succ)
-      if( .not. check_return( "thu_shoot_end", succ ) ) return
-      call plnt%state%get("harden_index", bcthardnx, succ)
-      if( .not. check_return( "harden_index", succ ) ) return
-      call plnt%state%get("warmdays", bctwarmdays, succ)
-      if( .not. check_return( "warmdays", succ ) ) return
-      call plnt%state%get("chill_unit_cum", bctchillucum, succ)
-      if( .not. check_return( "chill_unit_cum", succ ) ) return
-      call plnt%state%get("dayspring", dayspring, succ)
-      if( .not. check_return( "dayspring", succ ) ) return
+      if( .not. check_return( trim(self%phaseName) , "thu_shoot_end", succ ) ) return
       call plnt%state%get("can_regrow", can_regrow, succ)
-      if( .not. check_return( "can_regrow", succ ) ) return
+      if( .not. check_return( trim(self%phaseName) , "can_regrow", succ ) ) return
 
       ! phase state
       ! initialized to zero at phase beginning
       call self%phaseState%get("phase_rel_gdd", phase_rel_gdd, succ)
-      if( .not. check_return( "phase_rel_gdd", succ ) ) return
+      if( .not. check_return( trim(self%phaseName) , "phase_rel_gdd", succ ) ) return
       call self%phaseState%get("stagegdd", stagegdd, succ)
-      if( .not. check_return( "stagegdd", succ ) ) return
+      if( .not. check_return( trim(self%phaseName) , "stagegdd", succ ) ) return
 
       ! phase parameters
       call self%phasePars%get("GN_trans_gdd", GN_trans_gdd, succ)
-      if( .not. check_return( "GN_trans_gdd", succ ) ) return
+      if( .not. check_return( trim(self%phaseName) , "GN_trans_gdd", succ ) ) return
       call self%phasePars%get("GN_stress", GN_stress, succ)
-      if( .not. check_return( "GN_stress", succ ) ) return
+      if( .not. check_return( trim(self%phaseName) , "GN_stress", succ ) ) return
       call self%phasePars%get("GS_trans_gdd", GS_trans_gdd, succ)
-      if( .not. check_return( "GS_trans_gdd", succ ) ) return
+      if( .not. check_return( trim(self%phaseName) , "GS_trans_gdd", succ ) ) return
       call self%phasePars%get("GS_stress", GS_stress, succ)
-      if( .not. check_return( "GS_stress", succ ) ) return
+      if( .not. check_return( trim(self%phaseName) , "GS_stress", succ ) ) return
 
       call self%phasePars%get("height_inc", height_inc, succ)
-      if( .not. check_return( "height_inc", succ ) ) return
+      if( .not. check_return( trim(self%phaseName) , "height_inc", succ ) ) return
       call self%phasePars%get("root_depth_inc", root_depth_inc, succ)
-      if( .not. check_return( "root_depth_inc", succ ) ) return
+      if( .not. check_return( trim(self%phaseName) , "root_depth_inc", succ ) ) return
 
       call self%phasePars%get("beg_live_leaf", beg_live_leaf, succ)
-      if( .not. check_return( "beg_live_leaf", succ ) ) return
+      if( .not. check_return( trim(self%phaseName) , "beg_live_leaf", succ ) ) return
       call self%phasePars%get("end_live_leaf", end_live_leaf, succ)
-      if( .not. check_return( "end_live_leaf", succ ) ) return
+      if( .not. check_return( trim(self%phaseName) , "end_live_leaf", succ ) ) return
 
       call self%phasePars%get("beg_weath_leaf", beg_weath_leaf, succ)
-      if( .not. check_return( "beg_weath_leaf", succ ) ) return
+      if( .not. check_return( trim(self%phaseName) , "beg_weath_leaf", succ ) ) return
       call self%phasePars%get("end_weath_leaf", end_weath_leaf, succ)
-      if( .not. check_return( "end_weath_leaf", succ ) ) return
+      if( .not. check_return( trim(self%phaseName) , "end_weath_leaf", succ ) ) return
 
       call self%phasePars%get("beg_senes_root", beg_senes_root, succ)
-      if( .not. check_return( "beg_senes_root", succ ) ) return
+      if( .not. check_return( trim(self%phaseName) , "beg_senes_root", succ ) ) return
       call self%phasePars%get("end_senes_root", end_senes_root, succ)
-      if( .not. check_return( "end_senes_root", succ ) ) return
+      if( .not. check_return( trim(self%phaseName) , "end_senes_root", succ ) ) return
 
       call self%phasePars%get("beg_grain_index", beg_grain_index, succ)
-      if( .not. check_return( "beg_grain_index", succ ) ) return
+      if( .not. check_return( trim(self%phaseName) , "beg_grain_index", succ ) ) return
       call self%phasePars%get("end_grain_index", end_grain_index, succ)
-      if( .not. check_return( "end_grain_index", succ ) ) return
+      if( .not. check_return( trim(self%phaseName) , "end_grain_index", succ ) ) return
 
       call self%phasePars%get("beg_p_rw", beg_p_rw, succ)
-      if( .not. check_return( "beg_p_rw", succ ) ) return
+      if( .not. check_return( trim(self%phaseName) , "beg_p_rw", succ ) ) return
       call self%phasePars%get("end_p_rw", end_p_rw, succ)
-      if( .not. check_return( "end_p_rw", succ ) ) return
+      if( .not. check_return( trim(self%phaseName) , "end_p_rw", succ ) ) return
 
       call self%phasePars%get("beg_p_lf", beg_p_lf, succ)
-      if( .not. check_return( "beg_p_lf", succ ) ) return
+      if( .not. check_return( trim(self%phaseName) , "beg_p_lf", succ ) ) return
       call self%phasePars%get("end_p_lf", end_p_lf, succ)
-      if( .not. check_return( "end_p_lf", succ ) ) return
+      if( .not. check_return( trim(self%phaseName) , "end_p_lf", succ ) ) return
 
       call self%phasePars%get("beg_p_rp", beg_p_rp, succ)
-      if( .not. check_return( "beg_p_rp", succ ) ) return
+      if( .not. check_return( trim(self%phaseName) , "beg_p_rp", succ ) ) return
       call self%phasePars%get("end_p_rp", end_p_rp, succ)
-      if( .not. check_return( "end_p_rp", succ ) ) return
+      if( .not. check_return( trim(self%phaseName) , "end_p_rp", succ ) ) return
 
       ! release growth in spring if conditions met
       spring_flg = -1
       if( can_regrow ) then
-        if( (bc0idc.eq.2) .or. (bc0idc.eq.5) ) then
+        ! check winter annuals for completion of vernalization,
+        ! warming and spring day length 
+        if( bczgrowpt .le. 0.0_dp ) then
+          ! growing point to ground level or above
+          ! remember, negative number means above ground
 
-          ! check winter annuals for completion of vernalization,
-          ! warming and spring day length 
-          if( bczgrowpt .le. 0.0_dp ) then
-           ! remember, negative number means above ground
-           spring_flg = 1
-           if( bctchillucum .ge. chilluv ) then
+          ! plant state
+          call plnt%state%get("chill_unit_cum", bctchillucum, succ)
+          if( .not. check_return( trim(self%phaseName) , "chill_unit_cum", succ ) ) return
+
+          spring_flg = 1
+          if( bctchillucum .ge. chilluv ) then
+            ! chill units completed
+
+            ! plant database
+            call plnt%pars%get("verndel", bctverndel, succ)
+            if( .not. check_return( trim(self%phaseName) , "verndel", succ ) ) return
+            call plnt%state%get("warmdays", bctwarmdays, succ)
+            if( .not. check_return( trim(self%phaseName) , "warmdays", succ ) ) return
+
             spring_flg = 2
             if( bctwarmdays .ge. shoot_delay*bctverndel/verndelmax) then
-             spring_flg = 3
-             !if( huiy .gt. spring_trig ) then
-             !if( bcthardnx .le. 0.0 ) then
-             if( bcthardnx .lt. hard_spring ) then
-              spring_flg = 4
-              ! vernalized and ready to grow in spring
-              bcthu_shoot_beg = phase_rel_gdd
-              bcthu_shoot_end = phase_rel_gdd + (1.0_dp-phase_rel_gdd)/2.0_dp
-              call shootnum(shoot_flg, bnslay, bc0idc, bcdpop, bc0shoot,&
-     &             bcdmaxshoot, bcmtotshoot, bcmrootstorez, bcdstm )
-              ! eliminate diversion of biomass to crown storage
-              bcfleaf2stor = 0.0_dp
-              bcfstem2stor = 0.0_dp
-              bcfstor2stor = 0.0_dp
-              ! turn off freeze hardening
-              bcthardnx = 0.0_dp
-              dayspring = jd
-             end if
+              ! enough warm days
+
+              ! plant state
+              call plnt%state%get("harden_index", bcthardnx, succ)
+              if( .not. check_return( trim(self%phaseName) , "harden_index", succ ) ) return
+
+              spring_flg = 3
+              !if( huiy .gt. spring_trig ) then
+              !if( bcthardnx .le. 0.0 ) then
+              if( bcthardnx .lt. hard_spring ) then
+                ! de-vernalized and ready to grow in spring
+
+                ! plant database
+                call plnt%pars%get("plantpop", bcdpop, succ)
+                if( .not. check_return( trim(self%phaseName) , "plantpop", succ ) ) return
+                call plnt%pars%get("mshoot", bc0shoot, succ)
+                if( .not. check_return( trim(self%phaseName) , "mshoot", succ ) ) return
+                call plnt%pars%get("dmaxshoot", bcdmaxshoot, succ)
+                if( .not. check_return( trim(self%phaseName) , "dmaxshoot", succ ) ) return
+
+                ! plant state
+                call plnt%state%get("mtotshoot", bcmtotshoot, succ)
+                if( .not. check_return( trim(self%phaseName) , "mtotshoot", succ ) ) return
+                call plnt%state%get("mrootstorez", bcmrootstorez, succ)
+                if( .not. check_return( trim(self%phaseName) , "mrootstorez", succ ) ) return
+                bnslay = size(bcmrootstorez)
+                call plnt%state%get("dstm", bcdstm, succ)
+                if( .not. check_return( trim(self%phaseName) , "dstm", succ ) ) return
+
+                spring_flg = 4
+                bcthu_shoot_beg = phase_rel_gdd
+                bcthu_shoot_end = phase_rel_gdd + (1.0_dp-phase_rel_gdd)/2.0_dp
+                call shootnum(shoot_flg, bnslay, 1.0_dp, bcdpop, bc0shoot, bcdmaxshoot, bcmtotshoot, bcmrootstorez, bcdstm )
+                ! eliminate diversion of biomass to crown storage
+                bcfleaf2stor = 0.0_dp
+                bcfstem2stor = 0.0_dp
+                bcfstor2stor = 0.0_dp
+                ! turn off freeze hardening
+                bcthardnx = 0.0_dp
+                dayspring = jd
+
+                ! update plant database values
+                call plnt%pars%replace("leaf2stor", bcfleaf2stor, succ)
+                if( .not. check_return( trim(self%phaseName) , "leaf2stor", succ ) ) return
+                call plnt%pars%replace("stem2stor", bcfstem2stor, succ)
+                if( .not. check_return( trim(self%phaseName) , "stem2stor", succ ) ) return
+                call plnt%pars%replace("stor2stor", bcfstor2stor, succ)
+                if( .not. check_return( trim(self%phaseName) , "stor2stor", succ ) ) return
+
+                ! update plant state values
+                call plnt%state%replace("mtotshoot", bcmtotshoot, succ)
+                if( .not. check_return( trim(self%phaseName) , "mtotshoot", succ ) ) return
+                call plnt%state%replace("dstm", bcdstm, succ)
+                if( .not. check_return( trim(self%phaseName) , "dstm", succ ) ) return
+                call plnt%state%replace("harden_index", bcthardnx, succ)
+                if( .not. check_return( trim(self%phaseName) , "harden_index", succ ) ) return
+                call plnt%state%replace("dayspring", dayspring, succ)
+                if( .not. check_return( trim(self%phaseName) , "dayspring", succ ) ) return
+                call plnt%state%replace("thu_shoot_beg", bcthu_shoot_beg, succ)
+                if( .not. check_return( trim(self%phaseName) , "thu_shoot_beg", succ ) ) return
+                call plnt%state%replace("thu_shoot_end", bcthu_shoot_end, succ)
+                if( .not. check_return( trim(self%phaseName) , "thu_shoot_end", succ ) ) return
+
+              end if
             end if
-           end if
           end if
         end if
       end if
@@ -328,68 +353,49 @@ module PhenologyMMSSpringphenol_mod
         ! set control variables
         i_setter = 1
         call plnt%state%replace("nextstage", i_setter, succ)
+        if( .not. check_return( trim(self%phaseName) , "nextstage", succ ) ) return
         i_setter = 0
         call plnt%state%replace("specstage", i_setter, succ)
-      end if
+        if( .not. check_return( trim(self%phaseName) , "specstage", succ ) ) return
+    end if
 
       ! return modified values
       call self%phaseState%replace("phase_rel_gdd", phase_rel_gdd, succ)
-      if( .not. check_return( "phase_rel_gdd", succ ) ) return
+      if( .not. check_return( trim(self%phaseName) , "phase_rel_gdd", succ ) ) return
       call self%phaseState%replace("stagegdd", stagegdd, succ)
-      if( .not. check_return( "stagegdd", succ ) ) return
+      if( .not. check_return( trim(self%phaseName) , "stagegdd", succ ) ) return
       call plnt%state%replace("remgdd", daygdd, succ)
-      if( .not. check_return( "remgdd", succ ) ) return
-
-      ! update plant par values
-      call plnt%pars%replace("leaf2stor", bcfleaf2stor, succ)
-      if( .not. check_return( "leaf2stor", succ ) ) return
-      call plnt%pars%replace("stem2stor", bcfstem2stor, succ)
-      if( .not. check_return( "stem2stor", succ ) ) return
-      call plnt%pars%replace("stor2stor", bcfstor2stor, succ)
-      if( .not. check_return( "stor2stor", succ ) ) return
+      if( .not. check_return( trim(self%phaseName) , "remgdd", succ ) ) return
 
       ! update plant state values
-
-      call plnt%state%replace("mtotshoot", bcmtotshoot, succ)
-      if( .not. check_return( "mtotshoot", succ ) ) return
-      call plnt%state%replace("dstm", bcdstm, succ)
-      if( .not. check_return( "dstm", succ ) ) return
-      call plnt%state%replace("thu_shoot_beg", bcthu_shoot_beg, succ)
-      if( .not. check_return( "thu_shoot_beg", succ ) ) return
-      call plnt%state%replace("thu_shoot_end", bcthu_shoot_end, succ)
-      if( .not. check_return( "thu_shoot_end", succ ) ) return
-      call plnt%state%replace("harden_index", bcthardnx, succ)
-      if( .not. check_return( "harden_index", succ ) ) return
-      call plnt%state%replace("dayspring", dayspring, succ)
-      if( .not. check_return( "dayspring", succ ) ) return
       call plnt%state%replace("ffa", ffa, succ)
-      if( .not. check_return( "ffa", succ ) ) return
+      if( .not. check_return( trim(self%phaseName) , "ffa", succ ) ) return
       call plnt%state%replace("ffw", ffw, succ)
-      if( .not. check_return( "ffw", succ ) ) return
+      if( .not. check_return( trim(self%phaseName) , "ffw", succ ) ) return
       call plnt%state%replace("ffr", ffr, succ)
-      if( .not. check_return( "ffr", succ ) ) return
+      if( .not. check_return( trim(self%phaseName) , "ffr", succ ) ) return
       call plnt%state%replace("gif", gif, succ)
-      if( .not. check_return( "gif", succ ) ) return
+      if( .not. check_return( trim(self%phaseName) , "gif", succ ) ) return
       call plnt%state%replace("shoot_hui", shoot_hui, succ)
-      if( .not. check_return( "shoot_hui", succ ) ) return
+      if( .not. check_return( trim(self%phaseName) , "shoot_hui", succ ) ) return
       call plnt%state%replace("shoot_huiy", shoot_huiy, succ)
-      if( .not. check_return( "shoot_huiy", succ ) ) return
+      if( .not. check_return( trim(self%phaseName) , "shoot_huiy", succ ) ) return
       call plnt%state%replace("p_rw", p_rw, succ)
-      if( .not. check_return( "p_rw", succ ) ) return
+      if( .not. check_return( trim(self%phaseName) , "p_rw", succ ) ) return
       call plnt%state%replace("p_st", p_st, succ)
-      if( .not. check_return( "p_st", succ ) ) return
+      if( .not. check_return( trim(self%phaseName) , "p_st", succ ) ) return
       call plnt%state%replace("p_lf", p_lf, succ)
-      if( .not. check_return( "p_lf", succ ) ) return
+      if( .not. check_return( trim(self%phaseName) , "p_lf", succ ) ) return
       call plnt%state%replace("p_rp", p_rp, succ)
-      if( .not. check_return( "p_rp", succ ) ) return
+      if( .not. check_return( trim(self%phaseName) , "p_rp", succ ) ) return
       call plnt%state%replace("pdht", pdht, succ)
-      if( .not. check_return( "pdht", succ ) ) return
+      if( .not. check_return( trim(self%phaseName) , "pdht", succ ) ) return
       call plnt%state%replace("pdrd", pdrd, succ)
-      if( .not. check_return( "pdrd", succ ) ) return
+      if( .not. check_return( trim(self%phaseName) , "pdrd", succ ) ) return
       call plnt%state%replace("hu_delay", hu_delay, succ)
-      if( .not. check_return( "hu_delay", succ ) ) return
+      if( .not. check_return( trim(self%phaseName) , "hu_delay", succ ) ) return
       call plnt%state%replace("spring_flg", spring_flg, succ)
-      if( .not. check_return( "spring_flg", succ ) ) return
+      if( .not. check_return( trim(self%phaseName) , "spring_flg", succ ) ) return
 
       return
 

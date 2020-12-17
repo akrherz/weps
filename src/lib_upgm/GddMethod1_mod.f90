@@ -47,18 +47,19 @@ module gddmethod1_mod
       real(dp) :: tmin, tmax, tbase, daygdd
       logical :: succ = .false.
 
-      ! get temperatures
-      call env%state%get("tmin", tmin, succ)
-      if( .not. check_return( "tmin", succ ) ) return
-      call env%state%get("tmax", tmax, succ)
-      if( .not. check_return( "tmax", succ ) ) return
+      ! get Parameters
       call self%processPars%get("tbas", tbase, succ)
-      if( .not. check_return( "tbas", succ ) ) return
+      if( .not. check_return( trim(self%processName), "tbas", succ ) ) return
+      ! get current state
+      call env%state%get("tmin", tmin, succ)
+      if( .not. check_return( trim(self%processName), "tmin", succ ) ) return
+      call env%state%get("tmax", tmax, succ)
+      if( .not. check_return( trim(self%processName), "tmax", succ ) ) return
 
       daygdd =  max(0.0_dp, ((tmax+tmin)/2) - tbase)
 
       call plnt%state%replace("daygdd", daygdd, succ)
-      if( .not. check_return( "daygdd", succ ) ) return
+      if( .not. check_return( trim(self%processName), "daygdd", succ ) ) return
 
     end subroutine gdd_process
 

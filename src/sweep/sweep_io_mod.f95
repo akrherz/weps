@@ -146,7 +146,7 @@ module sweep_io_mod
               write(*,*) "Cannot open xml input file: ", trim(mksaeinp%fullpath) // trim(gridfile)
               stop
             end if
-          ! Read in grid subregion assignments from erod.grid
+          ! Read in grid subregion assignments from erod.grdx
           call init_grid_xml()
           call xml_parse(fxml, &
             begin_element_handler = begin_griddata_element_handler, &

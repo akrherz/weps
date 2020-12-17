@@ -1382,7 +1382,7 @@ contains
 
     nsubr = size(soil_in)
 
-    runxmlfil = trim(rootp) // 'weps.run.xml'
+    runxmlfil = trim(rootp) // 'weps.runx'
 
     call init_run_xml()
 

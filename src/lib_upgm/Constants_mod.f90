@@ -37,7 +37,8 @@ module constants
 
     end   subroutine precision_init
 
-    function check_return( var_name, succ ) result(result_val)
+    function check_return( proc_name, var_name, succ ) result(result_val)
+      character(*) :: proc_name
       character(*) :: var_name
       logical :: succ
       logical :: result_val
@@ -48,7 +49,7 @@ module constants
         succ = .false.
         result_val = .true.
       else
-        write(*,*) var_name, " input missing. Failed to run"
+        write(*,*) trim(proc_name), " is missing ", trim(var_name), " input. Failed to run"
         result_val = .false.
       end if
 

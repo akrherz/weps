@@ -109,7 +109,7 @@ module weps_main_mod
 !     + + + GLOBAL COMMON BLOCKS + + +
       use weps_cmdline_parms  !We use all the cmdline parms here
 
-      use datetime_mod, only: julday
+      use datetime_mod, only: julday, ckdate
       use f2kcli, only: COMMAND_ARGUMENT_COUNT, GET_COMMAND_ARGUMENT
       use climate_input_mod, only: wind_max_value, wind_max_flag
       use grid_mod, only: xgdpt, ygdpt
@@ -125,6 +125,8 @@ module weps_main_mod
       integer       numarg
       integer       ll,ss
       integer       id, im, iy
+
+      integer       arg_len ! number of characters in argv
 
 !     + + + LOCAL DEFINITIONS + + +
 
@@ -195,7 +197,7 @@ module weps_main_mod
       frac_frst_mass_lost = 0.0 !default is set to 0.0 fraction loss of young leaf freeze damaged mass
       transpiration_depth = 0 !default is set to not set transpiration depth to more than root depth.
 
-      make_runxml = 0     ! default is set to not create weps.run.xml/erod.grid from weps.run file
+      make_runxml = 0     ! default is set to not create weps.runx/erod.grdx from weps.run file
 
       xgdpt = 0           ! default xgdpt = 0 uses Hagen's grid spacings
       ygdpt = 0           ! default ygdpt = 0 uses Hagen's grid spacings
@@ -249,9 +251,15 @@ module weps_main_mod
                endif
             endif
 
-            write(*,*) 'Option ignored, no option flag: ', argv
+            write(*,*) 'Command line option ignored, no option flag (-): ', argv
             goto 9  !Go get next arg
           endif
+
+          ! check length to allow meaningful error message
+          arg_len = len_trim(argv)
+          if( arg_len .lt. 2 ) then
+            write(*,*) 'Option flag with no argument skipped'
+          end if
 
           !command line help prompt
           if( (argv(2:2).eq.'?').or.(argv(2:2).eq.'h')) then
@@ -295,7 +303,8 @@ module weps_main_mod
               write(*,*) '    2 = temperature stress function applied'
               write(*,*) '    3 = both stress functions applied'
 
-              write(*,*) '-G  Maximum level of water stress allowed'
+              write(*,*) &
+      '-G  Maximum level of water stress allowed'
               write(*,*) '-G0.00 allows maximum water stress to occur'
               write(*,*) '-G1.00 does not allow any water stress'
 
@@ -350,9 +359,9 @@ module weps_main_mod
      &'    Specify -l50 to inc. 50 percent for each layer (no decimals)'
 
               write(*,*)                                                &
-     &'-n  Write new format weps.run.xml and erod.grid files'
-              write(*,*) '    0 = Do not create weps.run.xml/erod.grid from weps.run'
-              write(*,*) '    1 = Create weps.run.xml/erod.grid from weps.run'
+     &'-n  Write new format weps.runx and erod.grdx files'
+              write(*,*) '    0 = Do not create weps.runx/erod.grdx from weps.run'
+              write(*,*) '    1 = Create weps.runx/erod.grdx from weps.run'
 
               write(*,*)                                                &
      &'-O  Generate stand alone erosion input file on simulation day'
@@ -499,152 +508,179 @@ module weps_main_mod
 
           !specify soil-conditioning flag
           else if(argv(2:2) .eq. 'c') then
+            if( .not. check_arg( 3, arg_len, argv ) ) goto 9
             read(argv(3:),*) cmd_iarg
             if( (cmd_iarg .lt. 0) .or. (cmd_iarg .gt. 1) ) then
               write(*,*)                                                &
-     &         'Ignoring invalid SCI-energy option: ', trim(argv)
+     &         'Warning: Ignored invalid SCI-energy option: ', trim(argv)
             else
               soil_cond = cmd_iarg
             endif
 
           !specify calibrate_crops flag
           else if(argv(2:2) .eq. 'C') then
+            if( .not. check_arg( 3, arg_len, argv ) ) goto 9
             read(argv(3:),*) cmd_iarg
             if( (cmd_iarg .lt. 0) ) then
               write(*,*)                                                &
-     &           'Ignoring invalid calibrate_crops option: ', trim(argv)
+     &           'Warning: Ignored invalid calibrate_crops option: ', trim(argv)
             else
               calibrate_crops = cmd_iarg
             endif
 
           !specify run_erosion flag
           else if(argv(2:2) .eq. 'E') then
+            if( .not. check_arg( 3, arg_len, argv ) ) goto 9
             read(argv(3:),*) cmd_iarg
             if( (cmd_iarg .lt. 0) .or. (cmd_iarg .gt. 3) ) then
               write(*,*)                                                &
-     &           'Ignoring invalid run_erosion option: ', trim(argv)
+     &           'Warning: Ignored invalid run_erosion option: ', trim(argv)
             else
               run_erosion = cmd_iarg
             endif
 
           !specify stand alone input files for every erosion event flag
           else if(argv(2:2) .eq. 'e') then
+            if( .not. check_arg( 3, arg_len, argv ) ) goto 9
             read(argv(3:),*) cmd_iarg
             if( (cmd_iarg .lt. 0) .or. (cmd_iarg .gt. 1) ) then
               write(*,*)                                                &
-     &           'Ignoring invalid saeinp_all option: ', trim(argv)
+     &           'Warning: Ignored invalid saeinp_all option: ', trim(argv)
             else
               saeinp_all = cmd_iarg
             endif
 
           !specify young leaf freeze damaged mass loss fraction
           else if(argv(2:2) .eq. 'f') then
+            if( .not. check_arg( 3, arg_len, argv ) ) goto 9
             read(argv(3:),*) cmd_rarg
             if( (cmd_rarg .lt. 0.0) .or. (cmd_rarg .gt. 1.0) ) then
               write(*,*)                                                &
-     &       'Ignoring invalid freeze mass loss value: ', trim(argv)
+     &       'Warning: Ignored invalid freeze mass loss value: ', trim(argv)
             else
               frac_frst_mass_lost = cmd_rarg
             endif
 
           !specify growth_stress flag
           else if(argv(2:2) .eq. 'g') then
+            if( .not. check_arg( 3, arg_len, argv ) ) goto 9
             read(argv(3:),*) cmd_iarg
-            if( cmd_iarg .gt. 3 ) then
+            if( (cmd_iarg .lt. 0) .or. (cmd_iarg .gt. 3) ) then
               write(*,*)                                                &
-     &           'Ignoring invalid growth_stress option: ', trim(argv)
+     &           'Warning: Ignored invalid growth_stress option: ', trim(argv)
             else
               growth_stress = cmd_iarg
             endif
 
           !specify maximum water stress value (assumes water stress is on)
           else if(argv(2:2) .eq. 'G') then
+            if( .not. check_arg( 3, arg_len, argv ) ) goto 9
             read(argv(3:),*) cmd_rarg
-            if( (cmd_rarg .lt. 0.0) .or. (cmd_rarg .gt. 3.0) ) then
+            if( (cmd_rarg .lt. 0.0) .or. (cmd_rarg .gt. 1.0) ) then
               write(*,*)                                                &
-     &       'Ignoring invalid water stress maximum value: ', trim(argv)
+     &       'Warning: Ignored invalid water stress maximum value: ', trim(argv)
             else
               water_stress_max = cmd_rarg
             endif
 
           ! specify informational (heartbeat frequency) report intervals (to stdout)
           else if(argv(2:2) .eq. 'H') then
+            if( .not. check_arg( 3, arg_len, argv ) ) goto 9
             read(argv(3:),*) cmd_iarg
             if( cmd_iarg .lt. 0 ) then
               write(*,*)                                                &
-     &           'Ignoring invalid info report option: ', trim(argv)
+     &           'Warning: Ignored invalid info report option: ', trim(argv)
             else
               hb_freq = cmd_iarg
             endif
 
           ! specify informational reporting options (to stdout)
           else if(argv(2:2) .eq. 'i') then
+            if( .not. check_arg( 3, arg_len, argv ) ) goto 9
             read(argv(3:),*) cmd_iarg
-            if( cmd_iarg .gt. 3 ) then
+            if( (cmd_iarg .lt. 0) .or. (cmd_iarg .gt. 3) ) then
               write(*,*)                                                &
-     &           'Ignoring invalid info report option: ', trim(argv)
+     &           'Warning: Ignored invalid info report option: ', trim(argv)
             else
               report_info = cmd_iarg
             endif
 
           !specify initialization cycle setting
           else if(argv(2:2) .eq. 'I') then
+            if( .not. check_arg( 3, arg_len, argv ) ) goto 9
             read(argv(3:),*) cmd_iarg
             if( cmd_iarg .lt. 0 ) then
               write(*,*)                                                &
-     &           'Ignoring invalid init_cycle option: ', trim(argv)
+     &           'Warning: Ignored invalid init_cycle option: ', trim(argv)
             else
               init_cycle = cmd_iarg
             endif
 
           !specify layer scale setting
           else if(argv(2:2) .eq. 'L') then
+            if( .not. check_arg( 3, arg_len, argv ) ) goto 9
             read(argv(3:),*) cmd_iarg
             if( cmd_iarg .le. 0 ) then
               write(*,*)                                                &
-     &           'Ignoring invalid layer_scale option: ', trim(argv)
+     &           'Warning: Ignored invalid layer_scale option: ', trim(argv)
             else
               layer_scale = cmd_iarg
             endif
 
           !specify layer inflation setting
           else if(argv(2:2) .eq. 'l') then
+            if( .not. check_arg( 3, arg_len, argv ) ) goto 9
             read(argv(3:),*) cmd_iarg
             if( cmd_iarg .lt. 0 ) then
               write(*,*)                                                &
-     &           'Ignoring invalid layer_infla option: ', trim(argv)
+     &           'Warning: Ignored invalid layer_infla option: ', trim(argv)
             else
               layer_infla = cmd_iarg
             endif
 
           ! specify report debug options
           else if(argv(2:2) .eq. 'n') then
+            if( .not. check_arg( 3, arg_len, argv ) ) goto 9
             read(argv(3:),*) cmd_iarg
             if( cmd_iarg .gt. 1 ) then
               write(*,*)                                                &
-     &           'Ignoring invalid make_runxml option: ', trim(argv)
+     &           'Warning: Ignored invalid make_runxml option: ', trim(argv)
             else
               make_runxml = cmd_iarg
             endif
 
           !generate stand alone erosion input file on simulation day
           else if(argv(2:2) .eq. 'O') then
-            read(argv(3:),*) saeinp_daysim
+            if( .not. check_arg( 3, arg_len, argv ) ) goto 9
+            read(argv(3:),*) cmd_iarg
+            if( cmd_iarg .lt. 1 ) then
+              write(*,*)                                                &
+     &           'Warning: Ignored invalid stand alone erosion simulation day option: ', trim(argv)
+            else
+              saeinp_daysim = cmd_iarg
+            endif
 
           !generate stand alone erosion input file on DD/MM/YY
           else if(argv(2:2) .eq. 'o') then
+            if( .not. check_arg( 7, arg_len, argv ) ) goto 9
             ! id, im, iy are used here before they are read from inprun
             read(argv(3:4),*) id
             read(argv(5:6),*) im
             read(argv(7:),*) iy
-            saeinp_jday = julday( id, im, iy )
+            if( ckdate(id, im, iy) ) then
+              saeinp_jday = julday( id, im, iy )
+            else
+              write(*,*) &
+                 'Warning: Ignored invalid stand alone erosion DD/MM/YY option: ', trim(argv)
+            end if
 
           !specify use of soil puddling when all temperatures are above freezing
           else if(argv(2:2) .eq. 'p') then
+            if( .not. check_arg( 3, arg_len, argv ) ) goto 9
             read(argv(3:),*) cmd_iarg
             if( (cmd_iarg .lt. 0) .or. (cmd_iarg .gt. 1) ) then
               write(*,*)                                                &
-     &           'Ignoring invalid soil puddling option: ', trim(argv)
+     &           'Warning: Ignored invalid soil puddling option: ', trim(argv)
             else
               puddle_warm = cmd_iarg
             endif
@@ -652,133 +688,145 @@ module weps_main_mod
           !specify root WEPS directory 
           else if(argv(2:2) .eq. 'P') then
             ! Check to see if trailing '/' is there - LEW
-            ln = len_trim(argv(3:))
-            if (ln .ne. 0) then
+            if( arg_len .ge. 3 ) then
                rootp = trim(argv(3:))
+               ln = len_trim(rootp)
                if (rootp(ln:ln) .ne. '/') then
                   rootp = trim(argv(3:)) // '/'     !add trailing '/' character
                endif
             else
               write(*,*)                                                &
-     &           'Ignoring invalid WEPS root dir option: ', trim(argv)
+     &           'Warning: Ignored invalid WEPS root dir option: ', trim(argv)
             endif
 
           !specify winter annual root growth setting
           else if(argv(2:2) .eq. 'r') then
+            if( .not. check_arg( 3, arg_len, argv ) ) goto 9
             read(argv(3:),*) cmd_iarg
             if( cmd_iarg .gt. 1 ) then
               write(*,*)                                                &
-     &           'Ignoring invalid root growth option: ', trim(argv)
+     &           'Warning: Ignored invalid root growth option: ', trim(argv)
             else
               winter_ann_root = cmd_iarg
             endif
 
           ! specify report debug options
           else if(argv(2:2) .eq. 'R') then
+            if( .not. check_arg( 3, arg_len, argv ) ) goto 9
             read(argv(3:),*) cmd_iarg
             if( cmd_iarg .gt. 3 ) then
               write(*,*)                                                &
-     &           'Ignoring invalid report_debug option: ', trim(argv)
+     &           'Warning: Ignored invalid report_debug option: ', trim(argv)
             else
               report_debug = cmd_iarg
             endif
 
-          !specify soil ifc file type
+          !specify soil ifc file water content type
           else if(argv(2:2) .eq. 'S') then
+            if( .not. check_arg( 3, arg_len, argv ) ) goto 9
             read(argv(3:),*) cmd_iarg
             if( cmd_iarg .gt. 4 ) then
               write(*,*)                                                &
-     &           'Ignoring invalid wc_type option: ', trim(argv)
+     &           'Warning: Ignored invalid wc_type option: ', trim(argv)
             else
               wc_type = cmd_iarg
             endif
 
           !specify soil ifc file input format type
           else if(argv(2:2) .eq. 's') then
+            if( .not. check_arg( 3, arg_len, argv ) ) goto 9
             read(argv(3:),*) cmd_iarg
             if( cmd_iarg .gt. 1 ) then
               write(*,*)                                                &
-     &           'Ignoring invalid ifc_format option: ', trim(argv)
+     &           'Warning: Ignored invalid ifc_format option: ', trim(argv)
             else
               ifc_format = cmd_iarg
             endif
 
           !specify usage of transpiration depth
           else if(argv(2:2) .eq. 'T') then
+            if( .not. check_arg( 3, arg_len, argv ) ) goto 9
             read(argv(3:),*) cmd_iarg
             if( (cmd_iarg .lt. 0) .or. (cmd_iarg .gt. 1) ) then
               write(*,*)                                                &
-     &       'Ignoring invalid transipration depth option: ', trim(argv)
+     &       'Warning: Ignored invalid transipration depth option: ', trim(argv)
             else
               transpiration_depth = cmd_iarg
             endif
 
           !specify calculation of confidence intervals
           else if(argv(2:2) .eq. 't') then
+            if( .not. check_arg( 3, arg_len, argv ) ) goto 9
             read(argv(3:),*) cmd_iarg
             if( (cmd_iarg .lt. 0) .or. (cmd_iarg .gt. 2) ) then
               write(*,*)                                                &
-     &       'Ignoring invalid confidence interval option: ', trim(argv)
+     &       'Warning: Ignored invalid confidence interval option: ', trim(argv)
             else
               calc_confidence = cmd_iarg
             endif
 
           !specify whether buried roots are resurfaced via process 26
           else if(argv(2:2) .eq. 'u') then
+            if( .not. check_arg( 3, arg_len, argv ) ) goto 9
             read(argv(3:),*) cmd_iarg
             if( cmd_iarg .gt. 1 ) then
               write(*,*)                                                &
-     &           'Ignoring invalid resurf_roots option: ', trim(argv)
+     &           'Warning: Ignored invalid resurf_roots option: ', trim(argv)
             else
               resurf_roots = cmd_iarg
             endif
 
-          !specify whether buried roots are resurfaced via process 26
+          !specify whether to WEPS crop or UPGM to grow WEPS crop record
           else if(argv(2:2) .eq. 'U') then
+            if( .not. check_arg( 3, arg_len, argv ) ) goto 9
             read(argv(3:),*) cmd_iarg
             if( cmd_iarg .gt. 1 ) then
               write(*,*)                                                &
-     &           'Ignoring invalid upgm_growth option: ', trim(argv)
+     &           'Warning: Ignored invalid upgm_growth option: ', trim(argv)
             else
               upgm_growth = cmd_iarg
             endif
 
           !specify internodal conductivity layer weighting setting
           else if(argv(2:2) .eq. 'w') then
+            if( .not. check_arg( 3, arg_len, argv ) ) goto 9
             read(argv(3:),*) cmd_iarg
             if( cmd_iarg .gt. 5 ) then
               write(*,*)                                                &
-     &           'Ignoring invalid layer_weighting option: ', trim(argv)
+     &           'Warning: Ignored invalid layer_weighting option: ', trim(argv)
             else
               layer_weighting = cmd_iarg
             endif
 
           !specify hydrology method flag
           else if(argv(2:2) .eq. 'W') then
+            if( .not. check_arg( 3, arg_len, argv ) ) goto 9
             read(argv(3:),*) cmd_iarg
             if( cmd_iarg .gt. 2 ) then
               write(*,*)                                                &
-     &           'Ignoring invalid wepp_hydro option: ', trim(argv)
+     &           'Warning: Ignored invalid wepp_hydro option: ', trim(argv)
             else
               wepp_hydro = cmd_iarg
             endif
 
           !specify number of grid cells in the y direction
           else if(argv(2:2) .eq. 'x') then
+            if( .not. check_arg( 3, arg_len, argv ) ) goto 9
             read(argv(3:),*) cmd_iarg
             if( cmd_iarg .lt. 0 ) then
               write(*,*)                                                &
-     &           'Ignoring invalid x_grid option: ', trim(argv)
+     &           'Warning: Ignored invalid x_grid option: ', trim(argv)
             else
               xgdpt = cmd_iarg
             endif
 
           !specify max wind speed value and set flag to use it
           else if(argv(2:2) .eq. 'X') then
+            if( .not. check_arg( 3, arg_len, argv ) ) goto 9
             read(argv(3:),*) cmd_rarg
             if( cmd_rarg .le. 0.0 ) then
               write(*,*)                                                &
-     &           'Ignoring invalid max wind speed value: ', trim(argv)
+     &           'Warning: Ignored invalid max wind speed value: ', trim(argv)
             else
               wind_max_value = cmd_rarg
               wind_max_flag = 1         !set max wind value cap flag
@@ -786,30 +834,33 @@ module weps_main_mod
 
           !specify number of grid cells in the y direction
           else if(argv(2:2) .eq. 'y') then
+            if( .not. check_arg( 3, arg_len, argv ) ) goto 9
             read(argv(3:),*) cmd_iarg
             if( cmd_iarg .lt. 0 ) then
               write(*,*)                                                &
-     &           'Ignoring invalid y_grid option: ', trim(argv)
+     &           'Warning: Ignored invalid y_grid option: ', trim(argv)
             else
               ygdpt = cmd_iarg
             endif
 
           !specify functional Yield/Residue ratio flag
           else if(argv(2:2) .eq. 'Y') then
+            if( .not. check_arg( 3, arg_len, argv ) ) goto 9
             read(argv(3:),*) cmd_iarg
             if( cmd_iarg .lt. 0 ) then
               write(*,*)                                                &
-     &           'Ignoring invalid cook_yield option: ', trim(argv)
+     &           'Warning: Ignored invalid cook_yield option: ', trim(argv)
             else
               cook_yield = cmd_iarg
             endif
 
           !specify calibrate_rotcycles flag
           else if(argv(2:2) .eq. 'Z') then
+            if( .not. check_arg( 3, arg_len, argv ) ) goto 9
             read(argv(3:),*) cmd_iarg
             if( (cmd_iarg .lt. 0) ) then
               write(*,*)                                                &
-     &           'Ignoring invalid calibrate_rotcycles option: ',       &
+     &           'Warning: Ignored invalid calibrate_rotcycles option: ',       &
      &            trim(argv)
             else
               calibrate_rotcycles = cmd_iarg
@@ -817,7 +868,7 @@ module weps_main_mod
 
           !Unknown option....
           else
-              write(*,*) 'Ignoring unknown option: ', trim(argv)
+              write(*,*) 'Warning: Ignored unknown option: ', trim(argv)
           endif
  09     continue
       endif
@@ -845,6 +896,28 @@ module weps_main_mod
 
       return
     end subroutine cmdline
+
+    function check_arg( req_len, arg_len, argv2 ) result(valid_arg)
+      ! checks if a valid numeric character is present after the option character
+      ! in the argument string
+      integer, intent(in) :: req_len
+      integer, intent(in) :: arg_len
+      character(len=*), intent(in) :: argv2
+
+      logical :: valid_arg
+
+      if( arg_len .lt. req_len ) then
+        write(*,*) 'Warning: Command line option: ', trim(argv2), ' has no argument. Skipped.'
+        valid_arg = .false.
+      else
+        if( verify( trim(argv2(3:)), '-.0123456789' ) .eq. 0 ) then
+          valid_arg = .true.
+        else
+          valid_arg = .false.
+          write(*,*) 'Warning: Command line option: ', trim(argv2), ' expects a numerical value. Skipped.'
+        end if
+      end if
+    end function
 
 end module weps_main_mod
 

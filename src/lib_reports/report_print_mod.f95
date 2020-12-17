@@ -585,7 +585,7 @@ module report_print_mod
 !          ' crop                                                        |'
 
     DO i = 1, size(mandate)
-       WRITE (UNIT=lun,FMT="(2(i2,'/'),i2,'| ')",ADVANCE="NO") mandate(i)%d, mandate(i)%m, mandate(i)%y
+       WRITE (UNIT=lun,FMT="(2(i2,'/'),i0,'| ')",ADVANCE="NO") mandate(i)%d, mandate(i)%m, mandate(i)%y
        WRITE (UNIT=lun,FMT="(a,'| ',a,'|')",ADVANCE="YES") trim(mandate(i)%opname), trim(mandate(i)%cropname)
     END DO
 

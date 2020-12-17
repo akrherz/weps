@@ -60,6 +60,7 @@ module datetime_mod
   public :: isleap
   public :: wkday
   public :: mvdate
+  public :: ckdate
 
 contains
 
@@ -489,5 +490,26 @@ contains
       call caldat ((julday (dd, mm, yyyy)+delta), nday, nmonth, nyear)
 
     end subroutine mvdate
+
+    function ckdate( dd, mm, yyyy ) result(valid)
+
+      ! + + + ARGUMENT DECLARATIONS + + + 
+      integer, intent(in) :: dd    ! day
+      integer, intent(in) :: mm    ! month
+      integer, intent(in) :: yyyy  ! year
+
+      logical :: valid
+
+      integer :: ckdd, ckmm, ckyyyy
+
+      call caldat( julday( dd, mm, yyyy ), ckdd, ckmm, ckyyyy )
+
+      if( (ckdd .ne. dd) .or. (ckmm .ne. mm ) .or. (ckyyyy .ne. yyyy) ) then
+        valid = .false.
+      else
+        valid = .true.
+      end if
+
+    end function ckdate
 
 end module datetime_mod

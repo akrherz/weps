@@ -48,20 +48,21 @@ module gddmethodWEPS_mod
       real(dp) :: tmin, tmax, tbase, topt, daygdd
       logical :: succ = .false.
 
-      ! get temperatures
-      call env%state%get("tmin", tmin, succ)
-      if( .not. check_return( "tmin", succ ) ) return
-      call env%state%get("tmax", tmax, succ)
-      if( .not. check_return( "tmax", succ ) ) return
+      ! get Parameters
       call self%processPars%get("tbas", tbase, succ)
-      if( .not. check_return( "tbas", succ ) ) return
+      if( .not. check_return( trim(self%processName), "tbas", succ ) ) return
       call self%processPars%get("topt", topt, succ)
-      if( .not. check_return( "topt", succ ) ) return
+      if( .not. check_return( trim(self%processName), "topt", succ ) ) return
+      ! get current state
+      call env%state%get("tmin", tmin, succ)
+      if( .not. check_return( trim(self%processName), "tmin", succ ) ) return
+      call env%state%get("tmax", tmax, succ)
+      if( .not. check_return( trim(self%processName), "tmax", succ ) ) return
 
       daygdd = huc( tmax, tmin, topt, tbase )
 
       call plnt%state%replace("daygdd", daygdd, succ)
-      if( .not. check_return( "daygdd", succ ) ) return
+      if( .not. check_return( trim(self%processName), "daygdd", succ ) ) return
 
     end subroutine gdd_process
 

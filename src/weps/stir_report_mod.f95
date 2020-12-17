@@ -527,8 +527,8 @@ module stir_report_mod
         mandate(idx)%d = stircum(isr)%phop(idx)%phopday
         mandate(idx)%m = stircum(isr)%phop(idx)%phopmon
         if( stircum(isr)%phop(idx)%phop_skip ) then
-          ! set year for operation O 0 to zero. Works in all use of mandates array in reports
-          mandate(idx)%y = 0
+          ! set year for operation O 0 to year minus number of years in rotation. Works in all use of mandates array in reports
+          mandate(idx)%y = stircum(isr)%phop(idx)%phopyr - manFile%mperod
         else
           mandate(idx)%y = stircum(isr)%phop(idx)%phopyr
         end if

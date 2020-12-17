@@ -55,29 +55,34 @@ module WEPSFreezeDamage_mod
       real(dp) :: lost_mass ! the amount of mass lost due to freeze damage
       logical :: succ = .false.
 
-      ! get process parameters
+      ! get Parameters
       call self%processPars%get("a_fr", a_fr, succ)
-      if( .not. check_return( "a_fr", succ ) ) return
+      if( .not. check_return( trim(self%processName) , "a_fr", succ ) ) return
       call self%processPars%get("b_fr", b_fr, succ)
-      if( .not. check_return( "b_fr", succ ) ) return
+      if( .not. check_return( trim(self%processName) , "b_fr", succ ) ) return
 
-      ! get input values
+      ! get current state
       call plnt%state%get("ffa", ffa, succ)
-      if( .not. check_return( "ffa", succ ) ) return
+      if( .not. check_return( trim(self%processName) , "ffa", succ ) ) return
       call plnt%state%get("mstandleaf", mstandleaf, succ)
-      if( .not. check_return( "mstandleaf", succ ) ) return
+      if( .not. check_return( trim(self%processName) , "mstandleaf", succ ) ) return
       call plnt%state%get("fliveleaf", fliveleaf, succ)
-      if( .not. check_return( "fliveleaf", succ ) ) return
+      if( .not. check_return( trim(self%processName) , "fliveleaf", succ ) ) return
 
+      ! get environment variables
       call env%state%get("tsmn1", tsmn1, succ)
-      if( .not. check_return( "tsmn1", succ ) ) return
+      if( .not. check_return( trim(self%processName) , "tsmn1", succ ) ) return
 
       call freeze_damage( ffa, tsmn1, a_fr, b_fr, mstandleaf, fliveleaf, frst, lost_mass )
 
       call plnt%state%replace("mstandleaf", mstandleaf, succ)
+      if( .not. check_return( trim(self%processName) , "mstandleaf", succ ) ) return
       call plnt%state%replace("fliveleaf", fliveleaf, succ)
+      if( .not. check_return( trim(self%processName) , "fliveleaf", succ ) ) return
       call plnt%state%replace("frst", frst, succ)
+      if( .not. check_return( trim(self%processName) , "frst", succ ) ) return
       call plnt%state%replace("lost_mass", lost_mass, succ)
+      if( .not. check_return( trim(self%processName) , "lost_mass", succ ) ) return
 
     end subroutine FreezeDamage
 

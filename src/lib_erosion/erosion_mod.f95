@@ -275,7 +275,7 @@ module erosion_mod
       ! check for day of simulation for which you want a file created
       if( mksaeinp%simday .gt. 0 ) then
           sweepfile = 'erod.sweep'
-          gridfile = '../../erod.grid'
+          gridfile = '../../erod.grdx'
           polyfile = '../../erod.poly'
           call saeinp( subrsurf )    ! output daily erosion stuff
       end if

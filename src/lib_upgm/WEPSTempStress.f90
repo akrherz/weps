@@ -53,20 +53,19 @@ module WEPSTempStress_mod
       logical :: succ = .false.
 
       ! get input values
-      call plnt%state%get("tstress", tstress, succ)
-      if( .not. check_return( "tstress", succ ) ) return
       call env%state%get("tmax", tmax, succ)
-      if( .not. check_return( "tmax", succ ) ) return
+      if( .not. check_return( trim(self%processName) , "tmax", succ ) ) return
       call env%state%get("tmin", tmin, succ)
-      if( .not. check_return( "tmin", succ ) ) return
+      if( .not. check_return( trim(self%processName) , "tmin", succ ) ) return
       call self%processPars%get("tbas", tbase, succ)
-      if( .not. check_return( "tbas", succ ) ) return
+      if( .not. check_return( trim(self%processName) , "tbas", succ ) ) return
       call self%processPars%get("topt", topt, succ)
-      if( .not. check_return( "topt", succ ) ) return
+      if( .not. check_return( trim(self%processName) , "topt", succ ) ) return
 
       tstress = temp_stress( tmax, tmin, topt, tbase )
 
       call plnt%state%replace("tstress", tstress, succ)
+      if( .not. check_return( trim(self%processName) , "tstress", succ ) ) return
 
     end subroutine TempStress
 

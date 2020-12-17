@@ -39,7 +39,7 @@ contains
 !     + + + END SPECIFICATIONS + + +
 
       ! check for xml format input run file
-      runfil = trim(rootp) // 'weps.run.xml'
+      runfil = trim(rootp) // 'weps.runx'
       inquire(file = trim(runfil), exist = fexist)
       if (fexist) then
         old_run_file = .false.
@@ -62,13 +62,13 @@ contains
         end if
 
         ! open grid file
-        gridfile = 'erod.grid'
+        gridfile = 'erod.grdx'
         call open_xmlfile(trim(rootp) // trim(gridfile),fxml,iostat)
         if (iostat /= 0) then
           write(*,*) "Cannot open grid xml input file: ", trim(rootp) // trim(gridfile)
           stop
         end if
-        ! Read in grid subregion assignments from erod.grid
+        ! Read in grid subregion assignments from erod.grdx
         call init_grid_xml()
         call xml_parse(fxml, &
             begin_element_handler = begin_griddata_element_handler, &

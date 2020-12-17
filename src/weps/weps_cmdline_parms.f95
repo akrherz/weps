@@ -93,7 +93,7 @@ module weps_cmdline_parms
     integer :: transpiration_depth ! flag to determine if deep furrows will change
                                    ! layer in the soil to which the roots can reach for water.
                                    ! Transpiration depth will be deeper than the crop root depth.
-    integer :: make_runxml    ! flat to determine if weps.run.xml/erod.grid created from weps.run input file
+    integer :: make_runxml    ! flat to determine if weps.runx/erod.grdx created from weps.run input file
                               ! 0 ! no files created
                               ! 1 ! files created
 end module weps_cmdline_parms

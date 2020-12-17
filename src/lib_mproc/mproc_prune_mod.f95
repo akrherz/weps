@@ -61,7 +61,7 @@ module mproc_prune_mod
 
         cntr = cntr + 1
 
-        if( thisPlant%growth%growing ) then
+        if( thisPlant%growth%living ) then
 
           ! this is a living plant
           temp_store = prune_pool(thisPlant%mass%standstore, storef, store_flag )

@@ -19,6 +19,11 @@ module WEPSCrop_util_mod
     real(dp), parameter :: hard_spring = 1.0_dp  ! hardening index threshold for spring growth breakout
     integer(int32), parameter :: shoot_flg = 0   ! used to control the behavior of the shootnum subroutine
                                                  ! 0 - returns the shoot number constrained by bcdmaxshoot
+    real(dp), parameter :: per_release = 0.9_dp  ! idc == 3 or 6 perennials, fraction of available root stoage mass
+                                                 ! released to grow new shoots. 
+    real(dp), parameter :: stage_release = 0.5_dp ! idc == 8, staged release, fraction of available root stoage mass
+                                                 ! released to grow new shoots
+    real(dp), parameter :: hu_leaf_days = 7.0d0  ! number of days of optimum heat units to get full leaf emergence
 
   contains
 
@@ -53,7 +58,7 @@ module WEPSCrop_util_mod
       return
     end function temp_stress
 
-    subroutine shootnum( shoot_flg, bnslay, bc0idc, bcdpop, bc0shoot, &
+    subroutine shootnum( shoot_flg, bnslay, frac_release, bcdpop, bc0shoot, &
                  bcdmaxshoot, bcmtotshoot, bcmrootstorez, bcdstm )
 
       ! + + + PURPOSE + + +
@@ -66,51 +71,25 @@ module WEPSCrop_util_mod
       !use p1unconv_mod, only: mgtokg
 
       ! + + + ARGUMENT DECLARATIONS + + +
-      integer(int32), intent(in) :: shoot_flg
-      integer(int32), intent(in) :: bnslay
-      integer(int32), intent(in) :: bc0idc
-      real(dp), intent(in) :: bcdpop
-      real(dp), intent(in) :: bc0shoot
-      real(dp), intent(in) :: bcdmaxshoot
-      real(dp), intent(inout) :: bcmtotshoot
-      real(dp), intent(in) :: bcmrootstorez(*)
-      real(dp), intent(inout) :: bcdstm
-
-      ! + + + ARGUMENT DEFINITIONS + + +
-      ! shoot_flg - used to control the behavior of the shootnum subroutine
-      !         0 - returns the shoot number constrained by bcdmaxshoot
-      !         1 - returns the shoot number unconstrained by bcdmaxshoot
-      ! bnslay - number of soil layers
-      ! bc0idc - crop type:annual,perennial,etc
-      ! bcdpop - Number of plants per unit area (#/m^2)
-      !        - Note: bcdstm/bcdpop gives number of stems per plant
-      ! bc0shoot - mass from root storage required for each shoot (mg/shoot)
-      ! bcdmaxshoot - maximum number of shoots possible from each plant
-      ! bcmtotshoot - total mass released from root storage biomass (kg/m^2)
-      !               in the period from beginning to completion of emergence heat units
-      ! bcmrootstorez - crop root storage mass by soil layer (kg/m^2)
-      !               (tubers (potatoes, carrots), extended leaf (onion), seeds (peanuts))
-      ! bcdstm - Number of crop stems per unit area (#/m^2)
+      integer(int32), intent(in) :: shoot_flg  ! Used to control the behavior of the shootnum subroutine
+                                               ! 0 - returns the shoot number constrained by bcdmaxshoot
+                                               ! 1 - returns the shoot number unconstrained by bcdmaxshoot
+      integer(int32), intent(in) :: bnslay     ! Number of soil layers
+      real(dp), intent(in) :: frac_release     ! Fraction of root store released for use in regrowth
+      real(dp), intent(in) :: bcdpop           ! Number of plants per unit area (#/m^2)
+                                               ! Note: bcdstm/bcdpop gives number of stems per plant
+      real(dp), intent(in) :: bc0shoot         ! Mass from root storage required for each shoot (mg/shoot)
+      real(dp), intent(in) :: bcdmaxshoot      ! Maximum number of shoots possible from each plant
+      real(dp), intent(inout) :: bcmtotshoot   ! Total mass released from root storage biomass (kg/m^2)
+                                               ! in the period from beginning to completion of emergence heat units
+      real(dp), intent(in) :: bcmrootstorez(*) ! Crop root storage mass by soil layer (kg/m^2)
+                                               ! (tubers (potatoes, carrots), extended leaf (onion), seeds (peanuts))
+      real(dp), intent(inout) :: bcdstm        ! Number of crop stems per unit area (#/m^2)
 
       ! + + + LOCAL VARIABLES + + +
-      integer(int32) lay
-      real(dp) root_store_sum
+      integer(int32) :: lay       ! Layer index for summing root storage
+      real(dp) :: root_store_sum  ! Sum of root storage
 
-      ! + + + LOCAL VARIABLE DEFINITIONS + + +
-      ! lay - layer index for summing root storage
-      ! root_store_sum - sum of root storage
-
-      ! + + + PARAMETERS + + +
-      real(dp) per_release
-      PARAMETER (per_release = 0.9_dp)
-      real(dp) stage_release
-      PARAMETER (stage_release = 0.5_dp)
-
-      ! + + + PARAMETER DEFINITIONS + + +
-      ! per_release - fraction of available root stoage mass released to
-      !               grow new shoots. Default is set to 90% of available
-      ! stage_release - fraction of available root stoage mass released to
-      !               grow new shoots for cropID type 8.
 
       ! Find number of shoots (stems) that can be supported from
       ! root storage mass up to the maximum
@@ -121,19 +100,7 @@ module WEPSCrop_util_mod
 
       ! determine number of regrowth shoots
       ! units are kg/m^2 / kg/shoot = shoots/m^2
-      if( (bc0idc.eq.3) .or. (bc0idc.eq.6) ) then
-          ! Perennials hold some mass in reserve
-          bcdstm = max( bcdpop, &
-                   per_release * root_store_sum/(bc0shoot*u_mgtokg)  )
-      else if( bc0idc.eq.8 ) then
-          ! This Perennial stages it's bud release, putting out less after each cutting
-          bcdstm = max( bcdpop, &
-                   stage_release * root_store_sum/(bc0shoot*u_mgtokg) )
-      else
-          ! all others go for broke
-          bcdstm = max( bcdpop, &
-                   root_store_sum/(bc0shoot*u_mgtokg) )
-      end if
+      bcdstm = max( bcdpop, frac_release * root_store_sum/(bc0shoot*u_mgtokg)  )
 
       if( shoot_flg .eq. 0 ) then
           ! respect maximum limit
@@ -213,16 +180,16 @@ module WEPSCrop_util_mod
       return
     end function heatunit
 
-!     calculates the vernalization effectiveness of a day. For fully
-!     effective tmeperatures, a full day is returned. for temperatures
-!     that are less than fully effective, a partial day or zero is 
-!     returned. If temperatures are above the upper temperature 
-!     threshold and insufficient chill days are accumulated, devernalization
-!     occurs.
+    ! calculates the vernalization effectiveness of a day. For fully
+    ! effective tmeperatures, a full day is returned. for temperatures
+    ! that are less than fully effective, a partial day or zero is 
+    ! returned. If temperatures are above the upper temperature 
+    ! threshold and insufficient chill days are accumulated, devernalization
+    ! occurs.
 
-!     method taken from: Ritchie, J.T. 1991. Wheat Phasic development in: 
-!     Hanks, J. and Ritchie, J.T. eds. Modeling plant and soil systems.
-!     Agronomy Monograph 31, pages 34-36.
+    ! method taken from: Ritchie, J.T. 1991. Wheat Phasic development in: 
+    ! Hanks, J. and Ritchie, J.T. eds. Modeling plant and soil systems.
+    ! Agronomy Monograph 31, pages 34-36.
 
     subroutine chillunit_cum( bctchillucum, day_max_temp, day_min_temp )
       real(dp), intent(inout) :: bctchillucum  ! accumulated chilling units (days)
@@ -285,6 +252,29 @@ module WEPSCrop_util_mod
 
       return
     end subroutine warmday_cum
+
+    ! calculates the cumulative number of days the daily average temperature
+    ! is below a threshold temperature.
+    subroutine coldday_cum( colddays, thres, tmax, tmin )
+      real(dp), intent(inout) :: colddays  ! total number of consequtive days tempeature is below threshold
+      real(dp), intent(in) :: thres  ! threshold temperature (such as minimum temperature for growth)
+      real(dp), intent(in) :: tmax   ! maximum daily air temperature
+      real(dp), intent(in) :: tmin   ! minimum daily air temperature
+
+      ! local variables
+      real(dp) :: tmean   ! arithmetic average of tmax and tmin
+
+      tmean = (dble(tmax) + dble(tmin)) / 2.0d0
+      if (tmean .le. dble(thres)) then
+          ! this is a cold day
+          colddays = colddays + 1.0d0
+      else
+          ! reduce cold day total, but do not zero
+          colddays = colddays / 2.0d0
+      end if
+
+      return
+    end subroutine coldday_cum
 
     subroutine freeze_damage( ff_senescence, stsmn1, a_fr, b_fr, bcmstandleaf, bcfliveleaf, frst, lost_mass )
       real(dp), intent(in) :: ff_senescence
@@ -350,5 +340,35 @@ module WEPSCrop_util_mod
       endif
 
     end subroutine freeze_damage
+
+    function total_leaf( bnslay, bcmrootstorez ) result(bcmtotleaf)
+      ! determine the mass of leaf emergence that root storage mass can support,
+      ! and set the total mass to be released from root storage.
+
+      integer(int32) :: bnslay    ! number of soil layers
+      real(dp), intent(in) :: bcmrootstorez(*) ! crop root storage mass by soil layer (kg/m^2)
+      real(dp) :: bcmtotleaf      ! total mass released from root storage biomass (kg/m^2)
+                                  ! in the period from beginning to completion of leaf emergence heat units
+
+      ! + + + LOCAL VARIABLES + + +
+      integer(int32) :: lay       ! layer index for summing root storage
+      real(dp) :: root_store_sum  ! sum of root storage (kg/m^2)
+
+      ! + + + PARAMETERS + + +
+      real(dp), parameter :: leaf_release = 0.5d0 ! fraction of available root storage mass released to
+                                                  ! grow new leaves. Default is set to 50% of available
+
+      ! find mass of leaf that can be supported from
+      ! root storage mass up to the maximum
+      root_store_sum = 0.0d0
+      do lay = 1,bnslay
+          root_store_sum = root_store_sum + dble(bcmrootstorez(lay))
+      end do
+
+      ! set the mass of root storage that is released (for use in leaf emergence)
+      bcmtotleaf = root_store_sum * leaf_release
+
+      return
+    end function total_leaf
 
 end module WEPSCrop_util_mod

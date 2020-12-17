@@ -106,7 +106,7 @@ module sweep_io_xml_defs
   integer, parameter, public :: SCI_SurfaceSubDayWaters = 74
   integer, parameter, public :: SCI_SurfaceSubDayWater = 75
 
-  ! erod.grid tags
+  ! erod.grdx tags
   integer, parameter, public :: SCI_GridFile = 76
 
 contains
@@ -216,7 +216,7 @@ contains
     input_tag(74)%name = "SCI_SurfaceSubDayWaters"
     input_tag(75)%name = "SCI_SurfaceSubDayWater"
 
-    ! erod.grid tags
+    ! erod.grdx tags
     input_tag(76)%name = "SCI_GridFile"
 
     ! temporarily retained 

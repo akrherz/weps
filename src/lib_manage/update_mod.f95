@@ -84,7 +84,7 @@ module update_mod
         ! Living plant material section
         iplt = iplt + 1
 
-        if( thisPlant%growth%growing .or. am0cropupfl ) then
+        if( thisPlant%growth%living .or. am0cropupfl ) then
           ! plant growing so update derived variables (if not growing should be residue)
           am0cropupfl = .false.
 
@@ -275,9 +275,9 @@ module update_mod
 
         end do
 
-        ! check if plant is not growing and has no residue
-        ! NOTE: this assumes no biomass contained in plant pools for a non growing plant
-        if( thisPlant%growth%growing .or. associated(thisPlant%residue) ) then
+        ! check if plant is not living and has no residue
+        ! NOTE: this assumes no biomass contained in plant pools for a non living plant
+        if( thisPlant%growth%living .or. associated(thisPlant%residue) ) then
           ! plant is growing or has residue
           parentPlant => thisPlant
           ! point to next older plant
@@ -380,7 +380,7 @@ module update_mod
         ! Living plant material section
         iplt = iplt + 1
 
-        if( thisPlant%growth%growing ) then
+        if( thisPlant%growth%living ) then
 
           ! this is a living plant, add to croptot
           croptot%dstmtot = croptot%dstmtot + thisPlant%geometry%dstm   ! total number of stems  per unit area (#/m^2)
@@ -531,7 +531,7 @@ module update_mod
         evapredu(jdx)%evapredu_a = thisPlant%database%resevapa
         evapredu(jdx)%evapredu_b = thisPlant%database%resevapb
 
-        if( thisPlant%growth%growing ) then
+        if( thisPlant%growth%living ) then
           ! this is a living plant, add to croptot
 
           ! use sai weighting for average height and representative stem diameter

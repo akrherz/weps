@@ -35,7 +35,6 @@ module crop_mod
 ! Local Variables
       integer lay
       type(crop_residue) :: cropres
-      logical :: crop_growing
       type(plant_pointer), pointer :: thisPlant       ! pointer used to interate plant pointer chain
 
       ! + + + END OF SPECIFICATIONS + + +
@@ -56,13 +55,10 @@ module crop_mod
            .or. (thisPlant%geometry%dpop .le. 0.0) &
            .or. (thisPlant%database%idc .le. 0) ) then
            ! this is not a valid growing crop
-           thisPlant%growth%growing = .false.
-           crop_growing = .false.
-         else
-           crop_growing = thisPlant%growth%growing
+           thisPlant%growth%living = .false.
          end if
 
-         if( crop_growing ) then
+         if( thisPlant%growth%living ) then
 
            if( associated(thisPlant%upgm_grow%plant) ) then
 
@@ -215,9 +211,10 @@ module crop_mod
 
       ! + + + OUTPUT FORMATS + + +
  2010 format(1x,i2,'/',i2,'/',i3,'|',1x,i2,'/',i2,'/',i2,'|',a40,'|',   &
-             10(f7.3,'|'),f7.2,'|',2(f7.3,'|'),f7.5,'|',f7.3,'|',i6,'|',&
-             3(f8.1,'|'),f5.3,'|',i4,'|')
- 2011 format(i6,'|')
+             10(f7.3,'|'),f7.2,'|',2(f7.3,'|'),f7.5,'|',f7.3,'|',i6,'|')
+ 2011 format(f8.1,'|')
+ 2020 format(2(f8.1,'|'),f5.3,'|',i4,'|')
+ 2021 format(i6,'|')
 
       ! + + + END OF SPECIFICATIONS + + +
 
@@ -279,14 +276,24 @@ module crop_mod
                 thisPlant%prev%flatstem, thisPlant%prev%flatleaf, thisPlant%prev%flatstore, &
                 bg_stem_sum, root_store_sum, root_fiber_sum, &
                 thisPlant%prev%ht, thisPlant%prev%stm, thisPlant%prev%rtd, thisPlant%prev%grainf, &
-                thisPlant%geometry%xstmrep, thisPlant%prev%cancov, thisPlant%prev%dayap, thisPlant%prev%chillucum, &
+                thisPlant%geometry%xstmrep, thisPlant%prev%cancov, thisPlant%prev%dayap
+
+              if( (thisPlant%database%idc .eq. 9) .or. (thisPlant%database%idc .eq. 12) ) then
+                write(UNIT=luoseason(isr),FMT=2011,advance='NO') &
+                  0.0
+              else
+                write(UNIT=luoseason(isr),FMT=2011,advance='NO') &
+                  thisPlant%prev%chillucum
+              end if
+
+              write(UNIT=luoseason(isr),FMT=2020,advance='NO') &
                 thisPlant%prev%hucum, thisPlant%database%thum, hui, thisPlant%growth%dayam
 
               if( (thisPlant%database%idc .ge. 9) .and. (thisPlant%database%idc .le. 12) ) then
-                write(UNIT=luoseason(isr),FMT=2011,advance='NO') &
+                write(UNIT=luoseason(isr),FMT=2021,advance='NO') &
                   thisPlant%prev%dayleafon
               else
-                write(UNIT=luoseason(isr),FMT=2011,advance='NO') &
+                write(UNIT=luoseason(isr),FMT=2021,advance='NO') &
                   thisPlant%prev%dayspring
               end if
 

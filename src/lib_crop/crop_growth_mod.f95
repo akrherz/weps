@@ -369,6 +369,9 @@ module crop_growth_mod
       ! calculates Frost damage s-curve coefficients
       call scrv1(bc0fd1,cc0fd1,bc0fd2,cc0fd2,a_fr,b_fr)
 
+      ! set heat unit index at beginning of the day
+      huiy = min(1.0d0, bcthucum / bcthum)
+
       if (dble(bhtsmn(1)) .lt. -2.0d0) then
           ! use daily minimum soil temperature of first layer to account for snow cover effects
           xw = abs( dble(bhtsmn(1)) )
@@ -380,7 +383,7 @@ module crop_growth_mod
           frst = min(1.0d0, max(0.0d0, frst))
 
           ! is it before or after scenescence?
-          if ( (bcthucum/bcthum) .lt. (bcehu0-bcehu0*.1)) then
+          if ( huiy .lt. (bcehu0-bcehu0*.1)) then
               ! before scenescence, frost killed mass is fragile and a fraction disappears
               ffa = 1.0d0 - frst
               ffw = 1.0d0 - frst * frac_frst_mass_lost
@@ -413,7 +416,7 @@ module crop_growth_mod
       ! set trend direction for living leaf area from external forces
       trend = (bcfliveleaf*dble(bcmstandleaf)) - (bprevliveleaf*dble(bprevstandleaf))
       if ((trend .ne. 0.0d0) &
-          .and. ((bcthucum/bcthum .gt. bc0hue) .or. (bc0idc.eq.8))) &
+          .and. ((huiy .gt. bc0hue) .or. (bc0idc.eq.8))) &
           then  ! trend non-zero and (heat units past emergence or staged crown release crop)
           bcleafareatrend = trend
       end if
@@ -421,7 +424,7 @@ module crop_growth_mod
       ! set trend direction for above ground stem mass from external forces
       trend = dble(bcmstandstem) + dble(bcmflatstem) - dble(bprevstandstem) - dble(bprevflatstem)
       if ((trend .ne. 0.0d0) &
-          .and. ((bcthucum/bcthum .gt. bc0hue) .or. (bc0idc.eq.8))) &
+          .and. ((huiy .gt. bc0hue) .or. (bc0idc.eq.8))) &
           then  ! trend non-zero and (heat units past emergence or staged crown release crop)
           bcstemmasstrend = trend
       end if
@@ -457,8 +460,8 @@ module crop_growth_mod
              if( bcthardnx .lt. hard_spring ) then
               regrowth_flg = 4
               ! vernalized and ready to grow in spring
-              bcthu_shoot_beg = bcthucum / bcthum
-              bcthu_shoot_end = bcthucum / bcthum + bc0hue
+              bcthu_shoot_beg = huiy
+              bcthu_shoot_end = huiy + bc0hue
               call shootnum(shoot_flg, bnslay, bc0idc, bcdpop, bc0shoot, &
                    bcdmaxshoot, u_bcmtotshoot, bcmrootstorez, u_bcdstm )
               ! eliminate diversion of biomass to crown storage
@@ -509,7 +512,7 @@ module crop_growth_mod
               if( bctwarmdays .ge. shoot_delay ) then
                 ! enough warm days to start regrowth
                 regrowth_flg = 2
-                if( bcthucum/bcthum .ge. bc0hue ) then
+                if( huiy .ge. bc0hue ) then
                   ! heat units past emergence
                   regrowth_flg = 3
                   ! find out how much root store can be released for regrowth
@@ -517,6 +520,7 @@ module crop_growth_mod
                      bcdmaxshoot, root_store_rel, bcmrootstorez, pot_stems)
                   ! reset growth clock 
                   bcthucum = 0.0d0
+                  huiy = 0.0d0
                   bcthu_shoot_beg = 0.0d0
                   bcthu_shoot_end = dble(bc0hue)
                   ! reset shoot grow configuration
@@ -568,7 +572,7 @@ module crop_growth_mod
           end if
 
           ! check for spring and leaf appearance
-          if( bcthucum/bcthum .ge. bc0hue ) then
+          if( huiy .ge. bc0hue ) then
             ! heat units past emergence
             if(     (hrlty .lt. hrlt) &
               ! days lengthening (ie. spring)
@@ -586,13 +590,13 @@ module crop_growth_mod
                 if( (bc0idc .eq. 9) .or. (bc0idc .eq. 11) .or. (bc0idc .eq. 12) ) then
                   ! reset heat units
                   bcthucum = 0.0d0
+                  huiy = 0.0d0
                 end if
-                bcthu_leaf_beg = bcthucum / bcthum
+                bcthu_leaf_beg = huiy
                 bcthu_leaf_end = (bcthucum + (hu_leaf_days * (bctopt-bctmin))) / bcthum
                 ! set day of year on which transition took place
                 bcdayleafon = jd
                 ! reset triggers
-                bctchillucum = 0.0d0
                 bctcolddays = 0.0d0
                 bcdayleafoff = 0
               end if
@@ -606,7 +610,6 @@ module crop_growth_mod
             ! fall not yet triggered
             if( jd .ge. fall_eqx ) then
               ! at least the first day of fall
-!              if(    (bctchillucum .ge. chilluv) &  ! enough cold to trigger leaf drop
               if(    (bctcolddays .ge. shoot_delay) &  ! enough cold to trigger leaf drop
                 .or. (jd .eq. winter_sol) &         ! always drop leaves by winter solstice
                 ) then
@@ -630,6 +633,7 @@ module crop_growth_mod
                   bcmflatleaf = 0.0
                   ! reset heat units (use vernalization delay)
                   bcthucum = 0.0d0
+                  huiy = 0.0d0
                 else if( bc0idc .eq. 11 ) then
                   ! Mixed Deciduous and Evergreen, default 50% tree mix
                   ! drop 50% leaf mass to simulate Deciduous leaf drop change in cover
@@ -644,6 +648,7 @@ module crop_growth_mod
                   bcmflatleaf = 0.0
                   ! reset heat units (use vernalization delay)
                   bcthucum = 0.0d0
+                  huiy = 0.0d0
                 end if
                 ! reset spring trigger values
                 bcmtotleaf = 0.0d0
@@ -678,12 +683,12 @@ module crop_growth_mod
             if( bctwarmdays .ge. shoot_delay ) then
              ! enough warm days to start regrowth
              regrowth_flg = 3
-             if( (bcthucum/bcthum .ge. bc0hue) &
+             if( (huiy .ge. bc0hue) &
               ! heat units past emergence
               .or.((bc0idc.eq.8).and.(bcstemmasstrend.lt.0.0)) ) then
               ! staged crown release will regrow without full emergence, but only if stem removed ie harvest
               regrowth_flg = 4
-              if( (bcthucum .lt. bcthum) &
+              if( (huiy .lt. 1.0d0) &
                ! not yet mature
                .or. ((bc0idc.eq.3) .or. (bc0idc.eq.6)) &
                ! perennial
@@ -708,6 +713,7 @@ module crop_growth_mod
                   ! regrow possible from shoot for perennials, annuals.
                   ! reset growth clock 
                   bcthucum = 0.0d0
+                  huiy = 0.0d0
                   bcthu_shoot_beg = 0.0d0
                   bcthu_shoot_end = dble(bc0hue)
                   bcdayam = 0
@@ -779,7 +785,6 @@ module crop_growth_mod
           hui = 0.0d0
       else
           ! previous day heat unit index
-          huiy = min(1.0d0, bcthucum / bcthum)
           huirty = bctrthucum / bcthum
           ! check for growth completion
           if( huiy .lt. 1.0d0 ) then
@@ -889,7 +894,7 @@ module crop_growth_mod
           trend = (bcfliveleaf*bcmstandleaf)                            &
      &          - (bprevliveleaf*bprevstandleaf)
           if ((trend .ne. 0.0)                                          &
-     &        .and. ((bcthucum/bcthum .gt. bc0hue) .or. (bc0idc.eq.8))) &
+     &        .and. ((hui .gt. bc0hue) .or. (bc0idc.eq.8))) &
      &        then  ! trend non-zero and (heat units past emergence or staged crown release crop)
               bcleafareatrend = trend
           end if
@@ -897,7 +902,7 @@ module crop_growth_mod
           trend = bcmstandstem + bcmflatstem                            &
      &          - bprevstandstem - bprevflatstem
           if ((trend .ne. 0.0)                                          &
-     &        .and. ((bcthucum/bcthum .gt. bc0hue) .or. (bc0idc.eq.8))) &
+     &        .and. ((hui .gt. bc0hue) .or. (bc0idc.eq.8))) &
      &        then  ! trend non-zero and (heat units past emergence or staged crown release crop)
               bcstemmasstrend = trend
           end if
@@ -936,7 +941,7 @@ module crop_growth_mod
 
       if( (hui .ge. 1.0d0) .and. (bcdstm .gt. 0.0)) then
 
-          if( (bc0idc.eq.9) .or. (bc0idc.eq.10) ) then
+          if( (bc0idc.ge.9) .and. (bc0idc.le.12) ) then
             ! these crops continue until leaf drop or are evergreen
           else
             ! heat units completed, crop leaf mass is non transpiring

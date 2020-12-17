@@ -5,11 +5,13 @@
 
 module phase_factory_mod
     use phases_mod
-    use PhenologyMMSGermination_mod
-    use PhenologyMMSShootGRG_mod
     use PhenologyMMSBasephenol_mod
     use PhenologyMMSFallphenol_mod
+    use PhenologyMMSGermination_mod
+    use PhenologyMMSShootGRG_mod
     use PhenologyMMSSpringphenol_mod
+    use WEPSDeciduousWood_mod
+    use WEPSEvergreenWood_mod
     use WEPSShootGrow_mod
     
   contains
@@ -22,17 +24,21 @@ module phase_factory_mod
 
     nullify(phasePtr)
 
-    if (phaseName == "pmms_germination") then
-        allocate(PhenologyMMS_Germination :: phasePtr)
-    elseif (phaseName == "pmms_shootgrg") then
-        allocate(PhenologyMMS_ShootGRG :: phasePtr)
-    elseif (phaseName == "pmms_basephenol") then
+    if (phaseName == "PhenologyMMS_Basephenol") then
         allocate(PhenologyMMS_Basephenol :: phasePtr)
-    elseif (phaseName == "pmms_fallphenol") then
+    elseif (phaseName == "PhenologyMMS_Fallphenol") then
         allocate(PhenologyMMS_Fallphenol :: phasePtr)
-    elseif (phaseName == "pmms_springphenol") then
+    elseif (phaseName == "PhenologyMMS_Germination") then
+        allocate(PhenologyMMS_Germination :: phasePtr)
+    elseif (phaseName == "PhenologyMMS_ShootGRG") then
+        allocate(PhenologyMMS_ShootGRG :: phasePtr)
+    elseif (phaseName == "PhenologyMMS_Springphenol") then
         allocate(PhenologyMMS_Springphenol :: phasePtr)
-    elseif(phaseName == "weps_shootgrow") then
+    elseif(phaseName == "WEPS_DeciduousWood") then
+        allocate(WEPS_DeciduousWood:: phasePtr)
+    elseif(phaseName == "WEPS_EvergreenWood") then
+        allocate(WEPS_EvergreenWood:: phasePtr)
+    elseif(phaseName == "WEPS_ShootGrow") then
         allocate(WEPS_ShootGrow:: phasePtr)
     !elseif(phaseName == "phase") then
         !allocate( phase:: phasePtr)

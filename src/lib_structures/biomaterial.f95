@@ -60,7 +60,8 @@ module biomaterial
 
   type biostate_growth
      logical :: am0cif      ! flag if set to .true. then run CROP growth initialization subroutine.
-     logical :: growing     ! flag set to indicate that crop is growing
+     logical :: living      ! indicates this is a living crop, not residue
+     logical :: growing     ! flag set to indicate that crop is actively growing
      logical :: shoot_growing     ! flag set to indicate that shoot growth occuring
      logical :: can_regrow  ! flag set to indicate that crop is able to regrow (past bc0hue, partition to root store)
      logical :: do_regrow   ! flag set to indicate that regrow has been triggered
@@ -615,6 +616,7 @@ contains
 
      ! plant not growing, just created
      plantNew%growth%am0cif = .false.
+     plantNew%growth%living = .false.
      plantNew%growth%growing = .false.
      plantNew%growth%shoot_growing = .false.
      plantNew%growth%can_regrow = .false.
