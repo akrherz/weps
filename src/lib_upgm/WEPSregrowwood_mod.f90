@@ -62,7 +62,8 @@ module WEPSregrowwood_mod
 
       ! plant state
       real(dp) :: bcmstandstem ! crop standing stem mass (kg/m^2)
-      real(dp) :: bcmstandleaf ! crop standing leaf mass (kg/m^2)
+      real(dp) :: bcmstandleaflive ! crop live standing leaf mass (kg/m^2)
+      real(dp) :: bcmstandleafdead ! crop dead standing leaf mass (kg/m^2)
       real(dp) :: bcmstandstore ! crop standing storage mass (kg/m^2) (head with seed, or vegetative head (cabbage, pineapple))
       real(dp) :: bcmflatstem  ! crop flat stem mass (kg/m^2)
       real(dp) :: bcmflatleaf  ! crop flat leaf mass (kg/m^2)
@@ -173,8 +174,10 @@ module WEPSregrowwood_mod
                 ! plant state
                 call plnt%state%get("mstandstem", bcmstandstem, succ)
                 if( .not. check_return( trim(self%processName) , "mstandstem", succ ) ) return
-                call plnt%state%get("mstandleaf", bcmstandleaf, succ)
-                if( .not. check_return( trim(self%processName) , "mstandleaf", succ ) ) return
+                call plnt%state%get("mstandleaflive", bcmstandleaflive, succ)
+                if( .not. check_return( trim(self%processName) , "mstandleaflive", succ ) ) return
+                call plnt%state%get("mstandleafdead", bcmstandleafdead, succ)
+                if( .not. check_return( trim(self%processName) , "mstandleafdead", succ ) ) return
                 call plnt%state%get("mstandstore", bcmstandstore, succ)
                 if( .not. check_return( trim(self%processName) , "mstandstore", succ ) ) return
                 call plnt%state%get("mflatstem", bcmflatstem, succ)
@@ -193,7 +196,7 @@ module WEPSregrowwood_mod
                 if( .not. check_return( trim(self%processName) , "dstm", succ ) ) return
 
                 bgmstandstem = bcmstandstem
-                bgmstandleaf = bcmstandleaf
+                bgmstandleaf = bcmstandleaflive + bcmstandleafdead
                 bgmstandstore = bcmstandstore
                 bgmflatstem = bcmflatstem
                 bgmflatleaf = bcmflatleaf
@@ -206,7 +209,8 @@ module WEPSregrowwood_mod
                 bgdstm = bcdstm
                 ! reset crop values to indicate new growth cycle
                 bcmstandstem = 0.0
-                bcmstandleaf = 0.0
+                bcmstandleaflive = 0.0
+                bcmstandleafdead = 0.0
                 bcmstandstore = 0.0
                 bcmflatstem = 0.0
                 bcmflatleaf = 0.0
@@ -240,8 +244,10 @@ module WEPSregrowwood_mod
 
                 call plnt%state%replace("mstandstem", bcmstandstem, succ)
                 if( .not. check_return( trim(self%processName) , "mstandstem", succ ) ) return
-                call plnt%state%replace("mstandleaf", bcmstandleaf, succ)
-                if( .not. check_return( trim(self%processName) , "mstandleaf", succ ) ) return
+                call plnt%state%replace("mstandleaflive", bcmstandleaflive, succ)
+                if( .not. check_return( trim(self%processName) , "mstandleaflive", succ ) ) return
+                call plnt%state%replace("mstandleafdead", bcmstandleafdead, succ)
+                if( .not. check_return( trim(self%processName) , "mstandleafdead", succ ) ) return
                 call plnt%state%replace("mstandstore", bcmstandstore, succ)
                 if( .not. check_return( trim(self%processName) , "mstandstore", succ ) ) return
                 call plnt%state%replace("mflatstem", bcmflatstem, succ)

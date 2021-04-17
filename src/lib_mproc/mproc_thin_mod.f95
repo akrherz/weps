@@ -19,7 +19,6 @@ module mproc_thin_mod
       ! a flat residue pool. Any thinned residue that is not removed is
       ! transferred to the corresponding flat pool.
 
-      use p1unconv_mod, only: mmtom
       use biomaterial, only: plant_pointer, residue_pointer, residueAdd
 
       ! + + + ARGUMENT DECLARATIONS + + +
@@ -79,14 +78,15 @@ module mproc_thin_mod
         tflatstem = 0.0
         tflatleaf = 0.0
         tflatstore = 0.0
-        call thin_pool ( mod_thinval, grainf, cropf, &
-           plant%mass%standstem, plant%mass%standleaf, plant%mass%standstore, &
+        call thin_pool_stand_plant ( mod_thinval, grainf, cropf, &
+           plant%mass%standstem, plant%mass%standleaflive, &
+           plant%mass%standleafdead, plant%mass%standstore, &
            tflatstem, tflatleaf, tflatstore, &
            plant%geometry%grainf, plant%geometry%hyfg, tot_mass_rem, sel_mass_left)
 
         ! if living crop flat pool has biomass, also transfer the correct
         ! proportions into temporary flat pool
-        call thin_pool ( mod_thinval, grainf, cropf, &
+        call thin_pool_residue ( mod_thinval, grainf, cropf, &
            plant%mass%flatstem, plant%mass%flatleaf, plant%mass%flatstore, &
            tflatstem, tflatleaf, tflatstore, &
            plant%geometry%grainf, plant%geometry%hyfg, tot_mass_rem, sel_mass_left)
@@ -112,7 +112,7 @@ module mproc_thin_mod
 
         do while( associated(thisResidue) )
           ! thin residue decomposition pools (standing to flat if not removed)
-          call thin_pool ( mod_thinval, grainf, standf, &
+          call thin_pool_residue ( mod_thinval, grainf, standf, &
              thisResidue%standstem, thisResidue%standleaf, thisResidue%standstore,&
              thisResidue%flatstem, thisResidue%flatleaf, thisResidue%flatstore,   &
              thisResidue%grainf, plant%geometry%hyfg, tot_mass_rem, sel_mass_left)
@@ -130,7 +130,8 @@ module mproc_thin_mod
       ! check that complete crop failure shows remaining biomass
       if( tot_mass_rem + sel_mass_left .le. 0.0 ) then
         if( associated(plant) ) then
-          sel_mass_left = plant%mass%standstem + plant%mass%standleaf + plant%mass%standstore   &
+          sel_mass_left = plant%mass%standstem + plant%mass%standleaflive &
+                        + plant%mass%standleafdead + plant%mass%standstore   &
                         + plant%mass%flatstem + plant%mass%flatleaf + plant%mass%flatstore
         else
           sel_mass_left = 0.0
@@ -146,18 +147,127 @@ module mproc_thin_mod
       ! the subroutine to allow the flat mass pool for a living crop to be
       ! handled the same as a standing pool for thinning purposes.
 
-    subroutine thin_pool ( thinval, grainf, cropf, &
+    subroutine thin_pool_stand_plant ( thinval, grainf, cropf, &
+                poolmstandstem, poolmstandleaflive, poolmstandleafdead, poolmstandstore, &
+                poolmflatstem, poolmflatleaf, poolmflatstore, &
+                poolgrainf, poolhyfg, tot_mass_rem, sel_mass_left)
+
+      ! + + + ARGUMENT DECLARATIONS + + +
+      real, intent(in) :: thinval
+      real, intent(in) :: grainf
+      real, intent(in) :: cropf
+
+      real, intent(inout) :: poolmstandstem
+      real, intent(inout) :: poolmstandleaflive
+      real, intent(inout) :: poolmstandleafdead
+      real, intent(inout) :: poolmstandstore
+
+      real, intent(inout) :: poolmflatstem
+      real, intent(inout) :: poolmflatleaf
+      real, intent(inout) :: poolmflatstore
+
+      integer, intent(in) :: poolhyfg
+      real, intent(in) :: poolgrainf
+      real, intent(inout) :: tot_mass_rem
+      real, intent(inout) :: sel_mass_left
+
+      ! + + + LOCAL VARIABLE DEFINITIONS + + +
+      integer pool_flag
+      real mass_thin
+      real mass_rem
+      real rem_frac
+
+      ! + + + END SPECIFICATIONS + + +
+
+      pool_flag = 0
+
+      ! yield mass
+      mass_thin = poolmstandstore * (1.0-thinval)
+      rem_frac = grainf
+      if( poolhyfg .le. 2 ) then
+          rem_frac = rem_frac * poolgrainf
+      end if
+      mass_rem = mass_thin * rem_frac
+      if( mass_rem.gt.0.0 ) then 
+          pool_flag = 1
+          tot_mass_rem = tot_mass_rem + mass_rem
+      end if
+      poolmstandstore = poolmstandstore - mass_thin
+      poolmflatstore = poolmflatstore + mass_thin - mass_rem
+
+      ! live standing leaf mass
+      mass_thin = poolmstandleaflive * (1.0-thinval) 
+      rem_frac = cropf
+      if( poolhyfg .eq. 3 ) then
+          rem_frac = rem_frac * poolgrainf
+      end if
+      mass_rem = mass_thin * rem_frac
+      if( mass_rem.gt.0.0 ) then 
+          pool_flag = 1
+          tot_mass_rem = tot_mass_rem + mass_rem
+      end if
+      poolmstandleaflive = poolmstandleaflive - mass_thin
+      poolmflatleaf = poolmflatleaf + mass_thin - mass_rem
+
+      ! dead standing leaf mass
+      mass_thin = poolmstandleafdead * (1.0-thinval) 
+      rem_frac = cropf
+      if( poolhyfg .eq. 3 ) then
+          rem_frac = rem_frac * poolgrainf
+      end if
+      mass_rem = mass_thin * rem_frac
+      if( mass_rem.gt.0.0 ) then 
+          pool_flag = 1
+          tot_mass_rem = tot_mass_rem + mass_rem
+      end if
+      poolmstandleafdead = poolmstandleafdead - mass_thin
+      poolmflatleaf = poolmflatleaf + mass_thin - mass_rem
+
+      ! standing stem mass
+      mass_thin = poolmstandstem * (1.0-thinval) 
+      rem_frac = cropf
+      if( poolhyfg .eq. 4 ) then
+          rem_frac = rem_frac * poolgrainf
+      end if
+      mass_rem = mass_thin * rem_frac
+      if( mass_rem.gt.0.0 ) then 
+          pool_flag = 1
+          tot_mass_rem = tot_mass_rem + mass_rem
+      end if
+      poolmstandstem = poolmstandstem - mass_thin
+      poolmflatstem = poolmflatstem + mass_thin - mass_rem
+
+      ! add biomass to selected mass if biomass was removed from pool
+      if( pool_flag.eq.1 ) then
+          sel_mass_left = sel_mass_left + poolmstandstem + poolmstandleaflive &
+                        + poolmstandleafdead + poolmstandstore
+      end if
+
+      return
+    end subroutine thin_pool_stand_plant
+
+    subroutine thin_pool_residue ( thinval, grainf, cropf, &
                 poolmstandstem, poolmstandleaf, poolmstandstore, &
                 poolmflatstem, poolmflatleaf, poolmflatstore, &
                 poolgrainf, poolhyfg, tot_mass_rem, sel_mass_left)
 
       ! + + + ARGUMENT DECLARATIONS + + +
-      real, intent(in) :: thinval, grainf, cropf
-      real, intent(inout) :: poolmstandstem, poolmstandleaf, poolmstandstore
-      real, intent(inout) :: poolmflatstem, poolmflatleaf, poolmflatstore
+      real, intent(in) :: thinval
+      real, intent(in) :: grainf
+      real, intent(in) :: cropf
+
+      real, intent(inout) :: poolmstandstem
+      real, intent(inout) :: poolmstandleaf
+      real, intent(inout) :: poolmstandstore
+
+      real, intent(inout) :: poolmflatstem
+      real, intent(inout) :: poolmflatleaf
+      real, intent(inout) :: poolmflatstore
+
       integer, intent(in) :: poolhyfg
       real, intent(in) :: poolgrainf
-      real, intent(inout) :: tot_mass_rem, sel_mass_left
+      real, intent(inout) :: tot_mass_rem
+      real, intent(inout) :: sel_mass_left
 
       ! + + + LOCAL VARIABLE DEFINITIONS + + +
       integer pool_flag
@@ -218,6 +328,6 @@ module mproc_thin_mod
       end if
 
       return
-    end subroutine thin_pool
+    end subroutine thin_pool_residue
 
 end module mproc_thin_mod

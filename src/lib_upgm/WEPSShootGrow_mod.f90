@@ -6,7 +6,7 @@
 module WEPSShootGrow_mod
     use phases_mod
     use constants, only: dp, int32, check_return, u_mgtokg, u_max_arg_exp, u_max_real
-    use WEPSCrop_util_mod, only: chilluv, scrv1, shootnum
+    use WEPSCrop_util_mod, only: chilluv, shootnum
     use WEPSCrop_util_mod, only: dev_floor, shoot_delay, shoot_flg, spring_trig, verndelmax, hard_spring
    implicit none
 

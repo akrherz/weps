@@ -13,7 +13,8 @@ module biomaterial
   ! defines mass of all plant parts
   type biostate_mass
      real :: standstem      ! standing stem mass (kg/m^2)
-     real :: standleaf      ! standing leaf mass (kg/m^2)
+     real :: standleaflive  ! live standing leaf mass (kg/m^2)
+     real :: standleafdead  ! dead standing leaf mass (kg/m^2)
      real :: standstore     ! standing storage mass (kg/m^2) (head with seed, or vegetative head (cabbage, pineapple))
      real :: flatstem       ! flat stem mass (kg/m^2)
      real :: flatleaf       ! flat leaf mass (kg/m^2)
@@ -71,7 +72,6 @@ module biomaterial
      double precision :: trthucum       ! accumulated root growth heat units (degree-days)
 
      real :: zgrowpt        ! depth in the soil of the growing point (m)
-     double precision :: fliveleaf      ! fraction of standing plant leaf which is living (transpiring)
      double precision :: leafareatrend  ! direction in which leaf area is trending.
                             ! Saves trend even if leaf area is static for long periods.
      double precision :: stemmasstrend  ! direction in which stem mass is trending.
@@ -118,7 +118,7 @@ module biomaterial
      real :: mbgrootfiber ! buried fibrous root mass (kg/m^2)
 
      real :: m            ! Total mass (standing + flat + roots + buried) (kg/m^2)
-     real :: mst          ! Standing mass (standstem + standleaf + standstore) (kg/m^2)
+     real :: mst          ! Standing mass (standstem + standleaflive + standleafdead + standstore) (kg/m^2)
      real :: mf           ! Flat mass (flatstem + flatleaf + flatstore + flatrootstore + flatrootfiber) (kg/m^2)
      real :: mrt          ! Buried root mass (rootfiber + rootstore)(kg/m^2)
      real :: mbg          ! Buried mass (kg/m^2) Excludes root mass below the surface.
@@ -140,6 +140,7 @@ module biomaterial
      real :: fscv         ! biomass cover - standing (m^2/m^2)
      real :: ftcv         ! biomass cover - total (m^2/m^2) (ffcv + fscv)
      real :: fcancov      ! fraction of soil surface covered by canopy (m^2/m^2)
+     double precision :: fliveleaf      ! fraction of standing plant leaf which is living (transpiring)
      real :: ztranspdepth ! depth in soil from which transpiration is extracted (m)
                           ! when crop is furrow planted, this is deeper than root depth
                           ! and is used in place of it when calling transp subroutine
@@ -167,7 +168,7 @@ module biomaterial
      real :: grf        ! Fraction of reproductive biomass that is grain (Mg/Mg)
      real :: ehu0       ! heat unit index leaf senescence starts
      real :: tverndel   ! thermal delay coefficient pre-vernalization
-     real :: bceff      ! biomass conversion efficiency
+     real :: bceff      ! biomass conversion efficiency (kg/ha/MJ/m^2)
      real :: alf        ! leaf mass partitioning coefficient a
      real :: blf        ! leaf mass partitioning coefficient b
      real :: clf        ! leaf mass partitioning coefficient c
@@ -180,6 +181,8 @@ module biomaterial
      real :: bht        ! plant height coefficient b
      real :: ssa        ! stem area to mass coefficient a, result is m^2 per plant
      real :: ssb        ! stem area to mass coefficient b, argument is kg per plant
+     real :: sla        ! specific leaf area
+     real :: ck         ! light extinction coeffficient (fraction)
      real :: hue        ! heat unit index where emergence is complete
      real :: dmaxshoot  ! maximum number of shoots possible from each plant
      integer :: transf  ! db input flag:
@@ -227,8 +230,6 @@ module biomaterial
      real :: covfact      ! flat residue cover factor (m^2/kg)
      real :: resevapa     ! coefficient a in relation ea/ep = exp(resevapa * (flat mass kg/m^2)**resevapb)
      real :: resevapb     ! coefficient b in relation ea/ep = exp(resevapa * (flat mass kg/m^2)**resevapb)
-     real :: sla          ! residue specific leaf area
-     real :: ck           ! residue light extinction coeffficient (fraction)
      integer :: rbc       ! residue burial class
                           ! 1   o Fragile-very small (soybeans) residue
                           ! 2   o Moderately tough-short (wheat) residue
@@ -244,7 +245,8 @@ module biomaterial
 
   type bio_prevday
      real :: standstem    ! crop standing stem mass (kg/m^2)
-     real :: standleaf    ! crop standing leaf mass (kg/m^2)
+     real :: standleaflive ! crop live standing leaf mass (kg/m^2)
+     real :: standleafdead ! crop dead standing leaf mass (kg/m^2)
      real :: standstore   ! crop standing storage mass (kg/m^2) (head with seed, or vegetative head (cabbage, pineapple))
      real :: flatstem     ! crop flat stem mass (kg/m^2)
      real :: flatleaf     ! crop flat leaf mass (kg/m^2)
@@ -266,7 +268,6 @@ module biomaterial
      double precision :: rthucum      ! crop accumulated heat units with no vernalization/photoperiod delay
      real :: grainf       ! internally computed grain fraction of reproductive mass
      double precision :: chillucum    ! accumulated chilling units (days)
-     double precision :: liveleaf     ! fraction of standing plant leaf which is living (transpiring)
      integer :: dayspring ! day of year in which a winter annual/perennial releases stored growth
      integer :: dayleafoff  ! day of year in which a perennial lost it's leaves (Deciduous all/ Conifer dead needles)
      integer :: dayleafon   ! day of year in which a perennial begins to grow new leaves/needles
@@ -346,7 +347,7 @@ module biomaterial
      real :: mflatstore   ! Total reproductive mass (flat) (kg/m^2)
      real :: mtot         ! Total mass across pools (standing + flat + roots + buried) (kg/m^2)
      real :: mtotto4      ! Total mass across pools (standing + flat + roots + buried to a 4 inch depth) (kg/m^2)
-     real :: msttot       ! Standing mass across pools (standstem + standleaf + standstore) (kg/m^2)
+     real :: msttot       ! Standing mass across pools (standstem + standleaflive + standleafdead + standstore) (kg/m^2)
      real :: mftot        ! Flat mass across pools (flatstem + flatleaf + flatstore) (kg/m^2)
      real :: mbgtot       ! Buried mass across pools (kg/m^2)
      real :: mbgtotto4    ! Buried (to a 4 inch depth) mass across pools (kg/m^2)
@@ -584,7 +585,8 @@ contains
 
      ! initialize all values
      plantNew%mass%standstem = 0.0
-     plantNew%mass%standleaf = 0.0
+     plantNew%mass%standleaflive = 0.0
+     plantNew%mass%standleafdead = 0.0
      plantNew%mass%standstore = 0.0
      plantNew%mass%flatstem = 0.0
      plantNew%mass%flatleaf = 0.0
@@ -624,7 +626,6 @@ contains
      plantNew%growth%thucum = 0.0
      plantNew%growth%trthucum = 0.0
      plantNew%growth%zgrowpt = 0.0
-     plantNew%growth%fliveleaf = 1.0
      plantNew%growth%leafareatrend = 0.0
      plantNew%growth%stemmasstrend = 0.0
      plantNew%growth%twarmdays = 0.0
@@ -683,6 +684,7 @@ contains
      plantNew%deriv%ftcv = 0.0
      plantNew%deriv%fcancov = 0.0
      plantNew%deriv%ztranspdepth = 0.0
+     plantNew%deriv%fliveleaf = 1.0
 
      plantNew%database%xstm = 0.0
      plantNew%database%rbc = 1
@@ -711,6 +713,12 @@ contains
      plantNew%database%tdtm = 0
 
      plantNew%database%shoot = 0.0
+
+     ! make sure these are zero (only planted crop initializes, not residue addition)
+     plantNew%database%plant_doy = 0
+     plantNew%database%plant_day = 0
+     plantNew%database%plant_month = 0
+     plantNew%database%plant_rotyr = 0
 
   end function plantAdd
 
@@ -818,8 +826,10 @@ contains
 
      ! print mass values
      if ( associated(plantPntr) ) then
-       write(*,*) 'Plant stand: ', plantPntr%mass%standstem, plantPntr%mass%standleaf, plantPntr%mass%standstore
-       standmass = plantPntr%mass%standstem + plantPntr%mass%standleaf + plantPntr%mass%standstore
+       write(*,*) 'Plant stand: ', plantPntr%mass%standstem, &
+                   plantPntr%mass%standleaflive, plantPntr%mass%standleafdead, plantPntr%mass%standstore
+       standmass = plantPntr%mass%standstem + plantPntr%mass%standleaflive &
+                 + plantPntr%mass%standleafdead + plantPntr%mass%standstore
 
        write(*,*) 'Plant  flat: ', plantPntr%mass%flatstem, plantPntr%mass%flatleaf, plantPntr%mass%flatstore, &
                                    plantPntr%mass%flatrootstore, plantPntr%mass%flatrootfiber
@@ -1180,9 +1190,10 @@ contains
 
      thisPlant => plantPntr
      do while( associated(thisPlant) )
-       !write(*,*) 'Plant stand: ', thisPlant%mass%standstem, thisPlant%mass%standleaf, thisPlant%mass%standstore
+       !write(*,*) 'Plant stand: ', thisPlant%mass%standstem, thisPlant%mass%standleaflive, &
+       !                             thisPlant%mass%standleafdead,  thisPlant%mass%standstore
        standstem = standstem + thisPlant%mass%standstem
-       standleaf = standleaf + thisPlant%mass%standleaf
+       standleaf = standleaf + thisPlant%mass%standleaflive + thisPlant%mass%standleafdead
        standstore = standstore + thisPlant%mass%standstore
 
        !write(*,*) 'Plant  flat: ', thisPlant%mass%flatstem, thisPlant%mass%flatleaf, thisPlant%mass%flatstore, &

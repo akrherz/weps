@@ -18,7 +18,7 @@ module WEPS_UPGM_mod
       use solar_mod, only: civilrise, daylen
       use datetime_mod, only: get_simdate_doy, get_simdate
       use environment_state_mod
-      use WEPSCrop_util_mod, only: scrv1, hu_leaf_days
+      use WEPSCrop_util_mod, only: hu_leaf_days
 
       type(soil_def), intent(in) :: soil  ! soil for this subregion
       type(plant_pointer), pointer :: plant     ! pointer to youngest plant data, which chains to older 
@@ -31,8 +31,6 @@ module WEPS_UPGM_mod
       integer :: nelem
       integer :: alloc_stat
       integer(int32) :: jd ! day of year
-      real(dp) :: a_fr ! parameter in the frost damage s-curve
-      real(dp) :: b_fr ! parameter in the frost damage s-curve
 
       ! init precision values
       call precision_init()
@@ -92,15 +90,21 @@ module WEPS_UPGM_mod
       call plant%upgm_grow%plant%plantstate%state%put("ffa", r_setter, success)
       r_setter = soil%tsmn(1)
       call plant%env%state%put("tsmn1", r_setter, success)
-      ! calculates Frost damage s-curve coefficients
-      call scrv1(plant%database%fd1(1),plant%database%fd1(2),plant%database%fd2(1),plant%database%fd2(2),a_fr,b_fr)
-      call plant%upgm_grow%plant%processCurrent%ptr%processPars%put("a_fr", a_fr, success)
-      call plant%upgm_grow%plant%processCurrent%ptr%processPars%put("b_fr", b_fr, success)
+      ! create process parameters for frost damage s-curve database values
+      r_setter = plant%database%fd1(1)
+      call plant%upgm_grow%plant%processCurrent%ptr%processPars%put("frsx1", r_setter, success)
+      r_setter = plant%database%fd2(1)
+      call plant%upgm_grow%plant%processCurrent%ptr%processPars%put("frsx2", r_setter, success)
+      r_setter = plant%database%fd1(2)
+      call plant%upgm_grow%plant%processCurrent%ptr%processPars%put("frsy1", r_setter, success)
+      r_setter = plant%database%fd2(2)
+      call plant%upgm_grow%plant%processCurrent%ptr%processPars%put("frsy2", r_setter, success)
 
-      r_setter = plant%mass%standleaf
-      call plant%upgm_grow%plant%plantstate%state%put("mstandleaf", r_setter, success)
-      r_setter = plant%growth%fliveleaf
-      call plant%upgm_grow%plant%plantstate%state%put("fliveleaf", r_setter, success)
+
+      r_setter = plant%mass%standleaflive
+      call plant%upgm_grow%plant%plantstate%state%put("mstandleaflive", r_setter, success)
+      r_setter = plant%mass%standleafdead
+      call plant%upgm_grow%plant%plantstate%state%put("mstandleafdead", r_setter, success)
       r_setter = 0.0_dp
       call plant%upgm_grow%plant%plantstate%state%put("frst", r_setter, success)
       call plant%upgm_grow%plant%plantstate%state%put("lost_mass", r_setter, success)
@@ -131,34 +135,8 @@ module WEPS_UPGM_mod
         ! Annuals, Winter Annuals, Perennnials, w/ Tuber dormancy and w/ Staged release
 
         if(    (plant%database%idc .eq. 1) &
-          .or. (plant%database%idc .eq. 2) &
-          .or. (plant%database%idc .eq. 4) &
-          .or. (plant%database%idc .eq. 5) ) then
-
-          ! add process
-          if(    (plant%database%idc .eq. 2) &
-            .or. (plant%database%idc .eq. 5) ) then
-            ! create WEPS_winterAnnSpring method
-            call plant%upgm_grow%plant%add_process("WEPSwinterAnnSpring", "Check for spring growth of winter annuals", 0)
-
-            ! create input names
-            ! plant database
-            ! tverndel (created below)
-
-            ! plant state
-            ! can_regrow (created below)
-            r_setter = plant%growth%zgrowpt
-            call plant%upgm_grow%plant%plantstate%state%put("zgrowpt", r_setter, success)
-            ! harden_index (created above)
-            ! warmdays (created above)
-            ! chill_unit_cum (created above)
-            r_setter = plant%growth%dayspring
-            call plant%upgm_grow%plant%plantstate%state%put("dayspring", r_setter, success)
-            i_setter = 0
-            call plant%upgm_grow%plant%plantstate%state%put("spring_flg", i_setter, success)
-            ! do_spring (created by shootgrow below)
-
-          end if
+          .or. (plant%database%idc .eq. 4) ) then
+          ! Annuals
 
           ! add process
           ! create WEPStrendleafexternal method
@@ -166,12 +144,9 @@ module WEPS_UPGM_mod
 
           ! create input names
           ! plant state
-          ! mstandleaf (created above)
-          ! fliveleaf (created above)
-          r_setter = plant%prev%liveleaf
-          call plant%upgm_grow%plant%plantstate%state%put("prevliveleaf", r_setter, success)
-          r_setter = plant%prev%standleaf
-          call plant%upgm_grow%plant%plantstate%state%put("prevstandleaf", r_setter, success)
+          ! mstandleaflive (created above)
+          r_setter = plant%prev%standleaflive
+          call plant%upgm_grow%plant%plantstate%state%put("prevstandleaflive", r_setter, success)
           r_setter = plant%growth%leafareatrend
           call plant%upgm_grow%plant%plantstate%state%put("leafareatrend", r_setter, success)
 
@@ -184,17 +159,17 @@ module WEPS_UPGM_mod
           ! plantpop (created below)
           r_setter = plant%database%fleafstem
           call plant%upgm_grow%plant%plantstate%pars%put("leafstem", r_setter, success)
-          r_setter = plant%database%storeinit
-          call plant%upgm_grow%plant%plantstate%pars%put("storeinit", r_setter, success)
-          ! mstandleaf (created above)
-          ! fliveleaf (created above)
           ! regrmshoot (created below)
           ! dmaxshoot (created below)"growing
+          r_setter = plant%database%storeinit
+          call plant%upgm_grow%plant%plantstate%pars%put("storeinit", r_setter, success)
           r_setter = plant%database%zloc_regrow
           call plant%upgm_grow%plant%plantstate%pars%put("zloc_regrow", r_setter, success)
           ! huie (created below)
 
           ! plant state
+          ! mstandleaflive (created above)
+          ! mstandleafdead (created above)
           ! can_regrow (created below)
           ! leafareatrend (created above)
           ! warmdays (created above)
@@ -261,8 +236,34 @@ module WEPS_UPGM_mod
           l_setter = .false.
           call plant%upgm_grow%plant%plantstate%state%put("do_regrow", l_setter, success)
 
+        else if(    (plant%database%idc .eq. 2) &
+               .or. (plant%database%idc .eq. 5) ) then
+          ! Winter Annuals 
+
+          ! add process
+          ! create WEPS_winterAnnSpring method
+          call plant%upgm_grow%plant%add_process("WEPSwinterAnnSpring", "Check for spring growth of winter annuals", 0)
+
+          ! create input names
+          ! plant database
+          ! tverndel (created below)
+
+          ! plant state
+          ! can_regrow (created below)
+          r_setter = plant%growth%zgrowpt
+          call plant%upgm_grow%plant%plantstate%state%put("zgrowpt", r_setter, success)
+          ! harden_index (created above)
+          ! warmdays (created above)
+          ! chill_unit_cum (created above)
+          r_setter = plant%growth%dayspring
+          call plant%upgm_grow%plant%plantstate%state%put("dayspring", r_setter, success)
+          i_setter = 0
+          call plant%upgm_grow%plant%plantstate%state%put("spring_flg", i_setter, success)
+          ! do_spring (created by shootgrow below)
+
         else if( (plant%database%idc .eq. 3) &
             .or. (plant%database%idc .eq. 6) ) then
+          ! Perennnials, and w/ Tuber dormancy
 
           ! add process
           ! create WEPStrendleafexternal method
@@ -270,12 +271,9 @@ module WEPS_UPGM_mod
 
           ! create input names
           ! plant state
-          ! mstandleaf (created above)
-          ! fliveleaf (created above)
-          r_setter = plant%prev%liveleaf
-          call plant%upgm_grow%plant%plantstate%state%put("prevliveleaf", r_setter, success)
-          r_setter = plant%prev%standleaf
-          call plant%upgm_grow%plant%plantstate%state%put("prevstandleaf", r_setter, success)
+          ! mstandleaflive (created above)
+          r_setter = plant%prev%standleaflive
+          call plant%upgm_grow%plant%plantstate%state%put("prevstandleaflive", r_setter, success)
           r_setter = plant%growth%leafareatrend
           call plant%upgm_grow%plant%plantstate%state%put("leafareatrend", r_setter, success)
 
@@ -299,8 +297,8 @@ module WEPS_UPGM_mod
           ! plant state
           ! can_regrow (created below)
           ! leafareatrend (created above)
-          ! fliveleaf (created above)
-          ! mstandleaf (created above)
+          ! mstandleaflive (created above)
+          ! mstandleafdead (created above)
           ! warmdays (created above)
           l_setter = .false.
           call plant%upgm_grow%plant%plantstate%state%put("shoot_growing", l_setter, success)
@@ -362,8 +360,11 @@ module WEPS_UPGM_mod
           call plant%upgm_grow%plant%plantstate%state%put("do_regrow", l_setter, success)
           i_setter = -2
           call plant%upgm_grow%plant%plantstate%state%put("regrowth_flg", i_setter, success)
+          r_setter = 0.0_dp
+          call plant%upgm_grow%plant%plantstate%state%put("regrow_release", r_setter, success)
 
         else if( plant%database%idc .eq. 8 ) then
+          ! Perennnials, w/ Staged release
 
           ! add process
           ! create WEPStrendleafexternal method
@@ -371,12 +372,9 @@ module WEPS_UPGM_mod
 
           ! create input names
           ! plant state
-          ! mstandleaf (created above)
-          ! fliveleaf (created above)
-          r_setter = plant%prev%liveleaf
-          call plant%upgm_grow%plant%plantstate%state%put("prevliveleaf", r_setter, success)
-          r_setter = plant%prev%standleaf
-          call plant%upgm_grow%plant%plantstate%state%put("prevstandleaf", r_setter, success)
+          ! mstandleaflive (created above)
+          r_setter = plant%prev%standleaflive
+          call plant%upgm_grow%plant%plantstate%state%put("prevstandleaflive", r_setter, success)
           r_setter = plant%growth%leafareatrend
           call plant%upgm_grow%plant%plantstate%state%put("leafareatrend", r_setter, success)
 
@@ -415,8 +413,8 @@ module WEPS_UPGM_mod
           ! plant state
           ! can_regrow (created below)
           ! leafareatrend (created above)
-          ! fliveleaf (created above)
-          ! mstandleaf (created above)
+          ! mstandleaflive (created above)
+          ! mstandleafdead (created above)
           ! warmdays (created above)
           ! stemmasstrend (created above)
           ! mtotshoot (created below)
@@ -593,10 +591,10 @@ module WEPS_UPGM_mod
         i_setter = plant%growth%dayleafoff
         call plant%upgm_grow%plant%plantstate%state%put("dayleafoff", i_setter, success)
         ! cold_days (created above)
-        ! mstandleaf (created above)
+        ! mstandleaflive (created above)
+        ! mstandleafdead (created above)
         r_setter = plant%mass%flatleaf
         call plant%upgm_grow%plant%plantstate%state%put("mflatleaf", r_setter, success)
-        ! fliveleaf (created above)
         ! environment variables
         ! hrlty (created below)
         ! hrlt (created below)
@@ -998,7 +996,7 @@ module WEPS_UPGM_mod
 
     subroutine run_UPGM( isr, soil, plant )
       use upgm_mod
-      use constants, only : dp, int32
+      use constants, only : dp, int32, check_return
       use soil_data_struct_defs, only: soil_def
       use biomaterial, only: plant_pointer, residueAdd
       use crop_data_struct_defs, only: crop_residue, am0cfl
@@ -1065,7 +1063,9 @@ module WEPS_UPGM_mod
       real(dp) :: hu_delay ! fraction of heat units accummulated based on incomplete vernalization and day length
       real(dp) :: temp_sai
       real(dp) :: temp_stmrep
+      real(dp) :: temp_fliveleaf
       real(dp) :: lost_mass    ! biomass that decayed (disappeared) from scenescence and freeze damage
+      real(dp) :: regrow_release ! fraction of storage root released to support regrowth of plant
       integer(int32) :: regrowth_flg
       integer(int32) :: spring_flg
       integer(int32) :: regrowth_or_spring_flg
@@ -1133,10 +1133,10 @@ module WEPS_UPGM_mod
           r_setter = cli_today%tdmx
           call plant%env%state%replace("tmax", r_setter, success)
         case ("WEPSFreezeDamage")
-          r_setter = plant%mass%standleaf
-          call plant%upgm_grow%plant%plantstate%state%replace("mstandleaf", r_setter, success)
-          r_setter = plant%growth%fliveleaf
-          call plant%upgm_grow%plant%plantstate%state%replace("fliveleaf", r_setter, success)
+          r_setter = plant%mass%standleaflive
+          call plant%upgm_grow%plant%plantstate%state%replace("mstandleaflive", r_setter, success)
+          r_setter = plant%mass%standleafdead
+          call plant%upgm_grow%plant%plantstate%state%replace("mstandleafdead", r_setter, success)
           r_setter = soil%tsmn(1)
           call plant%env%state%replace("tsmn1", r_setter, success)
         case ("WEPSleafoff")
@@ -1152,12 +1152,12 @@ module WEPS_UPGM_mod
           call plant%upgm_grow%plant%plantstate%state%replace("dayleafoff", i_setter, success)
           r_setter = plant%growth%tcolddays
           call plant%upgm_grow%plant%plantstate%state%replace("colddays", r_setter, success)
-          r_setter = plant%mass%standleaf
-          call plant%upgm_grow%plant%plantstate%state%replace("mstandleaf", r_setter, success)
+          r_setter = plant%mass%standleaflive
+          call plant%upgm_grow%plant%plantstate%state%replace("mstandleaflive", r_setter, success)
+          r_setter = plant%mass%standleafdead
+          call plant%upgm_grow%plant%plantstate%state%replace("mstandleafdead", r_setter, success)
           r_setter = plant%mass%flatleaf
           call plant%upgm_grow%plant%plantstate%state%replace("mflatleaf", r_setter, success)
-          r_setter = plant%growth%fliveleaf
-          call plant%upgm_grow%plant%plantstate%state%replace("fliveleaf", r_setter, success)
         case ("WEPSleafon")
           ! environmental variables
           r_setter = daylen(amalat, jd-1, civilrise)
@@ -1191,16 +1191,18 @@ module WEPS_UPGM_mod
           call plant%upgm_grow%plant%plantstate%state%replace("can_regrow", l_setter, success)
           r_setter = plant%growth%leafareatrend
           call plant%upgm_grow%plant%plantstate%state%replace("leafareatrend", r_setter, success)
-          r_setter = plant%mass%standleaf
-          call plant%upgm_grow%plant%plantstate%state%replace("mstandleaf", r_setter, success)
-          r_setter = plant%growth%fliveleaf
-          call plant%upgm_grow%plant%plantstate%state%replace("fliveleaf", r_setter, success)
+          r_setter = plant%mass%standleaflive
+          call plant%upgm_grow%plant%plantstate%state%replace("mstandleaflive", r_setter, success)
+          r_setter = plant%mass%standleafdead
+          call plant%upgm_grow%plant%plantstate%state%replace("mstandleafdead", r_setter, success)
           r_setter = plant%growth%twarmdays
           call plant%upgm_grow%plant%plantstate%state%replace("warmdays", r_setter, success)
           l_setter = plant%growth%shoot_growing
           call plant%upgm_grow%plant%plantstate%state%replace("shoot_growing", l_setter, success)
           l_setter = plant%growth%growing
           call plant%upgm_grow%plant%plantstate%state%replace("growing", l_setter, success)
+          r_setter = plant%growth%mshoot
+          call plant%upgm_grow%plant%plantstate%state%replace("masshoot", r_setter, success)
           r_setter = plant%growth%mtotshoot
           call plant%upgm_grow%plant%plantstate%state%replace("mtotshoot", r_setter, success)
 
@@ -1213,8 +1215,6 @@ module WEPS_UPGM_mod
           call plant%upgm_grow%plant%plantstate%state%replace("mrootstorez", ra_setter, success)
           deallocate(ra_setter, stat = alloc_stat)
 
-          r_setter = plant%growth%mshoot
-          call plant%upgm_grow%plant%plantstate%state%replace("masshoot", r_setter, success)
           i_setter = plant%growth%dayam
           call plant%upgm_grow%plant%plantstate%state%replace("dayam", i_setter, success)
           r_setter = plant%mass%standstem
@@ -1252,14 +1252,16 @@ module WEPS_UPGM_mod
           call plant%upgm_grow%plant%plantstate%state%replace("can_regrow", l_setter, success)
           r_setter = plant%growth%leafareatrend
           call plant%upgm_grow%plant%plantstate%state%replace("leafareatrend", r_setter, success)
-          r_setter = plant%mass%standleaf
-          call plant%upgm_grow%plant%plantstate%state%replace("mstandleaf", r_setter, success)
-          r_setter = plant%growth%fliveleaf
-          call plant%upgm_grow%plant%plantstate%state%replace("fliveleaf", r_setter, success)
+          r_setter = plant%mass%standleaflive
+          call plant%upgm_grow%plant%plantstate%state%replace("mstandleaflive", r_setter, success)
+          r_setter = plant%mass%standleafdead
+          call plant%upgm_grow%plant%plantstate%state%replace("mstandleafdead", r_setter, success)
           r_setter = plant%growth%twarmdays
           call plant%upgm_grow%plant%plantstate%state%replace("warmdays", r_setter, success)
           l_setter = plant%growth%shoot_growing
           call plant%upgm_grow%plant%plantstate%state%replace("shoot_growing", l_setter, success)
+          r_setter = plant%growth%mshoot
+          call plant%upgm_grow%plant%plantstate%state%replace("masshoot", r_setter, success)
           r_setter = plant%growth%mtotshoot
           call plant%upgm_grow%plant%plantstate%state%replace("mtotshoot", r_setter, success)
 
@@ -1312,10 +1314,10 @@ module WEPS_UPGM_mod
           call plant%upgm_grow%plant%plantstate%state%replace("can_regrow", l_setter, success)
           r_setter = plant%growth%leafareatrend
           call plant%upgm_grow%plant%plantstate%state%replace("leafareatrend", r_setter, success)
-          r_setter = plant%mass%standleaf
-          call plant%upgm_grow%plant%plantstate%state%replace("mstandleaf", r_setter, success)
-          r_setter = plant%growth%fliveleaf
-          call plant%upgm_grow%plant%plantstate%state%replace("fliveleaf", r_setter, success)
+          r_setter = plant%mass%standleaflive
+          call plant%upgm_grow%plant%plantstate%state%replace("mstandleaflive", r_setter, success)
+          r_setter = plant%mass%standleafdead
+          call plant%upgm_grow%plant%plantstate%state%replace("mstandleafdead", r_setter, success)
           r_setter = plant%growth%twarmdays
           call plant%upgm_grow%plant%plantstate%state%replace("warmdays", r_setter, success)
           r_setter = plant%growth%stemmasstrend
@@ -1383,8 +1385,10 @@ module WEPS_UPGM_mod
 
           r_setter = plant%mass%standstem
           call plant%upgm_grow%plant%plantstate%state%replace("mstandstem", r_setter, success)
-          r_setter = plant%mass%standleaf
-          call plant%upgm_grow%plant%plantstate%state%replace("mstandleaf", r_setter, success)
+          r_setter = plant%mass%standleaflive
+          call plant%upgm_grow%plant%plantstate%state%replace("mstandleaflive", r_setter, success)
+          r_setter = plant%mass%standleafdead
+          call plant%upgm_grow%plant%plantstate%state%replace("mstandleafdead", r_setter, success)
           r_setter = plant%mass%standstore
           call plant%upgm_grow%plant%plantstate%state%replace("mstandstore", r_setter, success)
           r_setter = plant%mass%flatstem
@@ -1416,14 +1420,10 @@ module WEPS_UPGM_mod
           r_setter = cli_today%tdmx
           call plant%env%state%replace("tmax", r_setter, success)
         case ("WEPStrendleafexternal")
-          r_setter = plant%mass%standleaf
-          call plant%upgm_grow%plant%plantstate%state%replace("mstandleaf", r_setter, success)
-          r_setter = plant%growth%fliveleaf
-          call plant%upgm_grow%plant%plantstate%state%replace("fliveleaf", r_setter, success)
-          r_setter = plant%prev%liveleaf
-          call plant%upgm_grow%plant%plantstate%state%replace("prevliveleaf", r_setter, success)
-          r_setter = plant%prev%standleaf
-          call plant%upgm_grow%plant%plantstate%state%replace("prevstandleaf", r_setter, success)
+          r_setter = plant%mass%standleaflive
+          call plant%upgm_grow%plant%plantstate%state%replace("mstandleaflive", r_setter, success)
+          r_setter = plant%prev%standleaflive
+          call plant%upgm_grow%plant%plantstate%state%replace("prevstandleaflive", r_setter, success)
         case ("WEPStrendstemexternal")
           r_setter = plant%mass%standstem
           call plant%upgm_grow%plant%plantstate%state%replace("mstandstem", r_setter, success)
@@ -1486,21 +1486,21 @@ module WEPS_UPGM_mod
           plant%growth%tcolddays = r_setter
         case ("WEPSFreezeDamage")
           ! ffa is updated in phases and persistent
-          call plant%upgm_grow%plant%plantstate%state%get("mstandleaf", r_setter, success)
-          plant%mass%standleaf = r_setter
-          call plant%upgm_grow%plant%plantstate%state%get("fliveleaf", r_setter, success)
-          plant%growth%fliveleaf = r_setter
+          call plant%upgm_grow%plant%plantstate%state%get("mstandleaflive", r_setter, success)
+          plant%mass%standleaflive = r_setter
+          call plant%upgm_grow%plant%plantstate%state%get("mstandleafdead", r_setter, success)
+          plant%mass%standleafdead = r_setter
         case ("WEPSleafoff")
           call plant%upgm_grow%plant%plantstate%state%get("dayleafoff", i_setter, success)
           plant%growth%dayleafoff = i_setter
           call plant%upgm_grow%plant%plantstate%state%get("dayleafon", i_setter, success)
           plant%growth%dayleafon = i_setter
-          call plant%upgm_grow%plant%plantstate%state%get("mstandleaf", r_setter, success)
-          plant%mass%standleaf = r_setter
+          call plant%upgm_grow%plant%plantstate%state%get("mstandleaflive", r_setter, success)
+          plant%mass%standleaflive = r_setter
+          call plant%upgm_grow%plant%plantstate%state%get("mstandleafdead", r_setter, success)
+          plant%mass%standleafdead = r_setter
           call plant%upgm_grow%plant%plantstate%state%get("mflatleaf", r_setter, success)
           plant%mass%flatleaf = r_setter
-          call plant%upgm_grow%plant%plantstate%state%get("fliveleaf", r_setter, success)
-          plant%growth%fliveleaf = r_setter
 
           cropres = create_crop_residue(soil%nslay)
 
@@ -1578,8 +1578,10 @@ module WEPS_UPGM_mod
         case ("WEPSregrowthannual")
           call plant%upgm_grow%plant%plantstate%state%get("mstandstem", r_setter, success)
           plant%mass%standstem = r_setter
-          call plant%upgm_grow%plant%plantstate%state%get("mstandleaf", r_setter, success)
-          plant%mass%standleaf = r_setter
+          call plant%upgm_grow%plant%plantstate%state%get("mstandleaflive", r_setter, success)
+          plant%mass%standleaflive = r_setter
+          call plant%upgm_grow%plant%plantstate%state%get("mstandleafdead", r_setter, success)
+          plant%mass%standleafdead = r_setter
           call plant%upgm_grow%plant%plantstate%state%get("mstandstore", r_setter, success)
           plant%mass%standstore = r_setter
           call plant%upgm_grow%plant%plantstate%state%get("mflatstem", r_setter, success)
@@ -1690,8 +1692,10 @@ module WEPS_UPGM_mod
         case ("WEPSregrowthperen","WEPSregrowthstaged")
           call plant%upgm_grow%plant%plantstate%state%get("mstandstem", r_setter, success)
           plant%mass%standstem = r_setter
-          call plant%upgm_grow%plant%plantstate%state%get("mstandleaf", r_setter, success)
-          plant%mass%standleaf = r_setter
+          call plant%upgm_grow%plant%plantstate%state%get("mstandleaflive", r_setter, success)
+          plant%mass%standleaflive = r_setter
+          call plant%upgm_grow%plant%plantstate%state%get("mstandleafdead", r_setter, success)
+          plant%mass%standleafdead = r_setter
           call plant%upgm_grow%plant%plantstate%state%get("mstandstore", r_setter, success)
           plant%mass%standstore = r_setter
           call plant%upgm_grow%plant%plantstate%state%get("mflatstem", r_setter, success)
@@ -1802,8 +1806,10 @@ module WEPS_UPGM_mod
         case ("WEPSregrowwood")
           call plant%upgm_grow%plant%plantstate%state%get("mstandstem", r_setter, success)
           plant%mass%standstem = r_setter
-          call plant%upgm_grow%plant%plantstate%state%get("mstandleaf", r_setter, success)
-          plant%mass%standleaf = r_setter
+          call plant%upgm_grow%plant%plantstate%state%get("mstandleaflive", r_setter, success)
+          plant%mass%standleaflive = r_setter
+          call plant%upgm_grow%plant%plantstate%state%get("mstandleafdead", r_setter, success)
+          plant%mass%standleafdead = r_setter
           call plant%upgm_grow%plant%plantstate%state%get("mstandstore", r_setter, success)
           plant%mass%standstore = r_setter
           call plant%upgm_grow%plant%plantstate%state%get("mflatstem", r_setter, success)
@@ -1938,7 +1944,8 @@ module WEPS_UPGM_mod
         call plant%upgm_grow%plant%phaseCurrent%ptr%phaseState%get("stagegdd", stagegdd, success)
 
         success = .false.
-        write(*,*) 'Degree Days: ', stagegdd, ' Phase Completed: ', trim(plant%upgm_grow%plant%phaseCurrent%ptr%phaseLabel)
+        write(*,*) 'Day of Year', jd, 'Degree Days: ', stagegdd, ' Phase Completed: ', &
+                   trim(plant%upgm_grow%plant%phaseCurrent%ptr%phaseLabel)
 
         success = .false.
         call plant%upgm_grow%plant%plantstate%state%get("specstage", specificStage, success)
@@ -2000,17 +2007,12 @@ module WEPS_UPGM_mod
           ! "daygdd"
           r_setter = 1.0_dp - plant%growth%fwsf
           call plant%upgm_grow%plant%plantstate%state%replace("stress", r_setter, success)
-          r_setter = plant%growth%fliveleaf
-          call plant%upgm_grow%plant%plantstate%state%replace("fliveleaf", r_setter, success)
-          r_setter = plant%growth%thu_shoot_beg
 
         case ("PhenologyMMS_Fallphenol")
           ! set below
           ! "daygdd"
           r_setter = 1.0_dp - plant%growth%fwsf
           call plant%upgm_grow%plant%plantstate%state%replace("stress", r_setter, success)
-          r_setter = plant%growth%fliveleaf
-          call plant%upgm_grow%plant%plantstate%state%replace("fliveleaf", r_setter, success)
           r_setter = plant%growth%tchillucum
           call plant%upgm_grow%plant%plantstate%state%replace("chill_unit_cum", r_setter, success)
 
@@ -2031,8 +2033,6 @@ module WEPS_UPGM_mod
           ! "daygdd"
           r_setter = 1.0_dp - plant%growth%fwsf
           call plant%upgm_grow%plant%plantstate%state%replace("stress", r_setter, success)
-          r_setter = plant%growth%fliveleaf
-          call plant%upgm_grow%plant%plantstate%state%replace("fliveleaf", r_setter, success)
           r_setter = plant%growth%thu_shoot_beg
           call plant%upgm_grow%plant%plantstate%state%replace("thu_shoot_beg", r_setter, success)
           r_setter = plant%growth%thu_shoot_end
@@ -2057,8 +2057,6 @@ module WEPS_UPGM_mod
 
           r_setter = plant%geometry%dstm
           call plant%upgm_grow%plant%plantstate%state%replace("dstm", r_setter, success)
-          r_setter = plant%growth%fliveleaf
-          call plant%upgm_grow%plant%plantstate%state%replace("fliveleaf", r_setter, success)
           r_setter = plant%growth%zgrowpt
           call plant%upgm_grow%plant%plantstate%state%replace("zgrowpt", r_setter, success)
           r_setter = plant%growth%thu_shoot_beg
@@ -2265,7 +2263,7 @@ module WEPS_UPGM_mod
 
         case ("PhenologyMMS_Basephenol")
           call plant%upgm_grow%plant%plantstate%state%get("ffa", ffa, success)
-          call plant%upgm_grow%plant%plantstate%state%get("ffw", ffw, success)
+          ffw = 1.0_dp
           call plant%upgm_grow%plant%plantstate%state%get("ffr", ffr, success)
           call plant%upgm_grow%plant%plantstate%state%get("gif", gif, success)
           shoot_hui = 1.0_dp
@@ -2282,7 +2280,7 @@ module WEPS_UPGM_mod
 
         case ("PhenologyMMS_Fallphenol")
           call plant%upgm_grow%plant%plantstate%state%get("ffa", ffa, success)
-          call plant%upgm_grow%plant%plantstate%state%get("ffw", ffw, success)
+          ffw = 1.0_dp
           call plant%upgm_grow%plant%plantstate%state%get("ffr", ffr, success)
           call plant%upgm_grow%plant%plantstate%state%get("gif", gif, success)
           shoot_hui = 1.0_dp
@@ -2316,7 +2314,7 @@ module WEPS_UPGM_mod
 
         case ("PhenologyMMS_ShootGRG")
           call plant%upgm_grow%plant%plantstate%state%get("ffa", ffa, success)
-          call plant%upgm_grow%plant%plantstate%state%get("ffw", ffw, success)
+          ffw = 1.0_dp
           call plant%upgm_grow%plant%plantstate%state%get("ffr", ffr, success)
           call plant%upgm_grow%plant%plantstate%state%get("gif", gif, success)
           call plant%upgm_grow%plant%plantstate%state%get("shoot_hui", shoot_hui, success)
@@ -2345,7 +2343,7 @@ module WEPS_UPGM_mod
           call plant%upgm_grow%plant%plantstate%state%get("dayspring", r_setter, success)
           plant%growth%dayspring = r_setter
           call plant%upgm_grow%plant%plantstate%state%get("ffa", ffa, success)
-          call plant%upgm_grow%plant%plantstate%state%get("ffw", ffw, success)
+          ffw = 1.0_dp
           call plant%upgm_grow%plant%plantstate%state%get("ffr", ffr, success)
           call plant%upgm_grow%plant%plantstate%state%get("gif", gif, success)
           call plant%upgm_grow%plant%plantstate%state%get("shoot_hui", shoot_hui, success)
@@ -2516,8 +2514,6 @@ module WEPS_UPGM_mod
         !plant%growth%dayam = i_setter
         !call plant%upgm_grow%plant%plantstate%state%get("zgrowpt", r_setter, success)
         !plant%growth%zgrowpt = r_setter
-        !call plant%upgm_grow%plant%plantstate%state%get("fliveleaf", r_setter, success)
-        !plant%growth%fliveleaf = r_setter
         !call plant%upgm_grow%plant%plantstate%state%get("grainf", r_setter, success)
         !plant%geometry%grainf = r_setter
         !call plant%upgm_grow%plant%plantstate%state%get("leafareatrend", r_setter, success)
@@ -2560,7 +2556,7 @@ module WEPS_UPGM_mod
 
           if( shoot_huiy .lt. 1.0_dp ) then
 
-            if( shoot_hui .gt. 0.0_dp ) then
+            if( shoot_hui .ge. 0.0_dp ) then
 
               ! set shoot growth flag
               plant%growth%shoot_growing = .true.
@@ -2569,6 +2565,18 @@ module WEPS_UPGM_mod
               call shoot_grow( soil, plant, shoot_hui, shoot_huiy, s_root_sum, f_root_sum, tot_mass_req, &
                 end_shoot_mass, end_root_mass, d_root_mass, d_shoot_mass, d_s_root_mass, &
                 end_stem_mass, end_stem_area, end_shoot_len )
+
+              if (am0cfl(isr) .ge. 1) then
+                ! note: dayap has not yet been updated. shoot.out write moved to before update to allow blank line to be printed
+                ! before shoot_growing set to false
+                write(luoshoot(isr), &
+                  "(1x,i5,1x,i3,1x,i4,1x,i4,1x,f6.3,2(1x,f10.4),2(1x,f12.4),4(1x,f12.4),4(1x,f12.4),(1x,f8.4),(1x,f8.3),1x,a)") &
+                  daysim, jd, get_simdate_year(), plant%growth%dayap+1, shoot_hui, &
+                  s_root_sum, f_root_sum, tot_mass_req, end_shoot_mass, &
+                  end_root_mass, d_root_mass, d_shoot_mass, d_s_root_mass, &
+                  end_stem_mass, end_stem_area, end_shoot_len, plant%geometry%zshoot, &
+                  plant%growth%mshoot, plant%geometry%dstm, trim(plant%bname)
+              end if
 
             end if
 
@@ -2581,6 +2589,15 @@ module WEPS_UPGM_mod
               ! move growing point to regrowth depth after shoot growth complete
               ! remember, a negative number is above ground
               plant%growth%zgrowpt = ( - plant%database%zloc_regrow )
+
+              if (am0cfl(isr) .ge. 1) then
+                  ! single blank line to separate shoot growth periods
+                  write(luoshoot(isr),*)  ! shoot.out
+              end if
+              ! last day of shoot grow, set shoot_huiy so shoot grow stops after shoot grow phase is completed.
+              shoot_huiy = 1.0_dp
+              call plant%upgm_grow%plant%plantstate%state%replace("shoot_huiy", shoot_huiy, success)
+
             end if
 
           end if
@@ -2598,7 +2615,17 @@ module WEPS_UPGM_mod
 
           ! used in growth
           call plant%upgm_grow%plant%plantstate%state%get("tstress", tstress, success)
+          if( .not. success ) then
+            tstress = 1.0_dp
+          end if
           call plant%upgm_grow%plant%plantstate%state%get("lost_mass", lost_mass, success)
+          if( .not. success ) then
+            lost_mass = 0.0_dp
+          end if
+          call plant%upgm_grow%plant%plantstate%state%get("regrow_release", regrow_release, success)
+          if( .not. success ) then
+            regrow_release = 1.0_dp
+          end if
 
           call growth( soil, plant, &
                    dble(cli_today%eirr), &
@@ -2606,7 +2633,7 @@ module WEPS_UPGM_mod
                    pdht, pdrd, &
                    ffa, ffw, ffr, gif, par, apar, pddm, &
                    stem_propor, pdiam, parea, &
-                   temp_sai, temp_stmrep, lost_mass )
+                   temp_sai, temp_stmrep, lost_mass, regrow_release )
 
           if(    (plant%database%fleaf2stor .gt. 0.0_dp) &
             .or. (plant%database%fstem2stor .gt. 0.0_dp) &
@@ -2617,7 +2644,7 @@ module WEPS_UPGM_mod
           end if
 
           ! set trend direction for living leaf area
-          trend = (plant%growth%fliveleaf * plant%mass%standleaf) - (plant%prev%liveleaf * plant%prev%standleaf)
+          trend = plant%mass%standleaflive - plant%prev%standleaflive
           if ((trend .ne. 0.0_dp) &
             .and. (.not. plant%growth%shoot_growing .or. (plant%database%idc.eq.8))) then
             ! trend non-zero and (heat units past emergence or staged crown release crop)
@@ -2632,12 +2659,12 @@ module WEPS_UPGM_mod
           end if
 
           plant%prev%standstem = plant%mass%standstem
-          plant%prev%standleaf = plant%mass%standleaf
+          plant%prev%standleaflive = plant%mass%standleaflive
+          plant%prev%standleafdead = plant%mass%standleafdead
           plant%prev%standstore = plant%mass%standstore
           plant%prev%flatstem = plant%mass%flatstem
           plant%prev%flatleaf = plant%mass%flatleaf
           plant%prev%flatstore = plant%mass%flatstore
-          plant%prev%liveleaf = plant%growth%fliveleaf
           plant%prev%mshoot = plant%growth%mshoot
           do idx = 1, soil%nslay
             plant%prev%stemz(idx) = plant%mass%stemz(idx)
@@ -2678,58 +2705,45 @@ module WEPS_UPGM_mod
             temp_stem = temp_stem + plant%mass%stemz(idx)
           end do
 
-          if( shoot_huiy .lt. 1.0_dp ) then
-            if( shoot_hui .gt. 0.0_dp ) then
-              if (am0cfl(isr) .ge. 1) then
-                write(luoshoot(isr), &
-                  "(1x,i5,1x,i3,1x,i4,1x,i4,1x,f6.3,2(1x,f10.4),2(1x,f12.4),4(1x,f10.4),4(1x,f10.4),(1x,f8.4),(1x,f8.3),1x,a)") &
-                  daysim, jd, get_simdate_year(), plant%growth%dayap, shoot_hui, &
-                  s_root_sum, f_root_sum, tot_mass_req, end_shoot_mass, &
-                  end_root_mass, d_root_mass, d_shoot_mass, d_s_root_mass, &
-                  end_stem_mass, end_stem_area, end_shoot_len, plant%geometry%zshoot, &
-                  plant%growth%mshoot, plant%geometry%dstm, trim(plant%bname)
-              end if
-            end if
-
-            if( shoot_hui .ge. 1.0_dp ) then
-              if (am0cfl(isr) .ge. 1) then
-                  ! single blank line to separate shoot growth periods
-                  write(luoshoot(isr),*)  ! shoot.out
-              end if
-              ! last day of shoot grow, set shoot_huiy so shoot grow stops after shoot grow phase is completed.
-              shoot_huiy = 1.0_dp
-              call plant%upgm_grow%plant%plantstate%state%replace("shoot_huiy", shoot_huiy, success)
-            end if
-          end if
-
           if( plant%growth%growing) then
             ! reporting only variables
             call plant%upgm_grow%plant%plantstate%state%get("frst", frst, success)
+            if( .not. success ) then
+              frst = 0.0_dp
+            end if
 
             regrowth_or_spring_flg = max(regrowth_flg, spring_flg)
 
+            if( (plant%mass%standleaflive + plant%mass%standleafdead) .gt. 0.0_dp ) then
+              temp_fliveleaf = plant%mass%standleaflive / (plant%mass%standleaflive + plant%mass%standleafdead)
+            else
+              temp_fliveleaf = 1.0_dp
+            end if
+
             write(luocrop(isr), "(1x,i6,1x,i3,1x,i4,1x,i5,1x,f6.3,12(1x,f7.4),1x,f7.2, &
-     &         3(1x,f7.4),8(1x,f6.3),1x,e12.3, 11(1x,f6.3),2(1x,f8.5),1x,i2,1x,f6.3,1x,a,1x,a)") &
+              3(1x,f7.4),8(1x,f6.3),1x,e12.3, 11(1x,f6.3),2(1x,f8.5),1x,i2,1x,f6.3,1x,a,1x,a)") &
             daysim, jd, get_simdate_year(), plant%growth%dayap, &
             hui, &
-            plant%mass%standstem, plant%mass%standleaf, plant%mass%standstore, &
+            plant%mass%standstem, plant%mass%standleaflive + plant%mass%standleafdead, plant%mass%standstore, &
             plant%mass%flatstem, plant%mass%flatleaf, plant%mass%flatstore, &
             temp_store, temp_fiber, temp_stem, &
-            plant%mass%standleaf + plant%mass%flatleaf, &
+            plant%mass%standleaflive + plant%mass%standleafdead + plant%mass%flatleaf, &
             plant%mass%standstem + plant%mass%flatstem + temp_stem, &
             plant%geometry%zht, plant%geometry%dstm, trad_lai, eff_lai, plant%geometry%zrtd, &
             plant%geometry%grainf, tstress, plant%growth%fwsf, frst, ffa, ffw, &
             par, apar, pddm, p_rw, p_st, p_lf, p_rp, &
             stem_propor, pdiam, parea, pdiam/plant%database%diammax, &
             parea*plant%geometry%dpop, hu_delay, plant%growth%thardnx, temp_sai,  &
-            temp_stmrep, regrowth_or_spring_flg, plant%growth%fliveleaf, trim(plant%bname) !, trim(PhaseLabel)
+            temp_stmrep, regrowth_or_spring_flg, temp_fliveleaf, &
+            trim(plant%bname) !, trim(PhaseLabel)
           end if
 
         end if
 
         if( plant%growth%lastday ) then
           ! heat units completed, crop leaf mass is non transpiring
-          plant%growth%fliveleaf = 0.0_dp
+          plant%mass%standleafdead = plant%mass%standleafdead + plant%mass%standleaflive
+          plant%mass%standleaflive = 0.0_dp
           plant%growth%lastday = .false.
           l_setter = plant%growth%lastday
           call plant%upgm_grow%plant%plantstate%state%replace("lastday", l_setter, success)
@@ -2737,15 +2751,19 @@ module WEPS_UPGM_mod
           ! at full maturity plant is dormant
           plant%growth%growing = .false.
           l_setter = plant%growth%growing
-          call plant%upgm_grow%plant%plantstate%state%put("growing", l_setter, success)
+          call plant%upgm_grow%plant%plantstate%state%replace("growing", l_setter, success)
 
-          if( .not. plant%growth%can_regrow ) then
+          !if( .not. plant%growth%can_regrow ) then
             ! fully mature, so whole plant is dead (no regrowth possible)
-            plant%growth%living = .false.
+            ! WEPS crop growth does not set this false, so do not do here
+            ! plant%growth%living = .false.
+
+            ! setting this to false without moving to residue will cause update to destroy plant and lose all biomass
 
             ! future, should entire plant biomass be moved to residue here
             ! so it can decompose from moment of maturity?
-          end if
+            ! P31 kill_plant would be cleanest way to move residue here. Also sets living to false.
+          !end if
 
         end if
 

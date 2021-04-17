@@ -62,8 +62,6 @@ module PhenologyMMSSpringphenol_mod
       real(dp) :: begin_phase_rel ! phase_rel_gdd at beginning of day step
       real(dp) :: beg_live_leaf  ! live leaf fraction at beginning of phase
       real(dp) :: end_live_leaf  ! live leaf fraction at end of phase
-      real(dp) :: beg_weath_leaf ! standing leaf mass remaining after weathering of senesced leaf mass at beginning of phase
-      real(dp) :: end_weath_leaf ! standing leaf mass remaining after weathering of senesced leaf mass at end of phase
       real(dp) :: beg_senes_root ! fibrous root mass remaining after senescence of mass at beginning of phase
       real(dp) :: end_senes_root ! fibrous root mass remaining after senescence of mass at end of phase
       real(dp) :: beg_grain_index ! grain fill fraction at beginning of phase
@@ -100,7 +98,6 @@ module PhenologyMMSSpringphenol_mod
       real(dp), dimension(:), allocatable :: bcmrootstorez ! crop root storage mass by soil layer (kg/m^2)
                                                        ! (tubers (potatoes, carrots), extended leaf (onion), seeds (peanuts))
       real(dp) :: bcdstm ! Number of crop stems per unit area (#/m^2)
-      real(dp) :: bcfliveleaf ! fraction of standing plant leaf which is living (transpiring)
       real(dp) :: bczgrowpt ! depth in the soil of the growing point (m)
       real(dp) :: bcthu_shoot_beg ! heat unit index (fraction) for beginning of shoot grow from root storage period
       real(dp) :: bcthu_shoot_end ! heat unit index (fraction) for end of shoot grow from root storage period
@@ -112,10 +109,8 @@ module PhenologyMMSSpringphenol_mod
 
       ! locally computed values
       integer(int32) :: spring_flg
-      real(dp) :: live_leaf  ! live leaf fraction at end of today (interpolated)
       real(dp) :: hu_delay ! fraction of heat units accummulated based on incomplete vernalization and day length
       real(dp) :: ffa  ! leaf senescence factor (ratio)
-      real(dp) :: ffw ! standing leaf mass remaining after weathering of senesced leaf mass at end of today (interpolated)
       real(dp) :: ffr  ! root weight reduction factor (ratio)
       real(dp) :: gif  ! grain index accounting for development of chaff before grain fill
       real(dp) :: shoot_hui    ! today fraction of heat unit shoot growth index accumulation
@@ -136,8 +131,6 @@ module PhenologyMMSSpringphenol_mod
       call plnt%state%get("stress", stress, succ)
       if( .not. check_return( trim(self%phaseName) , "stress", succ ) ) return
 
-      call plnt%state%get("fliveleaf", bcfliveleaf, succ)
-      if( .not. check_return( trim(self%phaseName) , "fliveleaf", succ ) ) return
       call plnt%state%get("thu_shoot_beg", bcthu_shoot_beg, succ)
       if( .not. check_return( trim(self%phaseName) , "thu_shoot_beg", succ ) ) return
       call plnt%state%get("thu_shoot_end", bcthu_shoot_end, succ)
@@ -171,11 +164,6 @@ module PhenologyMMSSpringphenol_mod
       if( .not. check_return( trim(self%phaseName) , "beg_live_leaf", succ ) ) return
       call self%phasePars%get("end_live_leaf", end_live_leaf, succ)
       if( .not. check_return( trim(self%phaseName) , "end_live_leaf", succ ) ) return
-
-      call self%phasePars%get("beg_weath_leaf", beg_weath_leaf, succ)
-      if( .not. check_return( trim(self%phaseName) , "beg_weath_leaf", succ ) ) return
-      call self%phasePars%get("end_weath_leaf", end_weath_leaf, succ)
-      if( .not. check_return( trim(self%phaseName) , "end_weath_leaf", succ ) ) return
 
       call self%phasePars%get("beg_senes_root", beg_senes_root, succ)
       if( .not. check_return( trim(self%phaseName) , "beg_senes_root", succ ) ) return
@@ -302,13 +290,7 @@ module PhenologyMMSSpringphenol_mod
       call gdd_stressed_del(phase_rel_gdd, stagegdd, daygdd, stress, GN_trans_gdd, GN_stress, GS_trans_gdd, GS_stress, 1.0_dp)
 
       ! senescence is done on a whole plant mass basis not incremental mass
-      live_leaf = beg_live_leaf + (end_live_leaf - beg_live_leaf) * phase_rel_gdd
-      ffw = beg_weath_leaf + (end_weath_leaf - beg_weath_leaf) * phase_rel_gdd
-      if( ffw .lt. live_leaf ) then
-        ! weathering of leaf cannot exceed dead leaf amount
-        ffw = live_leaf
-      end if
-      ffa = (live_leaf / bcfliveleaf) * (1.0_dp + bcfliveleaf * (ffw - 1.0_dp))
+      ffa = beg_live_leaf + (end_live_leaf - beg_live_leaf) * phase_rel_gdd
       ffr = beg_senes_root + (end_senes_root - beg_senes_root) * phase_rel_gdd
       gif = beg_grain_index + (end_grain_index - beg_grain_index) * phase_rel_gdd
 
@@ -364,14 +346,12 @@ module PhenologyMMSSpringphenol_mod
       if( .not. check_return( trim(self%phaseName) , "phase_rel_gdd", succ ) ) return
       call self%phaseState%replace("stagegdd", stagegdd, succ)
       if( .not. check_return( trim(self%phaseName) , "stagegdd", succ ) ) return
-      call plnt%state%replace("remgdd", daygdd, succ)
-      if( .not. check_return( trim(self%phaseName) , "remgdd", succ ) ) return
 
       ! update plant state values
+      call plnt%state%replace("remgdd", daygdd, succ)
+      if( .not. check_return( trim(self%phaseName) , "remgdd", succ ) ) return
       call plnt%state%replace("ffa", ffa, succ)
       if( .not. check_return( trim(self%phaseName) , "ffa", succ ) ) return
-      call plnt%state%replace("ffw", ffw, succ)
-      if( .not. check_return( trim(self%phaseName) , "ffw", succ ) ) return
       call plnt%state%replace("ffr", ffr, succ)
       if( .not. check_return( trim(self%phaseName) , "ffr", succ ) ) return
       call plnt%state%replace("gif", gif, succ)
@@ -394,6 +374,7 @@ module PhenologyMMSSpringphenol_mod
       if( .not. check_return( trim(self%phaseName) , "pdrd", succ ) ) return
       call plnt%state%replace("hu_delay", hu_delay, succ)
       if( .not. check_return( trim(self%phaseName) , "hu_delay", succ ) ) return
+
       call plnt%state%replace("spring_flg", spring_flg, succ)
       if( .not. check_return( trim(self%phaseName) , "spring_flg", succ ) ) return
 

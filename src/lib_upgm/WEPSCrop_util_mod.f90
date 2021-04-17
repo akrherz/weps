@@ -115,27 +115,6 @@ module WEPSCrop_util_mod
       return
     end subroutine shootnum
 
-    subroutine scrv1 (x1, y1, x2, y2, a, b)
-
-      ! compute parameters for an s-curve.
-
-      real(dp) :: a,b
-      real :: x1,x2,y1,y2
-
-      ! + + + LOCAL VARIABLES + + +
-      real(dp) :: xx1,xx2
-      real(dp) :: xx
-
-      xx1=abs(x1)
-      xx2=abs(x2)
-      xx = log(xx1/y1-xx1)
-
-      b=(xx-log(xx2/y2-xx2))/(xx2-xx1)
-      a=xx+b*xx1
-
-      return
-    end subroutine scrv1
-
     ! Calculate single day heat units for given temperatures
     function huc( bwtdmx, bwtdmn, bctmax, bctmin ) result(huc1)
       real(dp), intent(in) :: bwtdmx   ! daily maximum air temperature
@@ -276,62 +255,80 @@ module WEPSCrop_util_mod
       return
     end subroutine coldday_cum
 
-    subroutine freeze_damage( ff_senescence, stsmn1, a_fr, b_fr, bcmstandleaf, bcfliveleaf, frst, lost_mass )
+    subroutine freeze_damage(ff_senescence, stsmn1, frsx1, frsx2, frsy1, frsy2, bcmstandleaflive, bcmstandleafdead, frst,lost_mass)
       real(dp), intent(in) :: ff_senescence
       real(dp), intent(in) :: stsmn1
-      real(dp), intent(in) :: a_fr
-      real(dp), intent(in) :: b_fr
-      real(dp), intent(inout) :: bcmstandleaf
-      real(dp), intent(inout) :: bcfliveleaf
+      real(dp), intent(in) :: frsx1
+      real(dp), intent(in) :: frsx2
+      real(dp), intent(in) :: frsy1
+      real(dp), intent(in) :: frsy2
+      real(dp), intent(inout) :: bcmstandleaflive
+      real(dp), intent(inout) :: bcmstandleafdead
       real(dp), intent(out) :: frst
       real(dp), intent(out) :: lost_mass
 
       real(dp), parameter :: frac_frst_mass_lost = 0.0_dp
 
-      real(dp) :: xw
-      real(dp) :: ffa
-      real(dp) :: ffw
+      real(dp) :: xx1
+      real(dp) :: xx2
+      real(dp) :: fx1
+      real(dp) :: fx2
+      real(dp) :: xxw
+      real(dp) :: arg_exp
+      real(dp) :: delta_x
       real(dp) :: froz_mass
-      real(dp) :: live_leaf
-      real(dp) :: dead_leaf
 
       ! reduce green leaf mass in freezing weather
-      if( (bcmstandleaf .gt. 0.0_dp) .and. (stsmn1 .lt. -2.0_dp) ) then
+      if( ((bcmstandleaflive + bcmstandleafdead) .gt. 0.0_dp) .and. (stsmn1 .lt. -2.0_dp) ) then
           ! use daily minimum soil temperature of first layer to account for snow cover effects
-          xw = abs( stsmn1 )
-          ! this was obviously to prevent excessive leaf loss
-          ! frst=sqrt((1.-xw/(xw+exp(a_fr-b_fr*xw)))+0.000001)
-          ! frst=sqrt(frst)
-          ! tested to match the values input in the database
-          frst = xw / (xw + exp(a_fr - b_fr * xw))
-          frst = min(1.0_dp, max(0.0_dp, frst))
+          xx1 = abs( frsx1 )
+          xx2 = abs( frsx2 )
+          xxw = abs( stsmn1 )
+
+          delta_x = (xx2 - xx1)
+
+          if( (delta_x .gt. 0.0d0) .or. (delta_x .lt. 0.0d0) ) then
+            ! delta_x is non-zero
+            fx1 = log(xx1/frsy1-xx1)
+            fx2 = log(xx2/frsy2-xx2)
+          else
+            ! delta_x is zero. Make non-zero in correct direction for frost damage.
+            xx1 = xx1 - spacing(xx1)
+            xx2 = xx2 + spacing(xx2)
+            delta_x = (xx2 - xx1)
+            fx1 = log(xx1/frsy1-xx1)
+            fx2 = log(xx2/frsy2-xx2)
+          end if
+
+          arg_exp = fx1 + (xx1 - xxw) * (fx1 - fx2) / delta_x
+
+          if( abs(arg_exp) .gt. u_max_arg_exp ) then
+            ! cap the value to avoid floating point error on exponential function
+            ! preserve sign
+            arg_exp = sign( (u_max_arg_exp - spacing(u_max_arg_exp)), arg_exp)
+          end if
+
+          ! b_fr = (fx1 - fx2) / delta_x
+          ! a_fr = fx1 + b_fr * xx1
+          ! frst = xw / (xw + exp(a_fr-b_fr*xw))
+
+          frst = xxw / (xxw + exp(arg_exp))
 
           ! is it before or after scenescence?
           if (ff_senescence .gt. 0.9999_dp) then
               ! before scenescence, frost killed mass is fragile and a fraction disappears
-              ffa = 1.0_dp - frst
-              ffw = 1.0_dp - frst * frac_frst_mass_lost
-              lost_mass  = bcmstandleaf * (1.0_dp - ffw)
+              lost_mass  = (bcmstandleaflive + bcmstandleafdead) * frst * frac_frst_mass_lost
 
-              ! eliminate these in favor of dead to live ratio
               ! reduce green leaf area due to frost damage (10/1/99)
-              live_leaf = bcmstandleaf * bcfliveleaf
-              dead_leaf = bcmstandleaf * (1.0_dp - bcfliveleaf)
-
-              froz_mass = bcmstandleaf * bcfliveleaf * frst
-              live_leaf = live_leaf - froz_mass
-              dead_leaf = dead_leaf+froz_mass*(1.0_dp-frac_frst_mass_lost)
-
-              ! adjust here for lost mass amount so consistent below)
-              bcmstandleaf = bcmstandleaf * ffw
-              ! change in living mass fraction due freezing
-              ! and accounting for weathering mass loss of dead leaf
-              bcfliveleaf = ffa * bcfliveleaf / (1.0_dp + bcfliveleaf * (ffw - 1.0_dp))
-
+              froz_mass = bcmstandleaflive * frst
+              bcmstandleaflive = bcmstandleaflive - froz_mass
+              bcmstandleafdead = bcmstandleafdead + froz_mass*(1.0_dp-frac_frst_mass_lost)
           else
               ! after scenescence, frost killed mass is tougher and is not lost immediately
               ! reduce green leaf area due to frost damage (9/22/2003)
-              bcfliveleaf = bcfliveleaf * (1.0_dp - frst)
+              froz_mass = bcmstandleaflive * frst
+              bcmstandleaflive = bcmstandleaflive - froz_mass
+              bcmstandleafdead = bcmstandleafdead + froz_mass
               lost_mass = 0.0_dp
           end if
       else

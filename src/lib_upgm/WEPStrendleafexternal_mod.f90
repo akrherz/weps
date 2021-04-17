@@ -49,33 +49,27 @@ module WEPStrendleafexternal_mod
       logical :: succ = .false.
 
       ! plant state
-      real(dp) :: bcmstandleaf ! crop standing leaf mass (kg/m^2)
-      real(dp) :: bcfliveleaf ! fraction of standing plant leaf which is living (transpiring)
+      real(dp) :: bcmstandleaflive ! crop live standing leaf mass (kg/m^2)
 
       real(dp) :: bcleafareatrend ! direction in which leaf area is trending.
                                   ! Saves trend even if leaf area is static for long periods.
-      real(dp) :: bprevliveleaf
-      real(dp) :: bprevstandleaf
+      real(dp) :: bprevstandleaflive
 
       ! locally computed values
       real(dp) :: trend ! test computation for trend direction of living leaf area
 
-      ! Body of regrowth
+      ! Body of trendleafexternal
 
       ! retrieve required inputs
 
       ! plant state
-      call plnt%state%get("mstandleaf", bcmstandleaf, succ)
-      if( .not. check_return( trim(self%processName) , "mstandleaf", succ ) ) return
-      call plnt%state%get("fliveleaf", bcfliveleaf, succ)
-      if( .not. check_return( trim(self%processName) , "fliveleaf", succ ) ) return
-      call plnt%state%get("prevliveleaf", bprevliveleaf, succ)
-      if( .not. check_return( trim(self%processName) , "prevliveleaf", succ ) ) return
-      call plnt%state%get("prevstandleaf", bprevstandleaf, succ)
-      if( .not. check_return( trim(self%processName) , "prevstandleaf", succ ) ) return
+      call plnt%state%get("mstandleaflive", bcmstandleaflive, succ)
+      if( .not. check_return( trim(self%processName) , "mstandleaflive", succ ) ) return
+      call plnt%state%get("prevstandleaflive", bprevstandleaflive, succ)
+      if( .not. check_return( trim(self%processName) , "prevstandleaflive", succ ) ) return
 
       ! set trend direction for living leaf area from external forces
-      trend = (bcfliveleaf*bcmstandleaf) - (bprevliveleaf*bprevstandleaf)
+      trend = bcmstandleaflive - bprevstandleaflive
       if( trend .ne. 0.0_dp ) then
         ! trend non-zero and (heat units past emergence or staged crown release crop)
         bcleafareatrend = trend

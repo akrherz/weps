@@ -57,9 +57,9 @@ module WEPSleafoff_mod
       real(dp) :: hrlt   ! length of day (hours) today
 
       ! plant state
-      real(dp) :: bcmstandleaf ! crop standing leaf mass (kg/m^2)
+      real(dp) :: bcmstandleaflive ! crop standing leaf mass (kg/m^2)
+      real(dp) :: bcmstandleafdead ! crop standing leaf mass (kg/m^2)
       real(dp) :: bcmflatleaf  ! crop flat leaf mass (kg/m^2)
-      real(dp) :: bcfliveleaf ! fraction of standing plant leaf which is living (transpiring)
       real(dp) :: bgmflatleaf
       logical :: can_regrow ! flag set to indicate that crop is able to regrow
 
@@ -73,6 +73,10 @@ module WEPSleafoff_mod
       integer :: fall_eqx
       integer :: winter_sol
       logical :: do_leafoff
+
+      real(dp) :: dead_frac       ! fraction of leaf mass which is living
+      real(dp) :: dead_drop_mass  ! mass of dead leaf mass to drop
+      real(dp) :: live_drop_mass  ! mass of live leaf mass to drop
 
       ! Body of leafoff
 
@@ -131,23 +135,33 @@ module WEPSleafoff_mod
               if( .not. check_return( trim(self%processName) , "dropfrac", succ ) ) return
 
               ! get plant state
-              call plnt%state%get("mstandleaf", bcmstandleaf, succ)
-              if( .not. check_return( trim(self%processName) , "mstandleaf", succ ) ) return
+              call plnt%state%get("mstandleaflive", bcmstandleaflive, succ)
+              if( .not. check_return( trim(self%processName) , "mstandleaflive", succ ) ) return
+              call plnt%state%get("mstandleafdead", bcmstandleafdead, succ)
+              if( .not. check_return( trim(self%processName) , "mstandleafdead", succ ) ) return
               call plnt%state%get("mflatleaf", bcmflatleaf, succ)
               if( .not. check_return( trim(self%processName) , "mflatleaf", succ ) ) return
-              call plnt%state%get("fliveleaf", bcfliveleaf, succ)
-              if( .not. check_return( trim(self%processName) , "fliveleaf", succ ) ) return
 
               ! drop fraction of leaf mass (range 0.0-1.0)
-              bgmflatleaf = bcmflatleaf + bcmstandleaf * dropfrac
+              ! drop fraction should include all dead leaves and then any live leaves to complete the fraction
+              dead_frac = bcmstandleafdead / (bcmstandleaflive + bcmstandleafdead)
+              dead_drop_mass = (bcmstandleaflive + bcmstandleafdead) * dropfrac
+              if( dead_frac .ge. dropfrac ) then
+                live_drop_mass = 0.0_dp
+              else
+                live_drop_mass = dead_drop_mass - bcmstandleafdead
+                dead_drop_mass = bcmstandleafdead
+              end if
+              bgmflatleaf = bcmflatleaf + live_drop_mass + dead_drop_mass
               ! reset crop values
-              bcmstandleaf = bcmstandleaf * (1.0d0 - dropfrac)
+              bcmstandleaflive = bcmstandleaflive - live_drop_mass
+              bcmstandleafdead = bcmstandleafdead - dead_drop_mass
+
               ! drop any remaining dead evergreen leaves into flat residue pool
-              bgmflatleaf = bgmflatleaf + bcmstandleaf * (1.0d0 - bcfliveleaf)
+              bgmflatleaf = bgmflatleaf + bcmstandleafdead
               ! reset crop values
-              bcmstandleaf = bcmstandleaf * bcfliveleaf
-              bcfliveleaf = 1.0d0
-              bcmflatleaf = 0.0
+              bcmstandleafdead = 0.0_dp
+              bcmflatleaf = 0.0_dp
               ! activate leafoff resets in growth
               do_leafoff = .true.
               ! set day of year on which transition took place
@@ -160,12 +174,12 @@ module WEPSleafoff_mod
               if( .not. check_return( trim(self%processName) , "dayleafoff", succ ) ) return
               call plnt%state%replace("dayleafon", bcdayleafon, succ)
               if( .not. check_return( trim(self%processName) , "dayleafon", succ ) ) return
-              call plnt%state%replace("mstandleaf", bcmstandleaf, succ)
-              if( .not. check_return( trim(self%processName) , "mstandleaf", succ ) ) return
+              call plnt%state%replace("mstandleaflive", bcmstandleaflive, succ)
+              if( .not. check_return( trim(self%processName) , "mstandleaflive", succ ) ) return
+              call plnt%state%replace("mstandleafdead", bcmstandleafdead, succ)
+              if( .not. check_return( trim(self%processName) , "mstandleafdead", succ ) ) return
               call plnt%state%replace("mflatleaf", bcmflatleaf, succ)
               if( .not. check_return( trim(self%processName) , "mflatleaf", succ ) ) return
-              call plnt%state%replace("fliveleaf", bcfliveleaf, succ)
-              if( .not. check_return( trim(self%processName) , "fliveleaf", succ ) ) return
               call plnt%state%replace("res_flatleaf", bgmflatleaf, succ)
               if( .not. check_return( trim(self%processName) , "res_flatleaf", succ ) ) return
 

@@ -45,40 +45,46 @@ module WEPSFreezeDamage_mod
       class(WEPSFreezeDamage), intent(inout) :: self
       type(plant), intent(inout) :: plnt
       type(environment_state), intent(inout) :: env
-      real(dp) :: a_fr   ! parameter in the frost damage s-curve
-      real(dp) :: b_fr   ! parameter in the frost damage s-curve
+      real(dp) :: frsx1  ! warmer frost damage temperature
+      real(dp) :: frsx2  ! colder frost damage temperature
+      real(dp) :: frsy1  ! fraction leaf death at warmer frost damage temperature
+      real(dp) :: frsy2  ! fraction leaf death at colder frost damage temperature
       real(dp) :: ffa    ! fraction of live leaf senescence occuring
       real(dp) :: tsmn1  ! minimum temperature of surface soil layer
-      real(dp) :: mstandleaf ! mass of standing leaf
-      real(dp) :: fliveleaf ! mass of standing leaf
+      real(dp) :: mstandleaflive ! mass of live standing leaf
+      real(dp) :: mstandleafdead ! mass of dead standing leaf
       real(dp) :: frst   ! the fraction of living leaf killed by freezing
       real(dp) :: lost_mass ! the amount of mass lost due to freeze damage
       logical :: succ = .false.
 
       ! get Parameters
-      call self%processPars%get("a_fr", a_fr, succ)
-      if( .not. check_return( trim(self%processName) , "a_fr", succ ) ) return
-      call self%processPars%get("b_fr", b_fr, succ)
-      if( .not. check_return( trim(self%processName) , "b_fr", succ ) ) return
+      call self%processPars%get("frsx1", frsx1, succ)
+      if( .not. check_return( trim(self%processName) , "frsx1", succ ) ) return
+      call self%processPars%get("frsx2", frsx2, succ)
+      if( .not. check_return( trim(self%processName) , "frsx2", succ ) ) return
+      call self%processPars%get("frsy1", frsy1, succ)
+      if( .not. check_return( trim(self%processName) , "frsy1", succ ) ) return
+      call self%processPars%get("frsy2", frsy2, succ)
+      if( .not. check_return( trim(self%processName) , "frsy2", succ ) ) return
 
       ! get current state
       call plnt%state%get("ffa", ffa, succ)
       if( .not. check_return( trim(self%processName) , "ffa", succ ) ) return
-      call plnt%state%get("mstandleaf", mstandleaf, succ)
-      if( .not. check_return( trim(self%processName) , "mstandleaf", succ ) ) return
-      call plnt%state%get("fliveleaf", fliveleaf, succ)
-      if( .not. check_return( trim(self%processName) , "fliveleaf", succ ) ) return
+      call plnt%state%get("mstandleaflive", mstandleaflive, succ)
+      if( .not. check_return( trim(self%processName) , "mstandleaflive", succ ) ) return
+      call plnt%state%get("mstandleafdead", mstandleafdead, succ)
+      if( .not. check_return( trim(self%processName) , "mstandleafdead", succ ) ) return
 
       ! get environment variables
       call env%state%get("tsmn1", tsmn1, succ)
       if( .not. check_return( trim(self%processName) , "tsmn1", succ ) ) return
 
-      call freeze_damage( ffa, tsmn1, a_fr, b_fr, mstandleaf, fliveleaf, frst, lost_mass )
+      call freeze_damage( ffa, tsmn1, frsx1, frsx2, frsy1, frsy2, mstandleaflive, mstandleafdead, frst, lost_mass )
 
-      call plnt%state%replace("mstandleaf", mstandleaf, succ)
-      if( .not. check_return( trim(self%processName) , "mstandleaf", succ ) ) return
-      call plnt%state%replace("fliveleaf", fliveleaf, succ)
-      if( .not. check_return( trim(self%processName) , "fliveleaf", succ ) ) return
+      call plnt%state%replace("mstandleaflive", mstandleaflive, succ)
+      if( .not. check_return( trim(self%processName) , "mstandleaflive", succ ) ) return
+      call plnt%state%replace("mstandleafdead", mstandleafdead, succ)
+      if( .not. check_return( trim(self%processName) , "mstandleafdead", succ ) ) return
       call plnt%state%replace("frst", frst, succ)
       if( .not. check_return( trim(self%processName) , "frst", succ ) ) return
       call plnt%state%replace("lost_mass", lost_mass, succ)

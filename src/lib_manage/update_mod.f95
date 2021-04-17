@@ -99,7 +99,9 @@ module update_mod
             thisPlant%deriv%mbgrootfiber = thisPlant%deriv%mbgrootfiber + thisPlant%mass%rootfiberz(idx)
           end do
 
-          thisPlant%deriv%mst = thisPlant%mass%standstem + thisPlant%mass%standleaf + thisPlant%mass%standstore
+          thisPlant%deriv%mst = thisPlant%mass%standstem &
+                              + thisPlant%mass%standleaflive + thisPlant%mass%standleafdead &
+                              + thisPlant%mass%standstore
           thisPlant%deriv%mf = thisPlant%mass%flatstem + thisPlant%mass%flatleaf + thisPlant%mass%flatstore
           thisPlant%deriv%mrt = thisPlant%deriv%mbgstem + thisPlant%deriv%mbgrootstore + thisPlant%deriv%mbgrootfiber
           thisPlant%deriv%m = thisPlant%deriv%mst + thisPlant%deriv%mf + thisPlant%deriv%mrt
@@ -127,7 +129,7 @@ module update_mod
 
           ! leaf area index for standing material
           ! m^2 leaf/kg * kg/m^2 ground = m^2 leaf/m^2 ground
-          thisPlant%deriv%rlai = thisPlant%database%sla * thisPlant%mass%standleaf
+          thisPlant%deriv%rlai = thisPlant%database%sla * (thisPlant%mass%standleaflive + thisPlant%mass%standleafdead)
 
           ! set stem and leaf area by plant height increments
           ! these are divided equally for a first approximation
@@ -151,6 +153,12 @@ module update_mod
           ! transpiration depth as a function of furrow cut depth and root depth
           thisPlant%deriv%ztranspdepth = transpdepth(thisPlant%geometry%zrtd, thisPlant%geometry%zfurcut, &
                                          thisPlant%geometry%ztransprtmin, thisPlant%geometry%ztransprtmax)
+          if( (thisPlant%mass%standleaflive + thisPlant%mass%standleafdead) .gt. 0.0 ) then
+            thisPlant%deriv%fliveleaf = thisPlant%mass%standleaflive &
+                                      / (thisPlant%mass%standleaflive + thisPlant%mass%standleafdead)
+          else
+            thisPlant%deriv%fliveleaf = 0.0d0
+          end if
         end if
 
         ! point to newest residue for thisPlant
@@ -419,7 +427,7 @@ module update_mod
 
           croptot%rsaitot = croptot%rsaitot + thisPlant%deriv%rsai      ! total of stem area index across pools (m^2/m^2)
           croptot%rlaitot = croptot%rlaitot + thisPlant%deriv%rlai      ! total of leaf area index across pools (m^2/m^2)
-          croptot%rlailive = croptot%rlailive + thisPlant%deriv%rlai * thisPlant%growth%fliveleaf  ! living leaf area index total (m^2/m^2)
+          croptot%rlailive = croptot%rlailive + thisPlant%deriv%rlai * thisPlant%deriv%fliveleaf  ! living leaf area index total (m^2/m^2)
           do idx = 1, ncanlay
               croptot%rsaz(idx) = croptot%rsaz(idx) + thisPlant%deriv%rsai / ncanlay           ! stem area index by height (1/m)
               croptot%rlaz(idx) = croptot%rlaz(idx) + thisPlant%deriv%rlai / ncanlay           ! leaf area index by height (1/m)

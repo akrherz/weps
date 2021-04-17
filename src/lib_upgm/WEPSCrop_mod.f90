@@ -122,10 +122,6 @@ module WEPSCrop_mod
           d_s_root_mass =  d_s_root_mass * red_mass_rat
       end if
 
-      ! if no additional mass, no need to go further
-      if( d_shoot_mass .le. 0.0_dp) return
-      !! +++++++++++++ RETURN FROM HERE IF ZERO +++++++++++++++++
-
       ! find stem mass when shoot completely developed
       ! (mg tot/shoot) / ((kg leaf/kg stem)+1) = mg stem/shoot
       end_stem_mass = end_shoot_mass / (plant%database%fleafstem+1.0)
@@ -162,6 +158,10 @@ module WEPSCrop_mod
       plant%geometry%zshoot = end_shoot_len &
                * ((plant%growth%mshoot /(u_mgtokg * plant%geometry%dstm))+d_shoot_mass) &
                / end_shoot_mass
+
+      ! if no additional mass, no need to go further
+      if( d_shoot_mass .le. 0.0_dp) return
+      !! +++++++++++++ RETURN FROM HERE IF ZERO +++++++++++++++++
 
       yesterday_len = end_shoot_len * (plant%growth%mshoot /(u_mgtokg * plant%geometry%dstm)) &
                     / end_shoot_mass
@@ -200,10 +200,10 @@ module WEPSCrop_mod
         .and. (plant%database%yld_coef .gt. 1.0_dp) .and. (plant%database%resid_int .ge. 0.0_dp) &
         .and. ( (plant%geometry%hyfg.eq.0).or.(plant%geometry%hyfg.eq.1) ) ) then
           call cookyield(plant%geometry%hyfg, bnslay, dlfwt, dstwt, drpwt, drswt, &
-                         dble(plant%mass%standstem), dble(plant%mass%standleaf), dble(plant%mass%standstore), &
-                         dble(plant%mass%flatstem), dble(plant%mass%flatleaf), dble(plant%mass%flatstore), &
-                         dble(plant%mass%rootstorez), lost_mass, &
-                         dble(plant%database%yld_coef), dble(plant%database%resid_int), dble(plant%database%grf) )
+            dble(plant%mass%standstem), dble(plant%mass%standleaflive + plant%mass%standleafdead), dble(plant%mass%standstore), &
+            dble(plant%mass%flatstem), dble(plant%mass%flatleaf), dble(plant%mass%flatstore), &
+            dble(plant%mass%rootstorez), lost_mass, &
+            dble(plant%database%yld_coef), dble(plant%database%resid_int), dble(plant%database%grf) )
       end if
 
       ! divide above ground stem between standing and flat
@@ -223,13 +223,7 @@ module WEPSCrop_mod
       ! leaf mass is added even if below ground
       ! leaf has very low mass (small effect) and some light interaction
       ! does occur as emergence approaches (if problem can be changed easily)
-
-      if( (plant%mass%standleaf + dlfwt) .gt. 0.0_dp ) then
-          ! added leaf mass adjusts live leaf fraction, otherwise no change
-          plant%growth%fliveleaf = (plant%growth%fliveleaf*plant%mass%standleaf+dlfwt) &
-                  / (plant%mass%standleaf + dlfwt)
-      end if
-      plant%mass%standleaf = plant%mass%standleaf + dlfwt
+      plant%mass%standleaflive = plant%mass%standleaflive + dlfwt
 
       ! above ground stems
       plant%mass%standstem = plant%mass%standstem + stand_stem
@@ -416,12 +410,8 @@ module WEPSCrop_mod
       !convert from mg/plant to kg/m^2
       dlfwt = d_leaf_mass * u_mgtokg * plant%geometry%dpop
 
-      ! distribute mass into mass pools
-      if( (plant%mass%standleaf + dlfwt) .gt. 0.0 ) then
-          ! added leaf mass adjusts live leaf fraction, otherwise no change
-          plant%growth%fliveleaf = (plant%growth%fliveleaf*plant%mass%standleaf+dlfwt) / (plant%mass%standleaf + dlfwt)
-      end if
-      plant%mass%standleaf = plant%mass%standleaf + dlfwt
+      ! distribute mass into mass pool
+      plant%mass%standleaflive = plant%mass%standleaflive + dlfwt
 
       ! remove from storage root mass
       do lay = 1, bnslay
@@ -451,7 +441,7 @@ module WEPSCrop_mod
                       pdht, pdrd, &
                       ffa, ffw, ffr, gif, par, apar, pddm, &
                       stem_propor, pdiam, parea, &
-                      temp_sai, temp_stmrep, lost_mass )
+                      temp_sai, temp_stmrep, lost_mass, regrow_release )
 
       ! Author : Amare Retta
       ! + + + PURPOSE + + +
@@ -463,7 +453,7 @@ module WEPSCrop_mod
 
       use soil_data_struct_defs, only: soil_def
       use biomaterial, only: plant_pointer
-      use WEPSCrop_util_mod, only: shootnum, per_release, stage_release
+      use WEPSCrop_util_mod, only: shootnum
       use weps_cmdline_parms, only: cook_yield
 
       integer(int32), parameter :: growth_stress = 3
@@ -496,6 +486,7 @@ module WEPSCrop_mod
       real(dp) :: temp_sai
       real(dp) :: temp_stmrep
       real(dp) :: lost_mass    ! biomass that decayed (disappeared) from scenescence and freeze damage
+      real(dp) :: regrow_release ! fraction of storage root released to support regrowth of plant
 
       ! + + + LOCAL VARIABLES + + +
       integer(int32) :: bnslay ! number of soil layers
@@ -534,6 +525,8 @@ module WEPSCrop_mod
       real(dp) :: live_leaf
       real(dp) :: dead_leaf  ! mass in kg/m^2
       real(dp) :: strs       ! stress mass reduction factor
+      real(dp) :: lost_mass_weath  ! lost mass from weathering of senesence material
+      real(dp) :: senes_mass ! mass of leaf moved from live to dead (senescence)
 
       integer :: alloc_stat, sum_stat
 
@@ -546,8 +539,8 @@ module WEPSCrop_mod
 
       !!!!! START SINGLE PLANT CALCULATIONS !!!!!
       ! calculate single plant effective lai (standing living leaves only)
-      clfwt = plant%mass%standleaf / plant%geometry%dpop            ! kg/m^2 / plants/m^2 = kg/plant
-      clfarea = clfwt * plant%database%sla * plant%growth%fliveleaf   ! kg/plant * m^2/kg = m^2/plant
+      clfwt = plant%mass%standleaflive / plant%geometry%dpop  ! kg/m^2 / plants/m^2 = kg/plant
+      clfarea = clfwt * plant%database%sla                    ! kg/plant * m^2/kg = m^2/plant
 
       ! limiting plant area to a feasible plant area results in a
       ! leaf area index covering the "plant's area"
@@ -646,7 +639,7 @@ module WEPSCrop_mod
       drfwt = ddm * p_rw
       ddm_rem = ddm - drfwt
 
-      ! calculate assimate mass increments (kg/m^2)
+      ! calculate assimilate mass increments (kg/m^2)
       dlfwt = ddm_rem * p_lf
       dstwt = ddm_rem * p_st
       drpwt = ddm_rem * p_rp
@@ -668,22 +661,12 @@ module WEPSCrop_mod
           adjstor2stor = plant%database%fstor2stor
       end if
 
-       ! Limit accumulation of regrowth reserve on all but tuber crops
-      if( plant%database%idc .ne. 7 ) then
+      ! Limit accumulation of regrowth reserve on all but tuber crops
+      if( plant%database%fstor2stor .lt. 0.8_dp ) then
           ! check for regrowth shoot number possible from root store
-          if( (plant%database%idc.eq.3) .or. (plant%database%idc.eq.6) ) then
-            ! perennial
-            call shootnum(shoot_flg, bnslay, per_release, dble(plant%geometry%dpop), dble(plant%database%shoot), &
+          call shootnum(shoot_flg, bnslay, regrow_release, dble(plant%geometry%dpop), dble(plant%database%shoot), &
                    dble(plant%database%dmaxshoot), temptotshoot, dble(plant%mass%rootstorez), tempdstm )
-          else if( plant%database%idc .eq. 8 ) then
-            ! staged release
-            call shootnum(shoot_flg, bnslay, stage_release, dble(plant%geometry%dpop), dble(plant%database%shoot), &
-                   dble(plant%database%dmaxshoot), temptotshoot, dble(plant%mass%rootstorez), tempdstm )
-          else
-            ! all others go for broke
-            call shootnum(shoot_flg, bnslay, 1.0_dp, dble(plant%geometry%dpop), dble(plant%database%shoot), &
-                   dble(plant%database%dmaxshoot), temptotshoot, dble(plant%mass%rootstorez), tempdstm )
-          end if
+
           ! compare to maximum shoot number
           if( tempdstm .ge. 5.0_dp * plant%database%dmaxshoot * plant%geometry%dpop ) then
               ! one of these must be non-zero or regrowth will never occur
@@ -701,14 +684,19 @@ module WEPSCrop_mod
       drpwt = drpwt * (1.0_dp-adjstor2stor)
 
       ! senescence is done on a whole plant mass basis not incremental mass
-      ! loss from weathering of leaf mass added to mass lost to freeze damage
-      lost_mass = lost_mass + plant%mass%standleaf * (1.0_dp - ffw)
+      lost_mass_weath = (plant%mass%standleaflive + plant%mass%standleafdead) * (1.0_dp - ffw)
       ! adjust for senescence (done here, not below, so consistent with lost mass amount)
-      plant%mass%standleaf = plant%mass%standleaf * ffw
-      ! change in living mass fraction due scenescence
-      ! and accounting for weathering mass loss of dead leaf
-
-      plant%growth%fliveleaf = ffa * plant%growth%fliveleaf / (1.0_dp + plant%growth%fliveleaf * (ffw - 1.0_dp))
+      senes_mass = plant%mass%standleaflive * (1.0d0 - ffa)
+      plant%mass%standleaflive = plant%mass%standleaflive - senes_mass
+      plant%mass%standleafdead = plant%mass%standleafdead + senes_mass
+      if( plant%mass%standleafdead .lt. lost_mass_weath ) then
+        lost_mass_weath = plant%mass%standleafdead
+        plant%mass%standleafdead = 0.0_dp
+      else
+        plant%mass%standleafdead = plant%mass%standleafdead - lost_mass_weath
+      end if
+      ! loss from weathering of leaf mass added to mass lost to freeze damage
+      lost_mass = lost_mass + lost_mass_weath
 
       ! yield residue relationship adjustment
       if(     (cook_yield .eq. 1) &
@@ -716,10 +704,10 @@ module WEPSCrop_mod
         .and. ( (plant%geometry%hyfg .eq. 0).or.(plant%geometry%hyfg .eq. 1).or.(plant%geometry%hyfg .eq. 5) ) ) then
 
           call cookyield(plant%geometry%hyfg, bnslay, dlfwt, dstwt, drpwt, drswt, &
-                         dble(plant%mass%standstem), dble(plant%mass%standleaf), dble(plant%mass%standstore), &
-                         dble(plant%mass%flatstem), dble(plant%mass%flatleaf), dble(plant%mass%flatstore), &
-                         dble(plant%mass%rootstorez), lost_mass, &
-                         dble(plant%database%yld_coef), dble(plant%database%resid_int), dble(plant%database%grf) )
+            dble(plant%mass%standstem), dble(plant%mass%standleaflive + plant%mass%standleafdead), dble(plant%mass%standstore), &
+            dble(plant%mass%flatstem), dble(plant%mass%flatleaf), dble(plant%mass%flatstore), &
+            dble(plant%mass%rootstorez), lost_mass, &
+            dble(plant%database%yld_coef), dble(plant%database%resid_int), dble(plant%database%grf) )
 
       end if
 
@@ -732,13 +720,7 @@ module WEPSCrop_mod
 
       ! add mass increment to accumulated biomass (kg/m^2)
       ! all leaf mass added to living leaf in standing pool
-      if( dlfwt .gt. 0.0_dp ) then
-          ! recalculate fraction of leaf which is living
-          plant%growth%fliveleaf = (plant%growth%fliveleaf*plant%mass%standleaf + dlfwt) &
-                      / (plant%mass%standleaf + dlfwt)
-          ! next add in the additional mass
-          plant%mass%standleaf = plant%mass%standleaf + dlfwt
-      end if
+      plant%mass%standleaflive = plant%mass%standleaflive + dlfwt
 
       ! divide between standing and flat stem and storage in proportion
       ! to maximum height and maximum radius ratio

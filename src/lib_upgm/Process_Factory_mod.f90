@@ -13,7 +13,9 @@ module Process_Factory
     use WEPSFreezeDamage_mod
     use WEPSleafoff_mod
     use WEPSleafon_mod
-    use WEPSregrowth_mod
+    use WEPSregrowthannual_mod
+    use WEPSregrowthperen_mod
+    use WEPSregrowthstaged_mod
     use WEPSregrowwood_mod
     use WEPStempstress_mod
     use WEPStrendleafexternal_mod
@@ -38,32 +40,35 @@ module Process_Factory
         allocate(ritchieHardening :: processPtr)
       elseif (processName == "ritchieVernalization") then
         allocate(ritchieVernalization :: processPtr)
-      elseif (processName == "WEPScolddays") then
-        allocate(WEPScolddays :: processPtr)
+      elseif (processName == "WEPSwarmdays") then
+        allocate(WEPSwarmdays :: processPtr)
+      elseif (processName == "WEPSTempStress") then
+        allocate(WEPSTempStress :: processPtr)
       elseif (processName == "WEPSFreezeDamage") then
         allocate(WEPSFreezeDamage :: processPtr)
+      elseif (processName == "WEPScolddays") then
+        allocate(WEPScolddays :: processPtr)
       elseif (processName == "WEPSleafoff") then
         allocate(WEPSleafoff :: processPtr)
       elseif (processName == "WEPSleafon") then
         allocate(WEPSleafon :: processPtr)
       elseif (processName == "WEPSregrowthannual") then
-        allocate(WEPSregrowth :: processPtr)
+        allocate(WEPSregrowthannual :: processPtr)
       elseif (processName == "WEPSregrowthperen") then
-        allocate(WEPSregrowth :: processPtr)
+        allocate(WEPSregrowthperen :: processPtr)
       elseif (processName == "WEPSregrowthstaged") then
-        allocate(WEPSregrowth :: processPtr)
+        allocate(WEPSregrowthstaged :: processPtr)
       elseif (processName == "WEPSregrowwood") then
         allocate(WEPSregrowwood :: processPtr)
-      elseif (processName == "WEPSTempStress") then
-        allocate(WEPSTempStress :: processPtr)
       elseif (processName == "WEPStrendleafexternal") then
         allocate(WEPStrendleafexternal :: processPtr)
       elseif (processName == "WEPStrendstemexternal") then
         allocate(WEPStrendstemexternal :: processPtr)
-      elseif (processName == "WEPSwarmdays") then
-        allocate(WEPSwarmdays :: processPtr)
       elseif (processName == "WEPSwinterAnnSpring") then
         allocate(WEPSwinterAnnSpring :: processPtr)
+      else
+        write(*,*) 'ERROR: Invalid Process Name: ', trim(processName)
+        stop
       endif
 
       if( associated(processPtr) ) then

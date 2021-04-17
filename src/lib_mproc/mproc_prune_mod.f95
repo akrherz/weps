@@ -65,7 +65,8 @@ module mproc_prune_mod
 
           ! this is a living plant
           temp_store = prune_pool(thisPlant%mass%standstore, storef, store_flag )
-          temp_leaf = prune_pool(thisPlant%mass%standleaf, leaff, leaf_flag )
+          temp_leaf = prune_pool(thisPlant%mass%standleaflive, leaff, leaf_flag ) &
+                    + prune_pool(thisPlant%mass%standleafdead, leaff, leaf_flag )
           temp_stem = prune_pool(thisPlant%mass%standstem, stemf, stem_flag )
 
           tot_froot = 0.0

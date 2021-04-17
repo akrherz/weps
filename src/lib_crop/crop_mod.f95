@@ -52,8 +52,7 @@ module crop_mod
          ! plant exists
          ! check for a valid growing crop
          if(      (thisPlant%database%shoot .le. 0.0) &
-           .or. (thisPlant%geometry%dpop .le. 0.0) &
-           .or. (thisPlant%database%idc .le. 0) ) then
+           .or. (thisPlant%geometry%dpop .le. 0.0) ) then
            ! this is not a valid growing crop
            thisPlant%growth%living = .false.
          end if
@@ -90,26 +89,26 @@ module crop_mod
               thisPlant%database%diammax, thisPlant%database%ssa, thisPlant%database%ssb, &
               thisPlant%database%fleaf2stor, thisPlant%database%fstem2stor, thisPlant%database%fstor2stor, &
               thisPlant%database%yld_coef, thisPlant%database%resid_int, thisPlant%database%xstm, &
-              thisPlant%mass%standstem, thisPlant%mass%standleaf, thisPlant%mass%standstore, &
+              thisPlant%mass%standstem, thisPlant%mass%standleaflive, thisPlant%mass%standleafdead, thisPlant%mass%standstore, &
               thisPlant%mass%flatstem, thisPlant%mass%flatleaf, thisPlant%mass%flatstore, &
               thisPlant%growth%mshoot, thisPlant%growth%mtotshoot, thisPlant%mass%stemz, &
               thisPlant%mass%rootstorez, thisPlant%mass%rootfiberz, &
               thisPlant%geometry%zht, thisPlant%geometry%zshoot, thisPlant%geometry%dstm, thisPlant%geometry%zrtd, &
               thisPlant%growth%dayap, thisPlant%growth%dayam, &
               thisPlant%growth%thucum, thisPlant%growth%trthucum, &
-              thisPlant%geometry%grainf, thisPlant%growth%zgrowpt, thisPlant%growth%fliveleaf, &
+              thisPlant%geometry%grainf, thisPlant%growth%zgrowpt, &
               thisPlant%growth%leafareatrend, thisPlant%growth%stemmasstrend, &
               thisPlant%growth%twarmdays, thisPlant%growth%tcolddays, &
               thisPlant%growth%tchillucum, thisPlant%growth%thardnx, thisPlant%growth%thu_shoot_beg, &
               thisPlant%growth%thu_shoot_end, thisPlant%growth%mtotleaf, thisPlant%growth%thu_leaf_beg, &
               thisPlant%growth%thu_leaf_end, thisPlant%geometry%xstmrep, &
-              thisPlant%prev%standstem, thisPlant%prev%standleaf, thisPlant%prev%standstore, &
+              thisPlant%prev%standstem, thisPlant%prev%standleaflive, thisPlant%prev%standleafdead, thisPlant%prev%standstore, &
               thisPlant%prev%flatstem, thisPlant%prev%flatleaf, thisPlant%prev%flatstore, &
               thisPlant%prev%mshoot, thisPlant%prev%stemz, &
               thisPlant%prev%rootstorez, thisPlant%prev%rootfiberz, &
               thisPlant%prev%ht, thisPlant%prev%zshoot, thisPlant%prev%stm, thisPlant%prev%rtd, &
               thisPlant%prev%dayap, thisPlant%prev%hucum, thisPlant%prev%rthucum, &
-              thisPlant%prev%grainf, thisPlant%prev%chillucum, thisPlant%prev%liveleaf, &
+              thisPlant%prev%grainf, thisPlant%prev%chillucum, &
               thisPlant%prev%dayspring, thisPlant%prev%dayleafon, thisPlant%prev%dayleafoff, &
               daysim, thisPlant%growth%dayspring, thisPlant%growth%dayleafon, thisPlant%growth%dayleafoff, &
               thisPlant%database%zloc_regrow, &
@@ -147,16 +146,12 @@ module crop_mod
 
            if (am0cdb(sr).eq.1) call cdbug(sr, soil, thisPlant, restot, h1et)
 
-           ! update all derived globals for thisPlant global variables
-           call plantupdate( soil, thisPlant, croptot, restot, biotot )
-
-           ! set prevday derived variable for later reference in end_season
-           thisPlant%prev%cancov = thisPlant%deriv%fcancov
-
          end if
 
-         ! point to next older thisPlant
-         thisPlant => thisPlant%olderPlant
+         !if( associated(thisPlant) ) then
+           ! point to next older thisPlant
+           thisPlant => thisPlant%olderPlant
+         !end if
 
       end do
 
@@ -241,9 +236,8 @@ module crop_mod
         thisPlant => plant
         do while( associated(thisPlant) )
           ! plant exists
-          if( thisPlant%database%idc .gt. 0 ) then
+          if( thisPlant%database%plant_doy .gt. 0 ) then
             ! this is a plant, not some added residue
-
             if( thisPlant%database%thum .gt. 0.0 ) then
               hui = thisPlant%prev%hucum / thisPlant%database%thum
             else
@@ -263,7 +257,7 @@ module crop_mod
 
               ! adjust planting year to be less than the operation year that triggered this report
               if(     julday(thisPlant%database%plant_day, thisPlant%database%plant_month, thisPlant%database%plant_rotyr) &
-                 .gt. julday(lastoper(isr)%day,lastoper(isr)%mon,lastoper(isr)%yr) ) then
+                 .ge. julday(lastoper(isr)%day,lastoper(isr)%mon,lastoper(isr)%yr) ) then
                 adj_plant_yr = thisPlant%database%plant_rotyr - bmperod
               else
                 adj_plant_yr = thisPlant%database%plant_rotyr
@@ -272,41 +266,32 @@ module crop_mod
               write(UNIT=luoseason(isr),FMT=2010,advance='NO') &
                 thisPlant%database%plant_day, thisPlant%database%plant_month, adj_plant_yr, &
                 lastoper(isr)%day, lastoper(isr)%mon, lastoper(isr)%yr, thisPlant%bname, &
-                thisPlant%prev%standstem, thisPlant%prev%standleaf, thisPlant%prev%standstore, &
+                thisPlant%prev%standstem, thisPlant%prev%standleaflive + thisPlant%prev%standleafdead, thisPlant%prev%standstore, &
                 thisPlant%prev%flatstem, thisPlant%prev%flatleaf, thisPlant%prev%flatstore, &
                 bg_stem_sum, root_store_sum, root_fiber_sum, &
                 thisPlant%prev%ht, thisPlant%prev%stm, thisPlant%prev%rtd, thisPlant%prev%grainf, &
                 thisPlant%geometry%xstmrep, thisPlant%prev%cancov, thisPlant%prev%dayap
 
-              if( (thisPlant%database%idc .eq. 9) .or. (thisPlant%database%idc .eq. 12) ) then
-                write(UNIT=luoseason(isr),FMT=2011,advance='NO') &
-                  0.0
-              else
-                write(UNIT=luoseason(isr),FMT=2011,advance='NO') &
-                  thisPlant%prev%chillucum
-              end if
+              write(UNIT=luoseason(isr),FMT=2011,advance='NO') &
+                thisPlant%prev%chillucum
 
               write(UNIT=luoseason(isr),FMT=2020,advance='NO') &
                 thisPlant%prev%hucum, thisPlant%database%thum, hui, thisPlant%growth%dayam
 
-              if( (thisPlant%database%idc .ge. 9) .and. (thisPlant%database%idc .le. 12) ) then
-                write(UNIT=luoseason(isr),FMT=2021,advance='NO') &
-                  thisPlant%prev%dayleafon
-              else
-                write(UNIT=luoseason(isr),FMT=2021,advance='NO') &
-                  thisPlant%prev%dayspring
-              end if
+              write(UNIT=luoseason(isr),FMT=2021,advance='NO') &
+                 max( thisPlant%prev%dayleafon, thisPlant%prev%dayspring )
 
             end if
 
-            ! for annual crops, ALWAYS write out warning message
+            ! for crops that cannot regrow, ALWAYS write out warning message
             ! if harvested before maturity
-            ! Note that this is reported back to the WEPS GUI
+            ! Note: this is reported back to the WEPS GUI
             ! So, 'report_info' should be set to 1 (default) or greater under normal run conditions
             if( (hui < 1.0) .and. (mature_warn_flg .gt. 0) &
-              .and. ( (thisPlant%database%idc.eq.1) .or. (thisPlant%database%idc.eq.2) &
-                 .or. (thisPlant%database%idc.eq.4) .or. (thisPlant%database%idc.eq.5) ) ) then
-              if (report_info >= 1) then
+              .and. (thisPlant%database%fleaf2stor .le. 0.0) &
+              .and. (thisPlant%database%fstem2stor .le. 0.0) &
+              .and. (thisPlant%database%fstor2stor .le. 0.0) ) then
+             if (report_info >= 1) then
                 write(UNIT=6,FMT="(1x,3(a),i0,'/',i0,'/',i0,a,f5.1,a,a)") &
                  'Warning: ', &
                  thisPlant%bname(1:len_trim(thisPlant%bname)), &

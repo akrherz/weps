@@ -53,12 +53,12 @@ module input_soil_mod
 !     Check to see if this is a "versioned" IFC file
       read (lui1,'(a)',err=901) line
       if (line(1:12) .eq. 'Version: 1.0') then
-         call inp_ifc_v1(isr, lui1, soil, hstate)  ! For version 1.0 IFC file format only
+         call inp_ifc_v1(lui1, soil, hstate)  ! For version 1.0 IFC file format only
       else if (line(1:12) .eq. 'Version: 1.1') then
-         call inp_ifc_v1_1(isr, lui1, soil, hstate)  ! For version 1.1 IFC file format only
+         call inp_ifc_v1_1(lui1, soil, hstate)  ! For version 1.1 IFC file format only
       else  ! Assuming obsolete unversioned IFC file formats only
          close (lui1)    
-         call inpsub(isr, soil, hstate)  ! For obsolete IFC file formats only
+         call inpsub(soil, hstate)  ! For obsolete IFC file formats only
          return            ! initialization is already done in inpsub
       end if
                    
@@ -182,13 +182,12 @@ module input_soil_mod
 
 !      subroutine inp_ifc_v1 (isr, lui1, soil)
 !      subroutine inp_ifc_v1_1 (isr, lui1, soil)
-    subroutine inp_ifc_v1 (isr, lui1, soil, hstate)
+    subroutine inp_ifc_v1 (lui1, soil, hstate)
 
       use soil_data_struct_defs, only: soil_def, allocate_soil
       use hydro_data_struct_defs, only: hydro_state
 
 !     + + + Arguments + + +
-      integer isr
       integer lui1
       type(soil_def), intent(inout) :: soil  ! soil structure
       type(hydro_state), intent(inout) :: hstate
@@ -425,7 +424,7 @@ module input_soil_mod
     end subroutine inp_ifc_v1
 
 !-----------------------------------------------------------------------
-    subroutine inp_ifc_v1_1 (isr, lui1, soil, hstate)
+    subroutine inp_ifc_v1_1 (lui1, soil, hstate)
 
       ! input routine for Version 1.1 IFC file format
 
@@ -437,7 +436,6 @@ module input_soil_mod
       use hydro_data_struct_defs, only: hydro_state
 
 !     + + + Arguments + + +
-      integer isr
       integer lui1
       type(soil_def), intent(inout) :: soil  ! subregion surface conditions
       type(hydro_state), intent(inout) :: hstate
@@ -680,7 +678,7 @@ module input_soil_mod
     end subroutine inp_ifc_v1_1
 
 !      subroutine inpsub (isr, soil_in, soil)
-    subroutine inpsub (isr, soil, hstate)
+    subroutine inpsub (soil, hstate)
 ! ***************************************************************** wjr
 ! reads initial field conditions (IFC) file for all subregions
 !
@@ -699,7 +697,6 @@ module input_soil_mod
       use hydro_util_mod, only: param_pot_bc, param_prop_bc
 
 !     + + + Arguments + + +
-      integer, intent(in) :: isr
       type(soil_def), intent(inout) :: soil  ! subregion surface conditions
       type(hydro_state), intent(inout) :: hstate
 

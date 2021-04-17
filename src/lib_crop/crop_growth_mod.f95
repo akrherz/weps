@@ -27,26 +27,26 @@ module crop_growth_mod
      &                 bc0diammax, bc0ssa, bc0ssb,                      &
      &                 bcfleaf2stor, bcfstem2stor, bcfstor2stor,        &
      &                 bcyld_coef, bcresid_int, bcxstm,                 &
-     &                 bcmstandstem, bcmstandleaf, bcmstandstore,       &
+     &                 bcmstandstem, bcmstandleaflive, bcmstandleafdead, bcmstandstore, &
      &                 bcmflatstem, bcmflatleaf, bcmflatstore,          &
      &                 bcmshoot, bcmtotshoot, bcmbgstemz,               &
      &                 bcmrootstorez, bcmrootfiberz,                    &
      &                 bczht, bczshoot, bcdstm, bczrtd,                 &
      &                 bcdayap, bcdayam,                                &
      &                 bcthucum, bctrthucum,                            &
-     &                 bcgrainf, bczgrowpt, bcfliveleaf,                &
+     &                 bcgrainf, bczgrowpt,                &
      &                 bcleafareatrend, bcstemmasstrend, &
      &                 bctwarmdays, bctcolddays,  &
      &                 bctchillucum, bcthardnx, bcthu_shoot_beg,        &
      &                 bcthu_shoot_end, bcmtotleaf, bcthu_leaf_beg, &
      &                 bcthu_leaf_end, bcxstmrep, &
-     &                 bprevstandstem, bprevstandleaf, bprevstandstore, &
+     &                 bprevstandstem, bprevstandleaflive, bprevstandleafdead, bprevstandstore, &
      &                 bprevflatstem, bprevflatleaf, bprevflatstore,    &
      &                 bprevmshoot, bprevbgstemz,                       &
      &                 bprevrootstorez, bprevrootfiberz,                &
      &                 bprevht, bprevzshoot, bprevstm, bprevrtd,        &
      &                 bprevdayap, bprevhucum, bprevrthucum,            &
-     &                 bprevgrainf, bprevchillucum, bprevliveleaf,      &
+     &                 bprevgrainf, bprevchillucum,      &
      &                 bprevdayspring, bprevdayleafon, bprevdayleafoff, &
      &                 daysim, bcdayspring, bcdayleafon, bcdayleafoff, &
      &                 bczloc_regrow, &
@@ -65,7 +65,6 @@ module crop_growth_mod
       use crop_data_struct_defs, only: am0cfl
       use crop_climate_mod, only: huc1, freezeharden, chillunit_cum, warmday_cum, coldday_cum
       use climate_input_mod, only: amalat
-      use special_func_mod, only: scrv1
       use solar_mod, only: civilrise, daylen
       use solar_mod, only: N_spring_eqx, N_summer_sol, N_fall_eqx, N_winter_sol
       use solar_mod, only: S_spring_eqx, S_summer_sol, S_fall_eqx, S_winter_sol
@@ -93,7 +92,7 @@ module crop_growth_mod
       real bc0diammax, bc0ssa, bc0ssb
       real bcfleaf2stor, bcfstem2stor, bcfstor2stor
       real bcyld_coef, bcresid_int, bcxstm
-      real bcmstandstem, bcmstandleaf, bcmstandstore
+      real bcmstandstem, bcmstandleaflive, bcmstandleafdead, bcmstandstore
       real bcmflatstem, bcmflatleaf, bcmflatstore
       real bcmshoot, bcmtotshoot, bcmbgstemz(*)
       real bcmrootstorez(*), bcmrootfiberz(*)
@@ -102,7 +101,6 @@ module crop_growth_mod
       double precision bcthucum
       double precision bctrthucum
       real bcgrainf, bczgrowpt
-      double precision bcfliveleaf
       double precision bcleafareatrend, bcstemmasstrend
       double precision bctwarmdays
       double precision bctcolddays
@@ -112,7 +110,7 @@ module crop_growth_mod
       double precision bcmtotleaf
       double precision bcthu_leaf_beg, bcthu_leaf_end
       double precision bcxstmrep
-      real bprevstandstem, bprevstandleaf, bprevstandstore
+      real bprevstandstem, bprevstandleaflive, bprevstandleafdead, bprevstandstore
       real bprevflatstem, bprevflatleaf, bprevflatstore
       real bprevmshoot, bprevbgstemz(*)
       real bprevrootstorez(*), bprevrootfiberz(*)
@@ -120,7 +118,7 @@ module crop_growth_mod
       integer bprevdayap
       double precision bprevhucum, bprevrthucum
       real bprevgrainf
-      double precision bprevchillucum, bprevliveleaf
+      double precision bprevchillucum
       integer bprevdayspring, bprevdayleafon, bprevdayleafoff
       logical bm0cif
       real    bcbaf
@@ -163,7 +161,7 @@ module crop_growth_mod
 !     bsfsmb     - sum of bases (cmol/kg)
 !     bctmin - base temperature (deg. C)
 !     bctopt - optimum temperature (deg. C)
-!     bc0bceff - biomass conversion efficiency (kg/ha/mj)
+!     bc0bceff - biomass conversion efficiency (kg/ha/MJ/m^2)
 !     bszlyd - depth from top of soil to botom of layer, m
 !     bcbaf  - biomass adjustment factor
 !     bcyraf - yield to biomass ratio adjustment factor
@@ -187,7 +185,8 @@ module crop_growth_mod
 !     bcresid_int - residue intercept (kg/m^2)   harvest_residue = bcyld_coef(kg/kg) * Yield + bcresid_int (kg/m^2)
 !     bcxstm - Crop stem diameter (m)
 !     bcmstandstem - crop standing stem mass (kg/m^2)
-!     bcmstandleaf - crop standing leaf mass (kg/m^2)
+!     bcmstandleaflive - crop live standing leaf mass (kg/m^2)
+!     bcmstandleafdead - crop dead standing leaf mass (kg/m^2)
 !     bcmstandstore - crop standing storage mass (kg/m^2)
 !                    (head with seed, or vegetative head (cabbage, pineapple))
 !     bcmflatstem  - crop flat stem mass (kg/m^2)
@@ -214,7 +213,6 @@ module crop_growth_mod
 !     bctrthucum - accumulated root growth heat units (degree-days)
 !     bcgrainf - internally computed reproductive grain fraction
 !     bczgrowpt - depth in the soil of the gowing point (m)
-!     bcfliveleaf - fraction of standing plant leaf which is living (transpiring)
 !     bcleafareatrend - direction in which leaf area is trending.
 !                       Saves trend even if leaf area is static for long periods.
 !     bcstemmasstrend - direction in which stem mass is trending.
@@ -267,7 +265,7 @@ module crop_growth_mod
       double precision trend
       double precision hu_delay
       integer regrowth_flg
-      double precision frst, a_fr, b_fr, ffa, ffw
+      double precision frst, ffa, ffw
       double precision lost_mass
       real :: hrlt, hrlty   ! length of day in hours for today and yesterday
       double precision :: hui           ! heat unit amalat, jdindex
@@ -275,8 +273,7 @@ module crop_growth_mod
       double precision :: huirt         ! root growth heat unit index
       double precision :: huirty        ! root growth heat unit index yesterday
       double precision :: xw            ! absolute value of minimum temperature
-      double precision :: froz_mass        ! mass of living tissue that died today
-      double precision :: live_leaf, dead_leaf ! mass in kg/m^2
+      double precision :: froz_mass     ! mass of living tissue that died today
       double precision :: huc
 
       double precision :: u_bcmtotshoot
@@ -366,46 +363,32 @@ module crop_growth_mod
 
       ! reduce green leaf mass in freezing weather
 
-      ! calculates Frost damage s-curve coefficients
-      call scrv1(bc0fd1,cc0fd1,bc0fd2,cc0fd2,a_fr,b_fr)
-
       ! set heat unit index at beginning of the day
       huiy = min(1.0d0, bcthucum / bcthum)
 
-      if (dble(bhtsmn(1)) .lt. -2.0d0) then
+      if( ((bcmstandleaflive + bcmstandleafdead) .gt. 0.0) .and. (dble(bhtsmn(1)) .lt. -2.0d0) ) then
           ! use daily minimum soil temperature of first layer to account for snow cover effects
           xw = abs( dble(bhtsmn(1)) )
-          ! this was obviously to prevent excessive leaf loss
-          ! frst=sqrt((1.-xw/(xw+exp(a_fr-b_fr*xw)))+0.000001)
-          ! frst=sqrt(frst)
-          ! tested to match the values input in the database
-          frst = xw / (xw + exp(a_fr-b_fr*xw))
-          frst = min(1.0d0, max(0.0d0, frst))
+          ! calculates Frost damage
+          frst = freeze_damage( bc0fd1, cc0fd1, bc0fd2, cc0fd2, xw )
 
           ! is it before or after scenescence?
           if ( huiy .lt. (bcehu0-bcehu0*.1)) then
               ! before scenescence, frost killed mass is fragile and a fraction disappears
               ffa = 1.0d0 - frst
               ffw = 1.0d0 - frst * frac_frst_mass_lost
-              lost_mass = bcmstandleaf * (1.0d0 - ffw)
+              lost_mass = (bcmstandleaflive + bcmstandleafdead) * (1.0d0 - ffw)
 
-              ! eliminate these in favor of dead to live ratio
               ! reduce green leaf area due to frost damage (10/1/99)
-              live_leaf = bcmstandleaf * bcfliveleaf
-              dead_leaf = bcmstandleaf * (1.0d0 - bcfliveleaf)
-              froz_mass = bcmstandleaf * bcfliveleaf * frst
-              live_leaf = live_leaf - froz_mass
-              dead_leaf = dead_leaf+froz_mass*(1.0d0-frac_frst_mass_lost)
-
-              ! adjust here for lost mass amount so consistent below)
-              bcmstandleaf = bcmstandleaf * ffw
-              ! change in living mass fraction due freezing
-              ! and accounting for weathering mass loss of dead leaf
-              bcfliveleaf = ffa*bcfliveleaf/(1.0d0+bcfliveleaf*(ffw-1.0d0))
+              froz_mass = bcmstandleaflive * frst
+              bcmstandleaflive = bcmstandleaflive - froz_mass
+              bcmstandleafdead = bcmstandleafdead + froz_mass*(1.0d0-frac_frst_mass_lost)
           else
               ! after scenescence, frost killed mass is tougher and is not lost immediately
               ! reduce green leaf area due to frost damage (9/22/2003)
-              bcfliveleaf = bcfliveleaf * (1.0d0 - frst)
+              froz_mass = bcmstandleaflive * frst
+              bcmstandleaflive = bcmstandleaflive - froz_mass
+              bcmstandleafdead = bcmstandleafdead + froz_mass
               lost_mass = 0.0d0
           end if
       else
@@ -414,7 +397,7 @@ module crop_growth_mod
       endif
 
       ! set trend direction for living leaf area from external forces
-      trend = (bcfliveleaf*dble(bcmstandleaf)) - (bprevliveleaf*dble(bprevstandleaf))
+      trend = bcmstandleaflive - bprevstandleaflive
       if ((trend .ne. 0.0d0) &
           .and. ((huiy .gt. bc0hue) .or. (bc0idc.eq.8))) &
           then  ! trend non-zero and (heat units past emergence or staged crown release crop)
@@ -538,7 +521,7 @@ module crop_growth_mod
                   else
                       ! regrows from crown, stem becomes residue
                       bgmstandstem = bcmstandstem
-                      bgmstandleaf = bcmstandleaf
+                      bgmstandleaf = bcmstandleaflive + bcmstandleafdead
                       bgmstandstore = bcmstandstore
                       bgmflatstem = bcmflatstem
                       bgmflatleaf = bcmflatleaf
@@ -553,7 +536,8 @@ module crop_growth_mod
                       ! reset crop values to indicate new growth cycle
                       bcmshoot = 0.0
                       bcmstandstem = 0.0
-                      bcmstandleaf = 0.0
+                      bcmstandleaflive = 0.0
+                      bcmstandleafdead = 0.0
                       bcmstandstore = 0.0
                       bcmflatstem = 0.0
                       bcmflatleaf = 0.0
@@ -617,19 +601,19 @@ module crop_growth_mod
                 if( (bc0idc .eq. 9) .or. (bc0idc .eq. 12) ) then
                   ! Deciduous, drop all leaves
                   ! drop leaves into flat residue pool
-                  bgmflatleaf = bcmflatleaf + bcmstandleaf
+                  bgmflatleaf = bcmflatleaf + bcmstandleaflive + bcmstandleafdead
                   ! reset crop values
-                  bcmstandleaf = 0.0
+                  bcmstandleaflive = 0.0
+                  bcmstandleafdead = 0.0
                   bcmflatleaf = 0.0
                   ! set heat units to mature
                   bcthucum = bcthum
                 else if( bc0idc .eq. 10 ) then
                   ! Evergreen, drop dead leaves
                   ! drop leaves into flat residue pool
-                  bgmflatleaf = bcmflatleaf + bcmstandleaf * (1.0d0 - bcfliveleaf)
+                  bgmflatleaf = bcmflatleaf + bcmstandleafdead
                   ! reset crop values
-                  bcmstandleaf = bcmstandleaf * bcfliveleaf
-                  bcfliveleaf = 1.0d0
+                  bcmstandleafdead = 0.0
                   bcmflatleaf = 0.0
                   ! reset heat units (use vernalization delay)
                   bcthucum = 0.0d0
@@ -637,14 +621,14 @@ module crop_growth_mod
                 else if( bc0idc .eq. 11 ) then
                   ! Mixed Deciduous and Evergreen, default 50% tree mix
                   ! drop 50% leaf mass to simulate Deciduous leaf drop change in cover
-                  bgmflatleaf = bcmflatleaf + bcmstandleaf * 0.5d0
+                  bgmflatleaf = bcmflatleaf + bcmstandleaflive * 0.5d0 + bcmstandleafdead * 0.5d0
                   ! reset crop values
-                  bcmstandleaf = bcmstandleaf * 0.5d0
+                  bcmstandleaflive = bcmstandleaflive * 0.5d0
+                  bcmstandleafdead = bcmstandleafdead * 0.5d0
                   ! drop dead evergreen leaves into flat residue pool
-                  bgmflatleaf = bgmflatleaf + bcmstandleaf * (1.0d0 - bcfliveleaf)
+                  bgmflatleaf = bgmflatleaf + bcmstandleafdead
                   ! reset crop values
-                  bcmstandleaf = bcmstandleaf * bcfliveleaf
-                  bcfliveleaf = 1.0d0
+                  bcmstandleafdead = 0.0
                   bcmflatleaf = 0.0
                   ! reset heat units (use vernalization delay)
                   bcthucum = 0.0d0
@@ -676,7 +660,7 @@ module crop_growth_mod
           if( bcleafareatrend .lt. 0.0) then
            ! last change in leaf area was a reduction
            regrowth_flg = 1
-           if( bcfliveleaf * bcmstandleaf .lt. 0.84d0*bc0storeinit*bcdpop & ! 0.42 * 2 = 0.84
+           if( bcmstandleaflive .lt. 0.84d0*bc0storeinit*bcdpop & ! 0.42 * 2 = 0.84
             * u_mgtokg * bcfleafstem / (bcfleafstem + 1.0d0) ) then
             ! below minimum leaf emergence period living leaf mass (which is twice seed leaf mass)
             regrowth_flg = 2
@@ -700,7 +684,7 @@ module crop_growth_mod
                      bcdmaxshoot, root_store_rel, bcmrootstorez, pot_stems)
                ! find the potential leaf mass to be achieved with regrowth
                if ( bczloc_regrow .gt. 0.0 ) then
-                   pot_leaf_mass = dble(bcmstandleaf) + 0.42d0 &
+                   pot_leaf_mass = dble(bcmstandleaflive + bcmstandleafdead) + 0.42d0 &
                                  * min(root_store_rel, u_bcmtotshoot) &
                                  * dble(bcfleafstem) / (dble(bcfleafstem) + 1.0d0)
                else
@@ -708,7 +692,7 @@ module crop_growth_mod
                                  * dble(bcfleafstem) / (dble(bcfleafstem) + 1.0d0)
                end if
                ! is present living leaf mass less than leaf mass from storage regrowth
-               if( (bcfliveleaf*dble(bcmstandleaf)) .lt. pot_leaf_mass ) then
+               if( dble(bcmstandleaflive) .lt. pot_leaf_mass ) then
                   regrowth_flg = 6
                   ! regrow possible from shoot for perennials, annuals.
                   ! reset growth clock 
@@ -725,7 +709,7 @@ module crop_growth_mod
                       ! note, flat leaves are dead leaves, no storage in shoot.
 
                       ! testing shows that this is not what is intended
-                      !bcmshoot = bcmstandstem +bcmflatstem +bcmstandleaf
+                      !bcmshoot = bcmstandstem +bcmflatstem +bcmstandleaflive + bcmstandleafdead
                       !do lay = 1, bnslay
                       !    bcmshoot = bcmshoot + bcmbgstemz(lay)
                       !end do
@@ -735,7 +719,7 @@ module crop_growth_mod
                   else
                       ! regrows from crown, stem becomes residue
                       bgmstandstem = bcmstandstem
-                      bgmstandleaf = bcmstandleaf
+                      bgmstandleaf = bcmstandleaflive + bcmstandleafdead
                       bgmstandstore = bcmstandstore
                       bgmflatstem = bcmflatstem
                       bgmflatleaf = bcmflatleaf
@@ -750,7 +734,8 @@ module crop_growth_mod
                       ! reset crop values to indicate new growth cycle
                       bcmshoot = 0.0
                       bcmstandstem = 0.0
-                      bcmstandleaf = 0.0
+                      bcmstandleaflive = 0.0
+                      bcmstandleafdead = 0.0
                       bcmstandstore = 0.0
                       bcmflatstem = 0.0
                       bcmflatleaf = 0.0
@@ -833,18 +818,19 @@ module crop_growth_mod
           ! seedling, transplant initialization and winter annual shoot growth
           ! calculations using root reserves
           if(       (huiy .lt. bcthu_shoot_end)                         &
-     &        .and. (hui  .gt. bcthu_shoot_beg) ) then
+     &        .and. (hui  .ge. bcthu_shoot_beg) ) then
+
               ! daily shoot growth
               call shoot_grow( isr, bnslay, bszlyd, bcdpop,             &
      &                 bczmxc, bcfleafstem,                             &
      &                 bcfshoot, bc0ssa, bc0ssb, bc0diammax,            &
      &                 hui, huiy, bcthu_shoot_beg, bcthu_shoot_end,     &
-     &                 bcmstandstem, bcmstandleaf, bcmstandstore,       &
+     &                 bcmstandstem, bcmstandleaflive, bcmstandleafdead, bcmstandstore, &
      &                 bcmflatstem, bcmflatleaf, bcmflatstore,          &
      &                 bcmshoot, bcmtotshoot, bcmbgstemz,               &
      &                 bcmrootstorez, bcmrootfiberz,                    &
      &                 bczht, bczshoot, bcdstm, bczrtd,                 &
-     &                 bczgrowpt, bcfliveleaf, bc0nam,                  &
+     &                 bczgrowpt, bc0nam,                  &
      &                 bchyfg, bcyld_coef, bcresid_int, bcgrf,          &
      &                 daysim, bcdayap )
           end if
@@ -853,7 +839,7 @@ module crop_growth_mod
             .and. (hui  .gt. bcthu_leaf_beg) ) then
             ! daily leaf emergence
             call leaf_emerge( bnslay, bcdpop, hui, huiy, bcthu_leaf_beg, bcthu_leaf_end, &
-                              bcmstandleaf, bcmtotleaf, bcmrootstorez, bcfliveleaf )
+                              bcmstandleaflive, bcmtotleaf, bcmrootstorez )
           end if
 
           if(       (huiy .lt. bcthu_shoot_end)                         &
@@ -882,17 +868,16 @@ module crop_growth_mod
      &                 bcbaf, bchyfg,                                   &
      &                 bcfleaf2stor, bcfstem2stor, bcfstor2stor,        &
      &                 bcyld_coef, bcresid_int,                         &
-     &                 bcmstandstem, bcmstandleaf, bcmstandstore,       &
+     &                 bcmstandstem, bcmstandleaflive, bcmstandleafdead, bcmstandstore, &
      &                 bcmflatstem, bcmflatleaf, bcmflatstore,          &
      &                 bcmrootstorez, bcmrootfiberz,                    &
      &                 bcmbgstemz,                                      &
-     &                 bczht, bcdstm, bczrtd, bcfliveleaf,              &
+     &                 bczht, bcdstm, bczrtd,              &
      &                 bcdayap, bcgrainf, bcdpop, daysim, regrowth_flg, &
      &                 bc0shoot, bcdmaxshoot )
 
           ! set trend direction for living leaf area
-          trend = (bcfliveleaf*bcmstandleaf)                            &
-     &          - (bprevliveleaf*bprevstandleaf)
+          trend = bcmstandleaflive - bprevstandleaflive
           if ((trend .ne. 0.0)                                          &
      &        .and. ((hui .gt. bc0hue) .or. (bc0idc.eq.8))) &
      &        then  ! trend non-zero and (heat units past emergence or staged crown release crop)
@@ -909,7 +894,8 @@ module crop_growth_mod
 
           ! set saved values of crop state variables for comparison next time
           bprevstandstem = bcmstandstem
-          bprevstandleaf = bcmstandleaf
+          bprevstandleaflive = bcmstandleaflive
+          bprevstandleafdead = bcmstandleafdead
           bprevstandstore = bcmstandstore
           bprevflatstem = bcmflatstem
           bprevflatleaf = bcmflatleaf
@@ -929,7 +915,6 @@ module crop_growth_mod
           bprevrthucum = bctrthucum
           bprevgrainf = bcgrainf
           bprevchillucum = bctchillucum
-          bprevliveleaf = bcfliveleaf
           bprevdayspring = bcdayspring
           bprevdayleafon = bcdayleafon
           bprevdayleafoff = bcdayleafoff
@@ -945,7 +930,8 @@ module crop_growth_mod
             ! these crops continue until leaf drop or are evergreen
           else
             ! heat units completed, crop leaf mass is non transpiring
-            bcfliveleaf = 0.0d0
+            bcmstandleafdead = bcmstandleafdead + bcmstandleaflive
+            bcmstandleaflive = 0.0
           end if
 
           ! check for mature perennial that may re-sprout before fall (alfalfa, grasses)
@@ -973,11 +959,11 @@ module crop_growth_mod
      &                 bcbaf, bchyfg,                                   &
      &                 bcfleaf2stor, bcfstem2stor, bcfstor2stor,        &
      &                 bcyld_coef, bcresid_int,                         &
-     &                 bcmstandstem, bcmstandleaf, bcmstandstore,       &
+     &                 bcmstandstem, bcmstandleaflive, bcmstandleafdead, bcmstandstore, &
      &                 bcmflatstem, bcmflatleaf, bcmflatstore,          &
      &                 bcmrootstorez, bcmrootfiberz,                    &
      &                 bcmbgstemz,                                      &
-     &                 bczht, bcdstm, bczrtd, bcfliveleaf,              &
+     &                 bczht, bcdstm, bczrtd,              &
      &                 bcdayap, bcgrainf, bcdpop, daysim, regrowth_flg, &
      &                 bc0shoot, bcdmaxshoot )
 
@@ -1022,12 +1008,11 @@ module crop_growth_mod
       integer bchyfg
       real bcfleaf2stor, bcfstem2stor, bcfstor2stor
       real bcyld_coef, bcresid_int
-      real bcmstandstem, bcmstandleaf, bcmstandstore
+      real bcmstandstem, bcmstandleaflive, bcmstandleafdead, bcmstandstore
       real bcmflatstem, bcmflatleaf, bcmflatstore
       real bcmrootstorez(*), bcmrootfiberz(*)
       real bcmbgstemz(*)
       real bczht, bcdstm, bczrtd
-      double precision bcfliveleaf
       integer bcdayap
       real bcgrainf, bcdpop
       integer daysim, regrowth_flg
@@ -1088,7 +1073,8 @@ module crop_growth_mod
 !     bcyld_coef - yield coefficient (kg/kg)     harvest_residue = bcyld_coef(kg/kg) * Yield + bcresid_int (kg/m^2)
 !     bcresid_int - residue intercept (kg/m^2)   harvest_residue = bcyld_coef(kg/kg) * Yield + bcresid_int (kg/m^2)
 !     bcmstandstem - crop standing stem mass (kg/m^2)
-!     bcmstandleaf - crop standing leaf mass (kg/m^2)
+!     bcmstandleaflive - crop live standing leaf mass (kg/m^2)
+!     bcmstandleafdead - crop dead standing leaf mass (kg/m^2)
 !     bcmstandstore - crop standing storage mass (kg/m^2)
 !                    (head with seed, or vegetative head (cabbage, pineapple))
 !     bcmflatstem  - crop flat stem mass (kg/m^2)
@@ -1103,7 +1089,6 @@ module crop_growth_mod
 !     bcdstm - Number of plant stems per unit area (#/m^2)
 !            - Note: bcdstm/bcdpop gives the number of stems per plant
 !     bczrtd - root depth (m)
-!     bcfliveleaf - fraction of standing plant leaf which is living (transpiring)
 !     bcdayap - number of days of growth completed since crop planted
 !     bcgrainf - internally computed grain fraction of reproductive mass
 !     bcdpop - Number of plants per unit area (#/m^2)
@@ -1143,6 +1128,9 @@ module crop_growth_mod
       double precision temp_sai, temp_stmrep
       double precision adjleaf2stor, adjstem2stor, adjstor2stor
       double precision tempdstm, temptotshoot
+      double precision lost_mass_weath  ! lost mass from weathering of senesence material
+      double precision senes_mass       ! mass of leaf moved from live to dead (senescence)
+      double precision temp_fliveleaf
 
 !     + + + LOCAL VARIABLE DEFINITIONS + + +
 !     par - photosynthetically active radiation (MJ/m2)
@@ -1163,7 +1151,7 @@ module crop_growth_mod
 !     dht - daily height increment (m)
 !     hux - relative gdd offset to start at scenescence
 !     ff - senescence factor (ratio)
-!     ffa - leaf senescnce factor (ratio)
+!     ffa - leaf senescence factor (ratio)
 !     ffw - leaf weight reduction factor (ratio)
 !     ffr - fibrous root weight reduction factor (ratio)
 !     hui0f - relative gdd at start of scenescence
@@ -1177,8 +1165,8 @@ module crop_growth_mod
 
 !     bhfwsf_adj - water stress factor adjusted by biomass adjustment factor
 
-!     clfwt - leaf dry weight (kg/plant)
-!     clfarea - leaf area (m^2/plant)
+!     clfwt - live leaf dry weight (kg/plant)
+!     clfarea - live leaf area (m^2/plant)
 !     pdiam - Reach of growing plant (m)
 !     parea - areal extent occupied by plant leaf (m^2/plant)
 !     p_lf_rp - sum of leaf and reproductive partitioning fractions
@@ -1229,8 +1217,8 @@ module crop_growth_mod
 
       !!!!! START SINGLE PLANT CALCULATIONS !!!!!
       ! calculate single plant effective lai (standing living leaves only)
-      clfwt = bcmstandleaf / bcdpop            ! kg/m^2 / plants/m^2 = kg/plant
-      clfarea = clfwt * bc0sla * bcfliveleaf   ! kg/plant * m^2/kg = m^2/plant
+      clfwt = bcmstandleaflive / bcdpop  ! kg/m^2 / plants/m^2 = kg/plant
+      clfarea = clfwt * bc0sla           ! kg/plant * m^2/kg = m^2/plant
 
       ! limiting plant area to a feasible plant area results in a
       ! leaf area index covering the "plant's area"
@@ -1427,13 +1415,20 @@ module crop_growth_mod
           ffa = ff**0.125d0
           ffw = ff**0.0625d0
           ffr = 0.98d0
-          ! loss from weathering of leaf mass added to mass lost to freeze damage
-          lost_mass = lost_mass + bcmstandleaf * (1.0 - ffw)
+          ! loss from weathering of leaf mass
+          lost_mass_weath = (bcmstandleaflive + bcmstandleafdead) * (1.0 - ffw)
           ! adjust for senescence (done here, not below, so consistent with lost mass amount)
-          bcmstandleaf = bcmstandleaf * ffw
-          ! change in living mass fraction due scenescence
-          ! and accounting for weathering mass loss of dead leaf
-          bcfliveleaf = ffa*bcfliveleaf / (1.0d0 + bcfliveleaf*(ffw-1.0d0))
+          senes_mass = bcmstandleaflive * (1.0d0 - ffa)
+          bcmstandleaflive = bcmstandleaflive - senes_mass
+          bcmstandleafdead = bcmstandleafdead + senes_mass
+          if( bcmstandleafdead .lt. lost_mass_weath ) then
+              lost_mass_weath = bcmstandleafdead
+              bcmstandleafdead = 0.0
+          else
+              bcmstandleafdead = bcmstandleafdead - lost_mass_weath
+          endif
+          ! loss from weathering of leaf mass added to mass lost to freeze damage
+          lost_mass = lost_mass + lost_mass_weath
       else
           ! set a value to be written out
           ffa = 1.0d0
@@ -1447,7 +1442,7 @@ module crop_growth_mod
      &  .and. ( (bchyfg.eq.0).or.(bchyfg.eq.1).or.(bchyfg.eq.5) ) ) then
 
           call cookyield(bchyfg, bnslay, dlfwt, dstwt, drpwt, drswt,    &
-     &                   dble(bcmstandstem), dble(bcmstandleaf), dble(bcmstandstore), &
+     &                   dble(bcmstandstem), dble(bcmstandleaflive + bcmstandleafdead), dble(bcmstandstore), &
      &                   dble(bcmflatstem), dble(bcmflatleaf), dble(bcmflatstore), &
      &                   bcmrootstorez, lost_mass,                      &
      &                   dble(bcyld_coef), dble(bcresid_int), dble(bcgrf) )
@@ -1478,13 +1473,7 @@ module crop_growth_mod
 
       ! add mass increment to accumulated biomass (kg/m^2)
       ! all leaf mass added to living leaf in standing pool
-      if( dlfwt .gt. 0.0d0 ) then
-          ! recalculate fraction of leaf which is living
-          bcfliveleaf = (bcfliveleaf*bcmstandleaf + dlfwt)              &
-     &                / (bcmstandleaf + dlfwt)
-          ! next add in the additional mass
-          bcmstandleaf = bcmstandleaf + dlfwt
-      end if
+      bcmstandleaflive = bcmstandleaflive + dlfwt
 
       ! divide between standing and flat stem and storage in proportion
       ! to maximum height and maximum radius ratio
@@ -1618,18 +1607,25 @@ module crop_growth_mod
               temp_stem = temp_stem + bcmbgstemz(i)
           end do
 
+          if( (bcmstandleaflive + bcmstandleafdead) .gt. 0.0d0 ) then
+            temp_fliveleaf = bcmstandleaflive / (bcmstandleaflive + bcmstandleafdead)
+          else
+            temp_fliveleaf = 1.0d0
+          end if
+
           write(luocrop(isr), 2130) daysim, doy, yr, bcdayap, hui,      &
-     &                    bcmstandstem, bcmstandleaf, bcmstandstore,    &
+     &                    bcmstandstem, bcmstandleaflive + bcmstandleafdead, bcmstandstore, &
      &                    bcmflatstem, bcmflatleaf, bcmflatstore,       &
      &                    temp_store, temp_fiber, temp_stem,            &
-     &                    bcmstandleaf + bcmflatleaf,                   &
+     &                    bcmstandleaflive + bcmstandleafdead + bcmflatleaf, &
      &                    bcmstandstem + bcmflatstem + temp_stem,       &
      &                    bczht, bcdstm, trad_lai, eff_lai, bczrtd,     &
      &                    bcgrainf, ts, bhfwsf, frst, ffa, ffw,         &
      &                    par, apar, pddm, p_rw, p_st, p_lf, p_rp,      &
      &                    stem_propor, pdiam, parea, pdiam/bc0diammax,  &
      &                    parea*bcdpop, hu_delay, bcthardnx, temp_sai,  &
-     &                    temp_stmrep, regrowth_flg, bcfliveleaf, trim(bc0nam)
+     &                    temp_stmrep, regrowth_flg, temp_fliveleaf, &
+     &                    trim(bc0nam)
       end if
 
  2130 format(1x,i6,1x,i3,1x,i4,1x,i5,1x,f6.3,12(1x,f7.4),1x,f7.2,       &
@@ -1643,12 +1639,12 @@ module crop_growth_mod
      &                 bczmxc, bcfleafstem,                             &
      &                 bcfshoot, bc0ssa, bc0ssb, bc0diammax,            &
      &                 hui, huiy, bcthu_shoot_beg, bcthu_shoot_end,     &
-     &                 bcmstandstem, bcmstandleaf, bcmstandstore,       &
+     &                 bcmstandstem, bcmstandleaflive, bcmstandleafdead, bcmstandstore, &
      &                 bcmflatstem, bcmflatleaf, bcmflatstore,          &
      &                 bcmshoot, bcmtotshoot, bcmbgstemz,               &
      &                 bcmrootstorez, bcmrootfiberz,                    &
      &                 bczht, bczshoot, bcdstm, bczrtd,                 &
-     &                 bczgrowpt, bcfliveleaf, bc0nam,                  &
+     &                 bczgrowpt, bc0nam,                  &
      &                 bchyfg, bcyld_coef, bcresid_int, bcgrf,          &
      &                 daysim, bcdayap )
 
@@ -1672,13 +1668,12 @@ module crop_growth_mod
       real bcfshoot, bc0ssa, bc0ssb, bc0diammax
       double precision hui, huiy
       double precision bcthu_shoot_beg, bcthu_shoot_end
-      real bcmstandstem, bcmstandleaf, bcmstandstore
+      real bcmstandstem, bcmstandleaflive, bcmstandleafdead, bcmstandstore
       real bcmflatstem, bcmflatleaf, bcmflatstore
       real bcmshoot, bcmtotshoot, bcmbgstemz(*)
       real bcmrootstorez(*), bcmrootfiberz(*)
       real bczht, bczshoot, bcdstm, bczrtd
       real bczgrowpt
-      double precision bcfliveleaf
       character*(80) bc0nam
       integer bchyfg
       real bcyld_coef, bcresid_int, bcgrf
@@ -1700,7 +1695,8 @@ module crop_growth_mod
 !     bcthu_shoot_beg - heat unit index (fraction) for beginning of shoot grow from root storage period
 !     bcthu_shoot_end - heat unit index (fraction) for end of shoot grow from root storage period
 !     bcmstandstem - crop standing stem mass (kg/m^2)
-!     bcmstandleaf - crop standing leaf mass (kg/m^2)
+!     bcmstandleaflive - crop live standing leaf mass (kg/m^2)
+!     bcmstandleafdead - crop dead standing leaf mass (kg/m^2)
 !     bcmstandstore - crop standing storage mass (kg/m^2)
 !                    (head with seed, or vegetative head (cabbage, pineapple))
 !     bcmflatstem  - crop flat stem mass (kg/m^2)
@@ -1724,7 +1720,6 @@ module crop_growth_mod
 !     bcdstm - Number of crop stems per unit area (#/m^2)
 !     bczrtd - root depth (m)
 !     bczgrowpt - depth in the soil of the growing point (m)
-!     bcfliveleaf - fraction of standing plant leaf which is living (transpiring)
 !     bc0nam - crop name
 !     bchyfg - flag indicating the part of plant to apply the "grain fraction",
 !              GRF, to when removing that plant part for yield
@@ -1946,7 +1941,7 @@ module crop_growth_mod
      &  .and. ( (bchyfg.eq.0).or.(bchyfg.eq.1) ) ) then
 
           call cookyield(bchyfg, bnslay, dlfwt, dstwt, drpwt, drswt,    &
-     &                   dble(bcmstandstem), dble(bcmstandleaf), dble(bcmstandstore),     &
+     &                   dble(bcmstandstem), dble(bcmstandleaflive + bcmstandleafdead), dble(bcmstandstore), &
      &                   dble(bcmflatstem), dble(bcmflatleaf), dble(bcmflatstore),        &
      &                   bcmrootstorez, lost_mass,                      &
      &                   dble(bcyld_coef), dble(bcresid_int), dble(bcgrf) )
@@ -1970,13 +1965,7 @@ module crop_growth_mod
       ! leaf mass is added even if below ground
       ! leaf has very low mass (small effect) and some light interaction
       ! does occur as emergence approaches (if problem can be changed easily)
-
-      if( (bcmstandleaf + dlfwt) .gt. 0.0 ) then
-          ! added leaf mass adjusts live leaf fraction, otherwise no change
-          bcfliveleaf = (bcfliveleaf*bcmstandleaf+dlfwt)                &
-     &            / (bcmstandleaf + dlfwt)
-      end if
-      bcmstandleaf = bcmstandleaf + dlfwt
+      bcmstandleaflive = bcmstandleaflive + dlfwt
 
       ! above ground stems
       bcmstandstem = bcmstandstem + stand_stem
@@ -2065,7 +2054,7 @@ module crop_growth_mod
     end subroutine shoot_grow
 
     subroutine leaf_emerge( bnslay, bcdpop, hui, huiy, bcthu_leaf_beg, bcthu_leaf_end, &
-     &                      bcmstandleaf, bcmtotleaf, bcmrootstorez, bcfliveleaf )
+     &                      bcmstandleaflive, bcmtotleaf, bcmrootstorez )
 
 !     + + + KEYWORDS + + +
 !     spring leaf emergence
@@ -2079,10 +2068,9 @@ module crop_growth_mod
       real bcdpop
       double precision hui, huiy
       double precision bcthu_leaf_beg, bcthu_leaf_end
-      real bcmstandleaf
+      real bcmstandleaflive
       double precision bcmtotleaf
       real bcmrootstorez(*)
-      double precision bcfliveleaf
 
 !     + + + ARGUMENT DEFINITIONS + + +
 !     bnslay - number of soil layers
@@ -2091,15 +2079,13 @@ module crop_growth_mod
 !     huiy - heat unit index for yesterday
 !     bcthu_leaf_beg - heat unit index (fraction) for beginning of leaf emergence from root storage period
 !     bcthu_leaf_end - heat unit index (fraction) for end of leaf emergence from root storage period
-!     bcmstandleaf - crop standing leaf mass (kg/m^2)
+!     bcmstandleaflive - crop standing leaf mass (kg/m^2)
 
 !     bcmtotleaf - total mass released from root storage biomass (kg/m^2)
 !                  in the period from beginning to completion of leaf emergence heat units
 
 !     bcmrootstorez - crop root storage mass by soil layer (kg/m^2)
 !                   (tubers (potatoes, carrots), extended leaf (onion), seeds (peanuts))
-
-!     bcfliveleaf - fraction of standing plant leaf which is living (transpiring)
 
 !     + + + LOCAL VARIABLES + + +
       integer lay
@@ -2188,11 +2174,7 @@ module crop_growth_mod
       dlfwt = d_leaf_mass * u_mgtokg * bcdpop
 
       ! distribute mass into mass pools
-      if( (bcmstandleaf + dlfwt) .gt. 0.0 ) then
-          ! added leaf mass adjusts live leaf fraction, otherwise no change
-          bcfliveleaf = (bcfliveleaf*bcmstandleaf+dlfwt) / (bcmstandleaf + dlfwt)
-      end if
-      bcmstandleaf = bcmstandleaf + dlfwt
+      bcmstandleaflive = bcmstandleaflive + dlfwt
 
       ! remove from storage root mass
       do lay = 1, bnslay
@@ -2615,6 +2597,57 @@ module crop_growth_mod
       return
     end subroutine ht_dia_sai
 
+    function freeze_damage( x1, y1, x2, y2, xw ) result(frst)
 
+      use precision_mod, only: max_arg_exp_dp
+
+      ! fraction of leaf area killed by a single day freeze event 
+      ! with a low temperature of xw
+
+      ! + + + ARGUMENT DECLARATIONS + + +
+      real x1,x2,y1,y2
+      double precision xw
+      double precision frst
+
+      ! + + + LOCAL VARIABLES + + +
+      double precision xx1, xx2, fx1, fx2, xxw
+
+      double precision arg_exp, delta_x
+
+      xx1 = abs(x1)
+      xx2 = abs(x2)
+      xxw = abs(xw)
+
+      delta_x = (xx2 - xx1)
+
+      if( (delta_x .gt. 0.0d0) .or. (delta_x .lt. 0.0d0) ) then
+        ! delta_x is non-zero
+        fx1 = log(xx1/y1-xx1)
+        fx2 = log(xx2/y2-xx2)
+      else
+        ! delta_x is zero. Make non-zero in correct direction for frost damage.
+        xx1 = xx1 - spacing(xx1)
+        xx2 = xx2 + spacing(xx2)
+        delta_x = (xx2 - xx1)
+        fx1 = log(xx1/y1-xx1)
+        fx2 = log(xx2/y2-xx2)
+      end if
+
+      arg_exp = fx1 + (xx1 - xxw) * (fx1 - fx2) / delta_x
+
+      if( abs(arg_exp) .gt. max_arg_exp_dp ) then
+        ! cap the value to avoid floating point error on exponential function
+        ! preserve sign
+        arg_exp = sign( (max_arg_exp_dp - spacing(max_arg_exp_dp)), arg_exp)
+      end if
+
+      ! b_fr = (fx1 - fx2) / delta_x
+      ! a_fr = fx1 + b_fr * xx1
+      ! frst = xw / (xw + exp(a_fr-b_fr*xw))
+
+      frst = xxw / (xxw + exp(arg_exp))
+
+      return
+    end function freeze_damage
 
 end module crop_growth_mod

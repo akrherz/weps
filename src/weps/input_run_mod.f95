@@ -114,7 +114,7 @@ contains
       use file_io_mod, only: fopenk, luicli, luiwin, luolog
       use erosion_data_struct_defs, only: subday, ntstep, am0efl
       use barriers_mod, only: create_barrier, barrier, barseas
-      use grid_mod, only: amasim, amxsim, sim_area, xgdpt, ygdpt
+      use grid_mod, only: amasim, amxsim, sim_area
       use hydro_data_struct_defs, only: am0hfl, am0hdb
       use soil_data_struct_defs, only: am0sfl, am0sdb
       use manage_data_struct_defs, only: manFile, manFileAlloc
@@ -130,18 +130,15 @@ contains
       integer :: nacctr   ! Number of accounting regions
       integer :: nsubr    ! Number of subregions
       integer :: nbr      ! number of barriers
-      integer :: seas_flg ! barrier season flag
-      integer :: iexp     ! counter for extra parameters used with season flag .eq. 2
       integer :: ntm_seas ! number of time marks for seasonal barrier
       integer :: poly_np  ! number of points in polygon or polyline
-      integer       isr, iar, ios, ibr, ipol, iseas
+      integer       isr, iar, ios, ibr, ipol
       character     line*256
       real          sclsim, sclbar
       real          cligen_version
       real          wepsrun_version
       integer       lui1
       integer    :: sum_stat, alloc_stat
-      character*80     awwisn   ! made local since not used anywhere else
       integer, parameter :: max_simyear = 100000  ! value used to test simulation year input range
 
 !     + + + Local Variable Definitions + + +

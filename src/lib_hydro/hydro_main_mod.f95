@@ -315,7 +315,7 @@ module hydro_main_mod
 
         ! check irrigation flag for irrigation monitoring option
         if(      (bm0monirr .gt. 0) .and. (cropdp .gt. 0.0) &
-           .and. (thisPlant%growth%fliveleaf .gt. 0.0) .and. thisPlant%growth%living ) then
+           .and. (thisPlant%mass%standleaflive .gt. 0.0) .and. thisPlant%growth%living ) then
 
           ! find root zone water content above wilting point
           rootz_p_con = plant_wat_t(0.0, cropdp, soil%theta(1), soil%thetaw, soil%aszlyd, soil%nslay)
@@ -330,7 +330,7 @@ module hydro_main_mod
           ! note: as written, the potential Transpiration is from previous day
           ! partition potential transpiration based on proportion of living leaf area in canopy leaf area
           if( bbrlailive .gt. 0.0 ) then
-              thisPlant%growth%ptp = h1et%zptp * ((thisPlant%growth%fliveleaf * thisPlant%deriv%rlai) / bbrlailive)
+              thisPlant%growth%ptp = h1et%zptp * ((thisPlant%deriv%fliveleaf * thisPlant%deriv%rlai) / bbrlailive)
           else
               thisPlant%growth%ptp = 0.0
           end if
@@ -542,7 +542,7 @@ module hydro_main_mod
       cropdp_max = 0.0
       ! interate over all transpiring plants
       do while ( associated(thisPlant) )
-        if( (thisPlant%growth%fliveleaf .gt. 0.0) .and. thisPlant%growth%living) then
+        if( (thisPlant%mass%standleaflive .gt. 0.0) .and. thisPlant%growth%living) then
           ! check command line transpiration depth flag, set plant depth accordingly
           if( transpiration_depth .eq. 0 ) then
             cropdp = thisPlant%geometry%zrtd * mtomm
@@ -576,7 +576,7 @@ module hydro_main_mod
         h1et%zpta = 0.0
         ! interate over all transpiring plants
         do while ( associated(thisPlant) )
-          if( (thisPlant%growth%fliveleaf .gt. 0.0) .and. thisPlant%growth%living) then
+          if( (thisPlant%mass%standleaflive .gt. 0.0) .and. thisPlant%growth%living) then
             ! check command line transpiration depth flag, set plant depth accordingly
             if( transpiration_depth .eq. 0 ) then
               cropdp = thisPlant%geometry%zrtd * mtomm
@@ -584,7 +584,7 @@ module hydro_main_mod
               cropdp = thisPlant%deriv%ztranspdepth * mtomm
             end if
             ! partition potential transpiration based on proportion of living leaf area in canopy leaf area
-            thisPlant%growth%ptp = h1et%zptp * ((thisPlant%growth%fliveleaf * thisPlant%deriv%rlai) / bbrlailive)
+            thisPlant%growth%ptp = h1et%zptp * ((thisPlant%deriv%fliveleaf * thisPlant%deriv%rlai) / bbrlailive)
             call transp (soil%nslay, 1, soil%aszlyd, soil%aszlyt, cropdp, &
                        soil%theta, soil%thetas, soil%thetaf, soil%thetaw, &
                        theta80rh, soil%thetar, airentry, lambda, &
@@ -604,7 +604,7 @@ module hydro_main_mod
         ! point to youngest plant
         thisPlant => plant
         do while ( associated(thisPlant) )
-          if( thisPlant%growth%fliveleaf .gt. 0.0 ) then
+          if( thisPlant%mass%standleaflive .gt. 0.0 ) then
             ! has transpiring leaf area
             thisPlant%growth%fwsf = 1.0
           end if
@@ -687,7 +687,7 @@ module hydro_main_mod
         ! interate over all transpiring plants
         do while ( associated(thisPlant) )
 
-          if( (thisPlant%growth%fliveleaf .gt. 0.0) .and. thisPlant%growth%living) then
+          if( (thisPlant%mass%standleaflive .gt. 0.0) .and. thisPlant%growth%living) then
             ! increment counter
             nplant = nplant + 1 
 

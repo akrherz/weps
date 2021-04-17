@@ -57,8 +57,6 @@ module PhenologyMMSBasephenol_mod
       real(dp) :: begin_phase_rel ! phase_rel_gdd at beginning of day step
       real(dp) :: beg_live_leaf  ! live leaf fraction at beginning of phase
       real(dp) :: end_live_leaf  ! live leaf fraction at end of phase
-      real(dp) :: beg_weath_leaf ! standing leaf mass remaining after weathering of senesced leaf mass at beginning of phase
-      real(dp) :: end_weath_leaf ! standing leaf mass remaining after weathering of senesced leaf mass at end of phase
       real(dp) :: beg_senes_root ! fibrous root mass remaining after senescence of mass at beginning of phase
       real(dp) :: end_senes_root ! fibrous root mass remaining after senescence of mass at end of phase
       real(dp) :: beg_grain_index ! grain fill fraction at beginning of phase
@@ -75,13 +73,10 @@ module PhenologyMMSBasephenol_mod
       logical :: succ = .false.
 
       ! plant state
-      real(dp) :: bcfliveleaf ! fraction of standing plant leaf which is living (transpiring)
 
       ! locally computed values
-      real(dp) :: live_leaf  ! live leaf fraction at end of today (interpolated)
       real(dp) :: hu_delay ! fraction of heat units accummulated based on incomplete vernalization and day length
       real(dp) :: ffa  ! leaf senescence factor (ratio)
-      real(dp) :: ffw ! standing leaf mass remaining after weathering of senesced leaf mass at end of today (interpolated)
       real(dp) :: ffr  ! root weight reduction factor (ratio)
       real(dp) :: gif  ! grain index accounting for development of chaff before grain fill
       real(dp) :: p_rw ! fibrous root partitioning ratio
@@ -99,8 +94,6 @@ module PhenologyMMSBasephenol_mod
       if( .not. check_return( trim(self%phaseName), "daygdd", succ ) ) return
       call plnt%state%get("stress", stress, succ)
       if( .not. check_return( trim(self%phaseName), "stress", succ ) ) return
-      call plnt%state%get("fliveleaf", bcfliveleaf, succ)
-      if( .not. check_return( trim(self%phaseName), "fliveleaf", succ ) ) return
 
       ! phase state
       !initialized to zero at phase beginning
@@ -128,11 +121,6 @@ module PhenologyMMSBasephenol_mod
       if( .not. check_return( trim(self%phaseName), "beg_live_leaf", succ ) ) return
       call self%phasePars%get("end_live_leaf", end_live_leaf, succ)
       if( .not. check_return( trim(self%phaseName), "end_live_leaf", succ ) ) return
-
-      call self%phasePars%get("beg_weath_leaf", beg_weath_leaf, succ)
-      if( .not. check_return( trim(self%phaseName), "beg_weath_leaf", succ ) ) return
-      call self%phasePars%get("end_weath_leaf", end_weath_leaf, succ)
-      if( .not. check_return( trim(self%phaseName), "end_weath_leaf", succ ) ) return
 
       call self%phasePars%get("beg_senes_root", beg_senes_root, succ)
       if( .not. check_return( trim(self%phaseName), "beg_senes_root", succ ) ) return
@@ -165,13 +153,7 @@ module PhenologyMMSBasephenol_mod
       call gdd_stressed_del(phase_rel_gdd, stagegdd, daygdd, stress, GN_trans_gdd, GN_stress, GS_trans_gdd, GS_stress, 1.0_dp)
 
       ! senescence is done on a whole plant mass basis not incremental mass
-      live_leaf = beg_live_leaf + (end_live_leaf - beg_live_leaf) * phase_rel_gdd
-      ffw = beg_weath_leaf + (end_weath_leaf - beg_weath_leaf) * phase_rel_gdd
-      if( ffw .lt. live_leaf ) then
-        ! weathering of leaf cannot exceed dead leaf amount
-        ffw = live_leaf
-      end if
-      ffa = (live_leaf / bcfliveleaf) * (1.0_dp + bcfliveleaf * (ffw - 1.0_dp))
+      ffa = beg_live_leaf + (end_live_leaf - beg_live_leaf) * phase_rel_gdd
       ffr = beg_senes_root + (end_senes_root - beg_senes_root) * phase_rel_gdd
       gif = beg_grain_index + (end_grain_index - beg_grain_index) * phase_rel_gdd
 
@@ -216,8 +198,6 @@ module PhenologyMMSBasephenol_mod
       if( .not. check_return( trim(self%phaseName), "remgdd", succ ) ) return
       call plnt%state%replace("ffa", ffa, succ)
       if( .not. check_return( trim(self%phaseName), "ffa", succ ) ) return
-      call plnt%state%replace("ffw", ffw, succ)
-      if( .not. check_return( trim(self%phaseName), "ffw", succ ) ) return
       call plnt%state%replace("ffr", ffr, succ)
       if( .not. check_return( trim(self%phaseName), "ffr", succ ) ) return
       call plnt%state%replace("gif", gif, succ)

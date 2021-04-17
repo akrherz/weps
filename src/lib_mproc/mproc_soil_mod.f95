@@ -109,7 +109,6 @@ module mproc_soil_mod
       real, dimension(nlay) :: srlmass  ! by layer mass of fine soil plus rock fragments
       real :: srmass                    ! summation of soil plus rock fragment mass over layers
       real :: tmass                     ! temporary mass
-      real :: emass                     ! temporary mass
       integer :: i                      ! loop index variable
       integer :: j                      ! loop index variable
       type(plant_pointer), pointer :: thisPlant
@@ -509,12 +508,7 @@ module mproc_soil_mod
 
  
       !******************ASD MASS FRACTIONS********************	
-      tmass = 0.0
-      emass = 0.0
       do j = 1, msieve
-
-         tmass = tmass + massf(j,nlay)
-
          cmass = 0.0
          do i = 1, nlay
            ! find layer mass equivalent
@@ -524,14 +518,8 @@ module mproc_soil_mod
          call mixproc(tillmix, nlay, dum, cmass, srlmass, srmass)
          do i = 1, nlay
             dum(i) = dum(i) / slmass(i)
-
-            !write(*,*) 'MASSF: ', i, massf(j,i), dum(i)
-
             massf(j,i) = dum(i)
          end do
-
-         emass = emass + massf(j,nlay)
-
       end do
       !******************ASD MASS FRACTIONS********************	
 

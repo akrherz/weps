@@ -92,11 +92,13 @@ module mproc_bio_mod
               ! flatten standing living plant biomass for thisPlant
               ! increase flat pools
               thisPlant%mass%flatstem = thisPlant%mass%flatstem + thisPlant%mass%standstem * flatfrac
-              thisPlant%mass%flatleaf = thisPlant%mass%flatleaf + thisPlant%mass%standleaf * flatfrac
+              thisPlant%mass%flatleaf = thisPlant%mass%flatleaf &
+                                      + (thisPlant%mass%standleaflive + thisPlant%mass%standleafdead) * flatfrac
               thisPlant%mass%flatstore = thisPlant%mass%flatstore + thisPlant%mass%standstore * flatfrac
               ! decrease standing pools
               thisPlant%mass%standstem = thisPlant%mass%standstem * (1.0 - flatfrac)
-              thisPlant%mass%standleaf = thisPlant%mass%standleaf * (1.0 - flatfrac)
+              thisPlant%mass%standleaflive = thisPlant%mass%standleaflive * (1.0 - flatfrac)
+              thisPlant%mass%standleafdead = thisPlant%mass%standleafdead * (1.0 - flatfrac)
               thisPlant%mass%standstore = thisPlant%mass%standstore * (1.0 - flatfrac)
               ! reduce # of stems
               thisPlant%geometry%dstm = thisPlant%geometry%dstm * (1.0 - flatfrac)
@@ -407,7 +409,7 @@ module mproc_bio_mod
 
       ! calculate fractions of total to be buried in each layer
       do lay = 1, nlay
-          fracbury(lay) = burydist(lay, burydistflg, soil%aszlyt, soil%aszlyd, nlay)
+          fracbury(lay) = burydist(lay, burydistflg, soil%aszlyd, nlay)
       end do
 
       ! begin with provided plant then loop to older plants
@@ -537,9 +539,16 @@ module mproc_bio_mod
         ! plant exists
         if( thisPlant%growth%living .and. .not. thisPlant%growth%am0cif ) then
           ! crop growth flag on and not on initialization cycle
-          if ((bm0kilfl.eq.2).or.((bm0kilfl.eq.1).and.((thisPlant%database%idc.eq.1)&
-             .or.(thisPlant%database%idc.eq.2).or.(thisPlant%database%idc.eq.4) &
-             .or.(thisPlant%database%idc.eq.5)))) then
+          if (   (bm0kilfl.eq.2) & ! kill all plants regardless of type (think herbicide)
+            .or. ( (bm0kilfl.eq.1) & ! Note: true UPGM crops have idc .eq. 0, and will not be killed by bm0kilfl .eq. 1.
+                                     ! They will die as intended if operation removes all living leaf mass at right stage.
+              .and. ( (thisPlant%database%idc.eq.1) & ! Warm season legume (soybeans, etc.)
+                 .or. (thisPlant%database%idc.eq.2) & ! Cool season legume (peas, etc.)
+                 .or. (thisPlant%database%idc.eq.4) & ! Spring Seeded and Warm Season Annuals (cotton, sunflowers, corn, etc.)
+                 .or. (thisPlant%database%idc.eq.5) & ! Cold Season Annuals (winter wheat, winter canola)
+                    ) &
+                  ) &
+             ) then
 
             ! stop the crop growth (ie. stop calling crop submodel)
             thisPlant%growth%living = .false.
@@ -550,8 +559,9 @@ module mproc_bio_mod
             ! move biomass from living to dead
             thisPlant%residue%standstem = thisPlant%mass%standstem
             thisPlant%mass%standstem = 0.0
-            thisPlant%residue%standleaf = thisPlant%mass%standleaf
-            thisPlant%mass%standleaf = 0.0
+            thisPlant%residue%standleaf = thisPlant%mass%standleaflive + thisPlant%mass%standleafdead
+            thisPlant%mass%standleaflive = 0.0
+            thisPlant%mass%standleafdead = 0.0
             thisPlant%residue%standstore = thisPlant%mass%standstore
             thisPlant%mass%standstore = 0.0
 
@@ -610,7 +620,6 @@ module mproc_bio_mod
       logical :: plant_defoliated
 
       ! + + + LOCAL VARIABLES + + +
-      integer :: lay  ! soil layer index
       type(plant_pointer), pointer :: thisPlant
 
       ! + + + END SPECIFICATIONS + + +
@@ -629,8 +638,9 @@ module mproc_bio_mod
             thisPlant%residue => residueAdd( thisPlant%residue, thisPlant%residueIndex, nslay ) 
 
             ! move biomass from living to dead
-            thisPlant%residue%flatleaf = thisPlant%mass%standleaf
-            thisPlant%mass%standleaf = 0.0
+            thisPlant%residue%flatleaf = thisPlant%mass%standleaflive + thisPlant%mass%standleafdead
+            thisPlant%mass%standleaflive = 0.0
+            thisPlant%mass%standleafdead = 0.0
             thisPlant%residue%flatleaf = thisPlant%residue%flatleaf + thisPlant%mass%flatleaf
             thisPlant%mass%flatleaf = 0.0
 
@@ -652,67 +662,74 @@ module mproc_bio_mod
      &                    speed,stdspeed,minspeed,maxspeed,             &
      &                    depth,stddepth,mindepth,maxdepth)
 
-!     argument declarations
-      real    burycoef(mnrbc)
-      integer mnrbc
-      real    speed,stdspeed,minspeed,maxspeed
-      real    depth,stddepth,mindepth,maxdepth
+      ! argument declarations
+      real, intent(inout) :: burycoef(mnrbc) ! burial fraction coefficient to be adjusted
+      integer, intent(in) :: mnrbc ! number of burial coefficients (residue burial classes)
+      real, intent(in) :: speed    ! actual speed
+      real, intent(in) :: stdspeed ! standard, where coefficient remains unchanged
+      real, intent(in) :: minspeed ! minimum
+      real, intent(in) :: maxspeed ! maximum
+      real, intent(in) :: depth    ! actual depth
+      real, intent(in) :: stddepth ! standard, where coefficient remains unchanged
+      real, intent(in) :: mindepth ! minimum
+      real, intent(in) :: maxdepth ! maximum
 
-!     argument definitions
-!     burycoef - burial fraction coefficient to be adjusted
-!     mnrbc    - number of burial coefficients (residue burial classes)
-!     speed    - actual
-!     stdspeed - standard, where coefficient remains unchanged
-!     minspeed - minimum
-!     maxspeed - maximum
-!     depth    - actual
-!     stddepth - standard, where coefficient remains unchanged
-!     mindepth - minimum
-!     maxdepth - maximum
+      ! local variable declarations
+      integer idx     ! index for array
+      real :: lspeed  ! speed limited to range
+      real :: ldepth  ! depth limited to range
+      real :: rspeed  ! normalized speed
+      real :: rdepth  ! normalized depth
+      real, parameter :: expspeed = 0.5
+      real, parameter :: s1speed = 0.6
+      real, parameter :: s2speed = 0.4
+      real, parameter :: expdepth = 2.7
 
-!     local variable declarations
-      integer index
-      real    rspeed, rdepth
-      real    expspeed, s1speed, s2speed, expdepth
+      ! check inputs
+      if( (maxspeed .le. 0.0) .or. (minspeed .ge. maxspeed) ) then
+        ! no adjustment possible
+        rspeed = 1.0
+      else
+        ! find speed adjustment parameter
+        lspeed = max( min(speed, maxspeed), minspeed )
+        rspeed = (s1speed+s2speed*(lspeed/maxspeed)**expspeed)/ &
+                 (s1speed+s2speed*(stdspeed/maxspeed)**expspeed)
+      end if
 
-      parameter (expspeed = 0.5)
-      parameter (s1speed = 0.6)
-      parameter (s2speed = 0.4)
-      parameter (expdepth = 2.7)
+      ! check inputs
+      if( (maxdepth .le. 0.0) .or. (mindepth .ge. maxdepth) ) then
+        ! no adjustment possible
+        rdepth = 1.0
+      else
+        ! find depth adjustment parameter
+        ldepth = max(min(depth, maxdepth), mindepth )
+        rdepth = (1.0-(1.0-ldepth/maxdepth)**expdepth)/ &
+                 (1.0-(1.0-stddepth/maxdepth)**expdepth)
+      end if
 
-!     find speed adjustment parameter
-      speed = max( min(speed, maxspeed), minspeed )
-      rspeed = (s1speed+s2speed*(speed/maxspeed)**expspeed)/            &
-     &         (s1speed+s2speed*(stdspeed/maxspeed)**expspeed)
+      ! adjust burial coefficients and keep within range 0 to 1
+      do idx=1,mnrbc
+          burycoef(idx) = burycoef(idx)*rspeed*rdepth
+          burycoef(idx) = min( 1.0, max( 0.0, burycoef(idx)))
+      end do
 
-!     find depth adjustment parameter
-      depth = max(min(depth, maxdepth), mindepth )
-      rdepth = (1.0-(1.0-depth/maxdepth)**expdepth)/                    &
-     &         (1.0-(1.0-stddepth/maxdepth)**expdepth)
-
-!     adjust burial coefficients and keep within range 0 to 1
-      do 100 index=1,mnrbc
-          burycoef(index) = burycoef(index)*rspeed*rdepth
-          burycoef(index) = min( 1.0, max( 0.0, burycoef(index)))
- 100  continue
       return
 
     end subroutine buryadj
 
 ! This routine returns the fraction of material buried in layer number 
 ! LAY given the burial distribution function type BURYDISTFLG and the
-! layer thicknesses LTHICK and the total number of layers in which
+! layer depth LDEPTH and the total number of layers in which
 ! material will be buried NLAY and the tillage depth, soil layer
 ! thicknesses, and the number of soil layers.  It returns the number
 ! of layers that will be considered to be within the tillage zone for
 ! this operation.
 
-    real function burydist( lay, burydistflg, lthick, ldepth, nlay)
+    real function burydist( lay, burydistflg, ldepth, nlay)
 
 !     argument declarations
       integer lay
       integer burydistflg
-      real    lthick(*)
       real    ldepth(*)
       integer nlay
 
@@ -726,14 +743,13 @@ module mproc_bio_mod
 !              3    o Inversion Burial Distribution
 !              4    o Lifting, Fracturing Burial Distribution
 !              5    o Compression
-!     lthick      - thickness of soil layer
 !     ldepth      - distance from surface to bottom of layer
 !     nlay        - number of soil layers affected
 
 !     local variable declarations
       real upper, lower
       real c1exp, c2exp
-      real c3e1, c3e2, c3brk, c3split
+      real c3brk
 
       parameter (c1exp = 0.5)
       parameter (c2exp = 0.3)
@@ -769,7 +785,7 @@ module mproc_bio_mod
       case default   !uniform burial distribution
           burydist = lower - upper
       end select
- 1000 return
+      return
     end function burydist
 
     subroutine resinit(resmass, resdepth, nlay, resarray, laythick)

@@ -68,7 +68,8 @@ module mproc_cut_mod
       thisPlant => plant
       do while( associated(thisPlant) )
         ! standing mass
-        standmass = thisPlant%mass%standstem + thisPlant%mass%standleaf + thisPlant%mass%standstore
+        standmass = thisPlant%mass%standstem + thisPlant%mass%standleaflive &
+                  + thisPlant%mass%standleafdead + thisPlant%mass%standstore
         ! mass time living height
         mass_zht = mass_zht + standmass * thisPlant%geometry%zht
         ! standing mass sum
@@ -138,8 +139,9 @@ module mproc_cut_mod
         tflatstem = 0.0
         tflatleaf = 0.0
         tflatstore = 0.0
-        call cut_pool ( mod_cutht, grainf, cropf, &
-                 thisPlant%mass%standstem, thisPlant%mass%standleaf, thisPlant%mass%standstore, &
+        call cut_pool_stand_plant ( mod_cutht, grainf, cropf, &
+                 thisPlant%mass%standstem, thisPlant%mass%standleaflive, &
+                 thisPlant%mass%standleafdead, thisPlant%mass%standstore, &
                  thisPlant%geometry%zht, thisPlant%geometry%grainf, thisPlant%geometry%hyfg, &
                  tflatstem, tflatleaf, tflatstore, &
                  tot_mass_rem, sel_mass_left )
@@ -165,7 +167,7 @@ module mproc_cut_mod
           ! is used instead of cropf, keeping plant material removal
           ! separate for living and dead crop. Grain is harvested out of both.
           ! Cut material left behind is added to flat mass pools.
-          call cut_pool ( mod_cutht, grainf, standf, &
+          call cut_pool_residue ( mod_cutht, grainf, standf, &
                 thisResidue%standstem, thisResidue%standleaf, thisResidue%standstore, &
                 thisResidue%zht, thisResidue%grainf, thisPlant%geometry%hyfg, &
                 thisResidue%flatstem, thisResidue%flatleaf, thisResidue%flatstore, &
@@ -183,7 +185,8 @@ module mproc_cut_mod
       ! check that complete crop failure shows remaining biomass
       if( tot_mass_rem + sel_mass_left .le. 0.0 ) then
         if( associated(plant) ) then
-          sel_mass_left = plant%mass%standstem + plant%mass%standleaf + plant%mass%standstore   &
+          sel_mass_left = plant%mass%standstem + plant%mass%standleaflive &
+                        + plant%mass%standleafdead + plant%mass%standstore   &
                         + plant%mass%flatstem + plant%mass%flatleaf + plant%mass%flatstore
         else
           sel_mass_left = 0.0
@@ -198,7 +201,158 @@ module mproc_cut_mod
     ! now even be harvested from decomposition pools, so it is possible
     ! to kill a crop, transfer it to a decomposition pool, harvest
     ! the grain sucessfully, and get harvest index
-    subroutine cut_pool ( poolcutht, grainf, cropf, &
+    subroutine cut_pool_stand_plant ( poolcutht, grainf, cropf, &
+                 poolmstandstem, poolmstandleaflive, &
+                 poolmstandleafdead, poolmstandstore, &
+                 poolzht, poolgrainf, poolhyfg, &
+                 poolmflatstem, poolmflatleaf, poolmflatstore, &
+                 tot_mass_rem, sel_mass_left )
+
+      ! + + + ARGUMENT DECLARATIONS + + +
+      real, intent(in) :: poolcutht
+      real, intent(in) :: grainf
+      real, intent(in) :: cropf
+
+      real, intent(inout) :: poolmstandstem
+      real, intent(inout) :: poolmstandleaflive
+      real, intent(inout) :: poolmstandleafdead
+      real, intent(inout) :: poolmstandstore
+
+      real, intent(inout) :: poolzht
+      real, intent(in) :: poolgrainf
+      integer, intent(in) :: poolhyfg
+
+      real, intent(inout) :: poolmflatstem
+      real, intent(inout) :: poolmflatleaf
+      real, intent(inout) :: poolmflatstore
+
+      real, intent(inout) :: tot_mass_rem
+      real, intent(inout) :: sel_mass_left
+
+      ! + + + LOCAL VARIABLES + + +
+      integer :: pool_flag  ! if mass is removed, set true, so remaining biomass is 
+                            ! summed so harvest index can be computed.
+      real :: mass_cut   ! mass cut by cutting operation
+      real :: mass_rem   ! mass removed from field by harvest operation
+      real :: rem_frac   ! actual removal fraction calculated from combination of
+                         ! grain fraction (GRF) and removal fraction
+
+      pool_flag = 0
+      if (poolcutht.lt.poolzht) then        ! cut crop pool
+          ! above ground storage, reproductive fraction
+          ! find amount cut 
+
+          ! disabled partial storage fraction removal due to cutting too high
+          ! we now get all the storage regardless of cut height.
+      !      if( poolcutht.gt.0.75*poolzht ) then
+      !          ! yield assumed uniformly distributed in top 25% of plant
+      !          mass_cut = poolmstandstore                                &
+      ! &                  * ((poolzht-poolcutht)/(0.25*poolzht))
+      !      else
+      !          mass_cut = poolmstandstore
+      !      end if
+
+          ! we get all of the standing storage material regardless of cut height
+          mass_cut = poolmstandstore
+
+          poolmstandstore = poolmstandstore - mass_cut
+          ! find amount removed
+          rem_frac = grainf
+          if( poolhyfg .le. 2 ) then
+              rem_frac = rem_frac * poolgrainf
+          end if
+          mass_rem = mass_cut * rem_frac
+          mass_cut = mass_cut - mass_rem
+          ! cut crop material left on field placed in temporary pool
+          poolmflatstore = poolmflatstore + mass_cut
+          if( mass_rem.gt.0.0 ) then 
+              pool_flag = 1
+              tot_mass_rem = tot_mass_rem + mass_rem
+          end if
+
+          ! live leaf fraction removal amounts
+          ! find amount cut 
+          if( poolcutht.gt.0.5*poolzht ) then
+              ! leaves assumed uniformly distributed in top 50% of plant
+              mass_cut = poolmstandleaflive * ((poolzht-poolcutht)/(0.5*poolzht))
+          else
+              mass_cut = poolmstandleaflive
+          end if
+          poolmstandleaflive = poolmstandleaflive - mass_cut
+          ! find amount removed
+          rem_frac = cropf
+          if( poolhyfg .eq. 3 ) then
+              rem_frac = rem_frac * poolgrainf
+          end if
+          mass_rem = mass_cut * rem_frac
+          mass_cut = mass_cut - mass_rem
+          ! cut crop material left on field placed in temporary pool
+          poolmflatleaf = poolmflatleaf + mass_cut
+          if( mass_rem.gt.0.0 ) then 
+              pool_flag = 1
+              tot_mass_rem = tot_mass_rem + mass_rem
+          end if
+
+          ! dead leaf fraction removal amounts
+          ! find amount cut 
+          if( poolcutht.gt.0.5*poolzht ) then
+              ! leaves assumed uniformly distributed in top 50% of plant
+              mass_cut = poolmstandleafdead * ((poolzht-poolcutht)/(0.5*poolzht))
+          else
+              mass_cut = poolmstandleafdead
+          end if
+          poolmstandleafdead = poolmstandleafdead - mass_cut
+          ! find amount removed
+          rem_frac = cropf
+          if( poolhyfg .eq. 3 ) then
+              rem_frac = rem_frac * poolgrainf
+          end if
+          mass_rem = mass_cut * rem_frac
+          mass_cut = mass_cut - mass_rem
+          ! cut crop material left on field placed in temporary pool
+          poolmflatleaf = poolmflatleaf + mass_cut
+          if( mass_rem.gt.0.0 ) then 
+              pool_flag = 1
+              tot_mass_rem = tot_mass_rem + mass_rem
+          end if
+
+          ! stem fraction removal amounts
+          ! find amount cut 
+          mass_cut = poolmstandstem * (1.0 - (poolcutht/poolzht))
+          poolmstandstem = poolmstandstem - mass_cut
+          ! find amount removed
+          rem_frac = cropf
+          if( poolhyfg .eq. 4 ) then
+              rem_frac = rem_frac * poolgrainf
+          end if
+          mass_rem = mass_cut * rem_frac
+          mass_cut = mass_cut - mass_rem
+          ! cut crop material left on field placed in temporary pool
+          poolmflatstem = poolmflatstem + mass_cut
+          if( mass_rem.gt.0.0 ) then 
+              pool_flag = 1
+              tot_mass_rem = tot_mass_rem + mass_rem
+          end if
+
+          ! stem height
+          poolzht = poolcutht
+      endif
+
+      ! add biomass to selected mass if biomass was removed from pool
+      if( pool_flag.eq.1 ) then
+          sel_mass_left = sel_mass_left + poolmstandstore &
+                        + poolmstandleaflive + poolmstandleafdead + poolmstandstem &
+                        + poolmflatstem + poolmflatleaf + poolmflatstore
+      end if
+
+      return
+    end subroutine cut_pool_stand_plant
+
+    ! generalized routine for cutting biomass from each pool. Grain will
+    ! now even be harvested from decomposition pools, so it is possible
+    ! to kill a crop, transfer it to a decomposition pool, harvest
+    ! the grain sucessfully, and get harvest index
+    subroutine cut_pool_residue ( poolcutht, grainf, cropf, &
                  poolmstandstem, poolmstandleaf, poolmstandstore, &
                  poolzht, poolgrainf, poolhyfg, &
                  poolmflatstem, poolmflatleaf, poolmflatstore, &
@@ -318,6 +472,6 @@ module mproc_cut_mod
       end if
 
       return
-    end subroutine cut_pool
+    end subroutine cut_pool_residue
 
 end module mproc_cut_mod

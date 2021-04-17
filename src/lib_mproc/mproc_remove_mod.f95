@@ -90,26 +90,28 @@ module mproc_remove_mod
                              ! by this harvest operation (kg/m^2)
 
       ! + + + LOCAL VARIABLES + + +
-      real pool_temp1, pool_temp2
-      real pool_temp1z(nslay), pool_temp2z(nslay), pool_temp3z(nslay)
-      integer :: idx
-      integer :: idy
+      real :: pool_temp1         ! used to substitute for non existent pools in crop,
+                                 ! where there are no flatrootstore and flatrootfiber pools
+      real :: pool_temp2         ! see pool_temp1
+      real :: pool_temp1z(nslay) ! see pool_temp1
+      real :: pool_temp2z(nslay) ! see pool_temp1
+      real :: pool_temp3z(nslay) ! see pool_temp1
+      integer :: idx              ! loop variable for soil layers
+      integer :: idy              ! loop variable for decomp pools
       integer :: tflg    ! temporary flag to carry bioflag value if changes to all pools
       real :: temp_stem  ! temporary stem mass pool
       real :: temp_leaf  ! temporary leaf mass pool
       real :: temp_store ! temporary store mass pool
 
-      real start_store, start_leaf, start_stem
-      real start_rootstore(nslay), start_rootfiber(nslay)
+      real :: start_store
+      real :: start_leaflive  ! starting live leaf mass (standing plant)
+      real :: start_leafdead  ! starting dead leaf mass (standing plant)
+      real :: start_leaf      ! starting leaf mass (flat plant and residue pools)
+      real :: start_stem
+      real :: start_rootstore(nslay)
+      real :: start_rootfiber(nslay)
       type(plant_pointer), pointer :: thisPlant
       type(residue_pointer), pointer :: thisResidue
-
-      ! + + + LOCAL VARIABLE DEFINITIONS + + +
-      ! pool_temp1 - used to substitute for non existent pools in crop,
-      !              where there are no flatrootstore and flatrootfiber pools
-      ! pool_temp2 -  see pool_temp1
-      ! idx       - loop variable for soil layers
-      ! idy       - loop variable for decomp pools
 
       ! + + + END SPECIFICATIONS + + +
 
@@ -142,16 +144,18 @@ module mproc_remove_mod
           ! standing and rooted biomass
           ! set starting values
           start_store = thisPlant%mass%standstore
-          start_leaf = thisPlant%mass%standleaf
+          start_leaflive = thisPlant%mass%standleaflive
+          start_leafdead = thisPlant%mass%standleafdead
           start_stem = thisPlant%mass%standstem
           do idx = 1, nslay
             start_rootstore(idx) = thisPlant%mass%rootstorez(idx)
             start_rootfiber(idx) = thisPlant%mass%rootfiberz(idx)
           end do
           if( BTEST(sel_position,0) ) then
-            call rem_stand_pool( &
+            call rem_stand_pool_plant( &
             stemf, leaff, storef, rootstoref, rootfiberf, &
-            thisPlant%mass%standstem, thisPlant%mass%standleaf, thisPlant%mass%standstore, &
+            thisPlant%mass%standstem, thisPlant%mass%standleaflive, &
+            thisPlant%mass%standleafdead, thisPlant%mass%standstore, &
             thisPlant%mass%rootstorez, thisPlant%mass%rootfiberz, &
             nslay, thisPlant%geometry%hyfg, thisPlant%geometry%grainf, thisPlant%geometry%dstm, &
             tot_mass_rem, sel_mass_left )
@@ -175,10 +179,10 @@ module mproc_remove_mod
             nslay, thisPlant%geometry%hyfg, thisPlant%geometry%grainf, tot_mass_rem, sel_mass_left )
           end if
           ! adjust standing pools if supporting stems or roots removed
-          call adj_stand_pool( &
-             start_stem, start_leaf, start_store, &
+          call adj_stand_pool_plant( &
+             start_stem, start_leaflive, start_leafdead, start_store, &
              start_rootstore, start_rootfiber, &
-             thisPlant%mass%standstem, thisPlant%mass%standleaf, thisPlant%mass%standstore, &
+             thisPlant%mass%standstem, thisPlant%mass%standleaflive, thisPlant%mass%standleafdead, thisPlant%mass%standstore, &
              thisPlant%mass%rootstorez, thisPlant%mass%rootfiberz, &
              thisPlant%mass%flatstem, thisPlant%mass%flatleaf, thisPlant%mass%flatstore, &
              thisPlant%geometry%dstm, temp_stem, temp_leaf, temp_store, nslay)
@@ -216,7 +220,7 @@ module mproc_remove_mod
               start_rootfiber(idx) = thisResidue%rootfiberz(idx)
             end do
             if( BTEST(sel_position,0) ) then
-              call rem_stand_pool( &
+              call rem_stand_pool_residue( &
               stemf, leaff, storef, rootstoref, rootfiberf, &
               thisResidue%standstem, thisResidue%standleaf, thisResidue%standstore, &
               thisResidue%rootstorez, thisResidue%rootfiberz, &
@@ -252,7 +256,7 @@ module mproc_remove_mod
               end if
             end if
             ! adjust standing pools if supporting stems or roots removed
-            call adj_stand_pool( &
+            call adj_stand_pool_residue( &
                start_stem, start_leaf, start_store, &
                start_rootstore, start_rootfiber, &
                thisResidue%standstem, thisResidue%standleaf, thisResidue%standstore, &
@@ -273,7 +277,7 @@ module mproc_remove_mod
       ! check that complete crop failure shows remaining biomass
       if( tot_mass_rem + sel_mass_left .le. 0.0 ) then
         if( associated(plant) ) then
-          sel_mass_left = plant%mass%standstem + plant%mass%standleaf + plant%mass%standstore &
+          sel_mass_left = plant%mass%standstem + plant%mass%standleaflive + plant%mass%standleafdead + plant%mass%standstore &
                         + plant%mass%flatstem + plant%mass%flatleaf + plant%mass%flatstore
         else
           sel_mass_left = 0.0
@@ -284,7 +288,102 @@ module mproc_remove_mod
 
     end subroutine remove
 
-    subroutine rem_stand_pool( &
+    subroutine rem_stand_pool_plant( &
+           stemf, leaff, storef, rootstoref, rootfiberf, &
+           pool_stem, pool_leaf_live, pool_leaf_dead, pool_store, &
+           pool_rootstore, pool_rootfiber, &
+           nslay, pool_hyfg, pool_grainf, pool_dstm, &
+           tot_mass_rem, sel_mass_left )
+      
+      ! + + + ARGUMENT DECLARATIONS + + +
+      real, intent(in) :: stemf
+      real, intent(in) :: leaff
+      real, intent(in) :: storef
+      real, intent(in) :: rootstoref
+      real, intent(in) :: rootfiberf
+
+      real, intent(inout) :: pool_store
+      real, intent(inout) :: pool_leaf_live
+      real, intent(inout) :: pool_leaf_dead
+      real, intent(inout) :: pool_stem
+
+      real, intent(inout) :: pool_rootstore(*)
+      real, intent(inout) :: pool_rootfiber(*)
+
+      integer, intent(in) :: nslay
+      integer, intent(in) :: pool_hyfg
+      real, intent(in) :: pool_grainf
+      real, intent(inout) :: pool_dstm
+      real, intent(inout) :: tot_mass_rem
+      real, intent(inout) :: sel_mass_left
+
+      ! + + + LOCAL VARIABLES + + +
+      integer idx        ! loop variable for soil layers
+      logical :: store_flag = .false.
+      logical :: leaf_flag = .false.
+      logical :: stem_flag = .false.
+      logical :: sroot_flag = .false.
+      logical :: froot_flag = .false.
+      real :: rem_frac
+
+      rem_frac = storef
+      if( pool_hyfg .le. 2 ) then
+          rem_frac = rem_frac * pool_grainf
+      end if
+      call rem_pool(pool_store, rem_frac, store_flag, tot_mass_rem)
+
+      rem_frac = leaff
+      if( pool_hyfg .eq. 3 ) then
+          rem_frac = rem_frac * pool_grainf
+      end if
+      call rem_pool(pool_leaf_live, rem_frac, leaf_flag, tot_mass_rem)
+
+      rem_frac = leaff
+      if( pool_hyfg .eq. 3 ) then
+          rem_frac = rem_frac * pool_grainf
+      end if
+      call rem_pool(pool_leaf_dead, rem_frac, leaf_flag, tot_mass_rem)
+
+      rem_frac = stemf
+      if( pool_hyfg .eq. 4 ) then
+          rem_frac = rem_frac * pool_grainf
+      end if
+      call rem_pool(pool_stem, rem_frac, stem_flag, tot_mass_rem)
+      ! also reduce stem count
+      pool_dstm = pool_dstm * (1.0 - rem_frac)
+
+      rem_frac = rootstoref
+      if( pool_hyfg .eq. 5 ) then
+          rem_frac = rem_frac * pool_grainf
+      end if
+      do idx = 1, nslay
+          call rem_pool(pool_rootstore(idx), rem_frac, sroot_flag, &
+                        tot_mass_rem)
+      end do
+
+      rem_frac = rootfiberf
+      do idx = 1, nslay
+          call rem_pool(pool_rootfiber(idx), rem_frac, froot_flag, &
+                        tot_mass_rem)
+      end do
+
+      ! If storage root harvested, then remaining mass included in harvest index
+      if( sroot_flag ) then
+          do idx = 1, nslay
+              sel_mass_left = sel_mass_left + pool_rootstore(idx)
+          end do
+          sel_mass_left = sel_mass_left + pool_store + pool_leaf_live &
+                         + pool_leaf_dead + pool_stem
+      else if( store_flag .or. leaf_flag .or. stem_flag ) then
+          ! all above ground biomass remaining included in harvest index
+          sel_mass_left = sel_mass_left + pool_store + pool_leaf_live &
+                         + pool_leaf_dead + pool_stem
+      end if
+
+      return
+    end subroutine rem_stand_pool_plant
+
+    subroutine rem_stand_pool_residue( &
            stemf, leaff, storef, rootstoref, rootfiberf, &
            pool_stem, pool_leaf, pool_store, &
            pool_rootstore, pool_rootfiber, &
@@ -292,20 +391,34 @@ module mproc_remove_mod
            tot_mass_rem, sel_mass_left )
       
       ! + + + ARGUMENT DECLARATIONS + + +
-      real stemf, leaff, storef, rootstoref, rootfiberf
-      real pool_store, pool_leaf, pool_stem
-      real pool_rootstore(*), pool_rootfiber(*)
-      integer nslay, pool_hyfg
-      real pool_grainf, pool_dstm, tot_mass_rem, sel_mass_left
+      real, intent(in) :: stemf
+      real, intent(in) :: leaff
+      real, intent(in) :: storef
+      real, intent(in) :: rootstoref
+      real, intent(in) :: rootfiberf
+
+      real, intent(inout) :: pool_store
+      real, intent(inout) :: pool_leaf
+      real, intent(inout) :: pool_stem
+
+      real, intent(inout) :: pool_rootstore(*)
+      real, intent(inout) :: pool_rootfiber(*)
+
+      integer, intent(in) :: nslay
+      integer, intent(in) :: pool_hyfg
+      real, intent(in) :: pool_grainf
+      real, intent(inout) :: pool_dstm
+      real, intent(inout) :: tot_mass_rem
+      real, intent(inout) :: sel_mass_left
 
       ! + + + LOCAL VARIABLES + + +
-      integer idx
+      integer idx        ! loop variable for soil layers
       logical :: store_flag = .false.
       logical :: leaf_flag = .false.
       logical :: stem_flag = .false.
       logical :: sroot_flag = .false.
       logical :: froot_flag = .false.
-      real rem_frac
+      real :: rem_frac
 
       rem_frac = storef
       if( pool_hyfg .le. 2 ) then
@@ -356,8 +469,7 @@ module mproc_remove_mod
       end if
 
       return
-    end subroutine rem_stand_pool
-
+    end subroutine rem_stand_pool_residue
 
     subroutine rem_flat_pool( &
                  stemf, leaff, storef, rootstoref, rootfiberf, &
@@ -366,11 +478,24 @@ module mproc_remove_mod
                  pool_hyfg, pool_grainf, tot_mass_rem, sel_mass_left )
 
       ! + + + ARGUMENT DECLARATIONS + + +
-      real stemf, leaff, storef, rootstoref, rootfiberf
-      real pool_store, pool_leaf, pool_stem
-      real pool_rootstore, pool_rootfiber
-      integer pool_hyfg
-      real pool_grainf, tot_mass_rem, sel_mass_left
+      real, intent(in) :: stemf
+      real, intent(in) :: leaff
+      real, intent(in) :: storef
+      real, intent(in) :: rootstoref
+      real, intent(in) :: rootfiberf
+
+      real, intent(inout) :: pool_store
+      real, intent(inout) :: pool_leaf
+      real, intent(inout) :: pool_stem
+
+      real, intent(inout) :: pool_rootstore
+      real, intent(inout) :: pool_rootfiber
+
+      integer, intent(in) :: pool_hyfg
+      real, intent(in) :: pool_grainf
+      real, intent(inout) :: tot_mass_rem
+      real, intent(inout) :: sel_mass_left
+
 
       ! + + + LOCAL VARIABLES + + +
       logical :: store_flag = .false.
@@ -378,8 +503,7 @@ module mproc_remove_mod
       logical :: stem_flag = .false.
       logical :: sroot_flag = .false.
       logical :: froot_flag = .false.
-      real rem_frac
-
+      real :: rem_frac
 
       rem_frac = storef
       if( pool_hyfg .le. 2 ) then
@@ -424,20 +548,33 @@ module mproc_remove_mod
            nslay, pool_hyfg, pool_grainf, tot_mass_rem, sel_mass_left )
 
       ! + + + ARGUMENT DECLARATIONS + + +
-      real stemf, leaff, storef, rootstoref, rootfiberf
-      real pool_store(*), pool_leaf(*), pool_stem(*)
-      real pool_rootstore(*), pool_rootfiber(*)
-      integer nslay, pool_hyfg
-      real pool_grainf, tot_mass_rem, sel_mass_left
+      real, intent(in) :: stemf
+      real, intent(in) :: leaff
+      real, intent(in) :: storef
+      real, intent(in) :: rootstoref
+      real, intent(in) :: rootfiberf
+
+      real, intent(inout) :: pool_store(*)
+      real, intent(inout) :: pool_leaf(*)
+      real, intent(inout) :: pool_stem(*)
+
+      real, intent(inout) :: pool_rootstore(*)
+      real, intent(inout) :: pool_rootfiber(*)
+
+      integer, intent(in) :: nslay
+      integer, intent(in) :: pool_hyfg
+      real, intent(in) :: pool_grainf
+      real, intent(inout) :: tot_mass_rem
+      real, intent(inout) :: sel_mass_left
 
       ! + + + LOCAL VARIABLES + + +
-      integer idx
+      integer idx        ! loop variable for soil layers
       logical :: store_flag = .false.
       logical :: leaf_flag = .false.
       logical :: stem_flag = .false.
       logical :: sroot_flag = .false.
       logical :: froot_flag = .false.
-      real rem_frac
+      real :: rem_frac
 
       rem_frac = storef
       if( pool_hyfg .le. 2 ) then
@@ -494,9 +631,10 @@ module mproc_remove_mod
     subroutine rem_pool(pool_mass, pool_frac, pool_flag, tot_mass_rem)
 
       ! + + + ARGUMENT DECLARATIONS + + +
-      real pool_mass, pool_frac
-      logical :: pool_flag
-      real tot_mass_rem
+      real, intent(inout) :: pool_mass
+      real, intent(in) :: pool_frac
+      logical, intent(inout) :: pool_flag
+      real, intent(inout) :: tot_mass_rem
 
       ! + + + LOCAL VARIABLES + + +
       real mass_rem
@@ -511,7 +649,133 @@ module mproc_remove_mod
       return
     end subroutine rem_pool
 
-    subroutine adj_stand_pool( &
+    subroutine adj_stand_pool_plant( &
+           start_standstem, start_standleaflive, start_standleafdead, start_standstore, &
+           start_rootstore, start_rootfiber, &
+           pool_standstem, pool_standleaflive, pool_standleafdead, pool_standstore, &
+           pool_rootstore, pool_rootfiber, &
+           pool_flatstem, pool_flatleaf, pool_flatstore, &
+           pool_dstm, mov_stem, mov_leaf, mov_store, nslay)
+
+      ! + + + PURPOSE + + +
+      ! this subroutine checks to see if a greater proportion of roots
+      ! (storage and fiber) have been removed than stems, and if so turns
+      ! the now unsupported stems into flat biomass. The same check is
+      ! then done for stems supoorting leaves and storage biomass.
+
+      ! + + + ARGUMENT DECLARATIONS + + +
+      real, intent(in) :: start_standstem      ! before biomass removal, crop standing stem mass (kg/m^2)
+      real, intent(in) :: start_standleaflive  ! before biomass removal, crop live standing leaf mass (kg/m^2)
+      real, intent(in) :: start_standleafdead  ! before biomass removal, crop dead standing leaf mass (kg/m^2)
+      real, intent(in) :: start_standstore     ! before biomass removal, crop standing storage mass (kg/m^2)
+                                               ! (head with seed, or vegetative head (cabbage, pineapple))
+
+      real, intent(in) :: start_rootstore(*)   ! before biomass removal, crop root storage mass by soil layer (kg/m^2)
+                                               ! (tubers (potatoes, carrots), extended leaf (onion), seeds (peanuts))
+      real, intent(in) :: start_rootfiber(*)   ! before biomass removal, crop root fibrous mass by soil layer (kg/m^2)
+
+      real, intent(inout) :: pool_standstem    ! pool stand stem mass (kg/m^2)
+      real, intent(inout) :: pool_standleaflive ! pool live stand leaf mass (kg/m^2)
+      real, intent(inout) :: pool_standleafdead ! pool dead stand leaf mass (kg/m^2)
+      real, intent(inout) :: pool_standstore   ! pool stand storage mass (kg/m^2)
+
+      real, intent(inout) :: pool_rootstore(*) ! pool flat root storage mass (kg/m^2)
+                                               ! (tubers (potatoes, carrots), extended leaf (onion), seeds (peanuts))
+      real, intent(inout) :: pool_rootfiber(*) ! pool flat root fibrous mass (kg/m^2)
+
+      real, intent(inout) :: pool_flatstem     ! pool flat stem mass (kg/m^2)
+      real, intent(inout) :: pool_flatleaf     ! pool flat leaf mass (kg/m^2)
+      real, intent(inout) :: pool_flatstore    ! pool flat storage mass (kg/m^2)
+
+      real, intent(inout) :: pool_dstm         ! Number of crop stems per unit area (#/m^2)
+                                               ! It is computed by taking the tillering factor
+                                               ! times the plant population density.
+      real, intent(out) :: mov_stem            ! amount of stem biomass moved from standing to flat
+      real, intent(out) :: mov_leaf            ! amount of leaf biomass moved from standing to flat
+      real, intent(out) :: mov_store           ! amount of store biomass moved from standing to flat
+      integer, intent(in) ::  nslay            ! number of soil layers used
+
+      ! + + + LOCAL VARIABLES + + +
+      integer :: idx        ! loop variable for soil layers
+      real :: rat_store     ! fraction of store mass remaining after removal
+      real :: rat_leaf      ! fraction of leaf mass remaining after removal
+      real :: rat_stem      ! fraction of stem mass remaining after removal
+      real :: rat_rootstore ! fraction of root store mass remaining after removal
+      real :: rat_rootfiber ! fraction of root fiber mass remaining after removal
+      real :: rat_root      ! fraction of root mass (min of rat_rootstore and rat_rootfiber) remaining after removal
+      real :: mov_leaflive  ! amount of live leaf biomass moved from standing to flat
+      real :: mov_leafdead  ! amount of dead leaf biomass moved from standing to flat
+
+      ! adjust store, leaf and stem for rootstore or stem removal
+      if( start_standstore .gt. 0.0 ) then
+          rat_store = pool_standstore / start_standstore
+      else
+          rat_store = 1.0
+      end if
+      if( (start_standleaflive + start_standleafdead) .gt. 0.0 ) then
+          rat_leaf = (pool_standleaflive + pool_standleaflive) / (start_standleaflive + start_standleafdead)
+      else
+          rat_leaf = 1.0
+      end if
+      if( start_standstem .gt. 0.0 ) then
+          rat_stem = pool_standstem / start_standstem
+      else
+          rat_stem = 1.0
+      end if
+      rat_rootstore = 1.0
+      do idx = 1, nslay
+          if( start_rootstore(idx) .gt. 0.0 ) then
+              rat_rootstore = min(rat_rootstore, &
+                           pool_rootstore(idx) / start_rootstore(idx))
+          end if
+      end do
+      rat_rootfiber = 1.0
+      do idx = 1, nslay
+          if( start_rootfiber(idx) .gt. 0.0 ) then
+              rat_rootfiber = min(rat_rootfiber, &
+                           pool_rootfiber(idx) / start_rootfiber(idx))
+          end if
+      end do
+      ! check if supporting roots removed
+      rat_root = min( rat_rootstore, rat_rootfiber )
+      if( rat_root .lt. rat_stem ) then
+          ! reduce stem count proportionally as well
+          pool_dstm = pool_dstm * (rat_root/rat_stem)
+          ! move standing mass
+          mov_stem = pool_standstem * (1.0  - (rat_root/rat_stem))
+          pool_flatstem = pool_flatstem + mov_stem
+          pool_standstem = pool_standstem - mov_stem
+          rat_stem = rat_root
+      else
+          mov_stem = 0.0
+      end if
+      ! check if supporting stems removed
+      if( rat_stem .lt. rat_leaf ) then
+          ! live leaf
+          mov_leaflive = pool_standleaflive * (1.0  - (rat_stem/rat_leaf))
+          pool_flatleaf = pool_flatleaf + mov_leaflive
+          pool_standleaflive = pool_standleaflive - mov_leaflive
+          ! dead leaf
+          mov_leafdead = pool_standleafdead * (1.0  - (rat_stem/rat_leaf))
+          pool_flatleaf = pool_flatleaf + mov_leafdead
+          pool_standleafdead = pool_standleafdead - mov_leafdead
+          mov_leaf = mov_leaflive + mov_leafdead
+      else
+          mov_leaf = 0.0
+      end if
+      if( rat_stem .lt. rat_store ) then
+          mov_store = pool_standstore * (1.0  - (rat_stem/rat_store))
+          pool_flatstore = pool_flatstore + mov_store
+          pool_standstore = pool_standstore - mov_store
+      else
+          mov_store = 0.0
+      end if
+
+      return
+
+    end subroutine adj_stand_pool_plant
+
+    subroutine adj_stand_pool_residue( &
            start_standstem, start_standleaf, start_standstore, &
            start_rootstore, start_rootfiber, &
            pool_standstem, pool_standleaf, pool_standstore, &
@@ -526,53 +790,43 @@ module mproc_remove_mod
       ! then done for stems supoorting leaves and storage biomass.
 
       ! + + + ARGUMENT DECLARATIONS + + +
-      real start_standstem, start_standleaf, start_standstore
-      real start_rootstore(*), start_rootfiber(*)
-      real pool_standstem, pool_standleaf, pool_standstore
-      real pool_rootstore(*), pool_rootfiber(*)
-      real pool_flatstem, pool_flatleaf, pool_flatstore
-      real pool_dstm
-      real mov_stem, mov_leaf, mov_store
-      integer nslay
+      real, intent(in) :: start_standstem      ! before biomass removal, crop standing stem mass (kg/m^2)
+      real, intent(in) :: start_standleaf      ! before biomass removal, crop standing leaf mass (kg/m^2)
+      real, intent(in) :: start_standstore     ! before biomass removal, crop standing storage mass (kg/m^2)
+                                               ! (head with seed, or vegetative head (cabbage, pineapple))
 
-      ! + + + ARGUMENT DEFINITIONS + + +
-      ! start_standstem - before biomass removal, crop standing stem mass (kg/m^2)
-      ! start_standleaf - before biomass removal, crop standing leaf mass (kg/m^2)
-      ! start_standstore - before biomass removal, crop standing storage mass (kg/m^2)
-      !                (head with seed, or vegetative head (cabbage, pineapple))
-      ! start_rootstorez - before biomass removal, crop root storage mass by soil layer (kg/m^2)
-      !               (tubers (potatoes, carrots), extended leaf (onion), seeds (peanuts))
-      ! start_rootfiberz - before biomass removal, crop root fibrous mass by soil layer (kg/m^2)
+      real, intent(in) :: start_rootstore(*)   ! before biomass removal, crop root storage mass by soil layer (kg/m^2)
+                                               ! (tubers (potatoes, carrots), extended leaf (onion), seeds (peanuts))
+      real, intent(in) :: start_rootfiber(*)   ! before biomass removal, crop root fibrous mass by soil layer (kg/m^2)
 
-      ! pool_flatstem  - pool flat stem mass (kg/m^2)
-      ! pool_flatleaf  - pool flat leaf mass (kg/m^2)
-      ! pool_flatstore - pool flat storage mass (kg/m^2)
+      real, intent(inout) :: pool_standstem    ! pool stand stem mass (kg/m^2)
+      real, intent(inout) :: pool_standleaf    ! pool stand leaf mass (kg/m^2)
+      real, intent(inout) :: pool_standstore   ! pool stand storage mass (kg/m^2)
 
-      ! pool_rootstore - pool flat root storage mass (kg/m^2)
-      !               (tubers (potatoes, carrots), extended leaf (onion), seeds (peanuts))
-      ! pool_rootfiber - pool flat root fibrous mass (kg/m^2)
+      real, intent(inout) :: pool_rootstore(*) ! pool flat root storage mass (kg/m^2)
+                                               ! (tubers (potatoes, carrots), extended leaf (onion), seeds (peanuts))
+      real, intent(inout) :: pool_rootfiber(*) ! pool flat root fibrous mass (kg/m^2)
 
-      ! pool_flatstem  - pool flat stem mass (kg/m^2)
-      ! pool_flatleaf  - pool flat leaf mass (kg/m^2)
-      ! pool_flatstore - pool flat storage mass (kg/m^2)
+      real, intent(inout) :: pool_flatstem     ! pool flat stem mass (kg/m^2)
+      real, intent(inout) :: pool_flatleaf     ! pool flat leaf mass (kg/m^2)
+      real, intent(inout) :: pool_flatstore    ! pool flat storage mass (kg/m^2)
 
-      ! pool_dstm - Number of crop stems per unit area (#/m^2)
-      !           - It is computed by taking the tillering factor
-      !             times the plant population density.
-
-      ! mov_stem - amount of stem biomass moved from standing to flat
-      ! mov_leaf - amount of leaf biomass moved from standing to flat
-      ! mov_store - amount of store biomass moved from standing to flat
-
-      ! nslay - number of soil layers used
+      real, intent(inout) :: pool_dstm         ! Number of crop stems per unit area (#/m^2)
+                                               ! It is computed by taking the tillering factor
+                                               ! times the plant population density.
+      real, intent(out) :: mov_stem            ! amount of stem biomass moved from standing to flat
+      real, intent(out) :: mov_leaf            ! amount of leaf biomass moved from standing to flat
+      real, intent(out) :: mov_store           ! amount of store biomass moved from standing to flat
+      integer, intent(in) ::  nslay            ! number of soil layers used
 
       ! + + + LOCAL VARIABLES + + +
-      integer idx
-      real rat_store, rat_leaf, rat_stem
-      real rat_rootstore, rat_rootfiber
-      real rat_root, mov_mass
-
-      ! rat_root - the fraction of material remaining after removal
+      integer :: idx        ! loop variable for soil layers
+      real :: rat_store     ! fraction of store mass remaining after removal
+      real :: rat_leaf      ! fraction of leaf mass remaining after removal
+      real :: rat_stem      ! fraction of stem mass remaining after removal
+      real :: rat_rootstore ! fraction of root store mass remaining after removal
+      real :: rat_rootfiber ! fraction of root fiber mass remaining after removal
+      real :: rat_root      ! fraction of root mass (min of rat_rootstore and rat_rootfiber) remaining after removal
 
       ! adjust store, leaf and stem for rootstore or stem removal
       if( start_standstore .gt. 0.0 ) then
@@ -635,6 +889,6 @@ module mproc_remove_mod
 
       return
 
-    end subroutine adj_stand_pool
+    end subroutine adj_stand_pool_residue
 
 end module mproc_remove_mod

@@ -7,7 +7,7 @@ module WEPSregrowthperen_mod
   use Preprocess_mod
   use constants, only: dp, check_return, u_mgtokg
   use plant_mod
-  use WEPSCrop_util_mod, only: shootnum, shoot_delay, shoot_flg, per_release, stage_release
+  use WEPSCrop_util_mod, only: shootnum, shoot_delay, shoot_flg, per_release
   implicit none
 
   type, extends(preprocess) :: WEPSregrowthperen
@@ -62,7 +62,8 @@ module WEPSregrowthperen_mod
       ! plant state
       integer(int32) :: bnslay ! number of soil layers
       real(dp) :: bcmstandstem ! crop standing stem mass (kg/m^2)
-      real(dp) :: bcmstandleaf ! crop standing leaf mass (kg/m^2)
+      real(dp) :: bcmstandleaflive ! crop live standing leaf mass (kg/m^2)
+      real(dp) :: bcmstandleafdead ! crop dead standing leaf mass (kg/m^2)
       real(dp) :: bcmstandstore ! crop standing storage mass (kg/m^2) (head with seed, or vegetative head (cabbage, pineapple))
       real(dp) :: bcmflatstem  ! crop flat stem mass (kg/m^2)
       real(dp) :: bcmflatleaf  ! crop flat leaf mass (kg/m^2)
@@ -79,7 +80,6 @@ module WEPSregrowthperen_mod
       real(dp) :: bczht  ! Crop height (m)
       real(dp) :: bcdstm ! Number of crop stems per unit area (#/m^2)
       integer(int32) :: bcdayam ! number of days since crop matured 
-      real(dp) :: bcfliveleaf ! fraction of standing plant leaf which is living (transpiring)
       real(dp) :: bcthu_shoot_beg ! heat unit index (fraction) for beginning of shoot grow from root storage period
       real(dp) :: bcthu_shoot_end ! heat unit index (fraction) for end of shoot grow from root storage period
       real(dp) :: bcgrainf ! internally computed grain fraction of reproductive mass
@@ -108,6 +108,7 @@ module WEPSregrowthperen_mod
       real(dp) :: pot_stems ! potential number of stems which could be released for regrowth
       real(dp) :: pot_leaf_mass ! potential leaf mass which could be released for regrowth.
       integer(int32) :: regrowth_flg
+      real(dp) :: regrow_release ! fraction of storage root released to support regrowth of plant
 
       ! Body of regrowth
 
@@ -120,6 +121,7 @@ module WEPSregrowthperen_mod
       ! check crop type for shoot growth action
       regrowth_flg = -1
       do_regrow = .false.
+      regrow_release = per_release
       if( can_regrow ) then
         ! check summer annuals and perennials for removal of all (most) leaf mass
         ! perennials with staged crown release also exhibit tuber dormancy
@@ -144,13 +146,11 @@ module WEPSregrowthperen_mod
           if( .not. check_return( trim(self%processName) , "leafstem", succ ) ) return
 
           ! plant state
-          call plnt%state%get("fliveleaf", bcfliveleaf, succ)
-          if( .not. check_return( trim(self%processName) , "fliveleaf", succ ) ) return
-          call plnt%state%get("mstandleaf", bcmstandleaf, succ)
-          if( .not. check_return( trim(self%processName) , "mstandleaf", succ ) ) return
+          call plnt%state%get("mstandleaflive", bcmstandleaflive, succ)
+          if( .not. check_return( trim(self%processName) , "mstandleaflive", succ ) ) return
 
           regrowth_flg = 1
-          if( bcfliveleaf * bcmstandleaf .lt. 0.84_dp*bc0storeinit*bcdpop & ! 0.42 * 2 = 0.84
+          if( bcmstandleaflive .lt. 0.84_dp*bc0storeinit*bcdpop & ! 0.42 * 2 = 0.84
             * u_mgtokg * bcfleafstem / (bcfleafstem + 1.0_dp) ) then
             ! below minimum living leaf mass (which is twice seed leaf mass)
 
@@ -179,6 +179,8 @@ module WEPSregrowthperen_mod
                 if( .not. check_return( trim(self%processName) , "zloc_regrow", succ ) ) return
 
                 ! plant state
+                call plnt%state%get("mstandleafdead", bcmstandleafdead, succ)
+                if( .not. check_return( trim(self%processName) , "mstandleafdead", succ ) ) return
                 call plnt%state%get("mtotshoot", bcmtotshoot, succ)
                 if( .not. check_return( trim(self%processName) , "mtotshoot", succ ) ) return
                 call plnt%state%get("mrootstorez", bcmrootstorez, succ)
@@ -187,18 +189,18 @@ module WEPSregrowthperen_mod
 
                 regrowth_flg = 5
                 ! find out how much root store could be released for regrowth
-                call shootnum(shoot_flg, bnslay, per_release, bcdpop, bc0shoot,&
+                call shootnum(shoot_flg, bnslay, regrow_release, bcdpop, bc0shoot,&
                               bcdmaxshoot, root_store_rel, bcmrootstorez, pot_stems)
 
                 ! find the potential leaf mass to be achieved with regrowth
                 if( bczloc_regrow .gt. 0.0_dp ) then
-                  pot_leaf_mass = bcmstandleaf + 0.42_dp * min(root_store_rel, bcmtotshoot) &
+                  pot_leaf_mass = bcmstandleaflive + bcmstandleafdead + 0.42_dp * min(root_store_rel, bcmtotshoot) &
                                 * bcfleafstem / (bcfleafstem + 1.0)
                 else
                   pot_leaf_mass = 0.42_dp * root_store_rel * bcfleafstem / (bcfleafstem + 1.0)
                 end if
 
-                if( (bcfliveleaf*bcmstandleaf) .lt. pot_leaf_mass ) then
+                if( bcmstandleaflive .lt. pot_leaf_mass ) then
                   ! present living leaf mass less than leaf mass from storage regrowth
 
                   ! plant database
@@ -241,10 +243,14 @@ module WEPSregrowthperen_mod
                     if( .not. check_return( trim(self%processName) , "height", succ ) ) return
                     call plnt%state%get("dstm", bcdstm, succ)
                     if( .not. check_return( trim(self%processName) , "dstm", succ ) ) return
+                    ! get this to dimension array
+                    call plnt%state%get("res_bgstemz", bgmbgstemz, succ)
+                    if( .not. check_return( trim(self%processName) , "res_bgstemz", succ ) ) return
+
 
                     ! regrows from crown, stem becomes residue
                     bgmstandstem = bcmstandstem
-                    bgmstandleaf = bcmstandleaf
+                    bgmstandleaf = bcmstandleaflive + bcmstandleafdead
                     bgmstandstore = bcmstandstore
                     bgmflatstem = bcmflatstem
                     bgmflatleaf = bcmflatleaf
@@ -259,7 +265,8 @@ module WEPSregrowthperen_mod
                     bcmshoot = 0.0_dp
                     bcmtotshoot = root_store_rel
                     bcmstandstem = 0.0_dp
-                    bcmstandleaf = 0.0_dp
+                    bcmstandleaflive = 0.0_dp
+                    bcmstandleafdead = 0.0_dp
                     bcmstandstore = 0.0_dp
                     bcmflatstem = 0.0_dp
                     bcmflatleaf = 0.0_dp
@@ -294,8 +301,10 @@ module WEPSregrowthperen_mod
                     if( .not. check_return( trim(self%processName) , "res_dstm", succ ) ) return
                     call plnt%state%replace("mstandstem", bcmstandstem, succ)
                     if( .not. check_return( trim(self%processName) , "mstandstem", succ ) ) return
-                    call plnt%state%replace("mstandleaf", bcmstandleaf, succ)
-                    if( .not. check_return( trim(self%processName) , "mstandleaf", succ ) ) return
+                    call plnt%state%replace("mstandleaflive", bcmstandleaflive, succ)
+                    if( .not. check_return( trim(self%processName) , "mstandleaflive", succ ) ) return
+                    call plnt%state%replace("mstandleafdead", bcmstandleafdead, succ)
+                    if( .not. check_return( trim(self%processName) , "mstandleafdead", succ ) ) return
                     call plnt%state%replace("mstandstore", bcmstandstore, succ)
                     if( .not. check_return( trim(self%processName) , "mstandstore", succ ) ) return
                     call plnt%state%replace("mflatstem", bcmflatstem, succ)
@@ -341,6 +350,8 @@ module WEPSregrowthperen_mod
       if( .not. check_return( trim(self%processName) , "regrowth_flg", succ ) ) return
       call plnt%state%replace("do_regrow", do_regrow, succ)
       if( .not. check_return( trim(self%processName) , "do_regrow", succ ) ) return
+      call plnt%state%replace("regrow_release", regrow_release, succ)
+      if( .not. check_return( trim(self%processName) , "regrow_release", succ ) ) return
 
     end subroutine regrowth_proc
 

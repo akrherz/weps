@@ -63,10 +63,14 @@ module weps_submodel_mod
 
       ! CROP submodel
       call callcrop(daysim, isr, soil, plant, croptot, restot, biotot, h1et)
-      ! NOTE: plant update called within callcrop
+      call plantupdate( soil, plant, croptot, restot, biotot )
+
+      if( associated(plant) ) then
+        ! set prevday derived variable for later reference in end_season
+        plant%prev%cancov = plant%deriv%fcancov
+      end if
 
       ! write(*,*) "Start decomp", daysim
-
       ! DECOMPosition submodel
       call decomp(isr, soil, plant, decompfac, hstate, h1et)
       call plantupdate( soil, plant, croptot, restot, biotot )

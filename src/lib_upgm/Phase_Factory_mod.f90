@@ -24,16 +24,16 @@ module phase_factory_mod
 
     nullify(phasePtr)
 
-    if (phaseName == "PhenologyMMS_Basephenol") then
-        allocate(PhenologyMMS_Basephenol :: phasePtr)
-    elseif (phaseName == "PhenologyMMS_Fallphenol") then
-        allocate(PhenologyMMS_Fallphenol :: phasePtr)
-    elseif (phaseName == "PhenologyMMS_Germination") then
+    if (phaseName == "PhenologyMMS_Germination") then
         allocate(PhenologyMMS_Germination :: phasePtr)
     elseif (phaseName == "PhenologyMMS_ShootGRG") then
         allocate(PhenologyMMS_ShootGRG :: phasePtr)
+    elseif (phaseName == "PhenologyMMS_Basephenol") then
+        allocate(PhenologyMMS_Basephenol :: phasePtr)
     elseif (phaseName == "PhenologyMMS_Springphenol") then
         allocate(PhenologyMMS_Springphenol :: phasePtr)
+    elseif (phaseName == "PhenologyMMS_Fallphenol") then
+        allocate(PhenologyMMS_Fallphenol :: phasePtr)
     elseif(phaseName == "WEPS_DeciduousWood") then
         allocate(WEPS_DeciduousWood:: phasePtr)
     elseif(phaseName == "WEPS_EvergreenWood") then
@@ -42,6 +42,9 @@ module phase_factory_mod
         allocate(WEPS_ShootGrow:: phasePtr)
     !elseif(phaseName == "phase") then
         !allocate( phase:: phasePtr)
+      else
+        write(*,*) 'ERROR: Invalid Phase Name: ', trim(phaseName)
+        stop
     endif
 
     if( associated(phasePtr) ) then

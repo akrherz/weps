@@ -444,6 +444,10 @@ module manage_mod
           call getManVal(manFile%oper, 'ominspeed', ominspeed)
           call getManVal(manFile%oper, 'omaxspeed', omaxspeed)
 
+          if( ominspeed .gt. omaxspeed ) then
+            write(*,*) 'Warning: O1, Minimum operation speed greater than Maximum operation speed'
+          end if
+
       case (3) ! added energy and stir to O1
           ! read tillage speed and direction
           call getManVal(manFile%oper, 'oenergyarea', lastoper(sr)%energyarea)
@@ -453,6 +457,11 @@ module manage_mod
           call getManVal(manFile%oper, 'ostdspeed', ostdspeed)
           call getManVal(manFile%oper, 'ominspeed', ominspeed)
           call getManVal(manFile%oper, 'omaxspeed', omaxspeed)
+
+          if( ominspeed .gt. omaxspeed ) then
+            write(*,*) 'Warning: O3, Minimum operation speed greater than Maximum operation speed'
+          end if
+
           ! Version 1.5 added ofuel
           if (manFile%mversion .ge. 1.50) then
             ! get fuel line
@@ -531,6 +540,10 @@ module manage_mod
         call getManVal(manFile%grp, 'gtmindepth', tmindepth)
         call getManVal(manFile%grp, 'gtmaxdepth', tmaxdepth)
 
+        if( tmindepth .gt. tmaxdepth ) then
+          write(*,*) 'Warning: G1, Minimum tillage depth greater than Maximum tillage depth'
+        end if
+
         tlayer = tillay(tdepth, soil%aszlyt, soil%nslay)
 
       case (2)  ! biomass manipulation group
@@ -606,7 +619,7 @@ module manage_mod
       use upgm_mod
       use constants, only : dp, int32
       use environment_state_mod
-      use WEPSCrop_util_mod, only: scrv1
+      use p1unconv_mod, only: mtomm
 
 !     + + + ARGUMENT DECLARATIONS + + +
       type(soil_def), intent(inout) :: soil  ! soil for this subregion
@@ -716,14 +729,15 @@ module manage_mod
       type(plant_pointer), pointer :: harvPlant  ! pointer to the most recent harvestable plant
 
       logical :: succ      ! return value for JSON name assignment
-      real(dp) :: r_setter
+      real(dp) :: r_getter ! use to get data value from UPGM JSON element
+      real(dp) :: r_setter ! used to transfer value from plant data element to UPGM JSON element with change in precision
       real(dp), dimension(:), allocatable :: ra_setter
-      integer(int32) :: i_setter
-      logical :: l_setter
+      integer(int32) :: i_getter ! use to get data value from UPGM JSON element
+      integer(int32) :: i_setter ! used to transfer value from plant data element to UPGM JSON element (change in integer type)
+      logical :: l_getter ! use to get data value from UPGM JSON element
+      logical :: l_setter ! used to transfer value from plant data element to UPGM JSON element
       character(80) :: phaseLabel, processLabel
       integer :: phaseType, processType
-      real(dp) :: a_fr ! parameter in the frost damage s-curve
-      real(dp) :: b_fr ! parameter in the frost damage s-curve
 
 !     + + + LOCAL VARIABLE DEFINITIONS + + +
 
@@ -846,7 +860,7 @@ module manage_mod
       crop_present = 0
       thisPlant => plant
       do while( associated(thisPlant) )
-        if( (thisPlant%database%idc .gt. 0) .and. (poolmass( soil%nslay, thisPlant ) .gt. 0.0) ) then
+        if( (thisPlant%database%plant_doy .gt. 0) .and. (poolmass( soil%nslay, thisPlant ) .gt. 0.0) ) then
           ! this is a plant, not some added residue
           crop_present = 1
           ! most recent plant, one which is to be harvested
@@ -1302,9 +1316,6 @@ module manage_mod
         ! Some operations will not kill certain types of crops,
         ! ie., a mowing operation usually will not kill a perennial
         ! crop like alfalfa but would kill many annual crops.
-
-        ! this flag remains set until a biomass transfer process (40)
-        ! occurs so any side effects can be triggered
 
         ! This flag may get expanded in the future as new situations
         ! arise.
@@ -1977,8 +1988,8 @@ module manage_mod
         manFile%harv_calib_not_selected = .true.
 
         ! do process
-        ! do not initialize crop if no crop is present
-        if( (plant%geometry%dpop .gt. 0.0) .and. (plant%database%idc .gt. 0) ) then
+        if( (plant%geometry%dpop .gt. 0.0) .and. (plant%database%storeinit .gt. 0.0) ) then
+          ! crop is present, initialize
           ! set flag for crop initialization - jt
           plant%growth%am0cif = .true.
           ! set crop living flag on - jt
@@ -2222,6 +2233,8 @@ module manage_mod
         call getManVal(manFile%proc, 'resevapa', plant%database%resevapa)
         call getManVal(manFile%proc, 'resevapb', plant%database%resevapb)
  
+        ! use xstm value for xstmrep
+        plant%residue%xstmrep = plant%database%xstm
         ! use zmassrot value for zrtd
         plant%residue%zrtd = zmassrot
 
@@ -2720,7 +2733,8 @@ module manage_mod
 
         ! do process
         ! do not initialize crop if no crop is present
-        if( (plant%geometry%dpop .gt. 0.0) ) then
+        if( (plant%geometry%dpop .gt. 0.0) .and. (plant%database%storeinit .gt. 0.0) ) then
+          ! crop is present, initialize
           ! set flag for crop initialization - jt
           plant%growth%am0cif = .true.
           ! set crop growth flag on - jt
@@ -2747,7 +2761,7 @@ module manage_mod
           call report_hydrobal( sr, manFile%mcount, manFile%mperod )
         end if
 
-      case(110)  !  pmms_germination
+      case(110)  !  PhenologyMMS_Germination
 
         if( associated(plant%upgm_grow%plant) ) then
 
@@ -2756,7 +2770,7 @@ module manage_mod
           call getManVal(manFile%proc, 'stage_type', phaseType)
 
           ! add phase
-          call plant%upgm_grow%plant%add_phase("pmms_germination", trim(phaseLabel), phaseType)
+          call plant%upgm_grow%plant%add_phase("PhenologyMMS_Germination", trim(phaseLabel), phaseType)
 
           ! create 4 element array for Germination GDD values
           allocate(ra_setter(4), stat = alloc_stat)
@@ -2798,7 +2812,7 @@ module manage_mod
           ! soil layer of planting depth
           call plant%upgm_grow%plant%plantstate%state%get("p_layer", i_setter, succ)        
           if( .not. succ ) then
-            i_setter = tillay(plant%database%growdepth, soil%aszlyt, soil%nslay)
+            i_setter = tillay(plant%database%growdepth*mtomm, soil%aszlyt, soil%nslay)
             call plant%upgm_grow%plant%plantstate%state%put("p_layer", i_setter, succ)
           end if
 
@@ -2820,7 +2834,7 @@ module manage_mod
 
         ! post-process stuff
         if (manFile%am0tdb .eq. 1) then
-          write (luotdb(sr),*) '//After pmms_germination process//'
+          write (luotdb(sr),*) '//After PhenologyMMS_Germination process//'
           call tdbug(sr, prcode, soil, plant)
         end if
         call set_calib(sr, plant)
@@ -2829,7 +2843,7 @@ module manage_mod
           call report_hydrobal( sr, manFile%mcount, manFile%mperod )
         end if
 
-      case(120)  !  pmms_shootgrg
+      case(120)  !  PhenologyMMS_ShootGRG
 
         if( associated(plant%upgm_grow%plant) ) then
 
@@ -2838,7 +2852,7 @@ module manage_mod
           call getManVal(manFile%proc, 'stage_type', phaseType)
 
           ! add phase
-          call plant%upgm_grow%plant%add_phase("pmms_shootgrg", trim(phaseLabel), phaseType)
+          call plant%upgm_grow%plant%add_phase("PhenologyMMS_ShootGRG", trim(phaseLabel), phaseType)
 
           ! read Phase parameters and create
           call getManVal(manFile%proc, 'GN_trans_gdd', r_setter)
@@ -2858,10 +2872,6 @@ module manage_mod
           call plant%upgm_grow%plant%phaseCurrent%ptr%phasePars%put("beg_live_leaf", r_setter, succ)
           call getManVal(manFile%proc, "end_live_leaf", r_setter)
           call plant%upgm_grow%plant%phaseCurrent%ptr%phasePars%put("end_live_leaf", r_setter, succ)
-          call getManVal(manFile%proc, "beg_weath_leaf", r_setter)
-          call plant%upgm_grow%plant%phaseCurrent%ptr%phasePars%put("beg_weath_leaf", r_setter, succ)
-          call getManVal(manFile%proc, "end_weath_leaf", r_setter)
-          call plant%upgm_grow%plant%phaseCurrent%ptr%phasePars%put("end_weath_leaf", r_setter, succ)
           call getManVal(manFile%proc, "beg_senes_root", r_setter)
           call plant%upgm_grow%plant%phaseCurrent%ptr%phasePars%put("beg_senes_root", r_setter, succ)
           call getManVal(manFile%proc, "end_senes_root", r_setter)
@@ -2893,98 +2903,86 @@ module manage_mod
           call plant%upgm_grow%plant%phaseCurrent%ptr%phaseState%put("stagegdd", r_setter, succ)
 
           ! create plant state inputs
-          call plant%upgm_grow%plant%plantstate%state%get("stress", r_setter, succ)
+          call plant%upgm_grow%plant%plantstate%state%get("stress", r_getter, succ)
           if( .not. succ ) then
             call plant%upgm_grow%plant%plantstate%state%put("stress", r_setter, succ)
           end if
-          call plant%upgm_grow%plant%plantstate%state%get("fliveleaf", r_setter, succ)
-          if( .not. succ ) then
-            call plant%upgm_grow%plant%plantstate%state%put("fliveleaf", r_setter, succ)
-          end if
-          call plant%upgm_grow%plant%plantstate%state%get("thu_shoot_beg", r_setter, succ)
+          call plant%upgm_grow%plant%plantstate%state%get("thu_shoot_beg", r_getter, succ)
           if( .not. succ ) then
             call plant%upgm_grow%plant%plantstate%state%put("thu_shoot_beg", r_setter, succ)
           end if
-          call plant%upgm_grow%plant%plantstate%state%get("thu_shoot_end", r_setter, succ)
+          call plant%upgm_grow%plant%plantstate%state%get("thu_shoot_end", r_getter, succ)
           if( .not. succ ) then
             call plant%upgm_grow%plant%plantstate%state%put("thu_shoot_end", r_setter, succ)
           end if
 
           ! create plant state output updates
-          call plant%upgm_grow%plant%plantstate%state%get("nextstage", i_setter, succ)
+          call plant%upgm_grow%plant%plantstate%state%get("nextstage", i_getter, succ)
           if( .not. succ ) then
             call plant%upgm_grow%plant%plantstate%state%put("nextstage", i_setter, succ)
           end if
-          call plant%upgm_grow%plant%plantstate%state%get("specstage", i_setter, succ)
+          call plant%upgm_grow%plant%plantstate%state%get("specstage", i_getter, succ)
           if( .not. succ ) then
             call plant%upgm_grow%plant%plantstate%state%put("specstage", i_setter, succ)
           end if
-          call plant%upgm_grow%plant%plantstate%state%get("remgdd", r_setter, succ)
+          call plant%upgm_grow%plant%plantstate%state%get("remgdd", r_getter, succ)
           if( .not. succ ) then
             call plant%upgm_grow%plant%plantstate%state%put("remgdd", r_setter, succ)
           end if
-          call plant%upgm_grow%plant%plantstate%state%get("ffa", r_setter, succ)
+          call plant%upgm_grow%plant%plantstate%state%get("ffa", r_getter, succ)
           if( .not. succ ) then
             call plant%upgm_grow%plant%plantstate%state%put("ffa", r_setter, succ)
           end if
-          call plant%upgm_grow%plant%plantstate%state%get("ffw", r_setter, succ)
-          if( .not. succ ) then
-            call plant%upgm_grow%plant%plantstate%state%put("ffw", r_setter, succ)
-          end if
-          call plant%upgm_grow%plant%plantstate%state%get("ffr", r_setter, succ)
+          call plant%upgm_grow%plant%plantstate%state%get("ffr", r_getter, succ)
           if( .not. succ ) then
             call plant%upgm_grow%plant%plantstate%state%put("ffr", r_setter, succ)
           end if
-          call plant%upgm_grow%plant%plantstate%state%get("gif", r_setter, succ)
+          call plant%upgm_grow%plant%plantstate%state%get("gif", r_getter, succ)
           if( .not. succ ) then
             call plant%upgm_grow%plant%plantstate%state%put("gif", r_setter, succ)
           end if
-          call plant%upgm_grow%plant%plantstate%state%get("shoot_hui", r_setter, succ)
+          call plant%upgm_grow%plant%plantstate%state%get("shoot_hui", r_getter, succ)
           if( .not. succ ) then
             call plant%upgm_grow%plant%plantstate%state%put("shoot_hui", r_setter, succ)
           end if
-          call plant%upgm_grow%plant%plantstate%state%get("shoot_huiy", r_setter, succ)
+          call plant%upgm_grow%plant%plantstate%state%get("shoot_huiy", r_getter, succ)
           if( .not. succ ) then
             call plant%upgm_grow%plant%plantstate%state%put("shoot_huiy", r_setter, succ)
           end if
-          call plant%upgm_grow%plant%plantstate%state%get("p_rw", r_setter, succ)
+          call plant%upgm_grow%plant%plantstate%state%get("p_rw", r_getter, succ)
           if( .not. succ ) then
             call plant%upgm_grow%plant%plantstate%state%put("p_rw", r_setter, succ)
           end if
-          call plant%upgm_grow%plant%plantstate%state%get("p_st", r_setter, succ)
+          call plant%upgm_grow%plant%plantstate%state%get("p_st", r_getter, succ)
           if( .not. succ ) then
             call plant%upgm_grow%plant%plantstate%state%put("p_st", r_setter, succ)
           end if
-          call plant%upgm_grow%plant%plantstate%state%get("p_lf", r_setter, succ)
+          call plant%upgm_grow%plant%plantstate%state%get("p_lf", r_getter, succ)
           if( .not. succ ) then
             call plant%upgm_grow%plant%plantstate%state%put("p_lf", r_setter, succ)
           end if
-          call plant%upgm_grow%plant%plantstate%state%get("p_rp", r_setter, succ)
+          call plant%upgm_grow%plant%plantstate%state%get("p_rp", r_getter, succ)
           if( .not. succ ) then
             call plant%upgm_grow%plant%plantstate%state%put("p_rp", r_setter, succ)
           end if
-          call plant%upgm_grow%plant%plantstate%state%get("pdht", r_setter, succ)
+          call plant%upgm_grow%plant%plantstate%state%get("pdht", r_getter, succ)
           if( .not. succ ) then
             call plant%upgm_grow%plant%plantstate%state%put("pdht", r_setter, succ)
           end if
-          call plant%upgm_grow%plant%plantstate%state%get("pdrd", r_setter, succ)
+          call plant%upgm_grow%plant%plantstate%state%get("pdrd", r_getter, succ)
           if( .not. succ ) then
             call plant%upgm_grow%plant%plantstate%state%put("pdrd", r_setter, succ)
           end if
-          call plant%upgm_grow%plant%plantstate%state%get("hu_delay", r_setter, succ)
+          call plant%upgm_grow%plant%plantstate%state%get("hu_delay", r_getter, succ)
           if( .not. succ ) then
             call plant%upgm_grow%plant%plantstate%state%put("hu_delay", r_setter, succ)
-          end if
-          call plant%upgm_grow%plant%plantstate%state%get("growing", l_setter, succ)
-          if( .not. succ ) then
-            call plant%upgm_grow%plant%plantstate%state%put("growing", l_setter, succ)
           end if
 
         endif
 
         ! post-process stuff
         if (manFile%am0tdb .eq. 1) then
-          write (luotdb(sr),*) '//After pmms_shootgrg process//'
+          write (luotdb(sr),*) '//After PhenologyMMS_ShootGRG process//'
           call tdbug(sr, prcode, soil, plant)
         end if
         call set_calib(sr, plant)
@@ -2993,7 +2991,7 @@ module manage_mod
           call report_hydrobal( sr, manFile%mcount, manFile%mperod )
         end if
 
-      case(130)  !  pmms_basephenol
+      case(130)  !  PhenologyMMS_Basephenol
 
         if( associated(plant%upgm_grow%plant) ) then
 
@@ -3002,7 +3000,7 @@ module manage_mod
           call getManVal(manFile%proc, 'stage_type', phaseType)
 
           ! add phase
-          call plant%upgm_grow%plant%add_phase("pmms_basephenol", trim(phaseLabel), phaseType)
+          call plant%upgm_grow%plant%add_phase("PhenologyMMS_Basephenol", trim(phaseLabel), phaseType)
 
           ! read Phase parameters and create
           call getManVal(manFile%proc, 'GN_trans_gdd', r_setter)
@@ -3022,10 +3020,6 @@ module manage_mod
           call plant%upgm_grow%plant%phaseCurrent%ptr%phasePars%put("beg_live_leaf", r_setter, succ)
           call getManVal(manFile%proc, "end_live_leaf", r_setter)
           call plant%upgm_grow%plant%phaseCurrent%ptr%phasePars%put("end_live_leaf", r_setter, succ)
-          call getManVal(manFile%proc, "beg_weath_leaf", r_setter)
-          call plant%upgm_grow%plant%phaseCurrent%ptr%phasePars%put("beg_weath_leaf", r_setter, succ)
-          call getManVal(manFile%proc, "end_weath_leaf", r_setter)
-          call plant%upgm_grow%plant%phaseCurrent%ptr%phasePars%put("end_weath_leaf", r_setter, succ)
           call getManVal(manFile%proc, "beg_senes_root", r_setter)
           call plant%upgm_grow%plant%phaseCurrent%ptr%phasePars%put("beg_senes_root", r_setter, succ)
           call getManVal(manFile%proc, "end_senes_root", r_setter)
@@ -3057,81 +3051,73 @@ module manage_mod
           call plant%upgm_grow%plant%phaseCurrent%ptr%phaseState%put("stagegdd", r_setter, succ)
 
           ! create plant state inputs
-          call plant%upgm_grow%plant%plantstate%state%get("stress", r_setter, succ)
+          call plant%upgm_grow%plant%plantstate%state%get("stress", r_getter, succ)
           if( .not. succ ) then
             call plant%upgm_grow%plant%plantstate%state%put("stress", r_setter, succ)
           end if
-          call plant%upgm_grow%plant%plantstate%state%get("fliveleaf", r_setter, succ)
-          if( .not. succ ) then
-            call plant%upgm_grow%plant%plantstate%state%put("fliveleaf", r_setter, succ)
-          end if
 
           ! create plant state output updates
-          call plant%upgm_grow%plant%plantstate%state%get("nextstage", i_setter, succ)
+          call plant%upgm_grow%plant%plantstate%state%get("nextstage", i_getter, succ)
           if( .not. succ ) then
             call plant%upgm_grow%plant%plantstate%state%put("nextstage", i_setter, succ)
           end if
-          call plant%upgm_grow%plant%plantstate%state%get("specstage", i_setter, succ)
+          call plant%upgm_grow%plant%plantstate%state%get("specstage", i_getter, succ)
           if( .not. succ ) then
             call plant%upgm_grow%plant%plantstate%state%put("specstage", i_setter, succ)
           end if
-          call plant%upgm_grow%plant%plantstate%state%get("remgdd", r_setter, succ)
+          call plant%upgm_grow%plant%plantstate%state%get("remgdd", r_getter, succ)
           if( .not. succ ) then
             call plant%upgm_grow%plant%plantstate%state%put("remgdd", r_setter, succ)
           end if
-          call plant%upgm_grow%plant%plantstate%state%get("ffa", r_setter, succ)
+          call plant%upgm_grow%plant%plantstate%state%get("ffa", r_getter, succ)
           if( .not. succ ) then
             call plant%upgm_grow%plant%plantstate%state%put("ffa", r_setter, succ)
           end if
-          call plant%upgm_grow%plant%plantstate%state%get("ffw", r_setter, succ)
-          if( .not. succ ) then
-            call plant%upgm_grow%plant%plantstate%state%put("ffw", r_setter, succ)
-          end if
-          call plant%upgm_grow%plant%plantstate%state%get("ffr", r_setter, succ)
+          call plant%upgm_grow%plant%plantstate%state%get("ffr", r_getter, succ)
           if( .not. succ ) then
             call plant%upgm_grow%plant%plantstate%state%put("ffr", r_setter, succ)
           end if
-          call plant%upgm_grow%plant%plantstate%state%get("gif", r_setter, succ)
+          call plant%upgm_grow%plant%plantstate%state%get("gif", r_getter, succ)
           if( .not. succ ) then
             call plant%upgm_grow%plant%plantstate%state%put("gif", r_setter, succ)
           end if
-          call plant%upgm_grow%plant%plantstate%state%get("shoot_hui", r_setter, succ)
+          call plant%upgm_grow%plant%plantstate%state%get("shoot_hui", r_getter, succ)
           if( .not. succ ) then
             call plant%upgm_grow%plant%plantstate%state%put("shoot_hui", r_setter, succ)
           end if
-          call plant%upgm_grow%plant%plantstate%state%get("shoot_huiy", r_setter, succ)
+          call plant%upgm_grow%plant%plantstate%state%get("shoot_huiy", r_getter, succ)
           if( .not. succ ) then
             call plant%upgm_grow%plant%plantstate%state%put("shoot_huiy", r_setter, succ)
           end if
-          call plant%upgm_grow%plant%plantstate%state%get("p_rw", r_setter, succ)
+          call plant%upgm_grow%plant%plantstate%state%get("p_rw", r_getter, succ)
           if( .not. succ ) then
             call plant%upgm_grow%plant%plantstate%state%put("p_rw", r_setter, succ)
           end if
-          call plant%upgm_grow%plant%plantstate%state%get("p_st", r_setter, succ)
+          call plant%upgm_grow%plant%plantstate%state%get("p_st", r_getter, succ)
           if( .not. succ ) then
             call plant%upgm_grow%plant%plantstate%state%put("p_st", r_setter, succ)
           end if
-          call plant%upgm_grow%plant%plantstate%state%get("p_lf", r_setter, succ)
+          call plant%upgm_grow%plant%plantstate%state%get("p_lf", r_getter, succ)
           if( .not. succ ) then
             call plant%upgm_grow%plant%plantstate%state%put("p_lf", r_setter, succ)
           end if
-          call plant%upgm_grow%plant%plantstate%state%get("p_rp", r_setter, succ)
+          call plant%upgm_grow%plant%plantstate%state%get("p_rp", r_getter, succ)
           if( .not. succ ) then
             call plant%upgm_grow%plant%plantstate%state%put("p_rp", r_setter, succ)
           end if
-          call plant%upgm_grow%plant%plantstate%state%get("pdht", r_setter, succ)
+          call plant%upgm_grow%plant%plantstate%state%get("pdht", r_getter, succ)
           if( .not. succ ) then
             call plant%upgm_grow%plant%plantstate%state%put("pdht", r_setter, succ)
           end if
-          call plant%upgm_grow%plant%plantstate%state%get("pdrd", r_setter, succ)
+          call plant%upgm_grow%plant%plantstate%state%get("pdrd", r_getter, succ)
           if( .not. succ ) then
             call plant%upgm_grow%plant%plantstate%state%put("pdrd", r_setter, succ)
           end if
-          call plant%upgm_grow%plant%plantstate%state%get("hu_delay", r_setter, succ)
+          call plant%upgm_grow%plant%plantstate%state%get("hu_delay", r_getter, succ)
           if( .not. succ ) then
             call plant%upgm_grow%plant%plantstate%state%put("hu_delay", r_setter, succ)
           end if
-          call plant%upgm_grow%plant%plantstate%state%get("growing", l_setter, succ)
+          call plant%upgm_grow%plant%plantstate%state%get("growing", l_getter, succ)
           if( .not. succ ) then
             call plant%upgm_grow%plant%plantstate%state%put("growing", l_setter, succ)
           end if
@@ -3140,7 +3126,7 @@ module manage_mod
 
         ! post-process stuff
         if (manFile%am0tdb .eq. 1) then
-          write (luotdb(sr),*) '//After pmms_basephenol process//'
+          write (luotdb(sr),*) '//After PhenologyMMS_Basephenol process//'
           call tdbug(sr, prcode, soil, plant)
         end if
         call set_calib(sr, plant)
@@ -3149,7 +3135,7 @@ module manage_mod
           call report_hydrobal( sr, manFile%mcount, manFile%mperod )
         end if
 
-      case(140)  !  pmms_springphenol
+      case(140)  !  PhenologyMMS_Springphenol
 
         if( associated(plant%upgm_grow%plant) ) then
 
@@ -3158,7 +3144,7 @@ module manage_mod
           call getManVal(manFile%proc, 'stage_type', phaseType)
 
           ! add phase
-          call plant%upgm_grow%plant%add_phase("pmms_springphenol", trim(phaseLabel), phaseType)
+          call plant%upgm_grow%plant%add_phase("PhenologyMMS_Springphenol", trim(phaseLabel), phaseType)
 
           ! read Phase parameters and create
           call getManVal(manFile%proc, 'GN_trans_gdd', r_setter)
@@ -3178,10 +3164,6 @@ module manage_mod
           call plant%upgm_grow%plant%phaseCurrent%ptr%phasePars%put("beg_live_leaf", r_setter, succ)
           call getManVal(manFile%proc, "end_live_leaf", r_setter)
           call plant%upgm_grow%plant%phaseCurrent%ptr%phasePars%put("end_live_leaf", r_setter, succ)
-          call getManVal(manFile%proc, "beg_weath_leaf", r_setter)
-          call plant%upgm_grow%plant%phaseCurrent%ptr%phasePars%put("beg_weath_leaf", r_setter, succ)
-          call getManVal(manFile%proc, "end_weath_leaf", r_setter)
-          call plant%upgm_grow%plant%phaseCurrent%ptr%phasePars%put("end_weath_leaf", r_setter, succ)
           call getManVal(manFile%proc, "beg_senes_root", r_setter)
           call plant%upgm_grow%plant%phaseCurrent%ptr%phasePars%put("beg_senes_root", r_setter, succ)
           call getManVal(manFile%proc, "end_senes_root", r_setter)
@@ -3207,59 +3189,55 @@ module manage_mod
           ! do process
           ! create phase state names
           r_setter = 0.0_dp
-          i_setter = 0
-          l_setter = .false.
           call plant%upgm_grow%plant%phaseCurrent%ptr%phaseState%put("phase_rel_gdd", r_setter, succ)
           call plant%upgm_grow%plant%phaseCurrent%ptr%phaseState%put("stagegdd", r_setter, succ)
 
           ! create plant database inputs
-          call plant%upgm_grow%plant%plantstate%pars%get("plantpop", r_setter, succ)
+          call plant%upgm_grow%plant%plantstate%pars%get("plantpop", r_getter, succ)
           if( .not. succ ) then
             r_setter = plant%geometry%dpop
             call plant%upgm_grow%plant%plantstate%pars%put("plantpop", r_setter, succ)
           end if
-          call plant%upgm_grow%plant%plantstate%pars%get("idc", i_setter, succ)
-          if( .not. succ ) then
-            i_setter = plant%database%idc
-            call plant%upgm_grow%plant%plantstate%pars%put("idc", i_setter, succ)
-          end if
-          call plant%upgm_grow%plant%plantstate%pars%get("verndel", r_setter, succ)
+          call plant%upgm_grow%plant%plantstate%pars%get("verndel", r_getter, succ)
           if( .not. succ ) then
             r_setter = plant%database%tverndel
             call plant%upgm_grow%plant%plantstate%pars%put("verndel", r_setter, succ)
           end if
-          call plant%upgm_grow%plant%plantstate%pars%get("leaf2stor", r_setter, succ)
+          call plant%upgm_grow%plant%plantstate%pars%get("leaf2stor", r_getter, succ)
           if( .not. succ ) then
             r_setter = plant%database%fleaf2stor
             call plant%upgm_grow%plant%plantstate%pars%put("leaf2stor", r_setter, succ)
           end if
-          call plant%upgm_grow%plant%plantstate%pars%get("stem2stor", r_setter, succ)
+          call plant%upgm_grow%plant%plantstate%pars%get("stem2stor", r_getter, succ)
           if( .not. succ ) then
             r_setter = plant%database%fstem2stor
             call plant%upgm_grow%plant%plantstate%pars%put("stem2stor", r_setter, succ)
           end if
-          call plant%upgm_grow%plant%plantstate%pars%get("stor2stor", r_setter, succ)
+          call plant%upgm_grow%plant%plantstate%pars%get("stor2stor", r_getter, succ)
           if( .not. succ ) then
             r_setter = plant%database%fstor2stor
             call plant%upgm_grow%plant%plantstate%pars%put("stor2stor", r_setter, succ)
           end if
-          call plant%upgm_grow%plant%plantstate%pars%get("mshoot", r_setter, succ)
+          call plant%upgm_grow%plant%plantstate%pars%get("mshoot", r_getter, succ)
           if( .not. succ ) then
             r_setter = plant%database%shoot
             call plant%upgm_grow%plant%plantstate%pars%put("mshoot", r_setter, succ)
           end if
-          call plant%upgm_grow%plant%plantstate%pars%get("dmaxshoot", r_setter, succ)
+          call plant%upgm_grow%plant%plantstate%pars%get("dmaxshoot", r_getter, succ)
           if( .not. succ ) then
             r_setter = plant%database%dmaxshoot
             call plant%upgm_grow%plant%plantstate%pars%put("dmaxshoot", r_setter, succ)
           end if
 
           ! create plant state inputs
-          call plant%upgm_grow%plant%plantstate%state%get("stress", r_setter, succ)
+          r_setter = 0.0_dp
+          i_setter = 0
+          l_setter = .false.
+          call plant%upgm_grow%plant%plantstate%state%get("stress", r_getter, succ)
           if( .not. succ ) then
             call plant%upgm_grow%plant%plantstate%state%put("stress", r_setter, succ)
           end if
-          call plant%upgm_grow%plant%plantstate%state%get("mtotshoot", r_setter, succ)
+          call plant%upgm_grow%plant%plantstate%state%get("mtotshoot", r_getter, succ)
           if( .not. succ ) then
             call plant%upgm_grow%plant%plantstate%state%put("mtotshoot", r_setter, succ)
           end if
@@ -3275,105 +3253,97 @@ module manage_mod
             deallocate(ra_setter, stat = alloc_stat)
           end if
 
-          call plant%upgm_grow%plant%plantstate%state%get("dstm", r_setter, succ)
+          call plant%upgm_grow%plant%plantstate%state%get("dstm", r_getter, succ)
           if( .not. succ ) then
             call plant%upgm_grow%plant%plantstate%state%put("dstm", r_setter, succ)
           end if
-          call plant%upgm_grow%plant%plantstate%state%get("fliveleaf", r_setter, succ)
-          if( .not. succ ) then
-            call plant%upgm_grow%plant%plantstate%state%put("fliveleaf", r_setter, succ)
-          end if
-          call plant%upgm_grow%plant%plantstate%state%get("zgrowpt", r_setter, succ)
+          call plant%upgm_grow%plant%plantstate%state%get("zgrowpt", r_getter, succ)
           if( .not. succ ) then
             call plant%upgm_grow%plant%plantstate%state%put("zgrowpt", r_setter, succ)
           end if
-          call plant%upgm_grow%plant%plantstate%state%get("thu_shoot_beg", r_setter, succ)
+          call plant%upgm_grow%plant%plantstate%state%get("thu_shoot_beg", r_getter, succ)
           if( .not. succ ) then
             call plant%upgm_grow%plant%plantstate%state%put("thu_shoot_beg", r_setter, succ)
           end if
-          call plant%upgm_grow%plant%plantstate%state%get("thu_shoot_end", r_setter, succ)
+          call plant%upgm_grow%plant%plantstate%state%get("thu_shoot_end", r_getter, succ)
           if( .not. succ ) then
             call plant%upgm_grow%plant%plantstate%state%put("thu_shoot_end", r_setter, succ)
           end if
-          call plant%upgm_grow%plant%plantstate%state%get("dayspring", r_setter, succ)
+          call plant%upgm_grow%plant%plantstate%state%get("dayspring", r_getter, succ)
           if( .not. succ ) then
             call plant%upgm_grow%plant%plantstate%state%put("dayspring", r_setter, succ)
           end if
-          call plant%upgm_grow%plant%plantstate%state%get("can_regrow", r_setter, succ)
+          call plant%upgm_grow%plant%plantstate%state%get("can_regrow", r_getter, succ)
           if( .not. succ ) then
             call plant%upgm_grow%plant%plantstate%state%put("can_regrow", r_setter, succ)
           end if
 
           ! create plant state output updates
-          call plant%upgm_grow%plant%plantstate%state%get("nextstage", i_setter, succ)
+          call plant%upgm_grow%plant%plantstate%state%get("nextstage", i_getter, succ)
           if( .not. succ ) then
             call plant%upgm_grow%plant%plantstate%state%put("nextstage", i_setter, succ)
           end if
-          call plant%upgm_grow%plant%plantstate%state%get("specstage", i_setter, succ)
+          call plant%upgm_grow%plant%plantstate%state%get("specstage", i_getter, succ)
           if( .not. succ ) then
             call plant%upgm_grow%plant%plantstate%state%put("specstage", i_setter, succ)
           end if
-          call plant%upgm_grow%plant%plantstate%state%get("remgdd", r_setter, succ)
+          call plant%upgm_grow%plant%plantstate%state%get("remgdd", r_getter, succ)
           if( .not. succ ) then
             call plant%upgm_grow%plant%plantstate%state%put("remgdd", r_setter, succ)
           end if
-          call plant%upgm_grow%plant%plantstate%state%get("ffa", r_setter, succ)
+          call plant%upgm_grow%plant%plantstate%state%get("ffa", r_getter, succ)
           if( .not. succ ) then
             call plant%upgm_grow%plant%plantstate%state%put("ffa", r_setter, succ)
           end if
-          call plant%upgm_grow%plant%plantstate%state%get("ffw", r_setter, succ)
-          if( .not. succ ) then
-            call plant%upgm_grow%plant%plantstate%state%put("ffw", r_setter, succ)
-          end if
-          call plant%upgm_grow%plant%plantstate%state%get("ffr", r_setter, succ)
+          call plant%upgm_grow%plant%plantstate%state%get("ffr", r_getter, succ)
           if( .not. succ ) then
             call plant%upgm_grow%plant%plantstate%state%put("ffr", r_setter, succ)
           end if
-          call plant%upgm_grow%plant%plantstate%state%get("gif", r_setter, succ)
+          call plant%upgm_grow%plant%plantstate%state%get("gif", r_getter, succ)
           if( .not. succ ) then
             call plant%upgm_grow%plant%plantstate%state%put("gif", r_setter, succ)
           end if
-          call plant%upgm_grow%plant%plantstate%state%get("shoot_hui", r_setter, succ)
+          call plant%upgm_grow%plant%plantstate%state%get("shoot_hui", r_getter, succ)
           if( .not. succ ) then
             call plant%upgm_grow%plant%plantstate%state%put("shoot_hui", r_setter, succ)
           end if
-          call plant%upgm_grow%plant%plantstate%state%get("shoot_huiy", r_setter, succ)
+          call plant%upgm_grow%plant%plantstate%state%get("shoot_huiy", r_getter, succ)
           if( .not. succ ) then
             call plant%upgm_grow%plant%plantstate%state%put("shoot_huiy", r_setter, succ)
           end if
-          call plant%upgm_grow%plant%plantstate%state%get("p_rw", r_setter, succ)
+          call plant%upgm_grow%plant%plantstate%state%get("p_rw", r_getter, succ)
           if( .not. succ ) then
             call plant%upgm_grow%plant%plantstate%state%put("p_rw", r_setter, succ)
           end if
-          call plant%upgm_grow%plant%plantstate%state%get("p_st", r_setter, succ)
+          call plant%upgm_grow%plant%plantstate%state%get("p_st", r_getter, succ)
           if( .not. succ ) then
             call plant%upgm_grow%plant%plantstate%state%put("p_st", r_setter, succ)
           end if
-          call plant%upgm_grow%plant%plantstate%state%get("p_lf", r_setter, succ)
+          call plant%upgm_grow%plant%plantstate%state%get("p_lf", r_getter, succ)
           if( .not. succ ) then
             call plant%upgm_grow%plant%plantstate%state%put("p_lf", r_setter, succ)
           end if
-          call plant%upgm_grow%plant%plantstate%state%get("p_rp", r_setter, succ)
+          call plant%upgm_grow%plant%plantstate%state%get("p_rp", r_getter, succ)
           if( .not. succ ) then
             call plant%upgm_grow%plant%plantstate%state%put("p_rp", r_setter, succ)
           end if
-          call plant%upgm_grow%plant%plantstate%state%get("pdht", r_setter, succ)
+          call plant%upgm_grow%plant%plantstate%state%get("pdht", r_getter, succ)
           if( .not. succ ) then
             call plant%upgm_grow%plant%plantstate%state%put("pdht", r_setter, succ)
           end if
-          call plant%upgm_grow%plant%plantstate%state%get("pdrd", r_setter, succ)
+          call plant%upgm_grow%plant%plantstate%state%get("pdrd", r_getter, succ)
           if( .not. succ ) then
             call plant%upgm_grow%plant%plantstate%state%put("pdrd", r_setter, succ)
           end if
-          call plant%upgm_grow%plant%plantstate%state%get("hu_delay", r_setter, succ)
+          call plant%upgm_grow%plant%plantstate%state%get("hu_delay", r_getter, succ)
           if( .not. succ ) then
             call plant%upgm_grow%plant%plantstate%state%put("hu_delay", r_setter, succ)
           end if
-          call plant%upgm_grow%plant%plantstate%state%get("spring_flg", l_setter, succ)
+          call plant%upgm_grow%plant%plantstate%state%get("spring_flg", l_getter, succ)
           if( .not. succ ) then
             call plant%upgm_grow%plant%plantstate%state%put("spring_flg", l_setter, succ)
           end if
-          call plant%upgm_grow%plant%plantstate%state%get("growing", l_setter, succ)
+          call plant%upgm_grow%plant%plantstate%state%get("growing", l_getter, succ)
           if( .not. succ ) then
             call plant%upgm_grow%plant%plantstate%state%put("growing", l_setter, succ)
           end if
@@ -3382,7 +3352,7 @@ module manage_mod
 
         ! post-process stuff
         if (manFile%am0tdb .eq. 1) then
-          write (luotdb(sr),*) '//After pmms_springphenol process//'
+          write (luotdb(sr),*) '//After PhenologyMMS_Springphenol process//'
           call tdbug(sr, prcode, soil, plant)
         end if
         call set_calib(sr, plant)
@@ -3391,7 +3361,7 @@ module manage_mod
           call report_hydrobal( sr, manFile%mcount, manFile%mperod )
         end if
 
-      case(150)  !  pmms_fallphenol
+      case(150)  !  PhenologyMMS_Fallphenol
 
         if( associated(plant%upgm_grow%plant) ) then
 
@@ -3400,7 +3370,7 @@ module manage_mod
           call getManVal(manFile%proc, 'stage_type', phaseType)
 
           ! add phase
-          call plant%upgm_grow%plant%add_phase("pmms_fallphenol", trim(phaseLabel), phaseType)
+          call plant%upgm_grow%plant%add_phase("PhenologyMMS_Fallphenol", trim(phaseLabel), phaseType)
 
           ! read Phase parameters and create
           call getManVal(manFile%proc, 'GN_trans_gdd', r_setter)
@@ -3420,10 +3390,6 @@ module manage_mod
           call plant%upgm_grow%plant%phaseCurrent%ptr%phasePars%put("beg_live_leaf", r_setter, succ)
           call getManVal(manFile%proc, "end_live_leaf", r_setter)
           call plant%upgm_grow%plant%phaseCurrent%ptr%phasePars%put("end_live_leaf", r_setter, succ)
-          call getManVal(manFile%proc, "beg_weath_leaf", r_setter)
-          call plant%upgm_grow%plant%phaseCurrent%ptr%phasePars%put("beg_weath_leaf", r_setter, succ)
-          call getManVal(manFile%proc, "end_weath_leaf", r_setter)
-          call plant%upgm_grow%plant%phaseCurrent%ptr%phasePars%put("end_weath_leaf", r_setter, succ)
           call getManVal(manFile%proc, "beg_senes_root", r_setter)
           call plant%upgm_grow%plant%phaseCurrent%ptr%phasePars%put("beg_senes_root", r_setter, succ)
           call getManVal(manFile%proc, "end_senes_root", r_setter)
@@ -3455,81 +3421,73 @@ module manage_mod
           call plant%upgm_grow%plant%phaseCurrent%ptr%phaseState%put("stagegdd", r_setter, succ)
 
           ! create plant state inputs
-          call plant%upgm_grow%plant%plantstate%state%get("stress", r_setter, succ)
+          call plant%upgm_grow%plant%plantstate%state%get("stress", r_getter, succ)
           if( .not. succ ) then
             call plant%upgm_grow%plant%plantstate%state%put("stress", r_setter, succ)
           end if
-          call plant%upgm_grow%plant%plantstate%state%get("fliveleaf", r_setter, succ)
-          if( .not. succ ) then
-            call plant%upgm_grow%plant%plantstate%state%put("fliveleaf", r_setter, succ)
-          end if
 
           ! create plant state output updates
-          call plant%upgm_grow%plant%plantstate%state%get("nextstage", i_setter, succ)
+          call plant%upgm_grow%plant%plantstate%state%get("nextstage", i_getter, succ)
           if( .not. succ ) then
             call plant%upgm_grow%plant%plantstate%state%put("nextstage", i_setter, succ)
           end if
-          call plant%upgm_grow%plant%plantstate%state%get("specstage", i_setter, succ)
+          call plant%upgm_grow%plant%plantstate%state%get("specstage", i_getter, succ)
           if( .not. succ ) then
             call plant%upgm_grow%plant%plantstate%state%put("specstage", i_setter, succ)
           end if
-          call plant%upgm_grow%plant%plantstate%state%get("remgdd", r_setter, succ)
+          call plant%upgm_grow%plant%plantstate%state%get("remgdd", r_getter, succ)
           if( .not. succ ) then
             call plant%upgm_grow%plant%plantstate%state%put("remgdd", r_setter, succ)
           end if
-          call plant%upgm_grow%plant%plantstate%state%get("ffa", r_setter, succ)
+          call plant%upgm_grow%plant%plantstate%state%get("ffa", r_getter, succ)
           if( .not. succ ) then
             call plant%upgm_grow%plant%plantstate%state%put("ffa", r_setter, succ)
           end if
-          call plant%upgm_grow%plant%plantstate%state%get("ffw", r_setter, succ)
-          if( .not. succ ) then
-            call plant%upgm_grow%plant%plantstate%state%put("ffw", r_setter, succ)
-          end if
-          call plant%upgm_grow%plant%plantstate%state%get("ffr", r_setter, succ)
+          call plant%upgm_grow%plant%plantstate%state%get("ffr", r_getter, succ)
           if( .not. succ ) then
             call plant%upgm_grow%plant%plantstate%state%put("ffr", r_setter, succ)
           end if
-          call plant%upgm_grow%plant%plantstate%state%get("gif", r_setter, succ)
+          call plant%upgm_grow%plant%plantstate%state%get("gif", r_getter, succ)
           if( .not. succ ) then
             call plant%upgm_grow%plant%plantstate%state%put("gif", r_setter, succ)
           end if
-          call plant%upgm_grow%plant%plantstate%state%get("shoot_hui", r_setter, succ)
+          call plant%upgm_grow%plant%plantstate%state%get("shoot_hui", r_getter, succ)
           if( .not. succ ) then
             call plant%upgm_grow%plant%plantstate%state%put("shoot_hui", r_setter, succ)
           end if
-          call plant%upgm_grow%plant%plantstate%state%get("shoot_huiy", r_setter, succ)
+          call plant%upgm_grow%plant%plantstate%state%get("shoot_huiy", r_getter, succ)
           if( .not. succ ) then
             call plant%upgm_grow%plant%plantstate%state%put("shoot_huiy", r_setter, succ)
           end if
-          call plant%upgm_grow%plant%plantstate%state%get("p_rw", r_setter, succ)
+          call plant%upgm_grow%plant%plantstate%state%get("p_rw", r_getter, succ)
           if( .not. succ ) then
             call plant%upgm_grow%plant%plantstate%state%put("p_rw", r_setter, succ)
           end if
-          call plant%upgm_grow%plant%plantstate%state%get("p_st", r_setter, succ)
+          call plant%upgm_grow%plant%plantstate%state%get("p_st", r_getter, succ)
           if( .not. succ ) then
             call plant%upgm_grow%plant%plantstate%state%put("p_st", r_setter, succ)
           end if
-          call plant%upgm_grow%plant%plantstate%state%get("p_lf", r_setter, succ)
+          call plant%upgm_grow%plant%plantstate%state%get("p_lf", r_getter, succ)
           if( .not. succ ) then
             call plant%upgm_grow%plant%plantstate%state%put("p_lf", r_setter, succ)
           end if
-          call plant%upgm_grow%plant%plantstate%state%get("p_rp", r_setter, succ)
+          call plant%upgm_grow%plant%plantstate%state%get("p_rp", r_getter, succ)
           if( .not. succ ) then
             call plant%upgm_grow%plant%plantstate%state%put("p_rp", r_setter, succ)
           end if
-          call plant%upgm_grow%plant%plantstate%state%get("pdht", r_setter, succ)
+          call plant%upgm_grow%plant%plantstate%state%get("pdht", r_getter, succ)
           if( .not. succ ) then
             call plant%upgm_grow%plant%plantstate%state%put("pdht", r_setter, succ)
           end if
-          call plant%upgm_grow%plant%plantstate%state%get("pdrd", r_setter, succ)
+          call plant%upgm_grow%plant%plantstate%state%get("pdrd", r_getter, succ)
           if( .not. succ ) then
             call plant%upgm_grow%plant%plantstate%state%put("pdrd", r_setter, succ)
           end if
-          call plant%upgm_grow%plant%plantstate%state%get("hu_delay", r_setter, succ)
+          call plant%upgm_grow%plant%plantstate%state%get("hu_delay", r_getter, succ)
           if( .not. succ ) then
             call plant%upgm_grow%plant%plantstate%state%put("hu_delay", r_setter, succ)
           end if
-          call plant%upgm_grow%plant%plantstate%state%get("growing", l_setter, succ)
+          call plant%upgm_grow%plant%plantstate%state%get("growing", l_getter, succ)
           if( .not. succ ) then
             call plant%upgm_grow%plant%plantstate%state%put("growing", l_setter, succ)
           end if
@@ -3538,7 +3496,7 @@ module manage_mod
 
         ! post-process stuff
         if (manFile%am0tdb .eq. 1) then
-          write (luotdb(sr),*) '//After pmms_fallphenol process//'
+          write (luotdb(sr),*) '//After PhenologyMMS_Fallphenol process//'
           call tdbug(sr, prcode, soil, plant)
         end if
         call set_calib(sr, plant)
@@ -3546,6 +3504,10 @@ module manage_mod
           ! not reported by the kill process in this
           call report_hydrobal( sr, manFile%mcount, manFile%mperod )
         end if
+
+      case(160)  !  WEPS_DeciduousWood
+
+      case(170)  !  WEPS_EvergreenWood
 
       case(200)  !  gddmethod1
 
@@ -3570,11 +3532,11 @@ module manage_mod
           l_setter = .false.
 
           ! create environment state inputs
-          call plant%env%state%get("tmin", r_setter, succ)
+          call plant%env%state%get("tmin", r_getter, succ)
           if( .not. succ ) then
             call plant%env%state%put("tmin", r_setter, succ)
           end if
-          call plant%env%state%get("tmax", r_setter, succ)
+          call plant%env%state%get("tmax", r_getter, succ)
           if( .not. succ ) then
             call plant%env%state%put("tmax", r_setter, succ)
           end if
@@ -3582,7 +3544,7 @@ module manage_mod
           ! create plant state inputs
 
           ! create plant state output updates
-          call plant%upgm_grow%plant%plantstate%state%get("daygdd", r_setter, succ)
+          call plant%upgm_grow%plant%plantstate%state%get("daygdd", r_getter, succ)
           if( .not. succ ) then
             call plant%upgm_grow%plant%plantstate%state%put("daygdd", r_setter, succ)
           end if
@@ -3609,7 +3571,7 @@ module manage_mod
           call getManVal(manFile%proc, "process_type", processType)
 
           ! add phase
-          call plant%upgm_grow%plant%add_process("gddweps_method", trim(processLabel), processType)
+          call plant%upgm_grow%plant%add_process("gddWEPS_method", trim(processLabel), processType)
 
           ! read Phase parameters and create
           ! reading of process parameters complete
@@ -3625,11 +3587,11 @@ module manage_mod
           l_setter = .false.
 
           ! create environment state inputs
-          call plant%env%state%get("tmin", r_setter, succ)
+          call plant%env%state%get("tmin", r_getter, succ)
           if( .not. succ ) then
             call plant%env%state%put("tmin", r_setter, succ)
           end if
-          call plant%env%state%get("tmax", r_setter, succ)
+          call plant%env%state%get("tmax", r_getter, succ)
           if( .not. succ ) then
             call plant%env%state%put("tmax", r_setter, succ)
           end if
@@ -3637,7 +3599,7 @@ module manage_mod
           ! create plant state inputs
 
           ! create plant state output updates
-          call plant%upgm_grow%plant%plantstate%state%get("daygdd", r_setter, succ)
+          call plant%upgm_grow%plant%plantstate%state%get("daygdd", r_getter, succ)
           if( .not. succ ) then
             call plant%upgm_grow%plant%plantstate%state%put("daygdd", r_setter, succ)
           end if
@@ -3656,7 +3618,7 @@ module manage_mod
         end if
 
 
-      case(210)  !  ritchie_vernalization
+      case(210)  !  ritchieVernalization
 
         if( associated(plant%upgm_grow%plant) ) then
 
@@ -3665,7 +3627,7 @@ module manage_mod
           call getManVal(manFile%proc, "process_type", processType)
 
           ! add phase
-          call plant%upgm_grow%plant%add_process("ritchie_vernalization", trim(processLabel), processType)
+          call plant%upgm_grow%plant%add_process("ritchieVernalization", trim(processLabel), processType)
 
           ! read Phase parameters and create
           ! reading of process parameters complete
@@ -3678,17 +3640,17 @@ module manage_mod
           l_setter = .false.
 
           ! create environment state inputs
-          call plant%env%state%get("tmin", r_setter, succ)
+          call plant%env%state%get("tmin", r_getter, succ)
           if( .not. succ ) then
             call plant%env%state%put("tmin", r_setter, succ)
           end if
-          call plant%env%state%get("tmax", r_setter, succ)
+          call plant%env%state%get("tmax", r_getter, succ)
           if( .not. succ ) then
             call plant%env%state%put("tmax", r_setter, succ)
           end if
 
           ! create plant state inputs
-          call plant%upgm_grow%plant%plantstate%state%get("chill_unit_cum", r_setter, succ)
+          call plant%upgm_grow%plant%plantstate%state%get("chill_unit_cum", r_getter, succ)
           if( .not. succ ) then
             call plant%upgm_grow%plant%plantstate%state%put("chill_unit_cum", r_setter, succ)
           end if
@@ -3699,7 +3661,7 @@ module manage_mod
 
         ! post-process stuff
         if (manFile%am0tdb .eq. 1) then
-          write (luotdb(sr),*) '//After ritchie_vernalization process//'
+          write (luotdb(sr),*) '//After ritchieVernalization process//'
           call tdbug(sr, prcode, soil, plant)
         end if
         call set_calib(sr, plant)
@@ -3709,7 +3671,7 @@ module manage_mod
         end if
 
 
-      case(211)  !  ritchie_winterhardening
+      case(211)  !  ritchieHardening
 
         if( associated(plant%upgm_grow%plant) ) then
 
@@ -3718,7 +3680,7 @@ module manage_mod
           call getManVal(manFile%proc, "process_type", processType)
 
           ! add phase
-          call plant%upgm_grow%plant%add_process("ritchie_winterhardening", trim(processLabel), processType)
+          call plant%upgm_grow%plant%add_process("ritchieHardening", trim(processLabel), processType)
 
           ! read Phase parameters and create
           ! reading of process parameters complete
@@ -3731,21 +3693,21 @@ module manage_mod
           l_setter = .false.
 
           ! create environment state inputs
-          call plant%env%state%get("tsmx1", r_setter, succ)
+          call plant%env%state%get("tsmx1", r_getter, succ)
           if( .not. succ ) then
             call plant%env%state%put("tsmx1", r_setter, succ)
           end if
-          call plant%env%state%get("tsmn1", r_setter, succ)
+          call plant%env%state%get("tsmn1", r_getter, succ)
           if( .not. succ ) then
             call plant%env%state%put("tsmn1", r_setter, succ)
           end if
 
           ! create plant state inputs
-          call plant%upgm_grow%plant%plantstate%state%get("harden_index", r_setter, succ)
+          call plant%upgm_grow%plant%plantstate%state%get("harden_index", r_getter, succ)
           if( .not. succ ) then
             call plant%upgm_grow%plant%plantstate%state%put("harden_index", r_setter, succ)
           end if
-          call plant%upgm_grow%plant%plantstate%state%get("can_harden", l_setter, succ)
+          call plant%upgm_grow%plant%plantstate%state%get("can_harden", l_getter, succ)
           if( .not. succ ) then
             call plant%upgm_grow%plant%plantstate%state%put("can_harden", l_setter, succ)
           end if
@@ -3756,7 +3718,7 @@ module manage_mod
 
         ! post-process stuff
         if (manFile%am0tdb .eq. 1) then
-          write (luotdb(sr),*) '//After "ritchie_winterhardening" process//'
+          write (luotdb(sr),*) '//After "ritchieHardening" process//'
           call tdbug(sr, prcode, soil, plant)
         end if
         call set_calib(sr, plant)
@@ -3765,7 +3727,7 @@ module manage_mod
           call report_hydrobal( sr, manFile%mcount, manFile%mperod )
         end if
 
-      case(220)  !  weps_warmdays
+      case(220)  !  WEPSwarmdays
 
         if( associated(plant%upgm_grow%plant) ) then
 
@@ -3774,7 +3736,7 @@ module manage_mod
           call getManVal(manFile%proc, "process_type", processType)
 
           ! add phase
-          call plant%upgm_grow%plant%add_process("weps_warmdays", trim(processLabel), processType)
+          call plant%upgm_grow%plant%add_process("WEPSwarmdays", trim(processLabel), processType)
 
           ! read Phase parameters and create
           ! reading of process parameters complete
@@ -3788,17 +3750,17 @@ module manage_mod
           l_setter = .false.
 
           ! create environment state inputs
-          call plant%env%state%get("tmin", r_setter, succ)
+          call plant%env%state%get("tmin", r_getter, succ)
           if( .not. succ ) then
             call plant%env%state%put("tmin", r_setter, succ)
           end if
-          call plant%env%state%get("tmax", r_setter, succ)
+          call plant%env%state%get("tmax", r_getter, succ)
           if( .not. succ ) then
             call plant%env%state%put("tmax", r_setter, succ)
           end if
 
           ! create plant state inputs
-          call plant%upgm_grow%plant%plantstate%state%get("warmdays", r_setter, succ)
+          call plant%upgm_grow%plant%plantstate%state%get("warmdays", r_getter, succ)
           if( .not. succ ) then
             call plant%upgm_grow%plant%plantstate%state%put("warmdays", r_setter, succ)
           end if
@@ -3818,7 +3780,7 @@ module manage_mod
           call report_hydrobal( sr, manFile%mcount, manFile%mperod )
         end if
 
-      case(221)  !  weps_tempstress
+      case(221)  !  WEPSTempStress
 
         if( associated(plant%upgm_grow%plant) ) then
 
@@ -3826,34 +3788,32 @@ module manage_mod
           call getManVal(manFile%proc, "process_label", processLabel)
           call getManVal(manFile%proc, "process_type", processType)
 
-          ! add phase
-          call plant%upgm_grow%plant%add_process("weps_tempstress", trim(processLabel), processType)
+          ! add process
+          call plant%upgm_grow%plant%add_process("WEPSTempStress", trim(processLabel), processType)
 
-          ! read Phase parameters and create
-          ! reading of process parameters complete
-
-          ! do process
+          ! read process parameters and create
           call getManVal(manFile%proc, 'tbas', r_setter)
           call plant%upgm_grow%plant%processCurrent%ptr%processPars%put("tbas", r_setter, succ)
           call getManVal(manFile%proc, 'topt', r_setter)
           call plant%upgm_grow%plant%processCurrent%ptr%processPars%put("topt", r_setter, succ)
+          ! reading of process parameters complete
 
           r_setter = 0.0_dp
           i_setter = 0
           l_setter = .false.
 
           ! create environment state inputs
-          call plant%env%state%get("tmin", r_setter, succ)
+          call plant%env%state%get("tmin", r_getter, succ)
           if( .not. succ ) then
             call plant%env%state%put("tmin", r_setter, succ)
           end if
-          call plant%env%state%get("tmax", r_setter, succ)
+          call plant%env%state%get("tmax", r_getter, succ)
           if( .not. succ ) then
             call plant%env%state%put("tmax", r_setter, succ)
           end if
 
           ! create plant state inputs
-          call plant%upgm_grow%plant%plantstate%state%get("tstress", r_setter, succ)
+          call plant%upgm_grow%plant%plantstate%state%get("tstress", r_getter, succ)
           if( .not. succ ) then
             call plant%upgm_grow%plant%plantstate%state%put("tstress", r_setter, succ)
           end if
@@ -3864,7 +3824,7 @@ module manage_mod
 
         ! post-process stuff
         if (manFile%am0tdb .eq. 1) then
-          write (luotdb(sr),*) '//After weps_tempstress process//'
+          write (luotdb(sr),*) '//After WEPSTempStress process//'
           call tdbug(sr, prcode, soil, plant)
         end if
         call set_calib(sr, plant)
@@ -3873,7 +3833,7 @@ module manage_mod
           call report_hydrobal( sr, manFile%mcount, manFile%mperod )
         end if
 
-      case(222)  !  weps_freezedamage
+      case(222)  !  WEPSFreezeDamage
 
         if( associated(plant%upgm_grow%plant) ) then
 
@@ -3881,20 +3841,25 @@ module manage_mod
           call getManVal(manFile%proc, "process_label", processLabel)
           call getManVal(manFile%proc, "process_type", processType)
 
-          ! add phase
-          call plant%upgm_grow%plant%add_process("weps_freezedamage", trim(processLabel), processType)
+          ! add process
+          call plant%upgm_grow%plant%add_process("WEPSFreezeDamage", trim(processLabel), processType)
 
           ! read Process parameters and create
-          call getManVal(manFile%proc, 'frsx1', plant%database%fd1(1))
-          call getManVal(manFile%proc, 'frsx2', plant%database%fd2(1))
-          call getManVal(manFile%proc, 'frsy1', plant%database%fd1(2))
-          call getManVal(manFile%proc, 'frsy2', plant%database%fd2(2))
+          call getManVal(manFile%proc, 'frsx1', plant%database%fd1(1)) ! warmer frost damage temperature
+          call getManVal(manFile%proc, 'frsx2', plant%database%fd2(1)) ! colder frost damage temperature
+          call getManVal(manFile%proc, 'frsy1', plant%database%fd1(2)) ! fraction leaf death at warmer frost damage temperature
+          call getManVal(manFile%proc, 'frsy2', plant%database%fd2(2)) ! fraction leaf death at colder frost damage temperature
           ! reading of process parameters complete
 
-          ! calculates Frost damage s-curve coefficients
-          call scrv1(plant%database%fd1(1),plant%database%fd1(2),plant%database%fd2(1),plant%database%fd2(2),a_fr,b_fr)
-          call plant%upgm_grow%plant%processCurrent%ptr%processPars%put("a_fr", a_fr, succ)
-          call plant%upgm_grow%plant%processCurrent%ptr%processPars%put("b_fr", b_fr, succ)
+          ! create process parameters for frost damage s-curve database values
+          r_setter = plant%database%fd1(1)
+          call plant%upgm_grow%plant%processCurrent%ptr%processPars%put("frsx1", r_setter, succ)
+          r_setter = plant%database%fd2(1)
+          call plant%upgm_grow%plant%processCurrent%ptr%processPars%put("frsx2", r_setter, succ)
+          r_setter = plant%database%fd1(2)
+          call plant%upgm_grow%plant%processCurrent%ptr%processPars%put("frsy1", r_setter, succ)
+          r_setter = plant%database%fd2(2)
+          call plant%upgm_grow%plant%processCurrent%ptr%processPars%put("frsy2", r_setter, succ)
 
           ! do process
           ! create plant database inputs
@@ -3904,31 +3869,31 @@ module manage_mod
           l_setter = .false.
 
           ! create environment state inputs
-          call plant%env%state%get("tsmn1", r_setter, succ)
+          call plant%env%state%get("tsmn1", r_getter, succ)
           if( .not. succ ) then
             call plant%env%state%put("tsmn1", r_setter, succ)
           end if
 
           ! create plant state inputs
-          call plant%upgm_grow%plant%plantstate%state%get("ffa", r_setter, succ)
+          call plant%upgm_grow%plant%plantstate%state%get("ffa", r_getter, succ)
           if( .not. succ ) then
             call plant%upgm_grow%plant%plantstate%state%put("ffa", r_setter, succ)
           end if
-          call plant%upgm_grow%plant%plantstate%state%get("mstandleaf", r_setter, succ)
+          call plant%upgm_grow%plant%plantstate%state%get("mstandleaflive", r_getter, succ)
           if( .not. succ ) then
-            call plant%upgm_grow%plant%plantstate%state%put("mstandleaf", r_setter, succ)
+            call plant%upgm_grow%plant%plantstate%state%put("mstandleaflive", r_setter, succ)
           end if
-          call plant%upgm_grow%plant%plantstate%state%get("fliveleaf", r_setter, succ)
+          call plant%upgm_grow%plant%plantstate%state%get("mstandleafdead", r_getter, succ)
           if( .not. succ ) then
-            call plant%upgm_grow%plant%plantstate%state%put("fliveleaf", r_setter, succ)
+            call plant%upgm_grow%plant%plantstate%state%put("mstandleafdead", r_setter, succ)
           end if
 
           ! create plant state output updates
-          call plant%upgm_grow%plant%plantstate%state%get("frst", r_setter, succ)
+          call plant%upgm_grow%plant%plantstate%state%get("frst", r_getter, succ)
           if( .not. succ ) then
             call plant%upgm_grow%plant%plantstate%state%put("frst", r_setter, succ)
           end if
-          call plant%upgm_grow%plant%plantstate%state%get("lost_mass", r_setter, succ)
+          call plant%upgm_grow%plant%plantstate%state%get("lost_mass", r_getter, succ)
           if( .not. succ ) then
             call plant%upgm_grow%plant%plantstate%state%put("lost_mass", r_setter, succ)
           end if
@@ -3937,7 +3902,7 @@ module manage_mod
 
         ! post-process stuff
         if (manFile%am0tdb .eq. 1) then
-          write (luotdb(sr),*) '//After weps_freezedamage process//'
+          write (luotdb(sr),*) '//After WEPSFreezeDamage process//'
           call tdbug(sr, prcode, soil, plant)
         end if
         call set_calib(sr, plant)
@@ -3946,61 +3911,142 @@ module manage_mod
           call report_hydrobal( sr, manFile%mcount, manFile%mperod )
         end if
 
-      case(230)  !  weps_regrowth
+      case(223)  !  WEPScolddays
+
+      case(224)  !  WEPSleafoff
 
         if( associated(plant%upgm_grow%plant) ) then
 
-          ! read phase label
+          ! read process label
           call getManVal(manFile%proc, "process_label", processLabel)
           call getManVal(manFile%proc, "process_type", processType)
 
-          ! add phase
-          call plant%upgm_grow%plant%add_process("weps_regrowth", trim(processLabel), processType)
+          ! add process
+          call plant%upgm_grow%plant%add_process("WEPSleafoff", trim(processLabel), processType)
 
-          ! read Phase parameters and create
+          ! read Process parameters and create
+          call getManVal(manFile%proc, 'dropfrac', r_setter)
+          call plant%upgm_grow%plant%processCurrent%ptr%processPars%put("dropfrac", r_setter, succ)
+
+          ! reading of process parameters complete
+
+          r_setter = 0.0_dp
+          i_setter = 0
+          l_setter = .false.
+
+          ! create environment state inputs
+          call plant%env%state%get("hrlty", r_getter, succ)
+          if( .not. succ ) then
+            call plant%env%state%put("hrlty", r_setter, succ)
+          end if
+          call plant%env%state%get("hrlt", r_getter, succ)
+          if( .not. succ ) then
+            call plant%env%state%put("hrlt", r_setter, succ)
+          end if
+
+          ! create plant state inputs
+          call plant%upgm_grow%plant%plantstate%state%get("can_regrow", r_getter, succ)
+          if( .not. succ ) then
+            call plant%upgm_grow%plant%plantstate%state%put("can_regrow", r_setter, succ)
+          end if
+          call plant%upgm_grow%plant%plantstate%state%get("dayleafoff", r_getter, succ)
+          if( .not. succ ) then
+            call plant%upgm_grow%plant%plantstate%state%put("dayleafoff", r_setter, succ)
+          end if
+          call plant%upgm_grow%plant%plantstate%state%get("cold_days", r_getter, succ)
+          if( .not. succ ) then
+            call plant%upgm_grow%plant%plantstate%state%put("cold_days", r_setter, succ)
+          end if
+          call plant%upgm_grow%plant%plantstate%state%get("mstandleaflive", r_getter, succ)
+          if( .not. succ ) then
+            call plant%upgm_grow%plant%plantstate%state%put("mstandleaflive", r_setter, succ)
+          end if
+          call plant%upgm_grow%plant%plantstate%state%get("mstandleafdead", r_getter, succ)
+          if( .not. succ ) then
+            call plant%upgm_grow%plant%plantstate%state%put("mstandleafdead", r_setter, succ)
+          end if
+          call plant%upgm_grow%plant%plantstate%state%get("mflatleaf", r_getter, succ)
+          if( .not. succ ) then
+            call plant%upgm_grow%plant%plantstate%state%put("mflatleaf", r_setter, succ)
+          end if
+          call plant%upgm_grow%plant%plantstate%state%get("dayleafon", r_getter, succ)
+          if( .not. succ ) then
+            call plant%upgm_grow%plant%plantstate%state%put("dayleafon", r_setter, succ)
+          end if
+          call plant%upgm_grow%plant%plantstate%state%get("res_flatleaf", r_getter, succ)
+          if( .not. succ ) then
+            call plant%upgm_grow%plant%plantstate%state%put("res_flatleaf", r_setter, succ)
+          end if
+          call plant%upgm_grow%plant%plantstate%state%get("do_leafoff", r_getter, succ)
+          if( .not. succ ) then
+            call plant%upgm_grow%plant%plantstate%state%put("do_leafoff", r_setter, succ)
+          end if
+
+        endif
+
+        ! post-process stuff
+        if (manFile%am0tdb .eq. 1) then
+          write (luotdb(sr),*) '//After WEPSleafoff//'
+          call tdbug(sr, prcode, soil, plant)
+        end if
+        call set_calib(sr, plant)
+        if( manFile%rpt_season_flg ) then
+          ! not reported by the kill process in this
+          call report_hydrobal( sr, manFile%mcount, manFile%mperod )
+        end if
+
+      case(225)  !  WEPSleafon
+
+      case(230)  !  WEPSregrowthannual
+
+        if( associated(plant%upgm_grow%plant) ) then
+
+          ! read process label
+          call getManVal(manFile%proc, "process_label", processLabel)
+          call getManVal(manFile%proc, "process_type", processType)
+
+          ! add process
+          call plant%upgm_grow%plant%add_process("WEPSregrowthannual", trim(processLabel), processType)
+
+          ! read process parameters and create
           ! reading of process parameters complete
 
           ! do process
           ! create plant database inputs
-          call plant%upgm_grow%plant%plantstate%pars%get("plantpop", r_setter, succ)
+          call plant%upgm_grow%plant%plantstate%pars%get("plantpop", r_getter, succ)
           if( .not. succ ) then
             r_setter = plant%geometry%dpop
             call plant%upgm_grow%plant%plantstate%pars%put("plantpop", r_setter, succ)
           end if
-          call plant%upgm_grow%plant%plantstate%pars%get("leafstem", r_setter, succ)
+          call plant%upgm_grow%plant%plantstate%pars%get("leafstem", r_getter, succ)
           if( .not. succ ) then
             r_setter = plant%database%fleafstem
             call plant%upgm_grow%plant%plantstate%pars%put("leafstem", r_setter, succ)
           end if
-          call plant%upgm_grow%plant%plantstate%pars%get("idc", i_setter, succ)
-          if( .not. succ ) then
-            i_setter = plant%database%idc
-            call plant%upgm_grow%plant%plantstate%pars%put("idc", i_setter, succ)
-          end if
-          call plant%upgm_grow%plant%plantstate%pars%get("regrmshoot", r_setter, succ)
+          call plant%upgm_grow%plant%plantstate%pars%get("regrmshoot", r_getter, succ)
           if( .not. succ ) then
             r_setter = plant%database%shoot
             call plant%upgm_grow%plant%plantstate%pars%put("regrmshoot", r_setter, succ)
           end if
-          call plant%upgm_grow%plant%plantstate%pars%get("dmaxshoot", r_setter, succ)
+          call plant%upgm_grow%plant%plantstate%pars%get("dmaxshoot", r_getter, succ)
           if( .not. succ ) then
             r_setter = plant%database%dmaxshoot
             call plant%upgm_grow%plant%plantstate%pars%put("dmaxshoot", r_setter, succ)
           end if
-          call plant%upgm_grow%plant%plantstate%pars%get("storeinit", r_setter, succ)
+          call plant%upgm_grow%plant%plantstate%pars%get("storeinit", r_getter, succ)
           if( .not. succ ) then
             r_setter = plant%database%storeinit
             call plant%upgm_grow%plant%plantstate%pars%put("storeinit", r_setter, succ)
           end if
-          call plant%upgm_grow%plant%plantstate%pars%get("huie", r_setter, succ)
-          if( .not. succ ) then
-            r_setter = plant%database%hue
-            call plant%upgm_grow%plant%plantstate%pars%put("huie", r_setter, succ)
-          end if
-          call plant%upgm_grow%plant%plantstate%pars%get("zloc_regrow", r_setter, succ)
+          call plant%upgm_grow%plant%plantstate%pars%get("zloc_regrow", r_getter, succ)
           if( .not. succ ) then
             r_setter = plant%database%zloc_regrow
             call plant%upgm_grow%plant%plantstate%pars%put("zloc_regrow", r_setter, succ)
+          end if
+          call plant%upgm_grow%plant%plantstate%pars%get("huie", r_getter, succ)
+          if( .not. succ ) then
+            r_setter = plant%database%hue
+            call plant%upgm_grow%plant%plantstate%pars%put("huie", r_setter, succ)
           end if
 
           r_setter = 0.0_dp
@@ -4008,50 +4054,46 @@ module manage_mod
           l_setter = .false.
 
           ! create environment state inputs
-          call plant%env%state%get("hrlty", r_setter, succ)
-          if( .not. succ ) then
-            call plant%env%state%put("hrlty", r_setter, succ)
-          end if
-          call plant%env%state%get("hrlt", r_setter, succ)
-          if( .not. succ ) then
-            call plant%env%state%put("hrlt", r_setter, succ)
-          end if
 
           ! create plant state inputs
-          call plant%upgm_grow%plant%plantstate%state%get("mstandstem", r_setter, succ)
+          call plant%upgm_grow%plant%plantstate%state%get("mstandstem", r_getter, succ)
           if( .not. succ ) then
             call plant%upgm_grow%plant%plantstate%state%put("mstandstem", r_setter, succ)
           end if
-          call plant%upgm_grow%plant%plantstate%state%get("mstandleaf", r_setter, succ)
+          call plant%upgm_grow%plant%plantstate%state%get("mstandleaflive", r_getter, succ)
           if( .not. succ ) then
-            call plant%upgm_grow%plant%plantstate%state%put("mstandleaf", r_setter, succ)
+            call plant%upgm_grow%plant%plantstate%state%put("mstandleaflive", r_setter, succ)
           end if
-          call plant%upgm_grow%plant%plantstate%state%get("mstandstore", r_setter, succ)
+          call plant%upgm_grow%plant%plantstate%state%get("mstandleafdead", r_getter, succ)
+          if( .not. succ ) then
+            call plant%upgm_grow%plant%plantstate%state%put("mstandleafdead", r_setter, succ)
+          end if
+          call plant%upgm_grow%plant%plantstate%state%get("mstandstore", r_getter, succ)
           if( .not. succ ) then
             call plant%upgm_grow%plant%plantstate%state%put("mstandstore", r_setter, succ)
           end if
-          call plant%upgm_grow%plant%plantstate%state%get("mflatstem", r_setter, succ)
+          call plant%upgm_grow%plant%plantstate%state%get("mflatstem", r_getter, succ)
           if( .not. succ ) then
             call plant%upgm_grow%plant%plantstate%state%put("mflatstem", r_setter, succ)
           end if
-          call plant%upgm_grow%plant%plantstate%state%get("mflatleaf", r_setter, succ)
+          call plant%upgm_grow%plant%plantstate%state%get("mflatleaf", r_getter, succ)
           if( .not. succ ) then
             call plant%upgm_grow%plant%plantstate%state%put("mflatleaf", r_setter, succ)
           end if
-          call plant%upgm_grow%plant%plantstate%state%get("mflatstore", r_setter, succ)
+          call plant%upgm_grow%plant%plantstate%state%get("mflatstore", r_getter, succ)
           if( .not. succ ) then
             call plant%upgm_grow%plant%plantstate%state%put("mflatstore", r_setter, succ)
           end if
-          call plant%upgm_grow%plant%plantstate%state%get("masshoot", r_setter, succ)
+          call plant%upgm_grow%plant%plantstate%state%get("masshoot", r_getter, succ)
           if( .not. succ ) then
             call plant%upgm_grow%plant%plantstate%state%put("masshoot", r_setter, succ)
           end if
-          call plant%upgm_grow%plant%plantstate%state%get("mtotshoot", r_setter, succ)
+          call plant%upgm_grow%plant%plantstate%state%get("mtotshoot", r_getter, succ)
           if( .not. succ ) then
             call plant%upgm_grow%plant%plantstate%state%put("mtotshoot", r_setter, succ)
           end if
 
-          call plant%upgm_grow%plant%plantstate%state%get("mbgstemz", r_setter, succ)
+          call plant%upgm_grow%plant%plantstate%state%get("mbgstemz", r_getter, succ)
           if( .not. succ ) then
             allocate(ra_setter(soil%nslay), stat = alloc_stat)
             if( alloc_stat .gt. 0 ) then
@@ -4062,7 +4104,7 @@ module manage_mod
             deallocate(ra_setter, stat = alloc_stat)
           end if
 
-          call plant%upgm_grow%plant%plantstate%state%get("mrootstorez", r_setter, succ)
+          call plant%upgm_grow%plant%plantstate%state%get("mrootstorez", r_getter, succ)
           if( .not. succ ) then
             allocate(ra_setter(soil%nslay), stat = alloc_stat)
             if( alloc_stat .gt. 0 ) then
@@ -4073,84 +4115,62 @@ module manage_mod
             deallocate(ra_setter, stat = alloc_stat)
           end if
 
-          call plant%upgm_grow%plant%plantstate%state%get("height", r_setter, succ)
+          call plant%upgm_grow%plant%plantstate%state%get("height", r_getter, succ)
           if( .not. succ ) then
             call plant%upgm_grow%plant%plantstate%state%put("height", r_setter, succ)
           end if
-          call plant%upgm_grow%plant%plantstate%state%get("dstm", r_setter, succ)
+          call plant%upgm_grow%plant%plantstate%state%get("dstm", r_getter, succ)
           if( .not. succ ) then
             call plant%upgm_grow%plant%plantstate%state%put("dstm", r_setter, succ)
           end if
-          call plant%upgm_grow%plant%plantstate%state%get("dayam", r_setter, succ)
+          call plant%upgm_grow%plant%plantstate%state%get("dayam", r_getter, succ)
           if( .not. succ ) then
             call plant%upgm_grow%plant%plantstate%state%put("dayam", r_setter, succ)
           end if
-          call plant%upgm_grow%plant%plantstate%state%get("fliveleaf", r_setter, succ)
+          call plant%upgm_grow%plant%plantstate%state%get("thu_shoot_beg", r_getter, succ)
           if( .not. succ ) then
-            call plant%upgm_grow%plant%plantstate%state%put("fliveleaf", r_setter, succ)
-          end if
-          call plant%upgm_grow%plant%plantstate%state%get("thu_shoot_beg", r_setter, succ)
-          if( .not. succ ) then
+            r_setter = 0.0_dp
             call plant%upgm_grow%plant%plantstate%state%put("thu_shoot_beg", r_setter, succ)
           end if
-          call plant%upgm_grow%plant%plantstate%state%get("thu_shoot_end", r_setter, succ)
+          call plant%upgm_grow%plant%plantstate%state%get("thu_shoot_end", r_getter, succ)
           if( .not. succ ) then
+            r_setter = 0.0_dp
             call plant%upgm_grow%plant%plantstate%state%put("thu_shoot_end", r_setter, succ)
           end if
-          call plant%upgm_grow%plant%plantstate%state%get("grainf", r_setter, succ)
+          call plant%upgm_grow%plant%plantstate%state%get("grainf", r_getter, succ)
           if( .not. succ ) then
             call plant%upgm_grow%plant%plantstate%state%put("grainf", r_setter, succ)
           end if
-          call plant%upgm_grow%plant%plantstate%state%get("leafareatrend", r_setter, succ)
+          call plant%upgm_grow%plant%plantstate%state%get("leafareatrend", r_getter, succ)
           if( .not. succ ) then
             call plant%upgm_grow%plant%plantstate%state%put("leafareatrend", r_setter, succ)
           end if
-          call plant%upgm_grow%plant%plantstate%state%get("stemmasstrend", r_setter, succ)
-          if( .not. succ ) then
-            call plant%upgm_grow%plant%plantstate%state%put("stemmasstrend", r_setter, succ)
-          end if
-          call plant%upgm_grow%plant%plantstate%state%get("prevliveleaf", r_setter, succ)
-          if( .not. succ ) then
-            call plant%upgm_grow%plant%plantstate%state%put("prevliveleaf", r_setter, succ)
-          end if
-          call plant%upgm_grow%plant%plantstate%state%get("prevstandleaf", r_setter, succ)
-          if( .not. succ ) then
-            call plant%upgm_grow%plant%plantstate%state%put("prevstandleaf", r_setter, succ)
-          end if
-          call plant%upgm_grow%plant%plantstate%state%get("prevstandstem", r_setter, succ)
-          if( .not. succ ) then
-            call plant%upgm_grow%plant%plantstate%state%put("prevstandstem", r_setter, succ)
-          end if
-          call plant%upgm_grow%plant%plantstate%state%get("prevflatstem", r_setter, succ)
-          if( .not. succ ) then
-            call plant%upgm_grow%plant%plantstate%state%put("prevflatstem", r_setter, succ)
-          end if
-          call plant%upgm_grow%plant%plantstate%state%get("res_standstem", r_setter, succ)
+          call plant%upgm_grow%plant%plantstate%state%get("res_standstem", r_getter, succ)
           if( .not. succ ) then
             call plant%upgm_grow%plant%plantstate%state%put("res_standstem", r_setter, succ)
           end if
-          call plant%upgm_grow%plant%plantstate%state%get("res_standleaf", r_setter, succ)
+          call plant%upgm_grow%plant%plantstate%state%get("res_standleaf", r_getter, succ)
           if( .not. succ ) then
             call plant%upgm_grow%plant%plantstate%state%put("res_standleaf", r_setter, succ)
           end if
-          call plant%upgm_grow%plant%plantstate%state%get("res_standstore", r_setter, succ)
+          call plant%upgm_grow%plant%plantstate%state%get("res_standstore", r_getter, succ)
           if( .not. succ ) then
             call plant%upgm_grow%plant%plantstate%state%put("res_standstore", r_setter, succ)
           end if
-          call plant%upgm_grow%plant%plantstate%state%get("res_flatstem", r_setter, succ)
+          call plant%upgm_grow%plant%plantstate%state%get("res_flatstem", r_getter, succ)
           if( .not. succ ) then
             call plant%upgm_grow%plant%plantstate%state%put("res_flatstem", r_setter, succ)
           end if
-          call plant%upgm_grow%plant%plantstate%state%get("res_flatleaf", r_setter, succ)
+          call plant%upgm_grow%plant%plantstate%state%get("res_flatleaf", r_getter, succ)
           if( .not. succ ) then
             call plant%upgm_grow%plant%plantstate%state%put("res_flatleaf", r_setter, succ)
           end if
-          call plant%upgm_grow%plant%plantstate%state%get("res_flatstore", r_setter, succ)
+          call plant%upgm_grow%plant%plantstate%state%get("res_flatstore", r_getter, succ)
           if( .not. succ ) then
             call plant%upgm_grow%plant%plantstate%state%put("res_flatstore", r_setter, succ)
           end if
 
-          call plant%upgm_grow%plant%plantstate%state%get("res_bgstemz", r_setter, succ)
+          call plant%upgm_grow%plant%plantstate%state%get("res_bgstemz", r_getter, succ)
           if( .not. succ ) then
             allocate(ra_setter(soil%nslay), stat = alloc_stat)
             if( alloc_stat .gt. 0 ) then
@@ -4161,33 +4181,37 @@ module manage_mod
             deallocate(ra_setter, stat = alloc_stat)
           end if
 
-          call plant%upgm_grow%plant%plantstate%state%get("res_grainf", r_setter, succ)
+          call plant%upgm_grow%plant%plantstate%state%get("res_grainf", r_getter, succ)
           if( .not. succ ) then
             call plant%upgm_grow%plant%plantstate%state%put("res_grainf", r_setter, succ)
           end if
-          call plant%upgm_grow%plant%plantstate%state%get("res_zht", r_setter, succ)
+          call plant%upgm_grow%plant%plantstate%state%get("res_zht", r_getter, succ)
           if( .not. succ ) then
             call plant%upgm_grow%plant%plantstate%state%put("res_zht", r_setter, succ)
           end if
-          call plant%upgm_grow%plant%plantstate%state%get("res_dstm", r_setter, succ)
+          call plant%upgm_grow%plant%plantstate%state%get("res_dstm", r_getter, succ)
           if( .not. succ ) then
             call plant%upgm_grow%plant%plantstate%state%put("res_dstm", r_setter, succ)
           end if
-          call plant%upgm_grow%plant%plantstate%state%get("growing", l_setter, succ)
+          call plant%upgm_grow%plant%plantstate%state%get("growing", l_getter, succ)
           if( .not. succ ) then
             call plant%upgm_grow%plant%plantstate%state%put("growing", l_setter, succ)
           end if
-          call plant%upgm_grow%plant%plantstate%state%get("shoot_growing", l_setter, succ)
+          call plant%upgm_grow%plant%plantstate%state%get("shoot_growing", l_getter, succ)
           if( .not. succ ) then
             call plant%upgm_grow%plant%plantstate%state%put("shoot_growing", l_setter, succ)
           end if
-          call plant%upgm_grow%plant%plantstate%state%get("can_regrow", l_setter, succ)
+          call plant%upgm_grow%plant%plantstate%state%get("can_regrow", l_getter, succ)
           if( .not. succ ) then
             call plant%upgm_grow%plant%plantstate%state%put("can_regrow", l_setter, succ)
           end if
 
           ! create plant state output updates
-          call plant%upgm_grow%plant%plantstate%state%get("do_regrow", l_setter, succ)
+          call plant%upgm_grow%plant%plantstate%state%get("regrowth_flg", l_getter, succ)
+          if( .not. succ ) then
+            call plant%upgm_grow%plant%plantstate%state%put("regrowth_flg", l_setter, succ)
+          end if
+          call plant%upgm_grow%plant%plantstate%state%get("do_regrow", l_getter, succ)
           if( .not. succ ) then
             call plant%upgm_grow%plant%plantstate%state%put("do_regrow", l_setter, succ)
           end if
@@ -4196,7 +4220,7 @@ module manage_mod
 
         ! post-process stuff
         if (manFile%am0tdb .eq. 1) then
-          write (luotdb(sr),*) '//After weps_regrowth process//'
+          write (luotdb(sr),*) '//After WEPSregrowthannual process//'
           call tdbug(sr, prcode, soil, plant)
         end if
         call set_calib(sr, plant)
@@ -4204,6 +4228,18 @@ module manage_mod
           ! not reported by the kill process in this
           call report_hydrobal( sr, manFile%mcount, manFile%mperod )
         end if
+
+      case(231)  !  WEPSregrowthperen
+
+      case(232)  !  WEPSregrowthstaged
+
+      case(233)  !  WEPSregrowwood
+
+      case(240)  !  WEPStrendleafexternal
+
+      case(241)  !  WEPStrendstemexternal
+
+      case(250)  !  WEPSwinterAnnSpring
 
       case default
         write(0,*) 'Invalid process: ', prname, ' ', prcode
@@ -4398,7 +4434,7 @@ module manage_mod
 
       if( associated(plant) ) then
         ! sum all above ground biomass pools
-        mass = plant%mass%standstem + plant%mass%standleaf + plant%mass%standstore &
+        mass = plant%mass%standstem + plant%mass%standleaflive + plant%mass%standleafdead + plant%mass%standstore &
              + plant%mass%flatstem + plant%mass%flatleaf + plant%mass%flatstore
         ! add in below ground biomass pools
         do idx = 1, nslay
@@ -4788,7 +4824,8 @@ module manage_mod
 
       ! set previous values to initial values
       plant%prev%standstem = plant%mass%standstem
-      plant%prev%standleaf = plant%mass%standleaf
+      plant%prev%standleaflive = plant%mass%standleaflive
+      plant%prev%standleafdead = plant%mass%standleafdead
       plant%prev%standstore = plant%mass%standstore
       plant%prev%flatstem = plant%mass%flatstem
       plant%prev%flatleaf = plant%mass%flatleaf
@@ -4808,7 +4845,6 @@ module manage_mod
       plant%prev%rthucum = plant%growth%trthucum
       plant%prev%grainf = plant%geometry%grainf
       plant%prev%chillucum = plant%growth%tchillucum
-      plant%prev%liveleaf = plant%growth%fliveleaf
       plant%prev%dayspring = plant%growth%dayspring
 
 
