@@ -1895,9 +1895,14 @@ module crop_growth_mod
       ! today and yesterday shoot length and stem and leaf mass increments
       ! length increase scaled by mass increase
       ! stem and leaf mass allocated proportionally (prevents premature emergence)
-      bczshoot = end_shoot_len                                    &
+      
+      if( end_shoot_mass .le. 0.0d0 ) then
+          bczshoot = 0.0d0
+      else
+          bczshoot = end_shoot_len                                    &
      &         * ((bcmshoot /(u_mgtokg * bcdstm))+d_shoot_mass)           &
      &         / end_shoot_mass
+      end if
 
       ! if no additional mass, no need to go further
       if( d_shoot_mass .le. 0.0d0) goto 900

@@ -64,6 +64,7 @@ module sae_in_out_mod
       character*512 :: daypath  ! the root path plus subdirectory plus specific day directory for sweep input files
       character*512 :: filename ! filename with any preceding path removed
       integer :: luo_saeinp     ! output unit number
+      character*30, dimension(:), allocatable:: subr_text ! subregion output directory text string
 
 !     + + + LOCAL VARIABLE DEFINITIONS + + +
 !     sr - index used in subregion loop
@@ -85,6 +86,8 @@ module sae_in_out_mod
 
       nsubr = size(subrsurf) - 1  ! NOTE: subrsurf array dimensioned from 0 to nsubr
 
+      allocate( subr_text(nsubr) )
+
       ! write main sweep file
       call fopenk (luo_saeinp, (trim(daypath) // trim(sweepfile)), 'unknown')
 
@@ -95,7 +98,11 @@ module sae_in_out_mod
       end if
 
       do sr = 1, nsubr
-        ! must trim tinfil to just the file name, not path prefix, when ont running in run directory
+         ! create numbered subregion name
+         subr_text(sr) = makenamnum( 'subregion', sr, nsubr, '/' )
+         ! create directory with that name
+         call makedir( trim(daypath)//trim(subr_text(sr)) )
+        ! must trim tinfil to just the file name, not path prefix, when not running in run directory
         filename = trim(subrsurf(sr)%tinfil)
         if( index(filename,'\') .gt. 0 ) then
           filename = trim(filename((index(filename,'\',back=.true.)+1):))
@@ -143,8 +150,8 @@ module sae_in_out_mod
         do sr = 1, nsubr                ! NOTE: index adjusted to zero based
           call w_begin_tag( luo_saeinp, input_tag(SCI_Subregion)%name, &
                                         input_tag(SCI_index)%name, sr-1)
-            call w_whole_tag( luo_saeinp, input_tag(SCI_treat)%name, subrfiles(sr)%treatfil )
-            call w_whole_tag( luo_saeinp, input_tag(SCI_soilsurf)%name, subrfiles(sr)%slstfil )
+            call w_whole_tag( luo_saeinp, input_tag(SCI_treat)%name, trim(subr_text(sr))//subrfiles(sr)%treatfil )
+            call w_whole_tag( luo_saeinp, input_tag(SCI_soilsurf)%name, trim(subr_text(sr))//subrfiles(sr)%slstfil )
             call w_whole_tag( luo_saeinp, input_tag(GUI_soilifc)%name, '../../' // subrsurf(sr)%sinfil )
           call w_end_tag( luo_saeinp, input_tag(SCI_Subregion)%name )
         end do
@@ -206,7 +213,7 @@ module sae_in_out_mod
       do sr = 1, nsubr                ! NOTE: index adjusted to zero based
 
         ! write treatment file
-        call fopenk (luo_saeinp, (trim(daypath) // subrfiles(sr)%treatfil), 'unknown')
+        call fopenk (luo_saeinp, (trim(daypath) // trim(subr_text(sr)) // subrfiles(sr)%treatfil), 'unknown')
 
         ! write XML header
         write(luo_saeinp,"(a)") '<?xml version="1.0" encoding="ISO-8859-1"?>'
@@ -255,7 +262,7 @@ module sae_in_out_mod
         close(luo_saeinp)
 
         ! write soil state file
-        call fopenk (luo_saeinp, (trim(daypath) // subrfiles(sr)%slstfil), 'unknown')
+        call fopenk (luo_saeinp, (trim(daypath) // trim(subr_text(sr)) // subrfiles(sr)%slstfil), 'unknown')
 
         ! write XML header
         write(luo_saeinp,"(a)") '<?xml version="1.0" encoding="ISO-8859-1"?>'
@@ -303,6 +310,8 @@ module sae_in_out_mod
         ! deallocation failed
         write(*,*) "ERROR: unable to deallocate memory for subrfiles array"
       end if
+
+      deallocate( subr_text )
 
    end subroutine saeinp
 
@@ -1325,16 +1334,11 @@ module sae_in_out_mod
 !     To calc the emissions for each time step of the input wind speed
 !     The emissions for EPA are the suspension component
 !      with units kg m-2 s-1.
-!     To write out a file in the format:
-!      12 blank col, yr, mo, day, hr, soucename, emissionrate
 !
 !     Instructions & logic:
 !     To get ntstep period emissions output on erosion days:
-!       user sets am0efl = 3 in WEPS configuration screen
-!          subroutine openfils creates output file emit.out
-!          EROSION calls sbemit to write heading in emit.out file,
-!          & sets am0efl to 98, then calls sbemit
-!          to print (hourly) Weps emissions on erosion days.
+!       user assigns am0efl bit 2 in WEPS configuration screen
+!       to print (hourly) Weps emissions on erosion days.
 !       or
 !       user sets ae0efl (print flg)=4 in stand_alone input file
 !           EROSION opens emit.out file, calls sbemit to write headings
@@ -1353,8 +1357,6 @@ module sae_in_out_mod
 
 !     +++ LOCAL VARIABLES +++
       character(len=21) :: rundatetime
-      integer        initflg
-      save           initflg
 
       integer j,i
       integer yr, mo, da
@@ -1376,14 +1378,11 @@ module sae_in_out_mod
 
 !     set initial conditions
 
-      if (initflg .eq. 0) then
-          initflg = initflg + 1
+      if( first_emit ) then
 
           tims = 3600*24/ntstep !seconds in each emission period
 
           call caldat( mksaeout%jday, da, mo, yr) ! Set day, month and year
-
-          write(0,*) 'First ntstep is: ', ntstep, tims, tims/3600
 
           write (ounit,*) 'SBEMIT output'
 !          write (ounit,*) 'Suspended emissions < 0.10 mm dia.'
@@ -1397,10 +1396,8 @@ module sae_in_out_mod
           write (ounit,100)
           write (ounit,110) 
           write (ounit,*)
-      endif
 
-      ! init prev erosion hr values to zero if this is new erosion day
-      if( first_emit ) then
+          ! init prev erosion hr values to zero if this is new erosion day
           first_emit = .false.
           aegtp   = 0.0
           aegtcsp = 0.0

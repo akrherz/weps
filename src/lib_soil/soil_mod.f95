@@ -587,8 +587,8 @@ module soil_mod
 !     + + + KEY WORDS + + +
 !     wind, erosion, hydrology, tillage, soil, crop, decomposition
 
-      use weps_main_mod, only: daysim, am0ifl
-      use datetime_mod, only: get_simdate
+      use weps_main_mod, only: am0ifl
+      use datetime_mod, only: get_simdate, get_simdate_daysim
       use file_io_mod, only: luosdb
       use soil_data_struct_defs, only: soil_def
       use biomaterial, only: biototal
@@ -611,7 +611,6 @@ module soil_mod
 !   cd        - The current day of simulation month.
 !   cm        - The current month of simulation year.
 !   cy        - The current year of simulation run.
-!   daysim    - The surrent day of the simulation run.
 !   isr       - This variable holds the subregion index.
 !   l         - This variable is an index on soil layers.
 
@@ -666,9 +665,9 @@ module soil_mod
 !          write weather cligen and windgen variables
       if ((cd .eq. tday) .and. (cm .eq. tmo) .and. (cy .eq. tyr) .and.  &
      &   (isr .eq. tisr)) then
-         write(luosdb(isr),2030) cd,cm,cy,daysim,isr
+         write(luosdb(isr),2030) cd,cm,cy,get_simdate_daysim(),isr
       else
-         write(luosdb(isr),2031) cd,cm,cy,daysim,isr
+         write(luosdb(isr),2031) cd,cm,cy,get_simdate_daysim(),isr
       end if
       write(luosdb(isr),2032)
       write(luosdb(isr),2038) cli_today%zdpt,cli_today%tdmx,cli_today%tdmn,cli_today%eirr,awudmx,awudmn,&

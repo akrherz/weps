@@ -35,8 +35,6 @@ module update_mod
       use soil_data_struct_defs, only: soil_def
       use soillay_mod, only: valbydepth
 
-      use weps_main_mod, only: daysim
-
 !     + + +   ARGUMENT DECLARATIONS + + +
       type(soil_def), intent(in) :: soil  ! soil for this subregion
       type(plant_pointer), pointer :: plant     ! pointer to youngest plant data, which chains to older plant data

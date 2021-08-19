@@ -14,8 +14,8 @@ module weps_output_mod
       ! to make it easier to select specific columns for comparisons between the
       ! crop and individual biomass pools (not all pools have the same variables)
 
-      use weps_main_mod, only: old_run_file, rootp, daysim, am0ifl
-      use datetime_mod, only: get_simdate_doy, get_simdate_year
+      use weps_main_mod, only: old_run_file, rootp, am0ifl
+      use datetime_mod, only: get_simdate_doy, get_simdate_year, get_simdate_daysim
       use biomaterial, only: plant_pointer, residue_pointer, biototal, decomp_factors
       use file_io_mod, only: luocrp1, luobio1, makenamnum, makedir, fopenk
       use decomp_data_struct_defs, only: am0dfl
@@ -137,7 +137,7 @@ module weps_output_mod
           end if
 
           ! NOTE: tf=temperature factor, wf=water factor, dd=decomposition day
-          write(luocrp1(isr),2222) daysim, doy, cy, & ! simulation day, day of year, year
+          write(luocrp1(isr),2222) get_simdate_daysim(), doy, cy, & ! simulation day, day of year, year
           cli_today%tdmn, cli_today%tdmx, cli_today%tdav, decompfac%itcs, & ! tmin, tmax, tavg, tf  
           decompfac%aqua, decompfac%iwcs, decompfac%iwcf, & ! precip, wf standing, wf flat
           decompfac%idds, decompfac%iddf, &                 ! dd standing, dd flat
@@ -170,7 +170,7 @@ module weps_output_mod
 2345     format (i6,i4,i5,3f10.5,13f10.3)
 
           ! All Residue Pools Combined
-          write(luobio1(isr),2345) daysim, doy, cy, &
+          write(luobio1(isr),2345) get_simdate_daysim(), doy, cy, &
           biotot%ffcvtot, biotot%fscvtot, biotot%ftcvtot, &
           0.0, biotot%rsaitot, biotot%rlaitot, &
           biotot%mtot, biotot%mftot, biotot%msttot, &
@@ -233,7 +233,7 @@ module weps_output_mod
 2355        format (i6,1x,i5,1x,i4,1x,i3,1x,i4,1x,i2,30(1x,f10.5),1x,a30)
 
             ! Residue Pool
-            write(thisResidue%bout%luo,2355) daysim, &
+            write(thisResidue%bout%luo,2355) get_simdate_daysim(), &
                 thisResidue%resday, thisResidue%resyear, doy, cy, thisResidue%bout%num, &
                 thisResidue%cumdds, thisResidue%cumddf, thisResidue%cumddg(10), &
                 thisResidue%deriv%ffcv, thisResidue%deriv%fscv, thisResidue%deriv%ftcv, &
@@ -263,8 +263,8 @@ module weps_output_mod
 
     subroutine plotdata(sr, soil, plant, hstate, restot, croptot, biotot, noerod, manFile, subrsurf, cellstate)
 
-      use weps_main_mod, only: daysim, report_loop, am0ifl
-      use datetime_mod, only: get_simdate, get_simdate_doy
+      use weps_main_mod, only: report_loop, am0ifl
+      use datetime_mod, only: get_simdate, get_simdate_doy, get_simdate_daysim
       use file_io_mod, only: luoplt
       use soil_data_struct_defs, only: soil_def
       use biomaterial, only: biototal, plant_pointer
@@ -443,7 +443,7 @@ module weps_output_mod
         end if
 
         write (luoplt(sr), 2080, ADVANCE="NO")  &
-     &                    daysim, doy,                                  &
+     &                    get_simdate_daysim(), doy, &
      &                    day, month, year,                             &
      &                    total, suspen, pmten,                         &
      &         awudmx, awadir, cli_today%zdpt, hstate%rwc0(hhrs/2), &
@@ -533,7 +533,7 @@ module weps_output_mod
       use weps_cmdline_parms, only: calc_confidence, calibrate_crops, run_erosion, soil_cond, wepp_hydro
       use file_io_mod
       use erosion_data_struct_defs, only: am0efl
-      use barriers_mod, only: barseas, output_done
+      use barriers_mod, only: barseas
       use hydro_data_struct_defs, only: am0hfl, am0hdb
       use soil_data_struct_defs, only: am0sfl, am0sdb
       use manage_data_struct_defs, only: manFile
@@ -619,21 +619,16 @@ module weps_output_mod
          end do
       endif
 
-      ! open barrier output file
-      if( size(barseas) .gt. 0 ) then
-          call fopenk (luo_barr, rootp(1:len_trim(rootp)) // 'barriers.out', 'unknown')
-          output_done = .false.
-      else
-          output_done = .true.
-      end if
-
 !     open erosion output files
       if (am0efl.gt.0) then
-          call fopenk (luo_subday, rootp(1:len_trim(rootp)) // 'subday.out', 'unknown')
+          ! open barrier output file
+          if( size(barseas) .gt. 0 ) then
+              call fopenk (luo_barr, rootp(1:len_trim(rootp)) // 'barriers.out', 'unknown')
+          end if
       endif
 
       if (btest(am0efl,0)) then
-       call fopenk (luo_erod, rootp(1:len_trim(rootp)) // 'daily_out.erod', 'unknown')
+       call fopenk (luo_erod, rootp(1:len_trim(rootp)) // 'daily_erod.out', 'unknown')
       endif
 
 !     open plot data file
@@ -1040,17 +1035,14 @@ module weps_output_mod
       endif
 
       ! barrier output file
-      if( size(barseas) .gt. 0 ) then
-          close(luo_barr)
-      end if
-
-!     erosion output files
       if (am0efl.gt.0) then
-          close(luo_subday)
+        if( size(barseas) .gt. 0 ) then
+          close(luo_barr)
+        end if
       endif
 
       if (btest(am0efl,0)) then
-       close(luo_erod)
+        close(luo_erod)
       endif
 
 !     plot data file

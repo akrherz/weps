@@ -44,7 +44,6 @@ module weps_main_mod
 
     character*512 :: rootp*512  ! the root path from which the weps command was started.
 
-    integer :: daysim  ! current day number of the simulation run
     integer :: ijday   ! This variable contains the initial julian day of the simulation run.
     integer :: ljday   ! This variable contains the last julian day of the simulation run.
     integer :: maxper  ! The maximum number of years in a rotation cycle of all subregions.
@@ -77,7 +76,6 @@ module weps_main_mod
 
       use erosion_data_struct_defs, only: am0eif
 
-      daysim = 0
       maxper = 1
       longest_mgt_rotation = 1
 
@@ -124,7 +122,7 @@ module weps_main_mod
       integer       i
       integer       numarg
       integer       ll,ss
-      integer       id, im, iy
+      integer       day, mon, year
 
       integer       arg_len ! number of characters in argv
 
@@ -280,11 +278,6 @@ module weps_main_mod
               write(*,*) '    # = Run crop calibration # interation max'
 
               write(*,*)                                                &
-     &'-f  Specify leaf freeze damaged mass loss fraction'
-              write(*,*)                                                &
-     &'    Specify -f0.85 to make 85% of freeze damaged mass disappear'
-
-              write(*,*)                                                &
      &'-E  Simulate \"erosion\" in WEPS run'
               write(*,*) '    0 = Do not run any erosion submodel'
               write(*,*) '    1 = Run WEPS erosion submodel (default)'
@@ -295,6 +288,11 @@ module weps_main_mod
      &'-e  Create stand alone erosion output files, all erosion events'
               write(*,*) '    0 = Create -O, -o spec. output (default)'
               write(*,*) '    1 = Create SWEEP input files'
+
+              write(*,*)                                                &
+     &'-f  Specify leaf freeze damaged mass loss fraction'
+              write(*,*)                                                &
+     &'    Specify -f0.85 to make 85% of freeze damaged mass disappear'
 
               write(*,*)                                                &
      &'-g  Application of growth stress functions'
@@ -663,12 +661,11 @@ module weps_main_mod
           !generate stand alone erosion input file on DD/MM/YY
           else if(argv(2:2) .eq. 'o') then
             if( .not. check_arg( 7, arg_len, argv ) ) goto 9
-            ! id, im, iy are used here before they are read from inprun
-            read(argv(3:4),*) id
-            read(argv(5:6),*) im
-            read(argv(7:),*) iy
-            if( ckdate(id, im, iy) ) then
-              saeinp_jday = julday( id, im, iy )
+            read(argv(3:4),*) day
+            read(argv(5:6),*) mon
+            read(argv(7:),*) year
+            if( ckdate(day, mon, year) ) then
+              saeinp_jday = julday( day, mon, year )
             else
               write(*,*) &
                  'Warning: Ignored invalid stand alone erosion DD/MM/YY option: ', trim(argv)

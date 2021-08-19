@@ -20,6 +20,7 @@ module datetime_mod
     character(len=3) :: mstring ! three letter string for the name of the month
     integer :: julian_day
     integer :: day_of_year
+    integer :: day_of_sim       ! current day number of the simulation run
   end type date_time_numbers_strings
 
 
@@ -48,6 +49,7 @@ module datetime_mod
   end interface get_simdate
 
   public :: get_simdate
+  public :: get_simdate_daysim
   public :: get_simdate_jday
   public :: get_simdate_doy
   public :: get_simdate_year
@@ -100,7 +102,8 @@ contains
       write( systime_string, "(a3,' ',i2.2,', ',i4,' ', i2.2,':',i2.2,':',i2.2)" ) mname, day, year, hour, minute, second
     end function get_systime_string
 
-    subroutine update_simulation_date( julian_day )
+    subroutine update_simulation_date( beg_julian_day, julian_day )
+      integer, intent(in) :: beg_julian_day
       integer, intent(in) :: julian_day
       ! set julian_day
       sim_date%julian_day = julian_day
@@ -110,6 +113,8 @@ contains
       sim_date%mstring = find_month_string( sim_date%dt(2) )
       ! set day_of_year
       sim_date%day_of_year = dayear( sim_date%dt(3), sim_date%dt(2), sim_date%dt(1) )
+      ! set simulation day
+      sim_date%day_of_sim = julian_day - beg_julian_day + 1
     end subroutine update_simulation_date
 
     subroutine get_simdate_day_month_year( day, month, year )
@@ -129,6 +134,11 @@ contains
       integer, intent(out) :: julian_day, day_of_year
       call get_time_jday_doy( sim_date, julian_day, day_of_year )
     end subroutine get_simdate_jday_doy
+
+    function get_simdate_daysim() result( sim_day )
+      integer :: sim_day
+      sim_day = sim_date%day_of_sim
+    end function get_simdate_daysim
 
     function get_simdate_jday() result( julian_day )
       integer :: julian_day

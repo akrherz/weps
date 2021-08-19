@@ -12,7 +12,6 @@ module file_io_mod
 
     integer :: luolog          ! write logfil.txt for cmdline and inprun
 
-    integer :: luo_subday      ! for subdaily wind
     integer :: luo_egrd        ! For daily erosion grid
     integer :: luo_erod        ! For daily erosion summary
     integer :: luo_emit        ! For subdaily erosion summary

@@ -54,7 +54,8 @@ module manage_mod
       use flib_sax
       use manage_xml_mod, only: init_man_xml, read_old_manfile
       use manage_xml_mod, only: manfile_complete
-      use manage_xml_mod, only: begin_man_element_handler, end_man_element_handler, pcdata_man_chunk_handler
+      use manage_xml_mod, only: begin_man_element_handler, end_man_element_handler
+      use manage_xml_mod, only:  pcdata_man_chunk_handler, empty_man_element_handler
       use update_mod, only: am0cropupfl
 
 !     + + + ARGUMENT DECLARATIONS + + +
@@ -95,6 +96,7 @@ module manage_mod
            begin_element_handler = begin_man_element_handler, &
            end_element_handler = end_man_element_handler, &
            pcdata_chunk_handler = pcdata_man_chunk_handler, &
+           empty_element_handler = empty_man_element_handler, &
            verbose = .false.)
         call close_xmlfile(fxml)
         if (.not. manfile_complete) then

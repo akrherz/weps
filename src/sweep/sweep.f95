@@ -408,8 +408,6 @@
         endif 
       endif
 
-      write(0,*) 'am0efl is = ', am0efl
-
       ! Initialize erosion code, create grid, etc:
       ! (must come after sim field size, & no. subr specified)
 

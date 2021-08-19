@@ -1002,8 +1002,7 @@ module WEPS_UPGM_mod
       use crop_data_struct_defs, only: crop_residue, am0cfl
       use crop_data_struct_defs, only: create_crop_residue, destroy_crop_residue
       use climate_input_mod, only: amalat, cli_today
-      use weps_main_mod, only: daysim
-      use datetime_mod, only: get_simdate_doy, get_simdate_year
+      use datetime_mod, only: get_simdate_daysim, get_simdate_doy, get_simdate_year
       use file_io_mod, only: luocrop, luoshoot
       use WEPSCrop_mod, only: shoot_grow, leaf_emerge, growth
       use solar_mod, only: civilrise, daylen
@@ -2571,7 +2570,7 @@ module WEPS_UPGM_mod
                 ! before shoot_growing set to false
                 write(luoshoot(isr), &
                   "(1x,i5,1x,i3,1x,i4,1x,i4,1x,f6.3,2(1x,f10.4),2(1x,f12.4),4(1x,f12.4),4(1x,f12.4),(1x,f8.4),(1x,f8.3),1x,a)") &
-                  daysim, jd, get_simdate_year(), plant%growth%dayap+1, shoot_hui, &
+                  get_simdate_daysim(), jd, get_simdate_year(), plant%growth%dayap+1, shoot_hui, &
                   s_root_sum, f_root_sum, tot_mass_req, end_shoot_mass, &
                   end_root_mass, d_root_mass, d_shoot_mass, d_s_root_mass, &
                   end_stem_mass, end_stem_area, end_shoot_len, plant%geometry%zshoot, &
@@ -2722,7 +2721,7 @@ module WEPS_UPGM_mod
 
             write(luocrop(isr), "(1x,i6,1x,i3,1x,i4,1x,i5,1x,f6.3,12(1x,f7.4),1x,f7.2, &
               3(1x,f7.4),8(1x,f6.3),1x,e12.3, 11(1x,f6.3),2(1x,f8.5),1x,i2,1x,f6.3,1x,a,1x,a)") &
-            daysim, jd, get_simdate_year(), plant%growth%dayap, &
+            get_simdate_daysim(), jd, get_simdate_year(), plant%growth%dayap, &
             hui, &
             plant%mass%standstem, plant%mass%standleaflive + plant%mass%standleafdead, plant%mass%standstore, &
             plant%mass%flatstem, plant%mass%flatleaf, plant%mass%flatstore, &

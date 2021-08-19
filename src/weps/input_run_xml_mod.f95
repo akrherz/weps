@@ -1395,6 +1395,10 @@ contains
 
     call fopenk (luo_xml, trim(runxmlfil), 'unknown')
 
+    ! write XML header
+    write(luo_xml,"(a)") '<?xml version="1.0" encoding="ISO-8859-1"?>'
+    write(luo_xml,"(a)") '<!DOCTYPE runFileData SYSTEM "weps.run.dtd">'
+
     call w_begin_tag( luo_xml, run_tag(runFileData)%name )
 
       ! GUI tags

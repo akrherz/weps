@@ -1611,6 +1611,76 @@ contains
 
   end subroutine pcdata_man_chunk_handler
 
+  subroutine empty_man_element_handler(name,attributes)
+    use read_write_xml_mod, only: read_param
+    character(len=*), intent(in) :: name
+    type(dictionary_t), intent(in) :: attributes
+
+    character(len=80) :: param_value
+
+    param_value = " "
+
+    if (man_tag(wepsmanDB)%in_tag) then
+      if (man_tag(wepsmanvalue)%in_tag) then
+        if (man_tag(operationDB)%in_tag ) then
+          if (man_tag(actionvalue)%in_tag ) then
+            if (man_tag(param)%in_tag ) then
+              if (man_tag(p_name)%acquired ) then
+                ! previous name tag sets:
+                ! ogp_id_idx - operation/group/process
+                ! p_type     - int/real/str property of the empty value
+                ! p_idx      - index for placement of value into type array
+                if ( p_idx .gt. 0 ) then
+                  
+                  ! only the ofuel tag can have a blank value
+                  if( param_nt(ogp_id_idx)%s_name(p_idx) .eq. 'ofuel' ) then
+                    select case (p_type)
+                    case ('int')
+                      if ( operID .ge. 0 ) then
+                        call read_param(man_tag(p_name)%name, param_value, manFile(isub)%oper%i_param(p_idx)%p_value )
+                        manFile(isub)%oper%i_param(p_idx)%p_acquired = .true.
+                      else if ( grpID .ge. 0 ) then
+                        call read_param(man_tag(p_name)%name, param_value, manFile(isub)%grp%i_param(p_idx)%p_value )
+                        manFile(isub)%grp%i_param(p_idx)%p_acquired = .true.
+                      else if ( procID .ge. 0 ) then
+                        call read_param(man_tag(p_name)%name, param_value, manFile(isub)%proc%i_param(p_idx)%p_value )
+                        manFile(isub)%proc%i_param(p_idx)%p_acquired = .true.
+                      end if
+                    case ('real')
+                      if ( operID .ge. 0 ) then
+                        call read_param(man_tag(p_name)%name, param_value, manFile(isub)%oper%r_param(p_idx)%p_value )
+                        manFile(isub)%oper%r_param(p_idx)%p_acquired = .true.
+                      else if ( grpID .ge. 0 ) then
+                        call read_param(man_tag(p_name)%name, param_value, manFile(isub)%grp%r_param(p_idx)%p_value )
+                        manFile(isub)%grp%r_param(p_idx)%p_acquired = .true.
+                      else if ( procID .ge. 0 ) then
+                        call read_param(man_tag(p_name)%name, param_value, manFile(isub)%proc%r_param(p_idx)%p_value )
+                        manFile(isub)%proc%r_param(p_idx)%p_acquired = .true.
+                      end if
+                    case ('str')
+                      if ( operID .ge. 0 ) then
+                        manFile(isub)%oper%s_param(p_idx)%p_value = trim(param_value)
+                        manFile(isub)%oper%s_param(p_idx)%p_acquired = .true.
+                      else if ( grpID .ge. 0 ) then
+                        manFile(isub)%grp%s_param(p_idx)%p_value = trim(param_value)
+                        manFile(isub)%grp%s_param(p_idx)%p_acquired = .true.
+                      else if ( procID .ge. 0 ) then
+                        manFile(isub)%proc%s_param(p_idx)%p_value = trim(param_value)
+                        manFile(isub)%proc%s_param(p_idx)%p_acquired = .true.
+                      end if
+                    end select
+                    man_tag(value)%acquired = .true.
+                  end if
+                end if
+              end if
+            end if
+          end if
+        end if
+      end if
+    end if
+
+  end subroutine empty_man_element_handler
+
   subroutine read_old_manfile ( isubr, luimanfile )
     integer, intent(in) :: isubr      ! current manfile subregion
     integer, intent(in) :: luimanfile             ! management file io unit number

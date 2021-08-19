@@ -1,4 +1,4 @@
-!$Author$
+  !$Author$
 !$Date$
 !$Revision$
 !$HeadURL$
@@ -80,7 +80,6 @@ module barriers_mod
 
   type(barrier_data), dimension(:), allocatable :: barrier
   type(barrier_seasonal), dimension(:), allocatable :: barseas
-  logical :: output_done   ! flag to indicate that required barrier output is complete (1 day vs. 1 year vs. many years)
 
 contains
  
@@ -198,7 +197,9 @@ contains
 
     use lin_interp_mod, only: lin_interp
     use file_io_mod, only: luo_barr
-    use datetime_mod, only: get_simdate_year, isleap
+    use datetime_mod, only: get_simdate_daysim, get_simdate_year, isleap
+    use string_mod, only: space2hyphen
+    use erosion_data_struct_defs, only: am0efl
 
     ! argument declarations
     integer, intent(in) :: doy  ! day of year for setting barrier season
@@ -214,6 +215,7 @@ contains
     integer :: max_seas ! maximum season flag value for all barriers
     integer :: doy_adj  ! adjustment to day of year based on begin/end of year location of actual doy
     integer :: sgn_adj  ! adjustment to sign of calculation based on begin/end of year location of actual doy
+    real :: delta_x
 
     ! loop over all barriers
     do bdx = 1, size(barrier)
@@ -312,62 +314,80 @@ contains
       end if
     end do
 
-    if( (doy .eq. 1) .and. (.not. output_done) ) then
-      ! write header to barrier daily output file
-      do bdx = 1, size(barrier)
-        write(UNIT=luo_barr,FMT='(a)',advance='NO') &
-          '#yr  doy Barrier_Description  tb beg_accu beg_thre te end_accu end_thre npt '
-        do pdx = 1, barrier(bdx)%np
-          write(UNIT=luo_barr,FMT='(a)',advance='NO') &
-            ' height  width porosi '
+    if (am0efl.gt.0) then
+      if( get_simdate_daysim() .eq. 1 ) then
+        ! write header to barrier daily output file
+        do bdx = 1, size(barrier)
+          if( bdx .eq. 1 ) then
+            write(UNIT=luo_barr,FMT='(a)',advance='NO') &
+              '#simday doy yr  Barrier_Description  tb beg_accu beg_thre te end_accu end_thre npt'
+          else
+            write(UNIT=luo_barr,FMT='(a)',advance='NO') &
+              ' Barrier_Description  tb beg_accu beg_thre te end_accu end_thre npt'
+          end if
+          do pdx = 1, barrier(bdx)%np
+            write(UNIT=luo_barr,FMT='(a)',advance='NO') &
+              ' delta_x height  width porosi'
+          end do
         end do
-      end do
-      write(UNIT=luo_barr,FMT='(a)') ''
-    end if
+        write(UNIT=luo_barr,FMT='(a)') ''
+      end if
 
-    if( .not. output_done ) then
+      ! insert double blank lines to demarcate years
+      if( doy .eq. 1 ) then
+          write (luo_barr,*)
+          write (luo_barr,*)
+      end if
+    
       max_ntm = 0
       max_seas = 0
       do bdx = 1, size(barrier)
-        ! write data to barrier daily output file
-        write(UNIT=luo_barr,FMT='(i4," ",i3," ",a20," ")',advance='NO') &
-             get_simdate_year(), doy, barrier(bdx)%amzbt
-        if( barseas(bdx)%seas_flg .eq. 2 ) then
-          ! these values are populated
-          write(UNIT=luo_barr,FMT='(i2," ")',advance='NO') &
-             barseas(bdx)%clim(low_tm)%beg_flg
-          write(UNIT=luo_barr,FMT='(2(f8.4," "))',advance='NO') &
-             barseas(bdx)%clim(low_tm)%beg_accum, barseas(bdx)%clim(low_tm)%beg_thresh
-          write(UNIT=luo_barr,FMT='(i2," ")',advance='NO') &
-             barseas(bdx)%clim(low_tm)%end_flg
-          write(UNIT=luo_barr,FMT='(2(f8.4," "))',advance='NO') &
-             barseas(bdx)%clim(low_tm)%end_accum, barseas(bdx)%clim(low_tm)%end_thresh
-        else
-          ! these values are NOT populated, use fixed values
-          write(UNIT=luo_barr,FMT='(i2," ")',advance='NO') &
-             -1
-          write(UNIT=luo_barr,FMT='(2(f8.4," "))',advance='NO') &
-             0.0, 0.0
-          write(UNIT=luo_barr,FMT='(i2," ")',advance='NO') &
-             -1
-          write(UNIT=luo_barr,FMT='(2(f8.4," "))',advance='NO') &
-             0.0, 0.0
-        end if
-        write(UNIT=luo_barr,FMT='(i3," ")',advance='NO') &
-             barrier(bdx)%np
-        do pdx = 1, barrier(bdx)%np
-          write(UNIT=luo_barr,FMT='(3(" ",f7.4))',advance='NO') &
-            barrier(bdx)%param(pdx)%amzbr, barrier(bdx)%param(pdx)%amxbrw, barrier(bdx)%param(pdx)%ampbr
-        end do
-        max_ntm = max(max_ntm, barseas(bdx)%ntm)
-        max_seas = max(max_seas, barseas(bdx)%seas_flg)
+          ! write data to barrier daily output file
+          if( bdx .eq. 1 ) then
+            write(UNIT=luo_barr,FMT='(1x,i6,1x,i3,1x,i4,1x,a20)',advance='NO') &
+               get_simdate_daysim(), doy, get_simdate_year(), space2hyphen( trim(barrier(bdx)%amzbt) )
+          else
+            write(UNIT=luo_barr,FMT='(1x,a20)',advance='NO') &
+               space2hyphen( trim(barrier(bdx)%amzbt) )
+          end if
+          if( barseas(bdx)%seas_flg .eq. 2 ) then
+            ! these values are populated
+            write(UNIT=luo_barr,FMT='(1x,i2)',advance='NO') &
+               barseas(bdx)%clim(low_tm)%beg_flg
+            write(UNIT=luo_barr,FMT='(2(1x,f8.4))',advance='NO') &
+               barseas(bdx)%clim(low_tm)%beg_accum, barseas(bdx)%clim(low_tm)%beg_thresh
+            write(UNIT=luo_barr,FMT='(1x,i2)',advance='NO') &
+               barseas(bdx)%clim(low_tm)%end_flg
+            write(UNIT=luo_barr,FMT='(2(1x,f8.4))',advance='NO') &
+               barseas(bdx)%clim(low_tm)%end_accum, barseas(bdx)%clim(low_tm)%end_thresh
+          else
+            ! these values are NOT populated, use fixed values
+            write(UNIT=luo_barr,FMT='(1x,i2)',advance='NO') &
+               -1
+            write(UNIT=luo_barr,FMT='(2(1x,f8.4))',advance='NO') &
+               0.0, 0.0
+            write(UNIT=luo_barr,FMT='(1x,i2)',advance='NO') &
+               -1
+            write(UNIT=luo_barr,FMT='(2(1x,f8.4))',advance='NO') &
+               0.0, 0.0
+          end if
+          write(UNIT=luo_barr,FMT='(1x,i3)',advance='NO') &
+               barrier(bdx)%np
+          delta_x = 0.0
+          do pdx = 1, barrier(bdx)%np
+            if( pdx .gt. 1 ) then
+              delta_x = delta_x + slen(barrier(bdx)%points(pdx-1), barrier(bdx)%points(pdx))
+            end if
+            write(UNIT=luo_barr,FMT='(1x,f7.1)',advance='NO') &
+              delta_x
+            write(UNIT=luo_barr,FMT='(3(1x,f7.4))',advance='NO') &
+              barrier(bdx)%param(pdx)%amzbr, barrier(bdx)%param(pdx)%amxbrw, barrier(bdx)%param(pdx)%ampbr
+          end do
+          max_ntm = max(max_ntm, barseas(bdx)%ntm)
+          max_seas = max(max_seas, barseas(bdx)%seas_flg)
       end do
+      ! write newline character
       write(UNIT=luo_barr,FMT='(a)') ''
-      if( max_ntm .le. 1 ) then
-        output_done = .true.
-      else if( (doy .eq. 365) .and. (max_seas .lt. 2)) then
-        output_done = .true.
-      end if
     end if
 
   end subroutine set_barrier_season

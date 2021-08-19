@@ -155,9 +155,13 @@ module WEPSCrop_mod
       ! today and yesterday shoot length and stem and leaf mass increments
       ! length increase scaled by mass increase
       ! stem and leaf mass allocated proportionally (prevents premature emergence)
-      plant%geometry%zshoot = end_shoot_len &
+      if( end_shoot_mass .le. 0.0_dp ) then
+          plant%geometry%zshoot = 0.0_dp
+      else
+          plant%geometry%zshoot = end_shoot_len &
                * ((plant%growth%mshoot /(u_mgtokg * plant%geometry%dstm))+d_shoot_mass) &
                / end_shoot_mass
+      end if
 
       ! if no additional mass, no need to go further
       if( d_shoot_mass .le. 0.0_dp) return

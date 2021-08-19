@@ -10,7 +10,7 @@ module weps_submodel_mod
     subroutine submodels (isr, soil, plant, plantIndex, restot, croptot, &
                           biotot, decompfac, hstate, h1et, h1bal, wp, manFile)
 
-      use weps_main_mod, only: daysim
+      use datetime_mod, only: get_simdate_daysim
       use soil_data_struct_defs, only: soil_def
       use biomaterial, only: decomp_factors
       use biomaterial, only: plant_pointer, residue_pointer, biototal
@@ -41,28 +41,28 @@ module weps_submodel_mod
       type(wepp_param), intent(inout) :: wp
       type(man_file_struct), intent(inout) :: manFile
 
-      ! write(*,*) "Start manage", daysim
+      ! write(*,*) "Start manage", get_simdate_daysim()
 
       ! MANAGEment (tillage) submodel
       call manage(isr, iy, soil, plant, plantIndex, biotot, hstate, h1et, manFile)
 
       call plantupdate( soil, plant, croptot, restot, biotot )
 
-      ! write(*,*) "Start callhydr", daysim
+      ! write(*,*) "Start callhydr", get_simdate_daysim()
 
       ! HYDROLOGY submodel. Do not change call order. Hydro may set irrigation
       ! amounts that will affect soil.
-      call callhydr(daysim, isr, soil, plant, croptot, restot, biotot, hstate, h1et, h1bal, wp)
+      call callhydr(get_simdate_daysim(), isr, soil, plant, croptot, restot, biotot, hstate, h1et, h1bal, wp)
 
-      ! write(*,*) "Start callsoil", daysim
+      ! write(*,*) "Start callsoil", get_simdate_daysim()
 
       ! SOIL submodel
-      call callsoil(daysim, isr, soil, croptot, biotot, hstate, h1et)
+      call callsoil(get_simdate_daysim(), isr, soil, croptot, biotot, hstate, h1et)
 
-      ! write(*,*) "Start callcrop", daysim
+      ! write(*,*) "Start callcrop", get_simdate_daysim()
 
       ! CROP submodel
-      call callcrop(daysim, isr, soil, plant, croptot, restot, biotot, h1et)
+      call callcrop(get_simdate_daysim(), isr, soil, plant, croptot, restot, biotot, h1et)
       call plantupdate( soil, plant, croptot, restot, biotot )
 
       if( associated(plant) ) then
@@ -70,7 +70,7 @@ module weps_submodel_mod
         plant%prev%cancov = plant%deriv%fcancov
       end if
 
-      ! write(*,*) "Start decomp", daysim
+      ! write(*,*) "Start decomp", get_simdate_daysim()
       ! DECOMPosition submodel
       call decomp(isr, soil, plant, decompfac, hstate, h1et)
       call plantupdate( soil, plant, croptot, restot, biotot )

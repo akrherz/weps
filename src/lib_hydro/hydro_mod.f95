@@ -15,7 +15,7 @@ module hydro_mod
 
     subroutine hydrinit(isr, soil, hstate, h1et, h1bal, wp)
 
-      use weps_main_mod, only: daysim
+     use datetime_mod, only: get_simdate_daysim
       use hydro_wepp_util_mod, only: saxpar
       use soil_data_struct_defs, only: soil_def
       use hydro_data_struct_defs, only: hydro_derived_et, hydro_state, hhrs
@@ -59,7 +59,7 @@ module hydro_mod
       h1bal%initswc = dot_product(ltheta(1:soil%nslay),                 &
      &                            soil%aszlyt(1:soil%nslay))
       h1bal%initsnow = hstate%zsno
-      h1bal%initday = daysim
+      h1bal%initday = get_simdate_daysim()
 
       h1bal%presswc = h1bal%initswc
       h1bal%pressnow = h1bal%initsnow

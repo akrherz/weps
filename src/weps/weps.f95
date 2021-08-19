@@ -39,7 +39,7 @@
                                    saeinp_all, saeinp_daysim, saeinp_jday, wepp_hydro, &
                                    make_runxml
       use weps_main_mod, only: old_run_file, run_rot_cycles, id, im, iy, ld, lm, ly, rootp, &
-                               daysim, ijday, ljday, maxper, longest_mgt_rotation, ncycles, &
+                               ijday, ljday, maxper, longest_mgt_rotation, ncycles, &
                                init_loop, calib_loop, report_loop, &
                                max_calib_cycles, calib_cycle, calib_done, &
                                am0ifl, wepsinit, cmdline
@@ -48,7 +48,7 @@
       use weps_output_mod, only: openfils, plotdata, closefils, bpools
       use timer_mod, only: timer, TIMWEPS, TIMSTART, TIMSTOP, TIMPRINT
       use datetime_mod, only: update_system_time, get_systime_string, julday, lstday, isleap, &
-                              update_simulation_date, get_simdate, get_simdate_doy
+                              update_simulation_date, get_simdate, get_simdate_doy, get_simdate_daysim
       USE pd_dates_vars
       USE pd_update_vars
       USE pd_report_vars
@@ -123,7 +123,6 @@
       integer :: ndiy          ! The number of days in the year.
       integer :: isr           ! This variable holds the subregion index.
       integer :: simyrs        ! The number of years being simulated (for console output)
-      integer :: yrsim         ! Current simulation year (for console output)
       integer :: lcaljday      ! last julian day of calibration cycle
       integer :: ci_flag       ! determines when confidence interval is calculated in report loop
                                ! 0 - no calculation
@@ -164,7 +163,6 @@
 !     bpools   -  prints many biomass pool components (for debugging)
 
 !     + + + DATA INITIALIZATIONS + + +
-      data yrsim /0/
       data lcaljday /0/
 
 !     + + + END SPECIFICATIONS + + +
@@ -516,19 +514,17 @@
       do am0jd = beg_init_jday, ljday   !will not enter if end before beginning
 
         ! store day for use in simulation date routines
-        call update_simulation_date( am0jd )
+        call update_simulation_date( ijday, am0jd )
         call get_simdate( cd, cm, cy )
 
         ! determine number of days in the year
         ndiy = 365; if (isleap(cy) .eqv. .true.) ndiy = 366
         call getcli(cd, cm, cy); call getwin(cd, cm, cy)
         ! print current day of simulation to screen periodically
-        daysim = daysim + 1
         if ((cm .eq. 1) .and. (cd .eq. 1)) then
-            yrsim = yrsim + 1
             simyrs = (ly - beg_init_y + 1)
-            if (hb_freq .eq. 0 .or. mod(yrsim, hb_freq) == 0) then
-               write(6,*) 'Year', yrsim, ' of', simyrs, '(initialization)'
+            if (hb_freq .eq. 0 .or. mod(cy, hb_freq) == 0) then
+               write(6,*) 'Year', cy, ' of', simyrs, '(initialization)'
             end if
             call flush(6)
         end if
@@ -567,10 +563,6 @@
       ! End of "initialization" section
 
       ! Do all resetting of variables necessary for "calibrate" and "report" portions of the simulation
-      am0jd = ijday           ! Reset loop counter to first day of simulation
-      call update_simulation_date( am0jd ) ! store for use by simulation day routines
-      daysim = 0              ! Reset to zero (blkdat.for)
-      yrsim = 0               ! Reset to zero (weps.for)
       call getcli(0, cm, cy)  ! Reset cligen file (day == 0)
       call getwin(0, cm, cy)  ! Reset windgen file (day == 0)
 
@@ -592,19 +584,17 @@
          do am0jd = ijday,lcaljday
 
            ! store day for use in simulation date routines
-           call update_simulation_date( am0jd )
+           call update_simulation_date( ijday, am0jd )
            call get_simdate (cd, cm, cy)
-
+           
            ! determine number of days in the year
            ndiy = 365; if (isleap(cy) .eqv. .true.) ndiy = 366
            call getcli(cd, cm, cy); call getwin(cd, cm, cy)
            ! print current day of simulation to screen periodically
-           daysim = daysim + 1
            if ((cm .eq. 1) .and. (cd .eq. 1)) then
-              yrsim = yrsim + 1
               simyrs = (ly - iy + 1)
-              if (hb_freq .eq. 0 .or. mod(yrsim, hb_freq) == 0) then
-                write(6,*) 'Year', yrsim, ' of', maxper*calibrate_rotcycles, &
+              if (hb_freq .eq. 0 .or. mod(cy, hb_freq) == 0) then
+                write(6,*) 'Year', cy, ' of', maxper*calibrate_rotcycles, &
                         '(calibrating',calib_cycle,'/', max_calib_cycles,')'
               end if
               call flush(6)
@@ -655,17 +645,11 @@
 !
 !        end if
 ! Go back to "initialization" and restart after resetting the appropriate variables here
-         daysim = 0
+         am0eif = .true.
+         am0ifl = .false.
          do isr = 1, nsubr
             manfile(isr)%mnryr = 1
          end do
-         am0eif = .true.
-         am0ifl = .false.
-         am0jd = ijday           ! Reset loop counter to first day of simulation
-         ! store day for use in simulation date routines
-         call update_simulation_date( am0jd )
-         daysim = 0              ! Reset to zero (blkdat.for)
-         yrsim = 0               ! Reset to zero (weps.for)
          call getcli(0, cm, cy)  ! Reset cligen file (day == 0)
          call getwin(0, cm, cy)  ! Reset windgen file (day == 0)
 
@@ -715,7 +699,7 @@
          do am0jd = ijday,ljday
 
             ! store day for use in simulation date routines
-            call update_simulation_date( am0jd )
+            call update_simulation_date( ijday, am0jd )
             call get_simdate (cd, cm, cy)
 
             ! determine number of days in the year
@@ -727,12 +711,10 @@
             call getcli(cd, cm, cy); call getwin(cd, cm, cy)
 
             ! print current day of simulation to screen periodically
-            daysim = daysim + 1
             if ((cm .eq. 1) .and. (cd .eq. 1)) then
-               yrsim = yrsim + 1
                simyrs = (ly - iy + 1)
-            if (hb_freq .eq. 0 .or. mod(yrsim, hb_freq) == 0) then
-                 write(6,*) 'Year', yrsim, ' of', simyrs
+            if (hb_freq .eq. 0 .or. mod(cy, hb_freq) == 0) then
+                 write(6,*) 'Year', cy, ' of', simyrs
                end if
                call flush(6)
             end if
@@ -759,16 +741,16 @@
                if (awudmx .gt. 8.0) then ! if wind is great enough, call erosion
 
                   ! check for creation of stand alone erosion input files on this day
-                  if( (saeinp_daysim .eq. daysim) .or. (saeinp_jday .eq. am0jd) .or. (saeinp_all .gt. 0) ) then
+                  if( (saeinp_daysim .eq. get_simdate_daysim()) .or. (saeinp_jday .eq. am0jd) .or. (saeinp_all .gt. 0) ) then
                      mksaeinp%jday = am0jd
-                     mksaeinp%simday = daysim
+                     mksaeinp%simday = get_simdate_daysim()
                   else 
                         mksaeinp%simday = 0
                   end if
 
                   ! create setting for multiple output files
                   mksaeout%jday = am0jd
-                  mksaeout%simday = daysim
+                  mksaeout%simday = get_simdate_daysim()
                   if (btest(am0efl,0) .or. btest(am0efl,1)) then
                      luo_egrd = -1   ! setting this here signals daily erodout to create a separate file for each erosion day
                   endif
@@ -797,9 +779,6 @@
                                    manFile(isr), subrsurf(isr), cellstate)  ! print to plot data file
                ! write decomposition biomass pool amounts to files
                call bpools(isr, plants(isr)%plant, restot(isr), biotot(isr), decompfac(isr))
-
-!           write(*,*) 'weps:yrsim cd,cm,cy am0jd,daysim',              &
-!    &              yrsim," ",cd,cm,cy," ",am0jd,daysim
 
                ! if last day of year, check for end of rotation
                if (get_simdate_doy() .eq. ndiy) then
@@ -836,7 +815,7 @@
                call update_yrly_update_vars( isr, rep_update(isr)%yrly_update, rep_update(isr)%yrot_update, &
                                              rep_update(isr)%yr_update, cellstate, h1et(isr) )
                if ( (cm == 12) .and. (cd == 31) ) then          ! end of current year
-                  call update_yrly_report_vars(yrsim, mandatbs(isr)%mperod, rep_update(isr)%yrly_update, &
+                  call update_yrly_report_vars(cy, mandatbs(isr)%mperod, rep_update(isr)%yrly_update, &
                                                rep_update(isr)%yrot_update, rep_update(isr)%yr_update, &
                                                rep_report(isr)%yrly_report, rep_report(isr)%yr_report, &
                                                rep_dates(isr)%yrly, rep_dates(isr)%yr)
@@ -846,7 +825,7 @@
                call update_monthly_update_vars(isr, cm, rep_update(isr)%monthly_update, &
                                                rep_update(isr)%mrot_update, cellstate, h1et(isr))
                if (cd == lstday(cm,cy)) then                    ! end of current month
-                  call update_monthly_report_vars(cm, yrsim, mandatbs(isr)%mperod, &
+                  call update_monthly_report_vars(cm, cy, mandatbs(isr)%mperod, &
                        rep_update(isr)%monthly_update, rep_update(isr)%mrot_update, &
                        rep_report(isr)%monthly_report, rep_dates(isr)%monthly)
                end if
@@ -854,7 +833,7 @@
                ! Compute half month values
                call update_hmonth_update_vars(isr, cd, cm, rep_update(isr)%hmonth_update, rep_update(isr)%hmrot_update, h1et(isr))
                if ((cd == 14) .or. (cd == lstday(cm,cy))) then  ! end of half month
-                  call update_hmonth_report_vars(cd, cm, yrsim, mandatbs(isr)%mperod, &
+                  call update_hmonth_report_vars(cd, cm, cy, mandatbs(isr)%mperod, &
                        rep_update(isr)%hmonth_update, rep_update(isr)%hmrot_update, rep_report(isr)%hmonth_report)
                end if
 
@@ -872,7 +851,7 @@
                   .or. ( (cd == rep_dates(isr)%period(pd(isr))%ed) .and. (cm == rep_dates(isr)%period(pd(isr))%em) &
                          .and. ((mod((cy-1),mandatbs(isr)%mperod)+1) == rep_dates(isr)%period(pd(isr))%ey) ) ) then
                   ! end of period
-                  call update_period_report_vars( pd(isr), nperiods(isr), yrsim, mandatbs(isr)%mperod, &
+                  call update_period_report_vars( pd(isr), nperiods(isr), cy, mandatbs(isr)%mperod, &
                                                rep_update(isr)%period_update, rep_report(isr)%period_report, &
                                                rep_dates(isr)%period )
                   ! Update the current period index
