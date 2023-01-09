@@ -418,7 +418,6 @@ contains
     subroutine getcli(ccd, ccm, ccy)
 
         use datetime_mod, only: isleap, julday, dayear
-        use file_io_mod, only: luicli
 
         integer, intent(in) :: ccd    ! requested day of month
         integer, intent(in) :: ccm    ! requested month of year
@@ -724,7 +723,6 @@ contains
     subroutine getwin(cwd, cwm, cwy)
 
         use datetime_mod, only: isleap
-        use file_io_mod, only: luiwin
         use datetime_mod, only: julday, dayear
 
         integer :: cwd    ! requested day of month
@@ -734,7 +732,6 @@ contains
         ! + + + LOCAL VARIABLES + + +
         integer :: jday    ! astronomical julian day for requested day
         integer :: doy     ! day of year for requested day
-        integer :: idx     ! index for reading array values
 
         if (wind_today%day .eq. 0) then
             ! starting at beginning of the file

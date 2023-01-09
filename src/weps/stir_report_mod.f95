@@ -17,7 +17,8 @@ module stir_report_mod
                                  !   .false. = do every rotation
                                  !   .true.  = skip all but first instance (also skippped in the stir report)
       integer phop_type          ! operation type flag
-                                 !   0 = not yet initialized
+                                 !  -1 = not yet initialized
+                                 !   0 = not related to setting crop interval
                                  !   1 = planting operation
                                  !   2 = harvest operation
                                  !   3 = termination operation
@@ -151,7 +152,7 @@ module stir_report_mod
       real :: rootfiberf
       logical :: crop_present
       logical :: crop_present_today
-      logical :: temp_present
+      logical :: pass_2
       integer :: prev_day
       integer :: prev_mon
       integer :: prev_yr
@@ -183,7 +184,7 @@ module stir_report_mod
       croptype = 0
       crop_present = .false.
       crop_present_today = .false.
-      temp_present = .false.
+      pass_2 = .false.
       prev_day = 0
       prev_mon = 0
       prev_yr = 0
@@ -199,197 +200,200 @@ module stir_report_mod
 
         ! increment index for planting harvest accounting
         stircum(isr)%phopidx = stircum(isr)%phopidx + 1
-        ! check for total number, make maximum
-        stircum(isr)%phopcnt = max( stircum(isr)%phopcnt, stircum(isr)%phopidx )
-        stircum(isr)%oper_cnt = stircum(isr)%oper_cnt + 1
-        stircum(isr)%phop(stircum(isr)%phopidx)%phopday = manFile%oper%operDate%day
-        stircum(isr)%phop(stircum(isr)%phopidx)%phopmon = manFile%oper%operDate%month
-        stircum(isr)%phop(stircum(isr)%phopidx)%phopyr = manFile%oper%operDate%year
-        stircum(isr)%phop(stircum(isr)%phopidx)%stir_opname = manFile%oper%operName
-        if ( manFile%oper%operType .eq. 0 ) then
-          stircum(isr)%phop(stircum(isr)%phopidx)%phop_skip = .true.
-        else
-          stircum(isr)%phop(stircum(isr)%phopidx)%phop_skip = .false.
-        end if
 
-        if ( stircum(isr)%phopidx .eq. 1 ) then
-          stircum(isr)%phop(stircum(isr)%phopidx)%crop_num = stircum(isr)%phop(stircum(isr)%phopcnt)%crop_num
-        else
-          stircum(isr)%phop(stircum(isr)%phopidx)%crop_num = stircum(isr)%phop(stircum(isr)%phopidx-1)%crop_num
-        end if
-        stircum(isr)%phop(stircum(isr)%phopidx)%stir_fuelname = ''
-        oenergyarea = -1
-        ostir = -1
-        select case ( manFile%oper%operType )
-        case (1)
-          call getManVal(manFile%oper, 'ospeed', ospeed)
-        case (3)
-          call getManVal(manFile%oper, 'ospeed', ospeed)
-          call getManVal(manFile%oper, 'ofuel', stircum(isr)%phop(stircum(isr)%phopidx)%stir_fuelname)
-          call getManVal(manFile%oper, 'oenergyarea', oenergyarea)
-          call getManVal(manFile%oper, 'ostir', ostir)
-        case (4)
-          call getManVal(manFile%oper, 'ofuel', stircum(isr)%phop(stircum(isr)%phopidx)%stir_fuelname)
-          call getManVal(manFile%oper, 'oenergyarea', oenergyarea)
-          call getManVal(manFile%oper, 'ostir', ostir)
-        end select
-        ! do groups
-        manFile%grp => manFile%oper%grpFirst
-        do while ( associated(manFile%grp) )
-          select case( manFile%grp%grpType )
+        if( stircum(isr)%phop(stircum(isr)%phopidx)%phop_type .lt. 0 ) then
+
+          ! check for total number, make maximum
+          stircum(isr)%phopcnt = max( stircum(isr)%phopcnt, stircum(isr)%phopidx )
+          stircum(isr)%oper_cnt = stircum(isr)%oper_cnt + 1
+          stircum(isr)%phop(stircum(isr)%phopidx)%phopday = manFile%oper%operDate%day
+          stircum(isr)%phop(stircum(isr)%phopidx)%phopmon = manFile%oper%operDate%month
+          stircum(isr)%phop(stircum(isr)%phopidx)%phopyr = manFile%oper%operDate%year
+          stircum(isr)%phop(stircum(isr)%phopidx)%stir_opname = manFile%oper%operName
+          if ( manFile%oper%operType .eq. 0 ) then
+            stircum(isr)%phop(stircum(isr)%phopidx)%phop_skip = .true.
+          else
+            stircum(isr)%phop(stircum(isr)%phopidx)%phop_skip = .false.
+          end if
+
+          if ( stircum(isr)%phopidx .eq. 1 ) then
+            stircum(isr)%phop(stircum(isr)%phopidx)%crop_num = stircum(isr)%phop(stircum(isr)%phopcnt)%crop_num
+          else
+            stircum(isr)%phop(stircum(isr)%phopidx)%crop_num = stircum(isr)%phop(stircum(isr)%phopidx-1)%crop_num
+          end if
+          stircum(isr)%phop(stircum(isr)%phopidx)%stir_fuelname = ''
+          oenergyarea = -1
+          ostir = -1
+          select case ( manFile%oper%operType )
           case (1)
-            call getManVal(manFile%grp, 'gtdepth', tdepth)
-            call getManVal(manFile%grp, 'gtilArea', fracarea)
+            call getManVal(manFile%oper, 'ospeed', ospeed)
           case (3)
-            call getManVal(manFile%grp, 'gcropname', cropname)
+            call getManVal(manFile%oper, 'ospeed', ospeed)
+            call getManVal(manFile%oper, 'ofuel', stircum(isr)%phop(stircum(isr)%phopidx)%stir_fuelname)
+            call getManVal(manFile%oper, 'oenergyarea', oenergyarea)
+            call getManVal(manFile%oper, 'ostir', ostir)
+          case (4)
+            call getManVal(manFile%oper, 'ofuel', stircum(isr)%phop(stircum(isr)%phopidx)%stir_fuelname)
+            call getManVal(manFile%oper, 'oenergyarea', oenergyarea)
+            call getManVal(manFile%oper, 'ostir', ostir)
           end select
-          ! do processes
-          manFile%proc => manFile%grp%procFirst
-          do while ( associated(manFile%proc) )
-            select case( manFile%proc%procType )
-            case (25)
-              call getManVal(manFile%proc, 'burydist', burydistflg)
-              ! accumulation of STIR values
-              call stir_cum(isr, ospeed, tdepth, burydistflg, fracarea)
-            case (31)
-              call getManVal(manFile%proc, 'kilflag', killflag)
-              if (  ( (killflag .eq. 1) &
-                 .and. ( (croptype .eq. 1) .or. (croptype .eq. 2) &
-                    .or. (croptype .eq. 4) .or. (croptype .eq. 5) &
-                       ) &
-                     ) &
-                 .or. (killflag .eq. 2) &
-                ) then
-                 if ( crop_present ) then
-                   stircum(isr)%phop(stircum(isr)%phopidx)%phop_type = 3
-                   crop_present = .false.
-                   crop_present_today = .false.
-                   temp_present = .true.
-                 end if
-              else
-                stircum(isr)%phop(stircum(isr)%phopidx)%phop_type = 0
-              end if
-            case (40)
-              temp_present = .false.
-            case (32, 42)
-              call getManVal(manFile%proc, 'cyldrmh', pyieldf)
-              call getManVal(manFile%proc, 'cplrmh', pstalkf)
-              call getManVal(manFile%proc, 'cstrmh', rstandf)
-              if(     (pyieldf+pstalkf+rstandf.gt.0.0) &
-                .and. ((crop_present) .or. (temp_present)) ) then
-                if ( stircum(isr)%phop(stircum(isr)%phopidx)%phop_type .ne. 3 ) then
-                  stircum(isr)%phop(stircum(isr)%phopidx)%phop_type = 2
-                end if
-              else
-                stircum(isr)%phop(stircum(isr)%phopidx)%phop_type = 0
-              end if
-            case (33, 43)
-              call getManVal(manFile%proc, 'cyldrmf', pyieldf)
-              call getManVal(manFile%proc, 'cplrmf', pstalkf)
-              call getManVal(manFile%proc, 'cstrmf', rstandf)
-              if(     (pyieldf+pstalkf+rstandf.gt.0.0) &
-                .and. ((crop_present) .or. (temp_present)) ) then
-                if ( stircum(isr)%phop(stircum(isr)%phopidx)%phop_type .ne. 3 ) then
-                  stircum(isr)%phop(stircum(isr)%phopidx)%phop_type = 2
-                end if
-              else
-                stircum(isr)%phop(stircum(isr)%phopidx)%phop_type = 0
-              end if
-            case (37, 47)
-              call getManVal(manFile%proc, 'tyldrmp', pyieldf)
-              call getManVal(manFile%proc, 'tplrmp', pstalkf)
-              call getManVal(manFile%proc, 'tstrmp', rstandf)
-              if(     (pyieldf+pstalkf+rstandf.gt.0.0) &
-                .and. ((crop_present) .or. (temp_present)) ) then
-                if ( stircum(isr)%phop(stircum(isr)%phopidx)%phop_type .ne. 3 ) then
-                  stircum(isr)%phop(stircum(isr)%phopidx)%phop_type = 2
-                end if
-              else
-                stircum(isr)%phop(stircum(isr)%phopidx)%phop_type = 0
-              end if
-            case (38, 48)
-              call getManVal(manFile%proc, 'tyldrmf', pyieldf)
-              call getManVal(manFile%proc, 'tplrmf', pstalkf)
-              call getManVal(manFile%proc, 'tstrmf', rstandf)
-              if(     (pyieldf+pstalkf+rstandf.gt.0.0) &
-                .and. ((crop_present) .or. (temp_present)) ) then
-                if ( stircum(isr)%phop(stircum(isr)%phopidx)%phop_type .ne. 3 ) then
-                  stircum(isr)%phop(stircum(isr)%phopidx)%phop_type = 2
-                end if
-              else
-                stircum(isr)%phop(stircum(isr)%phopidx)%phop_type = 0
-              end if
-            case (51)
-              call getManVal(manFile%proc, 'idc', croptype)
-              call getManVal(manFile%proc, 'plantpop', plantpop)
-              if ( plantpop .gt. 0.0 ) then
-                stircum(isr)%phop(stircum(isr)%phopidx)%phop_type = 1
-                stircum(isr)%phop(stircum(isr)%phopidx)%stir_cropname = cropname
-                crop_present_today = .true.
-                stircum(isr)%phop(stircum(isr)%phopidx)%crop_num = stircum(isr)%phop(stircum(isr)%phopidx)%crop_num + 1
-              else
-                stircum(isr)%phop(stircum(isr)%phopidx)%phop_type = 0
-              end if
-            case (100)
-              call getManVal(manFile%proc, 'idc', croptype)
-              call getManVal(manFile%proc, 'plantpop', plantpop)
-              if ( plantpop .gt. 0.0 ) then
-                stircum(isr)%phop(stircum(isr)%phopidx)%phop_type = 1
-                stircum(isr)%phop(stircum(isr)%phopidx)%stir_cropname = cropname
-                crop_present_today = .true.
-                stircum(isr)%phop(stircum(isr)%phopidx)%crop_num = stircum(isr)%phop(stircum(isr)%phopidx)%crop_num + 1
-              else
-                stircum(isr)%phop(stircum(isr)%phopidx)%phop_type = 0
-              end if
-            case (61, 62)
-              call getManVal(manFile%proc, 'rstore', storef)
-              call getManVal(manFile%proc, 'rleaf', leaff)
-              call getManVal(manFile%proc, 'rstem', stemf)
-              call getManVal(manFile%proc, 'rrootstore', rootstoref)
-              call getManVal(manFile%proc, 'rrootfiber', rootfiberf)
-              if(     (storef + leaff + stemf + rootstoref + rootfiberf .gt. 0.0) &
-                .and. ((crop_present) .or. (temp_present)) ) then
-                if ( stircum(isr)%phop(stircum(isr)%phopidx)%phop_type .ne. 3 ) then
-                  stircum(isr)%phop(stircum(isr)%phopidx)%phop_type = 2
-                end if
-              else
-                stircum(isr)%phop(stircum(isr)%phopidx)%phop_type = 0
-              end if
-            case (50, 65, 66)
-              stircum(isr)%phop(stircum(isr)%phopidx)%phop_type = 4
-              stircum(isr)%phop(stircum(isr)%phopidx)%stir_cropname = cropname
+          ! do groups
+          manFile%grp => manFile%oper%grpFirst
+          do while ( associated(manFile%grp) )
+            select case( manFile%grp%grpType )
+            case (1)
+              call getManVal(manFile%grp, 'gtdepth', tdepth)
+              call getManVal(manFile%grp, 'gtilArea', fracarea)
+            case (3)
+              call getManVal(manFile%grp, 'gcropname', cropname)
             end select
-            ! next process
-            manFile%proc => manFile%proc%procNext
+            ! do processes
+            manFile%proc => manFile%grp%procFirst
+            do while ( associated(manFile%proc) )
+              select case( manFile%proc%procType )
+              case (25)
+                call getManVal(manFile%proc, 'burydist', burydistflg)
+                ! accumulation of STIR values
+                call stir_cum(isr, ospeed, tdepth, burydistflg, fracarea)
+              case (31)
+                call getManVal(manFile%proc, 'kilflag', killflag)
+                if (  ( (killflag .eq. 1) &
+                   .and. ( (croptype .eq. 1) .or. (croptype .eq. 2) &
+                      .or. (croptype .eq. 4) .or. (croptype .eq. 5) &
+                         ) &
+                       ) &
+                   .or. (killflag .eq. 2) &
+                  ) then
+                   if ( crop_present ) then
+                     stircum(isr)%phop(stircum(isr)%phopidx)%phop_type = 3
+                     crop_present_today = .false.
+                   end if
+                else
+                  stircum(isr)%phop(stircum(isr)%phopidx)%phop_type = 0
+                end if
+              case (32, 42)
+                call getManVal(manFile%proc, 'cyldrmh', pyieldf)
+                call getManVal(manFile%proc, 'cplrmh', pstalkf)
+                call getManVal(manFile%proc, 'cstrmh', rstandf)
+                if(     (pyieldf+pstalkf+rstandf.gt.0.0) &
+                  .and. crop_present ) then
+                  if ( stircum(isr)%phop(stircum(isr)%phopidx)%phop_type .ne. 3 ) then
+                    stircum(isr)%phop(stircum(isr)%phopidx)%phop_type = 2
+                  end if
+                else
+                  stircum(isr)%phop(stircum(isr)%phopidx)%phop_type = 0
+                end if
+              case (33, 43)
+                call getManVal(manFile%proc, 'cyldrmf', pyieldf)
+                call getManVal(manFile%proc, 'cplrmf', pstalkf)
+                call getManVal(manFile%proc, 'cstrmf', rstandf)
+                if(     (pyieldf+pstalkf+rstandf.gt.0.0) &
+                  .and. crop_present ) then
+                  if ( stircum(isr)%phop(stircum(isr)%phopidx)%phop_type .ne. 3 ) then
+                    stircum(isr)%phop(stircum(isr)%phopidx)%phop_type = 2
+                  end if
+                else
+                  stircum(isr)%phop(stircum(isr)%phopidx)%phop_type = 0
+                end if
+              case (37, 47)
+                call getManVal(manFile%proc, 'tyldrmp', pyieldf)
+                call getManVal(manFile%proc, 'tplrmp', pstalkf)
+                call getManVal(manFile%proc, 'tstrmp', rstandf)
+                if(     (pyieldf+pstalkf+rstandf.gt.0.0) &
+                  .and. crop_present ) then
+                  if ( stircum(isr)%phop(stircum(isr)%phopidx)%phop_type .ne. 3 ) then
+                    stircum(isr)%phop(stircum(isr)%phopidx)%phop_type = 2
+                  end if
+                else
+                  stircum(isr)%phop(stircum(isr)%phopidx)%phop_type = 0
+                end if
+              case (38, 48)
+                call getManVal(manFile%proc, 'tyldrmf', pyieldf)
+                call getManVal(manFile%proc, 'tplrmf', pstalkf)
+                call getManVal(manFile%proc, 'tstrmf', rstandf)
+                if(     (pyieldf+pstalkf+rstandf.gt.0.0) &
+                  .and. crop_present ) then
+                  if ( stircum(isr)%phop(stircum(isr)%phopidx)%phop_type .ne. 3 ) then
+                    stircum(isr)%phop(stircum(isr)%phopidx)%phop_type = 2
+                  end if
+                else
+                  stircum(isr)%phop(stircum(isr)%phopidx)%phop_type = 0
+                end if
+              case (51)
+                call getManVal(manFile%proc, 'idc', croptype)
+                call getManVal(manFile%proc, 'plantpop', plantpop)
+                if ( plantpop .gt. 0.0 ) then
+                  stircum(isr)%phop(stircum(isr)%phopidx)%phop_type = 1
+                  stircum(isr)%phop(stircum(isr)%phopidx)%stir_cropname = cropname
+                  crop_present_today = .true.
+                  stircum(isr)%phop(stircum(isr)%phopidx)%crop_num = stircum(isr)%phop(stircum(isr)%phopidx)%crop_num + 1
+                else
+                  stircum(isr)%phop(stircum(isr)%phopidx)%phop_type = 0
+                end if
+              case (100)
+                call getManVal(manFile%proc, 'idc', croptype)
+                call getManVal(manFile%proc, 'plantpop', plantpop)
+                if ( plantpop .gt. 0.0 ) then
+                  stircum(isr)%phop(stircum(isr)%phopidx)%phop_type = 1
+                  stircum(isr)%phop(stircum(isr)%phopidx)%stir_cropname = cropname
+                  crop_present_today = .true.
+                  stircum(isr)%phop(stircum(isr)%phopidx)%crop_num = stircum(isr)%phop(stircum(isr)%phopidx)%crop_num + 1
+                else
+                  stircum(isr)%phop(stircum(isr)%phopidx)%phop_type = 0
+                end if
+              case (61, 62)
+                call getManVal(manFile%proc, 'rstore', storef)
+                call getManVal(manFile%proc, 'rleaf', leaff)
+                call getManVal(manFile%proc, 'rstem', stemf)
+                call getManVal(manFile%proc, 'rrootstore', rootstoref)
+                call getManVal(manFile%proc, 'rrootfiber', rootfiberf)
+                if(     (storef + leaff + stemf + rootstoref + rootfiberf .gt. 0.0) &
+                  .and. crop_present ) then
+                  if ( stircum(isr)%phop(stircum(isr)%phopidx)%phop_type .ne. 3 ) then
+                    stircum(isr)%phop(stircum(isr)%phopidx)%phop_type = 2
+                  end if
+                else
+                  stircum(isr)%phop(stircum(isr)%phopidx)%phop_type = 0
+                end if
+              case (50, 65, 66)
+                stircum(isr)%phop(stircum(isr)%phopidx)%phop_type = 4
+                stircum(isr)%phop(stircum(isr)%phopidx)%stir_cropname = cropname
+              end select
+              ! next process
+              manFile%proc => manFile%proc%procNext
+            end do
+            ! next group
+            manFile%grp => manFile%grp%grpNext
           end do
-          ! next group
-          manFile%grp => manFile%grp%grpNext
-        end do
 
-        ! STIR accumulation
-        if( stircum(isr)%proc_cnt .gt. 0 ) then
-          stir_op_avg = stircum(isr)%stir_op_sum/stircum(isr)%proc_cnt
-        else
-          stir_op_avg = 0.0
-        end if
+          if( .not. pass_2 ) then
+            ! STIR accumulation
+            if( stircum(isr)%proc_cnt .gt. 0 ) then
+              stir_op_avg = stircum(isr)%stir_op_sum/stircum(isr)%proc_cnt
+            else
+              stir_op_avg = 0.0
+            end if
 
-        if( ostir .ge. 0.0 ) then
-          scisum(isr)%stir = scisum(isr)%stir + ostir
-          ! set stir value for each operation
-          stircum(isr)%phop(stircum(isr)%phopidx)%phop_stir = ostir
-        else
-          scisum(isr)%stir = scisum(isr)%stir + stir_op_avg
-          stircum(isr)%phop(stircum(isr)%phopidx)%phop_stir = stir_op_avg
-        end if
+            if( ostir .ge. 0.0 ) then
+              scisum(isr)%stir = scisum(isr)%stir + ostir
+              ! set stir value for each operation
+              stircum(isr)%phop(stircum(isr)%phopidx)%phop_stir = ostir
+            else
+              scisum(isr)%stir = scisum(isr)%stir + stir_op_avg
+              stircum(isr)%phop(stircum(isr)%phopidx)%phop_stir = stir_op_avg
+            end if
 
-        if ( (oenergyarea .ge. 0.0) .and. (manFile%oper%operType .eq. 3) ) then
-          stircum(isr)%phop(stircum(isr)%phopidx)%phop_energy = oenergyarea * get_stir_soil_multiplier(isr)
-        else
-          stircum(isr)%phop(stircum(isr)%phopidx)%phop_energy = oenergyarea
-        end if 
-        if( oenergyarea .ge. 0.0 ) then
-          ! set energy value for each operation
-          scisum(isr)%energy = scisum(isr)%energy + stircum(isr)%phop(stircum(isr)%phopidx)%phop_energy
+            if ( (oenergyarea .ge. 0.0) .and. (manFile%oper%operType .eq. 3) ) then
+              stircum(isr)%phop(stircum(isr)%phopidx)%phop_energy = oenergyarea * get_stir_soil_multiplier(isr)
+            else
+              stircum(isr)%phop(stircum(isr)%phopidx)%phop_energy = oenergyarea
+            end if 
+            if( oenergyarea .ge. 0.0 ) then
+              ! set energy value for each operation
+              scisum(isr)%energy = scisum(isr)%energy + stircum(isr)%phop(stircum(isr)%phopidx)%phop_energy
+            end if
+          end if
+
         end if
 
         ! reset values for next operation
@@ -403,6 +407,16 @@ module stir_report_mod
 
         prevcropname = cropname
         manFile%oper => manFile%oper%operNext
+
+        ! second pass required to take care planting/harvest combination
+        ! wrapped from end to beginning of rotation
+        if( .not. pass_2 ) then
+          if( .not. associated(manFile%oper) ) then
+            manFile%oper => manFile%operFirst
+            stircum(isr)%phopidx = 0
+            pass_2 = .true.
+          end if
+        end if
       end do
 
       ! go through phop array, setting last harvest flag and crop harvest name
@@ -473,7 +487,7 @@ module stir_report_mod
         end if
       end do
 
-      ! go through phop array, setting crop numbers which are still zero
+      ! go through phop array, setting crop numbers and crop names which are still zero
       idx = 1
       do while (.true.)
         ! search forward for crop number that is zero
@@ -487,6 +501,7 @@ module stir_report_mod
             if ( stircum(isr)%phop(jdx)%crop_num .gt. 0 ) then
               ! found non-zero crop number, assign, done searching backwards
               stircum(isr)%phop(idx)%crop_num = stircum(isr)%phop(jdx)%crop_num
+              stircum(isr)%phop(idx)%stir_cropname = stircum(isr)%phop(jdx)%stir_cropname
               exit
             end if
             if( jdx .eq. idx ) then
@@ -600,7 +615,7 @@ module stir_report_mod
           stircum(isr)%phop(idx)%stir_opname = ''
           stircum(isr)%phop(idx)%stir_cropname = ''
           stircum(isr)%phop(idx)%stir_fuelname = ''
-          stircum(isr)%phop(idx)%phop_type = 0
+          stircum(isr)%phop(idx)%phop_type = -1
           stircum(isr)%phop(idx)%phop_stir = 0.0
           stircum(isr)%phop(idx)%phop_energy = 0.0
           stircum(isr)%phop(idx)%crop_num = 0
