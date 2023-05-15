@@ -131,7 +131,7 @@ if [is_windows] then {
 }
 else { /* Linux */
 	/* fc_debug		="-g -ftrapuv -debug-parameters -debug"; */
-	fc_debug		="-g -debug-parameters -debug -traceback -warn all -init=snan";
+	fc_debug		="-g -debug-parameters -debug -traceback -warn all -init=snan -static";
 
 }
 
@@ -195,7 +195,7 @@ if [is_windows] then {
 	ld_out_flag		= "-o ";
 
 	/* debug flags */
-	ld_debug		=;
+	ld_debug		= "";
 
 	/* autoparallel flags */
 	ld_autoparallel		=;
@@ -204,7 +204,7 @@ if [is_windows] then {
 	ld_omp		="-qopenmp";
 
 	/* optimization flags */
-	ld_optimize		=;
+	ld_optimize		= "";
 
 	/* includes */
 	ld_inc_flag		= [fc_inc_flag];
@@ -218,7 +218,7 @@ else {
 	ld			= [fc];
 	ld_version		= [fc_version];
 
-	ld_link_flag	=;
+	ld_link_flag		= "";
 	ld_out_flag		= "-o ";
 
 	/* debug flags */
@@ -232,7 +232,7 @@ else {
 	ld_omp			= [fc_omp];
 
 	/* optimization flags */
-	ld_optimize		="-O3";
+	ld_optimize		="-O3 -static";
 
 	/* includes */
 	ld_inc_flag		= [fc_inc_flag];
