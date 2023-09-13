@@ -14,7 +14,7 @@
       use sweep_io_mod, only: erodin, erodout
       use sweep_io_xml_mod, only: nsubr
       use datetime_mod, only: update_system_time, get_systime_string, julday
-      use file_io_mod, only: fopenk, luo_erod, luo_egrd, luo_emit, luo_sgrd
+      use file_io_mod, only: fopenk, luo_erod, luo_egrd, luo_emit, luo_sgrd, in_weps
       use f2kcli, only: COMMAND_ARGUMENT_COUNT, GET_COMMAND_ARGUMENT
       use grid_mod, only: sbgrid, xgdpt, ygdpt, gridfile
       use erosion_mod, only: erosion, erodinit
@@ -22,7 +22,7 @@
                                           ntstep, am0eif, am0efl, subrsurf, cellstate
       use barriers_mod, only: minht_barriers
       use wind_mod, only: anemometer_init
-      use sae_in_out_mod, only: mksaeinp, mksaeout, in_weps, saeinp, infilebase, sweepfile
+      use sae_in_out_mod, only: mksaeinp, mksaeout, saeinp, infilebase, sweepfile
       use p1unconv_mod, only: SEC_PER_DAY
 
 !     +++  PURPOSE +++

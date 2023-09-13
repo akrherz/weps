@@ -31,7 +31,6 @@ module sae_in_out_mod
 
   ! placed here for sharing back with hagen_plot_flag by daily_erodout
   real :: aegt, aegtcs, aegtss, aegt10, aegt2_5
-  logical :: in_weps
 
   contains
 
@@ -318,7 +317,7 @@ module sae_in_out_mod
 !     +++  PURPOSE +++
 !     To print output desired from standalone EROSION submodel
 
-      use file_io_mod, only: fopenk, makenamnum, makedir
+      use file_io_mod, only: fopenk, makenamnum, makedir, in_weps
       use datetime_mod, only: get_systime_string, caldat
       use erosion_data_struct_defs, only: cellsurfacestate, am0efl
       use grid_mod, only: imax, jmax, amasim, amxsim

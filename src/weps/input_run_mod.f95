@@ -132,14 +132,13 @@ contains
       use climate_input_mod, only: cli_gen_fmt_flag, wind_gen_fmt_flag
       use climate_input_mod, only: amzele
       use solar_mod, only: amalat, amalon
+      use input_run_xml_mod, only: nsubr, nbr
 
 !     + + + ARGUMENT DECLARATIONS + + +
       type(soil_def), dimension(:), allocatable, intent(inout) :: soil 
 
 !     + + + LOCAL VARIABLES + + +
       integer :: nacctr   ! Number of accounting regions
-      integer :: nsubr    ! Number of subregions
-      integer :: nbr      ! number of barriers
       integer :: ntm_seas ! number of time marks for seasonal barrier
       integer :: poly_np  ! number of points in polygon or polyline
       integer       isr, iar, ios, ibr, ipol

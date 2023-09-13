@@ -20,6 +20,7 @@ module weps_output_mod
       use file_io_mod, only: luocrp1, luobio1, makenamnum, makedir, fopenk
       use decomp_data_struct_defs, only: am0dfl
       use climate_input_mod, only: cli_day
+      use input_run_xml_mod, only: nsubr
 
 !     + + + ARGUMENT DECLARATIONS + + +
       integer isr
@@ -31,7 +32,6 @@ module weps_output_mod
 !     + + + LOCAL VARIABLES + + +
       integer :: pjuld  ! present julian day
       integer doy, cy
-      integer :: nsubr
       real total
       integer :: ipool   ! index for pool number
       type(plant_pointer), pointer :: thisPlant       ! pointer used to interate plant pointer chain
@@ -183,10 +183,6 @@ module weps_output_mod
       endif
 
       if ((am0dfl(isr) .eq. 2).or.(am0dfl(isr).eq.3)) then
-
-        ! find total number of subregions from flag array size
-        nsubr = size(am0dfl)
-
           ! day, month, year
           ! flat residue cover, standing residue cover, total residue cover
           ! residue cover fract, residue SAI, residue LAI
@@ -540,9 +536,15 @@ module weps_output_mod
 !       10-Mar-99       wjr     created
 
       use weps_cmdline_parms, only: calc_confidence, calibrate_crops, run_erosion, soil_cond, wepp_hydro
-      use file_io_mod
+      use file_io_mod, only: luogui1, luomandate, luoharvest_si, luoharvest_en, luohydrobal, luoseason
+      use file_io_mod, only: luoharvest_calib, luoharvest_calib_parm, luobarr, luo_erod, luoplt, luosci, luostir
+      use file_io_mod, only: luohydro, luohlayers, luowater, luosurfwat, luoweather, luotempsoil
+      use file_io_mod, only: luocrp1, luobio1, luod_above, luod_below, luocrop, luoshoot, luoinpt
+      use file_io_mod, only: luosoilsurf, luosoillay, luomanage, luoasd, luowc
+      use file_io_mod, only: luoci,  luohdb, luosdb, luotdb, luocdb, luoddb
+      use file_io_mod, only: luowepphdrive, luowepperod, luoweppplot, luoweppsum
+      use file_io_mod, only: makenamnum, makedir, fopenk
       use erosion_data_struct_defs, only: am0efl
-      use barriers_mod, only: barseas
       use hydro_data_struct_defs, only: am0hfl, am0hdb
       use soil_data_struct_defs, only: am0sfl, am0sdb
       use manage_data_struct_defs, only: manFile
@@ -550,6 +552,7 @@ module weps_output_mod
       use decomp_data_struct_defs, only: am0dfl, am0ddb
       use weps_main_mod, only: old_run_file, rootp
       use crop_mod, only: cpout
+      use input_run_xml_mod, only: nsubr, nbr
 
 !     + + +   LOCAL VARIABLES + + +
       integer idx, alloc_stat, sum_stat
@@ -557,9 +560,6 @@ module weps_output_mod
       logical :: flag_set
       integer :: tflmax
       integer :: tdbmax
-      integer ::  nsubr  ! number of subregion (found from size of array always allocated, not with zero element)
-
-      nsubr = size(am0cfl)
 
       ! allocate the subregion name, number combination text for subregions
       allocate( subr_text(nsubr), stat=alloc_stat)
@@ -628,12 +628,13 @@ module weps_output_mod
          end do
       endif
 
-!     open erosion output files
+      ! open erosion output files
       if (am0efl.gt.0) then
-          ! open barrier output file
-          if( size(barseas) .gt. 0 ) then
-              call fopenk (luo_barr, rootp(1:len_trim(rootp)) // 'barriers.out', 'unknown')
-          end if
+         allocate( luobarr(nbr), stat=alloc_stat )
+         ! open barrier output files
+         do idx = 1, nbr
+            call fopenk (luobarr(idx), rootp(1:len_trim(rootp)) // makenamnum( 'barrier', idx, nbr, '.out' ), 'unknown')
+         end do
       endif
 
       if (btest(am0efl,0)) then
@@ -989,21 +990,25 @@ module weps_output_mod
     subroutine closefils()
 
       use weps_cmdline_parms, only: calc_confidence, calibrate_crops, run_erosion, soil_cond, wepp_hydro
-      use file_io_mod
+      use file_io_mod, only: luicli, luiwin
+      use file_io_mod, only: luogui1, luomandate, luoharvest_si, luoharvest_en, luohydrobal, luoseason
+      use file_io_mod, only: luoharvest_calib, luoharvest_calib_parm, luobarr, luo_erod, luoplt, luosci
+      use file_io_mod, only: luohydro, luohlayers, luowater, luosurfwat, luoweather, luotempsoil
+      use file_io_mod, only: luocrp1, luobio1, luod_above, luod_below, luocrop, luoshoot, luoinpt
+      use file_io_mod, only: luosoilsurf, luosoillay, luomanage, luoasd, luowc
+      use file_io_mod, only: luoci,  luohdb, luosdb, luotdb, luocdb, luoddb
+      use file_io_mod, only: luowepphdrive, luowepperod, luoweppplot, luoweppsum
       use erosion_data_struct_defs, only: am0efl
-      use barriers_mod, only: barseas
       use hydro_data_struct_defs, only: am0hfl, am0hdb
       use soil_data_struct_defs, only: am0sfl, am0sdb
       use manage_data_struct_defs, only: manFile
       use crop_data_struct_defs, only: am0cfl, am0cdb
       use decomp_data_struct_defs, only: am0dfl, am0ddb
       use input_run_mod, only: old_run_file
+      use input_run_xml_mod, only: nsubr, nbr
 
       ! local variables
       integer idx
-      integer ::  nsubr  ! number of subregion (found from size of array always allocated, not with zero element)
-
-      nsubr = size(am0cfl)
 
       ! files opened in inprun.for
       close(luicli)
@@ -1041,9 +1046,9 @@ module weps_output_mod
 
       ! barrier output file
       if (am0efl.gt.0) then
-        if( size(barseas) .gt. 0 ) then
-          close(luo_barr)
-        end if
+        do idx = 1, nbr
+          close(luobarr(idx))
+        end do
       endif
 
       if (btest(am0efl,0)) then
@@ -1074,6 +1079,8 @@ module weps_output_mod
          endif
          if ((am0hfl(idx) .eq. 2) .or. (am0hfl(idx) .eq. 6) .or. (am0hfl(idx) .eq. 3) .or. (am0hfl(idx) .eq. 7)) then
             close(luowater(idx))
+            close(luosurfwat(idx))
+            close(luoweather(idx))
          end if
          if ((am0hfl(idx) .eq. 4) .or. (am0hfl(idx) .eq. 5) .or. (am0hfl(idx) .eq. 6) .or. (am0hfl(idx) .eq. 7)) then
             close(luotempsoil(idx))

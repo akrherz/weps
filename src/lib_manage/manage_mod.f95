@@ -150,7 +150,6 @@ module manage_mod
 
       ! + + + LOCAL VARIABLES + + +
       integer :: idx  ! loop counter for printing output
-      integer :: jdx  ! loop counter for printing output
 
 !     + + + END SPECIFICATIONS + + +
 
@@ -234,7 +233,6 @@ module manage_mod
 
       ! + + + LOCAL VARIABLES + + +
       integer :: idx  ! loop counter for printing output
-      integer :: jdx  ! loop counter for printing output
 
 !     + + + END SPECIFICATIONS + + +
 
@@ -299,8 +297,6 @@ module manage_mod
 
       ! + + + LOCAL VARIABLES + + +
       integer :: idx  ! loop counter for printing output
-      integer :: jdx  ! loop counter for printing output
-      real :: total   ! summation variable
       type(plant_pointer), pointer :: thisPlant
       type(residue_pointer), pointer :: thisResidue
 

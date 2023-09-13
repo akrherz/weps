@@ -49,7 +49,7 @@
       use report_print_mod, only: print_report_vars, print_yr_report_vars, print_mandate_output
       use print_ui1_output_mod, only: print_ui1_output
       use barriers_mod, only: barrier, barseas, minht_barriers, destroy_barrier, set_barrier_season
-      use file_io_mod, only: luo_egrd, luo_emit, luo_sgrd, luogui1, luomandate, makedir, fopenk
+      use file_io_mod, only: luo_egrd, luo_emit, luo_sgrd, luogui1, luomandate, makedir, fopenk, in_weps
       use input_soil_mod, only: input_ifc, soil_in
       use soil_data_struct_defs, only: soil_def, allocate_soil, deallocate_soil, print_soil
       use crop_mod, only: cprevseasonrotation
@@ -69,7 +69,7 @@
       use wind_mod, only: anemometer_init
       use precision_mod, only: precision_init
       use grid_mod, only: sbgrid, write_grid, gridfile
-      use sae_in_out_mod, only: mksaeinp, mksaeout, in_weps
+      use sae_in_out_mod, only: mksaeinp, mksaeout
       use stir_soil_texture_mod, only: create_stir_soil_multiplier, destroy_stir_soil_multiplier
       use sci_soil_texture_mod, only: create_sci_soil_multiplier, destroy_sci_soil_multiplier
       use stir_report_mod, only: alloc_stir_accumulators, destroy_stir_accumulators, stir_report
@@ -91,6 +91,7 @@
       use water_erosion_mod, only: water_erosion, weppsum
       use confidence_interval_mod, only: confidence_interval
       use binomial_mod, only: init_buffer
+      use calib_plant_mod, only: init_calib_arrays
 
       external init_wepp
 
@@ -289,6 +290,10 @@
       sum_stat = sum_stat + alloc_stat
       if( sum_stat .gt. 0 ) then
          Write(*,*) 'ERROR: unable to allocate enough memory for weps main data arrays'
+      end if
+
+      if( calibrate_crops > 0 ) then
+        call init_calib_arrays(nsubr)
       end if
 
       if( wepp_hydro .eq. 0 ) then
@@ -572,6 +577,9 @@
            am0eif = .true.
            am0ifl(isr) = .false.
            manfile(isr)%mnryr = 1
+           ! destroy all plant biomass pools for each calibration iteration
+           call plantDestroyAll(plants(isr)%plant)
+
           ! End of "calibrate" section
         else
            exit ! calibration not being done or completed or max cycles

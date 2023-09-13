@@ -27,7 +27,7 @@ module barriers_mod
      integer :: doy          ! day of year the state occurs
   end type barrier_day_state
 
-  type barrier_climate       ! used with season flag type 2 and defines parameters for climate based triggers for 
+  type barrier_climate_transition       ! used with season flag type 2 and defines parameters for climate based triggers for 
                              ! transition from one barrier state to another such as leaf off to leaf on, or low height to high height (grass trap strip?)
      integer :: beg_flg ! multilevel flag defining the climate data type which will trigger beginning of transition
                              ! 0 - number of days temperature is above base trigger temperature since previous known state date
@@ -39,6 +39,7 @@ module barriers_mod
                              !     resets accumulation) since  previous known state date
                              ! 6 - accumulation of humidity levels above base humidity since previous known state date
                              ! 7 - accumulation of humidity levels below base humidity since previous known state date
+                             ! 8 - day length past a threshold, and either increasing or decreasing
      real :: beg_thresh  ! accumulation threshold value for each of the methods above
      real :: beg_base    ! base value above/below which accumulation occurs
      real :: beg_accum   ! total accumulation of beg_flg specified quantity since given day of year
@@ -49,6 +50,14 @@ module barriers_mod
      real :: end_thresh ! Accumulation threshold value where full transition occurs
      real :: end_base   ! base value above/below which accumulation occurs
      real :: end_accum  ! total accumlation of end_flg specified quantity since beg_threshold exceeded
+  end type barrier_climate_transition
+
+  type barrier_climate
+     integer :: trig_logic  ! logic for combination of multiple thresholds in phase transitions initiation
+                            ! 0 - OR logic, phase transition begins when any threshold is reached
+                            ! 1 - AND logic, phase transition begins when all thresholds are reached
+     integer :: nthresh     ! number of threshold methods
+     type(barrier_climate_transition), dimension(:), allocatable :: cli_tran
   end type barrier_climate
 
   type barrier_seasonal
@@ -57,8 +66,9 @@ module barriers_mod
                             ! 0 - use seasonal data as given with time interpolation
                             ! 1 - set barrier data on doy given. Value remains constant until the next doy given, ie. no time interpolation
                             ! 2 - Manage the timing of barrier state (seasonal) transitions internally with a climate based model
-     integer :: ntm  ! number of time marks specified for barrier
-     integer :: np   ! number of points in barrier_params and polyline point array
+     integer :: ntm         ! number of time marks specified for barrier
+     integer :: np          ! number of points in barrier_params and polyline point array
+     integer :: tran_days   ! days since beginning of barrier state transition
      type(point), dimension(:), allocatable :: points  ! the polyline points
      type(barrier_day_state), dimension(:), allocatable :: dst  ! label and day of year for time marks
      type(barrier_params), dimension(:,:), allocatable :: param
@@ -68,11 +78,13 @@ module barriers_mod
   interface create_barrier
       module procedure create_barrier_fixed
       module procedure create_barrier_seasonal
+      module procedure create_barrier_transition
   end interface create_barrier
 
   interface destroy_barrier
       module procedure destroy_barrier_fixed
       module procedure destroy_barrier_seasonal
+      module procedure destroy_barrier_transition
   end interface destroy_barrier
 
   public :: create_barrier
@@ -157,16 +169,19 @@ contains
       write(*,*) "ERROR: unable to allocate memory for barrier"
       barr%np = 0
       barr%ntm = 0
+      barr%tran_days = 0
       barr%seas_flg = 0
     else
       barr%np = nump
       barr%ntm = numtm
+      barr%tran_days = 0
       barr%seas_flg = sflg
       do iseas = 1, barr%ntm
         barr%dst(iseas)%st_desc = 'fixed'
         barr%dst(iseas)%doy = 0
         if( barr%seas_flg .eq. 2 ) then
-          barr%clim(iseas)%beg_accum = 0.0
+          barr%clim(iseas)%trig_logic = 0
+          barr%clim(iseas)%nthresh = 0
         end if
       end do
     end if 
@@ -195,11 +210,63 @@ contains
     end if
   end subroutine destroy_barrier_seasonal
 
+  subroutine create_barrier_transition(clim, nthresh, trig_logic)
+    type(barrier_climate), intent(inout) :: clim ! barrier climate array element to be allocated
+    integer, intent(in) :: nthresh    ! number of Threshold methods
+    integer, intent(in) :: trig_logic ! Time mark to be allocated
+  
+    ! local variable
+    integer :: sum_stat
+    integer :: alloc_stat
+    integer :: ithresh
+
+    sum_stat = 0
+    allocate(clim%cli_tran(nthresh), stat=alloc_stat)
+    sum_stat = sum_stat + alloc_stat
+
+    if( sum_stat .gt. 0 ) then
+      ! allocation failed
+      write(*,*) "ERROR: unable to allocate memory for barrier threshold"
+      clim%nthresh = 0
+      clim%trig_logic = 0
+    else
+      clim%nthresh = nthresh
+      clim%trig_logic = trig_logic
+      do ithresh = 1, clim%nthresh
+        clim%cli_tran(ithresh)%beg_flg = -1
+        clim%cli_tran(ithresh)%beg_thresh = 0.0
+        clim%cli_tran(ithresh)%beg_base = 0.0
+        clim%cli_tran(ithresh)%beg_accum = 0.0
+        clim%cli_tran(ithresh)%end_flg = -1
+        clim%cli_tran(ithresh)%end_thresh = 0.0
+        clim%cli_tran(ithresh)%end_base = 0.0
+        clim%cli_tran(ithresh)%end_accum = 0.0
+      end do
+    end if 
+  end subroutine create_barrier_transition
+
+  ! deallocates a barrier_data structure
+  subroutine destroy_barrier_transition(cli_tran)
+    type(barrier_climate_transition), dimension(:), allocatable, intent(inout) :: cli_tran ! barrier climate array element to be deallocated
+
+    ! local variable
+    integer :: sum_stat
+    integer :: dealloc_stat
+
+    sum_stat = 0
+    deallocate(cli_tran, stat=dealloc_stat)
+    sum_stat = sum_stat + dealloc_stat
+    if( sum_stat .gt. 0 ) then
+      ! deallocation failed
+      write(*,*) "ERROR: unable to deallocate memory for barrier threshold array"
+    end if
+  end subroutine destroy_barrier_transition
+
   ! Given the day of year, sets the present barrier characteristics for all barriers
   subroutine set_barrier_season(doy)
 
     use lin_interp_mod, only: lin_interp
-    use file_io_mod, only: luo_barr
+    use file_io_mod, only: luobarr
     use datetime_mod, only: get_simdate_daysim, get_simdate_year, isleap
     use string_mod, only: space2hyphen
     use erosion_data_struct_defs, only: am0efl
@@ -211,11 +278,10 @@ contains
     integer :: bdx    ! barrier loop variable
     integer :: tdx    ! time mark loop variable
     integer :: pdx    ! point loop variable
+    integer :: ndx    ! threshold loop variable
     integer :: low_tm ! low time mark index
     integer :: hi_tm  ! high time mark index
     real :: frac_tm   ! fraction of time into bracketed time interval
-    integer :: max_ntm  ! maximum time mark count for all barriers
-    integer :: max_seas ! maximum season flag value for all barriers
     integer :: doy_adj  ! adjustment to day of year based on begin/end of year location of actual doy
     integer :: sgn_adj  ! adjustment to sign of calculation based on begin/end of year location of actual doy
     real :: delta_x
@@ -248,8 +314,13 @@ contains
           hi_tm = 1
         end if
 
+        if( real(doy) .eq. barseas(bdx)%dst(low_tm)%doy) then
+            barseas(bdx)%tran_days = 0
+        end if
+
         select case (barseas(bdx)%seas_flg)
         case (0)  ! do interpolation between all time points
+
           if( low_tm .lt. hi_tm ) then
             ! find fraction of distance in time between time marks
             frac_tm = (real(doy) - barseas(bdx)%dst(low_tm)%doy) &
@@ -271,6 +342,11 @@ contains
             frac_tm = sgn_adj * (real(doy) + doy_adj - barseas(bdx)%dst(low_tm)%doy) &
                     / (barseas(bdx)%dst(hi_tm)%doy + doy_adj - barseas(bdx)%dst(low_tm)%doy)
           end if
+
+          if( frac_tm .gt. 0 ) then
+              barseas(bdx)%tran_days = barseas(bdx)%tran_days + 1
+          end if
+
           ! interpolate barrier params in time, copying into fixed barrier structure
           do pdx = 1, barseas(bdx)%np
             barrier(bdx)%param(pdx)%amzbr = lin_interp(frac_tm, barseas(bdx)%param(pdx,low_tm)%amzbr, &
@@ -282,6 +358,9 @@ contains
           end do
 
         case (1)  ! set barrier to value at previous time mark until next time mark
+
+          barseas(bdx)%tran_days = barseas(bdx)%tran_days + 1
+
           do pdx = 1, barseas(bdx)%np
             barrier(bdx)%param(pdx)%amzbr = barseas(bdx)%param(pdx,low_tm)%amzbr
             barrier(bdx)%param(pdx)%amxbrw = barseas(bdx)%param(pdx,low_tm)%amxbrw
@@ -291,10 +370,16 @@ contains
         case (2)  ! determine time based on climatic information and interpolate
           if( doy .eq. barseas(bdx)%dst(low_tm)%doy ) then
             ! reset accumulators to start this process
-            barseas(bdx)%clim(low_tm)%beg_accum = 0.0
+            do ndx = 1, barseas(bdx)%clim(hi_tm)%nthresh
+              barseas(bdx)%clim(hi_tm)%cli_tran(ndx)%beg_accum = 0.0
+            end do
           end if
           ! find fraction of state transition
-          frac_tm = state_transition( barseas(bdx)%clim(low_tm) )
+          frac_tm = state_transition( barseas(bdx)%clim(hi_tm), doy )
+
+          if( frac_tm .gt. 0 ) then
+              barseas(bdx)%tran_days = barseas(bdx)%tran_days + 1
+          end if
 
           ! interpolate barrier params in time, copying into fixed barrier structure
           do pdx = 1, barseas(bdx)%np
@@ -309,90 +394,82 @@ contains
         end select
 
       else  ! this barrier does not have seasons, copy into fixed barrier structure
+        low_tm = 0
+        hi_tm = 0
         do pdx = 1, barseas(bdx)%np
           barrier(bdx)%param(pdx)%amzbr = barseas(bdx)%param(pdx,1)%amzbr
           barrier(bdx)%param(pdx)%amxbrw = barseas(bdx)%param(pdx,1)%amxbrw
           barrier(bdx)%param(pdx)%ampbr = barseas(bdx)%param(pdx,1)%ampbr
         end do
       end if
-    end do
 
-    if( (am0efl .gt. 0) .and. (size(barseas) .gt. 0) ) then
-      if( get_simdate_daysim() .eq. 1 ) then
-        ! write header to barrier daily output file
-        do bdx = 1, size(barrier)
-          if( bdx .eq. 1 ) then
-            write(UNIT=luo_barr,FMT='(a)',advance='NO') &
-              '#simday doy yr  Barrier_Description  tb beg_accu beg_thre te end_accu end_thre npt'
-          else
-            write(UNIT=luo_barr,FMT='(a)',advance='NO') &
-              ' Barrier_Description  tb beg_accu beg_thre te end_accu end_thre npt'
-          end if
+      if( (am0efl .gt. 0) .and. (size(barseas) .gt. 0) ) then
+        if( get_simdate_daysim() .eq. 1 ) then
+          ! write header to barrier daily output file
+          write(UNIT=luobarr(bdx),FMT='(a)',advance='NO') '#simday doy yr  Barrier_Description npt'
           do pdx = 1, barrier(bdx)%np
-            write(UNIT=luo_barr,FMT='(a)',advance='NO') &
-              ' delta_x height  width porosi'
+            write(UNIT=luobarr(bdx),FMT='(a)',advance='NO') ' delta_x height  width porosi'
           end do
-        end do
-        write(UNIT=luo_barr,FMT='(a)') ''
-      end if
-
-      ! insert double blank lines to demarcate years
-      if( doy .eq. 1 ) then
-          write (luo_barr,'(a)')
-          write (luo_barr,'(a)')
-      end if
-    
-      max_ntm = 0
-      max_seas = 0
-      do bdx = 1, size(barrier)
-          ! write data to barrier daily output file
-          if( bdx .eq. 1 ) then
-            write(UNIT=luo_barr,FMT='(1x,i6,1x,i3,1x,i4,1x,a20)',advance='NO') &
-               get_simdate_daysim(), doy, get_simdate_year(), space2hyphen( trim(barrier(bdx)%amzbt) )
-          else
-            write(UNIT=luo_barr,FMT='(1x,a20)',advance='NO') &
-               space2hyphen( trim(barrier(bdx)%amzbt) )
-          end if
+          ! write transition days
+          write(UNIT=luobarr(bdx),FMT='(a)',advance='NO') ' tran_days'
+          ! write time mark
+          write(UNIT=luobarr(bdx),FMT='(a)',advance='NO') ' hi_tm'
+          ! write barrier season type
+          write(UNIT=luobarr(bdx),FMT='(a)',advance='NO') ' seas_flg'
           if( barseas(bdx)%seas_flg .eq. 2 ) then
             ! these values are populated
-            write(UNIT=luo_barr,FMT='(1x,i2)',advance='NO') &
-               barseas(bdx)%clim(low_tm)%beg_flg
-            write(UNIT=luo_barr,FMT='(2(1x,f8.4))',advance='NO') &
-               barseas(bdx)%clim(low_tm)%beg_accum, barseas(bdx)%clim(low_tm)%beg_thresh
-            write(UNIT=luo_barr,FMT='(1x,i2)',advance='NO') &
-               barseas(bdx)%clim(low_tm)%end_flg
-            write(UNIT=luo_barr,FMT='(2(1x,f8.4))',advance='NO') &
-               barseas(bdx)%clim(low_tm)%end_accum, barseas(bdx)%clim(low_tm)%end_thresh
-          else
-            ! these values are NOT populated, use fixed values
-            write(UNIT=luo_barr,FMT='(1x,i2)',advance='NO') &
-               -1
-            write(UNIT=luo_barr,FMT='(2(1x,f8.4))',advance='NO') &
-               0.0, 0.0
-            write(UNIT=luo_barr,FMT='(1x,i2)',advance='NO') &
-               -1
-            write(UNIT=luo_barr,FMT='(2(1x,f8.4))',advance='NO') &
-               0.0, 0.0
+            write(UNIT=luobarr(bdx),FMT='(a)',advance='NO') ' logic'
+            write(UNIT=luobarr(bdx),FMT='(a)',advance='NO') ' nthresh'
+            do ndx = 1, barseas(bdx)%clim(hi_tm)%nthresh
+              write(UNIT=luobarr(bdx),FMT='(a)',advance='NO') ' b_flg beg_accu beg_thre e_flg end_accu end_thre'
+            end do
           end if
-          write(UNIT=luo_barr,FMT='(1x,i3)',advance='NO') &
-               barrier(bdx)%np
-          delta_x = 0.0
-          do pdx = 1, barrier(bdx)%np
-            if( pdx .gt. 1 ) then
-              delta_x = delta_x + slen(barrier(bdx)%points(pdx-1), barrier(bdx)%points(pdx))
-            end if
-            write(UNIT=luo_barr,FMT='(1x,f7.1)',advance='NO') &
-              delta_x
-            write(UNIT=luo_barr,FMT='(3(1x,f7.4))',advance='NO') &
-              barrier(bdx)%param(pdx)%amzbr, barrier(bdx)%param(pdx)%amxbrw, barrier(bdx)%param(pdx)%ampbr
-          end do
-          max_ntm = max(max_ntm, barseas(bdx)%ntm)
-          max_seas = max(max_seas, barseas(bdx)%seas_flg)
-      end do
-      ! write newline character
-      write(UNIT=luo_barr,FMT='(a)') ''
-    end if
+          write(UNIT=luobarr(bdx),FMT='(a)') ''
+        end if
 
+        ! insert double blank lines to demarcate years
+        if( doy .eq. 1 ) then
+          write (luobarr(bdx),'(a)')
+          write (luobarr(bdx),'(a)')
+        end if
+    
+        ! write data to barrier daily output file
+        write(UNIT=luobarr(bdx),FMT='(1x,i6,1x,i3,1x,i4,1x,a20)',advance='NO') &
+               get_simdate_daysim(), doy, get_simdate_year(), space2hyphen( trim(barrier(bdx)%amzbt) )
+        write(UNIT=luobarr(bdx),FMT='(1x,i3)',advance='NO') barrier(bdx)%np
+        delta_x = 0.0
+        do pdx = 1, barrier(bdx)%np
+          if( pdx .gt. 1 ) then
+            delta_x = delta_x + slen(barrier(bdx)%points(pdx-1), barrier(bdx)%points(pdx))
+          end if
+          write(UNIT=luobarr(bdx),FMT='(1x,f7.1)',advance='NO') delta_x
+          write(UNIT=luobarr(bdx),FMT='(3(1x,f7.4))',advance='NO') &
+              barrier(bdx)%param(pdx)%amzbr, barrier(bdx)%param(pdx)%amxbrw, barrier(bdx)%param(pdx)%ampbr
+        end do
+        ! write transition days
+        write(UNIT=luobarr(bdx),FMT='(1x,i0)',advance='NO') barseas(bdx)%tran_days
+        ! write time mark
+        write(UNIT=luobarr(bdx),FMT='(1x,i0)',advance='NO') hi_tm
+        ! write barrier season type
+        write(UNIT=luobarr(bdx),FMT='(1x,i2)',advance='NO') barseas(bdx)%seas_flg
+        if( barseas(bdx)%seas_flg .eq. 2 ) then
+          ! these values are populated
+          write(UNIT=luobarr(bdx),FMT='(1x,i2)',advance='NO') barseas(bdx)%clim(hi_tm)%trig_logic
+          write(UNIT=luobarr(bdx),FMT='(1x,i0)',advance='NO') barseas(bdx)%clim(hi_tm)%nthresh
+          do ndx = 1, barseas(bdx)%clim(hi_tm)%nthresh
+            write(UNIT=luobarr(bdx),FMT='(1x,i2)',advance='NO') barseas(bdx)%clim(hi_tm)%cli_tran(ndx)%beg_flg
+            write(UNIT=luobarr(bdx),FMT='(2(1x,f8.4))',advance='NO') &
+                barseas(bdx)%clim(hi_tm)%cli_tran(ndx)%beg_accum, barseas(bdx)%clim(hi_tm)%cli_tran(ndx)%beg_thresh
+            write(UNIT=luobarr(bdx),FMT='(1x,i2)',advance='NO') barseas(bdx)%clim(hi_tm)%cli_tran(ndx)%end_flg
+            write(UNIT=luobarr(bdx),FMT='(2(1x,f8.4))',advance='NO') &
+                barseas(bdx)%clim(hi_tm)%cli_tran(ndx)%end_accum, barseas(bdx)%clim(hi_tm)%cli_tran(ndx)%end_thresh
+          end do
+        end if
+        ! write newline character
+        write(UNIT=luobarr(bdx),FMT='(a)') ''
+      end if
+    end do
+    
   end subroutine set_barrier_season
 
   ! finds accumulation of climate factors which will determine when barrier state changes
@@ -411,61 +488,125 @@ contains
   ! and drought-deciduous trees along a seasonally dry tropical forest chronosequence.
   ! Oecologia (2010) 164:881–890 DOI 10.1007/s00442-010-1725-y pone.0157833
   ! Additional research may be required to refine the procedures specified here.
-  function state_transition( clim ) result(frac_tm)
+  function state_transition( clim, doy ) result(frac_tm)
     use crop_climate_mod, only: warmday_cum, heatunit, coldunit, coldday_cum
     use air_water_mod, only: precip_cum, no_precip_cum, high_humid_cum, low_humid_cum
-    type(barrier_climate) :: clim
-    real frac_tm
+    use solar_mod, only: amalat, civilrise, daylen
+    type(barrier_climate), intent(inout) :: clim
+    integer, intent(in) :: doy  ! day of year
+    real :: frac_tm
 
-    ! test if threshold had been crossed. Prevent returning to previous state 
-    if( clim%beg_accum .le. clim%beg_thresh ) then
-      ! find current accumulation for when transition begins
-      select case (clim%beg_flg)
-      case (0)  ! number of consecutive days temperature is above base trigger temperature
-        call warmday_cum( clim%beg_accum, clim%beg_base )
-      case (1)  ! number of consecutive days temperature is below base trigger temperature
-        call coldday_cum( clim%beg_accum, clim%beg_base )
-      case (2)  ! accumulation of growing degree days (no optimum temperature specified)    
-        clim%beg_accum = clim%beg_accum + heatunit( clim%beg_base )
-      case (3)  ! accumulation of cold degree days
-        clim%beg_accum = clim%beg_accum + coldunit( clim%beg_base )
-      case (4)  ! accumulation of rainfall depth above minimum
-        clim%beg_accum = precip_cum( clim%beg_accum, clim%beg_base )
-      case (5)  ! accumulation of period with no rainfall above minimum value
-        clim%beg_accum = no_precip_cum( clim%beg_accum, clim%beg_base )
-      case (6)  ! number of consecutive days humidity is above base humidity    
-        clim%beg_accum = high_humid_cum( clim%beg_accum, clim%beg_base )
-      case (7)  ! number of consecutive days humidity is below base humidity    
-        clim%beg_accum = low_humid_cum( clim%beg_accum, clim%beg_base )
-      end select
+    integer :: idx
+    integer :: alloc_stat
+    real, dimension(:), allocatable :: frac_test
+    real :: hrlt    ! daylength
+    real :: hrlty   ! daylength yesterday
+    
+    allocate( frac_test(clim%nthresh), stat = alloc_stat )
+    if( alloc_stat .gt. 0 ) then
+      write(*,*) 'Unable to allocate memory for frac_test.'
     end if
 
-    if( clim%beg_accum .le. clim%beg_thresh ) then
-      ! no transition yet
+    select case ( clim%trig_logic )
+    case (0) ! OR logic, phase transition begins when any threshold is reached
       frac_tm = 0.0
-      clim%end_accum = 0.0
-    else
-      ! transition has begun
+    case (1) ! AND logic, phase transition begins when all thresholds are reached
+      frac_tm = 1.0
+    case (2) ! Second method starts to accumulate after first threshold is met
+      frac_tm = 1.0
+    end select
+
+    do idx = 1, clim%nthresh
+
       ! test if threshold had been crossed. Prevent returning to previous state 
-      if( clim%end_accum .lt. clim%end_thresh ) then
-        ! find current accumulation for when transition is complete
-        select case (clim%end_flg)
-        case (0)  ! days to complete transition are specified
-          clim%end_accum = clim%end_accum + 1
-        case (1)  ! Growing Degree Days (GDD) to complete transition are specified
-          clim%end_accum = clim%end_accum + heatunit( clim%end_base )
-        case (2)  ! Cold Degree Days (CDD) to complete transition are specified
-          clim%end_accum = clim%end_accum + coldunit( clim%end_base )
+      if( clim%cli_tran(idx)%beg_accum .le. clim%cli_tran(idx)%beg_thresh ) then
+        ! find current accumulation for when transition begins
+        select case (clim%cli_tran(idx)%beg_flg)
+        case (0)  ! number of consecutive days temperature is above base trigger temperature
+          call warmday_cum( clim%cli_tran(idx)%beg_accum, clim%cli_tran(idx)%beg_base )
+        case (1)  ! number of consecutive days temperature is below base trigger temperature
+          call coldday_cum( clim%cli_tran(idx)%beg_accum, clim%cli_tran(idx)%beg_base )
+        case (2)  ! accumulation of growing degree days (no optimum temperature specified)
+          clim%cli_tran(idx)%beg_accum = clim%cli_tran(idx)%beg_accum + heatunit( clim%cli_tran(idx)%beg_base )
+        case (3)  ! accumulation of cold degree days
+          clim%cli_tran(idx)%beg_accum = clim%cli_tran(idx)%beg_accum + coldunit( clim%cli_tran(idx)%beg_base )
+        case (4)  ! accumulation of rainfall depth above minimum
+          clim%cli_tran(idx)%beg_accum = precip_cum( clim%cli_tran(idx)%beg_accum, clim%cli_tran(idx)%beg_base )
+        case (5)  ! accumulation of period with no rainfall above minimum value
+          clim%cli_tran(idx)%beg_accum = no_precip_cum( clim%cli_tran(idx)%beg_accum, clim%cli_tran(idx)%beg_base )
+        case (6)  ! number of consecutive days humidity is above base humidity
+          clim%cli_tran(idx)%beg_accum = high_humid_cum( clim%cli_tran(idx)%beg_accum, clim%cli_tran(idx)%beg_base )
+        case (7)  ! number of consecutive days humidity is below base humidity
+          clim%cli_tran(idx)%beg_accum = low_humid_cum( clim%cli_tran(idx)%beg_accum, clim%cli_tran(idx)%beg_base )
+        case (8)  ! daylength is past threshold value either increasing or decreasing
+          hrlty = daylen(amalat, doy-1, civilrise)
+          hrlt = daylen(amalat, doy, civilrise)
+          if( clim%cli_tran(idx)%beg_base .lt. clim%cli_tran(idx)%beg_thresh ) then
+            ! increasing daylength required
+            if( hrlty .lt. hrlt ) then
+              ! increasing daylength found
+              clim%cli_tran(idx)%beg_accum = hrlt
+            end if
+          else
+            ! decreasing daylength
+            if( hrlty .gt. hrlt ) then
+              ! increasing daylength found
+              clim%cli_tran(idx)%beg_accum = hrlt
+            end if
+          end if
         end select
       end if
 
-      if( clim%end_accum .ge. clim%end_thresh ) then
-        ! transition is complete
-        frac_tm = 1.0
+      if( clim%cli_tran(idx)%beg_accum .le. clim%cli_tran(idx)%beg_thresh ) then
+        ! no transition yet
+        frac_test(idx) = 0.0
+        clim%cli_tran(idx)%end_accum = 0.0
       else
-        ! in transition
-        frac_tm = clim%end_accum / clim%end_thresh
+        ! transition has begun
+        ! test if threshold had been crossed. Prevent returning to previous state 
+        if( clim%cli_tran(idx)%end_accum .lt. clim%cli_tran(idx)%end_thresh ) then
+          ! find current accumulation for when transition is complete
+          select case (clim%cli_tran(idx)%end_flg)
+          case (0)  ! days to complete transition are specified
+            clim%cli_tran(idx)%end_accum = clim%cli_tran(idx)%end_accum + 1
+          case (1)  ! Growing Degree Days (GDD) to complete transition are specified
+            clim%cli_tran(idx)%end_accum = clim%cli_tran(idx)%end_accum + heatunit( clim%cli_tran(idx)%end_base )
+          case (2)  ! Cold Degree Days (CDD) to complete transition are specified
+            clim%cli_tran(idx)%end_accum = clim%cli_tran(idx)%end_accum + coldunit( clim%cli_tran(idx)%end_base )
+          end select
+        end if
+
+        if( clim%cli_tran(idx)%end_accum .ge. clim%cli_tran(idx)%end_thresh ) then
+          ! transition is complete
+          frac_test(idx) = 1.0
+        else
+          ! in transition
+          frac_test(idx) = clim%cli_tran(idx)%end_accum / clim%cli_tran(idx)%end_thresh
+        end if
       end if
+
+      select case( clim%trig_logic )
+      case (0) ! OR logic, phase transition begins when any threshold is reached
+        frac_tm = max(frac_tm, frac_test(idx))
+      case (1) ! AND logic, phase transition begins when all thresholds are reached
+        frac_tm = min(frac_tm, frac_test(idx))
+      case (2) ! Subsequent threshold starts to accumulate after previous threshold is met
+        if( idx .gt. 1 ) then
+          ! check for threshold and reset subsequent accum if necessary
+          if( frac_test(idx-1) .le. 0.0 ) then
+            ! previous transition threshold has not been met, reset accum to 0.0
+            clim%cli_tran(idx)%beg_accum = 0.0
+            frac_test(idx) = 0.0
+          end if
+        end if
+        frac_tm = min(frac_tm, frac_test(idx))
+      end select
+
+    end do
+    
+    deallocate( frac_test, stat = alloc_stat )
+    if( alloc_stat .gt. 0 ) then
+      write(*,*) 'Unable to deallocate memory for frac_test.'
     end if
 
   end function state_transition

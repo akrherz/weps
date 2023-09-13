@@ -5,7 +5,10 @@
 
 module file_io_mod
 
-    ! unit number for file input (lui) / output (luo)
+    logical :: in_weps   ! deterimins which files need to be opened depending on context
+                         ! .false. indicates SWEEP
+
+    ! unit numbers for file input (lui) / output (luo)
     ! global in scope, so only one unit required
     integer :: luicli          ! reading cligen input
     integer :: luiwin          ! reading windgen input
@@ -14,9 +17,8 @@ module file_io_mod
     integer :: luo_erod        ! For daily erosion summary
     integer :: luo_emit        ! For subdaily erosion summary
     integer :: luo_sgrd        ! For subdaily grid
-    integer :: luo_barr        ! for seasonal barrier daily output
-
     integer :: luoci           ! write "ci.out" for confidence interval
+    integer, dimension(:), allocatable :: luobarr        ! for seasonal barrier daily output
 
     ! this is for whole region and subregions
     integer, dimension(:), allocatable :: luogui1         ! write "gui1_data.out"

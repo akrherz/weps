@@ -132,7 +132,7 @@ contains
           sum_stat = 0
           allocate(barrier(nbr), stat = alloc_stat)
           sum_stat = sum_stat + alloc_stat
-          allocate(barseas(nbr), stat = alloc_stat)
+          allocate(barseas(0), stat = alloc_stat)
           sum_stat = sum_stat + alloc_stat
           allocate(barrier_complete(nbr), stat = alloc_stat)
           if( sum_stat .gt. 0 ) then
@@ -215,7 +215,6 @@ contains
         iseas = 1
         seas_flg = 0
         call create_barrier(barrier(ibr), poly_np)
-        call create_barrier(barseas(ibr), poly_np,ntm_seas,seas_flg)
         ! create storage for points index tracking
         allocate(barpnts_complete(poly_np), stat = alloc_stat)
         if( alloc_stat .gt. 0 ) then
@@ -458,7 +457,7 @@ contains
             .and. input_tag(SCI_width)%acquired &
             .and. input_tag(SCI_porosity)%acquired &
             ) then
-            if( barseas(ibr)%param(ipol,iseas)%amzbr .le. 0.0 ) then
+            if( barrier(ibr)%param(ipol)%amzbr .le. 0.0 ) then
               write(*,*) 'ERROR: Barrier height must be > 0'
               write(*,FMT='(2a,i0,3a,i0)') trim(input_tag(SCI_Barrier)%name), &
                           ' SCI_index="', ibr-1, &
@@ -472,9 +471,6 @@ contains
             input_tag(SCI_width)%acquired = .false.
             input_tag(SCI_porosity)%acquired = .false.
             barpnts_complete(ipol) = .true.
-            ! copy barseas into fixed barrier
-            barrier(ibr)%points(ipol) = barseas(ibr)%points(ipol)
-            barrier(ibr)%param(ipol) = barseas(ibr)%param(ipol,iseas)
           else
             do jdx = 1, size(input_tag)
               select case (jdx)
@@ -581,19 +577,19 @@ contains
           ! SCI_BarPoint
           !write(*,*) 'ibr: ',ibr, 'ipol: ', ipol
           if (input_tag(SCI_x)%in_tag) then
-            call read_param(input_tag(SCI_x)%name, param_value, barseas(ibr)%points(ipol)%x)
+            call read_param(input_tag(SCI_x)%name, param_value, barrier(ibr)%points(ipol)%x)
             input_tag(SCI_x)%acquired = .true.
           else if (input_tag(SCI_y)%in_tag) then
-            call read_param(input_tag(SCI_x)%name, param_value, barseas(ibr)%points(ipol)%y)
+            call read_param(input_tag(SCI_x)%name, param_value, barrier(ibr)%points(ipol)%y)
             input_tag(SCI_y)%acquired = .true.
           else if (input_tag(SCI_height)%in_tag) then
-            call read_param(input_tag(SCI_height)%name, param_value, barseas(ibr)%param(ipol,iseas)%amzbr)
+            call read_param(input_tag(SCI_height)%name, param_value, barrier(ibr)%param(ipol)%amzbr)
             input_tag(SCI_height)%acquired = .true.
           else if (input_tag(SCI_width)%in_tag) then
-            call read_param(input_tag(SCI_width)%name, param_value, barseas(ibr)%param(ipol,iseas)%amxbrw)
+            call read_param(input_tag(SCI_width)%name, param_value, barrier(ibr)%param(ipol)%amxbrw)
             input_tag(SCI_width)%acquired = .true.
           else if (input_tag(SCI_porosity)%in_tag) then
-            call read_param(input_tag(SCI_porosity)%name, param_value, barseas(ibr)%param(ipol,iseas)%ampbr)
+            call read_param(input_tag(SCI_porosity)%name, param_value, barrier(ibr)%param(ipol)%ampbr)
             input_tag(SCI_porosity)%acquired = .true.
           end if
         end if

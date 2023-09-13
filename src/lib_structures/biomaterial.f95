@@ -393,6 +393,21 @@ module biomaterial
 
   integer, parameter :: ncanlay = 5
 
+  interface plantPrintAll
+     module procedure plantPrintAll_detail
+     module procedure plantPrintAll_summary
+  end interface plantPrintAll
+
+  interface plantPrint
+     module procedure plantPrint_detail
+     module procedure plantPrint_summary
+  end interface plantPrint
+
+  interface residuePrint
+     module procedure residuePrint_detail
+     module procedure residuePrint_summary
+  end interface residuePrint
+
 contains
 
   function create_biototal(nsoillay) result(biotot)
@@ -813,7 +828,7 @@ contains
         
   end subroutine plantDestroyAll
 
-  subroutine plantPrint(plantPntr, nsoillay)
+  subroutine plantPrint_detail(plantPntr, nsoillay)
      type(plant_pointer), pointer :: plantPntr
      integer, intent(in) :: nsoillay
 
@@ -856,7 +871,28 @@ contains
        write(*,*) 'No Plant'
      end if
         
-  end subroutine plantPrint
+  end subroutine plantPrint_detail
+
+  subroutine plantPrint_summary(plantPntr)
+     type(plant_pointer), pointer :: plantPntr
+
+     ! local variable
+     type(residue_pointer), pointer :: thisResidue
+
+     if ( associated(plantPntr) ) then
+       write(*, "(a,i0,'/',i0,'/'i0,2x,a,i0)") "Planted: ", plantPntr%psimyr, plantPntr%pmon, plantPntr%pday, &
+                                               "Residue Index: ", plantPntr%residueIndex
+
+       thisResidue => plantPntr%residue
+       do while( associated(thisResidue) )
+         call residuePrint( thisResidue )
+         thisResidue => thisResidue%olderResidue
+       end do
+     else
+       write(*,*) 'No Plant'
+     end if
+        
+  end subroutine plantPrint_summary
 
   function residueAdd(residuePntr, residueIndex, nslay) result(residueNew)
 
@@ -1064,7 +1100,7 @@ contains
         
   end subroutine residueDestroyAll
 
-  subroutine residuePrint(residuePntr, nsoillay)
+  subroutine residuePrint_detail(residuePntr, nsoillay)
      type(residue_pointer), pointer :: residuePntr
      integer, intent(in) :: nsoillay
 
@@ -1103,9 +1139,20 @@ contains
        write(*,"(a)") 'No Residue'
      end if
         
-  end subroutine residuePrint
+  end subroutine residuePrint_detail
 
-  subroutine plantPrintAll(plantPntr, nsoillay)
+  subroutine residuePrint_summary(residuePntr)
+     type(residue_pointer), pointer :: residuePntr
+
+     if ( associated(residuePntr) ) then
+       write(*,"(a,1x,i0,'/',i0,2(2x,F8.1))") 'Residue:', residuePntr%resyear, residuePntr%resday, residuePntr%cumdds, residuePntr%cumddf
+     else
+       write(*,"(a)") 'No Residue'
+     end if
+        
+  end subroutine residuePrint_summary
+
+  subroutine plantPrintAll_detail(plantPntr, nsoillay)
      type(plant_pointer), pointer :: plantPntr
      integer, intent(in) :: nsoillay
 
@@ -1121,17 +1168,44 @@ contains
 
      do while( associated(thisPlant) )
        write(*,*) 'PLANT NAME: ', trim( thisPlant%bname )
-       call plantPrint( thisPlant, nsoillay )
+       call plantPrint_detail( thisPlant, nsoillay )
 
        thisResidue => thisPlant%residue
        do while( associated(thisResidue) )
-         call residuePrint( thisResidue, nsoillay)
+         call residuePrint_detail( thisResidue, nsoillay)
          thisResidue => thisResidue%olderResidue
        end do
        thisPlant => thisPlant%olderPlant
      end do
         
-  end subroutine plantPrintAll
+  end subroutine plantPrintAll_detail
+
+  subroutine plantPrintAll_summary(plantPntr)
+     type(plant_pointer), pointer :: plantPntr
+
+     ! local variable
+     type(plant_pointer), pointer :: thisPlant
+     type(residue_pointer), pointer :: thisResidue
+
+     ! print mass values
+     thisPlant => plantPntr
+     if( .not. associated(thisPlant) ) then
+       write(*,*) 'NO PLANT'
+     end if
+
+     do while( associated(thisPlant) )
+       write(*,*) 'PLANT NAME: ', trim( thisPlant%bname )
+       call plantPrint_summary( thisPlant )
+
+       thisResidue => thisPlant%residue
+       do while( associated(thisResidue) )
+         call residuePrint_summary( thisResidue)
+         thisResidue => thisResidue%olderResidue
+       end do
+       thisPlant => thisPlant%olderPlant
+     end do
+        
+  end subroutine plantPrintAll_summary
 
   subroutine plantSumAll(isr, plantPntr, nsoillay)
 

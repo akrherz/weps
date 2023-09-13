@@ -33,7 +33,7 @@ module input_run_xml_mod
   use weps_main_mod, only: winmethod, winstate, winstationname, winstationnum
   use weps_main_mod, only: id, im, iy, ld, lm, ly
   use barriers_mod, only: create_barrier, barrier, barseas
-  use barriers_mod, only: barrier_day_state, barrier_params, barrier_climate
+  use barriers_mod, only: barrier_day_state, barrier_params, barrier_climate, barrier_climate_transition
   use read_write_xml_mod, only: read_param
   use weps_cmdline_parms, only: report_info
 
@@ -108,54 +108,59 @@ module input_run_xml_mod
   integer, parameter :: SCI_height                = 52
   integer, parameter :: SCI_width                 = 53
   integer, parameter :: SCI_porosity              = 54
-  integer, parameter :: SCI_BegTranFlg            = 55
-  integer, parameter :: SCI_BegTranThresh         = 56
-  integer, parameter :: SCI_BegTranBase           = 57
-  integer, parameter :: SCI_EndTranFlg            = 58
-  integer, parameter :: SCI_EndTranThresh         = 59
-  integer, parameter :: SCI_EndTranBase           = 60
+  integer, parameter :: SCI_TranLogic             = 55
+  integer, parameter :: SCI_BarCliTran            = 56
+  integer, parameter :: SCI_BegTranFlg            = 57
+  integer, parameter :: SCI_BegTranThresh         = 58
+  integer, parameter :: SCI_BegTranBase           = 59
+  integer, parameter :: SCI_EndTranFlg            = 60
+  integer, parameter :: SCI_EndTranThresh         = 61
+  integer, parameter :: SCI_EndTranBase           = 62
 
-  integer, parameter :: GUI_UserName              = 61
-  integer, parameter :: GUI_FarmId                = 62
-  integer, parameter :: GUI_TractId               = 63
-  integer, parameter :: GUI_FieldId               = 64
-  integer, parameter :: GUI_RunTypeDisp           = 65
-  integer, parameter :: GUI_Site                  = 66
-  integer, parameter :: GUI_cligenFlag            = 67
-  integer, parameter :: GUI_cligenMethod          = 68
-  integer, parameter :: GUI_cligenLatitude        = 69
-  integer, parameter :: GUI_cligenLongitude       = 70
-  integer, parameter :: GUI_cligenStateId         = 71
-  integer, parameter :: GUI_cligenStationNum      = 72
-  integer, parameter :: GUI_cligenStationName     = 73
-  integer, parameter :: GUI_cligenElevation       = 74
-  integer, parameter :: GUI_windgenFlag           = 75
-  integer, parameter :: GUI_windgenMethod         = 76
-  integer, parameter :: GUI_windgenLatitude       = 77
-  integer, parameter :: GUI_windgenLongitude      = 78
-  integer, parameter :: GUI_windgenStationNum     = 79
-  integer, parameter :: GUI_windgenCountry        = 80
-  integer, parameter :: GUI_windgenState          = 81
-  integer, parameter :: GUI_windgenStationName    = 82
-  integer, parameter :: GUI_lastrun               = 83
-  integer, parameter :: GUI_lat                   = 84
-  integer, parameter :: GUI_lon                   = 85
+  integer, parameter :: GUI_UserName              = 63
+  integer, parameter :: GUI_FarmId                = 64
+  integer, parameter :: GUI_TractId               = 65
+  integer, parameter :: GUI_FieldId               = 66
+  integer, parameter :: GUI_RunTypeDisp           = 67
+  integer, parameter :: GUI_Site                  = 68
+  integer, parameter :: GUI_cligenFlag            = 69
+  integer, parameter :: GUI_cligenMethod          = 70
+  integer, parameter :: GUI_cligenLatitude        = 71
+  integer, parameter :: GUI_cligenLongitude       = 72
+  integer, parameter :: GUI_cligenStateId         = 73
+  integer, parameter :: GUI_cligenStationNum      = 74
+  integer, parameter :: GUI_cligenStationName     = 75
+  integer, parameter :: GUI_cligenElevation       = 76
+  integer, parameter :: GUI_windgenFlag           = 77
+  integer, parameter :: GUI_windgenMethod         = 78
+  integer, parameter :: GUI_windgenLatitude       = 79
+  integer, parameter :: GUI_windgenLongitude      = 80
+  integer, parameter :: GUI_windgenStationNum     = 81
+  integer, parameter :: GUI_windgenCountry        = 82
+  integer, parameter :: GUI_windgenState          = 83
+  integer, parameter :: GUI_windgenStationName    = 84
+  integer, parameter :: GUI_lastrun               = 85
+  integer, parameter :: GUI_lat                   = 86
+  integer, parameter :: GUI_lon                   = 87
 
   integer, parameter :: max_simyear = 100000  ! value used to test simulation year input range
   integer :: nsubr    ! Number of subregions
   integer :: nbr      ! number of barriers
   integer :: seas_flg ! barrier season flag
   integer :: ntm_seas ! number of time marks for seasonal barrier
+  integer :: ntran    ! number of transition methods for a time mark
   integer :: poly_np  ! number of points in polygon or polyline
   integer :: isr      ! index for subregion reading
   integer :: ibr      ! index for barrier reading
   integer :: ipol     ! index for polygon reading
   integer :: iseas    ! index for barrier season reading
+  integer :: itran    ! index for barrier transition method reading
   logical :: barriers_present
   logical, dimension(:), allocatable :: barrier_complete
   logical, dimension(:), allocatable :: subregion_complete
   logical, dimension(:), allocatable :: season_complete
   logical, dimension(:,:), allocatable :: clipar_complete
+  logical, dimension(:), allocatable :: clitran_complete
   logical :: bar_seasons
   logical :: bar_coords
   logical :: bar_params
@@ -170,7 +175,7 @@ contains
     integer :: idx
     integer :: alloc_stat
 
-    max_tags = 85   ! count of unique tags needed from all dtd files
+    max_tags = 87   ! count of unique tags needed from all dtd files
     allocate( run_tag(max_tags), stat=alloc_stat)
     if( alloc_stat .gt. 0 ) then
       write(*,*) 'ERROR: memory alloc., run_tag'
@@ -243,39 +248,40 @@ contains
     run_tag(52)%name = "SCI_height"
     run_tag(53)%name = "SCI_width"
     run_tag(54)%name = "SCI_porosity"
-    run_tag(55)%name = "SCI_BegTranFlg"
-    run_tag(56)%name = "SCI_BegTranThresh"
-    run_tag(57)%name = "SCI_BegTranBase"
-    run_tag(58)%name = "SCI_EndTranFlg"
-    run_tag(59)%name = "SCI_EndTranThresh"
-    run_tag(60)%name = "SCI_EndTranBase"
+    run_tag(55)%name = "SCI_TranLogic"
+    run_tag(56)%name = "SCI_BarCliTran"
+    run_tag(57)%name = "SCI_BegTranFlg"
+    run_tag(58)%name = "SCI_BegTranThresh"
+    run_tag(59)%name = "SCI_BegTranBase"
+    run_tag(60)%name = "SCI_EndTranFlg"
+    run_tag(61)%name = "SCI_EndTranThresh"
+    run_tag(62)%name = "SCI_EndTranBase"
 
-    run_tag(61)%name = "GUI_UserName"
-    run_tag(62)%name = "GUI_FarmId"
-    run_tag(63)%name = "GUI_TractId"
-    run_tag(64)%name = "GUI_FieldId"
-    run_tag(65)%name = "GUI_RunTypeDisp"
-    run_tag(66)%name = "GUI_Site"
-    run_tag(67)%name = "GUI_cligenFlag"
-    run_tag(68)%name = "GUI_cligenMethod"
-    run_tag(69)%name = "GUI_cligenLatitude"
-    run_tag(70)%name = "GUI_cligenLongitude"
-    run_tag(71)%name = "GUI_cligenStateId"
-    run_tag(72)%name = "GUI_cligenStationNum"
-    run_tag(73)%name = "GUI_cligenStationName"
-    run_tag(74)%name = "GUI_cligenElevation"
-    run_tag(75)%name = "GUI_windgenFlag"
-    run_tag(76)%name = "GUI_windgenMethod"
-    run_tag(77)%name = "GUI_windgenLatitude"
-    run_tag(78)%name = "GUI_windgenLongitude"
-    run_tag(79)%name = "GUI_windgenStationNum"
-    run_tag(80)%name = "GUI_windgenCountry"
-    run_tag(81)%name = "GUI_windgenState"
-    run_tag(82)%name = "GUI_windgenStationName"
-    run_tag(83)%name = "GUI_lastrun"
-    run_tag(84)%name = "GUI_lat"
-    run_tag(85)%name = "GUI_lon"
-
+    run_tag(63)%name = "GUI_UserName"
+    run_tag(64)%name = "GUI_FarmId"
+    run_tag(65)%name = "GUI_TractId"
+    run_tag(66)%name = "GUI_FieldId"
+    run_tag(67)%name = "GUI_RunTypeDisp"
+    run_tag(68)%name = "GUI_Site"
+    run_tag(69)%name = "GUI_cligenFlag"
+    run_tag(70)%name = "GUI_cligenMethod"
+    run_tag(71)%name = "GUI_cligenLatitude"
+    run_tag(72)%name = "GUI_cligenLongitude"
+    run_tag(73)%name = "GUI_cligenStateId"
+    run_tag(74)%name = "GUI_cligenStationNum"
+    run_tag(75)%name = "GUI_cligenStationName"
+    run_tag(76)%name = "GUI_cligenElevation"
+    run_tag(77)%name = "GUI_windgenFlag"
+    run_tag(78)%name = "GUI_windgenMethod"
+    run_tag(79)%name = "GUI_windgenLatitude"
+    run_tag(80)%name = "GUI_windgenLongitude"
+    run_tag(81)%name = "GUI_windgenStationNum"
+    run_tag(82)%name = "GUI_windgenCountry"
+    run_tag(83)%name = "GUI_windgenState"
+    run_tag(84)%name = "GUI_windgenStationName"
+    run_tag(85)%name = "GUI_lastrun"
+    run_tag(86)%name = "GUI_lat"
+    run_tag(87)%name = "GUI_lon"
 
     ! create integer variable names for tags and assign index number.
     ! makes chunk code more understandable.
@@ -288,14 +294,18 @@ contains
   end subroutine init_run_xml
 
   subroutine begin_element_handler(name,attributes)
+    use file_io_mod, only: luobarr
     character(len=*), intent(in)   :: name
     type(dictionary_t), intent(in) :: attributes
 
-    integer :: idx
+    integer :: idx    ! local index for looping
+    integer :: jdx    ! local index for nested looping
+    integer :: tdx    ! index for tag identification
     character(len=80) :: param_value
     integer :: ret_stat
     integer :: alloc_stat
     integer :: sum_stat
+    integer :: ptmp
 
     !write(*,*) ">>Begin Element: ", name
     !write(*,*) "--- ", len(attributes), " attributes:"
@@ -303,17 +313,18 @@ contains
 
     do idx = 1, size(run_tag)
       if( run_tag(idx)%name .eq. name ) then
+        tdx = idx
         run_tag(idx)%in_tag = .true.
         ! write(*,*) 'In tag ', trim(name)
         exit  ! found tag, no need to look further
       end if
     end do
 
-    if (   (idx .eq. SCI_Subregions) &
-      .or. (idx .eq. SCI_Barriers) ) then
+    if (   (tdx .eq. SCI_Subregions) &
+      .or. (tdx .eq. SCI_Barriers) ) then
       if ( has_key(attributes, run_tag(SCI_number)%name) ) then
         call get_value(attributes, run_tag(SCI_number)%name, param_value, ret_stat)
-        select case (idx)
+        select case (tdx)
         case (SCI_Subregions)
           call read_param(run_tag(SCI_number)%name, param_value, nsubr)
           !write(*,*) 'Number of Subregions: ', nsubr
@@ -364,6 +375,9 @@ contains
           allocate(barseas(nbr), stat = alloc_stat)
           sum_stat = sum_stat + alloc_stat
           allocate(barrier_complete(nbr), stat = alloc_stat)
+          sum_stat = sum_stat + alloc_stat
+          allocate(luobarr(nbr), stat = alloc_stat)
+          sum_stat = sum_stat + alloc_stat
           if( sum_stat .gt. 0 ) then
             write(*,*) 'ERROR: memory alloc., barrier arrays'
           end if
@@ -375,15 +389,15 @@ contains
 
         end select
       else
-        write(*,*) 'SCI_number attribute required for each ', trim(run_tag(idx)%name), ' Tag.'
+        write(*,*) 'SCI_number attribute required for each ', trim(run_tag(tdx)%name), ' Tag.'
         call exit(1)
       end if
-    else if ( (idx .eq. SCI_Subregion) &
-      .or. (idx .eq. SCI_coord) &
-      .or. (idx .eq. SCI_BarCli) ) then
+    else if ( (tdx .eq. SCI_Subregion) &
+      .or. (tdx .eq. SCI_coord) &
+      .or. (tdx .eq. SCI_BarCliTran) ) then
       if ( has_key(attributes, run_tag(SCI_index)%name) ) then
         call get_value(attributes, run_tag(SCI_index)%name, param_value, ret_stat)
-        select case (idx)
+        select case (tdx)
         case (SCI_Subregion)
           call read_param(run_tag(SCI_index)%name, param_value, isr)
           ! adjust from base 0 to base 1 arrays
@@ -394,18 +408,18 @@ contains
           ! adjust from base 0 to base 1 arrays
           ipol = ipol + 1
           !write(*,*) 'Subregion Coordinates Point Index: ', ipol
-        case (SCI_BarCli)
-          call read_param(run_tag(SCI_index)%name, param_value, iseas)
+        case (SCI_BarCliTran)
+          call read_param(run_tag(SCI_index)%name, param_value, itran)
           ! adjust from base 0 to base 1 arrays
-          iseas = iseas + 1
-          !write(*,*) 'Barrier Point Index: ', ipol
+          itran = itran + 1
+          !write(*,*) 'Barrier Season Threshold Index: ', itran
         end select
       else
-        write(*,*) 'SCI_index attribute required for each ', trim(run_tag(idx)%name), ' Tag.'
+        write(*,*) 'SCI_index attribute required for each ', trim(run_tag(tdx)%name), ' Tag.'
         call exit(1)
       end if
 
-    else if ( (idx .eq. SCI_Barrier) ) then
+    else if ( (tdx .eq. SCI_Barrier) ) then
       if ( has_key(attributes, run_tag(SCI_index)%name) ) then
         call get_value(attributes, run_tag(SCI_index)%name, param_value, ret_stat)
         call read_param(run_tag(SCI_index)%name, param_value, ibr)
@@ -413,7 +427,7 @@ contains
         ibr = ibr + 1
         !write(*,*) 'Barrier Index: ', ibr
       else
-        write(*,*) 'SCI_index attribute required for each ', trim(run_tag(idx)%name), ' Tag.'
+        write(*,*) 'SCI_index attribute required for each ', trim(run_tag(tdx)%name), ' Tag.'
         call exit(1)
       end if
       if ( has_key(attributes, run_tag(SCI_BarrierSeasonFlag)%name) ) then
@@ -429,17 +443,17 @@ contains
           call exit(35)
         end if
       else
-        write(*,*) 'SCI_BarrierSeasonFlag attribute required for each ', trim(run_tag(idx)%name), ' Tag.'
+        write(*,*) 'SCI_BarrierSeasonFlag attribute required for each ', trim(run_tag(tdx)%name), ' Tag.'
         call exit(1)
       end if
 
-    else if ( (idx .eq. SCI_PointBarClis) ) then
+    else if ( (tdx .eq. SCI_PointBarClis) ) then
       if ( has_key(attributes, run_tag(SCI_BarCliNumber)%name) ) then
         call get_value(attributes, run_tag(SCI_BarCliNumber)%name, param_value, ret_stat)
         call read_param(run_tag(SCI_BarCliNumber)%name, param_value, ntm_seas)
         !write(*,*) 'Barrier Total Time Marks: ', ntm_seas
       else
-        write(*,*) 'SCI_BarCliNumber attribute required for each ', trim(run_tag(idx)%name), ' Tag.'
+        write(*,*) 'SCI_BarCliNumber attribute required for each ', trim(run_tag(tdx)%name), ' Tag.'
         call exit(1)
       end if
       if ( has_key(attributes, run_tag(SCI_CoordinateNumber)%name) ) then
@@ -453,7 +467,7 @@ contains
           call exit(1)
         end if
       else
-        write(*,*) 'SCI_CoordinateNumber attribute required for each ', trim(run_tag(idx)%name), ' Tag.'
+        write(*,*) 'SCI_CoordinateNumber attribute required for each ', trim(run_tag(tdx)%name), ' Tag.'
         call exit(1)
       end if
       ! create storage for point and barrier data
@@ -473,19 +487,58 @@ contains
         write(*,*) "ERROR: unable to allocate memory for _complete arrays"
       end if
       ! initialize _complete arrays to false
-      do iseas = 1, ntm_seas
-        season_complete(iseas) = .false.
+      do idx = 1, ntm_seas
+        season_complete(idx) = .false.
       end do
-      do ipol = 1, poly_np
-        coord_complete(ipol) = .false.
+      do idx = 1, poly_np
+        coord_complete(idx) = .false.
       end do
-      do iseas = 1, ntm_seas
-        do ipol = 1, poly_np
-          clipar_complete(ipol, iseas) = .false.
+      do jdx = 1, ntm_seas
+        do idx = 1, poly_np
+          clipar_complete(idx, jdx) = .false.
         end do
       end do
 
-    else if ( (idx .eq. SCI_PointBarCli) ) then
+    else if ( tdx .eq. SCI_BarCli ) then
+      if ( has_key(attributes, run_tag(SCI_index)%name) ) then
+        call get_value(attributes, run_tag(SCI_Index)%name, param_value, ret_stat)
+        call read_param(run_tag(SCI_Index)%name, param_value, iseas)
+        !write(*,*) 'Number of Barrier Season Time Marks: ', iseas
+          ! adjust from base 0 to base 1 arrays
+          iseas = iseas + 1
+          !write(*,*) 'Barrier Season Index: ', iseas
+      else
+        write(*,*) 'SCI_index attribute required for each ', trim(run_tag(tdx)%name), ' Tag.'
+        call exit(1)
+      end if
+      if ( has_key(attributes, run_tag(SCI_BarCliNumber)%name) ) then
+        call get_value(attributes, run_tag(SCI_BarCliNumber)%name, param_value, ret_stat)
+        call read_param(run_tag(SCI_BarCliNumber)%name, param_value, ptmp)
+        if( ptmp .gt. 0 ) then 
+          barseas(ibr)%clim(iseas)%nthresh = ptmp
+          ! create storage for barrier time mark threshold arrays
+          ! this also sets values for barseas(ibr)%clim(iseas)%nthresh
+          call create_barrier(barseas(ibr)%clim(iseas), barseas(ibr)%clim(iseas)%nthresh, barseas(ibr)%clim(iseas)%trig_logic)
+          ! create storage for threshold parameter index tracking
+          sum_stat = 0
+          allocate(clitran_complete(barseas(ibr)%clim(iseas)%nthresh), stat = alloc_stat)
+          sum_stat = sum_stat + alloc_stat
+          if( sum_stat .gt. 0 ) then
+            ! allocation failed
+            write(*,*) "ERROR: unable to allocate memory for _complete arrays"
+          end if
+          ! initialize _complete arrays to false
+          do idx = 1, barseas(ibr)%clim(iseas)%nthresh
+            clitran_complete(idx) = .false.
+          end do
+        end if
+      else
+        write(*,*) 'SCI_BarCliNumber attribute required for each ', trim(run_tag(tdx)%name), ' Tag.'
+        call exit(1)
+      end if
+
+
+    else if ( (tdx .eq. SCI_PointBarCli) ) then
       if ( has_key(attributes, run_tag(SCI_BarCliIndex)%name) ) then
         call get_value(attributes, run_tag(SCI_BarCliIndex)%name, param_value, ret_stat)
         call read_param(run_tag(SCI_BarCliIndex)%name, param_value, iseas)
@@ -493,7 +546,7 @@ contains
         iseas = iseas + 1
         !write(*,*) 'Barrier Time Marks Index: ', iseas
       else
-        write(*,*) 'SCI_BarCliIndex attribute required for each ', trim(run_tag(idx)%name), ' Tag.'
+        write(*,*) 'SCI_BarCliIndex attribute required for each ', trim(run_tag(tdx)%name), ' Tag.'
         call exit(1)
       end if
       if ( has_key(attributes, run_tag(SCI_coordIndex)%name) ) then
@@ -503,7 +556,7 @@ contains
         ipol = ipol + 1
         !write(*,*) 'Barrier Points Index: ', ipol
       else
-        write(*,*) 'SCI_coordIndex attribute required for each ', trim(run_tag(idx)%name), ' Tag.'
+        write(*,*) 'SCI_coordIndex attribute required for each ', trim(run_tag(tdx)%name), ' Tag.'
         call exit(1)
       end if
 
@@ -834,33 +887,35 @@ contains
           if( seas_flg .eq. 2 ) then
             if (    run_tag(SCI_TimeMark)%acquired & 
               .and. run_tag(SCI_TimeDesc)%acquired &
-              .and. run_tag(SCI_BegTranFlg)%acquired &
-              .and. run_tag(SCI_BegTranThresh)%acquired &
-              .and. run_tag(SCI_BegTranBase)%acquired &
-              .and. run_tag(SCI_EndTranFlg)%acquired &
-              .and. run_tag(SCI_EndTranThresh)%acquired &
-              .and. run_tag(SCI_EndTranBase)%acquired &
+              .and. run_tag(SCI_TranLogic)%acquired &
               ) then
               run_tag(SCI_TimeMark)%acquired = .false.
               run_tag(SCI_TimeDesc)%acquired = .false.
-              run_tag(SCI_BegTranFlg)%acquired = .false.
-              run_tag(SCI_BegTranThresh)%acquired = .false.
-              run_tag(SCI_BegTranBase)%acquired = .false.
-              run_tag(SCI_EndTranFlg)%acquired = .false.
-              run_tag(SCI_EndTranThresh)%acquired = .false.
-              run_tag(SCI_EndTranBase)%acquired = .false.
-              season_complete(iseas) = .true.
+              run_tag(SCI_TranLogic)%acquired = .false.
+              ! check for acquisition of all required elements
+              ! transition thresholds
+              count_complete = 0
+              do jdx = 1, barseas(ibr)%clim(iseas)%nthresh
+                if (clitran_complete(jdx)) then
+                  count_complete = count_complete + 1
+                end if
+              end do
+              if (count_complete .ge. barseas(ibr)%clim(iseas)%nthresh) then
+                season_complete(iseas) = .true.
+              else
+                do jdx = 1, barseas(ibr)%clim(iseas)%nthresh
+                  if ( .not. clitran_complete(jdx)) then
+                    write(*,'(3a,i0,a)') 'Tag ', trim(run_tag(SCI_BarCliTran)%name), &
+                                         ' SCI_index="', jdx-1, '" is incomplete or missing from input file.'
+                  end if
+                end do
+              end if
             else
               do jdx = 1, size(run_tag)
                 select case (jdx)
                 case (SCI_TimeMark, &
                       SCI_TimeDesc, &
-                      SCI_BegTranFlg, &
-                      SCI_BegTranThresh, &
-                      SCI_BegTranBase, &
-                      SCI_EndTranFlg, &
-                      SCI_EndTranThresh, &
-                      SCI_EndTranBase)
+                      SCI_TranLogic)
                   if( .not. run_tag(jdx)%acquired ) then
                     write(*,'(3a)') 'Tag ', trim(run_tag(jdx)%name), ' is missing from input file.'
                   end if
@@ -885,6 +940,39 @@ contains
                 end select
               end do
             end if
+          end if
+
+        else if (idx .eq. SCI_BarCliTran) then
+          if( seas_flg .eq. 2 ) then
+            if (    run_tag(SCI_BegTranFlg)%acquired &
+              .and. run_tag(SCI_BegTranThresh)%acquired &
+              .and. run_tag(SCI_BegTranBase)%acquired &
+              .and. run_tag(SCI_EndTranFlg)%acquired &
+              .and. run_tag(SCI_EndTranThresh)%acquired &
+              .and. run_tag(SCI_EndTranBase)%acquired &
+              ) then
+              run_tag(SCI_BegTranFlg)%acquired = .false.
+              run_tag(SCI_BegTranThresh)%acquired = .false.
+              run_tag(SCI_BegTranBase)%acquired = .false.
+              run_tag(SCI_EndTranFlg)%acquired = .false.
+              run_tag(SCI_EndTranThresh)%acquired = .false.
+              run_tag(SCI_EndTranBase)%acquired = .false.
+              clitran_complete(itran) = .true.
+            else
+              do jdx = 1, size(run_tag)
+                select case (jdx)
+                case (SCI_BegTranFlg, &
+                      SCI_BegTranThresh, &
+                      SCI_BegTranBase, &
+                      SCI_EndTranFlg, &
+                      SCI_EndTranThresh, &
+                      SCI_EndTranBase)
+                  if( .not. run_tag(jdx)%acquired ) then
+                    write(*,'(3a)') 'Tag ', trim(run_tag(jdx)%name), ' is missing from input file.'
+                  end if
+                end select
+              end do
+            end if  
           end if
 
         else if (idx .eq. SCI_PointBarCli) then
@@ -1318,30 +1406,36 @@ contains
           else if (run_tag(SCI_PointBarClis)%in_tag) then
             if (run_tag(SCI_BarCli)%in_tag) then
               ! SCI_BarCli Climate transition parameters
-              if (run_tag(SCI_TimeMark)%in_tag) then
-                call read_param(run_tag(SCI_TimeMark)%name, param_value, barseas(ibr)%dst(iseas)%doy)
-                run_tag(SCI_TimeMark)%acquired = .true.
-              else if (run_tag(SCI_TimeDesc)%in_tag) then
+              if (run_tag(SCI_TimeDesc)%in_tag) then
                 barseas(ibr)%dst(iseas)%st_desc = param_value(1:80)
                 run_tag(SCI_TimeDesc)%acquired = .true.
-              else if (run_tag(SCI_BegTranFlg)%in_tag) then
-                call read_param(run_tag(SCI_BegTranFlg)%name, param_value, barseas(ibr)%clim(iseas)%beg_flg)
-                run_tag(SCI_BegTranFlg)%acquired = .true.
-              else if (run_tag(SCI_BegTranThresh)%in_tag) then
-                call read_param(run_tag(SCI_BegTranThresh)%name, param_value, barseas(ibr)%clim(iseas)%beg_thresh)
-                run_tag(SCI_BegTranThresh)%acquired = .true.
-              else if (run_tag(SCI_BegTranBase)%in_tag) then
-                call read_param(run_tag(SCI_BegTranBase)%name, param_value, barseas(ibr)%clim(iseas)%beg_base)
-                run_tag(SCI_BegTranBase)%acquired = .true.
-              else if (run_tag(SCI_EndTranFlg)%in_tag) then
-                call read_param(run_tag(SCI_EndTranFlg)%name, param_value, barseas(ibr)%clim(iseas)%end_flg)
-                run_tag(SCI_EndTranFlg)%acquired = .true.
-              else if (run_tag(SCI_EndTranThresh)%in_tag) then
-                call read_param(run_tag(SCI_EndTranThresh)%name, param_value, barseas(ibr)%clim(iseas)%end_thresh)
-                run_tag(SCI_EndTranThresh)%acquired = .true.
-              else if (run_tag(SCI_EndTranBase)%in_tag) then
-                call read_param(run_tag(SCI_EndTranBase)%name, param_value, barseas(ibr)%clim(iseas)%end_base)
-                run_tag(SCI_EndTranBase)%acquired = .true.
+              else if (run_tag(SCI_TimeMark)%in_tag) then
+                call read_param(run_tag(SCI_TimeMark)%name, param_value, barseas(ibr)%dst(iseas)%doy)
+                run_tag(SCI_TimeMark)%acquired = .true.
+              else if (run_tag(SCI_TranLogic)%in_tag) then
+                call read_param(run_tag(SCI_TranLogic)%name, param_value, barseas(ibr)%clim(iseas)%trig_logic)
+                run_tag(SCI_TranLogic)%acquired = .true.
+              end if
+              if (run_tag(SCI_BarCliTran)%in_tag) then
+                if (run_tag(SCI_BegTranFlg)%in_tag) then
+                  call read_param(run_tag(SCI_BegTranFlg)%name, param_value, barseas(ibr)%clim(iseas)%cli_tran(itran)%beg_flg)
+                  run_tag(SCI_BegTranFlg)%acquired = .true.
+                else if (run_tag(SCI_BegTranThresh)%in_tag) then
+                  call read_param(run_tag(SCI_BegTranThresh)%name, param_value, barseas(ibr)%clim(iseas)%cli_tran(itran)%beg_thresh)
+                  run_tag(SCI_BegTranThresh)%acquired = .true.
+                else if (run_tag(SCI_BegTranBase)%in_tag) then
+                  call read_param(run_tag(SCI_BegTranBase)%name, param_value, barseas(ibr)%clim(iseas)%cli_tran(itran)%beg_base)
+                  run_tag(SCI_BegTranBase)%acquired = .true.
+                else if (run_tag(SCI_EndTranFlg)%in_tag) then
+                  call read_param(run_tag(SCI_EndTranFlg)%name, param_value, barseas(ibr)%clim(iseas)%cli_tran(itran)%end_flg)
+                  run_tag(SCI_EndTranFlg)%acquired = .true.
+                else if (run_tag(SCI_EndTranThresh)%in_tag) then
+                  call read_param(run_tag(SCI_EndTranThresh)%name, param_value, barseas(ibr)%clim(iseas)%cli_tran(itran)%end_thresh)
+                  run_tag(SCI_EndTranThresh)%acquired = .true.
+                else if (run_tag(SCI_EndTranBase)%in_tag) then
+                  call read_param(run_tag(SCI_EndTranBase)%name, param_value, barseas(ibr)%clim(iseas)%cli_tran(itran)%end_base)
+                  run_tag(SCI_EndTranBase)%acquired = .true.
+                end if
               end if
             else if (run_tag(SCI_coord)%in_tag) then
               !SCI_coord
@@ -1387,8 +1481,6 @@ contains
     logical :: fexist     ! flag used to indicate result of file existence
     integer :: luo_xml     ! output unit number
     integer :: dealloc_stat
-
-    nsubr = size(soil_in)
 
     runxmlfil = trim(rootp) // 'weps.runx'
 
@@ -1500,18 +1592,22 @@ contains
                                        run_tag(SCI_CoordinateNumber)%name, barseas(ibr)%np )
             do iseas = 1, barseas(ibr)%ntm
               call w_begin_tag( luo_xml, run_tag(SCI_BarCli)%name, &
+                                         run_tag(SCI_BarCliNumber)%name, 0, &
                                          run_tag(SCI_index)%name, iseas-1 )
                 call w_whole_tag( luo_xml, run_tag(SCI_TimeDesc)%name, trim(barseas(ibr)%dst(iseas)%st_desc) )
                 call w_whole_tag( luo_xml, run_tag(SCI_TimeMark)%name, barseas(ibr)%dst(iseas)%doy )
 
                 if( barseas(ibr)%seas_flg .eq. 2 ) then
                   ! these are used for climate based seasonal transitions
-                  call w_whole_tag( luo_xml, run_tag(SCI_BegTranFlg)%name, barseas(ibr)%clim(iseas)%beg_flg )
-                  call w_whole_tag( luo_xml, run_tag(SCI_BegTranThresh)%name, barseas(ibr)%clim(iseas)%beg_thresh )
-                  call w_whole_tag( luo_xml, run_tag(SCI_BegTranBase)%name, barseas(ibr)%clim(iseas)%beg_base )
-                  call w_whole_tag( luo_xml, run_tag(SCI_EndTranFlg)%name, barseas(ibr)%clim(iseas)%end_flg )
-                  call w_whole_tag( luo_xml, run_tag(SCI_EndTranThresh)%name, barseas(ibr)%clim(iseas)%end_thresh )
-                  call w_whole_tag( luo_xml, run_tag(SCI_EndTranBase)%name, barseas(ibr)%clim(iseas)%end_base )
+                  call w_whole_tag( luo_xml, run_tag(SCI_TranLogic)%name, barseas(ibr)%clim(iseas)%trig_logic )
+                  do itran = 1, barseas(ibr)%clim(iseas)%nthresh
+                    call w_whole_tag( luo_xml, run_tag(SCI_BegTranFlg)%name, barseas(ibr)%clim(iseas)%cli_tran(itran)%beg_flg )
+                    call w_whole_tag( luo_xml, run_tag(SCI_BegTranThresh)%name, barseas(ibr)%clim(iseas)%cli_tran(itran)%beg_thresh )
+                    call w_whole_tag( luo_xml, run_tag(SCI_BegTranBase)%name, barseas(ibr)%clim(iseas)%cli_tran(itran)%beg_base )
+                    call w_whole_tag( luo_xml, run_tag(SCI_EndTranFlg)%name, barseas(ibr)%clim(iseas)%cli_tran(itran)%end_flg )
+                    call w_whole_tag( luo_xml, run_tag(SCI_EndTranThresh)%name, barseas(ibr)%clim(iseas)%cli_tran(itran)%end_thresh )
+                    call w_whole_tag( luo_xml, run_tag(SCI_EndTranBase)%name, barseas(ibr)%clim(iseas)%cli_tran(itran)%end_base )
+                  end do
                 end if
               call w_end_tag( luo_xml, run_tag(SCI_BarCli)%name )
             end do
