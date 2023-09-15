@@ -1129,7 +1129,7 @@ contains
     use grid_mod, only: amasim, amxsim, sim_area
     character(len=*), intent(in) :: chunk
 
-    character(len=256) :: param_value
+    character(len=512) :: param_value
     integer :: read_stat
     real :: cligen_version
 

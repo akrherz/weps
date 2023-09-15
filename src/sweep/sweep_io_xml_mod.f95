@@ -499,7 +499,7 @@ contains
   use grid_mod, only: amasim, amxsim
     character(len=*), intent(in) :: chunk
 
-    character(len=80) :: param_value
+    character(len=512) :: param_value
     type(xml_t) :: fxml   ! xml file handle structure
     integer :: iostat     ! input/output status
 
