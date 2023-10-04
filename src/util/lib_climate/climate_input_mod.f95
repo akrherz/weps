@@ -106,6 +106,32 @@ module climate_input_mod
 
 contains
 
+    subroutine wind_copy( lhs, rhs )
+        type(windgen_state), intent(inout) :: lhs
+        type(windgen_state), intent(in) :: rhs
+
+        integer :: idx
+
+        lhs%day = rhs%day
+        lhs%month = rhs%month
+        lhs%year = rhs%year
+        lhs%wwadir = rhs%wwadir
+        lhs%wwudmx = rhs%wwudmx
+        lhs%wwudmn = rhs%wwudmn
+        lhs%wwhrmx = rhs%wwhrmx
+
+        do idx = 1, size( rhs%wawu )
+            lhs%wawu(idx) = rhs%wawu(idx)
+        end do
+
+        lhs%jday = rhs%jday
+        lhs%doy = rhs%doy
+        lhs%twe = rhs%twe
+        lhs%wewudav = rhs%wewudav
+        lhs%wawudav = rhs%wawudav
+
+    end subroutine wind_copy
+
     subroutine set_cli_today( pjuld )
         use erosion_data_struct_defs, only: awdair
         integer, intent(in) :: pjuld   ! present julian day of the simulation run.
@@ -120,7 +146,7 @@ contains
 
         integer :: idx   ! loop index
 
-        wind_today = wind_day(pjuld)
+        call wind_copy(wind_today, wind_day(pjuld))
 
         awadir = wind_today%wwadir
         awudmx = wind_today%wwudmx
@@ -216,10 +242,7 @@ contains
 
             call caldat( idx, day, mon, year )
             call getwin( day, mon, year )
-            wind_day(idx) = wind_today
-            do jdx = 1, ntstep
-               wind_day(idx)%wawu(jdx) = wind_today%wawu(jdx)
-            end do
+            call wind_copy(wind_day(idx), wind_today)
         end do
 
     end subroutine create_wind_day
@@ -762,7 +785,7 @@ contains
             call wind_read_next( wind_next )
 
             ! set wind_prev to the same values as wind_today
-            wind_prev = wind_today
+            call wind_copy(wind_prev, wind_today)
 
         end if
 
@@ -777,8 +800,8 @@ contains
             else
                 do while( jday .ne. wind_today%jday )
                     ! file day is earlier than day requested, scan forward in file
-                    wind_prev = wind_today
-                    wind_today = wind_next
+                    call wind_copy(wind_prev, wind_today)
+                    call wind_copy(wind_today, wind_next)
                     call wind_read_next( wind_next )
 
                     if( jday .eq. wind_today%jday ) then
@@ -831,8 +854,8 @@ contains
                 ! Note: skips day 366, reads doy 1 into cli_today
                 do while( doy .ne. wind_today%doy )
                     ! file day is not the day requested, scan forward in file
-                    wind_prev = wind_today
-                    wind_today = wind_next
+                    call wind_copy(wind_prev, wind_today)
+                    call wind_copy(wind_today, wind_next)
                     call wind_read_next( wind_next )
                     if( doy .eq. wind_today%doy ) then
                         return
