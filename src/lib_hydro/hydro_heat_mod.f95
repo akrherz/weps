@@ -196,8 +196,7 @@ module hydro_heat_mod
       ! thermal conductivity of top soil layer
       bly = 1
       thermk_dn = heatcond(bsdblk(bly), theta(bly), thetas(bly), &
-                  bhtsav(bly), bhfice(bly), bsfsan(bly), bsfsil(bly), &
-                  bsfcla(bly), bsfom(bly))
+                  bhtsav(bly), bhfice(bly), bsfsan(bly), bsfom(bly))
 
       ! set net radiation on surface (drops through to soil surface if no snow)
       rad_val = rad_net
@@ -247,8 +246,7 @@ module hydro_heat_mod
           ! using layer below, set property values for lower interface
           bly = lay + 1
           thermk_dn = heatcond(bsdblk(bly), theta(bly), thetas(bly), &
-                   bhtsav(bly), bhfice(bly), bsfsan(bly), bsfsil(bly), &
-                   bsfcla(bly), bsfom(bly))
+                   bhtsav(bly), bhfice(bly), bsfsan(bly), bsfom(bly))
           thermt_dn = 2.0 * thermk_up * thermk_dn &
                    / (mmtom*(bszlyt(lay)*thermk_dn &
                    + bszlyt(bly)*thermk_up))
@@ -331,8 +329,7 @@ module hydro_heat_mod
                  * bszlyt(lay)
           thermk = thermk &
                  + heatcond(bsdblk(lay), theta(lay), thetas(lay), &
-                   bhtsav(lay), bhfice(lay), bsfsan(lay), bsfsil(lay), &
-                   bsfcla(lay), bsfom(lay)) * bszlyt(lay)
+                   bhtsav(lay), bhfice(lay), bsfsan(lay), bsfom(lay)) * bszlyt(lay)
       end do
 
       vsheat = vsheat / bszlyd(layrsn)
@@ -470,7 +467,7 @@ module hydro_heat_mod
       return
     end function heatcap
 
-    pure function heatcond(bsdblk, theta, thetas, bhtsav, bhfice, bsfsan, bsfsil, bsfcla, bsfom) result(heat_cond)
+    pure function heatcond(bsdblk, theta, thetas, bhtsav, bhfice, bsfsan, bsfom) result(heat_cond)
 
       ! This function returns the volumetrically based thermal conductivity of the soil
       ! given mass fractions of the soil constituents. (J/s m C) or (W/m C)
@@ -484,8 +481,6 @@ module hydro_heat_mod
       real, intent(in) :: bhtsav  ! soil layer average daily temperature (C)
       real, intent(in) :: bhfice  ! mass fraction of soil water which is ice (kg ice/kg water)
       real, intent(in) :: bsfsan  ! Sand mass fractions (kg clay/kg soil mineral)
-      real, intent(in) :: bsfsil  ! Silt mass fractions (kg clay/kg soil mineral)
-      real, intent(in) :: bsfcla  ! Clay mass fractions (kg clay/kg soil mineral)
       real, intent(in) :: bsfom   ! Organic matter fraction (kg organic matter/kg soil)
       real :: heat_cond ! calculated thermal conductivity
 

@@ -248,6 +248,8 @@ module WEPSShootGrow_mod
           ! regrowth early in spring, causing divide by zero in shoot_grow
           huiy = 0.0_dp
           hui = 0.0_dp
+          huirty = 0.0_dp
+          huirt = 0.0_dp
       else
           ! previous day heat unit index
           huiy = min(1.0_dp, bcthucum / bcthum)
@@ -426,7 +428,7 @@ module WEPSShootGrow_mod
 
         if( huiy .lt. bcthu_shoot_end ) then
 
-          if( hui .gt. bcthu_shoot_beg ) then
+          if( hui .ge. bcthu_shoot_beg ) then
 
             ! fraction of shoot growth from stored reserves (today and yesterday)
             shoot_hui = min( 1.0_dp, (hui - bcthu_shoot_beg) / (bcthu_shoot_end - bcthu_shoot_beg) )

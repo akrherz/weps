@@ -453,7 +453,7 @@ module hydro_util_mod
     end function radnet
 
     pure subroutine transp (layrsn, actflg, bszlyd, bszlyt, rootd, theta, thetas, thetaf, thetaw, &
-                       theta80rh, thetar, airentry, lambda, ksat, soiltemp, potwu, actwu, wsf)
+                       thetar, lambda, ksat, potwu, actwu, wsf)
       ! This subroutine determines the actual plant transpiration first
       ! by distributing the potential rate of plant transpiration
       ! throughout the root zone.  the actual plant transpiration is
@@ -471,12 +471,9 @@ module hydro_util_mod
       real, intent(in) :: thetas(*)   ! saturated volumetric water content
       real, intent(in) :: thetaf(*)   ! field capacity volumetric water content
       real, intent(in) :: thetaw(*)   ! volumetric water content at wilting (15 bar or 1.5 MPa)
-      real, intent(in) :: theta80rh(*) ! volumetric water content at %80 relative humidity (300 bar or 30 MPa)
       real, intent(in) :: thetar(*)   ! volumetric water content where hydraulic conductivity becomes zero
-      real, intent(in) :: airentry(*) ! Brooks/Corey air entry potential (1/pressure) (modify to set units returned)
       real, intent(in) :: lambda(*)   ! Brooks/Corey pore size interaction parameter
       real, intent(in) :: ksat(*)     ! Saturated hydraulic conductivity (m/s)
-      real, intent(in) :: soiltemp(*) ! soil temperature (C)
       real, intent(in) :: potwu       ! potential use of water by plant (mm)
       real, intent(out) :: actwu       ! actual soil water use (estimated or actucally removed (mm)
       real, intent(out) :: wsf         ! Plant growth water stress factor (unitless)
@@ -505,7 +502,6 @@ module hydro_util_mod
       integer :: k   ! Local loop variable
       real :: depth  ! used to set soil depth used for available water
       real :: awcr   ! Relative available soil water content (or potential), fraction (0-1.0)
-      real :: awcr_crit ! Critical relative available soil water content (or potential)
       real :: wua    ! Actual water use rate from soil layer (mm/day)
       real :: wup    ! Potential water use rate from soil layer (mm/day)
       real :: wup_fac(0:layrsn) ! water uptake factor with depth in soil
@@ -534,8 +530,6 @@ module hydro_util_mod
 
          ! volumetric soil water content based approach
          awcr = availwc(theta(k), thetaw(k), thetaf(k))
-         ! critical value for using fraction of available water content
-         awcr_crit = 0.3
 
          !soil water potential based approach
          ! Feddes,R.A., H. Hoff, M. Bruen, T. Dawson,d P.Rosnay, P. Dirmeyer,
@@ -547,7 +541,6 @@ module hydro_util_mod
 
          cond = unsatcond_bc( theta(k), thetar(k), thetas(k), ksat(k), lambda(k) )
          ! awcr = min(1.0, max(0.0, (potm - potwilt) / (potfc - potwilt)))
-         ! awcr_crit = 0.95  ! this corresponds to -1bar water stress level
 
          ! test for critical conductivity value
          ! from Gardner, C.M.K., K.B. Laryea, P.W. Unger. 1999. Soil Physical
@@ -567,7 +560,7 @@ module hydro_util_mod
          end if
 
          ! get actual layer water use
-         wua = acplwu(awcr, awcr_crit, wup)
+         wua = acplwu(awcr, wup)
          ! update soil water content in layer
          ! prevent going beyond wilting point
          if( wua .gt. 0.0 ) then
@@ -754,24 +747,15 @@ module hydro_util_mod
 
     end function matricpot_from_rh
 
-    pure function acplwu (awcr, awcr_crit, wup) result(watuse)
+    pure function acplwu (awcr, wup) result(watuse)
       ! Actual water use rate from soil layer, same units as wup
 
       real, intent(in) :: awcr      ! Relative soil water availability, fraction (0-1.0)
-      real, intent(in) :: awcr_crit ! soil water availability ratio below which plant transpiration is reduced
       real, intent(in) :: wup       ! Potential water use rate from soil layer (mm/day)
 
       real :: watuse
 
       real, parameter :: str_fac = 100.0
-
-!      if (awcr .ge. awcr_crit) then
-!         watuse = wup
-!      else if (awcr .gt. 0.0) then
-!         watuse = wup * awcr/awcr_crit
-!      else
-!         watuse = 0.0
-!      endif
 
       if (awcr .ge. 1.0) then
          watuse = wup

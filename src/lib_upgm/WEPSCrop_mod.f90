@@ -727,7 +727,7 @@ module WEPSCrop_mod
 
       ! check for consistency of height, diameter and stem area index.
       ! adjust rate of height increase to keep diameter inside a range.
-      call ht_dia_sai( dble(plant%geometry%dpop), dble(plant%mass%standstem), dstandstem, &
+      call ht_dia_sai( dble(plant%geometry%dpop), dble(plant%mass%standstem), &
                        dble(plant%database%ssa), dble(plant%database%ssb), dble(plant%geometry%dstm), &
                        dble(plant%geometry%zht), dht, temp_stmrep, temp_sai )
 
@@ -979,7 +979,7 @@ module WEPSCrop_mod
       return
     end subroutine cookyield
 
-    subroutine ht_dia_sai( bcdpop, bcmstandstem, dmstandstem, &
+    subroutine ht_dia_sai( bcdpop, bcmstandstem, &
                            bc0ssa, bc0ssb, bcdstm, &
                            bczht, dht, bcxstmrep, bcrsai )
 
@@ -989,7 +989,7 @@ module WEPSCrop_mod
       ! within the range the actual stem diameter is.
 
       ! + + + ARGUMENT DECLARATIONS + + +
-      real(dp), intent(in) :: bcdpop, bcmstandstem, dmstandstem
+      real(dp), intent(in) :: bcdpop, bcmstandstem
       real(dp), intent(in) :: bc0ssa, bc0ssb
       real(dp), intent(in) :: bcdstm, bczht 
       real(dp), intent(inout) :: dht
@@ -998,7 +998,6 @@ module WEPSCrop_mod
       ! + + + ARGUMENT DEFINITIONS + + +
       ! bcdpop - Crop seeding density (#/m^2)
       ! bcmstandstem - crop standing stem mass (kg/m^2)
-      ! dmstandstem - daily crop standing stem mass increment (kg/m^2)
       ! bc0ssa - stem area to mass coefficient a, result is m^2 per plant
       ! bc0ssb - stem area to mass coefficient b, argument is kg per plant
       ! bcdstm - Number of crop stems per unit area (#/m^2)

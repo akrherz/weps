@@ -408,7 +408,7 @@ module hydro_darcy_mod
     end subroutine deallocate_dvolw_param
 
     subroutine darcy(isr, daysim, numeq, bszlyt, bszlyd, bulkden,     &
-     &       theta, thetadmx, bthetas, bthetaf, bthetaw, bthetar,       &
+     &       theta, thetadmx, bthetas, bthetaw, bthetar,       &
      &       bhrsk, bheaep, bh0cb, bsfcla, bsfom, bhtsav,               &
      &       bwtdmxprev, bwtdmn, bwtdmx, bwtdmnnext, bwtdpt,            &
      &       rise, daylength, bhzep, dprecip, bwdurpt, bwpeaktpt,       &
@@ -439,7 +439,7 @@ module hydro_darcy_mod
       integer, intent(in) :: isr   ! subregion number
       integer daysim, numeq
       real bszlyt(*), bulkden(*), bszlyd(*), theta(0:*)
-      real thetadmx(*), bthetas(*), bthetaf(*), bthetar(*), bthetaw(*)
+      real thetadmx(*), bthetas(*), bthetar(*), bthetaw(*)
       real bhrsk(*), bheaep(*), bh0cb(*), bsfcla(*), bsfom(*), bhtsav(*)
       real bwtdmxprev, bwtdmn, bwtdmx, bwtdmnnext, bwtdpt
       real rise, daylength, bhzep, dprecip, bwdurpt, bwpeaktpt
@@ -450,7 +450,7 @@ module hydro_darcy_mod
 
 ! intent(in)
 ! daysim, numeq, bszlyt, bszlyd, bulkden,
-! bthetas, bthetaf, bthetar, bhrsk,
+! bthetas, bthetar, bhrsk,
 ! bheaep, bh0cb, bsfcla, bsfom, bhtsav,
 ! bwtdmxprev, bwtdmn, bwtdmx, bwtdmnnext, bwtdpt,
 ! rise, daylength, bhzep,
@@ -472,7 +472,6 @@ module hydro_darcy_mod
 !     thetadmx(*)- daily maximum volumetric water content (m^3/m^3)
 !     bulkden(*) - soil bulk density Mg/m^3)
 !     bthetas(*) - saturated volumetric water content (m^3/m^3)
-!     bthetaf(*) - field capacity volumetric water content (m^3/m^3)
 !     bthetar(*) - residual (conductivity) volumetric water content (m^3/m^3)
 !     bhrsk(*)   - saturated hydraulic conductivity (m/s)
 !     bheaep(*)  - air entry potential (J/kg)

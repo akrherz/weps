@@ -47,18 +47,24 @@ module WEPStrendstemexternal_mod
       type(environment_state), intent(inout) :: env
 
       logical :: succ = .false.
+      integer(int32) :: lay ! soil layer loop index
 
       ! plant state
       real(dp) :: bcmstandstem ! crop standing stem mass (kg/m^2)
       real(dp) :: bcmflatstem  ! crop flat stem mass (kg/m^2)
+      real(dp), dimension(:), allocatable :: bcmbgstemz ! crop stem mass below soil surface by layer (kg/m^2)
 
       real(dp) :: bcstemmasstrend ! direction in which stem mass is trending.
                                   ! Saves trend even if stem mass is static for long periods.
       real(dp) :: bprevstandstem
       real(dp) :: bprevflatstem
+      real(dp), dimension(:), allocatable :: bprevbgstemz
+
+      integer(int32) :: bnslay ! number of soil layers
 
       ! locally computed values
       real(dp) :: trend ! test computation for trend direction of living stem mass
+      real(dp) :: tsum  ! temporary sum of below ground stem mass
 
       ! Body of regrowth
 
@@ -69,13 +75,26 @@ module WEPStrendstemexternal_mod
       if( .not. check_return( trim(self%processName) , "mstandstem", succ ) ) return
       call plnt%state%get("mflatstem", bcmflatstem, succ)
       if( .not. check_return( trim(self%processName) , "mflatstem", succ ) ) return
+      call plnt%state%get("mbgstemz", bcmbgstemz, succ)
+      if( .not. check_return( trim(self%processName) , "mbgstemz", succ ) ) return
       call plnt%state%get("prevstandstem", bprevstandstem, succ)
       if( .not. check_return( trim(self%processName) , "prevstandstem", succ ) ) return
       call plnt%state%get("prevflatstem", bprevflatstem, succ)
       if( .not. check_return( trim(self%processName) , "prevflatstem", succ ) ) return
+      call plnt%state%get("prevmbgstemz", bprevbgstemz, succ)
+      if( .not. check_return( trim(self%processName) , "prevmbgstemz", succ ) ) return
+      bnslay = size(bcmbgstemz)
 
-      ! set trend direction for above ground stem mass from external forces
-      trend = bcmstandstem + bcmflatstem - bprevstandstem - bprevflatstem
+      ! set trend direction for above and below ground stem mass from external forces
+      trend = 0.0d0
+      do lay = 1, bnslay
+          trend = trend + bcmbgstemz(lay)
+      end do
+      tsum = 0.0d0
+      do lay = 1, bnslay
+          tsum = tsum + bprevbgstemz(lay)
+      end do
+      trend = trend + bcmstandstem + bcmflatstem - bprevstandstem - bprevflatstem - tsum
       if( trend .ne. 0.0_dp ) then
         ! trend non-zero and (heat units past emergence or staged crown release crop)
         bcstemmasstrend = trend

@@ -394,12 +394,31 @@ module WEPS_UPGM_mod
           ! plant state
           ! mstandstem (created below)
           ! mflatstem (created below)
+
+          nelem = size(plant%mass%stemz)
+          allocate(ra_setter(nelem), stat = alloc_stat)
+          if( alloc_stat .gt. 0 ) then
+            write(*,*) 'Unable to allocate memory for UPGM.'
+          end if
+          ra_setter = plant%mass%stemz
+          call plant%upgm_grow%plant%plantstate%state%put("mbgstemz", ra_setter, success)
+          deallocate(ra_setter, stat = alloc_stat)
+
           r_setter = plant%prev%standstem
           call plant%upgm_grow%plant%plantstate%state%put("prevstandstem", r_setter, success)
           r_setter = plant%prev%flatstem
           call plant%upgm_grow%plant%plantstate%state%put("prevflatstem", r_setter, success)
           r_setter = plant%growth%stemmasstrend
           call plant%upgm_grow%plant%plantstate%state%put("stemmasstrend", r_setter, success)
+
+          nelem = size(plant%mass%stemz)
+          allocate(ra_setter(nelem), stat = alloc_stat)
+          if( alloc_stat .gt. 0 ) then
+            write(*,*) 'Unable to allocate memory for UPGM.'
+          end if
+          ra_setter = plant%prev%stemz
+          call plant%upgm_grow%plant%plantstate%state%put("prevmbgstemz", ra_setter, success)
+          deallocate(ra_setter, stat = alloc_stat)
 
           ! add process
           ! create WEPSregrowthstaged method
@@ -438,14 +457,7 @@ module WEPS_UPGM_mod
           r_setter = plant%mass%flatstore
           call plant%upgm_grow%plant%plantstate%state%put("mflatstore", r_setter, success)
 
-          nelem = size(plant%mass%stemz)
-          allocate(ra_setter(nelem), stat = alloc_stat)
-          if( alloc_stat .gt. 0 ) then
-            write(*,*) 'Unable to allocate memory for UPGM.'
-          end if
-          ra_setter = plant%mass%stemz
-          call plant%upgm_grow%plant%plantstate%state%put("mbgstemz", ra_setter, success)
-          deallocate(ra_setter, stat = alloc_stat)
+          ! mbgstemz (created above)
 
           r_setter = plant%geometry%grainf
           call plant%upgm_grow%plant%plantstate%state%put("grainf", r_setter, success)
@@ -483,6 +495,8 @@ module WEPS_UPGM_mod
           call plant%upgm_grow%plant%plantstate%state%put("do_regrow", l_setter, success)
           i_setter = -2
           call plant%upgm_grow%plant%plantstate%state%put("regrowth_flg", i_setter, success)
+          r_setter = 0.0_dp
+          call plant%upgm_grow%plant%plantstate%state%put("regrow_release", r_setter, success)
 
           ! environment variables
           ! hrlty (created below)
@@ -1078,7 +1092,8 @@ module WEPS_UPGM_mod
       integer(int32) :: regrowth_or_spring_flg
       integer(int32) :: idx
       integer(int32) :: jd ! day of year
-      real(dp) :: trend ! test computation for trend direction of living leaf area
+      real(dp) :: trend ! test computation for trend direction of living leaf area and living stem mass
+      real(dp) :: tsum  ! temporary sum of below ground stem mass
       character(len=80) :: PhaseLabel
       integer(int32) :: nextstage
       integer(int32) :: specificStage
@@ -1357,6 +1372,8 @@ module WEPS_UPGM_mod
           call plant%upgm_grow%plant%plantstate%state%replace("mflatleaf", r_setter, success)
           r_setter = plant%mass%flatstore
           call plant%upgm_grow%plant%plantstate%state%replace("mflatstore", r_setter, success)
+          r_setter = plant%growth%mshoot
+          call plant%upgm_grow%plant%plantstate%state%replace("masshoot", r_setter, success)
 
           nelem = size(plant%mass%stemz)
           allocate(ra_setter(nelem), stat = alloc_stat)
@@ -1438,6 +1455,16 @@ module WEPS_UPGM_mod
           r_setter = plant%prev%standleaflive
           call plant%upgm_grow%plant%plantstate%state%replace("prevstandleaflive", r_setter, success)
         case ("WEPStrendstemexternal")
+
+          nelem = size(plant%mass%stemz)
+          allocate(ra_setter(nelem), stat = alloc_stat)
+          if( alloc_stat .gt. 0 ) then
+            write(*,*) 'Unable to allocate memory for UPGM.'
+          end if
+          ra_setter = plant%mass%stemz
+          call plant%upgm_grow%plant%plantstate%state%replace("mbgstemz", ra_setter, success)
+          deallocate(ra_setter, stat = alloc_stat)
+
           r_setter = plant%mass%standstem
           call plant%upgm_grow%plant%plantstate%state%replace("mstandstem", r_setter, success)
           r_setter = plant%mass%flatstem
@@ -1446,6 +1473,16 @@ module WEPS_UPGM_mod
           call plant%upgm_grow%plant%plantstate%state%replace("prevstandstem", r_setter, success)
           r_setter = plant%prev%flatstem
           call plant%upgm_grow%plant%plantstate%state%replace("prevflatstem", r_setter, success)
+
+          nelem = size(plant%prev%stemz)
+          allocate(ra_setter(nelem), stat = alloc_stat)
+          if( alloc_stat .gt. 0 ) then
+            write(*,*) 'Unable to allocate memory for UPGM.'
+          end if
+          ra_setter = plant%prev%stemz
+          call plant%upgm_grow%plant%plantstate%state%replace("prevmbgstemz", ra_setter, success)
+          deallocate(ra_setter, stat = alloc_stat)
+
         case ("WEPSwarmdays")
           r_setter = plant%growth%twarmdays
           call plant%upgm_grow%plant%plantstate%state%replace("warmdays", r_setter, success)
@@ -1803,7 +1840,6 @@ module WEPS_UPGM_mod
             call plant%upgm_grow%plant%plantstate%state%replace("res_grainf", r_setter, success)
             call plant%upgm_grow%plant%plantstate%state%replace("res_zht", r_setter, success)
             call plant%upgm_grow%plant%plantstate%state%replace("res_dstm", r_setter, success)
-
           end if
 
           call destroy_crop_residue(cropres)
@@ -1823,6 +1859,7 @@ module WEPS_UPGM_mod
           call plant%upgm_grow%plant%plantstate%state%get("regrowth_flg", regrowth_flg, success)
           call plant%upgm_grow%plant%plantstate%state%get("do_regrow", l_setter, success)
           plant%growth%do_regrow = l_setter
+
         case ("WEPSregrowwood")
           call plant%upgm_grow%plant%plantstate%state%get("mstandstem", r_setter, success)
           plant%mass%standstem = r_setter
@@ -1964,10 +2001,6 @@ module WEPS_UPGM_mod
         call plant%upgm_grow%plant%phaseCurrent%ptr%phaseState%get("stagegdd", stagegdd, success)
 
         success = .false.
-        write(*,'(a,1x,i0,2x,a,F7.1,2a)') 'Day of Year', jd, 'Degree Days: ', stagegdd, ' Phase Completed: ', &
-                   trim(plant%upgm_grow%plant%phaseCurrent%ptr%phaseLabel)
-
-        success = .false.
         call plant%upgm_grow%plant%plantstate%state%get("specstage", specificStage, success)
         if (success) then
             ! zero out stagegdd
@@ -1985,10 +2018,10 @@ module WEPS_UPGM_mod
             endif
         endif
 
-!      if( associated(plant%upgm_grow%plant%phaseCurrent%ptr) ) then 
-!          ! write info for start of phase
-!          write(*,*) 'Phase, stagegdd: ', trim(plant%upgm_grow%plant%phaseCurrent%ptr%phaseLabel), stagegdd
-!       end if
+        if( associated(plant%upgm_grow%plant%phaseCurrent%ptr) ) then
+          write(*,'(a,1x,i0,2x,a,F7.1,2a)') 'Day of Year', jd, 'Degree Days: ', stagegdd, ' Next Phase: ', &
+                   trim(plant%upgm_grow%plant%phaseCurrent%ptr%phaseLabel)
+        end if
 
         ! reset controls
         nextstage = 0  ! pass this out to calling routine for use, and reset there
@@ -2571,56 +2604,57 @@ module WEPS_UPGM_mod
 
         if( plant%growth%growing ) then
           ! crop growth not yet complete
-          ! stem count can be set to zero by harvest, but not reset by
-          ! regrowth early in spring, causing divide by zero in shoot_grow
+          if( plant%geometry%dstm .gt. 0.0 ) then
+            ! stem count can be set to zero by harvest, but not reset by
+            ! regrowth early in spring, causing divide by zero in shoot_grow
 
-          if( shoot_huiy .lt. 1.0_dp ) then
+            if( shoot_huiy .lt. 1.0_dp ) then
 
-            if( shoot_hui .ge. 0.0_dp ) then
+              if( shoot_hui .ge. 0.0_dp ) then
 
-              ! set shoot growth flag
-              plant%growth%shoot_growing = .true.
+                ! set shoot growth flag
+                plant%growth%shoot_growing = .true.
 
-              ! daily shoot growth
-              call shoot_grow( soil, plant, shoot_hui, shoot_huiy, s_root_sum, f_root_sum, tot_mass_req, &
-                end_shoot_mass, end_root_mass, d_root_mass, d_shoot_mass, d_s_root_mass, &
-                end_stem_mass, end_stem_area, end_shoot_len )
+                ! daily shoot growth
+                call shoot_grow( soil, plant, shoot_hui, shoot_huiy, s_root_sum, f_root_sum, tot_mass_req, &
+                  end_shoot_mass, end_root_mass, d_root_mass, d_shoot_mass, d_s_root_mass, &
+                  end_stem_mass, end_stem_area, end_shoot_len )
 
-              if (am0cfl(isr) .ge. 1) then
-                ! note: dayap has not yet been updated. shoot.out write moved to before update to allow blank line to be printed
-                ! before shoot_growing set to false
-                write(luoshoot(isr), &
-                  "(1x,i5,1x,i3,1x,i4,1x,i4,1x,f6.3,2(1x,f10.4),2(1x,f12.4),4(1x,f12.4),4(1x,f12.4),(1x,f8.4),(1x,f8.3),1x,a)") &
-                  get_psim_daysim(isr), jd, get_psim_year(isr), plant%growth%dayap+1, shoot_hui, &
-                  s_root_sum, f_root_sum, tot_mass_req, end_shoot_mass, &
-                  end_root_mass, d_root_mass, d_shoot_mass, d_s_root_mass, &
-                  end_stem_mass, end_stem_area, end_shoot_len, plant%geometry%zshoot, &
-                  plant%growth%mshoot, plant%geometry%dstm, trim(plant%bname)
+                if (am0cfl(isr) .ge. 1) then
+                  ! note: dayap has not yet been updated. shoot.out write moved to before update to allow blank line to be printed
+                  ! before shoot_growing set to false
+                  write(luoshoot(isr), &
+                    "(1x,i5,1x,i3,1x,i4,1x,i4,1x,f6.3,2(1x,f10.4),2(1x,f12.4),4(1x,f12.4),4(1x,f12.4),(1x,f8.4),(1x,f8.3),1x,a)") &
+                    get_psim_daysim(isr), jd, get_psim_year(isr), plant%growth%dayap+1, shoot_hui, &
+                    s_root_sum, f_root_sum, tot_mass_req, end_shoot_mass, &
+                    end_root_mass, d_root_mass, d_shoot_mass, d_s_root_mass, &
+                    end_stem_mass, end_stem_area, end_shoot_len, plant%geometry%zshoot, &
+                    plant%growth%mshoot, plant%geometry%dstm, trim(plant%bname)
+                end if
+
               end if
 
-            end if
+              if( shoot_hui .ge. 1.0_dp ) then
+                ! shoot growth completed on this day
 
-            if( shoot_hui .ge. 1.0_dp ) then
-              ! shoot growth completed on this day
+                ! set flag indicating regrowth capability
+                plant%growth%shoot_growing = .false.
 
-              ! set flag indicating regrowth capability
-              plant%growth%shoot_growing = .false.
+                ! move growing point to regrowth depth after shoot growth complete
+                ! remember, a negative number is above ground
+                plant%growth%zgrowpt = ( - plant%database%zloc_regrow )
 
-              ! move growing point to regrowth depth after shoot growth complete
-              ! remember, a negative number is above ground
-              plant%growth%zgrowpt = ( - plant%database%zloc_regrow )
-
-              if (am0cfl(isr) .ge. 1) then
+                if (am0cfl(isr) .ge. 1) then
                   ! single blank line to separate shoot growth periods
                   write(luoshoot(isr),'(a)')  ! shoot.out
+                end if
+                ! last day of shoot grow, set shoot_huiy so shoot grow stops after shoot grow phase is completed.
+                shoot_huiy = 1.0_dp
+                call plant%upgm_grow%plant%plantstate%state%replace("shoot_huiy", shoot_huiy, success)
+
               end if
-              ! last day of shoot grow, set shoot_huiy so shoot grow stops after shoot grow phase is completed.
-              shoot_huiy = 1.0_dp
-              call plant%upgm_grow%plant%plantstate%state%replace("shoot_huiy", shoot_huiy, success)
 
             end if
-
-          end if
 
           if( leaf_huiy .lt. 1.0_dp ) then
 
@@ -2671,7 +2705,15 @@ module WEPS_UPGM_mod
             plant%growth%leafareatrend = trend
           end if
           ! set trend direction for above ground stem mass from growth
-          trend = plant%mass%standstem + plant%mass%flatstem - plant%prev%standstem - plant%prev%flatstem
+          trend = 0.0d0
+          do idx = 1, soil%nslay
+              trend = trend + plant%mass%stemz(idx)
+          end do
+          tsum = 0.0d0
+          do idx = 1, soil%nslay
+              tsum = tsum + plant%prev%stemz(idx)
+          end do
+          trend = trend + plant%mass%standstem + plant%mass%flatstem - plant%prev%standstem - plant%prev%flatstem - tsum
           if ((trend .ne. 0.0_dp) &
             .and. (.not. plant%growth%shoot_growing .or. (plant%database%idc.eq.8))) then
             ! trend non-zero and (heat units past emergence or staged crown release crop)
@@ -2707,10 +2749,34 @@ module WEPS_UPGM_mod
           plant%growth%dayap = plant%growth%dayap + 1
           plant%prev%dayap = plant%growth%dayap
 
+          else
+            trad_lai = 0.0
+            eff_lai = 0.0
+            tstress = 0.0
+            par = 0.0
+            apar = 0.0
+            pddm = 0.0
+            stem_propor = 0.0
+            pdiam = 0.0
+            parea = 0.0
+            temp_sai = 0.0
+            temp_stmrep = 0.0
+          end if
+
         else
           ! accumulate days after maturity
           plant%growth%dayam = plant%growth%dayam + 1
-
+          trad_lai = 0.0
+          eff_lai = 0.0
+          tstress = 0.0
+          par = 0.0
+          apar = 0.0
+          pddm = 0.0
+          stem_propor = 0.0
+          pdiam = 0.0
+          parea = 0.0
+          temp_sai = 0.0
+          temp_stmrep = 0.0
         end if
 
         if (am0cfl(isr) .ge. 1) then
@@ -2741,21 +2807,21 @@ module WEPS_UPGM_mod
             end if
 
             write(luocrop(isr), "(1x,i6,1x,i3,1x,i4,1x,i5,1x,f6.3,12(1x,f7.4),1x,f7.2, &
-     &         3(1x,f7.4),8(1x,f6.3),1x,e12.3, 11(1x,f6.3),2(1x,f8.5),1x,i2,1x,f6.3,1x,a,1x,a)") &
-            get_psim_daysim(isr), jd, get_psim_year(isr), plant%growth%dayap, &
-            hui, &
-            plant%mass%standstem, plant%mass%standleaflive + plant%mass%standleafdead, plant%mass%standstore, &
-            plant%mass%flatstem, plant%mass%flatleaf, plant%mass%flatstore, &
-            temp_store, temp_fiber, temp_stem, &
-            plant%mass%standleaflive + plant%mass%standleafdead + plant%mass%flatleaf, &
-            plant%mass%standstem + plant%mass%flatstem + temp_stem, &
-            plant%geometry%zht, plant%geometry%dstm, trad_lai, eff_lai, plant%geometry%zrtd, &
-            plant%geometry%grainf, tstress, plant%growth%fwsf, frst, ffa, ffw, &
-            par, apar, pddm, p_rw, p_st, p_lf, p_rp, &
-            stem_propor, pdiam, parea, pdiam/plant%database%diammax, &
-            parea*plant%geometry%dpop, hu_delay, plant%growth%thardnx, temp_sai,  &
-            temp_stmrep, regrowth_or_spring_flg, temp_fliveleaf, &
-            trim(plant%bname) !, trim(PhaseLabel)
+     &        3(1x,f7.4),8(1x,f6.3),1x,e12.3, 11(1x,f6.3),2(1x,f8.5),1x,i2,1x,f6.3,1x,a,1x,a)") &
+              get_psim_daysim(isr), jd, get_psim_year(isr), plant%growth%dayap, &
+              hui, &
+              plant%mass%standstem, plant%mass%standleaflive + plant%mass%standleafdead, plant%mass%standstore, &
+              plant%mass%flatstem, plant%mass%flatleaf, plant%mass%flatstore, &
+              temp_store, temp_fiber, temp_stem, &
+              plant%mass%standleaflive + plant%mass%standleafdead + plant%mass%flatleaf, &
+              plant%mass%standstem + plant%mass%flatstem + temp_stem, &
+              plant%geometry%zht, plant%geometry%dstm, trad_lai, eff_lai, plant%geometry%zrtd, &
+              plant%geometry%grainf, tstress, plant%growth%fwsf, frst, ffa, ffw, &
+              par, apar, pddm, p_rw, p_st, p_lf, p_rp, &
+              stem_propor, pdiam, parea, pdiam/plant%database%diammax, &
+              parea*plant%geometry%dpop, hu_delay, plant%growth%thardnx, temp_sai,  &
+              temp_stmrep, regrowth_or_spring_flg, temp_fliveleaf, &
+              trim(plant%bname) !, trim(PhaseLabel)
           end if
 
         end if

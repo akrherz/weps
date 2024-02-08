@@ -131,7 +131,7 @@ module soil_mod
                   rain, snow, sprink, &
                   bhzirr, soil%aszrho, &
                   bhlocirr, bhzsmt, soil%aslrro, &
-                  soil%asdsblk, cli_day(get_psim_juld(isr))%zdpt, cli_day(get_psim_juld(isr))%tdav, trigger)
+                  cli_day(get_psim_juld(isr))%zdpt, cli_day(get_psim_juld(isr))%tdav, trigger)
 
       ! UPDATE SURFACE
       ! do surface processes if (rain+sprinkler+snowmelt>0)
@@ -282,7 +282,7 @@ module soil_mod
      &                 rain, snow, sprink,                              &
      &                 bhzirr, bszrho,                                  &
      &                 bhlocirr, bhzsmt, bszrro,                        &
-     &                 bsdsblk, bwzdpt, bwtdav, trigger)
+     &                 bwzdpt, bwtdav, trigger)
 
 !     + + + PURPOSE + + +
 ! SOIL submodel for the Wind Erosion Prediction System model.
@@ -309,7 +309,7 @@ module soil_mod
       real rain, snow, sprink
       real bhzirr, bszrho
       real bhlocirr, bhzsmt, bszrro
-      real bsdsblk(*), bwzdpt, bwtdav
+      real bwzdpt, bwtdav
       integer trigger(bslay)
 
 !     + + + ARGUMENT DEFINITIONS + + +
@@ -540,7 +540,7 @@ module soil_mod
       dcump = rain + sprink + bhzsmt
 !     (note: cump not used in calc., but useful as ouptput for validation)
       cump = cump + dcump
-      end subroutine sinit
+    end subroutine sinit
 
     subroutine sdbug(aflg, isr, soil, croptot, biotot, hstate, h1et)
 

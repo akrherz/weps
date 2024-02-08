@@ -82,7 +82,7 @@ module crop_mod
               thisPlant%database%fleafstem, thisPlant%database%shoot, &
               thisPlant%database%diammax, thisPlant%database%ssa, thisPlant%database%ssb, &
               thisPlant%database%fleaf2stor, thisPlant%database%fstem2stor, thisPlant%database%fstor2stor, &
-              thisPlant%database%yld_coef, thisPlant%database%resid_int, thisPlant%database%xstm, &
+              thisPlant%database%yld_coef, thisPlant%database%resid_int, &
               thisPlant%mass%standstem, thisPlant%mass%standleaflive, thisPlant%mass%standleafdead, thisPlant%mass%standstore, &
               thisPlant%mass%flatstem, thisPlant%mass%flatleaf, thisPlant%mass%flatstore, &
               thisPlant%growth%mshoot, thisPlant%growth%mtotshoot, thisPlant%mass%stemz, &

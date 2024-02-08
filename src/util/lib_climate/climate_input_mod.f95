@@ -213,7 +213,6 @@ contains
 
         integer :: alloc_stat  ! allocation error return value
         integer :: idx         ! loop variable
-        integer :: jdx         ! loop variable
         integer :: day         ! day of month
         integer :: mon         ! month on year (1-12)
         integer :: year        ! year

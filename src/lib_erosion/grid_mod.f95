@@ -393,7 +393,6 @@ module grid_mod
       real :: dxmin    ! minimum grid interval (m)
       real :: lx, ly   ! x-axis and y-axis lengths of simulation region
       logical :: bar_exist  ! .true if barriers exist
-      integer :: alloc_stat
       integer :: idx
       integer :: jdx
 

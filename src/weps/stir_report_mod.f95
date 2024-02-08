@@ -23,9 +23,11 @@ module stir_report_mod
                                  !   2 = harvest operation
                                  !   3 = termination operation
                                  !   4 = set/add residue operation
+                                 !   5 = harvest and terminaton
       real phop_stir             ! STIR value for that operation
       real phop_energy           ! energy value for that operation
       integer crop_num           ! number of crop in the crop rotation cycle, 0 = not yet initialized, 1-n = number of crop
+      logical crop_growing       ! .true. if crop planted but not terminated, .false. for operation after termination operation
       integer last_harv          ! is this the last harvest in a crop rotation cycle
                                  ! 0 = not the last harvest
                                  ! 1 = this is the last harvest (ie. end of the cycle)
@@ -138,9 +140,10 @@ module stir_report_mod
       real :: ospeed, tdepth, fracarea
       integer :: burydistflg
       character*80     cropname
-      character*80     prevcropname
-      integer :: killflag
       integer :: croptype
+      integer :: killflag
+      integer temp_num
+      integer temp_idx
       real :: plantpop
       real :: pyieldf
       real :: pstalkf
@@ -150,8 +153,6 @@ module stir_report_mod
       real :: stemf
       real :: rootstoref
       real :: rootfiberf
-      logical :: crop_present
-      logical :: crop_present_today
       logical :: pass_2
       integer :: prev_day
       integer :: prev_mon
@@ -182,21 +183,12 @@ module stir_report_mod
       ! types, stir and energy values and operation specified crop name.
       cropname = ''
       croptype = 0
-      crop_present = .false.
-      crop_present_today = .false.
       pass_2 = .false.
       prev_day = 0
       prev_mon = 0
       prev_yr = 0
       manFile%oper => manFile%operFirst
       do while( associated(manFile%oper) )
-
-        if(     (manFile%oper%operDate%day .ne. prev_day) &
-          .or. (manFile%oper%operDate%month .ne. prev_mon) &
-          .or. (manFile%oper%operDate%year .ne. prev_yr) ) then
-          ! new day
-          crop_present = crop_present_today
-        end if
 
         ! increment index for planting harvest accounting
         stircum(isr)%phopidx = stircum(isr)%phopidx + 1
@@ -216,11 +208,6 @@ module stir_report_mod
             stircum(isr)%phop(stircum(isr)%phopidx)%phop_skip = .false.
           end if
 
-          if ( stircum(isr)%phopidx .eq. 1 ) then
-            stircum(isr)%phop(stircum(isr)%phopidx)%crop_num = stircum(isr)%phop(stircum(isr)%phopcnt)%crop_num
-          else
-            stircum(isr)%phop(stircum(isr)%phopidx)%crop_num = stircum(isr)%phop(stircum(isr)%phopidx-1)%crop_num
-          end if
           stircum(isr)%phop(stircum(isr)%phopidx)%stir_fuelname = ''
           oenergyarea = -1
           ostir = -1
@@ -264,60 +251,55 @@ module stir_report_mod
                        ) &
                    .or. (killflag .eq. 2) &
                   ) then
-                   if ( crop_present ) then
+                   if ( stircum(isr)%phop(stircum(isr)%phopidx)%phop_type .eq. 2 ) then
+                     stircum(isr)%phop(stircum(isr)%phopidx)%phop_type = 5
+                   else
                      stircum(isr)%phop(stircum(isr)%phopidx)%phop_type = 3
-                     crop_present_today = .false.
                    end if
-                else
-                  stircum(isr)%phop(stircum(isr)%phopidx)%phop_type = 0
                 end if
               case (32, 42)
                 call getManVal(manFile%proc, 'cyldrmh', pyieldf)
                 call getManVal(manFile%proc, 'cplrmh', pstalkf)
                 call getManVal(manFile%proc, 'cstrmh', rstandf)
-                if(     (pyieldf+pstalkf+rstandf.gt.0.0) &
-                  .and. crop_present ) then
+                if( pyieldf+pstalkf+rstandf.gt.0.0 ) then
                   if ( stircum(isr)%phop(stircum(isr)%phopidx)%phop_type .ne. 3 ) then
                     stircum(isr)%phop(stircum(isr)%phopidx)%phop_type = 2
+                  else
+                    stircum(isr)%phop(stircum(isr)%phopidx)%phop_type = 5
                   end if
-                else
-                  stircum(isr)%phop(stircum(isr)%phopidx)%phop_type = 0
                 end if
               case (33, 43)
                 call getManVal(manFile%proc, 'cyldrmf', pyieldf)
                 call getManVal(manFile%proc, 'cplrmf', pstalkf)
                 call getManVal(manFile%proc, 'cstrmf', rstandf)
-                if(     (pyieldf+pstalkf+rstandf.gt.0.0) &
-                  .and. crop_present ) then
+                if( pyieldf+pstalkf+rstandf.gt.0.0 ) then
                   if ( stircum(isr)%phop(stircum(isr)%phopidx)%phop_type .ne. 3 ) then
                     stircum(isr)%phop(stircum(isr)%phopidx)%phop_type = 2
+                  else
+                    stircum(isr)%phop(stircum(isr)%phopidx)%phop_type = 5
                   end if
-                else
-                  stircum(isr)%phop(stircum(isr)%phopidx)%phop_type = 0
                 end if
               case (37, 47)
                 call getManVal(manFile%proc, 'tyldrmp', pyieldf)
                 call getManVal(manFile%proc, 'tplrmp', pstalkf)
                 call getManVal(manFile%proc, 'tstrmp', rstandf)
-                if(     (pyieldf+pstalkf+rstandf.gt.0.0) &
-                  .and. crop_present ) then
+                if( pyieldf+pstalkf+rstandf.gt.0.0 ) then
                   if ( stircum(isr)%phop(stircum(isr)%phopidx)%phop_type .ne. 3 ) then
                     stircum(isr)%phop(stircum(isr)%phopidx)%phop_type = 2
+                  else
+                    stircum(isr)%phop(stircum(isr)%phopidx)%phop_type = 5
                   end if
-                else
-                  stircum(isr)%phop(stircum(isr)%phopidx)%phop_type = 0
                 end if
               case (38, 48)
                 call getManVal(manFile%proc, 'tyldrmf', pyieldf)
                 call getManVal(manFile%proc, 'tplrmf', pstalkf)
                 call getManVal(manFile%proc, 'tstrmf', rstandf)
-                if(     (pyieldf+pstalkf+rstandf.gt.0.0) &
-                  .and. crop_present ) then
+                if( pyieldf+pstalkf+rstandf.gt.0.0 ) then
                   if ( stircum(isr)%phop(stircum(isr)%phopidx)%phop_type .ne. 3 ) then
                     stircum(isr)%phop(stircum(isr)%phopidx)%phop_type = 2
+                  else
+                    stircum(isr)%phop(stircum(isr)%phopidx)%phop_type = 5
                   end if
-                else
-                  stircum(isr)%phop(stircum(isr)%phopidx)%phop_type = 0
                 end if
               case (51)
                 call getManVal(manFile%proc, 'idc', croptype)
@@ -325,8 +307,6 @@ module stir_report_mod
                 if ( plantpop .gt. 0.0 ) then
                   stircum(isr)%phop(stircum(isr)%phopidx)%phop_type = 1
                   stircum(isr)%phop(stircum(isr)%phopidx)%stir_cropname = cropname
-                  crop_present_today = .true.
-                  stircum(isr)%phop(stircum(isr)%phopidx)%crop_num = stircum(isr)%phop(stircum(isr)%phopidx)%crop_num + 1
                 else
                   stircum(isr)%phop(stircum(isr)%phopidx)%phop_type = 0
                 end if
@@ -336,8 +316,6 @@ module stir_report_mod
                 if ( plantpop .gt. 0.0 ) then
                   stircum(isr)%phop(stircum(isr)%phopidx)%phop_type = 1
                   stircum(isr)%phop(stircum(isr)%phopidx)%stir_cropname = cropname
-                  crop_present_today = .true.
-                  stircum(isr)%phop(stircum(isr)%phopidx)%crop_num = stircum(isr)%phop(stircum(isr)%phopidx)%crop_num + 1
                 else
                   stircum(isr)%phop(stircum(isr)%phopidx)%phop_type = 0
                 end if
@@ -347,13 +325,12 @@ module stir_report_mod
                 call getManVal(manFile%proc, 'rstem', stemf)
                 call getManVal(manFile%proc, 'rrootstore', rootstoref)
                 call getManVal(manFile%proc, 'rrootfiber', rootfiberf)
-                if(     (storef + leaff + stemf + rootstoref + rootfiberf .gt. 0.0) &
-                  .and. crop_present ) then
+                if( storef + leaff + stemf + rootstoref + rootfiberf .gt. 0.0 ) then
                   if ( stircum(isr)%phop(stircum(isr)%phopidx)%phop_type .ne. 3 ) then
                     stircum(isr)%phop(stircum(isr)%phopidx)%phop_type = 2
+                  else
+                    stircum(isr)%phop(stircum(isr)%phopidx)%phop_type = 5
                   end if
-                else
-                  stircum(isr)%phop(stircum(isr)%phopidx)%phop_type = 0
                 end if
               case (50, 65, 66)
                 stircum(isr)%phop(stircum(isr)%phopidx)%phop_type = 4
@@ -405,7 +382,6 @@ module stir_report_mod
         stircum(isr)%oper_cnt = 0
         stircum(isr)%proc_cnt = 0
 
-        prevcropname = cropname
         manFile%oper => manFile%oper%operNext
 
         ! second pass required to take care planting/harvest combination
@@ -419,36 +395,33 @@ module stir_report_mod
         end if
       end do
 
-      ! go through phop array, setting last harvest flag and crop harvest name
+      ! go through phop array, setting crop_growing flag
       idx = 1
       do while (.true.)
         ! search forward for planting operation
         if ( stircum(isr)%phop(idx)%phop_type .eq. 1 ) then
-          ! search forward for end of crop growth
+          ! planted so crop is growing
+          stircum(isr)%phop(idx)%crop_growing = .true.
+          ! search forward for termination operation
           jdx = idx + 1
           if ( jdx .gt. stircum(isr)%phopcnt ) then
             jdx = 1
           end if
           do while (stircum(isr)%phop(jdx)%phop_type .ne. 1)
-            if ( stircum(isr)%phop(jdx)%phop_type .eq. 3 ) then
-              ! termination, may be harvest
-              stircum(isr)%phop(jdx)%last_harv = 1           
-              stircum(isr)%phop(jdx)%stir_cropname = stircum(isr)%phop(idx)%stir_cropname
+            if ( (stircum(isr)%phop(jdx)%phop_type .eq. 3 ) &    ! termination operation
+              .or. (stircum(isr)%phop(jdx)%phop_type .eq. 5) &   ! harvest operation with termination
+               ) then
+              stircum(isr)%phop(jdx)%crop_growing = .true.
               exit
-            else if ( stircum(isr)%phop(jdx)%phop_type .eq. 2 ) then
-              ! harvest operation, add name
-              stircum(isr)%phop(jdx)%stir_cropname = stircum(isr)%phop(idx)%stir_cropname
+            else
+              ! operation after planting and before tremination
+              stircum(isr)%phop(jdx)%crop_growing = .true.
             end if
             jdx = jdx + 1
             if ( jdx .gt. stircum(isr)%phopcnt ) then
               jdx = 1
             end if
           end do
-          ! if exited loop on phop_type=1 then no kill operation for crop
-          ! Set last_harv 
-          if ( stircum(isr)%phop(jdx)%phop_type .eq. 1 ) then
-            stircum(isr)%phop(jdx)%last_harv = 1           
-          end if
         end if
         idx = idx + 1
         if ( idx .gt. stircum(isr)%phopcnt ) then
@@ -456,56 +429,21 @@ module stir_report_mod
         end if
       end do
 
-      ! go through phop array, setting crop numbers backward until "last Harvest/Termination" is reached
+      ! go through phop array, setting last harvest flag
       idx = 1
       do while (.true.)
         ! search forward for planting operation
         if ( stircum(isr)%phop(idx)%phop_type .eq. 1 ) then
-          ! planting operation can be termination, done, otherwise
-          if (stircum(isr)%phop(idx)%last_harv .ne. 1) then
-            ! search backward for "last Harvest" or termination
-            jdx = idx - 1
-            if ( jdx .lt. 1 ) then
-              jdx = stircum(isr)%phopcnt
-            end if
-            do while (stircum(isr)%phop(jdx)%last_harv .ne. 1)
-              if( stircum(isr)%phop(jdx)%phop_type .eq. 1 ) then
-                exit
-              else
-                stircum(isr)%phop(jdx)%crop_num = stircum(isr)%phop(idx)%crop_num
-              end if
-              jdx = jdx - 1
-              if ( jdx .lt. 1 ) then
-                jdx = stircum(isr)%phopcnt
-              end if
-            end do
-          end if
-        end if
-        idx = idx + 1
-        if ( idx .gt. stircum(isr)%phopcnt ) then
-          exit
-        end if
-      end do
-
-      ! go through phop array, setting crop numbers and crop names which are still zero
-      idx = 1
-      do while (.true.)
-        ! search forward for crop number that is zero
-        if ( stircum(isr)%phop(idx)%crop_num .eq. 0 ) then
-          ! search backward for non zero crop number
+          ! search backward for last harvest operation
           jdx = idx - 1
           if ( jdx .lt. 1 ) then
             jdx = stircum(isr)%phopcnt
           end if
-          do while (stircum(isr)%phop(idx)%crop_num .eq. 0)
-            if ( stircum(isr)%phop(jdx)%crop_num .gt. 0 ) then
-              ! found non-zero crop number, assign, done searching backwards
-              stircum(isr)%phop(idx)%crop_num = stircum(isr)%phop(jdx)%crop_num
-              stircum(isr)%phop(idx)%stir_cropname = stircum(isr)%phop(jdx)%stir_cropname
-              exit
-            end if
-            if( jdx .eq. idx ) then
-              ! searched entire list, exit backward search
+          do while (stircum(isr)%phop(jdx)%phop_type .ne. 1)
+            if ( (stircum(isr)%phop(jdx)%phop_type .eq. 2 ) &    ! harvest operation
+              .or. (stircum(isr)%phop(jdx)%phop_type .eq. 5) &   ! harvest operation with termination, last harvest
+               ) then
+              stircum(isr)%phop(jdx)%last_harv = 1           
               exit
             end if
             jdx = jdx - 1
@@ -516,10 +454,134 @@ module stir_report_mod
         end if
         idx = idx + 1
         if ( idx .gt. stircum(isr)%phopcnt ) then
-          ! checked entire list, done
           exit
         end if
       end do
+
+      ! go through phop array, setting crop name for harvest and first termination
+      idx = 1
+      do while (.true.)
+        ! search forward for planting operation
+        if ( stircum(isr)%phop(idx)%phop_type .eq. 1 ) then
+          ! search forward for end of crop growth
+          jdx = idx + 1
+          if ( jdx .gt. stircum(isr)%phopcnt ) then
+            jdx = 1
+          end if
+          do while (stircum(isr)%phop(jdx)%phop_type .ne. 1)
+            if (    (stircum(isr)%phop(jdx)%phop_type .eq. 3) &
+              .and. (stircum(isr)%phop(jdx)%crop_growing) ) then
+              ! termination, add name
+              stircum(isr)%phop(jdx)%stir_cropname = stircum(isr)%phop(idx)%stir_cropname
+            else if ( stircum(isr)%phop(jdx)%phop_type .eq. 2 ) then
+              ! harvest operation, add name
+              stircum(isr)%phop(jdx)%stir_cropname = stircum(isr)%phop(idx)%stir_cropname
+            else if ( stircum(isr)%phop(jdx)%phop_type .eq. 5 ) then
+              ! harvest operation with termination, add name
+              stircum(isr)%phop(jdx)%stir_cropname = stircum(isr)%phop(idx)%stir_cropname
+            end if
+            jdx = jdx + 1
+            if ( jdx .gt. stircum(isr)%phopcnt ) then
+              jdx = 1
+            end if
+          end do
+        end if
+        idx = idx + 1
+        if ( idx .gt. stircum(isr)%phopcnt ) then
+          exit
+        end if
+      end do
+
+      ! go through phop array, setting crop number for each "last Harvest"
+      idx = 1
+      temp_num = 0
+      do while (.true.)
+        ! search forward for first last harvest flag
+        if ( stircum(isr)%phop(idx)%last_harv .eq. 1 ) then
+          ! search backward for first planting operation
+          jdx = idx - 1
+          if ( jdx .lt. 1 ) then
+            jdx = stircum(isr)%phopcnt
+          end if
+          do while (jdx .ne. idx)
+            if ( stircum(isr)%phop(jdx)%phop_type .eq. 1 ) then
+              ! found planting operation
+              ! increment crop number
+              temp_num = temp_num + 1
+              ! set crop number for last harvest operation
+              stircum(isr)%phop(idx)%crop_num = temp_num
+              exit
+            else
+              jdx = jdx - 1
+              if ( jdx .lt. 1 ) then
+                jdx = stircum(isr)%phopcnt
+              end if
+            end if
+          end do
+        end if
+        ! increment start index
+        idx = idx + 1
+        if ( idx .gt. stircum(isr)%phopcnt ) then
+          ! no last harvest operation
+          exit
+        end if
+      end do
+
+      ! go through phop array, setting crop numbers from first 'last harvest' number
+      idx = 1
+      temp_idx = 0
+      do while ( idx .le. stircum(isr)%phopcnt )
+        ! search forward for first last harvest crop number
+        if ( (stircum(isr)%phop(idx)%last_harv .eq. 1) &
+          .and. (stircum(isr)%phop(idx)%crop_num .eq. 1) &
+          ) then
+          ! set idx for loop exit
+          temp_idx = idx
+          ! set current crop number
+          temp_num = 1
+        end if
+        idx = idx + 1
+      end do
+      if( temp_idx .eq. 0 ) then
+        ! no last harvest, set all crop number values to 1
+        do idx = 1, stircum(isr)%phopcnt
+          stircum(isr)%phop(idx)%crop_num =  1
+        end do
+      else  
+        ! search forward for all last harvests and set operation crop interval number
+        idx = temp_idx + 1
+        do while ( idx .ne. temp_idx )
+          if ( idx .gt. stircum(isr)%phopcnt ) then
+            idx = 1
+          end if
+          if( stircum(isr)%phop(idx)%last_harv .eq. 1 ) then
+            temp_num = temp_num + 1
+            stircum(isr)%phop(idx)%crop_num = temp_num
+          end if
+          idx = idx + 1
+          if ( idx .gt. stircum(isr)%phopcnt ) then
+            idx = 1
+          end if
+        end do
+        ! index through all last harvest ops and set crop numbers backward
+        do idx = 1, stircum(isr)%phopcnt
+          if( stircum(isr)%phop(idx)%last_harv .eq. 1 ) then
+            temp_num = stircum(isr)%phop(idx)%crop_num
+            jdx = idx - 1
+            if ( jdx .lt. 1 ) then
+              jdx = stircum(isr)%phopcnt
+            end if
+            do while ( stircum(isr)%phop(jdx)%last_harv .ne. 1 )
+              stircum(isr)%phop(jdx)%crop_num = temp_num
+              jdx = jdx - 1
+              if ( jdx .lt. 1 ) then
+                jdx = stircum(isr)%phopcnt
+              end if
+            end do
+          end if
+        end do
+
+      end if
 
       ! create and print STIR report (2nd time through complete, info complete)
       do idx = 1, stircum(isr)%phopcnt
@@ -619,6 +681,7 @@ module stir_report_mod
           stircum(isr)%phop(idx)%phop_stir = 0.0
           stircum(isr)%phop(idx)%phop_energy = 0.0
           stircum(isr)%phop(idx)%crop_num = 0
+          stircum(isr)%phop(idx)%crop_growing = .false.
           stircum(isr)%phop(idx)%last_harv = 0
       end do 
 

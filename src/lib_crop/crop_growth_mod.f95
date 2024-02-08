@@ -26,7 +26,7 @@ module crop_growth_mod
      &                 bcfleafstem, bc0shoot,             &
      &                 bc0diammax, bc0ssa, bc0ssb,                      &
      &                 bcfleaf2stor, bcfstem2stor, bcfstor2stor,        &
-     &                 bcyld_coef, bcresid_int, bcxstm,                 &
+     &                 bcyld_coef, bcresid_int,                 &
      &                 bcmstandstem, bcmstandleaflive, bcmstandleafdead, bcmstandstore, &
      &                 bcmflatstem, bcmflatleaf, bcmflatstore,          &
      &                 bcmshoot, bcmtotshoot, bcmbgstemz,               &
@@ -91,7 +91,7 @@ module crop_growth_mod
       real bcfleafstem, bc0shoot
       real bc0diammax, bc0ssa, bc0ssb
       real bcfleaf2stor, bcfstem2stor, bcfstor2stor
-      real bcyld_coef, bcresid_int, bcxstm
+      real bcyld_coef, bcresid_int
       real bcmstandstem, bcmstandleaflive, bcmstandleafdead, bcmstandstore
       real bcmflatstem, bcmflatleaf, bcmflatstore
       real bcmshoot, bcmtotshoot, bcmbgstemz(*)
@@ -183,7 +183,6 @@ module crop_growth_mod
 !                    that is diverted to root store
 !     bcyld_coef - yield coefficient (kg/kg)     harvest_residue = bcyld_coef(kg/kg) * Yield + bcresid_int (kg/m^2)
 !     bcresid_int - residue intercept (kg/m^2)   harvest_residue = bcyld_coef(kg/kg) * Yield + bcresid_int (kg/m^2)
-!     bcxstm - Crop stem diameter (m)
 !     bcmstandstem - crop standing stem mass (kg/m^2)
 !     bcmstandleaflive - crop live standing leaf mass (kg/m^2)
 !     bcmstandleafdead - crop dead standing leaf mass (kg/m^2)
@@ -212,7 +211,7 @@ module crop_growth_mod
 !     bcthucum - crop accumulated heat units
 !     bctrthucum - accumulated root growth heat units (degree-days)
 !     bcgrainf - internally computed reproductive grain fraction
-!     bczgrowpt - depth in the soil of the gowing point (m)
+!     bczgrowpt - depth in the soil of the growing point (m)
 !     bcleafareatrend - direction in which leaf area is trending.
 !                       Saves trend even if leaf area is static for long periods.
 !     bcstemmasstrend - direction in which stem mass is trending.
@@ -278,6 +277,7 @@ module crop_growth_mod
 
       double precision :: u_bcmtotshoot
       double precision :: u_bcdstm
+      double precision :: tsum
 
       integer :: pjuld   ! present julian day for subregion
 
@@ -415,17 +415,24 @@ module crop_growth_mod
 
       ! set trend direction for living leaf area from external forces
       trend = bcmstandleaflive - bprevstandleaflive
-      if ((trend .ne. 0.0d0) &
-          .and. ((huiy .gt. bc0hue) .or. (bc0idc.eq.8))) &
-          then  ! trend non-zero and (heat units past emergence or staged crown release crop)
+      if ((trend .ne. 0.0d0) .and. ((huiy .gt. bc0hue) .or. (bc0idc.eq.8))) then
+          ! trend non-zero and (heat units past emergence or staged crown release crop)
           bcleafareatrend = trend
       end if
 
       ! set trend direction for above ground stem mass from external forces
-      trend = dble(bcmstandstem) + dble(bcmflatstem) - dble(bprevstandstem) - dble(bprevflatstem)
-      if ((trend .ne. 0.0d0) &
-          .and. ((huiy .gt. bc0hue) .or. (bc0idc.eq.8))) &
-          then  ! trend non-zero and (heat units past emergence or staged crown release crop)
+      trend = 0.0d0
+      do lay = 1, bnslay
+          trend = trend + dble(bcmbgstemz(lay))
+      end do
+      tsum = 0.0d0
+      do lay = 1, bnslay
+          tsum = tsum + dble(bprevbgstemz(lay))
+      end do
+      trend = trend + dble(bcmstandstem) + dble(bcmflatstem) - dble(bprevstandstem) - dble(bprevflatstem) - tsum
+
+      if ((trend .ne. 0.0d0) .and. ((huiy .gt. bc0hue) .or. (bc0idc.eq.8))) then
+          ! trend non-zero and (heat units past emergence or staged crown release crop)
           bcstemmasstrend = trend
       end if
 
@@ -483,6 +490,109 @@ module crop_growth_mod
           ! bi-annuals and perennials with tuber dormancy don't need
           ! either of these checks. Doing nothing here prevents
           ! resprouting after defoliation
+        else if( bc0idc.eq.8 ) then
+          ! perennials with staged crown release also exhibit tuber dormancy
+          ! so we really need to wait for spring and not regrow immediately
+          ! after it matures, even if it is defoliated, or cut down, but
+          ! also regrow in the spring even if not cut down (test 4 to 5 check below)
+
+          regrowth_flg = 0
+          if( bcleafareatrend .lt. 0.0) then
+           ! last change in leaf area was a reduction
+           regrowth_flg = 1
+           if( bcmstandleaflive .lt. 0.84d0*bc0storeinit*bcdpop & ! 0.42 * 2 = 0.84
+            * u_mgtokg * bcfleafstem / (bcfleafstem + 1.0d0) ) then
+            ! below minimum leaf emergence period living leaf mass (which is twice seed leaf mass)
+            regrowth_flg = 2
+            if( bctwarmdays .ge. shoot_delay ) then
+             ! enough warm days to start regrowth
+             regrowth_flg = 3
+             if( (bcstemmasstrend.lt.0.0) .or. (bcdstm .le. 0.0) ) then
+              ! staged crown release will regrow without full emergence, but only if stem removed ie harvest
+              regrowth_flg = 4
+              if( (huiy .lt. 1.0d0) &
+               ! not yet mature
+               .or. (hrlty .lt. hrlt) ) then
+               ! staged crown release and days lengthening (ie. spring)
+               regrowth_flg = 5
+               ! find out how much root store could be released for regrowth
+               call shootnum(shoot_flg, bnslay, bc0idc, bcdpop, bc0shoot, &
+                     bcdmaxshoot, root_store_rel, bcmrootstorez, pot_stems)
+               ! find the potential leaf mass to be achieved with regrowth
+               if ( bczloc_regrow .gt. 0.0 ) then
+                   pot_leaf_mass = dble(bcmstandleaflive + bcmstandleafdead) + 0.42d0 &
+                                 * min(root_store_rel, u_bcmtotshoot) &
+                                 * dble(bcfleafstem) / (dble(bcfleafstem) + 1.0d0)
+               else
+                   pot_leaf_mass = 0.42d0 * root_store_rel &
+                                 * dble(bcfleafstem) / (dble(bcfleafstem) + 1.0d0)
+               end if
+               ! is present living leaf mass less than leaf mass from storage regrowth
+               if( dble(bcmstandleaflive) .lt. pot_leaf_mass ) then
+                  regrowth_flg = 6
+
+                  ! regrow possible from shoot for perennials, annuals.
+                  ! reset growth clock 
+                  bcthucum = 0.0d0
+                  huiy = 0.0d0
+                  bcthu_shoot_beg = 0.0d0
+                  bcthu_shoot_end = dble(bc0hue)
+                  bcdayam = 0
+                  ! allow vernalization to start over (bluegrass uses this)
+                  bctchillucum = 0.0
+                  ! reset shoot grow configuration
+                  if ( bczloc_regrow .gt. 0.0 ) then
+                      ! regrows from stem, stem does not become residue
+                      ! note, flat leaves are dead leaves, no storage in shoot.
+
+                      ! testing shows that this is not what is intended
+                      !bcmshoot = bcmstandstem +bcmflatstem +bcmstandleaflive + bcmstandleafdead
+                      !do lay = 1, bnslay
+                      !    bcmshoot = bcmshoot + bcmbgstemz(lay)
+                      !end do
+                      ! shoot grows from stem regrow location using root reserves
+                      bcmshoot = 0.0
+                      u_bcmtotshoot = min(root_store_rel, u_bcmtotshoot)
+                  else
+                      ! regrows from crown, stem becomes residue
+                      bgmstandstem = bcmstandstem
+                      bgmstandleaf = bcmstandleaflive + bcmstandleafdead
+                      bgmstandstore = bcmstandstore
+                      bgmflatstem = bcmflatstem
+                      bgmflatleaf = bcmflatleaf
+                      bgmflatstore = bcmflatstore
+                      do lay = 1, bnslay
+                          bgmbgstemz(lay) = bcmbgstemz(lay)
+                      end do
+                      bggrainf = bcgrainf
+                      bgzht = bczht
+                      bgdstm = u_bcdstm
+                      bgxstmrep = bcxstmrep
+                      ! reset crop values to indicate new growth cycle
+                      bcmshoot = 0.0
+                      bcmstandstem = 0.0
+                      bcmstandleaflive = 0.0
+                      bcmstandleafdead = 0.0
+                      bcmstandstore = 0.0
+                      bcmflatstem = 0.0
+                      bcmflatleaf = 0.0
+                      bcmflatstore = 0.0
+                      do lay = 1, bnslay
+                          bcmbgstemz(lay) = 0.0
+                      end do
+                      bcgrainf = 0.0
+                      bczht = 0.0
+                      u_bcmtotshoot = root_store_rel
+                      u_bcdstm = pot_stems
+                      bcleafareatrend = 0.0
+                      bcstemmasstrend = 0.0
+                  end if
+               end if
+              end if
+             end if
+            end if
+           end if
+          end if
 
         else if( (bc0idc.eq.9) .or. (bc0idc.eq.10) .or. (bc0idc.eq.11) .or. (bc0idc.eq.12) ) then
           ! bush/tree crops with annual cycle without replanting
@@ -889,12 +999,18 @@ module crop_growth_mod
      &        then  ! trend non-zero and (heat units past emergence or staged crown release crop)
               bcleafareatrend = trend
           end if
-          ! set trend direction for above ground stem mass from growth
-          trend = bcmstandstem + bcmflatstem                            &
-     &          - bprevstandstem - bprevflatstem
-          if ((trend .ne. 0.0)                                          &
-     &        .and. ((hui .gt. bc0hue) .or. (bc0idc.eq.8))) &
-     &        then  ! trend non-zero and (heat units past emergence or staged crown release crop)
+          ! set trend direction for below and above ground stem mass from growth
+          trend = 0.0d0
+          do lay = 1, bnslay
+              trend = trend + dble(bcmbgstemz(lay))
+          end do
+          tsum = 0.0d0
+          do lay = 1, bnslay
+              tsum = tsum + dble(bprevbgstemz(lay))
+          end do
+          trend = trend + dble(bcmstandstem) + dble(bcmflatstem) - dble(bprevstandstem) - dble(bprevflatstem) - tsum
+          if ((trend .ne. 0.0) .and. ((hui .gt. bc0hue) .or. (bc0idc.eq.8))) then
+              ! trend non-zero and (heat units past emergence or staged crown release crop)
               bcstemmasstrend = trend
           end if
 
@@ -927,7 +1043,7 @@ module crop_growth_mod
       else
           ! accumulate days after maturity
           bcdayam = bcdayam + 1
-
+          bcdayap = bcdayap + 1
       end if
 
       if( (hui .ge. 1.0d0) .and. (bcdstm .gt. 0.0)) then

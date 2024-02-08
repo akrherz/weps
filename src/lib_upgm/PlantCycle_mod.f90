@@ -80,7 +80,6 @@ module plantcycle_mod
       logical ::  succ
       real(dp) :: stagegdd
       integer(int32) :: specificStage, nextstage
-      logical :: regrowth_trig
 
       ! Body of growplant
       ! make sure we never try to run anything past last phase.
@@ -99,16 +98,6 @@ module plantcycle_mod
           call self%plantstate%state%replace("nextstage", nextstage, succ)
         end if
 
-        !if( regrowth_trig ) then
-        !  if( associated(self%phaseCurrent%ptr%phaseRegrow) ) then
-        !    self%phaseCurrent%ptr => self%phaseCurrent%ptr%phaseRegrow
-        !    ! reset phase state to start again
-        !    stagegdd = 0.0_dp
-        !    call self%phaseCurrent%ptr%phaseState%replace("phase_rel_gdd", stagegdd, succ)
-        !    call self%phaseCurrent%ptr%phaseState%replace("stagegdd", stagegdd, succ)
-        !  end if
-        !end if
-        
         !run the phase
         call self%phaseCurrent%ptr%doPhase(self%plantstate, env)
 

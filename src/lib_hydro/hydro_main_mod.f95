@@ -339,8 +339,8 @@ module hydro_main_mod
 
           call transp (soil%nslay, 0, soil%aszlyd, soil%aszlyt, cropdp, &
                        soil%theta, soil%thetas, soil%thetaf, soil%thetaw, &
-                       theta80rh, soil%thetar, airentry, lambda, &
-                       soil%ahrsk, soil%tsav, thisPlant%growth%ptp, thisPlant%growth%pta, thisPlant%growth%fwsf)
+                       soil%thetar, lambda, &
+                       soil%ahrsk, thisPlant%growth%ptp, thisPlant%growth%pta, thisPlant%growth%fwsf)
           ! sum actual transipration
           h1et%zpta = h1et%zpta + thisPlant%growth%pta
 
@@ -508,7 +508,7 @@ module hydro_main_mod
          end if
 
          call darcy( isr, daysim, numeq, soil%aszlyt,soil%aszlyd,soil%asdblk, &
-            soil%theta, soil%thetadmx, soil%thetas, soil%thetaf, soil%thetaw, soil%thetar, &
+            soil%theta, soil%thetadmx, soil%thetas, soil%thetaw, soil%thetar, &
             soil%ahrsk, soil%aheaep, soil%ah0cb, soil%asfcla, soil%asfom, soil%tsav, &
             cli_day(prevjuld)%tdmx, cli_day(pjuld)%tdmn, cli_day(pjuld)%tdmx, cli_day(nextjuld)%tdmn, cli_day(pjuld)%tdpt, &
             rise, daylength, h1et%zep, dprecip, durprecip, tptprecip, &
@@ -596,8 +596,8 @@ module hydro_main_mod
             thisPlant%growth%ptp = h1et%zptp * ((thisPlant%deriv%fliveleaf * thisPlant%deriv%rlai) / bbrlailive)
             call transp( soil%nslay, 1, soil%aszlyd, soil%aszlyt, cropdp, &
                          soil%theta, soil%thetas, soil%thetaf, soil%thetaw, &
-                         theta80rh, soil%thetar, airentry, lambda, &
-                         soil%ahrsk, soil%tsav, thisPlant%growth%ptp, thisPlant%growth%pta, thisPlant%growth%fwsf)
+                         soil%thetar, lambda, &
+                         soil%ahrsk, thisPlant%growth%ptp, thisPlant%growth%pta, thisPlant%growth%fwsf)
             ! sum actual transpiration
             h1et%zpta = h1et%zpta + thisPlant%growth%pta
 

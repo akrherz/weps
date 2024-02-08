@@ -164,9 +164,11 @@ module WEPSregrowthstaged_mod
 
               call plnt%state%get("stemmasstrend", bcstemmasstrend, succ)
               if( .not. check_return( trim(self%processName) , "stemmasstrend", succ ) ) return
+              call plnt%state%get("dstm", bcdstm, succ)
+              if( .not. check_return( trim(self%processName) , "dstm", succ ) ) return
 
               regrowth_flg = 3
-              if( bcstemmasstrend.lt.0.0 ) then
+              if( (bcstemmasstrend.lt.0.0) .or. (bcdstm .le. 0.0) ) then
                 ! staged crown release will regrow without full emergence, but only if stem removed ie harvest
 
                 ! environment variables
@@ -252,8 +254,8 @@ module WEPSregrowthstaged_mod
                       if( .not. check_return( trim(self%processName) , "grainf", succ ) ) return
                       call plnt%state%get("height", bczht, succ)
                       if( .not. check_return( trim(self%processName) , "height", succ ) ) return
-                      call plnt%state%get("dstm", bcdstm, succ)
-                      if( .not. check_return( trim(self%processName) , "dstm", succ ) ) return
+                      call plnt%state%get("res_bgstemz", bgmbgstemz, succ)
+                      if( .not. check_return( trim(self%processName) , "res_bgstemz", succ ) ) return
 
                       bgmstandstem = bcmstandstem
                       bgmstandleaf = bcmstandleaflive + bcmstandleafdead
@@ -283,6 +285,8 @@ module WEPSregrowthstaged_mod
                       bczht = 0.0_dp
                       bcmtotshoot = root_store_rel
                       bcdstm = pot_stems
+                      bcleafareatrend = 0.0
+                      bcstemmasstrend = 0.0
 
                       ! update plant state values
                       call plnt%state%replace("mstandstem", bcmstandstem, succ)
@@ -325,8 +329,10 @@ module WEPSregrowthstaged_mod
                       if( .not. check_return( trim(self%processName) , "res_grainf", succ ) ) return
                       call plnt%state%replace("res_zht", bgzht, succ)
                       if( .not. check_return( trim(self%processName) , "res_zht", succ ) ) return
-                      call plnt%state%replace("res_dstm", bgdstm, succ)
-                      if( .not. check_return( trim(self%processName) , "res_dstm", succ ) ) return
+                      call plnt%state%replace("leafareatrend", bcleafareatrend, succ)
+                      if( .not. check_return( trim(self%processName) , "leafareatrend", succ ) ) return
+                      call plnt%state%replace("stemmasstrend", bcstemmasstrend, succ)
+                      if( .not. check_return( trim(self%processName) , "stemmasstrend", succ ) ) return
 
                     end if
 

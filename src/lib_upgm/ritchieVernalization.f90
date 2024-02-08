@@ -47,7 +47,6 @@ module ritchieVernalization_mod
       real(dp) :: chill_unit_cum  ! accumulated chill units for vernalization
       real(dp) :: tmax           ! Maximum temperature for this growth day
       real(dp) :: tmin           ! Minimum temperature for this growth day
-      integer(int32) :: tmp
       logical :: succ = .false.
 
       ! initialized to zero at process beginning

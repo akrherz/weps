@@ -68,8 +68,6 @@ module PhenologyMMSFallphenol_mod
       real(dp) :: end_p_rw       ! fibrous root allocation fraction at end of phase
       real(dp) :: beg_p_lf       ! leaf allocation fraction at beginning of phase
       real(dp) :: end_p_lf       ! leaf allocation fraction at end of phase
-      real(dp) :: beg_p_st       ! stem allocation fraction at beginning of phase
-      real(dp) :: end_p_st       ! stem allocation fraction at end of phase
       real(dp) :: beg_p_rp       ! reproductive allocation fraction at beginning of phase
       real(dp) :: end_p_rp       ! reproductive allocation fraction at end of phase
       integer(int32) :: i_setter
