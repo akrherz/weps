@@ -548,9 +548,8 @@ contains
               clim%cli_tran(idx)%beg_accum = hrlt
             end if
           else
-            ! decreasing daylength
             if( hrlty .gt. hrlt ) then
-              ! increasing daylength found
+              ! decreasing daylength found
               clim%cli_tran(idx)%beg_accum = hrlt
             end if
           end if

@@ -461,7 +461,7 @@ module soil_mod
             sf84sd(ldx) = (0.41 - 0.22*bsfsan(ldx))*sf84m(ldx)
 ! ***       write(*,*) ' sf84m(ldx), sf84sd(ldx) ', ldx, sf84m(ldx), sf84sd(ldx)
 
-!           calc. min and max values of geom. mean agg. diameter (eq. S-45, S-46)
+!           calc. min and max values of geom. mean agg. diameter (eq. 53, 54 in soil submodel chapter handbook 727)
             bslmin(ldx) = exp(3.44 - 7.21*(sf84m(ldx)+ 2.0*sf84sd(ldx)))
             if (bslmin(ldx) .lt. 0.025) bslmin(ldx) = 0.025
             bslmax(ldx) = exp(3.44 - 7.21*(sf84m(ldx)- 2.0*sf84sd(ldx)))

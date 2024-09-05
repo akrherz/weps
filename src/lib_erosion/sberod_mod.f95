@@ -5,6 +5,10 @@
 
 module sberod_mod
 
+    ! +++ PARAMETER +++
+    real SNODEP                !Minimum snow depth to prevent erosion
+    parameter (SNODEP = 20.0)  !No erosion when snow depth >= 20mm
+
   contains
 
     subroutine sberod (julday, time, SURF_UPD_FLG, cellstate)
@@ -380,6 +384,11 @@ module sberod_mod
                  subrsurf(julday,icsr)%sf84ic, subrsurf(julday,icsr)%bsl(1)%asvroc, & 
                  cellstate(i,j)%wust, cellstate(i,j)%wusp, cellstate(i,j)%wusto, &
                  wubsts, wucsts, wucwts, wucdts, sfcv)
+
+              if (subrsurf(julday,icsr)%ahzsnd .gt. SNODEP) then
+                ! snow depth > 20 mm, set thresholds above friction velocity
+                cellstate(i,j)%wust = cellstate(i,j)%wus * 1.01
+              end if
 
               ! calculate: smaglosmx; update: smaglos, sf84mn
               call sbaglos( cellstate(i,j)%wus, cellstate(i,j)%wust, cellstate(i,j)%wusto, &

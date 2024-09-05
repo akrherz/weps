@@ -531,6 +531,9 @@
                lcaljday = min(lcaljday, ljday)
            endif
 
+           ! set for beginning of calibration cycle
+           manFile(isr)%mcount = 1
+
            do am0jd = ijday,lcaljday
 
              ! store day for use in simulation date routines

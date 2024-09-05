@@ -1,0 +1,63 @@
+reading climate files
+
+day = zero
+	read first data line
+		failure
+			exit
+		success
+			requested day earlier than day read
+				switch to day of year (cwrnflg = 1)
+	read second data line
+		failure
+			exit
+		success
+			second day not consequtive
+				exit
+
+cwrnflg equals 0 (exact date mode)
+	if requested day earlier than today and greater or equal to next day
+		reset file to beginning
+		read next day
+		failure
+			exit
+	requested day greater than today 
+		read forward in file
+			failure
+				requested day December 31
+					reset file to beginning
+						failure
+							exit
+						success
+							switch to day of year (cwrnflg = 1)
+				requested day not end of year
+					reset file to beginning
+						switch to day of year (cwrnflg = 2)
+
+cwrnflg equals 0 (exact date mode)
+	today and next day not consecutive
+		today december 21
+			OK
+		February 28 or 29 or March 1
+			switch to day of year (cwrnflg = 2)
+		else
+			exit
+else
+	check day of year
+	requested day of year not equal to today day of year
+		exit
+		
+cwrnflg greater than 0 (day of year mode)
+	requested day of year 366 and next day of year 1
+		return today for requested day of year
+	requested day of year 1 and next day of year 366
+		read next day from file
+			failure
+				exit
+			
+
+Alternate logic
+
+read file until valid line
+	no valid line found
+		exit
+

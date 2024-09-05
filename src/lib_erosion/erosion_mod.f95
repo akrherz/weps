@@ -30,6 +30,7 @@ module erosion_mod
       use wind_mod, only: sbzo, sbwus, biodrag
       use sberod_mod, only: sberod, sbinit, sbwind
       use process_mod, only: sbwust, sbsfdi
+      use sberod_mod, only: SNODEP
 
 !     +++ ARGUMENT DECLARATIONS +++
       real min_erosion_awu       ! Minimum erosive wind speed (m/s) to evaluate for erosion loss
@@ -37,10 +38,6 @@ module erosion_mod
       integer, intent (in) :: julday ! current julian day (index into subrsurf array)
       type(threshold), dimension(:), intent(out) :: noerod                 ! report values to show which factors prevented erosion
       type(cellsurfacestate), dimension(0:,0:), intent(inout) :: cellstate     ! initialized grid cell state values
-
-!     +++ PARAMETER +++
-      real SNODEP                !Minimum snow depth to prevent erosion
-      parameter (SNODEP = 20.0)  !No erosion when snow depth >= 20mm
 
       ! +++ LOCAL VARIABLES +++
       integer :: nsubr    ! number of subregions
@@ -119,13 +116,8 @@ module erosion_mod
       
       ! for subhourly, surface water content values should be interpolated. see hidx calculation
       do icsr = 1, nsubr
-       ! initialize the subregion ratio
-       rusust_sub = 0.0
-
-       ! If snow depth > 20 mm in all subregions, then no erosion
-       if (subrsurf(julday,icsr)%ahzsnd .le. SNODEP) then
-        ! Have insufficient snow depth
-        noerod(icsr)%snowdepth = 0
+        ! initialize the subregion ratio
+        rusust_sub = 0.0
 
         ! calc if daily max friction vel. exceeds threshold in any 
         ! subregions without hill and barrier effects
@@ -199,23 +191,23 @@ module erosion_mod
           !  rusust_preros(i) = max( rusust_preros(i), wus/wust )
           !  rusust = max( rusust, rusust_preros(i) )
           if( wus/wust .gt. rusust_sub ) then
-             ! set new maximum
-             rusust_sub = wus/wust
-             ! set reporting values for the new maximum (this is as close to erosion as we will get)
-             noerod(icsr)%wus_anemom = wus_anemom
-             noerod(icsr)%wus_random = wus_random
-             noerod(icsr)%wus_ridge = wus_ridge
-             noerod(icsr)%wus_biodrag = wus_biodrag
-             noerod(icsr)%wus = wus
-             noerod(icsr)%bare = wubsts
-             noerod(icsr)%flat_cov = wucsts
-             noerod(icsr)%surf_wet = wucwts
-             noerod(icsr)%ag_den = wucdts
-             noerod(icsr)%wust = wust
-             noerod(icsr)%sfd84 = subrsurf(julday,icsr)%sfd84
-             noerod(icsr)%asvroc = subrsurf(julday,icsr)%bsl(1)%asvroc
-             noerod(icsr)%wzzo = wzzo
-             noerod(icsr)%sfcv = sfcv
+            ! set new maximum
+            rusust_sub = wus/wust
+            ! set reporting values for the new maximum (this is as close to erosion as we will get)
+            noerod(icsr)%wus_anemom = wus_anemom
+            noerod(icsr)%wus_random = wus_random
+            noerod(icsr)%wus_ridge = wus_ridge
+            noerod(icsr)%wus_biodrag = wus_biodrag
+            noerod(icsr)%wus = wus
+            noerod(icsr)%bare = wubsts
+            noerod(icsr)%flat_cov = wucsts
+            noerod(icsr)%surf_wet = wucwts
+            noerod(icsr)%ag_den = wucdts
+            noerod(icsr)%wust = wust
+            noerod(icsr)%sfd84 = subrsurf(julday,icsr)%sfd84
+            noerod(icsr)%asvroc = subrsurf(julday,icsr)%bsl(1)%asvroc
+            noerod(icsr)%wzzo = wzzo
+            noerod(icsr)%sfcv = sfcv
           end if
         end do
 
@@ -227,28 +219,21 @@ module erosion_mod
            noerod(icsr)%erosion = 1
         endif
 
-       else
-        ! snow prevented erosion in this subregion
-        noerod(icsr)%erosion = 0
-        noerod(icsr)%snowdepth = 1
-        noerod(icsr)%wus_anemom = 0
-        noerod(icsr)%wus_random = 0
-        noerod(icsr)%wus_ridge = 0
-        noerod(icsr)%wus_biodrag = 0
-        noerod(icsr)%wus = 0
-        noerod(icsr)%bare = 1
-        noerod(icsr)%flat_cov = 1
-        noerod(icsr)%surf_wet = 1
-        noerod(icsr)%ag_den = 1
-        noerod(icsr)%wust = 1
-        noerod(icsr)%sfd84 = 0
-        noerod(icsr)%asvroc = 0
-        noerod(icsr)%wzzo = 0
-        noerod(icsr)%sfcv = 0
-       endif
+        ! If snow depth > 20 mm in all subregions, then no erosion
+        if (subrsurf(julday,icsr)%ahzsnd .gt. SNODEP) then
+          ! snow prevented erosion in this subregion
+          noerod(icsr)%snowdepth = 1
+          ! set this so all subregions checked for snow depth suppression
+          ! see mod to wust below and in sbwind cell by cell for when
+          ! only some cells have sufficient depth to supress erosion
+          rusust_sub = 0.99
+        else
+          ! Have insufficient snow depth
+          noerod(icsr)%snowdepth = 0
+        end if
 
-       ! set global maximum
-       rusust_max = max( rusust_sub, rusust_max )
+        ! set global maximum
+        rusust_max = max( rusust_sub, rusust_max )
 
       end do
 

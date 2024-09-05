@@ -1,0 +1,318 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE runFileData SYSTEM "weps.run.dtd">
+<runFileData>
+	<GUI_UserName>Excercise 5</GUI_UserName>
+	<GUI_FarmId/>
+	<GUI_TractId/>
+	<GUI_FieldId/>
+	<GUI_RunTypeDisp>cycle</GUI_RunTypeDisp>
+	<GUI_Site>FIPS:US-WA-021</GUI_Site>
+	<GUI_cligenFlag>choice</GUI_cligenFlag>
+	<GUI_cligenMethod>cligen</GUI_cligenMethod>
+	<GUI_cligenLatitude>+46.75</GUI_cligenLatitude>
+	<GUI_cligenLongitude>-118.617</GUI_cligenLongitude>
+	<GUI_cligenStateId>45</GUI_cligenStateId>
+	<GUI_cligenStationNum>3546</GUI_cligenStationNum>
+	<GUI_cligenStationName>HATTON 10 E</GUI_cligenStationName>
+	<GUI_cligenElevation>417.0</GUI_cligenElevation>
+	<GUI_windgenFlag>choice</GUI_windgenFlag>
+	<GUI_windgenMethod>windgen</GUI_windgenMethod>
+	<GUI_windgenLatitude>+46.267</GUI_windgenLatitude>
+	<GUI_windgenLongitude>-119.117</GUI_windgenLongitude>
+	<GUI_windgenStationNum>727845</GUI_windgenStationNum>
+	<GUI_windgenCountry>US</GUI_windgenCountry>
+	<GUI_windgenState>WA</GUI_windgenState>
+	<GUI_windgenStationName>PASCO/TRI-CITIES</GUI_windgenStationName>
+	<GUI_lastrun/>
+	<SCI_CycleCount>2</SCI_CycleCount>
+	<SCI_CentrLatitude>37.7383499145508</SCI_CentrLatitude>
+	<SCI_CentrLongitude>-100.437850952148</SCI_CentrLongitude>
+	<SCI_Elevation>801.000000000000</SCI_Elevation>
+	<SCI_StartDate>
+		<SCI_Day>1</SCI_Day>
+		<SCI_Month>1</SCI_Month>
+		<SCI_Year>1</SCI_Year>
+	</SCI_StartDate>
+	<SCI_EndDate>
+		<SCI_Day>31</SCI_Day>
+		<SCI_Month>12</SCI_Month>
+		<SCI_Year>280</SCI_Year>
+	</SCI_EndDate>
+	<SCI_TimeSteps>24</SCI_TimeSteps>
+	<SCI_climateFile>./cli_gen.cli</SCI_climateFile>
+	<SCI_windFile>./win_gen.win</SCI_windFile>
+	<SCI_ErosionSubmodelOutput>15</SCI_ErosionSubmodelOutput>
+	<SCI_RegionAngle>0.00000000000000</SCI_RegionAngle>
+	<SCI_XOrigin>0.00000000000000</SCI_XOrigin>
+	<SCI_YOrigin>0.00000000000000</SCI_YOrigin>
+	<SCI_XLength>366</SCI_XLength>
+	<SCI_YLength>366</SCI_YLength>
+	<SCI_Subregions SCI_number="4">
+		<SCI_Subregion SCI_index="0">
+			<SCI_SubmodelOutput>
+				<SCI_hydro>0</SCI_hydro>
+				<SCI_soil>0</SCI_soil>
+				<SCI_man>0</SCI_man>
+				<SCI_crop>0</SCI_crop>
+				<SCI_decomp>0</SCI_decomp>
+			</SCI_SubmodelOutput>
+			<SCI_DebugOutput>
+				<SCI_hydro>0</SCI_hydro>
+				<SCI_soil>0</SCI_soil>
+				<SCI_man>0</SCI_man>
+				<SCI_crop>0</SCI_crop>
+				<SCI_decomp>0</SCI_decomp>
+			</SCI_DebugOutput>
+			<SCI_AverageSlope>-1</SCI_AverageSlope>
+			<SCI_SoilRockFragments>0.00000000000000</SCI_SoilRockFragments>
+			<SCI_SoilFile>Anders_1_90_SIL.ifc</SCI_SoilFile>
+			<SCI_ManageFile>WA-Potatoes-WntrWheat-Beans,dry-Alfalfa,4yrs-CMZ49.man</SCI_ManageFile>
+			<SCI_WaterErosionLoss>0.00000000000000</SCI_WaterErosionLoss>
+		</SCI_Subregion>
+			<SCI_Subregion SCI_index="1">
+			<SCI_SubmodelOutput>
+				<SCI_hydro>7</SCI_hydro>
+				<SCI_soil>1</SCI_soil>
+				<SCI_man>1</SCI_man>
+				<SCI_crop>1</SCI_crop>
+				<SCI_decomp>3</SCI_decomp>
+			</SCI_SubmodelOutput>
+			<SCI_DebugOutput>
+				<SCI_hydro>0</SCI_hydro>
+				<SCI_soil>0</SCI_soil>
+				<SCI_man>0</SCI_man>
+				<SCI_crop>0</SCI_crop>
+				<SCI_decomp>0</SCI_decomp>
+			</SCI_DebugOutput>
+			<SCI_AverageSlope>-1</SCI_AverageSlope>
+			<SCI_SoilRockFragments>0.00000000000000</SCI_SoilRockFragments>
+			<SCI_SoilFile>Anders_AKC_45_ST_SIL.ifc</SCI_SoilFile>
+			<SCI_ManageFile>Alfalfa, fall seed, 3yr-Potato-WWheat, circle irr CMZ49.man</SCI_ManageFile>
+			<SCI_WaterErosionLoss>0.00000000000000</SCI_WaterErosionLoss>
+		</SCI_Subregion><SCI_Subregion SCI_index="2">
+			<SCI_SubmodelOutput>
+				<SCI_hydro>0</SCI_hydro>
+				<SCI_soil>0</SCI_soil>
+				<SCI_man>0</SCI_man>
+				<SCI_crop>0</SCI_crop>
+				<SCI_decomp>0</SCI_decomp>
+			</SCI_SubmodelOutput>
+			<SCI_DebugOutput>
+				<SCI_hydro>0</SCI_hydro>
+				<SCI_soil>0</SCI_soil>
+				<SCI_man>0</SCI_man>
+				<SCI_crop>0</SCI_crop>
+				<SCI_decomp>0</SCI_decomp>
+			</SCI_DebugOutput>
+			<SCI_AverageSlope>-1</SCI_AverageSlope>
+			<SCI_SoilRockFragments>0.00000000000000</SCI_SoilRockFragments>
+			<SCI_SoilFile>Norfolk_NoA_90_LS.ifc</SCI_SoilFile>
+			<SCI_ManageFile>Wheat,winter,after fallow,conv.,CMZ50.man</SCI_ManageFile>
+			<SCI_WaterErosionLoss>0.00000000000000</SCI_WaterErosionLoss>
+		</SCI_Subregion><SCI_Subregion SCI_index="3">
+			<SCI_SubmodelOutput>
+				<SCI_hydro>0</SCI_hydro>
+				<SCI_soil>0</SCI_soil>
+				<SCI_man>0</SCI_man>
+				<SCI_crop>0</SCI_crop>
+				<SCI_decomp>0</SCI_decomp>
+			</SCI_SubmodelOutput>
+			<SCI_DebugOutput>
+				<SCI_hydro>0</SCI_hydro>
+				<SCI_soil>0</SCI_soil>
+				<SCI_man>0</SCI_man>
+				<SCI_crop>0</SCI_crop>
+				<SCI_decomp>0</SCI_decomp>
+			</SCI_DebugOutput>
+			<SCI_AverageSlope>-1</SCI_AverageSlope>
+			<SCI_SoilRockFragments>0.00000000000000</SCI_SoilRockFragments>
+			<SCI_SoilFile>Anders_1_90_SIL.ifc</SCI_SoilFile>
+			<SCI_ManageFile>Canola, fall; Fallow_ Wheat, winter; Fallow; mulch till, Z50.man</SCI_ManageFile>
+			<SCI_WaterErosionLoss>0.00000000000000</SCI_WaterErosionLoss>
+		</SCI_Subregion>
+	</SCI_Subregions>
+	<SCI_Barriers SCI_number="4">
+		<!-- Fixed Barrier - SCI_BarCliNumber=1 means it does not change in time-->
+		<SCI_Barrier SCI_BarrierSeasonFlag="0" SCI_index="0">
+			<SCI_Description>Fence, solid</SCI_Description>
+			<SCI_PointBarClis SCI_BarCliNumber="1" SCI_CoordinateNumber="2">
+				<SCI_BarCli SCI_index="0">
+					<SCI_TimeDesc>fixed</SCI_TimeDesc>
+					<SCI_TimeMark>0</SCI_TimeMark>
+				</SCI_BarCli>
+				<SCI_coord SCI_index="0">
+					<SCI_x>0.00000000000000</SCI_x>
+					<SCI_y>0.00000</SCI_y>
+				</SCI_coord>
+				<SCI_coord SCI_index="1">
+					<SCI_x>0.00000000000</SCI_x>
+					<SCI_y>366.00000</SCI_y>
+				</SCI_coord>
+				<SCI_PointBarCli SCI_BarCliIndex="0" SCI_coordIndex="0">
+					<SCI_height>1.21899998188019</SCI_height>
+					<SCI_width>0.305000007152557</SCI_width>
+					<SCI_porosity>0.500000007450581E-01</SCI_porosity>
+				</SCI_PointBarCli>
+				<SCI_PointBarCli SCI_BarCliIndex="0" SCI_coordIndex="1">
+					<SCI_height>1.21899998188019</SCI_height>
+					<SCI_width>0.305000007152557</SCI_width>
+					<SCI_porosity>0.500000007450581E-01</SCI_porosity>
+				</SCI_PointBarCli>
+			</SCI_PointBarClis>
+		</SCI_Barrier>
+		<!-- Temporary Barrier - SCI_BarCliNumber=2 two times, present and not present
+		     SCI_BarrierSeasonFlag=1 means the Barrier properties are set at the two time marks-->
+		<SCI_Barrier SCI_BarrierSeasonFlag="1" SCI_index="1">
+			<SCI_Description>Fence, snow</SCI_Description>
+			<SCI_PointBarClis SCI_BarCliNumber="2" SCI_CoordinateNumber="2">
+				<SCI_coord SCI_index="0">
+					<SCI_x>0.00000000000000</SCI_x>
+					<SCI_y>0.00000</SCI_y>
+				</SCI_coord>
+				<SCI_coord SCI_index="1">
+					<SCI_x>0.00000000000</SCI_x>
+					<SCI_y>660.00000</SCI_y>
+				</SCI_coord>
+				<SCI_BarCli SCI_index="0">
+					<SCI_TimeDesc>fence removed</SCI_TimeDesc>
+					<SCI_TimeMark>150</SCI_TimeMark>
+				</SCI_BarCli>
+				<SCI_PointBarCli SCI_BarCliIndex="0" SCI_coordIndex="0">
+					<SCI_height>1.21899998188019</SCI_height>
+					<SCI_width>0.305000007152557</SCI_width>
+					<SCI_porosity>1.0</SCI_porosity>
+				</SCI_PointBarCli>
+				<SCI_PointBarCli SCI_BarCliIndex="0" SCI_coordIndex="1">
+					<SCI_height>1.21899998188019</SCI_height>
+					<SCI_width>0.305000007152557</SCI_width>
+					<SCI_porosity>1.0</SCI_porosity>
+				</SCI_PointBarCli>
+				<SCI_BarCli SCI_index="1">
+					<SCI_TimeDesc>fence installed</SCI_TimeDesc>
+					<SCI_TimeMark>300</SCI_TimeMark>
+				</SCI_BarCli>
+				<SCI_PointBarCli SCI_BarCliIndex="1" SCI_coordIndex="0">
+					<SCI_height>1.21899998188019</SCI_height>
+					<SCI_width>0.305000007152557</SCI_width>
+					<SCI_porosity>0.5</SCI_porosity>
+				</SCI_PointBarCli>
+				<SCI_PointBarCli SCI_BarCliIndex="1" SCI_coordIndex="1">
+					<SCI_height>1.21899998188019</SCI_height>
+					<SCI_width>0.305000007152557</SCI_width>
+					<SCI_porosity>0.5</SCI_porosity>
+				</SCI_PointBarCli>
+			</SCI_PointBarClis>
+		</SCI_Barrier>
+		<!-- interpolated in time Barrier - Like a trap strip that grows and dies and gradually falls over-->
+		<SCI_Barrier SCI_BarrierSeasonFlag="0" SCI_index="2">
+			<SCI_Description>Corn, Sudex annl barrier|1.219|1|0.6|0.61</SCI_Description>
+			<SCI_PointBarClis SCI_BarCliNumber="3" SCI_CoordinateNumber="2">
+				<SCI_coord SCI_index="0">
+					<SCI_x>1050.00000000000000</SCI_x>
+					<SCI_y>0.00000</SCI_y>
+				</SCI_coord>
+				<SCI_coord SCI_index="1">
+					<SCI_x>1050.00000000000</SCI_x>
+					<SCI_y>660.00000</SCI_y>
+				</SCI_coord>
+				<SCI_BarCli SCI_index="0">
+					<SCI_TimeDesc>start growth</SCI_TimeDesc>
+					<SCI_TimeMark>120</SCI_TimeMark>
+				</SCI_BarCli>
+				<SCI_PointBarCli SCI_BarCliIndex="0" SCI_coordIndex="0">
+					<SCI_height>0.6</SCI_height>
+					<SCI_width>0.61</SCI_width>
+					<SCI_porosity>0.9</SCI_porosity>
+				</SCI_PointBarCli>
+				<SCI_PointBarCli SCI_BarCliIndex="0" SCI_coordIndex="1">
+					<SCI_height>0.6</SCI_height>
+					<SCI_width>0.61</SCI_width>
+					<SCI_porosity>0.9</SCI_porosity>
+				</SCI_PointBarCli>
+				<SCI_BarCli SCI_index="1">
+					<SCI_TimeDesc>mature</SCI_TimeDesc>
+					<SCI_TimeMark>200</SCI_TimeMark>
+				</SCI_BarCli>
+				<SCI_PointBarCli SCI_BarCliIndex="1" SCI_coordIndex="0">
+					<SCI_height>1.219</SCI_height>
+					<SCI_width>0.61</SCI_width>
+					<SCI_porosity>0.6</SCI_porosity>
+				</SCI_PointBarCli>
+				<SCI_PointBarCli SCI_BarCliIndex="1" SCI_coordIndex="1">
+					<SCI_height>1.219</SCI_height>
+					<SCI_width>0.61</SCI_width>
+					<SCI_porosity>0.6</SCI_porosity>
+				</SCI_PointBarCli>
+				<SCI_BarCli SCI_index="2">
+					<SCI_TimeDesc>begin decay</SCI_TimeDesc>
+					<SCI_TimeMark>300</SCI_TimeMark>
+				</SCI_BarCli>
+				<SCI_PointBarCli SCI_BarCliIndex="2" SCI_coordIndex="0">
+					<SCI_height>1.219</SCI_height>
+					<SCI_width>0.61</SCI_width>
+					<SCI_porosity>0.6</SCI_porosity>
+				</SCI_PointBarCli>
+				<SCI_PointBarCli SCI_BarCliIndex="2" SCI_coordIndex="1">
+					<SCI_height>1.219</SCI_height>
+					<SCI_width>0.61</SCI_width>
+					<SCI_porosity>0.6</SCI_porosity>
+				</SCI_PointBarCli>
+			</SCI_PointBarClis>
+		</SCI_Barrier>
+		<!--Time Varying Barrier - SCI_BarrierSeasonFlag=2 requires SCI_BarCliNumber=2 and additional tags-->
+		<SCI_Barrier SCI_BarrierSeasonFlag="2" SCI_index="3">
+			<SCI_Description>Trees 1row decidous yr10</SCI_Description>
+			<SCI_PointBarClis SCI_BarCliNumber="2" SCI_CoordinateNumber="2">
+				<SCI_coord SCI_index="0">
+					<SCI_x>0.00000000000000</SCI_x>
+					<SCI_y>0.00000000000000</SCI_y>
+				</SCI_coord>
+				<SCI_coord SCI_index="1">
+					<SCI_x>1050.00000000000</SCI_x>
+					<SCI_y>0.00000000000000</SCI_y>
+				</SCI_coord>
+				<SCI_BarCli SCI_index="0">
+					<SCI_TimeDesc>leafoff</SCI_TimeDesc>
+					<SCI_TimeMark>30</SCI_TimeMark>
+					<SCI_BegTranFlg>0</SCI_BegTranFlg>
+					<SCI_BegTranThresh>10</SCI_BegTranThresh>
+					<SCI_BegTranBase>1.0</SCI_BegTranBase>
+					<SCI_EndTranFlg>0</SCI_EndTranFlg>
+					<SCI_EndTranThresh>7</SCI_EndTranThresh>
+					<SCI_EndTranBase>0</SCI_EndTranBase>
+				</SCI_BarCli>
+				<SCI_PointBarCli SCI_BarCliIndex="0" SCI_coordIndex="0">
+					<SCI_height>6.096</SCI_height>
+					<SCI_width>3.6576</SCI_width>
+					<SCI_porosity>0.6</SCI_porosity>
+				</SCI_PointBarCli>
+				<SCI_PointBarCli SCI_BarCliIndex="0" SCI_coordIndex="1">
+					<SCI_height>6.096</SCI_height>
+					<SCI_width>3.6576</SCI_width>
+					<SCI_porosity>0.6</SCI_porosity>
+				</SCI_PointBarCli>
+				<SCI_BarCli SCI_index="1">
+					<SCI_TimeDesc>leafon</SCI_TimeDesc>
+					<SCI_TimeMark>180</SCI_TimeMark>
+					<SCI_BegTranFlg>1</SCI_BegTranFlg>
+					<SCI_BegTranThresh>10</SCI_BegTranThresh>
+					<SCI_BegTranBase>0.0</SCI_BegTranBase>
+					<SCI_EndTranFlg>0</SCI_EndTranFlg>
+					<SCI_EndTranThresh>7</SCI_EndTranThresh>
+					<SCI_EndTranBase>0</SCI_EndTranBase>
+				</SCI_BarCli>
+				<SCI_PointBarCli SCI_BarCliIndex="1" SCI_coordIndex="0">
+					<SCI_height>6.096</SCI_height>
+					<SCI_width>3.6576</SCI_width>
+					<SCI_porosity>0.75</SCI_porosity>
+				</SCI_PointBarCli>
+				<SCI_PointBarCli SCI_BarCliIndex="1" SCI_coordIndex="1">
+					<SCI_height>6.096</SCI_height>
+					<SCI_width>3.6576</SCI_width>
+					<SCI_porosity>0.75</SCI_porosity>
+				</SCI_PointBarCli>
+			</SCI_PointBarClis>
+		</SCI_Barrier>
+	</SCI_Barriers>
+</runFileData>
+
