@@ -149,7 +149,7 @@ cross		= [defined-or-default cross [false]];
 
 
 src.dir 	= src;					/* source files */
-inc.dir 	=;						/* include files, should be appended from target files */
+inc.dir 	=;					/* include files, should be appended from target files */
 test.dir 	= tests;				/* test scripts & source files */
 
 dep.dir 	= dep;					/* dependency build artifacts */
@@ -448,7 +448,7 @@ set nocascade
 	}
 
 	/* prepare a local list of includes */	
-	local incs = [stringset [src.dir]%0 [fpp.dir]%0 [inc.dir] ];
+	local incs = [stringset [src.dir]/% [fpp.dir]/% [inc.dir] ];
 
 	if [fc_inc_join] then {
 		/* combine the incs into a single list with the separator */
@@ -465,7 +465,7 @@ set nocascade
 	}
 
 	/* prepare a local list of includes */
-	local incs = [stringset [src.dir]%0 [fpp.dir]%0 [inc.dir]];
+	local incs = [stringset [src.dir]/% [fpp.dir]/% [inc.dir]];
 
 	if [fc_inc_join] then {
 		/* combine the incs into a single list with the separator */
@@ -482,7 +482,7 @@ set nocascade
 	}
 
 	/* prepare a local list of includes */
-	local incs = [stringset [src.dir]%0 [fpp.dir]%0 [inc.dir]];
+	local incs = [stringset [src.dir]/% [fpp.dir]/% [inc.dir]];
 
 	if [fc_inc_join] then {
 		/* combine the incs into a single list with the separator */

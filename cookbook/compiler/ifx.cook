@@ -58,12 +58,12 @@ if [is_windows] then { /* setup for specifying linker to use within ifx */
 	}
 	else {
 		function print "no TARGET_VS env variable found: " [getenv TARGET_VS];
-		target_vs = "";
+		target_vs = "vs2022";
 		function print "target_vs being set to: " [target_vs];
 	}
 
-	/* Test for MS Visual Studio 2017 */
-	if [matches "vs2017" [target_vs]] then {
+	/* Test for MS Visual Studio 2022 */
+	if [matches "vs2022" [target_vs]] then {
 
 		if [and [not [defined vctoolsinstalldir]] [strlen [getenv VCToolsInstallDir]]] then {
 			vctoolsinstalldir = [getenv VCToolsInstallDir];
@@ -73,10 +73,10 @@ if [is_windows] then { /* setup for specifying linker to use within ifx */
 			Cvctoolsinstalld = [shell cygpath -ams '"`echo -n $VCToolsInstallDir`"' | cygpath -uf -];
 			function print "Cvctoolsinstalld: " [Cvctoolsinstalld];
 
-			if [and [not [defined target_vs_arch]] [strlen [getenv TARGET_VS_ARCH]]] then {
-				target_vs_arch = [getenv TARGET_VS_ARCH];
-				function print "target_vs_arch: " [target_vs_arch];
-				if [matches "amd64" [target_vs_arch]] then {
+			if [and [not [defined vs_target_arch]] [strlen [getenv VS_TARGET_ARCH]]] then {
+				vs_target_arch = [getenv VS_TARGET_ARCH];
+				function print "vs_target_arch: " [vs_target_arch];
+				if [matches "amd64" [vs_target_arch]] then {
 					HostX = "HostX64";
 				}
 				else {
@@ -174,6 +174,7 @@ if [is_windows] then {
 	ld_version 		= [collect [ld] | head -1];
 
 	ld_flags		="";*/
+	ld			= [fc];
 
 	ld_out_flag		= "-o ";
 
