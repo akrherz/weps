@@ -60,6 +60,7 @@ module climate_input_mod
                                   ! = 1 --> 3.1 version cligen db format
                                   ! = 2 --> Forest Service cligen db format
                                   ! = 3 --> new WEPP compatible cli_gen file format
+                                  ! = 4 --> WEPP breakpoint daily climate format
 
     integer :: wind_gen_fmt_flag  ! flag indicating type of wind_gen daily input file
                                   ! = 1 --> original max/min wind_gen file format
@@ -166,8 +167,9 @@ contains
     end subroutine set_wind_today
 
     subroutine create_cli_day( ijuld, ljuld )
-    
+
         use datetime_mod, only: caldat
+        use erosion_data_struct_defs, only: awzypt
 
         integer, intent(in) :: ijuld   ! This variable contains the initial julian day of the simulation run.
         integer, intent(in) :: ljuld   ! This variable contains the last julian day of the simulation run.
@@ -260,7 +262,9 @@ contains
 
         rewind luicli
 
-        if (cli_gen_fmt_flag == 3) then
+        if (cli_gen_fmt_flag == 4) then
+            n_header = 15
+        else if (cli_gen_fmt_flag == 3) then
             n_header = 15
         else if (cli_gen_fmt_flag == 2) then
             n_header = 14
@@ -268,7 +272,7 @@ contains
             n_header = 8
         endif
 
-        if (cli_gen_fmt_flag == 3) then
+        if (cli_gen_fmt_flag >= 3) then
             read(luicli,'(a128)', iostat=ioc) header
             if( ioc .ne. 0 ) then
                 write(6,*) 'Error reading cligen header line 0'
@@ -381,10 +385,26 @@ contains
 
         ! + + + LOCAL VARIABLES + + +
         character :: line*256             ! data line read from file
+        character :: bp_line*256          ! breakpoint line read from file
         integer :: ioc                    ! error return from read statement
         integer :: errflg                 ! 0 - no error
-                                          ! 1 - read from file failed, restarted from beginning
+                          ! 1 - read from file failed, restarted from beginning
         real :: dummy
+        integer :: nbp
+        integer :: bpidx
+        real :: windspeed
+        real :: winddir
+        real :: bp_time
+        real :: bp_accum
+        real :: prev_time
+        real :: prev_accum
+        real :: delta_time
+        real :: delta_accum
+        real :: start_time
+        real :: end_time
+        real :: peak_time
+        real :: peak_intensity
+        logical :: started_rain
 
         errflg = 0
         do while(.true.)
@@ -405,9 +425,75 @@ contains
             end if
 
             ! successfull read from file, parse the line
-            read(line, *, iostat=ioc) cli_oneday%day, cli_oneday%month, cli_oneday%year, &
-                cli_oneday%zdpt, cli_oneday%durpt, cli_oneday%peaktpt, cli_oneday%peakipt, &
-                cli_oneday%tdmx, cli_oneday%tdmn, cli_oneday%grad, dummy, dummy, cli_oneday%tdpt
+            if( cli_gen_fmt_flag .eq. 4 ) then
+                read(line, *, iostat=ioc) cli_oneday%day, cli_oneday%month, cli_oneday%year, nbp, &
+                    cli_oneday%tdmx, cli_oneday%tdmn, cli_oneday%grad, windspeed, winddir, cli_oneday%tdpt
+                if( ioc .eq. 0 ) then
+                    prev_time = 0.0
+                    prev_accum = 0.0
+                    cli_oneday%zdpt = 0.0
+                    cli_oneday%durpt = 0.0
+                    cli_oneday%peaktpt = 0.5
+                    cli_oneday%peakipt = 1.0
+                    peak_intensity = 0.0
+                    peak_time = 0.0
+                    start_time = 0.0
+                    end_time = 0.0
+                    started_rain = .false.
+
+                    do bpidx = 1, nbp
+                        read(luicli, '(a)', iostat=ioc) bp_line
+                        if( ioc .ne. 0 ) then
+                            write(0,'(a,i0,a,i0,a)') 'Unable to read breakpoint record ', bpidx, ' of ', nbp, ' after daily summary line.'
+                            write(0,'(a)') 'Daily summary line: '//trim(line)
+                            exit
+                        end if
+                        read(bp_line, *, iostat=ioc) bp_time, bp_accum
+                        if( ioc .ne. 0 ) then
+                            write(0,'(a,i0,a,i0,a)') 'Unable to parse breakpoint record ', bpidx, ' of ', nbp, ' after daily summary line.'
+                            write(0,'(a)') 'Daily summary line: '//trim(line)
+                            write(0,'(a)') 'Breakpoint line: '//trim(bp_line)
+                            exit
+                        end if
+                        delta_time = bp_time - prev_time
+                        delta_accum = bp_accum - prev_accum
+                        if( (delta_accum .gt. 0.0) .and. (delta_time .gt. 0.0) ) then
+                            if( .not. started_rain ) then
+                                start_time = prev_time
+                                started_rain = .true.
+                            end if
+                            end_time = bp_time
+                            if( (delta_accum / delta_time) .gt. peak_intensity ) then
+                                peak_intensity = delta_accum / delta_time
+                                peak_time = 0.5 * (prev_time + bp_time)
+                            end if
+                        end if
+                        prev_time = bp_time
+                        prev_accum = bp_accum
+                    end do
+
+                    if( ioc .eq. 0 ) then
+                        cli_oneday%zdpt = max(0.0, prev_accum)
+                        if( started_rain ) then
+                            cli_oneday%durpt = max(0.0, end_time - start_time)
+                            if( cli_oneday%durpt .gt. 0.0 ) then
+                                dummy = cli_oneday%zdpt / cli_oneday%durpt
+                                if( dummy .gt. 0.0 ) then
+                                    cli_oneday%peaktpt = max(0.0, min(1.0, (peak_time - start_time) / cli_oneday%durpt))
+                                    cli_oneday%peakipt = peak_intensity / dummy
+                                end if
+                            end if
+                        end if
+                    end if
+                else
+                    write(0,'(a,i0,a)') 'Unable to parse breakpoint daily summary line, iostat=', ioc, '.'
+                    write(0,'(a)') 'Daily summary line: '//trim(line)
+                end if
+            else
+                read(line, *, iostat=ioc) cli_oneday%day, cli_oneday%month, cli_oneday%year, &
+                    cli_oneday%zdpt, cli_oneday%durpt, cli_oneday%peaktpt, cli_oneday%peakipt, &
+                    cli_oneday%tdmx, cli_oneday%tdmn, cli_oneday%grad, dummy, dummy, cli_oneday%tdpt
+            end if
             if (ioc .eq. 0) then
 
                 ! check that day, month, year values are a valid date
@@ -428,7 +514,8 @@ contains
             else
                 errflg = errflg + 1
                 if( errflg .gt. 2 ) then
-                    write(0,*) 'Unable to parse cligen file line after rewind'
+                    write(0,'(a,i0,a,i0,a)') 'Unable to parse cligen file line after rewind. format=', cli_gen_fmt_flag, ' iostat=', ioc, '.'
+                    write(0,'(a)') 'Last line: '//trim(line)
                     call exit(1)
                 end if
             end if

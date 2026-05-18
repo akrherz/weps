@@ -357,7 +357,19 @@ contains
             ! of cligen had the version number there.  Anyway, I had to change from
             ! "f" to "f6.3" for the Sun compiler on the second read of the line string.
 
-            ! Probably not a very robust way to do this
+            ! Version 4.30 denotes breakpoint climate input.
+            read(line,fmt="(73x,f8.5)",err=1910) cligen_version
+            if (cligen_version <= 5.1) then
+               read(line,fmt="(f8.5)",err=1910) cligen_version
+            end if
+
+            if (abs(cligen_version - 4.30) .lt. 0.0001) then
+               cli_gen_fmt_flag = 4
+               rewind luicli
+               goto 130
+            end if
+ 1910       continue
+
             read(line,fmt="(73x,f8.5)",err=190) cligen_version
             if (cligen_version <= 5.1) then   ! assume new version of cligen
                read(line,fmt="(f8.5)",err=190) cligen_version

@@ -1212,41 +1212,54 @@ contains
         ! of cligen had the version number there.  Anyway, I had to change from
         ! "f" to "f6.3" for the Sun compiler on the second read of the line string.
 
-        ! Probably not a very robust way to do this
+        ! Version 4.30 denotes breakpoint climate input.
         read(param_value,fmt="(73x,f6.3)",iostat=read_stat) cligen_version
-        if (read_stat .gt. 0) then
-          write(*,*) 'Error in file ', clifil, ' reading: ', param_value
-          call exit(1)
+        if (read_stat .eq. 0) then
+          if (cligen_version <= 5.1) then
+            read(param_value,fmt="(f6.3)",iostat=read_stat) cligen_version
+          end if
         end if
-        if (cligen_version <= 5.1) then   ! assume new version of cligen
-          read(param_value,fmt="(f6.3)",iostat=read_stat) cligen_version
+
+        if( (read_stat .eq. 0) .and. (abs(cligen_version - 4.30) .lt. 0.0001) ) then
+          cli_gen_fmt_flag = 4
+          rewind luicli
+          run_tag(SCI_climateFile)%acquired = .true.
+        else
+          read(param_value,fmt="(73x,f6.3)",iostat=read_stat) cligen_version
           if (read_stat .gt. 0) then
             write(*,*) 'Error in file ', clifil, ' reading: ', param_value
             call exit(1)
           end if
-        end if
+          if (cligen_version <= 5.1) then   ! assume new version of cligen
+            read(param_value,fmt="(f6.3)",iostat=read_stat) cligen_version
+            if (read_stat .gt. 0) then
+              write(*,*) 'Error in file ', clifil, ' reading: ', param_value
+              call exit(1)
+            end if
+          end if
 
-        if (report_info >=1) then
-          write(6,"(a17,f8.5)") 'cligen version: ', cligen_version
+          if (report_info >=1) then
+            write(6,"(a17,f8.5)") 'cligen version: ', cligen_version
+          end if
+          if (cligen_version >= 5.110) then
+            cli_gen_fmt_flag = 3
+            if (report_info >=2) then
+              write(6,*) 'cligen_version >= 5.110 db format'
+            end if
+          else if (cligen_version >= 5.101) then
+            cli_gen_fmt_flag = 2
+            if (report_info >=2) then
+              write(6,*) 'Forest Service cligen db format'
+            end if
+          else
+            cli_gen_fmt_flag = 1
+            if (report_info >=2) then
+              write(6,*) '3.1 version cligen db format'
+            end if
+          endif
+          rewind luicli
+          run_tag(SCI_climateFile)%acquired = .true.
         end if
-        if (cligen_version >= 5.110) then
-          cli_gen_fmt_flag = 3
-          if (report_info >=2) then
-            write(6,*) 'cligen_version >= 5.110 db format'
-          end if
-        else if (cligen_version >= 5.101) then
-          cli_gen_fmt_flag = 2
-          if (report_info >=2) then
-            write(6,*) 'Forest Service cligen db format'
-          end if
-        else
-          cli_gen_fmt_flag = 1
-          if (report_info >=2) then
-            write(6,*) '3.1 version cligen db format'
-          end if
-        endif
-        rewind luicli
-        run_tag(SCI_climateFile)%acquired = .true.
 
       else if (run_tag(SCI_windFile)%in_tag) then
         ! read WINDGEN file name
