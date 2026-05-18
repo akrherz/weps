@@ -446,14 +446,14 @@ contains
                         if( ioc .ne. 0 ) then
                             write(0,'(a,i0,a,i0,a)') 'Unable to read breakpoint record ', bpidx, ' of ', nbp, ' after daily summary line.'
                             write(0,'(a)') 'Daily summary line: '//trim(line)
-                            exit
+                            call exit(1)
                         end if
                         read(bp_line, *, iostat=ioc) bp_time, bp_accum
                         if( ioc .ne. 0 ) then
                             write(0,'(a,i0,a,i0,a)') 'Unable to parse breakpoint record ', bpidx, ' of ', nbp, ' after daily summary line.'
                             write(0,'(a)') 'Daily summary line: '//trim(line)
                             write(0,'(a)') 'Breakpoint line: '//trim(bp_line)
-                            exit
+                            call exit(1)
                         end if
                         delta_time = bp_time - prev_time
                         delta_accum = bp_accum - prev_accum
