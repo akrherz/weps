@@ -444,15 +444,12 @@ contains
                     do bpidx = 1, nbp
                         read(luicli, '(a)', iostat=ioc) bp_line
                         if( ioc .ne. 0 ) then
-                            write(0,'(a,i0,a,i0,a)') 'Unable to read breakpoint record ', bpidx, ' of ', nbp, ' after daily summary line.'
-                            write(0,'(a)') 'Daily summary line: '//trim(line)
+                            write(0,'(a,i0,a,i0,a)') 'Unable to read breakpoint record ', bpidx, ' of ', nbp, '.'
                             call exit(1)
                         end if
                         read(bp_line, *, iostat=ioc) bp_time, bp_accum
                         if( ioc .ne. 0 ) then
-                            write(0,'(a,i0,a,i0,a)') 'Unable to parse breakpoint record ', bpidx, ' of ', nbp, ' after daily summary line.'
-                            write(0,'(a)') 'Daily summary line: '//trim(line)
-                            write(0,'(a)') 'Breakpoint line: '//trim(bp_line)
+                            write(0,'(a,i0,a,i0,a)') 'Unable to parse breakpoint record ', bpidx, ' of ', nbp, '.'
                             call exit(1)
                         end if
                         delta_time = bp_time - prev_time
@@ -485,9 +482,6 @@ contains
                             end if
                         end if
                     end if
-                else
-                    write(0,'(a,i0,a)') 'Unable to parse breakpoint daily summary line, iostat=', ioc, '.'
-                    write(0,'(a)') 'Daily summary line: '//trim(line)
                 end if
             else
                 read(line, *, iostat=ioc) cli_oneday%day, cli_oneday%month, cli_oneday%year, &
@@ -514,8 +508,7 @@ contains
             else
                 errflg = errflg + 1
                 if( errflg .gt. 2 ) then
-                    write(0,'(a,i0,a,i0,a)') 'Unable to parse cligen file line after rewind. format=', cli_gen_fmt_flag, ' iostat=', ioc, '.'
-                    write(0,'(a)') 'Last line: '//trim(line)
+                    write(0,*) 'Unable to parse cligen file line after rewind'
                     call exit(1)
                 end if
             end if
@@ -694,19 +687,70 @@ contains
 
     end subroutine windinit
 
+    logical function wind_line_is_old_data(line)
+
+        character(len=*), intent(in) :: line
+
+        integer :: day
+        integer :: month
+        integer :: year
+        integer :: ioc
+        real :: dir
+        real :: udmx
+        real :: udmn
+        real :: hrmx
+
+        read(line, *, iostat=ioc) day, month, year, dir, udmx, udmn, hrmx
+        wind_line_is_old_data = (ioc .eq. 0) .and. (month .ge. 1) .and. (month .le. 12) .and. &
+                                (day .ge. 1) .and. (day .le. 31)
+
+    end function wind_line_is_old_data
+
+    logical function wind_line_is_hourly_data(line)
+        use erosion_data_struct_defs, only: ntstep
+
+        character(len=*), intent(in) :: line
+
+        integer :: day
+        integer :: month
+        integer :: year
+        integer :: idx
+        integer :: ioc
+        real :: dir
+        real :: values(ntstep)
+
+        read(line, *, iostat=ioc) day, month, year, dir, (values(idx), idx=1,ntstep)
+        wind_line_is_hourly_data = (ioc .eq. 0) .and. (month .ge. 1) .and. (month .le. 12) .and. &
+                                   (day .ge. 1) .and. (day .le. 31)
+
+    end function wind_line_is_hourly_data
+
+    logical function wind_line_is_data(line)
+
+        character(len=*), intent(in) :: line
+
+        wind_line_is_data = wind_line_is_hourly_data(line) .or. wind_line_is_old_data(line)
+
+    end function wind_line_is_data
+
     subroutine wind_start()
         use file_io_mod, only: luiwin     ! file unit number
 
         ! + + + LOCAL VARIABLES + + +
         character :: header*80
-        integer :: idx
+        integer :: ioc
 
         rewind luiwin
-        ! read through header lines when at beginning of file
-        do idx = 1,7
-            read(luiwin,*,err=9010) header
+        do
+            read(luiwin,'(a80)',iostat=ioc) header
+            if( ioc .ne. 0 ) then
+                goto 9010
+            end if
+            if( wind_line_is_data(header) ) then
+                backspace(luiwin)
+                return
+            end if
         end do
-        return
 
 9010    write(0,*) 'Unexpected error in windgen header'
         call exit(1)

@@ -333,8 +333,7 @@ module erosion_mod
           !rut = rusust_preros(idx)  This change sabotaged code logic
 
                if( abs(wuref) .le. tiny(wuref) ) then
-                  write(0,'(a,1x,i0,1x,a,1x,i0,1x,a,1x,g0,1x,a,1x,g0)') &
-                     'ERROR: invalid erosion reference wind speed at julday', julday, 'substep', idx, 'awudmx', awudmx, 'awu', subday(idx)%awu
+                  write(0,*) 'ERROR: invalid erosion reference wind speed'
                   call exit(1)
                end if
                rut = rusust_max*subday(idx)%awu/wuref

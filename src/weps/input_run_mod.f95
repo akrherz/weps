@@ -129,7 +129,7 @@ contains
       use manage_data_struct_defs, only: manFile, manFileAlloc
       use crop_data_struct_defs, only: am0cfl, am0cdb
       use decomp_data_struct_defs, only: am0dfl, am0ddb
-      use climate_input_mod, only: cli_gen_fmt_flag, wind_gen_fmt_flag
+      use climate_input_mod, only: cli_gen_fmt_flag, wind_gen_fmt_flag, wind_line_is_hourly_data, wind_line_is_old_data
       use climate_input_mod, only: amzele
       use solar_mod, only: amalat, amalon
       use input_run_xml_mod, only: nsubr, nbr
@@ -427,7 +427,17 @@ contains
                .or. (index(line,'WIND_GEN2') > 0) ) then
                wind_gen_fmt_flag = 2
             else
-               wind_gen_fmt_flag = 1
+               rewind luiwin
+               do
+                  read(luiwin,fmt="(a256)",err=191) line
+                  if( wind_line_is_hourly_data(line) ) then
+                     wind_gen_fmt_flag = 2
+                     exit
+                  else if( wind_line_is_old_data(line) ) then
+                     wind_gen_fmt_flag = 1
+                     exit
+                  end if
+               end do
             endif
             rewind luiwin
             goto 140

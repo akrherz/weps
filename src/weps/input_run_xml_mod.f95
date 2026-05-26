@@ -14,7 +14,7 @@ module input_run_xml_mod
   use datetime_mod, only: lstday, difdat
   use Polygons_Mod, only: polygon, create_polygon, destroy_polygon, set_area_polygon
   use file_io_mod, only: fopenk, luicli, luiwin
-  use climate_input_mod, only: cli_gen_fmt_flag, wind_gen_fmt_flag
+  use climate_input_mod, only: cli_gen_fmt_flag, wind_gen_fmt_flag, wind_line_is_hourly_data, wind_line_is_old_data
   use climate_input_mod, only: amzele
   use solar_mod, only: amalat, amalon
   use erosion_data_struct_defs, only: subday, ntstep, am0efl
@@ -1132,6 +1132,7 @@ contains
     character(len=512) :: param_value
     integer :: read_stat
     real :: cligen_version
+    integer :: idx
 
     param_value = trim(chunk)
 
@@ -1281,7 +1282,21 @@ contains
            .or. (index(param_value,'WIND_GEN2') > 0) ) then
            wind_gen_fmt_flag = 2
         else
-           wind_gen_fmt_flag = 1
+           rewind luiwin
+           do
+             read(luiwin,fmt="(a512)",iostat=read_stat) param_value
+             if (read_stat .gt. 0) then
+               write(*,*) 'Error in file ', winfil, ' reading: ', param_value
+               call exit(1)
+             end if
+             if( wind_line_is_hourly_data(param_value) ) then
+               wind_gen_fmt_flag = 2
+               exit
+             else if( wind_line_is_old_data(param_value) ) then
+               wind_gen_fmt_flag = 1
+               exit
+             end if
+           end do
         endif
         rewind luiwin
         run_tag(SCI_windFile)%acquired = .true.
