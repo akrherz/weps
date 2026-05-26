@@ -12,6 +12,8 @@
 
 - Allow `-O` or `-o` flags to generate SWEEP input files for the given date
   even if the date does not produce erosion (#5).
+- Determine the hourly wind data type by sniffing the file and remove the
+  hard coded seven comment line header (#14).
 
 ### Bug Fixes
 

@@ -190,24 +190,26 @@ module erosion_mod
           ! We have erosion if (wus/wust .gt. 1.0) - for flat fields only
           !  rusust_preros(i) = max( rusust_preros(i), wus/wust )
           !  rusust = max( rusust, rusust_preros(i) )
-          if( wus/wust .gt. rusust_sub ) then
+               if( wust .gt. tiny(wust) ) then
+                  if( wus/wust .gt. rusust_sub ) then
             ! set new maximum
-            rusust_sub = wus/wust
-            ! set reporting values for the new maximum (this is as close to erosion as we will get)
-            noerod(icsr)%wus_anemom = wus_anemom
-            noerod(icsr)%wus_random = wus_random
-            noerod(icsr)%wus_ridge = wus_ridge
-            noerod(icsr)%wus_biodrag = wus_biodrag
-            noerod(icsr)%wus = wus
-            noerod(icsr)%bare = wubsts
-            noerod(icsr)%flat_cov = wucsts
-            noerod(icsr)%surf_wet = wucwts
-            noerod(icsr)%ag_den = wucdts
-            noerod(icsr)%wust = wust
-            noerod(icsr)%sfd84 = subrsurf(julday,icsr)%sfd84
-            noerod(icsr)%asvroc = subrsurf(julday,icsr)%bsl(1)%asvroc
-            noerod(icsr)%wzzo = wzzo
-            noerod(icsr)%sfcv = sfcv
+                     rusust_sub = wus/wust
+                     ! set reporting values for the new maximum (this is as close to erosion as we will get)
+                     noerod(icsr)%wus_anemom = wus_anemom
+                     noerod(icsr)%wus_random = wus_random
+                     noerod(icsr)%wus_ridge = wus_ridge
+                     noerod(icsr)%wus_biodrag = wus_biodrag
+                     noerod(icsr)%wus = wus
+                     noerod(icsr)%bare = wubsts
+                     noerod(icsr)%flat_cov = wucsts
+                     noerod(icsr)%surf_wet = wucwts
+                     noerod(icsr)%ag_den = wucdts
+                     noerod(icsr)%wust = wust
+                     noerod(icsr)%sfd84 = subrsurf(julday,icsr)%sfd84
+                     noerod(icsr)%asvroc = subrsurf(julday,icsr)%bsl(1)%asvroc
+                     noerod(icsr)%wzzo = wzzo
+                     noerod(icsr)%sfcv = sfcv
+                  end if
           end if
         end do
 
@@ -329,8 +331,12 @@ module erosion_mod
           !end if
 
           !rut = rusust_preros(idx)  This change sabotaged code logic
-          
-          rut = rusust_max*subday(idx)%awu/wuref
+
+               if( abs(wuref) .le. tiny(wuref) ) then
+                  write(0,*) 'ERROR: invalid erosion reference wind speed'
+                  call exit(1)
+               end if
+               rut = rusust_max*subday(idx)%awu/wuref
           !if (wustfl < 1) then
           ! no erosion aka surface updating has occurred yet
           !if( rusust_preros(idx) .gt. wr ) then
