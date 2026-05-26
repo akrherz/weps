@@ -429,7 +429,13 @@ contains
             else
                rewind luiwin
                do
-                  read(luiwin,fmt="(a256)",err=191) line
+                  read(luiwin,fmt="(a256)",iostat=ios) line
+                  if( ios .lt. 0 ) then
+                     wind_gen_fmt_flag = 1
+                     exit
+                  else if( ios .gt. 0 ) then
+                     goto 191
+                  end if
                   if( wind_line_is_hourly_data(line) ) then
                      wind_gen_fmt_flag = 2
                      exit

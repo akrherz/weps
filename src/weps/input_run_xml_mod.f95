@@ -1285,7 +1285,10 @@ contains
            rewind luiwin
            do
              read(luiwin,fmt="(a512)",iostat=read_stat) param_value
-             if (read_stat .gt. 0) then
+             if (read_stat .lt. 0) then
+               wind_gen_fmt_flag = 1
+               exit
+             else if (read_stat .gt. 0) then
                write(*,*) 'Error in file ', winfil, ' reading: ', param_value
                call exit(1)
              end if
