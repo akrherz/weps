@@ -93,7 +93,7 @@ module report_update_vars_mod
          else if( cellstate(idx,jdx)%csr .ne. 0 ) then  ! csr of 0 is a non simulated area
            write(*,*) 'Grid contains invalid subregion index'
            write(*,"(3(a,i0))") 'cellstate(', idx, ',', jdx, ')%csr = ', cellstate(idx,jdx)%csr
-           stop
+                call exit(1)
          end if
        end do
     end do

@@ -50,7 +50,10 @@ contains
         ! open simulation run file
         write (*,'(a)') 'runfil is: ', trim(runfil)
         call open_xmlfile(trim(runfil),fxml,iostat)
-        if (iostat /= 0) stop "Cannot open runfil"
+            if (iostat /= 0) then
+               write(*,*) 'Cannot open runfil'
+               call exit(1)
+            end if
         ! read in xml based run file
         call init_run_xml()
         call xml_parse(fxml, &
@@ -69,7 +72,7 @@ contains
         call open_xmlfile(trim(rootp) // trim(gridfile),fxml,iostat)
         if (iostat /= 0) then
           write(*,*) "Cannot open grid xml input file: ", trim(rootp) // trim(gridfile)
-          stop
+               call exit(1)
         end if
         ! Read in grid subregion assignments from erod.grdx
         call init_grid_xml()
