@@ -51,7 +51,7 @@ contains
         write (*,'(a)') 'runfil is: ', trim(runfil)
         call open_xmlfile(trim(runfil),fxml,iostat)
             if (iostat /= 0) then
-               write(*,*) 'Cannot open runfil'
+               write(*,*) "Cannot open run xml input file: ", trim(runfil)
                call exit(1)
             end if
         ! read in xml based run file

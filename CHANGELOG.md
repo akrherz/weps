@@ -18,4 +18,4 @@
 ### Bug Fixes
 
 - Fixed missing comma typo preventing `-h` (Help) from working on WEPS (#3).
-- Replace some `stop` instances with explicit exit with `status=1`.
+- Replaced some `stop` instances with explicit `call exit(1)` handling.
