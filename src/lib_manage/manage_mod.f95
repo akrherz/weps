@@ -94,7 +94,8 @@ module manage_mod
       call fopenk(luimandate, trim(rootp) // trim(manFile%tinfil), 'old')
       read(luimandate, '(a)', iostat=read_stat) line
       if (read_stat /= 0) then
-        stop "Cannot read input file"
+        write(*,*) 'Cannot read input file'
+        call exit(1)
       end if
 
       call init_man_xml( manFile%isub )
@@ -102,7 +103,10 @@ module manage_mod
         close(luimandate)
         ! open input file
         call open_xmlfile(trim(rootp) // trim(manFile%tinfil),fxml,read_stat)
-        if (read_stat /= 0) stop "Cannot open xml input file"
+        if (read_stat /= 0) then
+          write(*,*) 'Cannot open xml input file'
+          call exit(1)
+        end if
         ! read in xml based input file
         call xml_parse(fxml, &
            begin_element_handler = begin_man_element_handler, &
@@ -4928,7 +4932,7 @@ module manage_mod
             write(*,*) 'Error: crop named (', trim(plant%bname), ') has bad grain fraction and residue yield ratio values'
             write(*,*) 'Error: grf*(ryrat+1-mc)/(1-mc) must be > 1', &
                        ', Value is: ',plant%database%yld_coef*plant%database%grf
-            stop
+            call exit(1)
           end if
         end if
       end if
