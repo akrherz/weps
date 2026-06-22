@@ -580,9 +580,6 @@ module report_print_mod
 ! is pretty easy to deduce what the file contents and format is - LEW
 !   WRITE (UNIT=lun,FMT="(1(A))",ADVANCE="NO")                               &
 !          'dd/mo/ry|'
-!   WRITE (UNIT=lun,FMT="(2(A))",ADVANCE="YES")                              &
-!          ' operation                                                   |', &
-!          ' crop                                                        |'
 
     DO i = 1, size(mandate)
        WRITE (UNIT=lun,FMT="(2(i2,'/'),i0,'| ')",ADVANCE="NO") mandate(i)%d, mandate(i)%m, mandate(i)%y
